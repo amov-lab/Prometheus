@@ -1,0 +1,9 @@
+<launch>
+	<!-- run the position_control.cpp -->
+
+	<node pkg="landpad_det" type="landpad_det" name="landpad_det" output="screen">
+
+		<!-- load blacklist, config -->
+                <rosparam command="load" file="PATH_TO/Prometheus/Modules/object_detection/config/camera_param.yaml" />
+	</node>
+</launch>

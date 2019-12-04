@@ -1,0 +1,3 @@
+<launch>
+  <node name="num_det" pkg="digitnum_det_ros" type="pytorch_mnist_camera.py" output="screen"/>
+</launch>
