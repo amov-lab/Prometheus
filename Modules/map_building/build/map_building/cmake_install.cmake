@@ -33,17 +33,17 @@ if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/colin/Prometheus/Modules/map_building/build/map_building/catkin_generated/installspace/tum_builder.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/colin/Prometheus/Modules/map_building/build/map_building/catkin_generated/installspace/map_builder.pc")
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/tum_builder/cmake" TYPE FILE FILES
-    "/home/colin/Prometheus/Modules/map_building/build/map_building/catkin_generated/installspace/tum_builderConfig.cmake"
-    "/home/colin/Prometheus/Modules/map_building/build/map_building/catkin_generated/installspace/tum_builderConfig-version.cmake"
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/map_builder/cmake" TYPE FILE FILES
+    "/home/colin/Prometheus/Modules/map_building/build/map_building/catkin_generated/installspace/map_builderConfig.cmake"
+    "/home/colin/Prometheus/Modules/map_building/build/map_building/catkin_generated/installspace/map_builderConfig-version.cmake"
     )
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/tum_builder" TYPE FILE FILES "/home/colin/Prometheus/Modules/map_building/src/map_building/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/map_builder" TYPE FILE FILES "/home/colin/Prometheus/Modules/map_building/src/map_building/package.xml")
 endif()
 

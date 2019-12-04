@@ -3,6 +3,6 @@ CATKIN_PACKAGE_PREFIX = ""
 PROJECT_PKG_CONFIG_INCLUDE_DIRS = "".split(';') if "" != "" else []
 PROJECT_CATKIN_DEPENDS = "".replace(';', ' ')
 PKG_CONFIG_LIBRARIES_WITH_PREFIX = "".split(';') if "" != "" else []
-PROJECT_NAME = "tum_builder"
+PROJECT_NAME = "map_builder"
 PROJECT_SPACE_DIR = "/home/colin/Prometheus/Modules/map_building/install"
 PROJECT_VERSION = "1.6.3"

@@ -488,6 +488,12 @@ gtest_main_LIB_DEPENDS:STATIC=general;-lpthread;general;gtest;
 //Path to a library.
 lib:FILEPATH=/opt/ros/kinetic/lib/libtf2.so
 
+//Value Computed by CMake
+map_builder_BINARY_DIR:STATIC=/home/colin/Prometheus/Modules/map_building/build/map_building
+
+//Value Computed by CMake
+map_builder_SOURCE_DIR:STATIC=/home/colin/Prometheus/Modules/map_building/src/map_building
+
 //The directory containing a CMake configuration file for message_filters.
 message_filters_DIR:PATH=/opt/ros/kinetic/share/message_filters/cmake
 
