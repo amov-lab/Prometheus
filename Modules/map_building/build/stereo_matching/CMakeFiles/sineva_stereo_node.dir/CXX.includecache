@@ -65,6 +65,8 @@ elas.h
 /home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/elas.h
 opencv2/core/mat.hpp
 -
+opencv2/opencv.hpp
+-
 Eigen/Geometry
 -
 pcl/point_types.h
