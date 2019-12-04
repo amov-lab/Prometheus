@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <name>digitnum_det_ros</name>
+  <version>0.1.0</version>
+  <description>
+    digital number detection.
+  </description>
+  <maintainer email="jr9014@foxmail.com">jario</maintainer>
+  <license>BSD</license>
+
+  <url type="website">http://www.ros.org/wiki/rospy_tutorials</url>
+  <url type="bugtracker">https://github.com/ros/ros_tutorials/issues</url>
+  <url type="repository">https://github.com/ros/ros_tutorials</url>
+  <author>jario</author>
+
+  <buildtool_depend version_gte="0.5.68">catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>rostest</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+</package>
