@@ -5,5 +5,6 @@
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 subdirs(gtest)
+subdirs(pointcloud_to_octomap)
 subdirs(map_building)
 subdirs(stereo_matching)

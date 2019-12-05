@@ -1,0 +1,8 @@
+prefix=/home/colin/Prometheus/Modules/map_building/install
+
+Name: pointcloud_to_octomap
+Description: Description of pointcloud_to_octomap
+Version: 2.1.1
+Cflags: 
+Libs: -L/home/colin/Prometheus/Modules/map_building/install/lib 
+Requires: 
