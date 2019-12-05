@@ -268,6 +268,15 @@ EMPY_EXECUTABLE:FILEPATH=/usr/bin/empy
 //Empy script
 EMPY_SCRIPT:STRING=/usr/bin/empy
 
+//Path to a file.
+FLANN_INCLUDE_DIRS:PATH=/usr/include
+
+//Path to a library.
+FLANN_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libflann_cpp_s.a
+
+//Path to a library.
+FLANN_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libflann_cpp_s.a
+
 //The directory containing a CMake configuration file for GMock.
 GMock_DIR:PATH=GMock_DIR-NOTFOUND
 
@@ -316,6 +325,15 @@ OPENNI_LIBRARY:FILEPATH=/usr/lib/libOpenNI.so
 //The directory containing a CMake configuration file for OpenCV.
 OpenCV_DIR:PATH=/opt/ros/kinetic/share/OpenCV-3.3.1-dev
 
+//path to apps headers
+PCL_APPS_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_apps library
+PCL_APPS_LIBRARY:FILEPATH=PCL_APPS_LIBRARY-NOTFOUND
+
+//path to pcl_apps library debug
+PCL_APPS_LIBRARY_DEBUG:FILEPATH=PCL_APPS_LIBRARY_DEBUG-NOTFOUND
+
 //path to common headers
 PCL_COMMON_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
 
@@ -337,6 +355,30 @@ PCL_COMPONENT_LIBRARY_DEBUG:FILEPATH=PCL_COMPONENT_LIBRARY_DEBUG-NOTFOUND
 //The directory containing a CMake configuration file for PCL.
 PCL_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/pcl
 
+//path to features headers
+PCL_FEATURES_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_features library
+PCL_FEATURES_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_features.so
+
+//path to pcl_features library debug
+PCL_FEATURES_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_features.so
+
+//path to filters headers
+PCL_FILTERS_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_filters library
+PCL_FILTERS_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_filters.so
+
+//path to pcl_filters library debug
+PCL_FILTERS_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_filters.so
+
+//path to geometry headers
+PCL_GEOMETRY_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to in_hand_scanner headers
+PCL_IN_HAND_SCANNER_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
 //path to io headers
 PCL_IO_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
 
@@ -346,6 +388,27 @@ PCL_IO_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_io.so
 //path to pcl_io library debug
 PCL_IO_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_io.so
 
+//path to kdtree headers
+PCL_KDTREE_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_kdtree library
+PCL_KDTREE_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_kdtree.so
+
+//path to pcl_kdtree library debug
+PCL_KDTREE_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_kdtree.so
+
+//path to keypoints headers
+PCL_KEYPOINTS_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_keypoints library
+PCL_KEYPOINTS_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_keypoints.so
+
+//path to pcl_keypoints library debug
+PCL_KEYPOINTS_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_keypoints.so
+
+//path to modeler headers
+PCL_MODELER_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
 //path to octree headers
 PCL_OCTREE_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
 
@@ -354,6 +417,99 @@ PCL_OCTREE_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_octree.so
 
 //path to pcl_octree library debug
 PCL_OCTREE_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_octree.so
+
+//path to outofcore headers
+PCL_OUTOFCORE_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_outofcore library
+PCL_OUTOFCORE_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_outofcore.so
+
+//path to pcl_outofcore library debug
+PCL_OUTOFCORE_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_outofcore.so
+
+//path to people headers
+PCL_PEOPLE_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_people library
+PCL_PEOPLE_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_people.so
+
+//path to pcl_people library debug
+PCL_PEOPLE_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_people.so
+
+//path to point_cloud_editor headers
+PCL_POINT_CLOUD_EDITOR_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to recognition headers
+PCL_RECOGNITION_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_recognition library
+PCL_RECOGNITION_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_recognition.so
+
+//path to pcl_recognition library debug
+PCL_RECOGNITION_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_recognition.so
+
+//path to registration headers
+PCL_REGISTRATION_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_registration library
+PCL_REGISTRATION_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_registration.so
+
+//path to pcl_registration library debug
+PCL_REGISTRATION_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_registration.so
+
+//path to sample_consensus headers
+PCL_SAMPLE_CONSENSUS_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_sample_consensus library
+PCL_SAMPLE_CONSENSUS_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_sample_consensus.so
+
+//path to pcl_sample_consensus library debug
+PCL_SAMPLE_CONSENSUS_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_sample_consensus.so
+
+//path to search headers
+PCL_SEARCH_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_search library
+PCL_SEARCH_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_search.so
+
+//path to pcl_search library debug
+PCL_SEARCH_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_search.so
+
+//path to segmentation headers
+PCL_SEGMENTATION_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_segmentation library
+PCL_SEGMENTATION_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_segmentation.so
+
+//path to pcl_segmentation library debug
+PCL_SEGMENTATION_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_segmentation.so
+
+//path to surface headers
+PCL_SURFACE_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_surface library
+PCL_SURFACE_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_surface.so
+
+//path to pcl_surface library debug
+PCL_SURFACE_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_surface.so
+
+//path to tracking headers
+PCL_TRACKING_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_tracking library
+PCL_TRACKING_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_tracking.so
+
+//path to pcl_tracking library debug
+PCL_TRACKING_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_tracking.so
+
+//path to visualization headers
+PCL_VISUALIZATION_INCLUDE_DIR:PATH=/usr/include/pcl-1.7
+
+//path to pcl_visualization library
+PCL_VISUALIZATION_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_visualization.so
+
+//path to pcl_visualization library debug
+PCL_VISUALIZATION_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libpcl_visualization.so
 
 //pkg-config executable
 PKG_CONFIG_EXECUTABLE:FILEPATH=/usr/bin/pkg-config
@@ -369,6 +525,15 @@ Project_BINARY_DIR:STATIC=/home/colin/Prometheus/Modules/map_building/build
 
 //Value Computed by CMake
 Project_SOURCE_DIR:STATIC=/home/colin/Prometheus/Modules/map_building/src
+
+//Path to a file.
+QHULL_INCLUDE_DIRS:PATH=/usr/include
+
+//Path to a library.
+QHULL_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libqhull.so
+
+//Path to a library.
+QHULL_LIBRARY_DEBUG:FILEPATH=/usr/lib/x86_64-linux-gnu/libqhull.so
 
 //The directory containing a CMake configuration file for Qt5Core.
 Qt5Core_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5Core
@@ -502,6 +667,15 @@ message_generation_DIR:PATH=/opt/ros/kinetic/share/message_generation/cmake
 
 //The directory containing a CMake configuration file for message_runtime.
 message_runtime_DIR:PATH=/opt/ros/kinetic/share/message_runtime/cmake
+
+//The directory containing a CMake configuration file for octomap.
+octomap_DIR:PATH=/opt/ros/kinetic/share/octomap
+
+//Value Computed by CMake
+pointcloud_to_octomap_BINARY_DIR:STATIC=/home/colin/Prometheus/Modules/map_building/build/pointcloud_to_octomap
+
+//Value Computed by CMake
+pointcloud_to_octomap_SOURCE_DIR:STATIC=/home/colin/Prometheus/Modules/map_building/src/pointcloud_to_octomap
 
 //The directory containing a CMake configuration file for rosconsole.
 rosconsole_DIR:PATH=/opt/ros/kinetic/share/rosconsole/cmake
@@ -707,7 +881,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=5
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=6
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -746,16 +920,54 @@ CMAKE_STRIP-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding Flann
+FIND_PACKAGE_MESSAGE_DETAILS_Flann:INTERNAL=[/usr/lib/x86_64-linux-gnu/libflann_cpp_s.a][/usr/include][v()]
 //Details about finding OpenCV
 FIND_PACKAGE_MESSAGE_DETAILS_OpenCV:INTERNAL=[/opt/ros/kinetic][v3.3.1(3.3.1)]
 //Details about finding PCL
 FIND_PACKAGE_MESSAGE_DETAILS_PCL:INTERNAL=[/usr/lib/x86_64-linux-gnu/libboost_system.so;/usr/lib/x86_64-linux-gnu/libboost_filesystem.so;/usr/lib/x86_64-linux-gnu/libboost_thread.so;/usr/lib/x86_64-linux-gnu/libboost_date_time.so;/usr/lib/x86_64-linux-gnu/libboost_iostreams.so;/usr/lib/x86_64-linux-gnu/libboost_serialization.so;/usr/lib/x86_64-linux-gnu/libboost_chrono.so;/usr/lib/x86_64-linux-gnu/libboost_atomic.so;/usr/lib/x86_64-linux-gnu/libboost_regex.so;/usr/lib/x86_64-linux-gnu/libpthread.so;optimized;/usr/lib/x86_64-linux-gnu/libpcl_common.so;debug;/usr/lib/x86_64-linux-gnu/libpcl_common.so;optimized;/usr/lib/x86_64-linux-gnu/libpcl_octree.so;debug;/usr/lib/x86_64-linux-gnu/libpcl_octree.so;/usr/lib/libOpenNI.so;vtkImagingStencil;vtkCommonComputationalGeometry;vtkCommonDataModel;vtkCommonMath;vtkCommonCore;vtksys;vtkCommonMisc;vtkCommonSystem;vtkCommonTransforms;vtkImagingCore;vtkCommonExecutionModel;vtkFiltersAMR;vtkFiltersGeneral;vtkFiltersCore;vtkParallelCore;vtkIOLegacy;vtkIOCore;/usr/lib/x86_64-linux-gnu/libz.so;vtkInteractionWidgets;vtkFiltersHybrid;vtkImagingSources;vtkRenderingCore;vtkCommonColor;vtkFiltersExtraction;vtkFiltersStatistics;vtkImagingFourier;vtkalglib;vtkFiltersGeometry;vtkFiltersSources;vtkFiltersModeling;vtkImagingGeneral;vtkImagingHybrid;vtkIOImage;vtkDICOMParser;vtkmetaio;/usr/lib/x86_64-linux-gnu/libjpeg.so;/usr/lib/x86_64-linux-gnu/libpng.so;/usr/lib/x86_64-linux-gnu/libtiff.so;vtkInteractionStyle;vtkRenderingAnnotation;vtkImagingColor;vtkRenderingFreeType;/usr/lib/x86_64-linux-gnu/libfreetype.so;vtkftgl;vtkRenderingVolume;vtkIOParallelNetCDF;vtkParallelMPI;/usr/lib/x86_64-linux-gnu/libnetcdf_c++.so;/usr/lib/x86_64-linux-gnu/libnetcdf.so;/usr/lib/x86_64-linux-gnu/hdf5/serial/lib/libhdf5.so;/usr/lib/x86_64-linux-gnu/libsz.so;/usr/lib/x86_64-linux-gnu/libdl.so;/usr/lib/x86_64-linux-gnu/libm.so;/usr/lib/x86_64-linux-gnu/hdf5/serial/lib/libhdf5_hl.so;vtkRenderingOpenGL;vtkIOLSDyna;vtkIOXML;vtkIOGeometry;/usr/lib/x86_64-linux-gnu/libjsoncpp.so;vtkIOXMLParser;/usr/lib/x86_64-linux-gnu/libexpat.so;vtkLocalExample;vtkInfovisCore;vtkGeovisCore;vtkInfovisLayout;vtkViewsCore;vtkproj4;/usr/lib/x86_64-linux-gnu/libpython2.7.so;vtkTestingGenericBridge;/usr/lib/libgl2ps.so;verdict;vtkIOMovie;/usr/lib/x86_64-linux-gnu/libtheoraenc.so;/usr/lib/x86_64-linux-gnu/libtheoradec.so;/usr/lib/x86_64-linux-gnu/libogg.so;vtkFiltersImaging;vtkIOMINC;vtkRenderingLOD;vtkViewsQt;vtkGUISupportQt;vtkViewsInfovis;vtkChartsCore;vtkRenderingContext2D;vtkRenderingLabel;vtkRenderingImage;vtkFiltersFlowPaths;vtkxdmf2;/usr/lib/x86_64-linux-gnu/libxml2.so;vtkFiltersReebGraph;vtkViewsContext2D;vtkIOXdmf2;vtkIOAMR;vtkRenderingContextOpenGL;vtkImagingStatistics;vtkIOParallel;vtkFiltersParallel;vtkIONetCDF;vtkexoIIc;vtkGUISupportQtOpenGL;vtkIOParallelLSDyna;vtkFiltersParallelGeometry;vtkGUISupportQtWebkit;vtkIOPLY;vtkWrappingTools;vtkFiltersHyperTree;vtkRenderingVolumeOpenGL;vtkIOExodus;vtkIOPostgreSQL;vtkIOSQL;sqlite3;vtkWrappingJava;vtkFiltersParallelFlowPaths;vtkFiltersParallelStatistics;vtkFiltersProgrammable;vtkFiltersParallelImaging;vtkRenderingParallelLIC;vtkRenderingLIC;vtkInteractionImage;vtkFiltersPython;vtkWrappingPythonCore;vtkIOParallelExodus;vtkFiltersGeneric;vtkIOVideo;vtkRenderingQt;vtkFiltersTexture;vtkIOInfovis;vtkGUISupportQtSQL;vtkRenderingFreeTypeOpenGL;vtkInfovisBoostGraphAlgorithms;vtkRenderingGL2PS;vtkIOGeoJSON;vtkFiltersVerdict;vtkViewsGeovis;vtkIOImport;vtkTestingIOSQL;vtkPythonInterpreter;vtkIOODBC;vtkIOEnSight;vtkIOMySQL;vtkRenderingMatplotlib;vtkDomainsChemistry;vtkIOExport;vtkFiltersParallelMPI;vtkIOParallelXML;vtkTestingRendering;vtkIOMPIParallel;vtkParallelMPI4Py;vtkFiltersSMP;vtkFiltersSelection;vtkIOVPIC;VPIC;vtkImagingMath;vtkImagingMorphological;vtkRenderingParallel;vtkRenderingFreeTypeFontConfig;vtkIOFFMPEG;vtkIOMPIImage;vtkIOGDAL;optimized;/usr/lib/x86_64-linux-gnu/libpcl_io.so;debug;/usr/lib/x86_64-linux-gnu/libpcl_io.so;/usr/lib/x86_64-linux-gnu/libboost_system.so;/usr/lib/x86_64-linux-gnu/libboost_filesystem.so;/usr/lib/x86_64-linux-gnu/libboost_thread.so;/usr/lib/x86_64-linux-gnu/libboost_date_time.so;/usr/lib/x86_64-linux-gnu/libboost_iostreams.so;/usr/lib/x86_64-linux-gnu/libboost_serialization.so;/usr/lib/x86_64-linux-gnu/libboost_chrono.so;/usr/lib/x86_64-linux-gnu/libboost_atomic.so;/usr/lib/x86_64-linux-gnu/libboost_regex.so;/usr/lib/x86_64-linux-gnu/libpthread.so;/usr/lib/libOpenNI.so;vtkImagingStencil;vtkCommonComputationalGeometry;vtkCommonDataModel;vtkCommonMath;vtkCommonCore;vtksys;vtkCommonMisc;vtkCommonSystem;vtkCommonTransforms;vtkImagingCore;vtkCommonExecutionModel;vtkFiltersAMR;vtkFiltersGeneral;vtkFiltersCore;vtkParallelCore;vtkIOLegacy;vtkIOCore;/usr/lib/x86_64-linux-gnu/libz.so;vtkInteractionWidgets;vtkFiltersHybrid;vtkImagingSources;vtkRenderingCore;vtkCommonColor;vtkFiltersExtraction;vtkFiltersStatistics;vtkImagingFourier;vtkalglib;vtkFiltersGeometry;vtkFiltersSources;vtkFiltersModeling;vtkImagingGeneral;vtkImagingHybrid;vtkIOImage;vtkDICOMParser;vtkmetaio;/usr/lib/x86_64-linux-gnu/libjpeg.so;/usr/lib/x86_64-linux-gnu/libpng.so;/usr/lib/x86_64-linux-gnu/libtiff.so;vtkInteractionStyle;vtkRenderingAnnotation;vtkImagingColor;vtkRenderingFreeType;/usr/lib/x86_64-linux-gnu/libfreetype.so;vtkftgl;vtkRenderingVolume;vtkIOParallelNetCDF;vtkParallelMPI;/usr/lib/x86_64-linux-gnu/libnetcdf_c++.so;/usr/lib/x86_64-linux-gnu/libnetcdf.so;/usr/lib/x86_64-linux-gnu/hdf5/serial/lib/libhdf5.so;/usr/lib/x86_64-linux-gnu/libpthread.so;/usr/lib/x86_64-linux-gnu/libsz.so;/usr/lib/x86_64-linux-gnu/libdl.so;/usr/lib/x86_64-linux-gnu/libm.so;/usr/lib/x86_64-linux-gnu/hdf5/serial/lib/libhdf5_hl.so;vtkRenderingOpenGL;vtkIOLSDyna;vtkIOXML;vtkIOGeometry;/usr/lib/x86_64-linux-gnu/libjsoncpp.so;vtkIOXMLParser;/usr/lib/x86_64-linux-gnu/libexpat.so;vtkLocalExample;vtkInfovisCore;vtkGeovisCore;vtkInfovisLayout;vtkViewsCore;vtkproj4;/usr/lib/x86_64-linux-gnu/libpython2.7.so;vtkTestingGenericBridge;/usr/lib/libgl2ps.so;verdict;vtkIOMovie;/usr/lib/x86_64-linux-gnu/libtheoraenc.so;/usr/lib/x86_64-linux-gnu/libtheoradec.so;/usr/lib/x86_64-linux-gnu/libogg.so;vtkFiltersImaging;vtkIOMINC;vtkRenderingLOD;vtkViewsQt;vtkGUISupportQt;vtkViewsInfovis;vtkChartsCore;vtkRenderingContext2D;vtkRenderingLabel;vtkRenderingImage;vtkFiltersFlowPaths;vtkxdmf2;/usr/lib/x86_64-linux-gnu/libxml2.so;vtkFiltersReebGraph;vtkViewsContext2D;vtkIOXdmf2;vtkIOAMR;vtkRenderingContextOpenGL;vtkImagingStatistics;vtkIOParallel;vtkFiltersParallel;vtkIONetCDF;vtkexoIIc;vtkGUISupportQtOpenGL;vtkIOParallelLSDyna;vtkFiltersParallelGeometry;vtkGUISupportQtWebkit;vtkIOPLY;vtkWrappingTools;vtkFiltersHyperTree;vtkRenderingVolumeOpenGL;vtkIOExodus;vtkIOPostgreSQL;vtkIOSQL;sqlite3;vtkWrappingJava;vtkFiltersParallelFlowPaths;vtkFiltersParallelStatistics;vtkFiltersProgrammable;vtkFiltersParallelImaging;vtkRenderingParallelLIC;vtkRenderingLIC;vtkInteractionImage;vtkFiltersPython;vtkWrappingPythonCore;vtkIOParallelExodus;vtkFiltersGeneric;vtkIOVideo;vtkRenderingQt;vtkFiltersTexture;vtkIOInfovis;vtkGUISupportQtSQL;vtkRenderingFreeTypeOpenGL;vtkInfovisBoostGraphAlgorithms;vtkRenderingGL2PS;vtkIOGeoJSON;vtkFiltersVerdict;vtkViewsGeovis;vtkIOImport;vtkTestingIOSQL;vtkPythonInterpreter;vtkIOODBC;vtkIOEnSight;vtkIOMySQL;vtkRenderingMatplotlib;vtkDomainsChemistry;vtkIOExport;vtkFiltersParallelMPI;vtkIOParallelXML;vtkTestingRendering;vtkIOMPIParallel;vtkParallelMPI4Py;vtkFiltersSMP;vtkFiltersSelection;vtkIOVPIC;VPIC;vtkImagingMath;vtkImagingMorphological;vtkRenderingParallel;vtkRenderingFreeTypeFontConfig;vtkIOFFMPEG;vtkIOMPIImage;vtkIOGDAL][/usr/include/pcl-1.7;/usr/include/eigen3;/usr/include;/usr/include/ni;/usr/include/vtk-6.2;/usr/lib/openmpi/include/openmpi/opal/mca/event/libevent2021/libevent;/usr/lib/openmpi/include/openmpi/opal/mca/event/libevent2021/libevent/include;/usr/lib/openmpi/include;/usr/lib/openmpi/include/openmpi;/usr/include/jsoncpp;/usr/include/hdf5/openmpi;/usr/include/x86_64-linux-gnu;/usr/include/freetype2;/usr/include/x86_64-linux-gnu/freetype2;/usr/include/libxml2;/usr/include/tcl;/usr/include/python2.7][v()]
 //Details about finding PCL_COMMON
 FIND_PACKAGE_MESSAGE_DETAILS_PCL_COMMON:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_common.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_FEATURES
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_FEATURES:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_features.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_FILTERS
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_FILTERS:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_filters.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_GEOMETRY
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_GEOMETRY:INTERNAL=[/usr/include/pcl-1.7][v()]
+//Details about finding PCL_IN_HAND_SCANNER
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_IN_HAND_SCANNER:INTERNAL=[/usr/include/pcl-1.7][v()]
 //Details about finding PCL_IO
 FIND_PACKAGE_MESSAGE_DETAILS_PCL_IO:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_io.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_KDTREE
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_KDTREE:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_kdtree.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_KEYPOINTS
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_KEYPOINTS:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_keypoints.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_MODELER
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_MODELER:INTERNAL=[/usr/include/pcl-1.7][v()]
 //Details about finding PCL_OCTREE
 FIND_PACKAGE_MESSAGE_DETAILS_PCL_OCTREE:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_octree.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_OUTOFCORE
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_OUTOFCORE:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_outofcore.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_PEOPLE
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_PEOPLE:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_people.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_POINT_CLOUD_EDITOR
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_POINT_CLOUD_EDITOR:INTERNAL=[/usr/include/pcl-1.7][v()]
+//Details about finding PCL_RECOGNITION
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_RECOGNITION:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_recognition.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_REGISTRATION
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_REGISTRATION:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_registration.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_SAMPLE_CONSENSUS
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_SAMPLE_CONSENSUS:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_sample_consensus.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_SEARCH
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_SEARCH:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_search.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_SEGMENTATION
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_SEGMENTATION:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_segmentation.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_SURFACE
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_SURFACE:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_surface.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_TRACKING
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_TRACKING:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_tracking.so][/usr/include/pcl-1.7][v()]
+//Details about finding PCL_VISUALIZATION
+FIND_PACKAGE_MESSAGE_DETAILS_PCL_VISUALIZATION:INTERNAL=[/usr/lib/x86_64-linux-gnu/libpcl_visualization.so][/usr/include/pcl-1.7][v()]
 //Details about finding PythonInterp
 FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/usr/bin/python][v2.7.12()]
 //Details about finding Threads
@@ -766,6 +978,8 @@ FIND_PACKAGE_MESSAGE_DETAILS_eigen:INTERNAL=[/usr/include/eigen3][v()]
 FIND_PACKAGE_MESSAGE_DETAILS_libusb-1.0:INTERNAL=[/usr/include][v()]
 //Details about finding openni
 FIND_PACKAGE_MESSAGE_DETAILS_openni:INTERNAL=[/usr/lib/libOpenNI.so][/usr/include/ni][v()]
+//Details about finding qhull
+FIND_PACKAGE_MESSAGE_DETAILS_qhull:INTERNAL=[/usr/lib/x86_64-linux-gnu/libqhull.so][/usr/include][v()]
 GMOCK_FROM_SOURCE_FOUND:INTERNAL=TRUE
 GMOCK_FROM_SOURCE_INCLUDE_DIRS:INTERNAL=/usr/include
 GMOCK_FROM_SOURCE_LIBRARIES:INTERNAL=gmock
@@ -790,14 +1004,70 @@ GTEST_MAIN_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 PCL_COMMON_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PCL_COMMON_LIBRARY_DEBUG
 PCL_COMMON_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_FEATURES_LIBRARY
+PCL_FEATURES_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_FEATURES_LIBRARY_DEBUG
+PCL_FEATURES_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_FILTERS_LIBRARY
+PCL_FILTERS_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_FILTERS_LIBRARY_DEBUG
+PCL_FILTERS_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PCL_IO_LIBRARY
 PCL_IO_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PCL_IO_LIBRARY_DEBUG
 PCL_IO_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_KDTREE_LIBRARY
+PCL_KDTREE_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_KDTREE_LIBRARY_DEBUG
+PCL_KDTREE_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_KEYPOINTS_LIBRARY
+PCL_KEYPOINTS_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_KEYPOINTS_LIBRARY_DEBUG
+PCL_KEYPOINTS_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PCL_OCTREE_LIBRARY
 PCL_OCTREE_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PCL_OCTREE_LIBRARY_DEBUG
 PCL_OCTREE_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_OUTOFCORE_LIBRARY
+PCL_OUTOFCORE_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_OUTOFCORE_LIBRARY_DEBUG
+PCL_OUTOFCORE_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_PEOPLE_LIBRARY
+PCL_PEOPLE_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_PEOPLE_LIBRARY_DEBUG
+PCL_PEOPLE_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_RECOGNITION_LIBRARY
+PCL_RECOGNITION_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_RECOGNITION_LIBRARY_DEBUG
+PCL_RECOGNITION_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_REGISTRATION_LIBRARY
+PCL_REGISTRATION_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_REGISTRATION_LIBRARY_DEBUG
+PCL_REGISTRATION_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SAMPLE_CONSENSUS_LIBRARY
+PCL_SAMPLE_CONSENSUS_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SAMPLE_CONSENSUS_LIBRARY_DEBUG
+PCL_SAMPLE_CONSENSUS_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SEARCH_LIBRARY
+PCL_SEARCH_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SEARCH_LIBRARY_DEBUG
+PCL_SEARCH_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SEGMENTATION_LIBRARY
+PCL_SEGMENTATION_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SEGMENTATION_LIBRARY_DEBUG
+PCL_SEGMENTATION_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SURFACE_LIBRARY
+PCL_SURFACE_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_SURFACE_LIBRARY_DEBUG
+PCL_SURFACE_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_TRACKING_LIBRARY
+PCL_TRACKING_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_TRACKING_LIBRARY_DEBUG
+PCL_TRACKING_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_VISUALIZATION_LIBRARY
+PCL_VISUALIZATION_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PCL_VISUALIZATION_LIBRARY_DEBUG
+PCL_VISUALIZATION_LIBRARY_DEBUG-ADVANCED:INTERNAL=1
 PC_EIGEN_CFLAGS:INTERNAL=-I/usr/include/eigen3
 PC_EIGEN_CFLAGS_I:INTERNAL=
 PC_EIGEN_CFLAGS_OTHER:INTERNAL=
@@ -832,6 +1102,40 @@ PC_EIGEN_eigen3_INCLUDEDIR:INTERNAL=
 PC_EIGEN_eigen3_LIBDIR:INTERNAL=
 PC_EIGEN_eigen3_PREFIX:INTERNAL=
 PC_EIGEN_eigen3_VERSION:INTERNAL=
+PC_FLANN_CFLAGS:INTERNAL=
+PC_FLANN_CFLAGS_I:INTERNAL=
+PC_FLANN_CFLAGS_OTHER:INTERNAL=
+PC_FLANN_FOUND:INTERNAL=1
+PC_FLANN_INCLUDEDIR:INTERNAL=/usr/include
+PC_FLANN_INCLUDE_DIRS:INTERNAL=
+PC_FLANN_LDFLAGS:INTERNAL=-lflann_cpp
+PC_FLANN_LDFLAGS_OTHER:INTERNAL=
+PC_FLANN_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+PC_FLANN_LIBRARIES:INTERNAL=flann_cpp
+PC_FLANN_LIBRARY_DIRS:INTERNAL=
+PC_FLANN_LIBS:INTERNAL=
+PC_FLANN_LIBS_L:INTERNAL=
+PC_FLANN_LIBS_OTHER:INTERNAL=
+PC_FLANN_LIBS_PATHS:INTERNAL=
+PC_FLANN_PREFIX:INTERNAL=/usr
+PC_FLANN_STATIC_CFLAGS:INTERNAL=
+PC_FLANN_STATIC_CFLAGS_I:INTERNAL=
+PC_FLANN_STATIC_CFLAGS_OTHER:INTERNAL=
+PC_FLANN_STATIC_INCLUDE_DIRS:INTERNAL=
+PC_FLANN_STATIC_LDFLAGS:INTERNAL=-lflann_cpp
+PC_FLANN_STATIC_LDFLAGS_OTHER:INTERNAL=
+PC_FLANN_STATIC_LIBDIR:INTERNAL=
+PC_FLANN_STATIC_LIBRARIES:INTERNAL=flann_cpp
+PC_FLANN_STATIC_LIBRARY_DIRS:INTERNAL=
+PC_FLANN_STATIC_LIBS:INTERNAL=
+PC_FLANN_STATIC_LIBS_L:INTERNAL=
+PC_FLANN_STATIC_LIBS_OTHER:INTERNAL=
+PC_FLANN_STATIC_LIBS_PATHS:INTERNAL=
+PC_FLANN_VERSION:INTERNAL=1.8.4
+PC_FLANN_flann_INCLUDEDIR:INTERNAL=
+PC_FLANN_flann_LIBDIR:INTERNAL=
+PC_FLANN_flann_PREFIX:INTERNAL=
+PC_FLANN_flann_VERSION:INTERNAL=
 PC_OPENNI2_CFLAGS:INTERNAL=
 PC_OPENNI2_CFLAGS_I:INTERNAL=
 PC_OPENNI2_CFLAGS_OTHER:INTERNAL=
@@ -915,7 +1219,8 @@ _Boost_NAMESPACE_LAST:INTERNAL=boost
 //Last used Boost_USE_MULTITHREADED value.
 _Boost_USE_MULTITHREADED_LAST:INTERNAL=TRUE
 __pkg_config_checked_PC_EIGEN:INTERNAL=1
+__pkg_config_checked_PC_FLANN:INTERNAL=1
 __pkg_config_checked_PC_OPENNI:INTERNAL=1
 __pkg_config_checked_PC_OPENNI2:INTERNAL=1
-prefix_result:INTERNAL=/usr/lib
+prefix_result:INTERNAL=/usr/lib/x86_64-linux-gnu
 

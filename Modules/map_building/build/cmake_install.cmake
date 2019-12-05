@@ -126,6 +126,7 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/colin/Prometheus/Modules/map_building/build/gtest/cmake_install.cmake")
+  include("/home/colin/Prometheus/Modules/map_building/build/pointcloud_to_octomap/cmake_install.cmake")
   include("/home/colin/Prometheus/Modules/map_building/build/map_building/cmake_install.cmake")
   include("/home/colin/Prometheus/Modules/map_building/build/stereo_matching/cmake_install.cmake")
 

@@ -1,2 +1,2 @@
-map_building:stereo_matching
+map_building:pointcloud_to_octomap:stereo_matching
 -DCATKIN_DEVEL_PREFIX=/home/colin/Prometheus/Modules/map_building/devel -DCMAKE_INSTALL_PREFIX=/home/colin/Prometheus/Modules/map_building/install -G Unix Makefiles
