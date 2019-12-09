@@ -157,6 +157,11 @@ stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o
  /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2/xfeatures2d.hpp
  /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2/xfeatures2d/cuda.hpp
  /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2/xfeatures2d/nonfree.hpp
+ /opt/ros/kinetic/include/pcl_conversions/pcl_conversions.h
+ /opt/ros/kinetic/include/pcl_msgs/ModelCoefficients.h
+ /opt/ros/kinetic/include/pcl_msgs/PointIndices.h
+ /opt/ros/kinetic/include/pcl_msgs/PolygonMesh.h
+ /opt/ros/kinetic/include/pcl_msgs/Vertices.h
  /opt/ros/kinetic/include/ros/advertise_options.h
  /opt/ros/kinetic/include/ros/advertise_service_options.h
  /opt/ros/kinetic/include/ros/assert.h
@@ -215,6 +220,8 @@ stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o
  /opt/ros/kinetic/include/rosconsole/macros_generated.h
  /opt/ros/kinetic/include/sensor_msgs/CompressedImage.h
  /opt/ros/kinetic/include/sensor_msgs/Image.h
+ /opt/ros/kinetic/include/sensor_msgs/PointCloud2.h
+ /opt/ros/kinetic/include/sensor_msgs/PointField.h
  /opt/ros/kinetic/include/sensor_msgs/image_encodings.h
  /opt/ros/kinetic/include/std_msgs/Header.h
  /opt/ros/kinetic/include/xmlrpcpp/XmlRpcDecl.h
