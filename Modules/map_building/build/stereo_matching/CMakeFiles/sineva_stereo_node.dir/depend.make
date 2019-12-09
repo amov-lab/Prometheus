@@ -156,6 +156,11 @@ stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2/xfeatures2d.hpp
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2/xfeatures2d/cuda.hpp
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/opencv-3.3.1-dev/opencv2/xfeatures2d/nonfree.hpp
+stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/pcl_conversions/pcl_conversions.h
+stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/pcl_msgs/ModelCoefficients.h
+stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/pcl_msgs/PointIndices.h
+stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/pcl_msgs/PolygonMesh.h
+stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/pcl_msgs/Vertices.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/ros/advertise_options.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/ros/advertise_service_options.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/ros/assert.h
@@ -214,6 +219,8 @@ stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/rosconsole/macros_generated.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/sensor_msgs/CompressedImage.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/sensor_msgs/Image.h
+stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/sensor_msgs/PointCloud2.h
+stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/sensor_msgs/PointField.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/sensor_msgs/image_encodings.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/std_msgs/Header.h
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o: /opt/ros/kinetic/include/xmlrpcpp/XmlRpcDecl.h
