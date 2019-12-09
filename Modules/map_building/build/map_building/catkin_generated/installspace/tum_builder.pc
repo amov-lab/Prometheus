@@ -1,8 +1,0 @@
-prefix=/home/colin/Prometheus/Modules/map_building/install
-
-Name: tum_builder
-Description: Description of tum_builder
-Version: 1.6.3
-Cflags: 
-Libs: -L/home/colin/Prometheus/Modules/map_building/install/lib 
-Requires: 

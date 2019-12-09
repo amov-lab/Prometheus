@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/colin/Prometheus/Modules/map_building/src
+CMAKE_SOURCE_DIR = /home/colin/code_repos/Prometheus/Modules/map_building/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/colin/Prometheus/Modules/map_building/build
+CMAKE_BINARY_DIR = /home/colin/code_repos/Prometheus/Modules/map_building/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -135,14 +135,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/colin/Prometheus/Modules/map_building/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/colin/Prometheus/Modules/map_building/build/CMakeFiles /home/colin/Prometheus/Modules/map_building/build/stereo_matching/CMakeFiles/progress.marks
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/colin/Prometheus/Modules/map_building/build/CMakeFiles 0
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles /home/colin/code_repos/Prometheus/Modules/map_building/build/stereo_matching/CMakeFiles/progress.marks
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/clean
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/clean
 .PHONY : clean
 
 # The main clean target
@@ -152,22 +152,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/preinstall
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/preinstall
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 stereo_matching/CMakeFiles/sineva_stereo_node.dir/rule:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/CMakeFiles/sineva_stereo_node.dir/rule
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f CMakeFiles/Makefile2 stereo_matching/CMakeFiles/sineva_stereo_node.dir/rule
 .PHONY : stereo_matching/CMakeFiles/sineva_stereo_node.dir/rule
 
 # Convenience name for target.
@@ -177,7 +177,7 @@ sineva_stereo_node: stereo_matching/CMakeFiles/sineva_stereo_node.dir/rule
 
 # fast build rule for target.
 sineva_stereo_node/fast:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/build
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/build
 .PHONY : sineva_stereo_node/fast
 
 nodes/sineva_stereo_node.o: nodes/sineva_stereo_node.cpp.o
@@ -186,7 +186,7 @@ nodes/sineva_stereo_node.o: nodes/sineva_stereo_node.cpp.o
 
 # target to build an object file
 nodes/sineva_stereo_node.cpp.o:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.o
 .PHONY : nodes/sineva_stereo_node.cpp.o
 
 nodes/sineva_stereo_node.i: nodes/sineva_stereo_node.cpp.i
@@ -195,7 +195,7 @@ nodes/sineva_stereo_node.i: nodes/sineva_stereo_node.cpp.i
 
 # target to preprocess a source file
 nodes/sineva_stereo_node.cpp.i:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.i
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.i
 .PHONY : nodes/sineva_stereo_node.cpp.i
 
 nodes/sineva_stereo_node.s: nodes/sineva_stereo_node.cpp.s
@@ -204,7 +204,7 @@ nodes/sineva_stereo_node.s: nodes/sineva_stereo_node.cpp.s
 
 # target to generate assembly for a file
 nodes/sineva_stereo_node.cpp.s:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.s
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/nodes/sineva_stereo_node.cpp.s
 .PHONY : nodes/sineva_stereo_node.cpp.s
 
 src/descriptor.o: src/descriptor.cpp.o
@@ -213,7 +213,7 @@ src/descriptor.o: src/descriptor.cpp.o
 
 # target to build an object file
 src/descriptor.cpp.o:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/descriptor.cpp.o
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/descriptor.cpp.o
 .PHONY : src/descriptor.cpp.o
 
 src/descriptor.i: src/descriptor.cpp.i
@@ -222,7 +222,7 @@ src/descriptor.i: src/descriptor.cpp.i
 
 # target to preprocess a source file
 src/descriptor.cpp.i:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/descriptor.cpp.i
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/descriptor.cpp.i
 .PHONY : src/descriptor.cpp.i
 
 src/descriptor.s: src/descriptor.cpp.s
@@ -231,7 +231,7 @@ src/descriptor.s: src/descriptor.cpp.s
 
 # target to generate assembly for a file
 src/descriptor.cpp.s:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/descriptor.cpp.s
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/descriptor.cpp.s
 .PHONY : src/descriptor.cpp.s
 
 src/elas.o: src/elas.cpp.o
@@ -240,7 +240,7 @@ src/elas.o: src/elas.cpp.o
 
 # target to build an object file
 src/elas.cpp.o:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/elas.cpp.o
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/elas.cpp.o
 .PHONY : src/elas.cpp.o
 
 src/elas.i: src/elas.cpp.i
@@ -249,7 +249,7 @@ src/elas.i: src/elas.cpp.i
 
 # target to preprocess a source file
 src/elas.cpp.i:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/elas.cpp.i
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/elas.cpp.i
 .PHONY : src/elas.cpp.i
 
 src/elas.s: src/elas.cpp.s
@@ -258,7 +258,7 @@ src/elas.s: src/elas.cpp.s
 
 # target to generate assembly for a file
 src/elas.cpp.s:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/elas.cpp.s
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/elas.cpp.s
 .PHONY : src/elas.cpp.s
 
 src/filter.o: src/filter.cpp.o
@@ -267,7 +267,7 @@ src/filter.o: src/filter.cpp.o
 
 # target to build an object file
 src/filter.cpp.o:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/filter.cpp.o
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/filter.cpp.o
 .PHONY : src/filter.cpp.o
 
 src/filter.i: src/filter.cpp.i
@@ -276,7 +276,7 @@ src/filter.i: src/filter.cpp.i
 
 # target to preprocess a source file
 src/filter.cpp.i:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/filter.cpp.i
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/filter.cpp.i
 .PHONY : src/filter.cpp.i
 
 src/filter.s: src/filter.cpp.s
@@ -285,7 +285,7 @@ src/filter.s: src/filter.cpp.s
 
 # target to generate assembly for a file
 src/filter.cpp.s:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/filter.cpp.s
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/filter.cpp.s
 .PHONY : src/filter.cpp.s
 
 src/matrix.o: src/matrix.cpp.o
@@ -294,7 +294,7 @@ src/matrix.o: src/matrix.cpp.o
 
 # target to build an object file
 src/matrix.cpp.o:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/matrix.cpp.o
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/matrix.cpp.o
 .PHONY : src/matrix.cpp.o
 
 src/matrix.i: src/matrix.cpp.i
@@ -303,7 +303,7 @@ src/matrix.i: src/matrix.cpp.i
 
 # target to preprocess a source file
 src/matrix.cpp.i:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/matrix.cpp.i
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/matrix.cpp.i
 .PHONY : src/matrix.cpp.i
 
 src/matrix.s: src/matrix.cpp.s
@@ -312,8 +312,35 @@ src/matrix.s: src/matrix.cpp.s
 
 # target to generate assembly for a file
 src/matrix.cpp.s:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/matrix.cpp.s
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/matrix.cpp.s
 .PHONY : src/matrix.cpp.s
+
+src/pointcloud.o: src/pointcloud.cpp.o
+
+.PHONY : src/pointcloud.o
+
+# target to build an object file
+src/pointcloud.cpp.o:
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/pointcloud.cpp.o
+.PHONY : src/pointcloud.cpp.o
+
+src/pointcloud.i: src/pointcloud.cpp.i
+
+.PHONY : src/pointcloud.i
+
+# target to preprocess a source file
+src/pointcloud.cpp.i:
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/pointcloud.cpp.i
+.PHONY : src/pointcloud.cpp.i
+
+src/pointcloud.s: src/pointcloud.cpp.s
+
+.PHONY : src/pointcloud.s
+
+# target to generate assembly for a file
+src/pointcloud.cpp.s:
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/pointcloud.cpp.s
+.PHONY : src/pointcloud.cpp.s
 
 src/stereomatch.o: src/stereomatch.cpp.o
 
@@ -321,7 +348,7 @@ src/stereomatch.o: src/stereomatch.cpp.o
 
 # target to build an object file
 src/stereomatch.cpp.o:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/stereomatch.cpp.o
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/stereomatch.cpp.o
 .PHONY : src/stereomatch.cpp.o
 
 src/stereomatch.i: src/stereomatch.cpp.i
@@ -330,7 +357,7 @@ src/stereomatch.i: src/stereomatch.cpp.i
 
 # target to preprocess a source file
 src/stereomatch.cpp.i:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/stereomatch.cpp.i
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/stereomatch.cpp.i
 .PHONY : src/stereomatch.cpp.i
 
 src/stereomatch.s: src/stereomatch.cpp.s
@@ -339,7 +366,7 @@ src/stereomatch.s: src/stereomatch.cpp.s
 
 # target to generate assembly for a file
 src/stereomatch.cpp.s:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/stereomatch.cpp.s
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/stereomatch.cpp.s
 .PHONY : src/stereomatch.cpp.s
 
 src/triangle.o: src/triangle.cpp.o
@@ -348,7 +375,7 @@ src/triangle.o: src/triangle.cpp.o
 
 # target to build an object file
 src/triangle.cpp.o:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/triangle.cpp.o
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/triangle.cpp.o
 .PHONY : src/triangle.cpp.o
 
 src/triangle.i: src/triangle.cpp.i
@@ -357,7 +384,7 @@ src/triangle.i: src/triangle.cpp.i
 
 # target to preprocess a source file
 src/triangle.cpp.i:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/triangle.cpp.i
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/triangle.cpp.i
 .PHONY : src/triangle.cpp.i
 
 src/triangle.s: src/triangle.cpp.s
@@ -366,7 +393,7 @@ src/triangle.s: src/triangle.cpp.s
 
 # target to generate assembly for a file
 src/triangle.cpp.s:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/triangle.cpp.s
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(MAKE) -f stereo_matching/CMakeFiles/sineva_stereo_node.dir/build.make stereo_matching/CMakeFiles/sineva_stereo_node.dir/src/triangle.cpp.s
 .PHONY : src/triangle.cpp.s
 
 # Help Target
@@ -398,6 +425,9 @@ help:
 	@echo "... src/matrix.o"
 	@echo "... src/matrix.i"
 	@echo "... src/matrix.s"
+	@echo "... src/pointcloud.o"
+	@echo "... src/pointcloud.i"
+	@echo "... src/pointcloud.s"
 	@echo "... src/stereomatch.o"
 	@echo "... src/stereomatch.i"
 	@echo "... src/stereomatch.s"
@@ -415,6 +445,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/colin/Prometheus/Modules/map_building/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/colin/code_repos/Prometheus/Modules/map_building/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
