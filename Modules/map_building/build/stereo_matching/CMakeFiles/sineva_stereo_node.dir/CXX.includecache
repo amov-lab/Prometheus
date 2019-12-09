@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/descriptor.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/descriptor.h
 iostream
 -
 stdio.h
@@ -20,7 +20,7 @@ math.h
 stdint.h
 -
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/elas.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/elas.h
 iostream
 -
 stdio.h
@@ -36,9 +36,9 @@ emmintrin.h
 stdint.h
 -
 timer.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/timer.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/timer.h
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/filter.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/filter.h
 emmintrin.h
 -
 pmmintrin.h
@@ -46,7 +46,7 @@ pmmintrin.h
 stdint.h
 -
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/matrix.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/matrix.h
 stdio.h
 -
 string.h
@@ -60,12 +60,8 @@ iostream
 vector
 -
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/stereomatch.h
-elas.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/elas.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/pointcloud.h
 opencv2/core/mat.hpp
--
-opencv2/opencv.hpp
 -
 Eigen/Geometry
 -
@@ -76,7 +72,17 @@ pcl/io/pcd_io.h
 pcl/visualization/pcl_visualizer.h
 -
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/timer.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/stereomatch.h
+elas.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/elas.h
+opencv2/core/mat.hpp
+-
+opencv2/opencv.hpp
+-
+Eigen/Geometry
+-
+
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/timer.h
 iostream
 -
 iomanip
@@ -96,9 +102,9 @@ time.h
 stdint.h
 -
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/triangle.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/triangle.h
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/nodes/sineva_stereo_node.cpp
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/nodes/sineva_stereo_node.cpp
 iostream
 -
 sstream
@@ -126,33 +132,35 @@ opencv2/imgcodecs.hpp
 opencv2/opencv.hpp
 -
 elas.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/nodes/elas.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/nodes/elas.h
 stereomatch.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/nodes/stereomatch.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/nodes/stereomatch.h
+pointcloud.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/nodes/pointcloud.h
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/src/descriptor.cpp
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/descriptor.cpp
 ../include/descriptor.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/descriptor.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/descriptor.h
 ../include/filter.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/filter.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/filter.h
 emmintrin.h
 -
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/src/elas.cpp
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/elas.cpp
 ../include/elas.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/elas.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/elas.h
 algorithm
 -
 math.h
 -
 ../include/descriptor.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/descriptor.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/descriptor.h
 ../include/triangle.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/triangle.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/triangle.h
 ../include/matrix.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/matrix.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/matrix.h
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/src/filter.cpp
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/filter.cpp
 stdio.h
 -
 string.h
@@ -162,21 +170,25 @@ cassert
 stdint.h
 -
 ../include/filter.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/filter.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/filter.h
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/src/matrix.cpp
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/matrix.cpp
 ../include/matrix.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/matrix.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/matrix.h
 algorithm
 -
 math.h
 -
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/src/stereomatch.cpp
-stereomatch.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/src/stereomatch.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/pointcloud.cpp
+pointcloud.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/pointcloud.h
 
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/src/triangle.cpp
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/stereomatch.cpp
+stereomatch.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/stereomatch.h
+
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/src/triangle.cpp
 stdio.h
 -
 stdlib.h
@@ -186,7 +198,7 @@ string.h
 math.h
 -
 ../include/triangle.h
-/home/colin/Prometheus/Modules/map_building/src/stereo_matching/include/triangle.h
+/home/colin/code_repos/Prometheus/Modules/map_building/src/stereo_matching/include/triangle.h
 
 /opt/ros/kinetic/include/cv_bridge/cv_bridge.h
 sensor_msgs/Image.h

@@ -2,7 +2,7 @@
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/colin/Prometheus/Modules/map_building/install")
+  set(CMAKE_INSTALL_PREFIX "/home/colin/code_repos/Prometheus/Modules/map_building/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

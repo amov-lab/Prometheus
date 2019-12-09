@@ -1,8 +1,8 @@
-prefix=/home/colin/Prometheus/Modules/map_building/devel
+prefix=/home/colin/code_repos/Prometheus/Modules/map_building/devel
 
 Name: sineva_stereo
 Description: Description of sineva_stereo
 Version: 1.6.3
 Cflags: 
-Libs: -L/home/colin/Prometheus/Modules/map_building/devel/lib 
+Libs: -L/home/colin/code_repos/Prometheus/Modules/map_building/devel/lib 
 Requires: 

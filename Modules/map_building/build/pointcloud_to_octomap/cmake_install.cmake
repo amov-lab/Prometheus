@@ -1,8 +1,8 @@
-# Install script for directory: /home/colin/Prometheus/Modules/map_building/src/pointcloud_to_octomap
+# Install script for directory: /home/colin/code_repos/Prometheus/Modules/map_building/src/pointcloud_to_octomap
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/colin/Prometheus/Modules/map_building/install")
+  set(CMAKE_INSTALL_PREFIX "/home/colin/code_repos/Prometheus/Modules/map_building/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -33,18 +33,18 @@ if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/colin/Prometheus/Modules/map_building/build/pointcloud_to_octomap/catkin_generated/installspace/pointcloud_to_octomap.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/colin/code_repos/Prometheus/Modules/map_building/build/pointcloud_to_octomap/catkin_generated/installspace/pointcloud_to_octomap.pc")
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pointcloud_to_octomap/cmake" TYPE FILE FILES
-    "/home/colin/Prometheus/Modules/map_building/build/pointcloud_to_octomap/catkin_generated/installspace/pointcloud_to_octomapConfig.cmake"
-    "/home/colin/Prometheus/Modules/map_building/build/pointcloud_to_octomap/catkin_generated/installspace/pointcloud_to_octomapConfig-version.cmake"
+    "/home/colin/code_repos/Prometheus/Modules/map_building/build/pointcloud_to_octomap/catkin_generated/installspace/pointcloud_to_octomapConfig.cmake"
+    "/home/colin/code_repos/Prometheus/Modules/map_building/build/pointcloud_to_octomap/catkin_generated/installspace/pointcloud_to_octomapConfig-version.cmake"
     )
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pointcloud_to_octomap" TYPE FILE FILES "/home/colin/Prometheus/Modules/map_building/src/pointcloud_to_octomap/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pointcloud_to_octomap" TYPE FILE FILES "/home/colin/code_repos/Prometheus/Modules/map_building/src/pointcloud_to_octomap/package.xml")
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
@@ -54,7 +54,7 @@ if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspeci
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/pointcloud_to_octomap/PointCloudToOctomapNode"
          RPATH "")
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pointcloud_to_octomap" TYPE EXECUTABLE FILES "/home/colin/Prometheus/Modules/map_building/devel/lib/pointcloud_to_octomap/PointCloudToOctomapNode")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pointcloud_to_octomap" TYPE EXECUTABLE FILES "/home/colin/code_repos/Prometheus/Modules/map_building/devel/lib/pointcloud_to_octomap/PointCloudToOctomapNode")
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/pointcloud_to_octomap/PointCloudToOctomapNode" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/pointcloud_to_octomap/PointCloudToOctomapNode")
     file(RPATH_CHANGE
