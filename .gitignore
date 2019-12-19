@@ -1,0 +1,33 @@
+# compilation and distribution
+__pycache__
+_ext
+*.pyc
+*.so
+
+build/
+devel/
+dist/
+Modules/object_detection/CMakeLists.txt
+
+# pytorch/python/numpy formats
+*.pth
+*.pkl
+*.npy
+
+# ipython/jupyter notebooks
+*.ipynb
+**/.ipynb_checkpoints/
+
+# Editor temporaries
+*.swn
+*.swo
+*.swp
+*~
+
+# Pycharm editor settings
+.idea
+
+# project dirs
+/datasets
+/models
+
