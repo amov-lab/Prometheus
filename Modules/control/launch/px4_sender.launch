@@ -1,0 +1,11 @@
+<launch>
+	<!-- run the position_control.cpp -->
+
+	<node pkg="px4_command" type="px4_sender" name="px4_sender" output="screen">
+
+		<!-- load blacklist, config -->
+		<rosparam command="load" file="$(find px4_command)/config/Parameter_for_control.yaml" />
+
+
+	</node>
+</launch>

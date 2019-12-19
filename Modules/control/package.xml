@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>px4_command</name>
+  <version>0.0.0</version>
+  <description>The px4_command package</description>
+
+  <maintainer email="fatmoonqyp@126.com">Yuhua Qi</maintainer>
+  <author email="fatmoonqyp@126.com">Yuhua Qi</author>
+  <license>TODO</license>
+
+  <url type="website">http://www.amovauto.com/</url>
+  <url type="repository">https://github.com/potato77/px4_command.git</url>
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+
+
+
+  <export>
+
+  </export>
+</package>

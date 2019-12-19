@@ -1,0 +1,35 @@
+# Parameter for autonomous_landing.cpp
+
+##降落追踪 的比例参数
+kpx_land: 0.5
+kpy_land: 0.5
+kpz_land: 0.4
+
+##降落追踪控制算法的最大速度
+Max_velx_land: 1
+Max_vely_land: 1
+Max_velz_land: 0.8
+
+##降落追踪控制算法的速度死区
+Thres_velx_land: 0.0
+Thres_vely_land: 0.0
+Thres_velz_land: 0.0
+
+##允许降落最大距离阈值
+Thres_distance_land: 0.16
+
+##允许降落计数阈值
+Thres_count_land: 10
+
+##允许降落最大高度阈值
+land_max_z: 0.40
+
+##视觉丢失计数阈值
+Thres_vision_lost: 30
+
+##允许飞行最低高度[这个高度是指降落板上方的相对高度]
+fly_min_z: 0.3
+
+##降落板高度
+height_on_pad: -0.4
+
