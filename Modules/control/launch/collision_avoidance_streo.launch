@@ -1,0 +1,9 @@
+<launch>
+	<!-- run the position_control.cpp -->
+
+	<node pkg="px4_command" type="collision_avoidance_streo" name="collision_avoidance_streo" output="screen">
+
+		<!-- load blacklist, config -->
+                <rosparam command="load" file="$(find px4_command)/config/collision_avoidance_streo.yaml" />
+	</node>
+</launch>
