@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="px4_command" type="TFmini" name="TFmini">
+  <node pkg="prometheus_control" type="TFmini" name="TFmini">
     <param name="serial_port" type="string" value="/dev/ttyUSB0" />
     <param name="baud_rate" type="int" value="115200" />
   </node>

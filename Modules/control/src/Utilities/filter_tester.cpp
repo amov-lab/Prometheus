@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <LowPassFilter.h>
-#include <px4_command_utils.h>
+#include <prometheus_control_utils.h>
 #include <geometry_msgs/Point.h>
 
 using namespace std;
@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     geometry_msgs::Point random;
 
-    ros::Publisher log_pub = nh.advertise<geometry_msgs::Point>("/px4_command/test", 10);
+    ros::Publisher log_pub = nh.advertise<geometry_msgs::Point>("/prometheus_msgs/test", 10);
 
     ros::Rate rate(50.0);
 
@@ -62,9 +62,9 @@ int main(int argc, char **argv)
 
 
         // 先生成随机数
-        random.x = px4_command_utils::random_num(0.2, 0.1);
-        random.y = px4_command_utils::random_num(2, 0.0);
-        random.z = px4_command_utils::random_num(0.1, 0.05);
+        random.x = prometheus_control_utils::random_num(0.2, 0.1);
+        random.y = prometheus_control_utils::random_num(2, 0.0);
+        random.z = prometheus_control_utils::random_num(0.1, 0.05);
 
         // 低通滤波
         random.x = LPF1.apply(random.x , 0.02);

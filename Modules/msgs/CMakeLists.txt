@@ -20,6 +20,13 @@ add_message_files(
   DIRECTORY msg
   FILES
   Target_from_vision.msg
+  ControlCommand.msg
+  TrajectoryPoint.msg
+  Trajectory.msg
+  AttitudeReference.msg
+  DroneState.msg
+  Topic_for_log.msg
+  ControlOutput.msg
 )
 
 generate_messages(

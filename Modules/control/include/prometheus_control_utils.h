@@ -1,23 +1,23 @@
 /***************************************************************************************************************************
-* px4_command_utils.h
+* prometheus_control_utils.h
 *
 * Author: Qyp
 *
 * Update Time: 2019.7.6
 ***************************************************************************************************************************/
-#ifndef PX4_COMMAND_UTILS_H
-#define PX4_COMMAND_UTILS_H
+#ifndef PROMETHEUS_CONTORL_UTILS_H
+#define PROMETHEUS_CONTORL_UTILS_H
 
 #include <Eigen/Eigen>
 #include <math.h>
 #include <math_utils.h>
 #include <command_to_mavros.h>
 
-#include <px4_command/ControlCommand.h>
-#include <px4_command/DroneState.h>
-#include <px4_command/DroneState.h>
-#include <px4_command/TrajectoryPoint.h>
-#include <px4_command/AttitudeReference.h>
+#include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/AttitudeReference.h>
 
 using namespace std;
 
@@ -33,12 +33,12 @@ using namespace std;
 #define thrust_max_single_motor 6.0
 
 
-namespace px4_command_utils 
+namespace prometheus_control_utils 
 {
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 打 印 函 数 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  
 // 打印上层控制指令  
-void printf_command_control(const px4_command::ControlCommand& _ControlCommand)
+void printf_command_control(const prometheus_msgs::ControlCommand& _ControlCommand)
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>> Control Command <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
@@ -109,7 +109,7 @@ void printf_command_control(const px4_command::ControlCommand& _ControlCommand)
 
 
 // 打印无人机状态
-void prinft_drone_state(const px4_command::DroneState& _Drone_state)
+void prinft_drone_state(const prometheus_msgs::DroneState& _Drone_state)
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>   Drone State   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
@@ -157,7 +157,7 @@ void prinft_drone_state(const px4_command::DroneState& _Drone_state)
 }
 
 // 打印位置控制器输出结果
-void prinft_attitude_reference(const px4_command::AttitudeReference& _AttitudeReference)
+void prinft_attitude_reference(const prometheus_msgs::AttitudeReference& _AttitudeReference)
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>> Attitude Reference <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
@@ -197,7 +197,7 @@ void rotation_yaw(float yaw_angle, float body_frame[2], float enu_frame[2])
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 控 制 辅 助 函 数 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
 //计算位置误差
-Eigen::Vector3f cal_pos_error(const px4_command::DroneState& _DroneState, const px4_command::TrajectoryPoint& _Reference_State)
+Eigen::Vector3f cal_pos_error(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State)
 {
     Eigen::Vector3f pos_error;
 
@@ -224,7 +224,7 @@ Eigen::Vector3f cal_pos_error(const px4_command::DroneState& _DroneState, const 
 }
 
 //计算速度误差
-Eigen::Vector3f cal_vel_error(const px4_command::DroneState& _DroneState, const px4_command::TrajectoryPoint& _Reference_State)
+Eigen::Vector3f cal_vel_error(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State)
 {
     Eigen::Vector3f vel_error;
     for (int i=0; i<3; i++)
@@ -275,9 +275,9 @@ Eigen::Vector3d thrustToThrottle(const Eigen::Vector3d& thrust_sp)
 //Thrust to Attitude
 //Input: desired thrust (desired throttle [0,1]) and yaw_sp(rad)
 //Output: desired attitude (quaternion)
-px4_command::AttitudeReference ThrottleToAttitude(const Eigen::Vector3d& thr_sp, float yaw_sp)
+prometheus_msgs::AttitudeReference ThrottleToAttitude(const Eigen::Vector3d& thr_sp, float yaw_sp)
 {
-    px4_command::AttitudeReference _AttitudeReference;
+    prometheus_msgs::AttitudeReference _AttitudeReference;
     Eigen::Vector3d att_sp;
     att_sp[2] = yaw_sp;
 

@@ -13,18 +13,18 @@
 #include <Eigen/Eigen>
 #include <math.h>
 #include <command_to_mavros.h>
-#include <px4_command_utils.h>
+#include <prometheus_control_utils.h>
 #include <math_utils.h>
 
 #include <LowPassFilter.h>
 #include <HighPassFilter.h>
 #include <LeadLagFilter.h>
-#include <px4_command/ControlOutput.h>
+#include <prometheus_msgs/ControlOutput.h>
 
 
-#include <px4_command/DroneState.h>
-#include <px4_command/TrajectoryPoint.h>
-#include <px4_command/AttitudeReference.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/AttitudeReference.h>
 
 
 using namespace std;
@@ -89,7 +89,7 @@ class pos_controller_NE
         Eigen::Vector3f Kd;
         Eigen::Vector3f T_ude;
         float T_ne;
-        px4_command::ControlOutput _ControlOutput;
+        prometheus_msgs::ControlOutput _ControlOutput;
 
 
         //Filter for NE
@@ -127,7 +127,7 @@ class pos_controller_NE
 
         // Position control main function 
         // [Input: Current state, Reference state, sub_mode, dt; Output: AttitudeReference;]
-        px4_command::ControlOutput pos_controller(const px4_command::DroneState& _DroneState, const px4_command::TrajectoryPoint& _Reference_State, float dt);
+        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt);
 
         void set_initial_pos(const Eigen::Vector3d& pos);
 
@@ -159,9 +159,9 @@ void pos_controller_NE::set_initial_pos(const Eigen::Vector3d& pos)
     pos_initial = pos;
 }
 
-px4_command::ControlOutput pos_controller_NE::pos_controller(
-    const px4_command::DroneState& _DroneState, 
-    const px4_command::TrajectoryPoint& _Reference_State, float dt)
+prometheus_msgs::ControlOutput pos_controller_NE::pos_controller(
+    const prometheus_msgs::DroneState& _DroneState, 
+    const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt)
 {
     Eigen::Vector3d accel_sp;
     
@@ -169,8 +169,8 @@ px4_command::ControlOutput pos_controller_NE::pos_controller(
     Eigen::Vector3f pos_error;
     Eigen::Vector3f vel_error;
     
-    pos_error = px4_command_utils::cal_pos_error(_DroneState, _Reference_State);
-    vel_error = px4_command_utils::cal_vel_error(_DroneState, _Reference_State);
+    pos_error = prometheus_control_utils::cal_pos_error(_DroneState, _Reference_State);
+    vel_error = prometheus_control_utils::cal_vel_error(_DroneState, _Reference_State);
 
     // 误差项限幅
     for (int i=0; i<3; i++)
@@ -237,8 +237,8 @@ px4_command::ControlOutput pos_controller_NE::pos_controller(
     // 归一化推力 ： 根据电机模型，反解出归一化推力
     Eigen::Vector3d thrust_sp;
     Eigen::Vector3d throttle_sp;
-    thrust_sp =  px4_command_utils::accelToThrust(accel_sp, Quad_MASS, tilt_max);
-    throttle_sp = px4_command_utils::thrustToThrottle(thrust_sp);
+    thrust_sp =  prometheus_control_utils::accelToThrust(accel_sp, Quad_MASS, tilt_max);
+    throttle_sp = prometheus_control_utils::thrustToThrottle(thrust_sp);
 
     for (int i=0; i<3; i++)
     {

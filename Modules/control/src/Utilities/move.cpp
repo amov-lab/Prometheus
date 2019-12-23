@@ -10,14 +10,14 @@
 #include <ros/ros.h>
 
 #include <iostream>
-#include <px4_command/ControlCommand.h>
+#include <prometheus_msgs/ControlCommand.h>
 #include <command_to_mavros.h>
 
 using namespace std;
  
 ros::Publisher move_pub;
 int Num_StateMachine;
-px4_command::ControlCommand Command_Now;
+prometheus_msgs::ControlCommand Command_Now;
 void generate_com(int sub_mode, float state_desired[4]);
 
 int main(int argc, char **argv)
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "move");
     ros::NodeHandle nh;
 
-    move_pub = nh.advertise<px4_command::ControlCommand>("/px4_command/control_command", 10);
+    move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
 
 
     int flag_1;

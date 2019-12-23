@@ -23,13 +23,13 @@
 #include <iostream>
 #include <stdio.h>
 #include <std_msgs/Bool.h>
-#include <px4_command/ControlCommand.h>
+#include <prometheus_msgs/ControlCommand.h>
 #include <command_to_mavros.h>
 
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-px4_command::ControlCommand Command_Now;
+prometheus_msgs::ControlCommand Command_Now;
 //---------------------------------------正方形参数---------------------------------------------
 float size_square;                  //正方形边长
 float height_square;                //飞行高度
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     ros::Rate rate(1.0);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher move_pub = nh.advertise<px4_command::ControlCommand>("/px4_command/control_command", 10);
+    ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     nh.param<float>("size_square", size_square, 1.5);

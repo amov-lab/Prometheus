@@ -6,7 +6,7 @@
 * Update Time: 2019.6.29
 *
 * 主要功能：
-*    本库函数主要用于连接px4_command与mavros两个功能包。
+*    本库函数主要用于连接prometheus_control与mavros两个功能包。
 * 1、订阅mavros功能包发布的飞控状态量。状态量包括无人机状态、位置、速度、角度、角速度。
 *     注： 这里并没有订阅所有可以来自飞控的消息，如需其他消息，请参阅mavros代码。
 *     注意：代码中，参与运算的角度均是以rad为单位，但是涉及到显示时或者需要手动输入时均以deg为单位。
@@ -26,10 +26,10 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <mavros_msgs/ActuatorControl.h>
 #include <sensor_msgs/Imu.h>
-#include <px4_command/DroneState.h>
+#include <prometheus_msgs/DroneState.h>
 #include <bitset>
-#include <px4_command/AttitudeReference.h>
-#include <px4_command/DroneState.h>
+#include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_msgs/DroneState.h>
 
 using namespace std;
 
@@ -58,7 +58,7 @@ class state_from_mavros
     }
 
     //变量声明 
-    px4_command::DroneState _DroneState;
+    prometheus_msgs::DroneState _DroneState;
 
     private:
 

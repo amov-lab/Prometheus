@@ -55,9 +55,9 @@
 #include <tf2_msgs/TFMessage.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/Range.h>
-#include <px4_command/DroneState.h>
+#include <prometheus_msgs/DroneState.h>
 #include <LowPassFilter.h>
-#include <px4_command_utils.h>
+#include <prometheus_control_utils.h>
 using namespace std;
 //---------------------------------------相关参数-----------------------------------------------
 int flag_use_laser_or_vicon;                               //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
@@ -86,7 +86,7 @@ Eigen::Vector3d Att_rate_fcu;
 //---------------------------------------发布相关变量--------------------------------------------
 ros::Publisher vision_pub;
 ros::Publisher drone_state_pub;
-px4_command::DroneState _DroneState;  
+prometheus_msgs::DroneState _DroneState;  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_info();                                                                       //打印函数
 void send_to_fcu();
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
     //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#??), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
     vision_pub = nh.advertise<geometry_msgs::PoseStamped>("/mavros/vision_pose/pose", 100);
 
-    drone_state_pub = nh.advertise<px4_command::DroneState>("/px4_command/drone_state", 10);
+    drone_state_pub = nh.advertise<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10);
 
     // 用于与mavros通讯的类，通过mavros接收来至飞控的消息【飞控->mavros->本程序】
     state_from_mavros _state_from_mavros;
@@ -265,9 +265,9 @@ int main(int argc, char **argv)
         Eigen::Vector3d random;
 
         // 先生成随机数
-        random[0] = px4_command_utils::random_num(noise_a, noise_b);
-        random[1] = px4_command_utils::random_num(noise_a, noise_b);
-        random[2] = px4_command_utils::random_num(noise_a, noise_b);
+        random[0] = prometheus_control_utils::random_num(noise_a, noise_b);
+        random[1] = prometheus_control_utils::random_num(noise_a, noise_b);
+        random[2] = prometheus_control_utils::random_num(noise_a, noise_b);
 
         // 低通滤波
         random[0] = LPF_x.apply(random[0], 0.01);
