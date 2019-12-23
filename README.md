@@ -20,7 +20,9 @@ Open source software for autonomous drones.
 # 编译说明
 
 >  cd Prometheus
+
 > sudo chmod 777 ./complie_all.sh (第一次运行才需要执行)
+
 > ./complie_all.sh
 
  - complie_all默认编译项目中所有代码
@@ -33,4 +35,5 @@ Open source software for autonomous drones.
  - 不确定的测试代码，可以使用分支进行开发
  - 一般默认的commit的风格为 ：模块名（control,detection,simulator等等+ 具体的更新内容
   `control: add px4_pos_control.cpp`
+  
   `simulator: update readme.md`
