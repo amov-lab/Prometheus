@@ -305,7 +305,7 @@ int main(int argc, char **argv)
 
             break;
 
-        case command_to_mavros::PPN_land:
+        case command_to_mavros::User_Mode:
 
             break;
 
@@ -350,8 +350,8 @@ void prinft_command_state()
     case command_to_mavros::Disarm:
         cout << "Command: [ Disarm ] " <<endl;
         break;
-    case command_to_mavros::PPN_land:
-        cout << "Command: [ PPN_land ] " <<endl;
+    case command_to_mavros::User_Mode:
+        cout << "Command: [ User_Mode ] " <<endl;
         break;
     case command_to_mavros::Idle:
         cout << "Command: [ Idle ] " <<endl;

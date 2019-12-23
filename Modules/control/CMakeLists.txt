@@ -89,9 +89,9 @@ target_link_libraries(ground_station ${catkin_LIBRARIES})
 target_link_libraries(ground_station OptiTrackFeedbackRigidBody)
 
 ###### Test File ##########
-add_executable(px4_fw_controller src/Test/px4_fw_controller.cpp)
-add_dependencies(px4_fw_controller prometheus_control_gencpp)
-target_link_libraries(px4_fw_controller ${catkin_LIBRARIES})
+#add_executable(px4_fw_controller src/Test/px4_fw_controller.cpp)
+#add_dependencies(px4_fw_controller prometheus_control_gencpp)
+#target_link_libraries(px4_fw_controller ${catkin_LIBRARIES})
 ###### Utilities File ##########
 
 add_executable(setpoint_track src/Utilities/setpoint_track.cpp)

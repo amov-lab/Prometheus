@@ -162,10 +162,10 @@ int main(int argc, char **argv)
             Num_StateMachine = 0;
             break;
 
-        //PPN_land
+        //User_Mode
         case 6:
             Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::PPN_land;
+            Command_Now.Mode = command_to_mavros::User_Mode;
             generate_com(sub_mode, state_desired);
             move_pub.publish(Command_Now);
             Num_StateMachine = 0;

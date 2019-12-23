@@ -3,7 +3,7 @@
 
 	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
 
-	<rosparam command="load" file="$(find prometheus_control)/config/Parameter_for_control.yaml" />
+	<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
 
 	</node>
 </launch>

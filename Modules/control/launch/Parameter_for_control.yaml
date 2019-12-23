@@ -1,25 +1,28 @@
-## parameter for px4_pos_controller.cpp
+## 飞机参数
+Quad:
+  mass: 1.2
+
+  ## parameter for px4_pos_controller.cpp
 ## 起飞高度
-Takeoff_height : 1.0
-Disarm_height : 0.2
-## 1 for use the accel command
-Use_accel : 0.0
-## 1 for printf the state, 0 for block
-Flag_printf : 1.0
+pos_controller:
+  Takeoff_height : 1.0
+  Disarm_height : 0.2
+  disturbance_a_xy : 0.0
+  disturbance_b_xy : 0.00
+  disturbance_a_z : 0.0
+  disturbance_b_z : 0.00
+  disturbance_T : 1.0
+  disturbance_start_time : 100.0
+  disturbance_end_time : 30.0
 
-ppn_kx : 0.2
-ppn_ky : 0.2
-ppn_kz : 0.2
-
-disturbance_a_xy : 0.0
-disturbance_b_xy : 0.00
-
-disturbance_a_z : 0.0
-disturbance_b_z : 0.00
-disturbance_T : 1.0
-
-disturbance_start_time : 100.0
-disturbance_end_time : 30.0
+##geo fence
+geo_fence:
+  x_min: -10.0
+  x_max: 10.0
+  y_min: -10.0
+  y_max: 10.0
+  z_min: -0.5
+  z_max: 10.0
 
 ## parameter for px4_pos_estimator.cpp
 pos_estimator:
@@ -34,18 +37,9 @@ pos_estimator:
   noise_T : 1.0
 
 
-## 飞机参数
-Quad:
-  mass: 1.2
 
-##geo fence for fsc
-geo_fence:
-  x_min: -20.0
-  x_max: 20.0
-  y_min: -10.8
-  y_max: 10.8
-  z_min: -0.5
-  z_max: 100.5
+
+
 
 ## 限制参数 
 Limit:
