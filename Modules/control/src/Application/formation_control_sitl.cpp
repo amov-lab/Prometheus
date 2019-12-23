@@ -6,7 +6,7 @@
 * Update Time: 2019.6.16
 ***************************************************************************************************************************/
 #include <ros/ros.h>
-#include <px4_command/ControlCommand.h>
+#include <prometheus_msgs/ControlCommand.h>
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
@@ -53,8 +53,8 @@ mavros_msgs::PositionTarget pos_setpoint3;
 
 Eigen::Vector3d Takeoff_position = Eigen::Vector3d(0.0,0.0,0.0);
 
-px4_command::ControlCommand Command_Now;                      //无人机当前执行命令
-px4_command::ControlCommand Command_Last;                     //无人机上一条执行命令
+prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
+prometheus_msgs::ControlCommand Command_Last;                     //无人机上一条执行命令
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 float get_time_in_sec(ros::Time begin);
@@ -62,7 +62,7 @@ void prinft_command_state();
 void rotation_yaw(float yaw_angle, float input[2], float output[2]);
 void prinft_drone_state(float current_time);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void Command_cb(const px4_command::ControlCommand::ConstPtr& msg)
+void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
 {
     Command_Now = *msg;
 }
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "formation_control_sitl");
     ros::NodeHandle nh("~");
 
-    ros::Subscriber Command_sub = nh.subscribe<px4_command::ControlCommand>("/px4_command/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10, Command_cb);
 
     ros::Subscriber uav1_state_sub = nh.subscribe<mavros_msgs::State>("/uav1/mavros/state", 10, uav1_state_sub_cb);
     ros::Subscriber uav1_position_sub = nh.subscribe<geometry_msgs::PoseStamped>("/uav1/mavros/local_position/pose", 100, uav1_position_sub_cb);

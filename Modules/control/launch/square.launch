@@ -1,10 +1,10 @@
 <launch>
 	<!-- run the position_control.cpp -->
 
-	<node pkg="px4_command" type="square" name="square" output="screen">
+	<node pkg="prometheus_control" type="square" name="square" output="screen">
 
 		<!-- load blacklist, config -->
-		<rosparam command="load" file="$(find px4_command)/config/square.yaml" />
+		<rosparam command="load" file="$(find prometheus_control)/config/square.yaml" />
 
 
 	</node>

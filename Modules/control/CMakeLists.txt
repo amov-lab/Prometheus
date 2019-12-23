@@ -31,19 +31,6 @@ find_package(Boost REQUIRED COMPONENTS system)
 ## Declare ROS messages, services and actions ##
 ################################################
 
-## Generate messages in the 'msg' folder
-add_message_files(
-  DIRECTORY msg
-  FILES
-  ControlCommand.msg
-  TrajectoryPoint.msg
-  Trajectory.msg
-  AttitudeReference.msg
-  DroneState.msg
-  Topic_for_log.msg
-  ControlOutput.msg
-)
-
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES

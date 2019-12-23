@@ -16,11 +16,11 @@
 #include <command_to_mavros.h>
 //topic 头文件
 #include <iostream>
-#include <px4_command/ControlCommand.h>
+#include <prometheus_msgs/ControlCommand.h>
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/LaserScan.h>
-#include <px4_command/DroneState.h>
+#include <prometheus_msgs/DroneState.h>
 
 /*
  * 主要功能:
@@ -61,7 +61,7 @@ int flag_land;                                                  //降落标志�
 std_msgs::Bool flag_collision_avoidance;                       //是否进入避障模式标志位
 float vel_sp_body[2];                                           //总速度
 float vel_sp_max;                                               //总速度限幅
-px4_command::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void cal_min_distance();
 float satfunc(float data, float Max);
@@ -104,9 +104,9 @@ void lidar_cb(const sensor_msgs::LaserScan::ConstPtr& scan)
 
 }
 
-void drone_state_cb(const px4_command::DroneState::ConstPtr& msg)
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
-    px4_command::DroneState state;
+    prometheus_msgs::DroneState state;
     pos_drone.position.x = state.position[0];
     pos_drone.position.y = state.position[1];
     pos_drone.position.z = state.position[2];
@@ -126,10 +126,10 @@ int main(int argc, char **argv)
 
     //【订阅】无人机当前状态
     // 本话题来自根据需求自定px4_pos_estimator.cpp
-    ros::Subscriber drone_state_sub = nh.subscribe<px4_command::DroneState>("/px4_command/drone_state", 10, drone_state_cb);
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10, drone_state_cb);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher command_pub = nh.advertise<px4_command::ControlCommand>("/px4_command/control_command", 10);
+    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
 
     //读取参数表中的参数
     nh.param<float>("target_x", target_x, 1.0);

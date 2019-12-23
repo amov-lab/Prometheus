@@ -1,9 +1,9 @@
 <launch>
 	<!-- run the position_control.cpp -->
 
-	<node pkg="px4_command" type="autonomous_landing" name="autonomous_landing" output="screen">
+	<node pkg="prometheus_control" type="autonomous_landing" name="autonomous_landing" output="screen">
 
 		<!-- load blacklist, config -->
-                <rosparam command="load" file="$(find px4_command)/config/autonomous_landing.yaml" />
+                <rosparam command="load" file="$(find prometheus_control)/config/autonomous_landing.yaml" />
 	</node>
 </launch>

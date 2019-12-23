@@ -8,14 +8,14 @@
  * 说明: 目标追踪示例程序
  *      1. 订阅目标位置(来自视觉的ros节点)
  *      2. 追踪算法及追踪策略
- *      3. 发布上层控制指令 (px4_command::ControlCommand)
+ *      3. 发布上层控制指令 (prometheus_msgs::ControlCommand)
 ***************************************************************************************************************************/
 //ros头文件
 #include <ros/ros.h>
 
 //topic 头文件
 #include <iostream>
-#include <px4_command/ControlCommand.h>
+#include <prometheus_msgs/ControlCommand.h>
 #include <command_to_mavros.h>
 #include <geometry_msgs/Pose.h>
 #include <prometheus_msgs/Target_from_vision.h>
@@ -51,7 +51,7 @@ float track_thres_vel_z;                                          //追踪速度
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
 int count_vision_lost = 0;                                                          //视觉丢失计数器阈值
 //---------------------------------------Output---------------------------------------------
-px4_command::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_param();                                                                 //打印各项参数以供检查
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
     ros::Subscriber vision_sub = nh.subscribe<geometry_msgs::Pose>("/vision/target", 10, vision_cb);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher command_pub = nh.advertise<px4_command::ControlCommand>("/px4_command/control_command", 10);
+    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
 
     // 频率 [20Hz]
     // 这个频率取决于视觉程序输出的频率，一般不能低于10Hz，不然追踪效果不好

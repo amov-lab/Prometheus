@@ -5,22 +5,22 @@
 
 #include <pos_controller_PID.h>
 
-#include <px4_command/ControlCommand.h>
-#include <px4_command/DroneState.h>
-#include <px4_command/TrajectoryPoint.h>
-#include <px4_command/AttitudeReference.h>
-#include <px4_command_utils.h>
-#include <px4_command/Trajectory.h>
+#include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_control_utils.h>
+#include <prometheus_msgs/Trajectory.h>
 
 #include <Eigen/Eigen>
 
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-px4_command::ControlCommand Command_Now;                      //无人机当前执行命令
-px4_command::ControlCommand Command_Last;                     //无人机上一条执行命令
+prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
+prometheus_msgs::ControlCommand Command_Last;                     //无人机上一条执行命令
 
-px4_command::DroneState _DroneState;                          //无人机状态量
+prometheus_msgs::DroneState _DroneState;                          //无人机状态量
 float cur_time;
 
 Eigen::Vector3d pos_sp(0,0,0);
@@ -33,11 +33,11 @@ Eigen::Vector3d pos_drone_fcu_target;
 Eigen::Vector3d vel_drone_fcu_target;
 
 
-void Command_cb(const px4_command::ControlCommand::ConstPtr& msg)
+void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
 {
     Command_Now = *msg;
 }
-void drone_state_cb(const px4_command::DroneState::ConstPtr& msg)
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
 
@@ -55,11 +55,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "px4_fw_controller");
     ros::NodeHandle nh("~");
 
-    ros::Subscriber Command_sub = nh.subscribe<px4_command::ControlCommand>("/px4_command/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10, Command_cb);
 
     //【订阅】无人机当前状态
     // 本话题来自根据需求自定px4_pos_estimator.cpp
-    ros::Subscriber drone_state_sub = nh.subscribe<px4_command::DroneState>("/px4_command/drone_state", 10, drone_state_cb);
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10, drone_state_cb);
 
     // 【订阅】无人机期望位置/速度/加速度 坐标系:ENU系
     //  本话题来自飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp读取), 对应Mavlink消息为POSITION_TARGET_LOCAL_NED, 对应的飞控中的uORB消息为vehicle_local_position_setpoint.msg
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
     // 记录启控时间
     ros::Time begin_time = ros::Time::now();
-    float last_time = px4_command_utils::get_time_in_sec(begin_time);
+    float last_time = prometheus_control_utils::get_time_in_sec(begin_time);
     float dt = 0;
 
     mavros_msgs::PositionTarget pos_setpoint;
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     while(ros::ok())
     {
        // 当前时间
-        cur_time = px4_command_utils::get_time_in_sec(begin_time);
+        cur_time = prometheus_control_utils::get_time_in_sec(begin_time);
         dt = cur_time  - last_time;
         dt = constrain_function2(dt, 0.01, 0.03);
         last_time = cur_time;
@@ -116,10 +116,10 @@ int main(int argc, char **argv)
 
         cout <<">>>>>>>>>>>>>>>>>>>>>> px4_fw_controller <<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
         // 打印无人机状态
-        px4_command_utils::prinft_drone_state(_DroneState);
+        prometheus_control_utils::prinft_drone_state(_DroneState);
 
         // 打印上层控制指令
-        px4_command_utils::printf_command_control(Command_Now);
+        prometheus_control_utils::printf_command_control(Command_Now);
 
 
         switch (Command_Now.Mode)

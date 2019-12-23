@@ -13,10 +13,10 @@
 #include <command_to_mavros.h>
 //topic 头文件
 #include <iostream>
-#include <px4_command/ControlCommand.h>
+#include <prometheus_msgs/ControlCommand.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
-#include <px4_command/DroneState.h>
+#include <prometheus_msgs/DroneState.h>
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -30,7 +30,7 @@ float vel_track[2];                                             //追踪部分�
 float vel_track_max;                                            //追踪部分速度限幅
 int flag_land;                                                  //降落标志位
 float vel_sp[2];                                           //总速度
-px4_command::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 float satfunc(float data, float Max);
 void printf();                                                                       //打印函数
@@ -41,9 +41,9 @@ void streo_cb(const geometry_msgs::Point::ConstPtr& msg)
     Streo_distance = *msg;
 }
 
-void drone_state_cb(const px4_command::DroneState::ConstPtr& msg)
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
-    px4_command::DroneState state;
+    prometheus_msgs::DroneState state;
     pos_drone.position.x = state.position[0];
     pos_drone.position.y = state.position[1];
     pos_drone.position.z = state.position[2];
@@ -62,10 +62,10 @@ int main(int argc, char **argv)
 
     //【订阅】无人机当前状态
     // 本话题来自根据需求自定px4_pos_estimator.cpp
-    ros::Subscriber drone_state_sub = nh.subscribe<px4_command::DroneState>("/px4_command/drone_state", 10, drone_state_cb);
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10, drone_state_cb);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher command_pub = nh.advertise<px4_command::ControlCommand>("/px4_command/control_command", 10);
+    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
 
     //读取参数表中的参数
     nh.param<float>("target_x", target_x, 7.0);

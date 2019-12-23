@@ -22,11 +22,11 @@
 #include <Eigen/Eigen>
 #include <math.h>
 #include <math_utils.h>
-#include <px4_command_utils.h>
-#include <px4_command/DroneState.h>
-#include <px4_command/TrajectoryPoint.h>
-#include <px4_command/AttitudeReference.h>
-#include <px4_command/ControlOutput.h>
+#include <prometheus_control_utils.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_msgs/ControlOutput.h>
 
 using namespace std;
 
@@ -119,7 +119,7 @@ class pos_controller_cascade_PID
         //Current state of the drone
         mavros_msgs::State current_state;
 
-        px4_command::ControlOutput _ControlOutput;
+        prometheus_msgs::ControlOutput _ControlOutput;
 
         //Printf the PID parameter
         void printf_param();
@@ -129,13 +129,13 @@ class pos_controller_cascade_PID
 
         // Position control main function 
         // [Input: Current state, Reference state, _Reference_State.Sub_mode, dt; Output: AttitudeReference;]
-        px4_command::ControlOutput pos_controller(const px4_command::DroneState& _DroneState, const px4_command::TrajectoryPoint& _Reference_State, float dt);
+        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt);
 
         //Position control loop [Input: current pos, desired pos; Output: desired vel]
-        void _positionController(const px4_command::DroneState& _DroneState, const px4_command::TrajectoryPoint& _Reference_State, Eigen::Vector3d& vel_setpoint);
+        void _positionController(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, Eigen::Vector3d& vel_setpoint);
 
         //Velocity control loop [Input: current vel, desired vel; Output: desired thrust]
-        void _velocityController(const px4_command::DroneState& _DroneState, const px4_command::TrajectoryPoint& _Reference_State, float dt, Eigen::Vector3d& thrust_sp);
+        void _velocityController(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt, Eigen::Vector3d& thrust_sp);
 
         void cal_vel_error_deriv(const Eigen::Vector3d& error_now, Eigen::Vector3d& vel_error_deriv);
 
@@ -144,9 +144,9 @@ class pos_controller_cascade_PID
         ros::NodeHandle pos_cascade_pid_nh;
 };
 
-px4_command::ControlOutput pos_controller_cascade_PID::pos_controller
-    (const px4_command::DroneState& _DroneState, 
-     const px4_command::TrajectoryPoint& _Reference_State, 
+prometheus_msgs::ControlOutput pos_controller_cascade_PID::pos_controller
+    (const prometheus_msgs::DroneState& _DroneState, 
+     const prometheus_msgs::TrajectoryPoint& _Reference_State, 
      float dt)
 {
     delta_time = dt;
@@ -166,8 +166,8 @@ px4_command::ControlOutput pos_controller_cascade_PID::pos_controller
 
 
 void pos_controller_cascade_PID::_positionController
-    (const px4_command::DroneState& _DroneState, 
-     const px4_command::TrajectoryPoint& _Reference_State,
+    (const prometheus_msgs::DroneState& _DroneState, 
+     const prometheus_msgs::TrajectoryPoint& _Reference_State,
      Eigen::Vector3d& vel_setpoint)
 {
     //# _Reference_State.Sub_mode 2-bit value:
@@ -203,8 +203,8 @@ void pos_controller_cascade_PID::_positionController
 }
 
 void pos_controller_cascade_PID::_velocityController
-    (const px4_command::DroneState& _DroneState, 
-     const px4_command::TrajectoryPoint& _Reference_State, float dt,
+    (const prometheus_msgs::DroneState& _DroneState, 
+     const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt,
      Eigen::Vector3d& thrust_sp)
 {
     // Generate desired thrust setpoint.

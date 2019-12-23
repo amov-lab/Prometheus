@@ -6,12 +6,12 @@
 * Update Time: 2019.7.6
 *
 * Introduction:  PX4 Position Controller 
-*         1. 从应用层节点订阅/px4_command/control_command话题（ControlCommand.msg），接收来自上层的控制指令。
+*         1. 从应用层节点订阅/prometheus_msgs/control_command话题（ControlCommand.msg），接收来自上层的控制指令。
 *         2. 从command_from_mavros.h读取无人机的状态信息（DroneState.msg）。
 *         3. 调用位置环控制算法，计算加速度控制量。可选择cascade_PID, PID, UDE, passivity-UDE, NE+UDE位置控制算法。
 *         4. 通过command_to_mavros.h将计算出来的控制指令发送至飞控（通过mavros包）(mavros package will send the message to PX4 as Mavlink msg)
 *         5. PX4 firmware will recieve the Mavlink msg by mavlink_receiver.cpp in mavlink module.
-*         6. 发送相关信息至地面站节点(/px4_command/attitude_reference)，供监控使用。
+*         6. 发送相关信息至地面站节点(/prometheus_msgs/attitude_reference)，供监控使用。
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
@@ -26,32 +26,32 @@
 #include <pos_controller_cascade_PID.h>
 #include <pos_controller_NE.h>
 
-#include <px4_command_utils.h>
+#include <prometheus_control_utils.h>
 
 #include <circle_trajectory.h>
 
-#include <px4_command/ControlCommand.h>
-#include <px4_command/DroneState.h>
-#include <px4_command/TrajectoryPoint.h>
-#include <px4_command/AttitudeReference.h>
-#include <px4_command/Trajectory.h>
-#include <px4_command/Topic_for_log.h>
-#include <px4_command/Trajectory.h>
+#include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_msgs/Trajectory.h>
+#include <prometheus_msgs/Topic_for_log.h>
+#include <prometheus_msgs/Trajectory.h>
 #include <LowPassFilter.h>
 
-#include <px4_command/ControlOutput.h>
+#include <prometheus_msgs/ControlOutput.h>
 
 using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-px4_command::ControlCommand Command_Now;                      //无人机当前执行命令
-px4_command::ControlCommand Command_Last;                     //无人机上一条执行命令
-px4_command::ControlCommand Command_to_gs;                    //发送至地面站的指令
-px4_command::DroneState _DroneState;                          //无人机状态量
+prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
+prometheus_msgs::ControlCommand Command_Last;                     //无人机上一条执行命令
+prometheus_msgs::ControlCommand Command_to_gs;                    //发送至地面站的指令
+prometheus_msgs::DroneState _DroneState;                          //无人机状态量
 Eigen::Vector3d throttle_sp;
-px4_command::ControlOutput _ControlOutput;
-px4_command::AttitudeReference _AttitudeReference;           //位置控制器输出，即姿态环参考量
+prometheus_msgs::ControlOutput _ControlOutput;
+prometheus_msgs::AttitudeReference _AttitudeReference;           //位置控制器输出，即姿态环参考量
 float cur_time;
-px4_command::Topic_for_log _Topic_for_log;                  //用于日志记录的topic
+prometheus_msgs::Topic_for_log _Topic_for_log;                  //用于日志记录的topic
 
 float Takeoff_height;                                       //起飞高度
 float Disarm_height;                                        //自动上锁高度
@@ -82,7 +82,7 @@ Eigen::Vector3d Takeoff_position = Eigen::Vector3d(0.0,0.0,0.0);
 int check_failsafe();
 void printf_param();
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void Command_cb(const px4_command::ControlCommand::ConstPtr& msg)
+void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
 {
     Command_Now = *msg;
     
@@ -99,7 +99,7 @@ void Command_cb(const px4_command::ControlCommand::ConstPtr& msg)
     }
 }
 
-void drone_state_cb(const px4_command::DroneState::ConstPtr& msg)
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
 
@@ -114,14 +114,14 @@ int main(int argc, char **argv)
 
     //【订阅】指令
     // 本话题来自根据需求自定义的上层模块，比如track_land.cpp 比如move.cpp
-    ros::Subscriber Command_sub = nh.subscribe<px4_command::ControlCommand>("/px4_command/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10, Command_cb);
 
     //【订阅】无人机当前状态
     // 本话题来自根据需求自定px4_pos_estimator.cpp
-    ros::Subscriber drone_state_sub = nh.subscribe<px4_command::DroneState>("/px4_command/drone_state", 10, drone_state_cb);
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10, drone_state_cb);
 
     // 发布log消息至ground_station.cpp
-    ros::Publisher log_pub = nh.advertise<px4_command::Topic_for_log>("/px4_command/topic_for_log", 10);
+    ros::Publisher log_pub = nh.advertise<prometheus_msgs::Topic_for_log>("/prometheus_msgs/topic_for_log", 10);
 
     // 参数读取
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
@@ -247,13 +247,13 @@ int main(int argc, char **argv)
 
     // 记录启控时间
     ros::Time begin_time = ros::Time::now();
-    float last_time = px4_command_utils::get_time_in_sec(begin_time);
+    float last_time = prometheus_control_utils::get_time_in_sec(begin_time);
     float dt = 0;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主  循  环<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
     {
         // 当前时间
-        cur_time = px4_command_utils::get_time_in_sec(begin_time);
+        cur_time = prometheus_control_utils::get_time_in_sec(begin_time);
         dt = cur_time  - last_time;
         dt = constrain_function2(dt, 0.01, 0.03);
         last_time = cur_time;
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
             throttle_sp[1] = _ControlOutput.Throttle[1];
             throttle_sp[2] = _ControlOutput.Throttle[2];
 
-            _AttitudeReference = px4_command_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
+            _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
             if(Use_accel > 0.5)
             {
@@ -342,7 +342,7 @@ int main(int argc, char **argv)
             throttle_sp[1] = _ControlOutput.Throttle[1];
             throttle_sp[2] = _ControlOutput.Throttle[2];
 
-            _AttitudeReference = px4_command_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
+            _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
             if(Use_accel > 0.5)
             {
@@ -367,7 +367,7 @@ int main(int argc, char **argv)
                     float d_vel_enu[2];                                                           //the desired xy velocity in NED Frame
 
                     //根据无人机当前偏航角进行坐标系转换
-                    px4_command_utils::rotation_yaw(_DroneState.attitude[2], d_vel_body, d_vel_enu);
+                    prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_vel_body, d_vel_enu);
                     Command_to_gs.Reference_State.position_ref[0] = 0;
                     Command_to_gs.Reference_State.position_ref[1] = 0;
                     Command_to_gs.Reference_State.velocity_ref[0] = d_vel_enu[0];
@@ -378,7 +378,7 @@ int main(int argc, char **argv)
                 {
                     float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
                     float d_pos_enu[2];                                                           //the desired xy position in enu Frame (The origin point is the drone)
-                    px4_command_utils::rotation_yaw(_DroneState.attitude[2], d_pos_body, d_pos_enu);
+                    prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_pos_body, d_pos_enu);
 
                     Command_to_gs.Reference_State.position_ref[0] = _DroneState.position[0] + d_pos_enu[0];
                     Command_to_gs.Reference_State.position_ref[1] = _DroneState.position[1] + d_pos_enu[1];
@@ -403,7 +403,7 @@ int main(int argc, char **argv)
                 float d_acc_body[2] = {Command_Now.Reference_State.acceleration_ref[0], Command_Now.Reference_State.acceleration_ref[1]};       
                 float d_acc_enu[2]; 
 
-                px4_command_utils::rotation_yaw(_DroneState.attitude[2], d_acc_body, d_acc_enu);
+                prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_acc_body, d_acc_enu);
                 Command_to_gs.Reference_State.acceleration_ref[0] = d_acc_enu[0];
                 Command_to_gs.Reference_State.acceleration_ref[1] = d_acc_enu[1];
                 Command_to_gs.Reference_State.acceleration_ref[2] = Command_Now.Reference_State.acceleration_ref[2];
@@ -431,7 +431,7 @@ int main(int argc, char **argv)
             throttle_sp[1] = _ControlOutput.Throttle[1];
             throttle_sp[2] = _ControlOutput.Throttle[2];
 
-            _AttitudeReference = px4_command_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
+            _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
 
             if(Use_accel > 0.5)
@@ -484,7 +484,7 @@ int main(int argc, char **argv)
             throttle_sp[1] = _ControlOutput.Throttle[1];
             throttle_sp[2] = _ControlOutput.Throttle[2];
 
-            _AttitudeReference = px4_command_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
+            _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
             if(Use_accel > 0.5)
             {
@@ -557,7 +557,7 @@ int main(int argc, char **argv)
                 throttle_sp[1] = _ControlOutput.Throttle[1];
                 throttle_sp[2] = _ControlOutput.Throttle[2];
 
-                _AttitudeReference = px4_command_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
+                _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
                 if(Use_accel > 0.5)
                 {
@@ -654,7 +654,7 @@ int main(int argc, char **argv)
             throttle_sp[1] = _ControlOutput.Throttle[1];
             throttle_sp[2] = _ControlOutput.Throttle[2];
 
-            _AttitudeReference = px4_command_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
+            _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
             if(Use_accel > 0.5)
             {
@@ -704,9 +704,9 @@ int main(int argc, char **argv)
             Eigen::Vector3d random;
 
             // 先生成随机数
-            random[0] = px4_command_utils::random_num(disturbance_a_xy, disturbance_b_xy);
-            random[1] = px4_command_utils::random_num(disturbance_a_xy, disturbance_b_xy);
-            random[2] = px4_command_utils::random_num(disturbance_a_z, disturbance_b_z);
+            random[0] = prometheus_control_utils::random_num(disturbance_a_xy, disturbance_b_xy);
+            random[1] = prometheus_control_utils::random_num(disturbance_a_xy, disturbance_b_xy);
+            random[2] = prometheus_control_utils::random_num(disturbance_a_z, disturbance_b_z);
 
             // 低通滤波
             random[0] = LPF_x.apply(random[0], 0.02);
@@ -725,7 +725,7 @@ int main(int argc, char **argv)
             throttle_sp[1] = _ControlOutput.Throttle[1];
             throttle_sp[2] = _ControlOutput.Throttle[2];
 
-            _AttitudeReference = px4_command_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
+            _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
             if(Use_accel > 0.5)
             {
@@ -749,10 +749,10 @@ int main(int argc, char **argv)
         {
             //cout <<">>>>>>>>>>>>>>>>>>>>>> px4_pos_controller <<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
             // 打印无人机状态
-            px4_command_utils::prinft_drone_state(_DroneState);
+            prometheus_control_utils::prinft_drone_state(_DroneState);
 
             // 打印上层控制指令
-            px4_command_utils::printf_command_control(Command_to_gs);
+            prometheus_control_utils::printf_command_control(Command_to_gs);
 
             // 打印位置控制器中间计算量
             if(switch_ude == 0)
@@ -773,7 +773,7 @@ int main(int argc, char **argv)
             }
 
             // 打印位置控制器输出结果
-            px4_command_utils::prinft_attitude_reference(_AttitudeReference);
+            prometheus_control_utils::prinft_attitude_reference(_AttitudeReference);
 
         }else if(((int)(cur_time*10) % 50) == 0)
         {

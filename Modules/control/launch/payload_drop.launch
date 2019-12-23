@@ -1,7 +1,7 @@
 <launch>
-	<node pkg="px4_command" type="payload_drop" name="payload_drop" output="screen">
+	<node pkg="prometheus_control" type="payload_drop" name="payload_drop" output="screen">
 
-	<rosparam command="load" file="$(find px4_command)/config/payload_drop.yaml" />
+	<rosparam command="load" file="$(find prometheus_control)/config/payload_drop.yaml" />
 
 	</node>
 </launch>
