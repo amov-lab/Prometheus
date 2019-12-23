@@ -13,8 +13,10 @@ Open source software for autonomous drones.
 	 Mavros安装请参考: [https://github.com/mavlink/mavros](https://github.com/mavlink/mavros)
 	 如果你已经使用源码的方式安装过Mavros功能包，请先将其删除
  3. 打开一个新终端（一般在home目录下）
+	 
 	 `crtl+alt+T`
  5. 下载
+	 
 	 `git clone https://github.com/amov-lab/Prometheus`
 
 # 编译说明
@@ -34,6 +36,7 @@ Open source software for autonomous drones.
  - 目前属于分模块开发，切记不要动他人模块的代码
  - 不确定的测试代码，可以使用分支进行开发
  - 一般默认的commit的风格为 ：模块名（control,detection,simulator等等+ 具体的更新内容
-  `control: add px4_pos_control.cpp`
   
-  `simulator: update readme.md`
+	`control: add px4_pos_control.cpp`
+   
+	`simulator: update readme.md`
