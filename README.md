@@ -49,7 +49,7 @@ Open source software for autonomous drones.
 
  - 目前属于分模块开发，切记不要动他人模块的代码
  - 不确定的测试代码，可以使用分支进行开发
- - 一般默认的commit的风格为 ：模块名（control,detection,simulator等等+ 具体的更新内容
+ - 一般默认的commit的风格为 ：模块名(control,detection,simulator等等)+具体的更新内容
   
 	`control: add px4_pos_control.cpp`
    
