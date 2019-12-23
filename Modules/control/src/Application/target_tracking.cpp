@@ -18,13 +18,14 @@
 #include <px4_command/ControlCommand.h>
 #include <command_to_mavros.h>
 #include <geometry_msgs/Pose.h>
-
+#include <prometheus_msgs/Target_from_vision.h>
 
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //---------------------------------------Vision---------------------------------------------
 geometry_msgs::Pose pos_target;                                 //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
+prometheus_msgs::Target_from_vision test;
 
 int flag_detected = 0;                                          // 是否检测到目标标志
 //---------------------------------------Track---------------------------------------------
