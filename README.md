@@ -8,9 +8,12 @@ Open source software for autonomous drones.
 # 安装
 
  1. 安装ROS
+	 
 	 参考：[https://www.ros.org/](https://www.ros.org/)
  2. 通过二进制的方法安装Mavros功能包
+	 
 	 Mavros安装请参考: [https://github.com/mavlink/mavros](https://github.com/mavlink/mavros)
+	 
 	 如果你已经使用源码的方式安装过Mavros功能包，请先将其删除
  3. 打开一个新终端（一般在home目录下）
 	 
@@ -18,13 +21,18 @@ Open source software for autonomous drones.
  5. 下载
 	 
 	 `git clone https://github.com/amov-lab/Prometheus`
+ 6.source
+ 	打开一个新终端
+	`gedit .bashrc`
+	
+	在打开的`bashrc.txt`文件中添加 `source /home/$(your computer name)/Prometheus/devel/setup.bash`
 
 # 编译说明
 
 >  cd Prometheus
 
 > sudo chmod 777 ./complie_all.sh (第一次运行才需要执行)
-
+	
 > ./complie_all.sh
 
  - complie_all默认编译项目中所有代码
