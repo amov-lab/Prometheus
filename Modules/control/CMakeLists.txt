@@ -128,36 +128,6 @@ add_executable(eigen_test src/Utilities/eigen_test.cpp)
 add_dependencies(eigen_test prometheus_control_gencpp)
 target_link_libraries(eigen_test ${catkin_LIBRARIES})
 
-###### Application File ##########
-add_executable(square src/Application/square.cpp)
-add_dependencies(square prometheus_control_gencpp)
-target_link_libraries(square ${catkin_LIBRARIES})
-
-add_executable(autonomous_landing src/Application/autonomous_landing.cpp)
-add_dependencies(autonomous_landing prometheus_control_gencpp)
-target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
-
-add_executable(target_tracking src/Application/target_tracking.cpp)
-add_dependencies(target_tracking prometheus_control_gencpp)
-target_link_libraries(target_tracking ${catkin_LIBRARIES})
-
-add_executable(collision_avoidance src/Application/collision_avoidance.cpp)
-add_dependencies(collision_avoidance prometheus_control_gencpp)
-target_link_libraries(collision_avoidance ${catkin_LIBRARIES})
-
-add_executable(collision_avoidance_streo src/Application/collision_avoidance_streo.cpp)
-add_dependencies(collision_avoidance_streo prometheus_control_gencpp)
-target_link_libraries(collision_avoidance_streo ${catkin_LIBRARIES})
-
-add_executable(payload_drop src/Application/payload_drop.cpp)
-add_dependencies(payload_drop prometheus_control_gencpp)
-target_link_libraries(payload_drop ${catkin_LIBRARIES})
-
-add_executable(formation_control_sitl src/Application/formation_control_sitl.cpp)
-add_dependencies(formation_control_sitl prometheus_control_gencpp)
-target_link_libraries(formation_control_sitl ${catkin_LIBRARIES})
-
-
 #############
 ## Install ##
 #############

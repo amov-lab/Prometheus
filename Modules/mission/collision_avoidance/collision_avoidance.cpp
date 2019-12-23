@@ -13,7 +13,6 @@
 ***************************************************************************************************************************/
 //ROS 头文件
 #include <ros/ros.h>
-#include <command_to_mavros.h>
 //topic 头文件
 #include <iostream>
 #include <prometheus_msgs/ControlCommand.h>
@@ -275,10 +274,10 @@ int main(int argc, char **argv)
 
         //5. 发布Command指令给position_controller.cpp
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = command_to_mavros::Move_Body;     //机体系下移动
+        Command_Now.Mode = Command_Now.Move_Body;     //机体系下移动
         Command_Now.Command_ID = comid;
         comid++;
-        Command_Now.Reference_State.Sub_mode  = command_to_mavros::XY_VEL_Z_POS; // xy 速度控制模式 z 位置控制模式
+        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_VEL_Z_POS; // xy 速度控制模式 z 位置控制模式
         Command_Now.Reference_State.velocity_ref[0] =  vel_sp_body[0];
         Command_Now.Reference_State.velocity_ref[1] =  - vel_sp_body[1];  //ENU frame
         Command_Now.Reference_State.position_ref[2] =  0;

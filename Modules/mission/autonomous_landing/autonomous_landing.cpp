@@ -16,7 +16,6 @@
 
 //ros头文件
 #include <ros/ros.h>
-#include <command_to_mavros.h>
 
 //topic 头文件
 #include <iostream>
@@ -216,7 +215,7 @@ int main(int argc, char **argv)
             // 惯性系移动
             case 1:
                 Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode = command_to_mavros::Move_ENU;
+                Command_Now.Mode = Command_Now.Move_ENU;
                 generate_com(0, state_desired);
                 command_pub.publish(Command_Now);
 
@@ -227,7 +226,7 @@ int main(int argc, char **argv)
             // 机体系移动
             case 2:
                 Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode = command_to_mavros::Move_Body;
+                Command_Now.Mode = Command_Now.Move_Body;
                 generate_com(0, state_desired);
                 command_pub.publish(Command_Now);
 
@@ -238,7 +237,7 @@ int main(int argc, char **argv)
             //Land
             case 3:
                 Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode = command_to_mavros::Land;
+                Command_Now.Mode = Command_Now.Land;
                 command_pub.publish(Command_Now);
 
                 Num_StateMachine_Last = Num_StateMachine;
@@ -331,7 +330,7 @@ int main(int argc, char **argv)
 
         case 5:
             Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Disarm;
+            Command_Now.Mode = Command_Now.Disarm;
             command_pub.publish(Command_Now);
             Num_StateMachine_Last = Num_StateMachine;
 
@@ -339,8 +338,8 @@ int main(int argc, char **argv)
 
         case 6:
             Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Hold;
-            Command_Now.Reference_State.Sub_mode  = command_to_mavros::XY_POS_Z_VEL;  //xy pos z vel
+            Command_Now.Mode = Command_Now.Hold;
+            Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_POS_Z_VEL;  //xy pos z vel
             Command_Now.Command_ID = comid;
             Command_Now.Reference_State.position_ref[0] = 0;
             Command_Now.Reference_State.position_ref[1] = 0;
@@ -386,7 +385,7 @@ int main(int argc, char **argv)
 //自主降落追踪算法
 void track_land()
 {
-    Command_Now.Mode = command_to_mavros::Move_Body;
+    Command_Now.Mode = Command_Now.Move_Body;
     Command_Now.Command_ID = comid;
     comid++;
 
@@ -396,7 +395,7 @@ void track_land()
     //relative_position.z = (height_on_pad  - pos_drone.position.z);
 
     //xyz速度控制模式
-    Command_Now.Reference_State.Sub_mode  = command_to_mavros::XY_VEL_Z_VEL; // xy velocity z velocity
+    Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_VEL_Z_VEL; // xy velocity z velocity
     //如果要去追踪一个动态的降落板，则需要反馈其速度
     Command_Now.Reference_State.velocity_ref[0] =  kpx_land * relative_position.x;
     Command_Now.Reference_State.velocity_ref[1] =  - kpy_land * relative_position.y;

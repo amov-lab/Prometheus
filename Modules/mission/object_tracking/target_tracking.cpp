@@ -16,7 +16,6 @@
 //topic 头文件
 #include <iostream>
 #include <prometheus_msgs/ControlCommand.h>
-#include <command_to_mavros.h>
 #include <geometry_msgs/Pose.h>
 #include <prometheus_msgs/Target_from_vision.h>
 
@@ -214,7 +213,7 @@ int main(int argc, char **argv)
             // 惯性系移动
             case 1:
                 Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode = command_to_mavros::Move_ENU;
+                Command_Now.Mode = Command_Now.Move_ENU;
                 generate_com(0, state_desired);
                 command_pub.publish(Command_Now);
 
@@ -225,7 +224,7 @@ int main(int argc, char **argv)
             // 机体系移动
             case 2:
                 Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode = command_to_mavros::Move_Body;
+                Command_Now.Mode = Command_Now.Move_Body;
                 generate_com(0, state_desired);
                 command_pub.publish(Command_Now);
 
@@ -236,7 +235,7 @@ int main(int argc, char **argv)
             //Land
             case 3:
                 Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode = command_to_mavros::Land;
+                Command_Now.Mode = Command_Now.Land;
                 command_pub.publish(Command_Now);
 
                 Num_StateMachine_Last = Num_StateMachine;
@@ -261,14 +260,14 @@ int main(int argc, char **argv)
                 //发送悬停指令
                 if(flag_detected == 0 || (distance < distance_thres))
                 {
-                    Command_Now.Mode = command_to_mavros::Hold;
+                    Command_Now.Mode = Command_Now.Hold;
                 }
                 //如果捕捉到目标
                 else
                 {
                     //追踪是在机体系下完成
-                    Command_Now.Mode = command_to_mavros::Move_Body;
-                    Command_Now.Reference_State.Sub_mode  = command_to_mavros::XY_VEL_Z_POS;   //xy velocity z position
+                    Command_Now.Mode = Command_Now.Move_Body;
+                    Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_VEL_Z_POS;   //xy velocity z position
                     Command_Now.Command_ID = comid;
                     comid++;
 
@@ -297,7 +296,7 @@ int main(int argc, char **argv)
                     //如果期望速度为0,则直接执行悬停指令
                     if(Command_Now.Reference_State.velocity_ref[0]==0 && Command_Now.Reference_State.velocity_ref[1] == 0)
                     {
-                        Command_Now.Mode = command_to_mavros::Hold;
+                        Command_Now.Mode = Command_Now.Hold;
                     }
 
                 }

@@ -30,7 +30,6 @@
 #include <prometheus_msgs/ControlCommand.h>
 #include <mavros_msgs/OverrideRCIn.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <command_to_mavros.h>
 #include <Eigen/Eigen>
 
 using namespace std;
@@ -142,8 +141,8 @@ int main(int argc, char **argv)
     //Takeoff - fly to point 1
     while (switch_flag == 0)
     {
-        Command_Now.Mode = command_to_mavros::Move_ENU;         //Move模式
-        Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;               //子模式：位置控制模式
+        Command_Now.Mode = Command_Now.Move_ENU;         //Move模式
+        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;               //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = point1[0];
         Command_Now.Reference_State.position_ref[1] = point1[1];
         Command_Now.Reference_State.position_ref[2] = point1[2];
@@ -180,8 +179,8 @@ int main(int argc, char **argv)
     //Fly to target - to point 2
     while (switch_flag == 0)
     {
-        Command_Now.Mode = command_to_mavros::Move_ENU;         //Move模式
-        Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;               //子模式：位置控制模式
+        Command_Now.Mode = Command_Now.Move_ENU;         //Move模式
+        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;               //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = point2[0];
         Command_Now.Reference_State.position_ref[1] = point2[1];
         Command_Now.Reference_State.position_ref[2] = point2[2];
@@ -221,8 +220,8 @@ int main(int argc, char **argv)
     while (switch_flag == 0)
     {
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = command_to_mavros::Move_ENU;         //Move模式
-        Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;               //子模式：位置控制模式
+        Command_Now.Mode = Command_Now.Move_ENU;         //Move模式
+        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;               //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = point3[0];
         Command_Now.Reference_State.position_ref[1] = point3[1];
         Command_Now.Reference_State.position_ref[2] = point3[2];
@@ -278,8 +277,8 @@ int main(int argc, char **argv)
     while (switch_flag == 0)
     {
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = command_to_mavros::Move_ENU;         //Move模式
-        Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;               //子模式：位置控制模式
+        Command_Now.Mode = Command_Now.Move_ENU;         //Move模式
+        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;               //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = point2[0];
         Command_Now.Reference_State.position_ref[1] = point2[1];
         Command_Now.Reference_State.position_ref[2] = point2[2];
@@ -318,8 +317,8 @@ int main(int argc, char **argv)
     while (switch_flag == 0)
     {
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = command_to_mavros::Move_ENU;         //Move模式
-        Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;               //子模式：位置控制模式
+        Command_Now.Mode = Command_Now.Move_ENU;         //Move模式
+        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;               //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = point1[0];
         Command_Now.Reference_State.position_ref[1] = point1[1];
         Command_Now.Reference_State.position_ref[2] = point1[2];
@@ -356,7 +355,7 @@ int main(int argc, char **argv)
     while (time_sec < 5)
     {
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = command_to_mavros::Land;
+        Command_Now.Mode = Command_Now.Land;
         move_pub.publish(Command_Now);
 
         cout << "Finsh the payload drop mission, Landing..."<<endl;
