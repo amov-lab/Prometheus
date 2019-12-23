@@ -36,6 +36,7 @@ Open source software for autonomous drones.
 > ./complie_all.sh
  
  - 目前每个模块都是一个独立的ros包，编译脚本会负责全部或部分编译模块代码，每个包的命名规则为`prometheus_xxx`
+ - 如果依赖prometheus_msgs包中的消息时，需提前编译prometheus_msgs包
  - complie_all默认编译项目中所有代码
  - complie_control则只编译控制部分代码，若只需要使用控制部分代码，运行`./complie_control.sh`即可
 
