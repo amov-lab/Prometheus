@@ -18,7 +18,6 @@
 #include <sensor_msgs/Imu.h>
 #include <bitset>
 #include <Eigen/Eigen>
-#include <command_to_mavros.h>
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -183,8 +182,8 @@ int main(int argc, char **argv)
     //初始化命令-
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
     Command_Now.Command_ID = 0;
-    Command_Now.Mode = command_to_mavros::Idle;
-    Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;
+    Command_Now.Mode = Command_Now.Idle;
+    Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;
     Command_Now.Reference_State.position_ref[0] = 0;
     Command_Now.Reference_State.position_ref[1] = 0;
     Command_Now.Reference_State.position_ref[2] = 0;
@@ -218,7 +217,7 @@ int main(int argc, char **argv)
         switch (Command_Now.Mode)
         {
         // 【Idle】 怠速旋转，此时可以切入offboard模式，但不会起飞。
-        case command_to_mavros::Idle:
+        case Command_Now.Idle:
             //Here pls ref to mavlink_receiver.cpp
             pos_setpoint1.header.stamp = ros::Time::now();
             pos_setpoint2.header.stamp = ros::Time::now();
@@ -277,7 +276,7 @@ int main(int argc, char **argv)
             break;
 
         // 【Move_ENU】 ENU系移动。只有PID算法中才有追踪速度的选项，其他控制只能追踪位置
-        case command_to_mavros::Move_ENU:
+        case Command_Now.Move_ENU:
             pos_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
             yaw_sp = Command_Now.Reference_State.yaw_ref;
 
@@ -316,13 +315,13 @@ int main(int argc, char **argv)
             break;
 
         // 【Land】 降落。当前位置原地降落，降落后会自动上锁，且切换为mannual模式
-        case command_to_mavros::Land:
+        case Command_Now.Land:
 
         // 【Disarm】 紧急上锁。直接上锁，不建议使用，危险。
-        case command_to_mavros::Disarm:
+        case Command_Now.Disarm:
 
         // 【PPN_land】 暂空。可进行自定义
-        case command_to_mavros::PPN_land:
+        case Command_Now.PPN_land:
 
 
 
@@ -357,7 +356,7 @@ void prinft_command_state()
 
     switch(Command_Now.Mode)
     {
-    case command_to_mavros::Move_ENU:
+    case Command_Now.Move_ENU:
         cout << "Command: [ Move_ENU ] " <<endl;
 
         if((sub_mode & 0b10) == 0) //xy channel
@@ -384,7 +383,7 @@ void prinft_command_state()
         cout << "Yaw_setpoint : "  << Command_Now.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
 
         break;
-    case command_to_mavros::Move_Body:
+    case Command_Now.Move_Body:
         cout << "Command: [ Move_Body ] " <<endl;
 
         if((sub_mode & 0b10) == 0) //xy channel
@@ -412,31 +411,31 @@ void prinft_command_state()
 
         break;
 
-    case command_to_mavros::Hold:
+    case Command_Now.Hold:
         cout << "Command: [ Hold ] " <<endl;
         cout << "Hold Position [X Y Z] : " << pos_sp[0] << " [ m ] "<< pos_sp[1]<<" [ m ] "<< pos_sp[2]<<" [ m ] "<<endl;
         cout << "Yaw_setpoint : "  << yaw_sp* 180/M_PI << " [deg] " <<endl;
         break;
 
-    case command_to_mavros::Land:
+    case Command_Now.Land:
         cout << "Command: [ Land ] " <<endl;
         cout << "Land Position [X Y Z] : " << pos_sp[0] << " [ m ] "<< pos_sp[1]<<" [ m ] "<< pos_sp[2]<<" [ m ] "<<endl;
         cout << "Yaw_setpoint : "  << yaw_sp* 180/M_PI << " [deg] " <<endl;
         break;
 
-    case command_to_mavros::Disarm:
+    case Command_Now.Disarm:
         cout << "Command: [ Disarm ] " <<endl;
         break;
 
-    case command_to_mavros::PPN_land:
+    case Command_Now.PPN_land:
         cout << "Command: [ PPN_land ] " <<endl;
         break;
 
-    case command_to_mavros::Idle:
+    case Command_Now.Idle:
         cout << "Command: [ Idle ] " <<endl;
         break;
 
-    case command_to_mavros::Takeoff:
+    case Command_Now.Takeoff:
         cout << "Command: [ Takeoff ] " <<endl;
         cout << "Takeoff Position [X Y Z] : " << pos_sp[0] << " [ m ] "<< pos_sp[1]<<" [ m ] "<< pos_sp[2]<<" [ m ] "<<endl;
         cout << "Yaw_setpoint : "  << yaw_sp* 180/M_PI << " [deg] " <<endl;
