@@ -46,6 +46,7 @@ using namespace std;
 prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
 prometheus_msgs::ControlCommand Command_Last;                     //无人机上一条执行命令
 prometheus_msgs::ControlCommand Command_to_gs;                    //发送至地面站的指令
+//static const prometheus_msgs::ControlCommand _ControlCommand;
 prometheus_msgs::DroneState _DroneState;                          //无人机状态量
 Eigen::Vector3d throttle_sp;
 prometheus_msgs::ControlOutput _ControlOutput;
@@ -55,9 +56,6 @@ prometheus_msgs::Topic_for_log _Topic_for_log;                  //用于日志�
 
 float Takeoff_height;                                       //起飞高度
 float Disarm_height;                                        //自动上锁高度
-float Use_accel;                                            // 1 for use the accel command
-int Flag_printf;
-
 
 float disturbance_a_xy,disturbance_b_xy;
 float disturbance_a_z,disturbance_b_z;
@@ -67,9 +65,6 @@ float disturbance_end_time;
 // For PPN landing - Silas
 Eigen::Vector3d pos_des_prev;
 Eigen::Vector3d vel_command;
-float ppn_kx;
-float ppn_ky;
-float ppn_kz;//0.01;
 
 //变量声明 - 其他变量
 //Geigraphical fence 地理围栏
@@ -124,24 +119,18 @@ int main(int argc, char **argv)
     ros::Publisher log_pub = nh.advertise<prometheus_msgs::Topic_for_log>("/prometheus_msgs/topic_for_log", 10);
 
     // 参数读取
-    nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
-    nh.param<float>("Disarm_height", Disarm_height, 0.15);
-    nh.param<float>("Use_accel", Use_accel, 0.0);
-    nh.param<int>("Flag_printf", Flag_printf, 0.0);
+    nh.param<float>("pos_controller/Takeoff_height", Takeoff_height, 1.0);
+    nh.param<float>("pos_controller/Disarm_height", Disarm_height, 0.15);
 
-    nh.param<float>("disturbance_a_xy", disturbance_a_xy, 0.5);
-    nh.param<float>("disturbance_b_xy", disturbance_b_xy, 0.0);
+    nh.param<float>("pos_controller/disturbance_a_xy", disturbance_a_xy, 0.5);
+    nh.param<float>("pos_controller/disturbance_b_xy", disturbance_b_xy, 0.0);
 
-    nh.param<float>("disturbance_a_z", disturbance_a_z, 0.5);
-    nh.param<float>("disturbance_b_z", disturbance_b_z, 0.0);
-    nh.param<float>("disturbance_T", disturbance_T, 0.0);
+    nh.param<float>("pos_controller/disturbance_a_z", disturbance_a_z, 0.5);
+    nh.param<float>("pos_controller/disturbance_b_z", disturbance_b_z, 0.0);
+    nh.param<float>("pos_controller/disturbance_T", disturbance_T, 0.0);
 
-    nh.param<float>("disturbance_start_time", disturbance_start_time, 5.0);
-    nh.param<float>("disturbance_end_time", disturbance_end_time, 10.0);
-
-    nh.param<float>("ppn_kx", ppn_kx, 0.0);
-    nh.param<float>("ppn_ky", ppn_ky, 0.0);
-    nh.param<float>("ppn_kz", ppn_kz, 0.0);
+    nh.param<float>("pos_controller/disturbance_start_time", disturbance_start_time, 5.0);
+    nh.param<float>("pos_controller/disturbance_end_time", disturbance_end_time, 10.0);
     
     nh.param<float>("geo_fence/x_min", geo_fence_x[0], -100.0);
     nh.param<float>("geo_fence/x_max", geo_fence_x[1], 100.0);
@@ -265,6 +254,7 @@ int main(int argc, char **argv)
         {
         // 【Idle】 怠速旋转，此时可以切入offboard模式，但不会起飞。
         case command_to_mavros::Idle:
+        //  case (const int)_ControlCommand.Idle:
             _command_to_mavros.idle();
             break;
 
@@ -307,13 +297,7 @@ int main(int argc, char **argv)
 
             _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
-            if(Use_accel > 0.5)
-            {
-                _command_to_mavros.send_accel_setpoint(throttle_sp,Command_to_gs.Reference_State.yaw_ref);
-            }else
-            {
-                _command_to_mavros.send_attitude_setpoint(_AttitudeReference);            
-            }
+            _command_to_mavros.send_attitude_setpoint(_AttitudeReference); 
             
             break;
 
@@ -344,13 +328,7 @@ int main(int argc, char **argv)
 
             _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
-            if(Use_accel > 0.5)
-            {
-                _command_to_mavros.send_accel_setpoint(throttle_sp,Command_to_gs.Reference_State.yaw_ref);
-            }else
-            {
-                _command_to_mavros.send_attitude_setpoint(_AttitudeReference);            
-            }
+            _command_to_mavros.send_attitude_setpoint(_AttitudeReference); 
             break;
 
         // 【Move_Body】 机体系移动。
@@ -433,14 +411,7 @@ int main(int argc, char **argv)
 
             _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
-
-            if(Use_accel > 0.5)
-            {
-                _command_to_mavros.send_accel_setpoint(throttle_sp,Command_to_gs.Reference_State.yaw_ref);
-            }else
-            {
-                _command_to_mavros.send_attitude_setpoint(_AttitudeReference);            
-            }
+            _command_to_mavros.send_attitude_setpoint(_AttitudeReference); 
 
             break;
 
@@ -486,13 +457,7 @@ int main(int argc, char **argv)
 
             _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
-            if(Use_accel > 0.5)
-            {
-                _command_to_mavros.send_accel_setpoint(throttle_sp,Command_to_gs.Reference_State.yaw_ref);
-            }else
-            {
-                _command_to_mavros.send_attitude_setpoint(_AttitudeReference);            
-            }
+            _command_to_mavros.send_attitude_setpoint(_AttitudeReference); 
             break;
 
         // 【Land】 降落。当前位置原地降落，降落后会自动上锁，且切换为mannual模式
@@ -559,13 +524,7 @@ int main(int argc, char **argv)
 
                 _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
-                if(Use_accel > 0.5)
-                {
-                    _command_to_mavros.send_accel_setpoint(throttle_sp,Command_to_gs.Reference_State.yaw_ref);
-                }else
-                {
-                    _command_to_mavros.send_attitude_setpoint(_AttitudeReference);            
-                }
+                _command_to_mavros.send_attitude_setpoint(_AttitudeReference); 
              }
 
 
@@ -596,74 +555,8 @@ int main(int argc, char **argv)
 
             break;
 
-        // 【PPN_land】 暂空。可进行自定义
-        case command_to_mavros::PPN_land:
-
-            if (Command_Last.Mode != command_to_mavros::PPN_land)
-            {
-                pos_des_prev[0] = _DroneState.position[0];
-                pos_des_prev[1] = _DroneState.position[1];
-                pos_des_prev[2] = _DroneState.position[2];
-            }
-
-            Command_to_gs.Mode = Command_Now.Mode;
-            Command_to_gs.Command_ID = Command_Now.Command_ID;
-
-            Command_to_gs.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;
-
-            vel_command[0] = ppn_kx * ( Command_Now.Reference_State.position_ref[0] - _DroneState.position[0]);
-            vel_command[1] = ppn_ky * ( Command_Now.Reference_State.position_ref[1] - _DroneState.position[1]);
-            vel_command[2] = ppn_kz * ( Command_Now.Reference_State.position_ref[2] - _DroneState.position[2]);
-
-            for (int i=0; i<3; i++)
-            {
-                Command_to_gs.Reference_State.position_ref[i] = pos_des_prev[i] + vel_command[i]*dt;
-            }
-
-            Command_to_gs.Reference_State.velocity_ref[0] = 0;
-            Command_to_gs.Reference_State.velocity_ref[1] = 0;
-            Command_to_gs.Reference_State.velocity_ref[2] = 0;
-            Command_to_gs.Reference_State.acceleration_ref[0] = 0;
-            Command_to_gs.Reference_State.acceleration_ref[1] = 0;
-            Command_to_gs.Reference_State.acceleration_ref[2] = 0;
-            Command_to_gs.Reference_State.yaw_ref = 0; //rad
-
-            for (int i=0; i<3; i++)
-            {
-                pos_des_prev[i] = Command_to_gs.Reference_State.position_ref[i];
-            }
-        
-            if(switch_ude == 0)
-            {
-                _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_to_gs.Reference_State, dt);
-            }else if(switch_ude == 1)
-            {
-                _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_to_gs.Reference_State, dt);
-            }else if(switch_ude == 2)
-            {
-                _ControlOutput = pos_controller_ude.pos_controller(_DroneState, Command_to_gs.Reference_State, dt);
-            }else if(switch_ude == 3)
-            {
-                _ControlOutput = pos_controller_ps.pos_controller(_DroneState, Command_to_gs.Reference_State, dt);
-            }else if(switch_ude == 4)
-            {
-                _ControlOutput = pos_controller_ne.pos_controller(_DroneState, Command_to_gs.Reference_State, dt);
-            }
-            
-            throttle_sp[0] = _ControlOutput.Throttle[0];
-            throttle_sp[1] = _ControlOutput.Throttle[1];
-            throttle_sp[2] = _ControlOutput.Throttle[2];
-
-            _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
-
-            if(Use_accel > 0.5)
-            {
-                _command_to_mavros.send_accel_setpoint(throttle_sp,Command_to_gs.Reference_State.yaw_ref);
-            }else
-            {
-                _command_to_mavros.send_attitude_setpoint(_AttitudeReference);            
-            }
-
+        // 【User_Mode】 暂空。可进行自定义
+        case command_to_mavros::User_Mode:
             
             break;
         
@@ -727,13 +620,7 @@ int main(int argc, char **argv)
 
             _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_to_gs.Reference_State.yaw_ref);
 
-            if(Use_accel > 0.5)
-            {
-                _command_to_mavros.send_accel_setpoint(throttle_sp,Command_to_gs.Reference_State.yaw_ref);
-            }else
-            {
-                _command_to_mavros.send_attitude_setpoint(_AttitudeReference);            
-            }
+            _command_to_mavros.send_attitude_setpoint(_AttitudeReference);
             
             // Quit  悬停于最后一个目标点
             if (time_trajectory >= _Circle_Trajectory.time_total)
@@ -745,37 +632,7 @@ int main(int argc, char **argv)
             break;
         }
 
-        if(Flag_printf == 1)
-        {
-            //cout <<">>>>>>>>>>>>>>>>>>>>>> px4_pos_controller <<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-            // 打印无人机状态
-            prometheus_control_utils::prinft_drone_state(_DroneState);
-
-            // 打印上层控制指令
-            prometheus_control_utils::printf_command_control(Command_to_gs);
-
-            // 打印位置控制器中间计算量
-            if(switch_ude == 0)
-            {
-                pos_controller_cascade_pid.printf_result();
-            }else if(switch_ude == 1)
-            {
-                pos_controller_pid.printf_result();
-            }else if(switch_ude == 2)
-            {
-                pos_controller_ude.printf_result();
-            }else if(switch_ude == 3)
-            {
-                pos_controller_ps.printf_result();
-            }else if(switch_ude == 4)
-            {
-                pos_controller_ne.printf_result();
-            }
-
-            // 打印位置控制器输出结果
-            prometheus_control_utils::prinft_attitude_reference(_AttitudeReference);
-
-        }else if(((int)(cur_time*10) % 50) == 0)
+        if(((int)(cur_time*10) % 50) == 0)
         {
             cout << "px4_pos_controller is running for :" << cur_time << " [s] "<<endl;
         }
@@ -816,7 +673,7 @@ void printf_param()
     cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
     cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
     cout << "geo_fence_z : "<< geo_fence_z[0] << " [m]  to  "<<geo_fence_z[1] << " [m]"<< endl;
-    cout << "ppn_kx: "<< ppn_kx<<" [m] "<<endl;
+
 
     cout << "disturbance_a_xy: "<< disturbance_a_xy<<" [m] "<<endl;
     cout << "disturbance_b_xy: "<< disturbance_b_xy<<" [m] "<<endl;
@@ -827,9 +684,6 @@ void printf_param()
 
     cout << "disturbance_start_time: "<< disturbance_start_time<<" [s] "<<endl;
     cout << "disturbance_end_time: "<< disturbance_end_time<<" [s] "<<endl;
-    
-    
-
 }
 
 int check_failsafe()
