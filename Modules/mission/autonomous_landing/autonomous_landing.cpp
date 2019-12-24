@@ -13,16 +13,14 @@
 //ROS 头文件
 #include <ros/ros.h>
 
-
-//ros头文件
-#include <ros/ros.h>
-
 //topic 头文件
 #include <iostream>
 #include <prometheus_msgs/ControlCommand.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
-
+#include <ukf.h>
+#include <prometheus_msgs/DetectionInfo.h>
+#include <Eigen/Eigen>
 
 using namespace std;
  
@@ -98,7 +96,7 @@ int main(int argc, char **argv)
     ros::Subscriber vision_flag_sub = nh.subscribe<geometry_msgs::Pose>("/vision/vision_flag", 10, vision_flag);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
+    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //降落追踪控制算法 的比例参数

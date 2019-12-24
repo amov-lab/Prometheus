@@ -67,9 +67,9 @@ add_executable(autonomous_landing autonomous_landing/autonomous_landing.cpp)
 add_dependencies(autonomous_landing prometheus_mission_gencpp)
 target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
 
-add_executable(target_tracking object_tracking/target_tracking.cpp)
-add_dependencies(target_tracking prometheus_mission_gencpp)
-target_link_libraries(target_tracking ${catkin_LIBRARIES})
+add_executable(object_tracking object_tracking/object_tracking.cpp)
+add_dependencies(object_tracking prometheus_mission_gencpp)
+target_link_libraries(object_tracking ${catkin_LIBRARIES})
 
 add_executable(collision_avoidance collision_avoidance/collision_avoidance.cpp)
 add_dependencies(collision_avoidance prometheus_mission_gencpp)

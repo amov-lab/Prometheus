@@ -61,10 +61,10 @@ int main(int argc, char **argv)
 
     //【订阅】无人机当前状态
     // 本话题来自根据需求自定px4_pos_estimator.cpp
-    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10, drone_state_cb);
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
+    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     //读取参数表中的参数
     nh.param<float>("target_x", target_x, 7.0);

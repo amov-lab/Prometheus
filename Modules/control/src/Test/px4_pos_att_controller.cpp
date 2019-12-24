@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     //flag of using our own pid control law or not: 0 for not use, 1 for use
     nh.param<int>("flag_using_pid", flag_using_pid, 0);
 
-    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
 
 
     ros::Rate rate(250.0);
