@@ -17,14 +17,20 @@
 #include <iostream>
 #include <prometheus_msgs/ControlCommand.h>
 #include <geometry_msgs/Pose.h>
-#include <prometheus_msgs/Target_from_vision.h>
+#include <prometheus_msgs/DroneState.h>
+#include <ukf.h>
+#include <prometheus_msgs/DetectionInfo.h>
+#include <Eigen/Eigen>
 
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+prometheus_msgs::DroneState _DroneState;   
 //---------------------------------------Vision---------------------------------------------
 geometry_msgs::Pose pos_target;                                 //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
-prometheus_msgs::Target_from_vision test;
+prometheus_msgs::DetectionInfo target_raw;
+prometheus_msgs::DetectionInfo target_fusion;
+
 
 int flag_detected = 0;                                          // 是否检测到目标标志
 //---------------------------------------Track---------------------------------------------
@@ -58,17 +64,19 @@ void printf_result();                                                           
 void generate_com(int sub_mode, float state_desired[4]);
 float satfunc(float data, float Max, float Thres);                                   //限幅函数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void vision_cb(const geometry_msgs::Pose::ConstPtr &msg)
+void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
-    pos_target = *msg;
+    prometheus_msgs::DetectionInfo target_body;
+    target_body = *msg;
 
-    if(pos_target.orientation.w == 0)
-    {
-        num_count_vision_lost++;
-    }else if(pos_target.orientation.w == 1)
+    if(target_body.detected)
     {
         flag_detected = 1;
         num_count_vision_lost = 0;
+        
+    }else
+    {
+        num_count_vision_lost++;
     }
 
     if(num_count_vision_lost > count_vision_lost)
@@ -76,22 +84,35 @@ void vision_cb(const geometry_msgs::Pose::ConstPtr &msg)
         flag_detected = 0;
     }
 
+    // Body frame to Inertial frame
+    target_raw = target_body;
+    target_raw.frame = 1;
+
+    target_raw.position[0] = _DroneState.position[0] + target_body.position[0];
+    target_raw.position[1] = _DroneState.position[1] + target_body.position[1];
+    target_raw.position[2] = _DroneState.position[2] + target_body.position[2];
+}
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
+{
+    _DroneState = *msg;
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "target_tracking");
     ros::NodeHandle nh("~");
-
+ 
     // 【订阅】视觉消息 来自视觉节点
     //  方向定义： 目标位置[机体系下：前方x为正，右方y为正，下方z为正]
     //  标志位：   orientation.w 用作标志位 1代表识别到目标 0代表丢失目标
     // 注意这里为了复用程序使用了/vision/target作为话题名字，适用于椭圆、二维码、yolo等视觉算法
     // 故同时只能运行一种视觉识别程序，如果想同时追踪多个目标，这里请修改接口话题的名字
-    ros::Subscriber vision_sub = nh.subscribe<geometry_msgs::Pose>("/vision/target", 10, vision_cb);
+    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
+
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
+    ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     // 频率 [20Hz]
     // 这个频率取决于视觉程序输出的频率，一般不能低于10Hz，不然追踪效果不好
@@ -132,6 +153,9 @@ int main(int argc, char **argv)
     nh.param<float>("distance_thres", distance_thres, 0.2);
 
 
+    UKF UKF_target;
+
+
     //打印现实检查参数
     printf_param();
 
@@ -152,6 +176,10 @@ int main(int argc, char **argv)
     {
         //回调
         ros::spinOnce();
+
+        Eigen::VectorXd target_fusion = UKF_target.Run(target_raw,0.05);
+
+
 
         printf_result();
 

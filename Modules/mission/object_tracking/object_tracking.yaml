@@ -28,5 +28,13 @@ delta_x : 1.5
 ##追踪距离阈值
 distance_thres: 0.4
 
+UKF:
+  std_ax_: 0.02
+  std_ay_: 0.02
+  std_az_: 0.02
+  std_px_: 0.05
+  std_py_: 0.05
+  std_pz_: 0.05
+
 
 

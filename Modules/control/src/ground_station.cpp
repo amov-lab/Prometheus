@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     // 【订阅】optitrack估计位置
     ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/UAV/pose", 10, optitrack_cb);
 
-    ros::Subscriber log_sub = nh.subscribe<prometheus_msgs::Topic_for_log>("/prometheus_msgs/topic_for_log", 10, log_cb);
+    ros::Subscriber log_sub = nh.subscribe<prometheus_msgs::Topic_for_log>("/prometheus/topic_for_log", 10, log_cb);
 
     ros::Subscriber attitude_target_sub = nh.subscribe<mavros_msgs::AttitudeTarget>("/mavros/setpoint_raw/target_attitude", 10,att_target_cb);
 
