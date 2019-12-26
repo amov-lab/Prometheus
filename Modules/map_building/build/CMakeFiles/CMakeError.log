@@ -1,22 +1,22 @@
 Determining if the pthread_create exist failed with the following output:
 Change Dir: /home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_b1c26/fast"
-/usr/bin/make -f CMakeFiles/cmTC_b1c26.dir/build.make CMakeFiles/cmTC_b1c26.dir/build
+Run Build Command:"/usr/bin/make" "cmTC_4ac1d/fast"
+/usr/bin/make -f CMakeFiles/cmTC_4ac1d.dir/build.make CMakeFiles/cmTC_4ac1d.dir/build
 make[1]: Entering directory '/home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_b1c26.dir/CheckSymbolExists.c.o
-/usr/bin/cc     -o CMakeFiles/cmTC_b1c26.dir/CheckSymbolExists.c.o   -c /home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
-Linking C executable cmTC_b1c26
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b1c26.dir/link.txt --verbose=1
-/usr/bin/cc       CMakeFiles/cmTC_b1c26.dir/CheckSymbolExists.c.o  -o cmTC_b1c26 -rdynamic 
-CMakeFiles/cmTC_b1c26.dir/CheckSymbolExists.c.o: In function `main':
+Building C object CMakeFiles/cmTC_4ac1d.dir/CheckSymbolExists.c.o
+/usr/bin/cc     -o CMakeFiles/cmTC_4ac1d.dir/CheckSymbolExists.c.o   -c /home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_4ac1d
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4ac1d.dir/link.txt --verbose=1
+/usr/bin/cc       CMakeFiles/cmTC_4ac1d.dir/CheckSymbolExists.c.o  -o cmTC_4ac1d -rdynamic 
+CMakeFiles/cmTC_4ac1d.dir/CheckSymbolExists.c.o: In function `main':
 CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_b1c26.dir/build.make:97: recipe for target 'cmTC_b1c26' failed
-make[1]: *** [cmTC_b1c26] Error 1
+CMakeFiles/cmTC_4ac1d.dir/build.make:97: recipe for target 'cmTC_4ac1d' failed
+make[1]: *** [cmTC_4ac1d] Error 1
 make[1]: Leaving directory '/home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_b1c26/fast' failed
-make: *** [cmTC_b1c26/fast] Error 2
+Makefile:126: recipe for target 'cmTC_4ac1d/fast' failed
+make: *** [cmTC_4ac1d/fast] Error 2
 
 File /home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
 /* */
@@ -36,20 +36,20 @@ int main(int argc, char** argv)
 Determining if the function pthread_create exists in the pthreads failed with the following output:
 Change Dir: /home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"/usr/bin/make" "cmTC_4de31/fast"
-/usr/bin/make -f CMakeFiles/cmTC_4de31.dir/build.make CMakeFiles/cmTC_4de31.dir/build
+Run Build Command:"/usr/bin/make" "cmTC_62aef/fast"
+/usr/bin/make -f CMakeFiles/cmTC_62aef.dir/build.make CMakeFiles/cmTC_62aef.dir/build
 make[1]: Entering directory '/home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_4de31.dir/CheckFunctionExists.c.o
-/usr/bin/cc    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_4de31.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.5/Modules/CheckFunctionExists.c
-Linking C executable cmTC_4de31
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4de31.dir/link.txt --verbose=1
-/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_4de31.dir/CheckFunctionExists.c.o  -o cmTC_4de31 -rdynamic -lpthreads 
+Building C object CMakeFiles/cmTC_62aef.dir/CheckFunctionExists.c.o
+/usr/bin/cc    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_62aef.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.5/Modules/CheckFunctionExists.c
+Linking C executable cmTC_62aef
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_62aef.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_62aef.dir/CheckFunctionExists.c.o  -o cmTC_62aef -rdynamic -lpthreads 
 /usr/bin/ld: cannot find -lpthreads
 collect2: error: ld returned 1 exit status
-CMakeFiles/cmTC_4de31.dir/build.make:97: recipe for target 'cmTC_4de31' failed
-make[1]: *** [cmTC_4de31] Error 1
+CMakeFiles/cmTC_62aef.dir/build.make:97: recipe for target 'cmTC_62aef' failed
+make[1]: *** [cmTC_62aef] Error 1
 make[1]: Leaving directory '/home/colin/code_repos/Prometheus/Modules/map_building/build/CMakeFiles/CMakeTmp'
-Makefile:126: recipe for target 'cmTC_4de31/fast' failed
-make: *** [cmTC_4de31/fast] Error 2
+Makefile:126: recipe for target 'cmTC_62aef/fast' failed
+make: *** [cmTC_62aef/fast] Error 2
 
 
