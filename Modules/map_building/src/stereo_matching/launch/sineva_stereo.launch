@@ -1,0 +1,11 @@
+<launch>
+	<node name="sineva_stereo_node" pkg="sineva_stereo" type="sineva_stereo_node" output="screen">
+		<param name="camera_param_path" value="$(find sineva_stereo)/RealSense.yaml" />
+		<param name="left_topic" value="/camera/left/image" />
+		<param name="right_topic" value="/camera/right/image" />
+		<param name="base_line" value="0.05" />
+		<param name="focal_length" value="387.4" />		
+		<remap from="/camera/left/image" to="/camera/infra1/image_rect_raw" />
+		<remap from="/camera/right/image" to="/camera/infra2/image_rect_raw" />
+	</node>
+</launch>
