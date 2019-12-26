@@ -1,5 +1,5 @@
 # vision_ws
-Vision code for P100 quadrotor platform
+Vision code for P300 quadrotor platform
 
 方向定义： 目标位置 [机体系下：前方x为正，右方y为正，下方z为正]
 
