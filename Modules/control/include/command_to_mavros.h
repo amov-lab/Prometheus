@@ -3,7 +3,7 @@
 *
 * Author: Qyp
 *
-* Update Time: 2019.6.28
+* Update Time: 2019.12.23
 *
 * Introduction:  Drone control command send class using Mavros package
 *         1. Ref to the Mavros plugins (setpoint_raw, loca_position, imu and etc..)
@@ -13,8 +13,8 @@
 *         5. Ref to the attitude control module in PX4: https://github.com/PX4/Firmware/blob/master/src/modules/mc_att_control
 *         6. 还需要考虑复合形式的输出情况
 * 主要功能：
-*    本库函数主要用于连接px4_command与mavros两个功能包。简单来讲，本代码提供飞控的状态量，用于控制或者监控，本代码接受控制指令，并将其发送至飞控。
-* 1、发布px4_command功能包生成的控制量至mavros功能包，可发送期望位置、速度、角度、角速度、底层控制等。
+*    本库函数主要用于连接prometheus_control与mavros两个功能包。简单来讲，本代码提供飞控的状态量，用于控制或者监控，本代码接受控制指令，并将其发送至飞控。
+* 1、发布prometheus_control功能包生成的控制量至mavros功能包，可发送期望位置、速度、角度、角速度、底层控制等。
 * 2、订阅mavros功能包发布的飞控状态量（包括PX4中的期望位置、速度、角度、角速度、底层控制），用于检查飞控是否正确接收机载电脑的指令
 * 3、解锁上锁、修改模式两个服务。
 ***************************************************************************************************************************/
@@ -32,10 +32,10 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <mavros_msgs/ActuatorControl.h>
 #include <sensor_msgs/Imu.h>
-#include <px4_command/DroneState.h>
+#include <prometheus_msgs/DroneState.h>
 #include <bitset>
-#include <px4_command/AttitudeReference.h>
-#include <px4_command/DroneState.h>
+#include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_msgs/DroneState.h>
 using namespace std;
 
 class command_to_mavros
@@ -96,7 +96,7 @@ class command_to_mavros
         Hold,
         Land,
         Disarm,
-        PPN_land,
+        User_Mode,
         Trajectory_Tracking,
     };
 
@@ -121,8 +121,6 @@ class command_to_mavros
     //Target thrust of the drone [from fcu]
     float Thrust_target;
     mavros_msgs::ActuatorControl actuator_target;
-
-
 
     //变量声明 - 服务
     mavros_msgs::SetMode mode_cmd;
@@ -150,7 +148,7 @@ class command_to_mavros
     void send_accel_setpoint(const Eigen::Vector3d& accel_sp, float yaw_sp);
 
     //发送角度期望值至飞控（输入：期望角度-四元数,期望推力）
-    void send_attitude_setpoint(const px4_command::AttitudeReference& _AttitudeReference);
+    void send_attitude_setpoint(const prometheus_msgs::AttitudeReference& _AttitudeReference);
 
     //发送角度期望值至飞控（输入：期望角速度,期望推力）
     void send_attitude_rate_setpoint(const Eigen::Vector3d& attitude_rate_sp, float thrust_sp);
@@ -307,7 +305,7 @@ void command_to_mavros::send_accel_setpoint(const Eigen::Vector3d& accel_sp, flo
 }
 
 //发送角度期望值至飞控（输入：期望角度-四元数,期望推力）
-void command_to_mavros::send_attitude_setpoint(const px4_command::AttitudeReference& _AttitudeReference)
+void command_to_mavros::send_attitude_setpoint(const prometheus_msgs::AttitudeReference& _AttitudeReference)
 {
     mavros_msgs::AttitudeTarget att_setpoint;
 

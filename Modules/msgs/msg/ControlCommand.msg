@@ -13,7 +13,7 @@ uint8 Move_Body=3
 uint8 Hold=4
 uint8 Land=5
 uint8 Disarm=6
-uint8 PPN_land=7
+uint8 User_Mode=7
 uint8 Trajectory_Tracking=8
 
 ## 控制参考量 

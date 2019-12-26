@@ -16,7 +16,7 @@
 #include <command_to_mavros.h>
 #include <pos_controller_PID.h>
 #include <att_controller_PID.h>
-#include <px4_command/ControlCommand.h>
+#include <prometheus_msgs/ControlCommand.h>
 
 
 #include <Eigen/Eigen>
@@ -39,10 +39,10 @@ enum Command
     Idle
 };
 //Command Now [from upper node]
-px4_command::ControlCommand Command_Now;                      //无人机当前执行命令
+prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
 
 //Command Last [from upper node]
-px4_command::ControlCommand Command_Last;                     //无人机上一条执行命令
+prometheus_msgs::ControlCommand Command_Last;                     //无人机上一条执行命令
 
 int flag_using_pid;
 
@@ -50,7 +50,7 @@ float get_time_in_sec(ros::Time begin);
 void prinft_command_state();
 void rotation_yaw(float yaw_angle, float input[2], float output[2]);
 
-void Command_cb(const px4_command::ControlCommand::ConstPtr& msg)
+void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
 {
     Command_Now = *msg;
 }
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     //flag of using our own pid control law or not: 0 for not use, 1 for use
     nh.param<int>("flag_using_pid", flag_using_pid, 0);
 
-    ros::Subscriber Command_sub = nh.subscribe<px4_command::ControlCommand>("/px4_command/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
 
 
     ros::Rate rate(250.0);
