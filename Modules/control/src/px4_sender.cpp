@@ -28,22 +28,22 @@
 #include <pos_controller_NE.h>
 #include <circle_trajectory.h>
 
-#include <px4_command/ControlCommand.h>
-#include <px4_command/DroneState.h>
-#include <px4_command/TrajectoryPoint.h>
-#include <px4_command/AttitudeReference.h>
-#include <px4_command_utils.h>
-#include <px4_command/Trajectory.h>
+#include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_control_utils.h>
+#include <prometheus_msgs/Trajectory.h>
 
 #include <Eigen/Eigen>
 
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-px4_command::ControlCommand Command_Now;                      //无人机当前执行命令
-px4_command::ControlCommand Command_Last;                     //无人机上一条执行命令
+prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
+prometheus_msgs::ControlCommand Command_Last;                     //无人机上一条执行命令
 
-px4_command::DroneState _DroneState;                         //无人机状态量
+prometheus_msgs::DroneState _DroneState;                         //无人机状态量
 Eigen::Vector3d pos_sp(0,0,0);
 Eigen::Vector3d vel_sp(0,0,0);
 double yaw_sp;
@@ -64,7 +64,7 @@ void prinft_command_state();
 void rotation_yaw(float yaw_angle, float input[2], float output[2]);
 void printf_param();
 int check_failsafe();
-void Command_cb(const px4_command::ControlCommand::ConstPtr& msg)
+void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
 {
     Command_Now = *msg;
 }
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "px4_sender");
     ros::NodeHandle nh("~");
 
-    ros::Subscriber Command_sub = nh.subscribe<px4_command::ControlCommand>("/px4_command/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
 
     // 参数读取
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
         _DroneState = _state_from_mavros._DroneState;
 
         // 打印无人机状态
-        px4_command_utils::prinft_drone_state(_DroneState);
+        prometheus_control_utils::prinft_drone_state(_DroneState);
 
         //Printf the command state
         prinft_command_state();
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
 
             break;
 
-        case command_to_mavros::PPN_land:
+        case command_to_mavros::User_Mode:
 
             break;
 
@@ -350,8 +350,8 @@ void prinft_command_state()
     case command_to_mavros::Disarm:
         cout << "Command: [ Disarm ] " <<endl;
         break;
-    case command_to_mavros::PPN_land:
-        cout << "Command: [ PPN_land ] " <<endl;
+    case command_to_mavros::User_Mode:
+        cout << "Command: [ User_Mode ] " <<endl;
         break;
     case command_to_mavros::Idle:
         cout << "Command: [ Idle ] " <<endl;

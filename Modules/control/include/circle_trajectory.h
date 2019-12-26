@@ -17,7 +17,7 @@
 #include <Eigen/Eigen>
 #include <math.h>
 #include <math_utils.h>
-#include <px4_command/TrajectoryPoint.h>
+#include <prometheus_msgs/TrajectoryPoint.h>
 #include <command_to_mavros.h>
 
 using namespace std;
@@ -51,10 +51,10 @@ class Circle_Trajectory
         void printf_param();
 
         //Printf the Circle_Trajectory result
-        void printf_result(px4_command::TrajectoryPoint& Circle_trajectory);
+        void printf_result(prometheus_msgs::TrajectoryPoint& Circle_trajectory);
 
         //Circle_Trajectory Calculation [Input: time_from_start; Output: Circle_trajectory;]
-        px4_command::TrajectoryPoint Circle_trajectory_generation(float time_from_start);
+        prometheus_msgs::TrajectoryPoint Circle_trajectory_generation(float time_from_start);
 
     private:
 
@@ -62,9 +62,9 @@ class Circle_Trajectory
 };
 
 
-px4_command::TrajectoryPoint Circle_Trajectory::Circle_trajectory_generation(float time_from_start)
+prometheus_msgs::TrajectoryPoint Circle_Trajectory::Circle_trajectory_generation(float time_from_start)
 {
-    px4_command::TrajectoryPoint Circle_trajectory;
+    prometheus_msgs::TrajectoryPoint Circle_trajectory;
     float omega;
     if( radius != 0)
     {
@@ -114,7 +114,7 @@ px4_command::TrajectoryPoint Circle_Trajectory::Circle_trajectory_generation(flo
 }
 
 
-void Circle_Trajectory::printf_result(px4_command::TrajectoryPoint& Circle_trajectory)
+void Circle_Trajectory::printf_result(prometheus_msgs::TrajectoryPoint& Circle_trajectory)
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>> Circle_Trajectory <<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 

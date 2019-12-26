@@ -1,0 +1,7 @@
+##payload_drop parameter
+fly_height: 1.0
+target_x: 0.0
+target_y: 1.0
+drop_height: 0.4
+limit_time: 10.0
+min_distance: 0.2

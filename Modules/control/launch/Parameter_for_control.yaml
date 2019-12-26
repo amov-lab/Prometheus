@@ -1,0 +1,123 @@
+## 飞机参数
+Quad:
+  mass: 1.2
+
+  ## parameter for px4_pos_controller.cpp
+## 起飞高度
+pos_controller:
+  Takeoff_height : 1.0
+  Disarm_height : 0.2
+  disturbance_a_xy : 0.0
+  disturbance_b_xy : 0.00
+  disturbance_a_z : 0.0
+  disturbance_b_z : 0.00
+  disturbance_T : 1.0
+  disturbance_start_time : 100.0
+  disturbance_end_time : 30.0
+
+##geo fence
+geo_fence:
+  x_min: -10.0
+  x_max: 10.0
+  y_min: -10.0
+  y_max: 10.0
+  z_min: -0.5
+  z_max: 10.0
+
+## parameter for px4_pos_estimator.cpp
+pos_estimator:
+  ## 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM
+  flag_use_laser_or_vicon : 0
+  ## 0 for use the data from fcu, 1 for use the mocap raw data(only position), 2 for use the mocap raw data(position and velocity)
+  Use_mocap_raw : 0
+  linear_window : 3
+  angular_window : 3
+  noise_a : 0.0
+  noise_b : 0.0
+  noise_T : 1.0
+
+
+
+
+
+
+## 限制参数 
+Limit:
+  pxy_error_max: 10.0
+  vxy_error_max: 10.0
+  pz_error_max: 10.0
+  vz_error_max: 10.0
+  pxy_int_max : 10.0
+  pz_int_max : 10.0
+  tilt_max: 20.0
+  int_start_error: 10.0
+
+  XY_VEL_MAX : 10.0
+  Z_VEL_MAX : 10.0 
+
+# 位置环参数 - cascade pid
+Pos_cascade_pid:
+   Kp_xy : 0.95
+   Kp_z : 1.0
+   Kp_vxvy : 0.09
+   Kp_vz : 0.2
+   Ki_vxvy : 0.02
+   Ki_vz : 0.02
+   Kd_vxvy : 0.01
+   Kd_vz : 0.0
+   Hover_throttle : 0.4
+   MPC_VELD_LP: 5.0
+
+# 位置环参数 - normal pid
+Pos_pid:
+  Kp_xy : 2.5
+  Kp_z : 2.5
+  Ki_xy : 0.5
+  Ki_z : 0.5
+  Kd_xy : 3.0
+  Kd_z : 3.0
+
+
+# 位置环参数 for ude
+Pos_ude:
+  Kp_xy : 0.5
+  Kp_z : 0.5
+  Kd_xy : 2.0
+  Kd_z : 2.0
+  T_ude_xy : 2.0
+  T_ude_z : 2.0
+
+
+# 位置环参数 for passivity
+Pos_passivity:
+  Kp_xy : 0.5
+  Kp_z : 0.5
+  Kd_xy : 2.0
+  Kd_z : 2.0
+  T_ude_xy : 1.0
+  T_ude_z : 1.0
+  T_ps: 0.2
+
+# 位置环参数 for ne
+Pos_ne:
+  Kp_xy : 0.5
+  Kp_z : 0.5
+  Kd_xy : 2.0
+  Kd_z : 2.0
+  T_ude_xy : 1.0
+  T_ude_z : 1.0
+  T_ne : 0.1
+
+# 圆轨迹参数 for Circle_Trajectory
+Circle_Trajectory:
+  Center_x: 0.0
+  Center_y: 0.0
+  Center_z: 1.0
+  radius: 1.0
+  linear_vel: 1.0
+  time_total: 50.0
+  direction: 1.0
+
+
+
+

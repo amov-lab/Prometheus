@@ -1,0 +1,9 @@
+<launch>
+	<!-- run the position_control.cpp -->
+
+	<node pkg="prometheus_control" type="collision_avoidance" name="collision_avoidance" output="screen">
+
+		<!-- load blacklist, config -->
+                <rosparam command="load" file="$(find prometheus_control)/collision_avoidance/collision_avoidance.yaml" />
+	</node>
+</launch>
