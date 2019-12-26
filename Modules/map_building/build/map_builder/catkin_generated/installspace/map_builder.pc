@@ -1,8 +1,0 @@
-prefix=/home/colin/code_repos/Prometheus/Modules/map_building/install
-
-Name: map_builder
-Description: Description of map_builder
-Version: 1.6.3
-Cflags: 
-Libs: -L/home/colin/code_repos/Prometheus/Modules/map_building/install/lib 
-Requires: 
