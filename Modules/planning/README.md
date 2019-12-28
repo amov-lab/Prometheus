@@ -18,10 +18,12 @@ Fast-planner可以在及其短的时间内（几毫秒）生成高质量轨迹�
 ## 3. Run the Simulation
 
 
-## 4. Acknowledgements
-  We use **NLopt** for non-linear optimization.
+## 4. 致谢
+  * 使用 **nlopt**作为非线性优化工具 （位于/ThirdParty）
+  * 感谢港科的老师、同学！！  
 
-## 5. Licence
-The source code is released under [GPLv3](http://www.gnu.org/licenses/) license.
+## 5. 说明
+* 与控制接口  plan_manage/src/traj_server.cpp
+> msgs/msg/PlanningPositionCommand.msg
 
 

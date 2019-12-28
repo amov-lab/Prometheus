@@ -5,6 +5,7 @@
 #include "quadrotor_msgs/PositionCommand.h"
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
+#include "prometheus_msgs/PlanningPositionCommand.h"
 
 using namespace dyn_planner;
 
@@ -12,7 +13,8 @@ ros::Publisher state_pub, pos_cmd_pub, traj_pub;
 
 nav_msgs::Odometry odom;
 
-quadrotor_msgs::PositionCommand cmd;
+// the interference with controller
+prometheus_msgs::PlanningPositionCommand cmd;
 // double pos_gain[3] = {5.7, 5.7, 6.2};
 // double vel_gain[3] = {3.4, 3.4, 4.0};
 double pos_gain[3] = {5.7, 5.7, 6.2};
@@ -218,20 +220,22 @@ int main(int argc, char** argv) {
 
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
   state_pub = node.advertise<visualization_msgs::Marker>("planning/state", 10);
+
   pos_cmd_pub =
-      node.advertise<quadrotor_msgs::PositionCommand>("/position_cmd", 50);
+      node.advertise<prometheus_msgs::PlanningPositionCommand>("/position_cmd", 50);
+
 
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.5), visCallback);
   traj_pub = node.advertise<visualization_msgs::Marker>("planning/traj", 10);
 
   /* control parameter */
-  cmd.kx[0] = pos_gain[0];
-  cmd.kx[1] = pos_gain[1];
-  cmd.kx[2] = pos_gain[2];
-
-  cmd.kv[0] = vel_gain[0];
-  cmd.kv[1] = vel_gain[1];
-  cmd.kv[2] = vel_gain[2];
+//  cmd.kx[0] = pos_gain[0];
+//  cmd.kx[1] = pos_gain[1];
+//  cmd.kx[2] = pos_gain[2];
+//
+//  cmd.kv[0] = vel_gain[0];
+//  cmd.kv[1] = vel_gain[1];
+//  cmd.kv[2] = vel_gain[2];
 
   ros::Duration(1.0).sleep();
 
