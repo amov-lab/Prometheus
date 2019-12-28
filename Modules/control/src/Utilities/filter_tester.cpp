@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     geometry_msgs::Point random;
 
-    ros::Publisher log_pub = nh.advertise<geometry_msgs::Point>("/prometheus_msgs/test", 10);
+    ros::Publisher log_pub = nh.advertise<geometry_msgs::Point>("/prometheus/test", 10);
 
     ros::Rate rate(50.0);
 

@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "move");
     ros::NodeHandle nh;
 
-    move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
+    move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
 
     int flag_1;

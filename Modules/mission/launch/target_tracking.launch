@@ -1,8 +1,0 @@
-<launch>
-	<!-- run the position_control.cpp -->
-
-	<node pkg="prometheus_control" type="target_tracking" name="target_tracking" output="screen">
-
-                <rosparam command="load" file="$(find prometheus_control)/config/target_tracking.yaml" />
-	</node>
-</launch>

@@ -224,7 +224,7 @@ int main(int argc, char **argv)
     //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#??), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
     vision_pub = nh.advertise<geometry_msgs::PoseStamped>("/mavros/vision_pose/pose", 100);
 
-    drone_state_pub = nh.advertise<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10);
+    drone_state_pub = nh.advertise<prometheus_msgs::DroneState>("/prometheus/drone_state", 10);
 
     // 用于与mavros通讯的类，通过mavros接收来至飞控的消息【飞控->mavros->本程序】
     state_from_mavros _state_from_mavros;

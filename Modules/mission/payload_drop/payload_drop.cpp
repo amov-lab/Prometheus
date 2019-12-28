@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     ros::Subscriber position_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 100, pos_cb);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
+    ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     // Drop cmd send to mavros
     ros::Publisher drop_pub = nh.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 10);

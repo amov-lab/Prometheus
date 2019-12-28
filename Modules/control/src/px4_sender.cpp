@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "px4_sender");
     ros::NodeHandle nh("~");
 
-    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
 
     // 参数读取
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);

@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     ros::Rate rate(1.0);
 
     // 【发布】发送给position_control.cpp的命令
-    ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10);
+    ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     nh.param<float>("setpoint_length", setpoint_length, 0.5);

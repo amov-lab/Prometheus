@@ -6,12 +6,12 @@
 * Update Time: 2019.7.6
 *
 * Introduction:  PX4 Position Controller 
-*         1. 从应用层节点订阅/prometheus_msgs/control_command话题（ControlCommand.msg），接收来自上层的控制指令。
+*         1. 从应用层节点订阅/prometheus/control_command话题（ControlCommand.msg），接收来自上层的控制指令。
 *         2. 从command_from_mavros.h读取无人机的状态信息（DroneState.msg）。
 *         3. 调用位置环控制算法，计算加速度控制量。可选择cascade_PID, PID, UDE, passivity-UDE, NE+UDE位置控制算法。
 *         4. 通过command_to_mavros.h将计算出来的控制指令发送至飞控（通过mavros包）(mavros package will send the message to PX4 as Mavlink msg)
 *         5. PX4 firmware will recieve the Mavlink msg by mavlink_receiver.cpp in mavlink module.
-*         6. 发送相关信息至地面站节点(/prometheus_msgs/attitude_reference)，供监控使用。
+*         6. 发送相关信息至地面站节点(/prometheus/attitude_reference)，供监控使用。
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
@@ -109,14 +109,14 @@ int main(int argc, char **argv)
 
     //【订阅】指令
     // 本话题来自根据需求自定义的上层模块，比如track_land.cpp 比如move.cpp
-    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
 
     //【订阅】无人机当前状态
     // 本话题来自根据需求自定px4_pos_estimator.cpp
-    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus_msgs/drone_state", 10, drone_state_cb);
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
     // 发布log消息至ground_station.cpp
-    ros::Publisher log_pub = nh.advertise<prometheus_msgs::Topic_for_log>("/prometheus_msgs/topic_for_log", 10);
+    ros::Publisher log_pub = nh.advertise<prometheus_msgs::Topic_for_log>("/prometheus/topic_for_log", 10);
 
     // 参数读取
     nh.param<float>("pos_controller/Takeoff_height", Takeoff_height, 1.0);
