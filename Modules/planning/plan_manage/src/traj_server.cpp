@@ -2,7 +2,6 @@
 #include "plan_manage/Bspline.h"
 #include "bspline_opt/non_uniform_bspline.h"
 #include "nav_msgs/Odometry.h"
-#include "quadrotor_msgs/PositionCommand.h"
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
 #include "prometheus_msgs/PlanningPositionCommand.h"
@@ -181,7 +180,7 @@ void cmdCallback(const ros::TimerEvent& e) {
   cmd.header.stamp = time_now;
   cmd.header.frame_id = "world";
   cmd.trajectory_flag =
-      quadrotor_msgs::PositionCommand::TRAJECTORY_STATUS_READY;
+          prometheus_msgs::PlanningPositionCommand::TRAJECTORY_STATUS_READY;
   cmd.trajectory_id = traj_id;
 
   cmd.position.x = pos(0);
