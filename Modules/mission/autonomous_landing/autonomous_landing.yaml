@@ -33,3 +33,9 @@ fly_min_z: 0.3
 ##降落板高度
 height_on_pad: -0.4
 
+UKF:
+  std_a_: 0.02
+  std_yaw_dotdot_: 0.01
+  std_px_: 0.05
+  std_py_: 0.05
+  std_yaw_: 0.03

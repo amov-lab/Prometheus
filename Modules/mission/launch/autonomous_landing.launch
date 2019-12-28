@@ -4,6 +4,6 @@
 	<node pkg="prometheus_control" type="autonomous_landing" name="autonomous_landing" output="screen">
 
 		<!-- load blacklist, config -->
-                <rosparam command="load" file="$(find prometheus_control)/config/autonomous_landing.yaml" />
+                <rosparam command="load" file="$(find prometheus_control)/autonomous_landing/autonomous_landing.yaml" />
 	</node>
 </launch>

@@ -19,7 +19,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 add_message_files(
   DIRECTORY msg
   FILES
-  Target_from_vision.msg
+  DetectionInfo.msg
   ControlCommand.msg
   TrajectoryPoint.msg
   Trajectory.msg

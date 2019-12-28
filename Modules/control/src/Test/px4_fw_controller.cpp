@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "px4_fw_controller");
     ros::NodeHandle nh("~");
 
-    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus_msgs/control_command", 10, Command_cb);
+    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
 
     //【订阅】无人机当前状态
     // 本话题来自根据需求自定px4_pos_estimator.cpp
