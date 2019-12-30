@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="stereo_camera_new">
+    <pose>0 0 0.035 0 0 0</pose>
+    <link name="link">
+      <inertial>
+        <pose>0.01 0.025 0.025 0 0 0</pose>
+        <mass>0.01</mass>
+        <inertia>
+          <ixx>4.15e-6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.407e-6</iyy>
+          <iyz>0</iyz>
+          <izz>2.407e-6</izz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <pose>0 0 0 0 1.57 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://depth_camera_new/meshes/hokuyo.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <sensor type="multicamera" name="stereo_camera">
+        <update_rate>7.0</update_rate>
+        <camera name="left">
+          <pose>0.1 0.035 0 0 0 0</pose>
+          <horizontal_fov>1.3962634</horizontal_fov>
+          <image>
+            <width>400</width>
+            <height>400</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <camera name="right">
+          <pose>0.1 -0.035 0 0 0 0</pose>
+          <horizontal_fov>1.3962634</horizontal_fov>
+          <image>
+            <width>400</width>
+            <height>400</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <plugin name="stereo_camera_controller" filename="libgazebo_ros_multicamera.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>20</updateRate>
+          <cameraName>stereo</cameraName>
+          <imageTopicName>image_raw</imageTopicName>
+          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+          <frameName>stereo_camera_link</frameName>
+          <!-- <rightFrameName>camera_link</rightFrameName> -->
+          <hackBaseline>0.07</hackBaseline>
+          <distortionK1>0.0</distortionK1>
+          <distortionK2>0.0</distortionK2>
+          <distortionK3>0.0</distortionK3>
+          <distortionT1>0.0</distortionT1>
+          <distortionT2>0.0</distortionT2>
+        </plugin>
+      </sensor>
+    </link>
+  </model>
+</sdf>
