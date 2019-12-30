@@ -3,7 +3,6 @@
     <include>
       <uri>model://iris</uri>
     </include>
-
     <include>
       <uri>model://realsense_camera</uri>
       <pose>0.1 0 0 0 0 0</pose>
