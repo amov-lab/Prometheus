@@ -1,0 +1,93 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="2Dlidar">
+    <link name="link">
+
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.19</mass>
+        <inertia>
+          <ixx>4.15e-6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.407e-6</iyy>
+          <iyz>0</iyz>
+          <izz>2.407e-6</izz>
+        </inertia>
+      </inertial>
+
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.02 0.05 0.05</size>
+          </box>
+        </geometry>
+      </visual>
+
+     <sensor name="laser" type="ray">
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.14</min_angle>
+              <max_angle>3.14</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.2</min>
+            <max>25</max>
+            <resolution>0.05</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+        <plugin name="laser" filename="libRayPlugin.so" />
+        <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
+          <topicName>/2Dlidar_scan</topicName>
+          <frameName>2Dlidar_link</frameName>
+        </plugin>
+        <always_on>1</always_on>
+        <update_rate>5.5</update_rate>
+        <visualize>true</visualize>
+      </sensor>
+<!--
+      <sensor name="laser" type="gpu_ray">
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.14</min_angle>
+              <max_angle>3.14</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.2</min>
+            <max>25</max>
+            <resolution>0.05</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+        <plugin name="laser" filename="libGpuRayPlugin.so" />
+        <plugin name="2Dlidar" filename="libgazebo_ros_gpu_laser.so">
+          <topicName>/2Dlidar_scan</topicName>
+          <frameName>2Dlidar_link</frameName>
+        </plugin>
+        <always_on>1</always_on>
+        <update_rate>5.5</update_rate>
+        <visualize>true</visualize>
+      </sensor>
+-->
+    </link>
+  </model>
+</sdf>
+
+<!-- vim: set et fenc= ff=unix sts=0 sw=2 ts=2 : -->
