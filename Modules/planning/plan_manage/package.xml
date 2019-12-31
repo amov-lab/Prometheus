@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>plan_manage</name>
+  <name>prometheus_plan_manage</name>
   <version>0.0.0</version>
   <description>The dyn_planner package</description>
 
