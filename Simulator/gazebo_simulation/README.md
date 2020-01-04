@@ -95,3 +95,31 @@ RC_MAP_THROTTLE = Channel 2
 RC_MAP_YAW = Channel 4
 ```
 
+## Octomap地图
+
+首先使用如下命令安装Octomap:
+
+For Ubuntu 16.04:
+
+```
+sudo apt-get install ros-kinetic-octomap-ros #安装octomap
+sudo apt-get install ros-kinetic-octomap-msgs
+sudo apt-get install ros-kinetic-octomap-server
+```
+
+然后再安装octomap在rviz中的插件
+
+```
+sudo apt-get install ros-kinetic-octomap-rviz-plugins
+```
+
+安装完插件后，再运行rviz时会出现octomap的模组。
+
+通过如下命令运行带有realsense相机的iris无人机仿真，并运行rtabmap，其作用是接受RGBD相机发布的深度图及里程计发布的相机位姿，并以此为基础发布的各种地图topic，包括pointcloud, grid map和octomap。
+
+```
+roslaunch iris_gazebo iris_with_realsense.launch
+roslaunch iris_gazebo rtabmap_depthCam_mapping.launch
+```
+
+此时会有octomap的topic发布，运行rviz后选择add添加‘ColorOccupancyGrid’并选择octomap的topic，便会看到实时显示的octomap。
