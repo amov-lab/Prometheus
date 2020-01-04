@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.4">
+   <model name="chessboard">
+      <static>true</static>
+      <pose>2 -2 0.1 0 0 4.712</pose>
+      <link name="link">
+         <collision name="collision">
+            <geometry>
+               <plane>
+                  <normal>0 0 1</normal>
+                  <size>1 1</size>
+               </plane>
+            </geometry>
+            <surface>
+               <friction>
+                  <ode>
+                     <mu>100</mu>
+                     <mu2>50</mu2>
+                  </ode>
+               </friction>
+            </surface>
+         </collision>
+         <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+               <plane>
+                  <normal>0 0 1</normal>
+                  <size>1 1</size>
+               </plane>
+            </geometry>
+            <material>
+               <script>
+                  <uri>model://chessboard/materials/scripts</uri>
+                  <uri>model://chessboard/materials/textures/</uri>
+                  <name>qrcode/Image</name>
+               </script>
+            </material>
+         </visual>
+      </link>
+   </model>
+</sdf>
