@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <name>prometheus_octomap_builder</name>
+  <version>2.1.1</version>
+  <description>pointcloud_to_octomap package</description>
+  <maintainer email="lcyfly1@163.com">Chunyu Li</maintainer>
+  <license>todo</license>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>image_transport</build_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>std_msgs</run_depend>
+</package>
+
+
+

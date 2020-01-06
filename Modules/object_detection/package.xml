@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package>
+  <name>prometheus_detection</name>
+  <version>0.7.1</version>
+  <description>
+    This package attempts to show the features of ROS step-by-step,
+    including using messages, servers, parameters, etc.
+  </description>
+  <maintainer email="jariof@foxmail.com">Prometheus</maintainer>
+  <license>BSD</license>
+
+  <url type="website">http://www.ros.org/wiki/roscpp_tutorials</url>
+  <url type="bugtracker">https://github.com/ros/ros_tutorials/issues</url>
+  <url type="repository">https://github.com/ros/ros_tutorials</url>
+  <author>BIT_vision</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>rosconsole</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>roscpp_serialization</build_depend>
+  <build_depend>rostime</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>rosconsole</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>roscpp_serialization</run_depend>
+  <run_depend>rostime</run_depend>
+  <run_depend>std_msgs</run_depend>
+</package>

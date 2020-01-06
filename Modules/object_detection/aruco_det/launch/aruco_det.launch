@@ -1,9 +1,0 @@
-<launch>
-	<!-- run the position_control.cpp -->
-
-	<node pkg="aruco_det" type="aruco_det" name="aruco_det" output="screen">
-
-		<!-- load blacklist, config -->
-                <rosparam command="load" file="PATH_TO/Prometheus/Modules/object_detection/config/camera_param.yaml" />
-	</node>
-</launch>

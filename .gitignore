@@ -7,7 +7,6 @@ _ext
 build/
 devel/
 dist/
-Modules/object_detection/CMakeLists.txt
 
 # pytorch/python/numpy formats
 *.pth

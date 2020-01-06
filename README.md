@@ -21,11 +21,18 @@ Open source software for autonomous drones.
  5. 下载
 	 
 	 `git clone https://github.com/amov-lab/Prometheus`
- 6.source
+ 6. source
  	打开一个新终端
 	`gedit .bashrc`
 	
 	在打开的`bashrc.txt`文件中添加 `source /home/$(your computer name)/Prometheus/devel/setup.bash`
+
+或者
+
+```
+echo "source (Path To Prometheus)/devel/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
 
 # 编译说明
 
