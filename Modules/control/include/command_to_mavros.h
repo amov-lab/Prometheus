@@ -95,9 +95,9 @@ class command_to_mavros
         Move_Body,
         Hold,
         Land,
-        Disarm,
-        User_Mode,
         Trajectory_Tracking,
+        User_Mode1,
+        User_Mode2,
     };
 
     enum Submode_Type

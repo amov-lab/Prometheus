@@ -3,34 +3,46 @@
  *
  * Author: Qyp
  *
- * Update Time: 2019.4.17
+ * Update Time: 2019.12.25
  *
  * 说明: 基于单目摄像头的自主降落程序
  *      1. 订阅目标位置(来自视觉的ros节点)
- *      2. 追踪算法及降落策略
- *      3. 发布上层控制指令
+ *      2. UKF
+ *      3. 追踪算法及降落策略
+ *      4. 发布上层控制指令
 ***************************************************************************************************************************/
 //ROS 头文件
 #include <ros/ros.h>
+#include <Eigen/Eigen>
+#include <ukf.h>
+#include <iostream>
 
 //topic 头文件
-#include <iostream>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
-#include <ukf.h>
-#include <prometheus_msgs/DetectionInfo.h>
-#include <Eigen/Eigen>
 
 using namespace std;
- 
+using namespace Eigen;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int Num_StateMachine = 0;                                       //状态机编号
 int Num_StateMachine_Last = 0;                                  //上一时刻 状态机编号
 int comid = 1;                                                  //Command_Now的id号
-//-----------------------------------------视觉相关----------------------------------------------------
-float flag_vision = 0;                                          //视觉FLAG 是否识别到目标 1代表能识别到目标，0代表不能
+prometheus_msgs::DroneState _DroneState;                        //无人机位置等状态
+//-----------------------------------------目标检测及状态估计----------------------------------------------------
+
+
 geometry_msgs::Point relative_position;                         //机体固连坐标系下 降落板的位置
+prometheus_msgs::DetectionInfo target_raw;                      //视觉检测的原始信息 
+prometheus_msgs::DetectionInfo target_raw_inertial;             //目标在xy平面的位置,yaw,惯性系,用于UKF
+VectorXd _x_ukf;                                                //UKF状态量
+
+bool is_detected = false;                                       //视觉FLAG 是否识别到目标 1代表能识别到目标，0代表不能
+int num_count_vision_lost = 0;
+int Thres_vision_lost;
+
 float relative_yaw;                                             //降落板与无人机的相对偏航角 单位:rad
 float relative_yaw_last;
 float height_on_pad;                                            //降落板高度
@@ -48,8 +60,7 @@ int Flag_reach_pad_center = 0;
 int Flag_z_below_30cm = 0;
 float land_max_z;
 
-int num_count_lost = 0;
-float Thres_vision_lost = 30;
+
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -58,21 +69,38 @@ void track_land();
 void printf_land();
 void generate_com(int sub_mode, float state_desired[4]);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void relative_position_cb(const geometry_msgs::Pose::ConstPtr& msg)
+void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
-    relative_position = msg->position;
-}
+    target_raw = *msg;
 
-void relative_yaw_cb(const geometry_msgs::Pose::ConstPtr& msg)
+    if(target_raw.detected)
+    {
+        is_detected = true;
+        num_count_vision_lost = 0;
+        
+    }else
+    {
+        num_count_vision_lost++;
+    }
+
+    if(num_count_vision_lost > Thres_vision_lost)
+    {
+        is_detected = false;
+    }
+
+    // Body frame to Inertial frame
+    target_raw_inertial.frame = 1;
+
+    target_raw_inertial.position[0] = _DroneState.position[0] + target_raw.position[0];
+    target_raw_inertial.position[1] = _DroneState.position[1] + target_raw.position[1];
+    target_raw_inertial.position[2] = _DroneState.position[2] + target_raw.position[2];
+
+    target_raw_inertial.attitude[2] = _DroneState.attitude[2] + target_raw.attitude[2];
+}
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
-    relative_yaw = msg->orientation.w;
+    _DroneState = *msg;
 }
-
-void vision_flag(const geometry_msgs::Pose::ConstPtr& msg)
-{
-    flag_vision = msg->orientation.w;
-}
-
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -83,54 +111,50 @@ int main(int argc, char **argv)
     //节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate rate(20.0);
 
-    //【订阅】降落板与无人机的相对位置 单位：米
+    //【订阅】降落板与无人机的相对位置及相对偏航角  单位：米   单位：弧度
     // 来自视觉节点 方向定义：[机体系下：前方x为正，右方y为正，下方z为正]
-    ros::Subscriber relative_pos_sub = nh.subscribe<geometry_msgs::Pose>("/vision/relative_position", 10, relative_position_cb);
+    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
 
-    //【订阅】降落板与无人机的相对偏航角 单位：弧度
-    // 利用orientation.w 传递
-    ros::Subscriber relative_yaw_sub = nh.subscribe<geometry_msgs::Pose>("/vison/relative_yaw", 10, relative_yaw_cb);
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
-    //【订阅】视觉flag 来自视觉节点
-    // orientation.w ： 0 for目标丢失，1 for 正常识别
-    ros::Subscriber vision_flag_sub = nh.subscribe<geometry_msgs::Pose>("/vision/vision_flag", 10, vision_flag);
-
-    // 【发布】发送给position_control.cpp的命令
+    //【发布】发送给position_control.cpp的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //降落追踪控制算法 的比例参数
-    nh.param<float>("kpx_land", kpx_land, 0.3);
-    nh.param<float>("kpy_land", kpy_land, 0.3);
-    nh.param<float>("kpz_land", kpz_land, 0.3);
+    nh.param<float>("landing/kpx_land", kpx_land, 0.3);
+    nh.param<float>("landing/kpy_land", kpy_land, 0.3);
+    nh.param<float>("landing/kpz_land", kpz_land, 0.3);
 
     //降落追踪控制算法的最大速度
-    nh.param<float>("Max_velx_land", Max_velx_land, 1.0);
-    nh.param<float>("Max_vely_land", Max_vely_land, 1.0);
-    nh.param<float>("Max_velz_land", Max_velz_land, 1.0);
+    nh.param<float>("landing/Max_velx_land", Max_velx_land, 1.0);
+    nh.param<float>("landing/Max_vely_land", Max_vely_land, 1.0);
+    nh.param<float>("landing/Max_velz_land", Max_velz_land, 1.0);
 
     //降落追踪控制算法的速度死区
-    nh.param<float>("Thres_velx_land", Thres_velx_land, 0.02);
-    nh.param<float>("Thres_vely_land", Thres_vely_land, 0.02);
-    nh.param<float>("Thres_velz_land", Thres_velz_land, 0.02);
+    nh.param<float>("landing/Thres_velx_land", Thres_velx_land, 0.02);
+    nh.param<float>("landing/Thres_vely_land", Thres_vely_land, 0.02);
+    nh.param<float>("landing/Thres_velz_land", Thres_velz_land, 0.02);
 
     //允许降落最大距离阈值
-    nh.param<float>("Thres_distance_land", Thres_distance_land, 0.2);
+    nh.param<float>("landing/Thres_distance_land", Thres_distance_land, 0.2);
 
     //允许降落计数阈值
-    nh.param<float>("Thres_count_land", Thres_count_land, 30);
+    nh.param<float>("landing/Thres_count_land", Thres_count_land, 30);
 
     //允许降落最大高度阈值
-    nh.param<float>("land_max_z", land_max_z, 0.3);
+    nh.param<float>("landing/land_max_z", land_max_z, 0.3);
 
     //允许飞行最低高度[这个高度是指降落板上方的相对高度]
-    nh.param<float>("fly_min_z", fly_min_z, 0.3);
+    nh.param<float>("landing/fly_min_z", fly_min_z, 0.3);
 
     //视觉丢失计数阈值
-    nh.param<float>("Thres_vision_lost", Thres_vision_lost, 30);
+    nh.param<int>("landing/Thres_vision_lost", Thres_vision_lost, 30);
 
     //降落板高度
-    nh.param<float>("height_on_pad", height_on_pad, -0.4);
+    nh.param<float>("landing/height_on_pad", height_on_pad, -0.4);
+
+    UKF UKF_landing;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>模式选择<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     int check_flag;
@@ -153,6 +177,10 @@ int main(int argc, char **argv)
     {
         //回调
         ros::spinOnce();
+
+        _x_ukf = UKF_landing.Run(target_raw,0.05);
+
+        relative_position.x = _x_ukf[0] - _DroneState.position[0];
 
         printf_land();
 
@@ -256,7 +284,7 @@ int main(int argc, char **argv)
                 //2：相对高度小于阈值，
 
                 //如果 相对距离 小于 阈值，计数增加
-                if(distance_pad < Thres_distance_land && flag_vision == 1)
+                if(distance_pad < Thres_distance_land && is_detected == 1)
                 {
                     num_count++;
                     cout<< "Distance_pad: " << distance_pad <<endl;
@@ -302,20 +330,20 @@ int main(int argc, char **argv)
                 }
 
                 //如果视觉丢失了降落板目标，计数增加
-                if(flag_vision == 0)
+                if(is_detected == 0)
                 {
-                    num_count_lost++;
-                    cout<< "vision_lost_num: " << num_count_lost <<endl;
+                    num_count_vision_lost++;
+                    cout<< "vision_lost_num: " << num_count_vision_lost <<endl;
                 }else
                 {
-                    num_count_lost = 0;
-                    cout<< "vision_lost_num: " << num_count_lost <<endl;
+                    num_count_vision_lost = 0;
+                    cout<< "vision_lost_num: " << num_count_vision_lost <<endl;
                 }
 
                 //如果丢失计数超过阈值，则切换状态机（爬升）
-                if(num_count_lost > Thres_vision_lost)
+                if(num_count_vision_lost > Thres_vision_lost)
                 {
-                    num_count_lost = 0;
+                    num_count_vision_lost = 0;
                     Num_StateMachine = 6;
                 }
 
@@ -328,7 +356,7 @@ int main(int argc, char **argv)
 
         case 5:
             Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = Command_Now.Disarm;
+            Command_Now.Mode = Command_Now.Idle;
             command_pub.publish(Command_Now);
             Num_StateMachine_Last = Num_StateMachine;
 
@@ -350,20 +378,20 @@ int main(int argc, char **argv)
 
             cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>Search State<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
             //重新获得视觉信息，计数
-            if(flag_vision == 1)
+            if(is_detected == 1)
             {
-                num_count_lost++;
-                cout<< "vision_regain_num: " << num_count_lost <<endl;
+                num_count_vision_lost++;
+                cout<< "vision_regain_num: " << num_count_vision_lost <<endl;
             }else
             {
-                num_count_lost = 0;
-                cout<< "vision_regain_num: " << num_count_lost <<endl;
+                num_count_vision_lost = 0;
+                cout<< "vision_regain_num: " << num_count_vision_lost <<endl;
             }
 
             //如果重新获得视觉计数超过阈值，则切换状态机（追踪降落）
-            if(num_count_lost > Thres_vision_lost)
+            if(num_count_vision_lost > Thres_vision_lost)
             {
-                num_count_lost = 0;
+                num_count_vision_lost = 0;
                 Num_StateMachine = 4;
             }
 
@@ -472,7 +500,7 @@ void printf_land()
     cout << "Num_StateMachine : " << Num_StateMachine <<endl;
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "flag_vision: " << flag_vision <<endl;
+    cout << "is_detected: " << is_detected <<endl;
     cout << "relative position: " << relative_position.x << " [m] "<< relative_position.y << " [m] "<< relative_position.z << " [m] "<<endl;
     cout << "relative_yaw: " << relative_yaw/3.1415926 *180 << " [du] "<<endl;
 

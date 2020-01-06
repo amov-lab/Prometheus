@@ -131,7 +131,7 @@ int main(int argc, char **argv)
         //Disarm
         case 2:
             Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Disarm;
+            Command_Now.Mode = command_to_mavros::User_Mode1;
             move_pub.publish(Command_Now);
             Num_StateMachine = 0;
             break;
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
         //User_Mode
         case 6:
             Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::User_Mode;
+            Command_Now.Mode = command_to_mavros::User_Mode1;
             generate_com(sub_mode, state_desired);
             move_pub.publish(Command_Now);
             Num_StateMachine = 0;

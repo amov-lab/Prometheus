@@ -12,9 +12,9 @@ uint8 Move_ENU=2
 uint8 Move_Body=3
 uint8 Hold=4
 uint8 Land=5
-uint8 Disarm=6
-uint8 User_Mode=7
-uint8 Trajectory_Tracking=8
+uint8 Trajectory_Tracking=6
+uint8 User_Mode1=7
+uint8 User_Mode2=8
 
 ## 控制参考量 
 ## 位置参考量：位置、速度、加速度、加加速度、加加加速度

@@ -25,7 +25,7 @@ add_message_files(
   Trajectory.msg
   AttitudeReference.msg
   DroneState.msg
-  Topic_for_log.msg
+  GroundStation.msg
   ControlOutput.msg
 )
 
