@@ -27,6 +27,7 @@ add_message_files(
   DroneState.msg
   GroundStation.msg
   ControlOutput.msg
+  PlanningPositionCommand.msg
 )
 
 generate_messages(
