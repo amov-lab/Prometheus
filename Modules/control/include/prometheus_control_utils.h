@@ -89,15 +89,14 @@ void printf_command_control(const prometheus_msgs::ControlCommand& _ControlComma
             cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
             break;
 
-        case command_to_mavros::Disarm:
-            cout << "Command: [ Disarm ] " <<endl;
+        case command_to_mavros::User_Mode1:
+            cout << "Command: [ User_Mode1 ] " <<endl;
             break;
 
-        case command_to_mavros::User_Mode:
-            cout << "Command: [ User_Mode ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
+        case command_to_mavros::User_Mode2:
+            cout << "Command: [ User_Mode2 ] " <<endl;
             break;
+            
         case command_to_mavros::Trajectory_Tracking:
             cout << "Command: [ Trajectory_Tracking ] " <<endl;
             cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;

@@ -54,7 +54,7 @@ float track_thres_vel_y;                                          //追踪速度
 float track_thres_vel_z;                                          //追踪速度死区
 
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
-int count_vision_lost = 0;                                                          //视觉丢失计数器阈值
+int Thres_vision_lost = 0;                                                          //视觉丢失计数器阈值
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
 
@@ -79,7 +79,7 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
         num_count_vision_lost++;
     }
 
-    if(num_count_vision_lost > count_vision_lost)
+    if(num_count_vision_lost > Thres_vision_lost)
     {
         flag_detected = 0;
     }
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 
     //视觉丢失次数阈值
     //处理视觉丢失时的情况
-    nh.param<int>("count_vision_lost", count_vision_lost, 20);
+    nh.param<int>("Thres_vision_lost", Thres_vision_lost, 20);
 
     //追踪的前后间隔
     nh.param<float>("delta_x", delta_x, 1.5);
@@ -380,7 +380,7 @@ void printf_param()
     cout << "track_thres_vel_y : "<< track_thres_vel_y << endl;
     cout << "track_thres_vel_z : "<< track_thres_vel_z << endl;
     cout << "flag_x : "<< flag_x << endl;
-    cout << "count_vision_lost : "<< count_vision_lost << endl;
+    cout << "Thres_vision_lost : "<< Thres_vision_lost << endl;
 
 
 

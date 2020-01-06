@@ -46,13 +46,13 @@ class UKF
                 UKF_nh.param<double>("UKF/std_py_", std_py_, 0.0);
                 UKF_nh.param<double>("UKF/std_pz_", std_pz_, 0.0);
             }
-            // car model
+            // car model,for autonomous landing
             else if (model == 2)
             {
                 n_x_ = 5;
                 n_noise_ = 2;
                 n_aug_ = n_x_ + n_noise_;
-                x_ = Eigen::VectorXd(n_x_);
+                x_ = VectorXd(n_x_);
                 Xsig_pred_ = MatrixXd(n_x_,2*n_aug_+1);
                 kamma_ = 3 - n_aug_;
                 
@@ -192,7 +192,7 @@ void UKF::Prediction(double delta_t)
     if (model == 1)
     {
         // Augmentation
-        VectorXd x_aug = VectorXd(11);
+        VectorXd x_aug = VectorXd(n_aug_);
         MatrixXd Xsig_aug = MatrixXd(n_aug_, 2*n_aug_+1);
         MatrixXd P_aug = MatrixXd(11,11);
 
