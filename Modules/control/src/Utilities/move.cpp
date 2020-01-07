@@ -14,94 +14,62 @@
 #include <command_to_mavros.h>
 
 using namespace std;
- 
-ros::Publisher move_pub;
-int Num_StateMachine;
+
 prometheus_msgs::ControlCommand Command_Now;
-void generate_com(int sub_mode, float state_desired[4]);
+
+void generate_com(int Move_mode, float state_desired[4]);
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "move");
     ros::NodeHandle nh;
 
-    move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+    ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
-
-    int flag_1;
+    int Control_Mode;
+    int Move_mode;
+    int Move_frame;
+    int Trjectory_mode;
     float state_desired[4];
-    int sub_mode;
 
-    Num_StateMachine = 0;
-    //----------------------------------
-    //input
+    // 初始化命令-
+    // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
+    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
+    Command_Now.Command_ID                          = 0;
+    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+    Command_Now.Reference_State.position_ref[0]     = 0;
+    Command_Now.Reference_State.position_ref[1]     = 0;
+    Command_Now.Reference_State.position_ref[2]     = 0;
+    Command_Now.Reference_State.velocity_ref[0]     = 0;
+    Command_Now.Reference_State.velocity_ref[1]     = 0;
+    Command_Now.Reference_State.velocity_ref[2]     = 0;
+    Command_Now.Reference_State.acceleration_ref[0] = 0;
+    Command_Now.Reference_State.acceleration_ref[1] = 0;
+    Command_Now.Reference_State.acceleration_ref[2] = 0;
+    Command_Now.Reference_State.yaw_ref             = 0;
+
     while(ros::ok())
     {
-        switch (Num_StateMachine)
+        // Waiting for input
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Control Test<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << "Input the Mode: 0 for Idle, 1 for Takeoff, 2 for Hold, 3 for Land, 4 for Move, 5 for User_Mode1, 6 for User_Mode2, 7 for User_Mode3"<<endl;
+        cin >> Control_Mode;
+
+        if(Control_Mode == prometheus_msgs::ControlCommand::Move)
         {
-            // input
-            case 0:
-                cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>--------<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-                cout << "Input the flag:  0 for Move_ENU，1 for Move_Body，2 for Land,3 for Disarm ,4 for Hold, 5 for PPN Land, 6 for Idle,7 for Takeoff to default height, 8 for trajectory tracking"<<endl;
-                cin >> flag_1;
+            cout << "Input the Move_mode: 0 for xy/z position control, 3 for xy/z velocity control, 4 for trajectory tracking"<<endl;
+            cin >> Move_mode;
 
-                if (flag_1 == 2)
-                {
-                    Num_StateMachine = 1;
-                    break;
-                }
-
-                if (flag_1 == 3)
-                {
-                    Num_StateMachine = 2;
-                    break;
-                }
-
-                if (flag_1 == 4)
-                {
-                    Num_StateMachine = 5;
-                    break;
-                }
-
-                if (flag_1 == 6)
-                {
-                    Num_StateMachine = 7;
-                    break;
-                }
-
-                if (flag_1 == 7)
-                {
-                    Num_StateMachine = 8;
-                    break;
-                }
-
-                if (flag_1 == 8)
-                {
-                    Num_StateMachine = 9;
-                    break;
-                }
-
-
-                //如果是机体系移动
-                if(flag_1 == 1)
-                {
-                    Num_StateMachine = 4;
-                }//惯性系移动
-                else if(flag_1 == 0)
-                {
-                    Num_StateMachine = 3;
-                }
-
-                if (flag_1 == 5)
-                {
-                    Num_StateMachine = 6;
-                }
-
-                cout << "Input the sub_mode:  # 0 for xy/z position control; 3 for xy/z velocity control"<<endl;
-                cin >> sub_mode;
-
-                cout << "Please input next setpoint [x y z yaw]: "<< endl;
-
+            if(Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+            {
+                cout << "Input the Trajectory: 0 for Circle, 1 for Eight Shape, 2 for Step"<<endl;
+                cin >> Trjectory_mode;  
+            }else
+            {
+                cout << "Input the Move_frame: 0 for ENU_FRAME, 1 for BODY_FRAME"<<endl;
+                cin >> Move_frame; 
+                cout << "Please input reference state [x y z yaw]: "<< endl;
                 cout << "setpoint_t[0] --- x [m] : "<< endl;
                 cin >> state_desired[0];
                 cout << "setpoint_t[1] --- y [m] : "<< endl;
@@ -109,117 +77,105 @@ int main(int argc, char **argv)
                 cout << "setpoint_t[2] --- z [m] : "<< endl;
                 cin >> state_desired[2];
                 cout << "setpoint_t[3] --- yaw [du] : "<< endl;
-                cout << "500 for input again: "<< endl;
                 cin >> state_desired[3];
-
-                //500  重新输入各数值
-                if (state_desired[3] == 500)
-                {
-                    Num_StateMachine = 0;
-                }
-
-                break;
-
-        //Land
-        case 1:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Land;
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //Disarm
-        case 2:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::User_Mode1;
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //Move_ENU
-        case 3:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Move_ENU;
-            generate_com(sub_mode, state_desired);
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //Move_Body
-        case 4:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Move_Body;
-            generate_com(sub_mode, state_desired);
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //Hold
-        case 5:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Hold;
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //User_Mode
-        case 6:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::User_Mode1;
-            generate_com(sub_mode, state_desired);
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //Idle
-        case 7:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Idle;
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //Takeoff
-        case 8:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Takeoff;
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
-        //Trajectory_Tracking
-        case 9:
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode = command_to_mavros::Trajectory_Tracking;
-            Command_Now.Reference_State.Sub_mode  = 0;
-            move_pub.publish(Command_Now);
-            Num_StateMachine = 0;
-            break;
-
+            }
         }
 
-        sleep(0.2);
+        switch (Control_Mode)
+        {
+            case prometheus_msgs::ControlCommand::Idle:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Idle;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                move_pub.publish(Command_Now);
+                break;
+
+            case prometheus_msgs::ControlCommand::Takeoff:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                move_pub.publish(Command_Now);
+                break;
+
+            case prometheus_msgs::ControlCommand::Hold:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                move_pub.publish(Command_Now);
+                break;
+    
+            case prometheus_msgs::ControlCommand::Land:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                move_pub.publish(Command_Now);
+                break;
+
+            case prometheus_msgs::ControlCommand::Move:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+
+                if(Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+                {
+                    if(Trjectory_mode == 0)
+                    {
+                        //Circle();
+                    }else if(Trjectory_mode == 1)
+                    {
+                        //Eight();
+                    }else if(Trjectory_mode == 2)
+                    {
+                        //Step();
+                    }
+                }else
+                {
+                    generate_com(Move_mode, state_desired);
+                }
+
+                move_pub.publish(Command_Now);
+                break;
+            
+            case prometheus_msgs::ControlCommand::User_Mode1:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::User_Mode1;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                move_pub.publish(Command_Now);
+                break;
+
+            case prometheus_msgs::ControlCommand::User_Mode2:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::User_Mode2;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                move_pub.publish(Command_Now);
+                break;
+            
+            case prometheus_msgs::ControlCommand::User_Mode3:
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Mode = prometheus_msgs::ControlCommand::User_Mode3;
+                Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                move_pub.publish(Command_Now);
+                break;
+        }
+
+        sleep(0.5);
     }
 
     return 0;
 }
 
-// float32[3] pos_sp
-// float32[3] vel_sp
-// float32 yaw_sp
-void generate_com(int sub_mode, float state_desired[4])
+void generate_com(int Move_mode, float state_desired[4])
 {
 
-    static int comid = 1;
-    Command_Now.Reference_State.Sub_mode  = sub_mode;
+    Command_Now.Reference_State.Move_mode  = Move_mode;
 
-//# sub_mode 2-bit value:
-//# 0 for position, 1 for vel, 1st for xy, 2nd for z.
-//#                   xy position     xy velocity
-//# z position       	0b00(0)       0b10(2)
-//# z velocity		0b01(1)       0b11(3)
+    //# Move_mode 2-bit value:
+    //# 0 for position, 1 for vel, 1st for xy, 2nd for z.
+    //#                   xy position     xy velocity
+    //# z position       	0b00(0)       0b10(2)
+    //# z velocity		0b01(1)       0b11(3)
 
-    if((sub_mode & 0b10) == 0) //xy channel
+    if((Move_mode & 0b10) == 0) //xy channel
     {
         Command_Now.Reference_State.position_ref[0] = state_desired[0];
         Command_Now.Reference_State.position_ref[1] = state_desired[1];
@@ -234,7 +190,7 @@ void generate_com(int sub_mode, float state_desired[4])
         Command_Now.Reference_State.velocity_ref[1] = state_desired[1];
     }
 
-    if((sub_mode & 0b01) == 0) //z channel
+    if((Move_mode & 0b01) == 0) //z channel
     {
         Command_Now.Reference_State.position_ref[2] = state_desired[2];
         Command_Now.Reference_State.velocity_ref[2] = 0;
@@ -251,6 +207,4 @@ void generate_com(int sub_mode, float state_desired[4])
 
 
     Command_Now.Reference_State.yaw_ref = state_desired[3]/180.0*M_PI;
-    Command_Now.Command_ID = comid;
-    comid++;
 }

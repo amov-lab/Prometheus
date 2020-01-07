@@ -295,7 +295,7 @@ int main(int argc, char **argv)
                 {
                     //追踪是在机体系下完成
                     Command_Now.Mode = Command_Now.Move_Body;
-                    Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_VEL_Z_POS;   //xy velocity z position
+                    Command_Now.Move_mode  = Command_Now.Reference_State.XY_VEL_Z_POS;   //xy velocity z position
                     Command_Now.Command_ID = comid;
                     comid++;
 
@@ -392,7 +392,7 @@ void printf_param()
 void generate_com(int sub_mode, float state_desired[4])
 {
     static int comid = 1;
-    Command_Now.Reference_State.Sub_mode  = sub_mode;
+    Command_Now.Move_mode  = sub_mode;
 
 //# sub_mode 2-bit value:
 //# 0 for position, 1 for vel, 1st for xy, 2nd for z.

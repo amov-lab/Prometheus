@@ -122,7 +122,6 @@ target_link_libraries(set_mode ${catkin_LIBRARIES})
 add_executable(eigen_test src/Utilities/eigen_test.cpp)
 add_dependencies(eigen_test prometheus_control_gencpp)
 target_link_libraries(eigen_test ${catkin_LIBRARIES})
-
 #############
 ## Install ##
 #############

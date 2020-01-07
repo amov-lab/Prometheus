@@ -23,7 +23,7 @@
 
 
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
 
 
@@ -127,7 +127,7 @@ class pos_controller_NE
 
         // Position control main function 
         // [Input: Current state, Reference state, sub_mode, dt; Output: AttitudeReference;]
-        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt);
+        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::PositionReference& _Reference_State, float dt);
 
         void set_initial_pos(const Eigen::Vector3d& pos);
 
@@ -161,7 +161,7 @@ void pos_controller_NE::set_initial_pos(const Eigen::Vector3d& pos)
 
 prometheus_msgs::ControlOutput pos_controller_NE::pos_controller(
     const prometheus_msgs::DroneState& _DroneState, 
-    const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt)
+    const prometheus_msgs::PositionReference& _Reference_State, float dt)
 {
     Eigen::Vector3d accel_sp;
     

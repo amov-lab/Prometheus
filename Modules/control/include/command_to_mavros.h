@@ -86,28 +86,6 @@ class command_to_mavros
         set_mode_client = command_nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
     }
 
-    // 相应的命令分别为 待机,起飞，移动(惯性系ENU)，移动(机体系)，悬停，降落，上锁，紧急降落
-    enum Command_Type
-    {
-        Idle,
-        Takeoff,
-        Move_ENU,
-        Move_Body,
-        Hold,
-        Land,
-        Trajectory_Tracking,
-        User_Mode1,
-        User_Mode2,
-    };
-
-    enum Submode_Type
-    {
-        XYZ_POS,
-        XY_POS_Z_VEL,
-        XY_VEL_Z_POS,
-        XY_VEL_Z_VEL,
-    };
-
     //Target pos of the drone [from fcu]
     Eigen::Vector3d pos_drone_fcu_target;
     //Target vel of the drone [from fcu]

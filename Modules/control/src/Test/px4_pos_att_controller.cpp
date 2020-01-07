@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 
     Command_Now.Command_ID = 0;
     Command_Now.Mode = Move_ENU;
-    Command_Now.Reference_State.Sub_mode  = 0;
+    Command_Now.Move_mode  = 0;
     Command_Now.Reference_State.position_ref[0] = command_fsc.Takeoff_position[0];          //ENU Frame
     Command_Now.Reference_State.position_ref[1] = command_fsc.Takeoff_position[1];          //ENU Frame
     Command_Now.Reference_State.position_ref[2] = command_fsc.Takeoff_position[2] + command_fsc.Takeoff_height;         //ENU Frame
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
             pos_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
             vel_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
 
-            accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Reference_State.Sub_mode , cur_time);
+            accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Move_mode , cur_time);
 
             actuator_sp = att_controller_fsc.att_controller(command_fsc.Euler_fcu, command_fsc.rates_fcu, accel_sp, Command_Now.Reference_State.yaw_ref, cur_time);
 
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
             if( Command_Now.Command_ID  >  Command_Last.comid )
             {
                 //xy velocity mode
-                if( Command_Now.Reference_State.Sub_mode  & 0b10 )
+                if( Command_Now.Move_mode  & 0b10 )
                 {
                     float d_vel_body[2] = {Command_Now.Reference_State.velocity_ref[0], Command_Now.Reference_State.velocity_ref[1]};         //the desired xy velocity in Body Frame
                     float d_vel_enu[2];                                                           //the desired xy velocity in NED Frame
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
                 }
 
                 //z velocity mode
-                if( Command_Now.Reference_State.Sub_mode  & 0b01 )
+                if( Command_Now.Move_mode  & 0b01 )
                 {
                     vel_sp[2] = Command_Now.Reference_State.velocity_ref[2];
                 }
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
                 }
             }
 
-            accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Reference_State.Sub_mode , cur_time);
+            accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Move_mode , cur_time);
 
             actuator_sp = att_controller_fsc.att_controller(command_fsc.Euler_fcu, command_fsc.rates_fcu, accel_sp, Command_Now.Reference_State.yaw_ref, cur_time);
 
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
                 command_fsc.Hold_position = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
             }
 
-            accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Reference_State.Sub_mode , cur_time);
+            accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Move_mode , cur_time);
 
             actuator_sp = att_controller_fsc.att_controller(command_fsc.Euler_fcu, command_fsc.rates_fcu, accel_sp, Command_Now.Reference_State.yaw_ref, cur_time);
 
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
                 }
             }else
             {
-                accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Reference_State.Sub_mode , cur_time);
+                accel_sp = pos_controller_fsc.pos_controller(command_fsc.pos_drone_fcu, command_fsc.vel_drone_fcu, pos_sp, vel_sp, Command_Now.Move_mode , cur_time);
 
                 actuator_sp = att_controller_fsc.att_controller(command_fsc.Euler_fcu, command_fsc.rates_fcu, accel_sp, Command_Now.Reference_State.yaw_ref, cur_time);
 
@@ -368,7 +368,7 @@ void prinft_command_state()
     }
 
     int sub_mode;
-    sub_mode = Command_Now.Reference_State.Sub_mode ;
+    sub_mode = Command_Now.Move_mode ;
 
     if((sub_mode & 0b10) == 0) //xy channel
     {

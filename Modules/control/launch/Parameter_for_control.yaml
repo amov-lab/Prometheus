@@ -8,7 +8,7 @@ pos_controller:
   ## 控制器编号: 0 for 串级PID, 1 for PID, 2 for UDE, 3 for passivity, 4 for NE
   controller_number: 0
   Takeoff_height : 1.0
-  Disarm_height : 0.2
+  Disarm_height : 0.1
 
 Input_disturbance:
   use_disturbance: 0

@@ -17,7 +17,7 @@
 #include <Eigen/Eigen>
 #include <math.h>
 #include <math_utils.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <command_to_mavros.h>
 
 using namespace std;
@@ -51,10 +51,10 @@ class Circle_Trajectory
         void printf_param();
 
         //Printf the Circle_Trajectory result
-        void printf_result(prometheus_msgs::TrajectoryPoint& Circle_trajectory);
+        void printf_result(prometheus_msgs::PositionReference& Circle_trajectory);
 
         //Circle_Trajectory Calculation [Input: time_from_start; Output: Circle_trajectory;]
-        prometheus_msgs::TrajectoryPoint Circle_trajectory_generation(float time_from_start);
+        prometheus_msgs::PositionReference Circle_trajectory_generation(float time_from_start);
 
     private:
 
@@ -62,9 +62,9 @@ class Circle_Trajectory
 };
 
 
-prometheus_msgs::TrajectoryPoint Circle_Trajectory::Circle_trajectory_generation(float time_from_start)
+prometheus_msgs::PositionReference Circle_Trajectory::Circle_trajectory_generation(float time_from_start)
 {
-    prometheus_msgs::TrajectoryPoint Circle_trajectory;
+    prometheus_msgs::PositionReference Circle_trajectory;
     float omega;
     if( radius != 0)
     {
@@ -84,7 +84,7 @@ prometheus_msgs::TrajectoryPoint Circle_Trajectory::Circle_trajectory_generation
 
     Circle_trajectory.time_from_start = time_from_start;
 
-    Circle_trajectory.Sub_mode  = command_to_mavros::XYZ_POS;
+    Circle_trajectory.Move_mode  = prometheus_msgs::PositionReference::XYZ_POS;
 
     Circle_trajectory.position_ref[0] = radius * cos_angle + center[0];
     Circle_trajectory.position_ref[1] = radius * sin_angle + center[1];
@@ -114,7 +114,7 @@ prometheus_msgs::TrajectoryPoint Circle_Trajectory::Circle_trajectory_generation
 }
 
 
-void Circle_Trajectory::printf_result(prometheus_msgs::TrajectoryPoint& Circle_trajectory)
+void Circle_Trajectory::printf_result(prometheus_msgs::PositionReference& Circle_trajectory)
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>> Circle_Trajectory <<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 

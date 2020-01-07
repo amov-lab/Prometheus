@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode = Command_Now.Move_ENU;  //Move模式
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
+        Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = 0;
         Command_Now.Reference_State.position_ref[1] = 0;
         Command_Now.Reference_State.position_ref[2] = height_square;
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode = Command_Now.Move_ENU;  //Move模式
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
+        Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = -size_square/2;
         Command_Now.Reference_State.position_ref[1] = -size_square/2;
         Command_Now.Reference_State.position_ref[2] = height_square;
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     {
 
         Command_Now.Mode = Command_Now.Move_ENU;  //Move模式
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
+        Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = size_square/2;
         Command_Now.Reference_State.position_ref[1] = -size_square/2;
         Command_Now.Reference_State.position_ref[2] = height_square;
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
         Command_Now.header.stamp = ros::Time::now();
         
         Command_Now.Mode = Command_Now.Move_ENU;  //Move模式
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
+        Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = size_square/2;
         Command_Now.Reference_State.position_ref[1] = size_square/2;
         Command_Now.Reference_State.position_ref[2] = height_square;
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
     {
 
         Command_Now.Mode = Command_Now.Move_ENU;  //Move模式
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
+        Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = -size_square/2;
         Command_Now.Reference_State.position_ref[1] = size_square/2;
         Command_Now.Reference_State.position_ref[2] = height_square;
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode = Command_Now.Move_ENU;  //Move模式
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
+        Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_POS;             //子模式：位置控制模式
         Command_Now.Reference_State.position_ref[0] = -size_square/2;
         Command_Now.Reference_State.position_ref[1] = -size_square/2;
         Command_Now.Reference_State.position_ref[2] = height_square;
