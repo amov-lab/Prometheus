@@ -105,9 +105,9 @@ add_executable(fake_vicon src/Utilities/fake_vicon.cpp)
 add_dependencies(fake_vicon prometheus_control_gencpp)
 target_link_libraries(fake_vicon ${catkin_LIBRARIES})
 
-add_executable(move src/Utilities/move.cpp)
-add_dependencies(move prometheus_control_gencpp)
-target_link_libraries(move ${catkin_LIBRARIES})
+add_executable(terminal_control src/Utilities/terminal_control.cpp)
+add_dependencies(terminal_control prometheus_control_gencpp)
+target_link_libraries(terminal_control ${catkin_LIBRARIES})
 
 add_executable(OptiTrackTest src/Utilities/OptiTrackTest.cpp)
 add_dependencies(OptiTrackTest prometheus_control_gencpp)

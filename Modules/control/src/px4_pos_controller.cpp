@@ -27,7 +27,6 @@
 #include <pos_controller_NE.h>
 
 #include <prometheus_control_utils.h>
-#include <circle_trajectory.h>
 #include <LowPassFilter.h>
 
 #include <prometheus_msgs/ControlCommand.h>
@@ -82,7 +81,7 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         Command_Now = *msg;
     }else
     {
-        ROS_WARN_STREAM_ONCE ("Wrong Command ID.");
+        ROS_WARN("Wrong Command ID.");
     }
     
     // 无人机一旦接受到Land指令，则会屏蔽其他指令
@@ -167,10 +166,7 @@ int main(int argc, char **argv)
     // pos_controller_passivity pos_controller_ps;
     // pos_controller_NE pos_controller_ne;
 
-    // 圆形轨迹追踪类
-    Circle_Trajectory _Circle_Trajectory;
     float time_trajectory = 0.0;
-    _Circle_Trajectory.printf_param();
 
     printf_param();
 
@@ -227,7 +223,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
 
         //定期打印
-        ROS_INFO_STREAM_THROTTLE(5.0, "px4_pos_controller is running.");
+        ROS_INFO_STREAM_THROTTLE(10.0, "px4_pos_controller is running.");
 
         switch (Command_Now.Mode)
         {
@@ -305,8 +301,8 @@ int main(int argc, char **argv)
         // 【Move】 ENU系移动。只有PID算法中才有追踪速度的选项，其他控制只能追踪位置
         case prometheus_msgs::ControlCommand::Move:
 
-            //对于机体系的指令,需要转换成ENU坐标系执行
-            if(Command_Now.Reference_State.Move_frame == prometheus_msgs::PositionReference::BODY_FRAME)
+            //对于机体系的指令,需要转换成ENU坐标系执行,且同一ID号内,只执行一次.
+            if(Command_Now.Reference_State.Move_frame == prometheus_msgs::PositionReference::BODY_FRAME && Command_Now.Command_ID > Command_Last.Command_ID )
             {
                 Body_to_ENU();
             }
@@ -329,7 +325,7 @@ int main(int argc, char **argv)
             break;
         }
 
-        if(Command_Now.Mode == prometheus_msgs::PositionReference::TRAJECTORY)
+        if(Command_Now.Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
         {
             // 轨迹追踪控制选用PID控制器,也可选用其他自定义控制器
             _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
