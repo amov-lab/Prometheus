@@ -1,17 +1,18 @@
 /***************************************************************************************************************************
-* move.cpp
+* terminal_control.cpp
 *
 * Author: Qyp
 *
-* Update Time: 2019.3.16
+* Update Time: 2020.1.10
 *
-* Introduction:  test function for sending command.msg
+* Introduction:  test function for sending ControlCommand.msg
 ***************************************************************************************************************************/
 #include <ros/ros.h>
 
 #include <iostream>
 #include <prometheus_msgs/ControlCommand.h>
 #include <command_to_mavros.h>
+#include <controller_test.h>
 
 using namespace std;
 
@@ -26,11 +27,16 @@ int main(int argc, char **argv)
 
     ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
-    int Control_Mode;
-    int Move_mode;
-    int Move_frame;
-    int Trjectory_mode;
+    int Control_Mode = 0;
+    int Move_mode = 0;
+    int Move_frame = 0;
+    int Trjectory_mode = 0;
+    float trajectory_total_time = 0;
     float state_desired[4];
+
+    // 圆形轨迹追踪类
+    Controller_Test Controller_Test;
+    Controller_Test.printf_param();
 
     // 初始化命令-
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
@@ -65,6 +71,8 @@ int main(int argc, char **argv)
             {
                 cout << "Input the Trajectory: 0 for Circle, 1 for Eight Shape, 2 for Step"<<endl;
                 cin >> Trjectory_mode;  
+                cout << "Input the trajectory_total_time:"<<endl;
+                cin >> trajectory_total_time;
             }else
             {
                 cout << "Input the Move_frame: 0 for ENU_FRAME, 1 for BODY_FRAME"<<endl;
@@ -112,28 +120,46 @@ int main(int argc, char **argv)
                 break;
 
             case prometheus_msgs::ControlCommand::Move:
-                Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-                Command_Now.Command_ID = Command_Now.Command_ID + 1;
-
                 if(Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
                 {
-                    if(Trjectory_mode == 0)
+                    float time_trajectory = 0.0;
+
+                    while(time_trajectory < trajectory_total_time)
                     {
-                        //Circle();
-                    }else if(Trjectory_mode == 1)
-                    {
-                        //Eight();
-                    }else if(Trjectory_mode == 2)
-                    {
-                        //Step();
+                        Command_Now.header.stamp = ros::Time::now();
+                        Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+                        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+
+                        if(Trjectory_mode == 0)
+                        {
+                            Command_Now.Reference_State = Controller_Test.Circle_trajectory_generation(time_trajectory);
+                        }else if(Trjectory_mode == 1)
+                        {
+                            Command_Now.Reference_State = Controller_Test.Eight_trajectory_generation(time_trajectory);
+                        }else if(Trjectory_mode == 2)
+                        {
+                            Command_Now.Reference_State = Controller_Test.Step_trajectory_generation(time_trajectory);
+                        }
+
+                        move_pub.publish(Command_Now);
+                        time_trajectory = time_trajectory + 0.01;
+
+                        cout << "Trajectory tracking: "<< time_trajectory << " / " << trajectory_total_time  << " [ s ]" <<endl;
+
+
+                        ros::Duration(0.01).sleep();
                     }
+
                 }else
                 {
+                    Command_Now.header.stamp = ros::Time::now();
+                    Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+                    Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                    Command_Now.Reference_State.Move_mode  = Move_mode;
+                    Command_Now.Reference_State.Move_frame = Move_frame;
                     generate_com(Move_mode, state_desired);
+                    move_pub.publish(Command_Now);
                 }
-
-                move_pub.publish(Command_Now);
                 break;
             
             case prometheus_msgs::ControlCommand::User_Mode1:
@@ -157,8 +183,10 @@ int main(int argc, char **argv)
                 move_pub.publish(Command_Now);
                 break;
         }
-
-        sleep(0.5);
+        
+        ROS_INFO("..................................");
+        
+        sleep(2.0);
     }
 
     return 0;
@@ -166,9 +194,6 @@ int main(int argc, char **argv)
 
 void generate_com(int Move_mode, float state_desired[4])
 {
-
-    Command_Now.Reference_State.Move_mode  = Move_mode;
-
     //# Move_mode 2-bit value:
     //# 0 for position, 1 for vel, 1st for xy, 2nd for z.
     //#                   xy position     xy velocity

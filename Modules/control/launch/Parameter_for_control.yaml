@@ -113,15 +113,18 @@ Pos_ne:
   T_ude_z : 1.0
   T_ne : 0.1
 
-# 圆轨迹参数 for Circle_Trajectory
-Circle_Trajectory:
-  Center_x: 0.0
-  Center_y: 0.0
-  Center_z: 1.0
-  radius: 1.0
-  linear_vel: 1.0
-  time_total: 50.0
-  direction: 1.0
+# 圆轨迹参数 
+Controller_Test:
+  Circle:
+    Center_x: 0.0
+    Center_y: 0.0
+    Center_z: 1.0
+    circle_radius: 1.0          ## m
+    linear_vel: 1.0             ## m/s
+    direction: 1.0              ##direction = 1 for CCW 逆时针, direction = -1 for CW 顺时针
+  Step:
+    step_length: 2.0
+    step_interval: 5.0
 
 
 
