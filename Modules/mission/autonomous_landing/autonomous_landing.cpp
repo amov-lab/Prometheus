@@ -365,7 +365,7 @@ int main(int argc, char **argv)
         case 6:
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode = Command_Now.Hold;
-            Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_POS_Z_VEL;  //xy pos z vel
+            Command_Now.Move_mode  = Command_Now.Reference_State.XY_POS_Z_VEL;  //xy pos z vel
             Command_Now.Command_ID = comid;
             Command_Now.Reference_State.position_ref[0] = 0;
             Command_Now.Reference_State.position_ref[1] = 0;
@@ -421,7 +421,7 @@ void track_land()
     //relative_position.z = (height_on_pad  - pos_drone.position.z);
 
     //xyz速度控制模式
-    Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_VEL_Z_VEL; // xy velocity z velocity
+    Command_Now.Move_mode  = Command_Now.Reference_State.XY_VEL_Z_VEL; // xy velocity z velocity
     //如果要去追踪一个动态的降落板，则需要反馈其速度
     Command_Now.Reference_State.velocity_ref[0] =  kpx_land * relative_position.x;
     Command_Now.Reference_State.velocity_ref[1] =  - kpy_land * relative_position.y;
@@ -460,7 +460,7 @@ float satfunc(float data, float Max, float Thres)
 void generate_com(int sub_mode, float state_desired[4])
 {
     static int comid = 1;
-    Command_Now.Reference_State.Sub_mode  = sub_mode;
+    Command_Now.Move_mode  = sub_mode;
 
 //# sub_mode 2-bit value:
 //# 0 for position, 1 for vel, 1st for xy, 2nd for z.

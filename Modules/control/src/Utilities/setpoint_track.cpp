@@ -64,20 +64,20 @@ int main(int argc, char **argv)
     while (i < total_times)
     {
 
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = command_to_mavros::Move_ENU;  //Move模式
-        Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;             //子模式：位置控制模式
-        
-        Command_Now.Reference_State.position_ref[1] = 0;
-        Command_Now.Reference_State.position_ref[2] = 1.0;
-        Command_Now.Reference_State.velocity_ref[0] = 0;
-        Command_Now.Reference_State.velocity_ref[1] = 0;
-        Command_Now.Reference_State.velocity_ref[2] = 0;
+        Command_Now.header.stamp                        = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;  //Move模式
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;             //子模式：位置控制模式
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[1]     = 0;
+        Command_Now.Reference_State.position_ref[2]     = 1.0;
+        Command_Now.Reference_State.velocity_ref[0]     = 0;
+        Command_Now.Reference_State.velocity_ref[1]     = 0;
+        Command_Now.Reference_State.velocity_ref[2]     = 0;
         Command_Now.Reference_State.acceleration_ref[0] = 0;
         Command_Now.Reference_State.acceleration_ref[1] = 0;
         Command_Now.Reference_State.acceleration_ref[2] = 0;
-        Command_Now.Reference_State.yaw_ref = 0;
-        Command_Now.Command_ID = comid;
+        Command_Now.Reference_State.yaw_ref             = 0;
+        Command_Now.Command_ID                          = comid;
         comid++;
 
         if( i%2 == 0)
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
 
     Command_Now.header.stamp = ros::Time::now();
-    Command_Now.Mode = command_to_mavros::Land;
+    Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
     move_pub.publish(Command_Now);
 
     rate.sleep();

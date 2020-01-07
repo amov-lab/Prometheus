@@ -12,7 +12,7 @@
 #include <OptiTrackFeedBackRigidBody.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
 
 #include <prometheus_msgs/Trajectory.h>

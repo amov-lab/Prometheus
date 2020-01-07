@@ -172,7 +172,7 @@ int main(int argc, char **argv)
         Command_Now.Mode = Command_Now.Move_Body;     //机体系下移动
         Command_Now.Command_ID = comid;
         comid++;
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_VEL_Z_POS; // xy 速度控制模式 z 位置控制模式
+        Command_Now.Move_mode  = Command_Now.Reference_State.XY_VEL_Z_POS; // xy 速度控制模式 z 位置控制模式
         Command_Now.Reference_State.velocity_ref[0] =  vel_sp[0];
         Command_Now.Reference_State.velocity_ref[1] =  vel_sp[1];
         Command_Now.Reference_State.position_ref[2] =  0;
