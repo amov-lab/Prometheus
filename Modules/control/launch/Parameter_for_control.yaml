@@ -41,11 +41,6 @@ pos_estimator:
   noise_b : 0.0
   noise_T : 1.0
 
-
-
-
-
-
 ## 限制参数 
 Limit:
   pxy_error_max: 10.0
@@ -82,7 +77,6 @@ Pos_pid:
   Kd_xy : 3.0
   Kd_z : 3.0
 
-
 # 位置环参数 for ude
 Pos_ude:
   Kp_xy : 0.5
@@ -113,18 +107,6 @@ Pos_ne:
   T_ude_z : 1.0
   T_ne : 0.1
 
-# 圆轨迹参数 
-Controller_Test:
-  Circle:
-    Center_x: 0.0
-    Center_y: 0.0
-    Center_z: 1.0
-    circle_radius: 1.0          ## m
-    linear_vel: 1.0             ## m/s
-    direction: 1.0              ##direction = 1 for CCW 逆时针, direction = -1 for CW 顺时针
-  Step:
-    step_length: 2.0
-    step_interval: 5.0
 
 
 
