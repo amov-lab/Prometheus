@@ -4,6 +4,15 @@
 
 ## 消息说明
 
-- Target_from_vision.msg
+- ControlCommand.msg
 
-  从视觉模块获得的目标消息
+	 控制指令消息
+
+- DetectionInfo.msg
+
+  视觉检测消息
+  
+  
+- GroundStation.msg
+
+	 发送至地面站节点用于监测的消息
