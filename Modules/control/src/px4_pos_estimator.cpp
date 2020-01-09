@@ -13,20 +13,6 @@
  *      5. 选择激光SLAM或者Mocap设备作为位置来源，发布位置及偏航角(xyz+yaw)给飞控
  *
 ***************************************************************************************************************************/
-/***************************************************************************************************************************
-* px4_pos_controller.cpp
-*
-* Author: Qyp
-*
-* Update Time: 2019.3.16
-*
-* Introduction:  PX4 Position Estimator using external positioning equipment
-*         1. Subscribe position and yaw information from Lidar SLAM node(cartorgrapher_ros节点), transfrom from laser frame to ENU frame
-*         2. Subscribe position and yaw information from Vicon node(vrpn-client-ros节点), transfrom from vicon frame to ENU frame
-*         3. Send the position and yaw information to FCU using Mavros package (/mavros/mocap/pose or /mavros/vision_estimate/pose)
-*         4. Subscribe position and yaw information from FCU, used for compare
-***************************************************************************************************************************/
-
 
 //头文件
 #include <ros/ros.h>

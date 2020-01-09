@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <prometheus_msgs/ControlCommand.h>
-#include <command_to_mavros.h>
 #include <controller_test.h>
 
 using namespace std;
