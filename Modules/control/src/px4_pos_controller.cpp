@@ -20,14 +20,14 @@
 #include <state_from_mavros.h>
 #include <command_to_mavros.h>
 
-#include <pos_controller_cascade_PID.h>
-#include <pos_controller_PID.h>
-#include <pos_controller_UDE.h>
-#include <pos_controller_Passivity.h>
-#include <pos_controller_NE.h>
+#include <Position_Controller/pos_controller_cascade_PID.h>
+#include <Position_Controller/pos_controller_PID.h>
+#include <Position_Controller/pos_controller_UDE.h>
+#include <Position_Controller/pos_controller_Passivity.h>
+#include <Position_Controller/pos_controller_NE.h>
 
 #include <prometheus_control_utils.h>
-#include <LowPassFilter.h>
+#include <Filter/LowPassFilter.h>
 
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
