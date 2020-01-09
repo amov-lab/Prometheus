@@ -6,7 +6,7 @@ uint8 Move_mode
 uint8 XYZ_POS      = 0
 uint8 XY_POS_Z_VEL = 1
 uint8 XY_VEL_Z_POS = 2
-uint8 XY_VEL_Z_VEL = 3
+uint8 XYZ_VEL = 3
 uint8 TRAJECTORY   = 4
 
 uint8 Move_frame

@@ -88,6 +88,11 @@ target_link_libraries(ground_station OptiTrackFeedbackRigidBody)
 #add_dependencies(px4_fw_controller prometheus_control_gencpp)
 #target_link_libraries(px4_fw_controller ${catkin_LIBRARIES})
 ###### Utilities File ##########
+add_executable(keyboard_control src/Utilities/keyboard_control.cpp)
+add_dependencies(keyboard_control prometheus_control_gencpp)
+target_link_libraries(keyboard_control ${catkin_LIBRARIES})
+target_link_libraries(keyboard_control KeyboardEvent)
+
 add_executable(filter_tester src/Utilities/filter_tester.cpp)
 add_dependencies(filter_tester prometheus_control_gencpp)
 target_link_libraries(filter_tester ${catkin_LIBRARIES})

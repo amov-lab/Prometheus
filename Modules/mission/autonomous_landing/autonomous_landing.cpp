@@ -421,7 +421,7 @@ void track_land()
     //relative_position.z = (height_on_pad  - pos_drone.position.z);
 
     //xyz速度控制模式
-    Command_Now.Move_mode  = Command_Now.Reference_State.XY_VEL_Z_VEL; // xy velocity z velocity
+    Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_VEL; // xy velocity z velocity
     //如果要去追踪一个动态的降落板，则需要反馈其速度
     Command_Now.Reference_State.velocity_ref[0] =  kpx_land * relative_position.x;
     Command_Now.Reference_State.velocity_ref[1] =  - kpy_land * relative_position.y;

@@ -86,9 +86,9 @@ void printf_command_control(const prometheus_msgs::ControlCommand& _ControlComma
             }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::XY_VEL_Z_POS)
             {
                 cout << "Command: [ Move ] " << "Move_mode: [ XY_VEL_Z_POS ] " <<endl;
-            }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::XY_VEL_Z_VEL)
+            }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::XYZ_VEL)
             {
-                cout << "Command: [ Move ] " << "Move_mode: [ XY_VEL_Z_VEL ] " <<endl;
+                cout << "Command: [ Move ] " << "Move_mode: [ XYZ_VEL ] " <<endl;
             }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
             {
                 cout << "Command: [ Move ] " << "Move_mode: [ TRAJECTORY ] " <<endl;
