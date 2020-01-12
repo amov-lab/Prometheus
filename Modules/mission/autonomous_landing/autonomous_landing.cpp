@@ -62,7 +62,7 @@ float land_max_z;
 
 
 //---------------------------------------Output---------------------------------------------
-prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 float satfunc(float data, float Max, float Thres);                           //限幅函数
 void track_land();
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
-    //【发布】发送给position_control.cpp的命令
+    //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
