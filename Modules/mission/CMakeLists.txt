@@ -63,10 +63,6 @@ add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
 add_dependencies(waypoint_tracking prometheus_mission_gencpp)
 target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
 
-#add_executable(payload_drop payload_drop/payload_drop.cpp)
-#add_dependencies(payload_drop prometheus_mission_gencpp)
-#target_link_libraries(payload_drop ${catkin_LIBRARIES})
-
 #add_executable(autonomous_landing autonomous_landing/autonomous_landing.cpp)
 #add_dependencies(autonomous_landing prometheus_mission_gencpp)
 #target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
