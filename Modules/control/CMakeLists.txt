@@ -77,11 +77,6 @@ add_dependencies(px4_pos_estimator prometheus_control_gencpp)
 target_link_libraries(px4_pos_estimator ${catkin_LIBRARIES})
 target_link_libraries(px4_pos_estimator OptiTrackFeedbackRigidBody)
 
-##px4_sender.cpp
-add_executable(px4_sender src/px4_sender.cpp)
-add_dependencies(px4_sender prometheus_control_gencpp)
-target_link_libraries(px4_sender ${catkin_LIBRARIES})
-
 ##ground_station.cpp
 add_executable(ground_station src/ground_station.cpp)
 add_dependencies(ground_station prometheus_control_gencpp)
@@ -93,10 +88,10 @@ target_link_libraries(ground_station OptiTrackFeedbackRigidBody)
 #add_dependencies(px4_fw_controller prometheus_control_gencpp)
 #target_link_libraries(px4_fw_controller ${catkin_LIBRARIES})
 ###### Utilities File ##########
-
-add_executable(setpoint_track src/Utilities/setpoint_track.cpp)
-add_dependencies(setpoint_track prometheus_control_gencpp)
-target_link_libraries(setpoint_track ${catkin_LIBRARIES})
+add_executable(keyboard_control src/Utilities/keyboard_control.cpp)
+add_dependencies(keyboard_control prometheus_control_gencpp)
+target_link_libraries(keyboard_control ${catkin_LIBRARIES})
+target_link_libraries(keyboard_control KeyboardEvent)
 
 add_executable(filter_tester src/Utilities/filter_tester.cpp)
 add_dependencies(filter_tester prometheus_control_gencpp)
@@ -110,9 +105,9 @@ add_executable(fake_vicon src/Utilities/fake_vicon.cpp)
 add_dependencies(fake_vicon prometheus_control_gencpp)
 target_link_libraries(fake_vicon ${catkin_LIBRARIES})
 
-add_executable(move src/Utilities/move.cpp)
-add_dependencies(move prometheus_control_gencpp)
-target_link_libraries(move ${catkin_LIBRARIES})
+add_executable(terminal_control src/Utilities/terminal_control.cpp)
+add_dependencies(terminal_control prometheus_control_gencpp)
+target_link_libraries(terminal_control ${catkin_LIBRARIES})
 
 add_executable(OptiTrackTest src/Utilities/OptiTrackTest.cpp)
 add_dependencies(OptiTrackTest prometheus_control_gencpp)
@@ -127,7 +122,6 @@ target_link_libraries(set_mode ${catkin_LIBRARIES})
 add_executable(eigen_test src/Utilities/eigen_test.cpp)
 add_dependencies(eigen_test prometheus_control_gencpp)
 target_link_libraries(eigen_test ${catkin_LIBRARIES})
-
 #############
 ## Install ##
 #############

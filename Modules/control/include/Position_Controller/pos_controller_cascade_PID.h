@@ -24,7 +24,7 @@
 #include <math_utils.h>
 #include <prometheus_control_utils.h>
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_msgs/ControlOutput.h>
 
@@ -57,8 +57,6 @@ class pos_controller_cascade_PID
             pos_cascade_pid_nh.param<float>("Limit/THR_MIN", MPC_THR_MIN, 0.1);
             pos_cascade_pid_nh.param<float>("Limit/THR_MAX", MPC_THR_MAX, 0.9);
             pos_cascade_pid_nh.param<float>("Limit/tilt_max", tilt_max, 5.0);
-
-
 
             vel_setpoint    = Eigen::Vector3d(0.0,0.0,0.0);
             thrust_sp       = Eigen::Vector3d(0.0,0.0,0.0);
@@ -128,14 +126,14 @@ class pos_controller_cascade_PID
         void printf_result();
 
         // Position control main function 
-        // [Input: Current state, Reference state, _Reference_State.Sub_mode, dt; Output: AttitudeReference;]
-        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt);
+        // [Input: Current state, Reference state, _Move_mode, dt; Output: AttitudeReference;]
+        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::PositionReference& _Reference_State, float dt);
 
         //Position control loop [Input: current pos, desired pos; Output: desired vel]
-        void _positionController(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, Eigen::Vector3d& vel_setpoint);
+        void _positionController(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::PositionReference& _Reference_State, Eigen::Vector3d& vel_setpoint);
 
         //Velocity control loop [Input: current vel, desired vel; Output: desired thrust]
-        void _velocityController(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt, Eigen::Vector3d& thrust_sp);
+        void _velocityController(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::PositionReference& _Reference_State, float dt, Eigen::Vector3d& thrust_sp);
 
         void cal_vel_error_deriv(const Eigen::Vector3d& error_now, Eigen::Vector3d& vel_error_deriv);
 
@@ -146,7 +144,7 @@ class pos_controller_cascade_PID
 
 prometheus_msgs::ControlOutput pos_controller_cascade_PID::pos_controller
     (const prometheus_msgs::DroneState& _DroneState, 
-     const prometheus_msgs::TrajectoryPoint& _Reference_State, 
+     const prometheus_msgs::PositionReference& _Reference_State, 
      float dt)
 {
     delta_time = dt;
@@ -167,16 +165,16 @@ prometheus_msgs::ControlOutput pos_controller_cascade_PID::pos_controller
 
 void pos_controller_cascade_PID::_positionController
     (const prometheus_msgs::DroneState& _DroneState, 
-     const prometheus_msgs::TrajectoryPoint& _Reference_State,
+     const prometheus_msgs::PositionReference& _Reference_State,
      Eigen::Vector3d& vel_setpoint)
 {
-    //# _Reference_State.Sub_mode 2-bit value:
+    //# Reference_State.Move_mode 2-bit value:
     //# 0 for position, 1 for vel, 1st for xy, 2nd for z.
     //#                   xy position     xy velocity
     //# z position       	0b00[0]       0b10[2]
     //# z velocity		0b01[1]       0b11(3)
 
-    if((_Reference_State.Sub_mode & 0b10) == 0) //xy channel
+    if((_Reference_State.Move_mode & 0b10) == 0) //xy channel
     {
         vel_setpoint[0] = _Reference_State.velocity_ref[0] + Kp_xy * (_Reference_State.position_ref[0] - _DroneState.position[0]);
         vel_setpoint[1] = _Reference_State.velocity_ref[1] + Kp_xy * (_Reference_State.position_ref[1] - _DroneState.position[1]);
@@ -187,7 +185,7 @@ void pos_controller_cascade_PID::_positionController
         vel_setpoint[1] = _Reference_State.velocity_ref[1];
     }
 
-    if((_Reference_State.Sub_mode & 0b01) == 0) //z channel
+    if((_Reference_State.Move_mode & 0b01) == 0) //z channel
     {
         vel_setpoint[2] = _Reference_State.velocity_ref[2] + Kp_z  * (_Reference_State.position_ref[2] - _DroneState.position[2]);
     }
@@ -204,7 +202,7 @@ void pos_controller_cascade_PID::_positionController
 
 void pos_controller_cascade_PID::_velocityController
     (const prometheus_msgs::DroneState& _DroneState, 
-     const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt,
+     const prometheus_msgs::PositionReference& _Reference_State, float dt,
      Eigen::Vector3d& thrust_sp)
 {
     // Generate desired thrust setpoint.

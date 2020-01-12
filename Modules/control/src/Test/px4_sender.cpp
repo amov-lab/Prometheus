@@ -30,7 +30,7 @@
 
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_control_utils.h>
 #include <prometheus_msgs/Trajectory.h>
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
     Command_Now.Mode = command_to_mavros::Idle;
     Command_Now.Command_ID = 0;
-    Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;
+    Command_Now.Move_mode  = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.position_ref[0] = 0;
     Command_Now.Reference_State.position_ref[1] = 0;
     Command_Now.Reference_State.position_ref[2] = 0;
@@ -160,15 +160,15 @@ int main(int argc, char **argv)
         prinft_command_state();
 
         // 无人机一旦接受到Land指令，则会屏蔽其他指令
-        if(Command_Last.Mode == command_to_mavros::Land)
+        if(Command_Last.Mode == prometheus_msgs::ControlCommand::Land)
         {
-            Command_Now.Mode = command_to_mavros::Land;
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
         }
 
         // Check for geo fence: If drone is out of the geo fence, it will land now.
         if(check_failsafe() == 1)
         {
-            Command_Now.Mode = command_to_mavros::Land;
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
         }
 
         switch (Command_Now.Mode)
@@ -187,19 +187,19 @@ int main(int argc, char **argv)
             break;
 
         // 不支持复合模式
-        case command_to_mavros::Move_ENU:
+        case prometheus_msgs::ControlCommand::Move:
 
             //只有在comid增加时才会进入解算 ： 机体系 至 惯性系
             if( Command_Now.Command_ID  >  Command_Last.Command_ID )
             {
-                if( Command_Now.Reference_State.Sub_mode  == 0 )
+                if( Command_Now.Move_mode  == 0 )
                 {
                     pos_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
                     yaw_sp = Command_Now.Reference_State.yaw_ref;
 
                     _command_to_mavros.send_pos_setpoint(pos_sp, yaw_sp);
                 }
-                else if( Command_Now.Reference_State.Sub_mode  == 3 )
+                else if( Command_Now.Move_mode  == 3 )
                 {
                     vel_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
 
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
         // 不支持复合模式
         case command_to_mavros::Move_Body:
 
-            if( Command_Now.Reference_State.Sub_mode  == 0 )
+            if( Command_Now.Move_mode  == 0 )
             {
                 float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
                 float d_pos_enu[2];                                                           //the desired xy position in enu Frame (The origin point is the drone)
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
 
                 _command_to_mavros.send_pos_setpoint(pos_sp, yaw_sp);
             }
-            else if( Command_Now.Reference_State.Sub_mode  == 3 )
+            else if( Command_Now.Move_mode  == 3 )
             {
                 vel_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
 
@@ -248,8 +248,8 @@ int main(int argc, char **argv)
             break;
 
 
-        case command_to_mavros::Land:
-            if (Command_Last.Mode != command_to_mavros::Land)
+        case prometheus_msgs::ControlCommand::Land:
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
             {
                 pos_sp = Eigen::Vector3d(_DroneState.position[0],_DroneState.position[1],Takeoff_position[2]);
                 yaw_sp = _DroneState.attitude[2];
@@ -335,7 +335,7 @@ void prinft_command_state()
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Command State<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     switch(Command_Now.Mode)
     {
-    case command_to_mavros::Move_ENU:
+    case prometheus_msgs::ControlCommand::Move:
         cout << "Command: [ Move_ENU ] " <<endl;
         break;
     case command_to_mavros::Move_Body:
@@ -344,7 +344,7 @@ void prinft_command_state()
     case command_to_mavros::Hold:
         cout << "Command: [ Hold ] " <<endl;
         break;
-    case command_to_mavros::Land:
+    case prometheus_msgs::ControlCommand::Land:
         cout << "Command: [ Land ] " <<endl;
         break;
     case command_to_mavros::Disarm:
@@ -363,7 +363,7 @@ void prinft_command_state()
     }
 
     int sub_mode;
-    sub_mode = Command_Now.Reference_State.Sub_mode ;
+    sub_mode = Command_Now.Move_mode ;
 
     if((sub_mode & 0b10) == 0) //xy channel
     {

@@ -1,6 +1,0 @@
-##正方形大小 m
-size_square: 2
-##飞行高度
-height_square: 1.0
-##单边飞行时间
-sleep_time: 10.0
