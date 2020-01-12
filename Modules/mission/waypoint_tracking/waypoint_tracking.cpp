@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     // 本话题来自根据需求自定px4_pos_estimator.cpp
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
-    // 【发布】发送给position_control.cpp的命令
+    // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     ros::Time time_begin;
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     // 无人机未解锁或者未进入offboard模式前，循环等待
     while(_DroneState.armed != true || _DroneState.mode != "OFFBOARD")
     {
-        cout<<"[sqaure]: "<<"Please arm and switch to OFFBOARD mode."<<endl;
+        cout<<"[waypoint_tracking]: "<<"Please arm and switch to OFFBOARD mode."<<endl;
         ros::spinOnce();
         rate.sleep();
     }
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主程序<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //takeoff
-    cout<<"[sqaure]: "<<"Takeoff."<<endl;
+    cout<<"[waypoint_tracking]: "<<"Takeoff."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Takeoff;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     sleep(10.0);
     
     //第一个目标点，左下角
-    cout<<"[sqaure]: "<<"Moving to Point 1."<<endl;
+    cout<<"[waypoint_tracking]: "<<"Moving to Point 1."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -147,14 +147,14 @@ int main(int argc, char **argv)
         ros::Time time_now = ros::Time::now();
         time_sec = time_now.sec-time_begin.sec;
         distance = cal_distance(drone_pos,point1);
-        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        cout<<"[waypoint_tracking]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
         ros::spinOnce();
         rate.sleep();
     }
 
         
     //第二个目标点，左上角
-    cout<<"[sqaure]: "<<"Moving to Point 2."<<endl;
+    cout<<"[waypoint_tracking]: "<<"Moving to Point 2."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -175,13 +175,13 @@ int main(int argc, char **argv)
         ros::Time time_now = ros::Time::now();
         time_sec = time_now.sec-time_begin.sec;
         distance = cal_distance(drone_pos,point2);
-        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        cout<<"[waypoint_tracking]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
         ros::spinOnce();
         rate.sleep();
     }
 
     //第三个目标点，右上角
-    cout<<"[sqaure]: "<<"Moving to Point 3."<<endl;
+    cout<<"[waypoint_tracking]: "<<"Moving to Point 3."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -202,13 +202,13 @@ int main(int argc, char **argv)
         ros::Time time_now = ros::Time::now();
         time_sec = time_now.sec-time_begin.sec;
         distance = cal_distance(drone_pos,point3);
-        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        cout<<"[waypoint_tracking]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
         ros::spinOnce();
         rate.sleep();
     }
 
     //第四个目标点，右下角
-    cout<<"[sqaure]: "<<"Moving to Point 4."<<endl;
+    cout<<"[waypoint_tracking]: "<<"Moving to Point 4."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -229,13 +229,13 @@ int main(int argc, char **argv)
         ros::Time time_now = ros::Time::now();
         time_sec = time_now.sec-time_begin.sec;
         distance = cal_distance(drone_pos,point4);
-        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        cout<<"[waypoint_tracking]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
         ros::spinOnce();
         rate.sleep();
     }
 
     //第五个目标点，回到起点
-    cout<<"[sqaure]: "<<"Moving to Point 5."<<endl;
+    cout<<"[waypoint_tracking]: "<<"Moving to Point 5."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -256,13 +256,13 @@ int main(int argc, char **argv)
         ros::Time time_now = ros::Time::now();
         time_sec = time_now.sec-time_begin.sec;
         distance = cal_distance(drone_pos,point5);
-        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        cout<<"[waypoint_tracking]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
         ros::spinOnce();
         rate.sleep();
     }
 
     //降落
-    cout<<"[sqaure]: "<<"Landing."<<endl;
+    cout<<"[waypoint_tracking]: "<<"Landing."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Land;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
