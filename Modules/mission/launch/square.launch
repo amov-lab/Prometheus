@@ -1,10 +1,10 @@
 <launch>
-	<!-- run the position_control.cpp -->
+	<!-- run the square.cpp -->
 
-	<node pkg="prometheus_control" type="square" name="square" output="screen">
+	<node pkg="prometheus_mission" type="square" name="square" output="screen">
 
-		<!-- load blacklist, config -->
-		<rosparam command="load" file="$(find prometheus_control)/square/square.yaml" />
+		<!-- load config -->
+		<rosparam command="load" file="$(find prometheus_mission)/square/square.yaml" />
 
 
 	</node>
