@@ -59,9 +59,13 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
-add_executable(square square/square.cpp)
-add_dependencies(square prometheus_mission_gencpp)
-target_link_libraries(square ${catkin_LIBRARIES})
+add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
+add_dependencies(waypoint_tracking prometheus_mission_gencpp)
+target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
+
+#add_executable(payload_drop payload_drop/payload_drop.cpp)
+#add_dependencies(payload_drop prometheus_mission_gencpp)
+#target_link_libraries(payload_drop ${catkin_LIBRARIES})
 
 #add_executable(autonomous_landing autonomous_landing/autonomous_landing.cpp)
 #add_dependencies(autonomous_landing prometheus_mission_gencpp)
@@ -79,9 +83,7 @@ target_link_libraries(square ${catkin_LIBRARIES})
 #add_dependencies(collision_avoidance_streo prometheus_mission_gencpp)
 #target_link_libraries(collision_avoidance_streo ${catkin_LIBRARIES})
 
-#add_executable(payload_drop payload_drop/payload_drop.cpp)
-#add_dependencies(payload_drop prometheus_mission_gencpp)
-#target_link_libraries(payload_drop ${catkin_LIBRARIES})
+
 
 #add_executable(formation_control_sitl formation_control_sitl/formation_control_sitl.cpp)
 #add_dependencies(formation_control_sitl prometheus_mission_gencpp)
