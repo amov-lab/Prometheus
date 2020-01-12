@@ -1,0 +1,15 @@
+Controller_Test:
+  Circle:
+    Center_x: 0.0
+    Center_y: 0.0
+    Center_z: 1.0
+    circle_radius: 1.0          ## m
+    linear_vel: 1.0             ## m/s
+    direction: 1.0              ##direction = 1 for CCW 逆时针, direction = -1 for CW 顺时针
+  Step:
+    step_length: 2.0
+    step_interval: 5.0
+
+
+
+

@@ -15,7 +15,7 @@
 #include <command_to_mavros.h>
 #include <prometheus_control_utils.h>
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_msgs/ControlOutput.h>
 
@@ -87,7 +87,7 @@ class pos_controller_PID
 
         // Position control main function 
         // [Input: Current state, Reference state, sub_mode, dt; Output: AttitudeReference;]
-        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt);
+        prometheus_msgs::ControlOutput pos_controller(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::PositionReference& _Reference_State, float dt);
 
     private:
         ros::NodeHandle pos_pid_nh;
@@ -96,7 +96,7 @@ class pos_controller_PID
 
 prometheus_msgs::ControlOutput pos_controller_PID::pos_controller(
     const prometheus_msgs::DroneState& _DroneState, 
-    const prometheus_msgs::TrajectoryPoint& _Reference_State, float dt)
+    const prometheus_msgs::PositionReference& _Reference_State, float dt)
 {
     Eigen::Vector3d accel_sp;
     

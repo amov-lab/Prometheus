@@ -12,10 +12,8 @@
 #include <OptiTrackFeedBackRigidBody.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
-
-#include <prometheus_msgs/Trajectory.h>
 //msg 头文件
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
@@ -32,12 +30,12 @@
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
-#include <prometheus_msgs/Topic_for_log.h>
+#include <prometheus_msgs/GroundStation.h>
 
 
 using namespace std;
 //---------------------------------------相关参数-----------------------------------------------
-prometheus_msgs::Topic_for_log _Topic_for_log;
+prometheus_msgs::GroundStation _GroundStation;
 
 Eigen::Vector3d pos_drone_mocap;                          //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -50,9 +48,9 @@ float Thrust_target;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_info();                                                                       //打印函数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void log_cb(const prometheus_msgs::Topic_for_log::ConstPtr &msg)
+void log_cb(const prometheus_msgs::GroundStation::ConstPtr &msg)
 {
-    _Topic_for_log = *msg;
+    _GroundStation = *msg;
 }
 
 void att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr& msg)
@@ -99,7 +97,7 @@ int main(int argc, char **argv)
     // 【订阅】optitrack估计位置
     ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/UAV/pose", 10, optitrack_cb);
 
-    ros::Subscriber log_sub = nh.subscribe<prometheus_msgs::Topic_for_log>("/prometheus/topic_for_log", 10, log_cb);
+    ros::Subscriber log_sub = nh.subscribe<prometheus_msgs::GroundStation>("/prometheus/GroundStation", 10, log_cb);
 
     ros::Subscriber attitude_target_sub = nh.subscribe<mavros_msgs::AttitudeTarget>("/mavros/setpoint_raw/target_attitude", 10,att_target_cb);
 
@@ -143,23 +141,23 @@ void printf_info()
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    prometheus_control_utils::prinft_drone_state(_Topic_for_log.Drone_State);
+    prometheus_control_utils::prinft_drone_state(_GroundStation.Drone_State);
 
-    prometheus_control_utils::printf_command_control(_Topic_for_log.Control_Command);
+    prometheus_control_utils::printf_command_control(_GroundStation.Control_Command);
 
-    prometheus_control_utils::prinft_attitude_reference(_Topic_for_log.Attitude_Reference);
+    prometheus_control_utils::prinft_attitude_reference(_GroundStation.Attitude_Reference);
 
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>> Control Output  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     
-    //cout << "u_l [X Y Z]  : " << _Topic_for_log.Control_Output.u_l[0] << " [ ] "<< _Topic_for_log.Control_Output.u_l[1] <<" [ ] "<< _Topic_for_log.Control_Output.u_l[2] <<" [ ] "<<endl;
+    //cout << "u_l [X Y Z]  : " << _GroundStation.Control_Output.u_l[0] << " [ ] "<< _GroundStation.Control_Output.u_l[1] <<" [ ] "<< _GroundStation.Control_Output.u_l[2] <<" [ ] "<<endl;
     
-    //cout << "u_d [X Y Z]  : " << _Topic_for_log.Control_Output.u_d[0] << " [ ] "<< _Topic_for_log.Control_Output.u_d[1] <<" [ ] "<< _Topic_for_log.Control_Output.u_d[2] <<" [ ] "<<endl;
-    //cout << "NE  [X Y Z]  : " << _Topic_for_log.Control_Output.NE[0] << " [ ] "<< _Topic_for_log.Control_Output.NE[1] <<" [ ] "<< _Topic_for_log.Control_Output.NE[2] <<" [ ] "<<endl;
+    //cout << "u_d [X Y Z]  : " << _GroundStation.Control_Output.u_d[0] << " [ ] "<< _GroundStation.Control_Output.u_d[1] <<" [ ] "<< _GroundStation.Control_Output.u_d[2] <<" [ ] "<<endl;
+    //cout << "NE  [X Y Z]  : " << _GroundStation.Control_Output.NE[0] << " [ ] "<< _GroundStation.Control_Output.NE[1] <<" [ ] "<< _GroundStation.Control_Output.NE[2] <<" [ ] "<<endl;
 
-    cout << "Thrust  [X Y Z]  : " << _Topic_for_log.Control_Output.Thrust[0] << " [ ] "<< _Topic_for_log.Control_Output.Thrust[1] <<" [ ] "<< _Topic_for_log.Control_Output.Thrust[2] <<" [ ] "<<endl;
+    cout << "Thrust  [X Y Z]  : " << _GroundStation.Control_Output.Thrust[0] << " [ ] "<< _GroundStation.Control_Output.Thrust[1] <<" [ ] "<< _GroundStation.Control_Output.Thrust[2] <<" [ ] "<<endl;
 
-    cout << "Throttle  [X Y Z]  : " << _Topic_for_log.Control_Output.Throttle[0] << " [ ] "<< _Topic_for_log.Control_Output.Throttle[1] <<" [ ] "<< _Topic_for_log.Control_Output.Throttle[2] <<" [ ] "<<endl;
+    cout << "Throttle  [X Y Z]  : " << _GroundStation.Control_Output.Throttle[0] << " [ ] "<< _GroundStation.Control_Output.Throttle[1] <<" [ ] "<< _GroundStation.Control_Output.Throttle[2] <<" [ ] "<<endl;
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>> Target Info FCU <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     
@@ -170,9 +168,9 @@ void printf_info()
     cout << "Thr_target [ 0-1 ] : " << Thrust_target <<endl;
 
     //cout <<">>>>>>>>>>>>>>>>>>>>>>>>Error Info [ Longhao ]<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    //cout << "Error_pos      : " << UAVstate.Position[0] - _Topic_for_log.Drone_State.position[0] << " [ m ] "<< UAVstate.Position[1] - _Topic_for_log.Drone_State.position[1]<<" [ m ] "<< UAVstate.Position[2] - _Topic_for_log.Drone_State.position[2]<<" [ m ] "<<endl;
-    //cout << "Error_vel      : " << UAVstate.V_I[0] - _Topic_for_log.Drone_State.velocity[0] << " [m/s] "<< UAVstate.V_I[1] - _Topic_for_log.Drone_State.velocity[1]<<" [m/s] "<< UAVstate.V_I[2] - _Topic_for_log.Drone_State.velocity[2]<<" [m/s] "<<endl;
-    //cout << "Error_att      : " << UAVstate.Euler[0]*57.3 - _Topic_for_log.Drone_State.attitude[0]*57.3 << " [deg] "<< UAVstate.Euler[1]*57.3 - _Topic_for_log.Drone_State.attitude[1]*57.3<<" [deg] "<< UAVstate.Euler[2]*57.3 - _Topic_for_log.Drone_State.attitude[2]*57.3<<" [deg] "<<endl;
-    //cout << "Error_att_rate : " << UAVstate.Omega_BI[0]*57.3 - _Topic_for_log.Drone_State.attitude_rate[0]*57.3 << " [deg] "<< UAVstate.Omega_BI[1]*57.3 - _Topic_for_log.Drone_State.attitude_rate[1]*57.3<<" [deg] "<< UAVstate.Omega_BI[2]*57.3 - _Topic_for_log.Drone_State.attitude_rate[2]*57.3<<" [deg] "<<endl;
+    //cout << "Error_pos      : " << UAVstate.Position[0] - _GroundStation.Drone_State.position[0] << " [ m ] "<< UAVstate.Position[1] - _GroundStation.Drone_State.position[1]<<" [ m ] "<< UAVstate.Position[2] - _GroundStation.Drone_State.position[2]<<" [ m ] "<<endl;
+    //cout << "Error_vel      : " << UAVstate.V_I[0] - _GroundStation.Drone_State.velocity[0] << " [m/s] "<< UAVstate.V_I[1] - _GroundStation.Drone_State.velocity[1]<<" [m/s] "<< UAVstate.V_I[2] - _GroundStation.Drone_State.velocity[2]<<" [m/s] "<<endl;
+    //cout << "Error_att      : " << UAVstate.Euler[0]*57.3 - _GroundStation.Drone_State.attitude[0]*57.3 << " [deg] "<< UAVstate.Euler[1]*57.3 - _GroundStation.Drone_State.attitude[1]*57.3<<" [deg] "<< UAVstate.Euler[2]*57.3 - _GroundStation.Drone_State.attitude[2]*57.3<<" [deg] "<<endl;
+    //cout << "Error_att_rate : " << UAVstate.Omega_BI[0]*57.3 - _GroundStation.Drone_State.attitude_rate[0]*57.3 << " [deg] "<< UAVstate.Omega_BI[1]*57.3 - _GroundStation.Drone_State.attitude_rate[1]*57.3<<" [deg] "<< UAVstate.Omega_BI[2]*57.3 - _GroundStation.Drone_State.attitude_rate[2]*57.3<<" [deg] "<<endl;
 
 }

@@ -105,7 +105,7 @@ class command_to_mavros
         XYZ_POS,
         XY_POS_Z_VEL,
         XY_VEL_Z_POS,
-        XY_VEL_Z_VEL,
+        XYZ_VEL,
     };
 
     //Target pos of the drone [from fcu]
