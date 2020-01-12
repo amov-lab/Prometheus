@@ -14,8 +14,6 @@
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
-
-#include <prometheus_msgs/Trajectory.h>
 //msg 头文件
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
