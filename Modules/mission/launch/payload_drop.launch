@@ -1,5 +1,0 @@
-<launch>
-	<node pkg="prometheus_mission" type="payload_drop" name="payload_drop" output="screen">
-		<rosparam command="load" file="$(find prometheus_mission)/payload_drop/payload_drop.yaml" />
-	</node>
-</launch>

@@ -7,7 +7,6 @@
 - 简易避障 [collision_avoidance.cpp]
 - 双目简易避障 [collision_avoidance_streo.cpp]
 - 编队飞行（目前仅支持gazebo仿真）[formation_control_sitl.cpp]
-- 负载投掷 [payload_drop.cpp]
 - 目标追踪 [target_tracking.cpp]
 
 ## 航点追踪（正方形飞行）
