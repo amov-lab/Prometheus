@@ -1,18 +1,16 @@
 /***************************************************************************************************************************
- * square.cpp
+ * waypoint_tracking.cpp
  *
  * Author: Qyp
  *
  * Update Time: 2020.1.12
  *
- * 说明: 正方形飞行示例程序
- *      1.
- *      2.
- *      3.
+ * 说明: 航点追踪
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
 #include <iostream>
+#include <mission_utils.h>
 
 #include <std_msgs/Bool.h>
 #include <prometheus_msgs/ControlCommand.h>
@@ -20,21 +18,24 @@
 #include <prometheus_msgs/PositionReference.h>
 using namespace std;
  
+# define TIME_OUT 20.0
+# define THRES_DISTANCE 0.15
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::ControlCommand Command_Now;
 prometheus_msgs::DroneState _DroneState;                          //无人机状态量
-//---------------------------------------正方形参数---------------------------------------------
-float size_square;                  //正方形边长
-float height_square;                //飞行高度
-float sleep_time;
+Eigen::Vector3f drone_pos;
 
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
+
+    drone_pos[0] = _DroneState.position[0];
+    drone_pos[1] = _DroneState.position[1];
+    drone_pos[2] = _DroneState.position[2];
 }
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "square");
+    ros::init(argc, argv, "waypoint_tracking");
     ros::NodeHandle nh("~");
 
     // 频率 [1hz]
@@ -47,16 +48,41 @@ int main(int argc, char **argv)
     // 【发布】发送给position_control.cpp的命令
     ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
+    ros::Time time_begin;
+    float time_sec;
+    float distance;
+    Eigen::Vector3f point1;
+    Eigen::Vector3f point2;
+    Eigen::Vector3f point3;
+    Eigen::Vector3f point4;
+    Eigen::Vector3f point5;
+
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    nh.param<float>("size_square", size_square, 1.5);
-    nh.param<float>("height_square", height_square, 1.0);
-    nh.param<float>("sleep_time", sleep_time, 10.0);
+    nh.param<float>("point1_x", point1[0], 0.0);
+    nh.param<float>("point1_y", point1[1], 0.0);
+    nh.param<float>("point1_z", point1[2], 0.0);
+    nh.param<float>("point2_x", point2[0], 0.0);
+    nh.param<float>("point2_y", point2[1], 0.0);
+    nh.param<float>("point2_z", point2[2], 0.0);
+    nh.param<float>("point3_x", point3[0], 0.0);
+    nh.param<float>("point3_y", point3[1], 0.0);
+    nh.param<float>("point3_z", point3[2], 0.0);
+    nh.param<float>("point4_x", point4[0], 0.0);
+    nh.param<float>("point4_y", point4[1], 0.0);
+    nh.param<float>("point4_z", point4[2], 0.0);
+    nh.param<float>("point5_x", point5[0], 0.0);
+    nh.param<float>("point5_y", point5[1], 0.0);
+    nh.param<float>("point5_z", point5[2], 0.0);
+
 
     int check_flag;
     // 这一步是为了程序运行前检查一下参数是否正确
     // 输入1,继续，其他，退出程序
-    cout << "size_square: "<<size_square<<"[m]"<<endl;
-    cout << "height_square: "<<height_square<<"[m]"<<endl;
+    cout << "point1: " << "[ "<<point1[0]<< "," <<point1[1]<<","<<point1[2]<<" ]"<<endl;
+    cout << "point2: " << "[ "<<point2[0]<< "," <<point2[1]<<","<<point2[2]<<" ]"<<endl;    
+    cout << "point3: " << "[ "<<point3[0]<< "," <<point3[1]<<","<<point3[2]<<" ]"<<endl;
+    cout << "point4: " << "[ "<<point4[0]<< "," <<point4[1]<<","<<point4[2]<<" ]"<<endl;
+    cout << "point5: " << "[ "<<point5[0]<< "," <<point5[1]<<","<<point5[2]<<" ]"<<endl;
     cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
     cin >> check_flag;
 
@@ -64,9 +90,6 @@ int main(int argc, char **argv)
     {
         return -1;
     }
-
-    int i = 0;
-    int comid = 0;
 
     // 无人机未解锁或者未进入offboard模式前，循环等待
     while(_DroneState.armed != true || _DroneState.mode != "OFFBOARD")
@@ -95,18 +118,12 @@ int main(int argc, char **argv)
     //takeoff
     cout<<"[sqaure]: "<<"Takeoff."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
-    Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
+    Command_Now.Mode                            = prometheus_msgs::ControlCommand::Takeoff;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
-    Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
-    Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0] = 0;
-    Command_Now.Reference_State.position_ref[1] = 0;
-    Command_Now.Reference_State.position_ref[2] = height_square;
-    Command_Now.Reference_State.yaw_ref         = 0;
 
     move_pub.publish(Command_Now);
 
-    sleep(sleep_time);
+    sleep(10.0);
     
     //第一个目标点，左下角
     cout<<"[sqaure]: "<<"Moving to Point 1."<<endl;
@@ -115,14 +132,26 @@ int main(int argc, char **argv)
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0] = -size_square/2;
-    Command_Now.Reference_State.position_ref[1] = -size_square/2;
-    Command_Now.Reference_State.position_ref[2] = height_square;
+    Command_Now.Reference_State.position_ref[0] = point1[0];
+    Command_Now.Reference_State.position_ref[1] = point1[1];
+    Command_Now.Reference_State.position_ref[2] = point1[2];
     Command_Now.Reference_State.yaw_ref         = 0;
 
     move_pub.publish(Command_Now);
 
-    sleep(sleep_time);
+    time_begin = ros::Time::now();
+    distance = cal_distance(drone_pos,point1);
+    time_sec = 0;
+    while(distance > THRES_DISTANCE && time_sec < TIME_OUT)
+    {
+        ros::Time time_now = ros::Time::now();
+        time_sec = time_now.sec-time_begin.sec;
+        distance = cal_distance(drone_pos,point1);
+        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        ros::spinOnce();
+        rate.sleep();
+    }
+
         
     //第二个目标点，左上角
     cout<<"[sqaure]: "<<"Moving to Point 2."<<endl;
@@ -131,14 +160,25 @@ int main(int argc, char **argv)
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0] = size_square/2;
-    Command_Now.Reference_State.position_ref[1] = -size_square/2;
-    Command_Now.Reference_State.position_ref[2] = height_square;
+    Command_Now.Reference_State.position_ref[0] = point2[0];
+    Command_Now.Reference_State.position_ref[1] = point2[1];
+    Command_Now.Reference_State.position_ref[2] = point2[2];
     Command_Now.Reference_State.yaw_ref         = 0;
 
     move_pub.publish(Command_Now);
 
-    sleep(sleep_time);
+    time_begin = ros::Time::now();
+    distance = cal_distance(drone_pos,point2);
+    time_sec = 0;
+    while(distance > THRES_DISTANCE && time_sec < TIME_OUT)
+    {
+        ros::Time time_now = ros::Time::now();
+        time_sec = time_now.sec-time_begin.sec;
+        distance = cal_distance(drone_pos,point2);
+        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        ros::spinOnce();
+        rate.sleep();
+    }
 
     //第三个目标点，右上角
     cout<<"[sqaure]: "<<"Moving to Point 3."<<endl;
@@ -147,14 +187,25 @@ int main(int argc, char **argv)
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0] = size_square/2;
-    Command_Now.Reference_State.position_ref[1] = size_square/2;
-    Command_Now.Reference_State.position_ref[2] = height_square;
+    Command_Now.Reference_State.position_ref[0] = point3[0];
+    Command_Now.Reference_State.position_ref[1] = point3[1];
+    Command_Now.Reference_State.position_ref[2] = point3[2];
     Command_Now.Reference_State.yaw_ref         = 0;
 
     move_pub.publish(Command_Now);
 
-    sleep(sleep_time);
+    time_begin = ros::Time::now();
+    distance = cal_distance(drone_pos,point3);
+    time_sec = 0;
+    while(distance > THRES_DISTANCE && time_sec < TIME_OUT)
+    {
+        ros::Time time_now = ros::Time::now();
+        time_sec = time_now.sec-time_begin.sec;
+        distance = cal_distance(drone_pos,point3);
+        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        ros::spinOnce();
+        rate.sleep();
+    }
 
     //第四个目标点，右下角
     cout<<"[sqaure]: "<<"Moving to Point 4."<<endl;
@@ -163,14 +214,25 @@ int main(int argc, char **argv)
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0] = -size_square/2;
-    Command_Now.Reference_State.position_ref[1] = size_square/2;
-    Command_Now.Reference_State.position_ref[2] = height_square;
+    Command_Now.Reference_State.position_ref[0] = point4[0];
+    Command_Now.Reference_State.position_ref[1] = point4[1];
+    Command_Now.Reference_State.position_ref[2] = point4[2];
     Command_Now.Reference_State.yaw_ref         = 0;
 
     move_pub.publish(Command_Now);
 
-    sleep(sleep_time);
+    time_begin = ros::Time::now();
+    distance = cal_distance(drone_pos,point4);
+    time_sec = 0;
+    while(distance > THRES_DISTANCE && time_sec < TIME_OUT)
+    {
+        ros::Time time_now = ros::Time::now();
+        time_sec = time_now.sec-time_begin.sec;
+        distance = cal_distance(drone_pos,point4);
+        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        ros::spinOnce();
+        rate.sleep();
+    }
 
     //第五个目标点，回到起点
     cout<<"[sqaure]: "<<"Moving to Point 5."<<endl;
@@ -179,14 +241,25 @@ int main(int argc, char **argv)
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0] = -size_square/2;
-    Command_Now.Reference_State.position_ref[1] = -size_square/2;
-    Command_Now.Reference_State.position_ref[2] = height_square;
+    Command_Now.Reference_State.position_ref[0] = point5[0];
+    Command_Now.Reference_State.position_ref[1] = point5[1];
+    Command_Now.Reference_State.position_ref[2] = point5[2];
     Command_Now.Reference_State.yaw_ref         = 0;
 
     move_pub.publish(Command_Now);
 
-    sleep(sleep_time);
+    time_begin = ros::Time::now();
+    distance = cal_distance(drone_pos,point5);
+    time_sec = 0;
+    while(distance > THRES_DISTANCE && time_sec < TIME_OUT)
+    {
+        ros::Time time_now = ros::Time::now();
+        time_sec = time_now.sec-time_begin.sec;
+        distance = cal_distance(drone_pos,point5);
+        cout<<"[sqaure]: "<<"Distance to waypoint: "<<distance<< "[m], used " <<time_sec << "[s]."<<endl;
+        ros::spinOnce();
+        rate.sleep();
+    }
 
     //降落
     cout<<"[sqaure]: "<<"Landing."<<endl;

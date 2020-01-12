@@ -3,7 +3,7 @@
  *
  * Author: Qyp
  *
- * Update Time: 2019.06.07
+ * Update Time: 2020.1.12
  *
  * Introduction: payload_drop.cpp
  * 1.Takeoff
@@ -16,20 +16,13 @@
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
-#include <fstream>
-#include <math.h>
-#include <string>
-#include <time.h>
-#include <queue>
-#include <vector>
-#include <cstdlib>
-#include <stdlib.h>
 #include <iostream>
-#include <stdio.h>
+
 #include <std_msgs/Bool.h>
 #include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <mavros_msgs/OverrideRCIn.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <Eigen/Eigen>
 
 using namespace std;
@@ -61,7 +54,10 @@ void pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     drone_pos  = Eigen::Vector3f(msg->pose.position.x,msg->pose.position.y,msg->pose.position.z);
 }
-
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
+{
+    _DroneState = *msg;
+}
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "payload_drop");
@@ -78,8 +74,10 @@ int main(int argc, char **argv)
     // 频率 [1hz]
     ros::Rate rate(1.0);
 
-    //Subscribe the drone position
-    ros::Subscriber position_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 100, pos_cb);
+    //【订阅】无人机当前状态
+    // 本话题来自根据需求自定px4_pos_estimator.cpp
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
+
 
     // 【发布】发送给position_control.cpp的命令
     ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
