@@ -4,11 +4,11 @@
       <uri>model://iris</uri>
     </include>
     <include>
-      <uri>model://realsense_camera</uri>
+      <uri>model://realsense_camera_pose</uri>
       <pose>0.1 0 0 0 0 0</pose>
     </include>
     <joint name="realsense_camera_joint" type="revolute">
-      <child>realsense_camera::link</child>
+      <child>realsense_camera_pose::link</child>
       <parent>iris::base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
