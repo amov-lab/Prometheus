@@ -22,6 +22,11 @@
 #include <mavros_msgs/State.h>
 #include <prometheus_msgs/ControlCommand.h>
 
+
+# define VEL_XY 0.2
+# define VEL_Z 0.2
+# define VEL_YAW 0.1
+
 using namespace std;
 
 prometheus_msgs::ControlCommand Command_Now;
@@ -36,7 +41,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "keyboard_control");
     ros::NodeHandle nh;
-    ros::Rate rate(50.0);
+    ros::Rate rate(20.0);
 
     ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
     
@@ -85,17 +90,20 @@ int main(int argc, char **argv)
         //悬停, 应当只发送一次, 不需要循环发送
         case U_KEY_NONE:
 
-          cout << "[keyboard_control]: The drone is in Hold Mode. Waiting for keyboard command" <<endl;
+            if (key_last != U_KEY_NONE && current_state.mode == "OFFBOARD")
+            {
+              cout << "[keyboard_control]: The drone is in Hold Mode. Waiting for keyboard command" <<endl;
 
-          Command_Now.header.stamp = ros::Time::now();
-          Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
-          Command_Now.Command_ID = Command_Now.Command_ID + 1;
-          //move_pub.publish(Command_Now);
+              Command_Now.header.stamp = ros::Time::now();
+              Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+              Command_Now.Command_ID = Command_Now.Command_ID + 1;
+              move_pub.publish(Command_Now);
+            }
         
           break;
 
         //起飞要维持起飞的模式?
-        case U_KEY_Q:
+        case U_KEY_T:
 
           cout << "[keyboard_control]: The drone is in Takeoff Mode." <<endl;
 
@@ -103,10 +111,13 @@ int main(int argc, char **argv)
           Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
           Command_Now.Command_ID = Command_Now.Command_ID + 1;
           move_pub.publish(Command_Now);
+
+          sleep(5.0);
         
           break;
 
-        //运动逻辑需要修改,应当是模拟遥控器的定点模式,但是如何同时接收多个键盘按键
+        // 运动逻辑需要修改,应当是模拟遥控器的定点模式,但是如何同时接收多个键盘按键?
+        // 向前匀速运动
         case U_KEY_W:
 
           cout << "[keyboard_control]: Moving Forward." <<endl;
@@ -114,34 +125,182 @@ int main(int argc, char **argv)
           Command_Now.header.stamp = ros::Time::now();
           Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
           Command_Now.Command_ID = Command_Now.Command_ID + 1;
-          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_VEL;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
           Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
-          Command_Now.Reference_State.velocity_ref[0]     = 1.0;
+          Command_Now.Reference_State.position_ref[0]     = VEL_XY;
+          Command_Now.Reference_State.position_ref[1]     = 0;
+          Command_Now.Reference_State.position_ref[2]     = 0;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
           Command_Now.Reference_State.velocity_ref[1]     = 0;
           Command_Now.Reference_State.velocity_ref[2]     = 0;
           Command_Now.Reference_State.yaw_ref             = 0;
           move_pub.publish(Command_Now);
+
+          sleep(1.0);
         
           break;
         
+        // 向后匀速运动
         case U_KEY_S:
         
           cout << "[keyboard_control]: Moving Back." <<endl;
           Command_Now.header.stamp = ros::Time::now();
           Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
           Command_Now.Command_ID = Command_Now.Command_ID + 1;
-          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_VEL;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
           Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
-          Command_Now.Reference_State.velocity_ref[0]     = -1.0;
+          Command_Now.Reference_State.position_ref[0]     = -VEL_XY;
+          Command_Now.Reference_State.position_ref[1]     = 0;
+          Command_Now.Reference_State.position_ref[2]     = 0;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
           Command_Now.Reference_State.velocity_ref[1]     = 0;
           Command_Now.Reference_State.velocity_ref[2]     = 0;
           Command_Now.Reference_State.yaw_ref             = 0;
           move_pub.publish(Command_Now);
 
+          sleep(1.0);
+
           break;
 
+        // 向左匀速运动
+        case U_KEY_A:
+        
+          cout << "[keyboard_control]: Moving Left." <<endl;
+          Command_Now.header.stamp = ros::Time::now();
+          Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+          Command_Now.Command_ID = Command_Now.Command_ID + 1;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+          Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
+          Command_Now.Reference_State.position_ref[0]     = 0;
+          Command_Now.Reference_State.position_ref[1]     = VEL_XY;
+          Command_Now.Reference_State.position_ref[2]     = 0;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
+          Command_Now.Reference_State.velocity_ref[1]     = 0;
+          Command_Now.Reference_State.velocity_ref[2]     = 0;
+          Command_Now.Reference_State.yaw_ref             = 0;
+          move_pub.publish(Command_Now);
+
+          sleep(1.0);
+
+          break;
+
+        // 向右匀速运动
+        case U_KEY_D:
+        
+          cout << "[keyboard_control]: Moving Right." <<endl;
+          Command_Now.header.stamp = ros::Time::now();
+          Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+          Command_Now.Command_ID = Command_Now.Command_ID + 1;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+          Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
+          Command_Now.Reference_State.position_ref[0]     = 0;
+          Command_Now.Reference_State.position_ref[1]     = -VEL_XY;
+          Command_Now.Reference_State.position_ref[2]     = 0;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
+          Command_Now.Reference_State.velocity_ref[1]     = 0;
+          Command_Now.Reference_State.velocity_ref[2]     = 0;
+          Command_Now.Reference_State.yaw_ref             = 0;
+          move_pub.publish(Command_Now);
+
+          sleep(1.0);
+
+          break;
+
+        // 向上运动
+        case U_KEY_P:
+
+          cout << "[keyboard_control]: Moving Up." <<endl;
+
+          Command_Now.header.stamp = ros::Time::now();
+          Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+          Command_Now.Command_ID = Command_Now.Command_ID + 1;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+          Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
+          Command_Now.Reference_State.position_ref[0]     = 0;
+          Command_Now.Reference_State.position_ref[1]     = 0;
+          Command_Now.Reference_State.position_ref[2]     = VEL_Z;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
+          Command_Now.Reference_State.velocity_ref[1]     = 0;
+          Command_Now.Reference_State.velocity_ref[2]     = 0;
+          Command_Now.Reference_State.yaw_ref             = 0;
+          move_pub.publish(Command_Now);
+        
+          sleep(1.0);
+
+          break;
+
+        // 向下运动
+        case U_KEY_L:
+
+          cout << "[keyboard_control]: Moving Down." <<endl;
+
+          Command_Now.header.stamp = ros::Time::now();
+          Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+          Command_Now.Command_ID = Command_Now.Command_ID + 1;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+          Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
+          Command_Now.Reference_State.position_ref[0]     = 0;
+          Command_Now.Reference_State.position_ref[1]     = 0;
+          Command_Now.Reference_State.position_ref[2]     = -VEL_Z;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
+          Command_Now.Reference_State.velocity_ref[1]     = 0;
+          Command_Now.Reference_State.velocity_ref[2]     = 0;
+          Command_Now.Reference_State.yaw_ref             = 0;
+          move_pub.publish(Command_Now);
+
+          sleep(1.0);
+        
+          break;
+
+        // 偏航运动，左转 （这个里偏航控制的是位置 不是速度）
+        case U_KEY_Q:
+
+          cout << "[keyboard_control]: Turn Left." <<endl;
+
+          Command_Now.header.stamp = ros::Time::now();
+          Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+          Command_Now.Command_ID = Command_Now.Command_ID + 1;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+          Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
+          Command_Now.Reference_State.position_ref[0]     = 0;
+          Command_Now.Reference_State.position_ref[1]     = 0;
+          Command_Now.Reference_State.position_ref[2]     = 0;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
+          Command_Now.Reference_State.velocity_ref[1]     = 0;
+          Command_Now.Reference_State.velocity_ref[2]     = 0;
+          Command_Now.Reference_State.yaw_ref             = VEL_YAW;
+          move_pub.publish(Command_Now);
+
+          sleep(1.0);
+        
+          break;
+
+        // 偏航运动，右转
+        case U_KEY_E:
+
+          cout << "[keyboard_control]: Turn RIGHT." <<endl;
+
+          Command_Now.header.stamp = ros::Time::now();
+          Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+          Command_Now.Command_ID = Command_Now.Command_ID + 1;
+          Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+          Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
+          Command_Now.Reference_State.position_ref[0]     = 0;
+          Command_Now.Reference_State.position_ref[1]     = 0;
+          Command_Now.Reference_State.position_ref[2]     = 0;
+          Command_Now.Reference_State.velocity_ref[0]     = 0;
+          Command_Now.Reference_State.velocity_ref[1]     = 0;
+          Command_Now.Reference_State.velocity_ref[2]     = 0;
+          Command_Now.Reference_State.yaw_ref             = -VEL_YAW;
+          move_pub.publish(Command_Now);
+
+          sleep(1.0);
+        
+          break;
+
+
         //切换到offboard模式
-        case U_KEY_SPACE:
+        case U_KEY_O:
         
           if(current_state.mode != "OFFBOARD")
           {
@@ -157,8 +316,8 @@ int main(int argc, char **argv)
           break;
         
 
-        //上锁
-        case U_KEY_Z:
+        // 解锁
+        case U_KEY_SPACE:
         
           if(!current_state.armed)
           {
@@ -173,6 +332,7 @@ int main(int argc, char **argv)
           }
 
           break;
+
         }
 
         key_last = key_now;
