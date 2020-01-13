@@ -2,7 +2,7 @@
  * 识别的二维码可以利用生成二维码程序完成生成
  * 视野里只允许存在一个二维码 且二维码的字典类型要对应
  * 二维码的边长为0.2m
- * Update Time: 2018.10.15
+ * Update Time: 2020.01.12
  */
 
 #include <pthread.h>
@@ -16,6 +16,7 @@
 #include <cv_bridge/cv_bridge.h>  
 #include <sensor_msgs/image_encodings.h>  
 #include <geometry_msgs/Pose.h>
+#include <prometheus_msgs/DetectionInfo.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
@@ -124,7 +125,7 @@ int main(int argc, char **argv)
     // 更新频率为30HZ
     ros::Rate loop_rate(30);
     //【发布】识别
-    pose_pub = nh.advertise<geometry_msgs::Pose>("/vision/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target", 1);
 
     // 接收图像的话题
     image_subscriber = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
@@ -172,6 +173,25 @@ int main(int argc, char **argv)
     vector<double> rv(3),tv(3);
     cv::Mat rvec(rv),tvec(tv);
     const auto wait_duration = std::chrono::milliseconds(2000);
+
+    // 生成Aruco码
+    // 保存在Prometheus/Modules/object_detection/config/aruco_images文件夹中
+    /*******************************************************************************************
+    cv::Mat markerImage;
+    cv::Mat markerImagePad = cv::Mat::ones(500, 500,  CV_8UC1) * 255;
+    for (int i=0; i<250; i++)
+    {
+        cv::aruco::drawMarker(dictionary, i, 400, markerImage, 1);
+        markerImage.copyTo(markerImagePad.rowRange(50, 450).colRange(50, 450));
+        cv::imshow("markerImagePad", markerImagePad);
+        cv::waitKey(100);
+        char img_fn[256];
+        sprintf(img_fn, "Prometheus/Modules/object_detection/config/aruco_images/DICT_6X6_250_%d.png", i);
+        cv::imwrite(img_fn, markerImagePad);
+    }
+    *******************************************************************************************/
+
+
     while (ros::ok())
 	{
         while (!getImageStatus()) 
@@ -202,6 +222,8 @@ int main(int argc, char **argv)
                 cv::Point3f Position_OcInW;
 
                 cv::aruco::estimatePoseSingleMarkers(markerCorners,0.2,camera_matrix,distortion_coefficients,rvec,tvec);
+
+                /**********************************************************************
                 double rm[9];
                 RoteM = cv::Mat(3, 3, CV_64FC1, rm);
                 Rodrigues(rvec, RoteM);
@@ -240,34 +262,49 @@ int main(int argc, char **argv)
                 Position_OcInW.x = x*-1;
                 Position_OcInW.y = y*-1;
                 Position_OcInW.z = z*-1;
-                geometry_msgs::Pose pose_now;
-                pose_now.position.x = Position_OcInW.z;
-                pose_now.position.y = -Position_OcInW.x;
-                pose_now.position.z = Position_OcInW.y;
-                pose_now.orientation.w = 1;
+                **********************************************************************/
 
+                prometheus_msgs::DetectionInfo pose_now;
+                pose_now.detected = true;
+                pose_now.frame = 0;
+                pose_now.position[0] = tvec.ptr<double>(0)[2];
+                pose_now.position[1] = tvec.ptr<double>(0)[0];
+                pose_now.position[2] = tvec.ptr<double>(0)[1];
 
-                static_depth  = Position_OcInW.z;
-                static_real_x = -Position_OcInW.x;
-                static_real_y = Position_OcInW.y;;
+                // geometry_msgs::Pose pose_now;                
+                // pose_now.position.x = Position_OcInW.z;
+                // pose_now.position.y = -Position_OcInW.x;
+                // pose_now.position.z = Position_OcInW.y;
+                // pose_now.orientation.w = 1;
 
-                cout << "flag_detected: " <<  pose_now.orientation.w <<endl;
-                cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<endl;
+                static_depth  = tvec.ptr<double>(0)[2];
+                static_real_x = tvec.ptr<double>(0)[0];
+                static_real_y = tvec.ptr<double>(0)[1];
+
+                cout << "flag_detected: " << int(pose_now.detected) <<endl;
+                cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
                 pose_pub.publish(pose_now);
                 deted=true;
             }
             if (!deted)
             {
-                geometry_msgs::Pose pose_now;
-                pose_now.position.x = static_depth;
-                pose_now.position.y = static_real_x;
-                pose_now.position.z = static_real_y;
-                pose_now.orientation.w = 0;
+                prometheus_msgs::DetectionInfo pose_now;
+                pose_now.detected = false;
+                pose_now.frame = 0;
+                pose_now.position[0] = static_depth;
+                pose_now.position[1] = static_real_x;
+                pose_now.position[2] = static_real_y;
+                // geometry_msgs::Pose pose_now;
+                // pose_now.position.x = static_depth;
+                // pose_now.position.y = static_real_x;
+                // pose_now.position.z = static_real_y;
+                // pose_now.orientation.w = 0;
+
                 pose_pub.publish(pose_now);
 
-                cout << "flag_detected: " <<  pose_now.orientation.w <<endl;
-                cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<endl;
+                cout << "flag_detected: " << int(pose_now.detected) <<endl;
+                cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
             }
 

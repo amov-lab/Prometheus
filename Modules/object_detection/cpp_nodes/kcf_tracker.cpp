@@ -12,7 +12,8 @@
 #include <ros/ros.h>  
 #include <image_transport/image_transport.h>  
 #include <cv_bridge/cv_bridge.h>  
-#include <sensor_msgs/image_encodings.h>  
+#include <sensor_msgs/image_encodings.h>
+#include <prometheus_msgs/DetectionInfo.h>
 #include <geometry_msgs/Pose.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
@@ -146,8 +147,8 @@ int main(int argc, char **argv)
     // 接收图像的话题
     imageSubscriber_ = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
 
-    // 椭圆检测结果，xyz
-    pose_pub = nh.advertise<geometry_msgs::Pose>("/vision/ellipse", 1);
+    // 跟踪结果，xyz
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
 
