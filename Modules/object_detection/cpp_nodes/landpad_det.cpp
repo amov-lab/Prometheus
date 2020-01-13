@@ -1,36 +1,47 @@
-/*
-降落目标识别程序 需要注意 降落板图片的左侧为冲前
-降落板的尺寸为60cmX60cm
-Update Time: 2018.10.15
-*/
+/***************************************************************************************************************************
+ * object_tracking.cpp
+ * Author: Jario
+ * Update Time: 2020.1.12
+ *
+ * 说明: 降落目标识别程序，降落板的尺寸为60cmX60cm
+ *      1. 订阅相机话题(来自web_cam)
+ *      3. 发布目标位置
+***************************************************************************************************************************/
+
+#include <time.h>
+#include <fstream>
+#include <iostream>
+#include <math.h>
 #include <pthread.h>
 #include <thread>
 #include <chrono>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
+// ros头文件
 #include <ros/ros.h>
 #include <yaml-cpp/yaml.h>
 #include <ros/package.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+
+// opencv头文件
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/aruco.hpp"
-#include "opencv2/aruco/dictionary.hpp"
-#include "opencv2/aruco/charuco.hpp"
-#include "opencv2/calib3d.hpp"
-#include "geometry_msgs/Point.h"
-#include "geometry_msgs/PoseStamped.h"
-#include "geometry_msgs/Pose.h"
-#include "eigen3/Eigen/Core"
-#include "eigen3/Eigen/Geometry"
-#include "time.h"
-#include "fstream"
-#include "iostream"
-#include "math.h"
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
+#include <opencv2/aruco.hpp>
+#include <opencv2/aruco/dictionary.hpp>
+#include <opencv2/aruco/charuco.hpp>
+#include <opencv2/calib3d.hpp>
+
+// topic 头文件
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
 #include <prometheus_msgs/DetectionInfo.h>
+
 using namespace std;
 using namespace cv;
 
@@ -47,10 +58,6 @@ ros::Subscriber vehicle_pose_sub;
 image_transport::Subscriber image_subscriber;
 //【发布】无人机和小车相对位置
 ros::Publisher position_pub;
-//【发布】无人机和小车相对偏航角
-// ros::Publisher yaw_pub;
-//【发布】是否识别到目标标志位
-// ros::Publisher position_flag_pub;
 //【发布】识别后的图像
 image_transport::Publisher landpad_pub;
 
@@ -58,11 +65,20 @@ image_transport::Publisher landpad_pub;
 Mat img;
 
 
-
 //-------------TIME-------------
 ros::Time begin_time;
 float cur_time;
 float photo_time;
+
+
+//! Camera related parameters.
+int frameWidth_;
+int frameHeight_;
+std_msgs::Header imageHeader_;
+cv::Mat camImageCopy_;
+boost::shared_mutex mutexImageCallback_;
+bool imageStatus_ = false;
+boost::shared_mutex mutexImageStatus_;
 
 
 // 是否检测到标志位-----Point.orientation.w=1为检测成功 =0为检测失败
@@ -152,14 +168,7 @@ float get_dt(ros::Time last)
 }
 
 
-//! Camera related parameters.
-int frameWidth_;
-int frameHeight_;
-std_msgs::Header imageHeader_;
-cv::Mat camImageCopy_;
-boost::shared_mutex mutexImageCallback_;
-bool imageStatus_ = false;
-boost::shared_mutex mutexImageStatus_;
+
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在camImageCopy_中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
@@ -206,7 +215,7 @@ int main(int argc, char **argv)
 
     drone_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
     vehicle_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
-    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target",10);
+    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 10);
     // yaw_pub=nh.advertise<geometry_msgs::Pose>("/relative_yaw",10);
     // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
@@ -309,6 +318,8 @@ int main(int argc, char **argv)
                 cv::Point3f Theta_W2C;
                 cv::Point3f Position_OcInW;
 
+                // 大二维码：19，小二维码：43
+                // cout << "markerids" << markerids[t] << endl;
 
                 //--------------对每一个Marker的相对位置进行解算----------------
                 vector<vector<Point2f> > singMarkerCorner_10, singMarkerCorner_15;
@@ -443,9 +454,9 @@ int main(int argc, char **argv)
             prometheus_msgs::DetectionInfo pose_now;
             pose_now.detected = true;
             pose_now.frame = 0;
-            pose_now.position[0] = -A1_Position_OcInW.x;
-            pose_now.position[1] = A1_Position_OcInW.y;
-            pose_now.position[2] = A1_Position_OcInW.z;
+            pose_now.position[0] = A1_Position_OcInW.y;
+            pose_now.position[1] = A1_Position_OcInW.z;
+            pose_now.position[2] = -A1_Position_OcInW.x;
             pose_now.yaw_error = A1_yaw;
 
             last_x = pose_now.position[0];
