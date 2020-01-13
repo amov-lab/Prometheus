@@ -28,6 +28,7 @@ Update Time: 2018.10.15
 #include "math.h"
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include <prometheus_msgs/DetectionInfo.h>
 using namespace std;
 using namespace cv;
 
@@ -48,9 +49,9 @@ image_transport::Subscriber image_subscriber;
 //【发布】无人机和小车相对位置
 ros::Publisher position_pub;
 //【发布】无人机和小车相对偏航角
-ros::Publisher yaw_pub;
+// ros::Publisher yaw_pub;
 //【发布】是否识别到目标标志位
-ros::Publisher position_flag_pub;
+// ros::Publisher position_flag_pub;
 //【发布】识别后的图像
 image_transport::Publisher landpad_pub;
 
@@ -65,8 +66,8 @@ float cur_time;
 float photo_time;
 
 
-//是否检测到标志位-----Point.orientation.w=1为检测成功 =0为检测失败
-geometry_msgs::Pose flag_position;
+// 是否检测到标志位-----Point.orientation.w=1为检测成功 =0为检测失败
+// geometry_msgs::Pose flag_position;
 //无人机位姿message
 geometry_msgs::Pose pos_drone_optitrack;
 Eigen::Vector3d euler_drone_optitrack;
@@ -208,11 +209,9 @@ int main(int argc, char **argv)
 
     vehicle_pose_sub=nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
 
-    position_pub=nh.advertise<geometry_msgs::Pose>("/vision/relative_position",10);
-
-    yaw_pub=nh.advertise<geometry_msgs::Pose>("/relative_yaw",10);
-
-    position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
+    position_pub=nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target",10);
+    // yaw_pub=nh.advertise<geometry_msgs::Pose>("/relative_yaw",10);
+    // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
     // 接收图像的话题
     image_subscriber = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
@@ -258,6 +257,7 @@ int main(int argc, char **argv)
     vector<double> rv(3),tv(3);
     cv::Mat rvec(rv),tvec(tv);
     // cv::VideoCapture capture(0);
+    float last_x(0), last_y(0), last_z(0), last_yaw(0);
 
 
     //节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
@@ -437,28 +437,49 @@ int main(int argc, char **argv)
 
 
             //将解算后的位置发给控制端
-            geometry_msgs::Pose point_msg;
-            point_msg.position.x=-A1_Position_OcInW.x;
-            point_msg.position.y=A1_Position_OcInW.y;
-            point_msg.position.z=A1_Position_OcInW.z;
-            position_pub.publish(point_msg);
+            prometheus_msgs::DetectionInfo pose_now;
+            pose_now.detected = true;
+            pose_now.frame = 0;
+            pose_now.position[0] = -A1_Position_OcInW.x;
+            pose_now.position[1] = A1_Position_OcInW.y;
+            pose_now.position[2] = A1_Position_OcInW.z;
+            pose_now.yaw_error = A1_yaw;
 
-            geometry_msgs::Pose yaw_msg;
-            yaw_msg.orientation.w=A1_yaw;
-            yaw_pub.publish(yaw_msg);
+            last_x = pose_now.position[0];
+            last_y = pose_now.position[1];
+            last_z = pose_now.position[2];
+            last_yaw = pose_now.yaw_error;
+
+            // geometry_msgs::Pose point_msg;
+            // point_msg.position.x=-A1_Position_OcInW.x;
+            // point_msg.position.y=A1_Position_OcInW.y;
+            // point_msg.position.z=A1_Position_OcInW.z;
+            position_pub.publish(pose_now);
+
+            // geometry_msgs::Pose yaw_msg;
+            // yaw_msg.orientation.w=A1_yaw;
+            // yaw_pub.publish(yaw_msg);
             cur_time = get_dt(begin_time);
-            flag_position.orientation.w=1;
-            position_flag_pub.publish(flag_position);
+            // flag_position.orientation.w=1;
+            // position_flag_pub.publish(flag_position);
 
-            cout<<" flag_detected: "<< flag_position.orientation.w <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << point_msg.position.x  << " [m] "<< point_msg.position.y   <<" [m] "<< point_msg.position.z <<" [m] "<<endl;
+            cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
+            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
         }
         else
         {
-            flag_position.orientation.w=0;
-            position_flag_pub.publish(flag_position);
-            cout<<" flag_detected: "<< flag_position.orientation.w <<endl;
+            prometheus_msgs::DetectionInfo pose_now;
+            pose_now.detected = false;
+            pose_now.frame = 0;
+            pose_now.position[0] = last_x;
+            pose_now.position[1] = last_y;
+            pose_now.position[2] = last_z;
+            pose_now.yaw_error = last_yaw;
+            // flag_position.orientation.w=0;
+            // position_flag_pub.publish(flag_position);
+            cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
+            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
         }
         //画出识别到的二维码
