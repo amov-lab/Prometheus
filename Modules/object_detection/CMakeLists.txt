@@ -154,22 +154,22 @@ target_link_libraries(web_cam ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LI
 add_executable(kcf_tracker
     cpp_nodes/kcf_tracker.cpp
 )
-target_link_libraries(kcf_tracker ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} kcftrackerlib)
+target_link_libraries(kcf_tracker ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} kcftrackerlib yaml-cpp)
 
 add_executable(ellipse_det
     cpp_nodes/ellipse_det.cpp
 )
-target_link_libraries(ellipse_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ellipselib)
+target_link_libraries(ellipse_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ellipselib yaml-cpp)
 
 add_executable(aruco_det
     cpp_nodes/aruco_det.cpp
 )
-target_link_libraries(aruco_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(aruco_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 add_executable(landpad_det
     cpp_nodes/landpad_det.cpp
 )
-target_link_libraries(landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 #############
 ## Install ##
