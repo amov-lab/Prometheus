@@ -11,7 +11,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-#include <ros/ros.h>  
+#include <ros/ros.h>
+#include <ros/package.h>
+#include <yaml-cpp/yaml.h>
 #include <image_transport/image_transport.h>  
 #include <cv_bridge/cv_bridge.h>  
 #include <sensor_msgs/image_encodings.h>  
@@ -34,11 +36,6 @@ image_transport::Subscriber image_subscriber;
 ros::Publisher pose_pub;
 //【发布】输入检测结果图像
 image_transport::Publisher aruco_pub;
-
-//相机内部参数
-float fx,fy,cx,cy;
-//相机畸变系数
-float k1,k2,p1,p2,k3;
 
 
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -140,17 +137,21 @@ int main(int argc, char **argv)
     cv::Mat camera_matrix;
     cv::Mat distortion_coefficients;
 
+    std::string ros_path = ros::package::getPath("prometheus_detection");
+    cout << "DETECTION_PATH: " << ros_path << endl;
     //读取参数文档camera_param.yaml中的参数值；
-    nh.param<float>("fx", fx, 582.611780);
-    nh.param<float>("fy", fy, 582.283970);
-    nh.param<float>("x0", cx, 355.598968);
-    nh.param<float>("y0", cy, 259.508932);
-
-    nh.param<float>("k1", k1, -0.401900);
-    nh.param<float>("k2", k2, 0.175110);
-    nh.param<float>("p1", p1, 0.002115);
-    nh.param<float>("p2", p2, -0.003032);
-    nh.param<float>("k3", k3, 0.0);
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    //相机内部参数
+    double fx = camera_config["fx"].as<double>();
+    double fy = camera_config["fy"].as<double>();
+    double cx = camera_config["x0"].as<double>();
+    double cy = camera_config["y0"].as<double>();
+    //相机畸变系数
+    double k1 = camera_config["k1"].as<double>();
+    double k2 = camera_config["k2"].as<double>();
+    double p1 = camera_config["p1"].as<double>();
+    double p2 = camera_config["p2"].as<double>();
+    double k3 = camera_config["k3"].as<double>();
 
     //相机内参
     camera_matrix = cv::Mat(3,3,CV_64FC1,cv::Scalar::all(0));

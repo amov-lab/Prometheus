@@ -9,7 +9,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-#include <ros/ros.h>  
+#include <ros/ros.h>
+#include <ros/package.h>
+#include <yaml-cpp/yaml.h>
 #include <image_transport/image_transport.h>  
 #include <cv_bridge/cv_bridge.h>  
 #include <sensor_msgs/image_encodings.h>
@@ -151,6 +153,22 @@ int main(int argc, char **argv)
     pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
+
+    std::string ros_path = ros::package::getPath("prometheus_detection");
+    cout << "DETECTION_PATH: " << ros_path << endl;
+    //读取参数文档camera_param.yaml中的参数值；
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    //相机内部参数
+    double fx = camera_config["fx"].as<double>();
+    double fy = camera_config["fy"].as<double>();
+    double cx = camera_config["x0"].as<double>();
+    double cy = camera_config["y0"].as<double>();
+    //相机畸变系数
+    double k1 = camera_config["k1"].as<double>();
+    double k2 = camera_config["k2"].as<double>();
+    double p1 = camera_config["p1"].as<double>();
+    double p2 = camera_config["p2"].as<double>();
+    double k3 = camera_config["k3"].as<double>();
 
     const auto wait_duration = std::chrono::milliseconds(2000);
 

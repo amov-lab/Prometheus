@@ -10,6 +10,8 @@ Update Time: 2018.10.15
 #include <boost/thread/shared_mutex.hpp>
 
 #include <ros/ros.h>
+#include <yaml-cpp/yaml.h>
+#include <ros/package.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -34,10 +36,7 @@ using namespace cv;
 
 double threshold_error=0.4;
 
-//相机内部参数
-float fx,fy,x_0,y_0;
-//相机畸变系数
-float k1,k2,p1,p2,k3;
+
 //---------------------------variables---------------------------------------
 //------------ROS TOPIC---------
 //【订阅】无人机位置
@@ -205,11 +204,9 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
-    drone_pose_sub=nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
-
-    vehicle_pose_sub=nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
-
-    position_pub=nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target",10);
+    drone_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
+    vehicle_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
+    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target",10);
     // yaw_pub=nh.advertise<geometry_msgs::Pose>("/relative_yaw",10);
     // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
@@ -220,37 +217,41 @@ int main(int argc, char **argv)
 
     sensor_msgs::ImagePtr msg_ellipse;
 
+    std::string ros_path = ros::package::getPath("prometheus_detection");
+    cout << "DETECTION_PATH: " << ros_path << endl;
     //读取参数文档camera_param.yaml中的参数值；
-    nh.param<float>("fx", fx, 582.611780);
-    nh.param<float>("fy", fy, 582.283970);
-    nh.param<float>("x0", x_0, 355.598968);
-    nh.param<float>("y0", y_0, 259.508932);
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    //相机内部参数
+    double fx = camera_config["fx"].as<double>();
+    double fy = camera_config["fy"].as<double>();
+    double cx = camera_config["x0"].as<double>();
+    double cy = camera_config["y0"].as<double>();
+    //相机畸变系数
+    double k1 = camera_config["k1"].as<double>();
+    double k2 = camera_config["k2"].as<double>();
+    double p1 = camera_config["p1"].as<double>();
+    double p2 = camera_config["p2"].as<double>();
+    double k3 = camera_config["k3"].as<double>();
 
-    nh.param<float>("k1", k1, -0.401900);
-    nh.param<float>("k2", k2, 0.175110);
-    nh.param<float>("p1", p1, 0.002115);
-    nh.param<float>("p2", p2, -0.003032);
-    nh.param<float>("k3", k3, 0.0);
-
+    // cout << fx << " " << fy << " " << cx << " " << cy << " " << k1 << " " << k2 << " ";
 
     //--------------------------相机参数赋值---------------------
     //相机内参
     Mat camera_matrix;
     camera_matrix =cv::Mat(3,3,CV_64FC1,cv::Scalar::all(0));
-    camera_matrix.ptr<double>(0)[0]=582.611780;
-    camera_matrix.ptr<double>(0)[2]=355.598968;
-    camera_matrix.ptr<double>(1)[1]=582.283970;
-    camera_matrix.ptr<double>(1)[2]=259.508932;
-    camera_matrix.ptr<double>(2)[2]=1.0f;
+    camera_matrix.ptr<double>(0)[0] = fx;
+    camera_matrix.ptr<double>(0)[2] = cx;
+    camera_matrix.ptr<double>(1)[1] = fy;
+    camera_matrix.ptr<double>(1)[2] = cy;
+    camera_matrix.ptr<double>(2)[2] = 1.0f;
     //相机畸变参数k1 k2 p1 p2 k3
     Mat distortion_coefficients;
     distortion_coefficients=cv::Mat(5,1,CV_64FC1,cv::Scalar::all(0));
-    distortion_coefficients.ptr<double>(0)[0]=-0.401900;
-    distortion_coefficients.ptr<double>(1)[0]=0.175110;
-    distortion_coefficients.ptr<double>(2)[0]=0.002115;
-    distortion_coefficients.ptr<double>(3)[0]=-0.003032;
-    distortion_coefficients.ptr<double>(4)[0]=0.0;
-
+    distortion_coefficients.ptr<double>(0)[0] = k1;
+    distortion_coefficients.ptr<double>(1)[0] = k2;
+    distortion_coefficients.ptr<double>(2)[0] = p1;
+    distortion_coefficients.ptr<double>(3)[0] = p2;
+    distortion_coefficients.ptr<double>(4)[0] = k3;
 
     //ArUco Marker字典选择以及旋转向量和评议向量初始化
     Ptr<cv::aruco::Dictionary> dictionary=cv::aruco::getPredefinedDictionary(10);
@@ -262,15 +263,17 @@ int main(int argc, char **argv)
 
     //节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate loopRate(20);
+    ros::Rate loopRate_1Hz(1);
     //----------------------------------------主循环------------------------------------
-    const auto wait_duration = std::chrono::milliseconds(2000);
+    // const auto wait_duration = std::chrono::milliseconds(2000);
     while (ros::ok())
     {
-        while (!getImageStatus()) 
+        while (!getImageStatus() && ros::ok()) 
         {
             printf("Waiting for image.\n");
-            std::this_thread::sleep_for(wait_duration);
+            // std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
+            loopRate_1Hz.sleep();
         }
 
         {
