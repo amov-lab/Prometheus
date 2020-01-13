@@ -3,10 +3,10 @@ std_msgs/Header header
 ## 是否检测到目标
 bool detected
 
-## 0 for body frame, 1 for inertial frame
+## 0表示相机坐标系, 1表示机体坐标系, 2表示惯性坐标系
 int32 frame
 
-## 目标位置[机体系下：前方x为正，右方y为正，下方z为正]
+## 目标位置[相机系下：右方x为正，下方y为正，前方z为正]
 float32[3] position
 
 ## 目标姿态

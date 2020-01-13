@@ -368,14 +368,14 @@ int main(int argc, char **argv)
                     // pose_now.position.z = real_y;
                     pose_now.detected = true;
                     pose_now.frame = 0;
-                    pose_now.position[0] = depth;
-                    pose_now.position[1] = real_x;
-                    pose_now.position[2] = real_y;
+                    pose_now.position[0] = real_x;
+                    pose_now.position[1] = real_y;
+                    pose_now.position[2] = depth;
                     pose_pub.publish(pose_now);
 
-                    last_x = depth;
-                    last_y = real_x;
-                    last_z = real_y;
+                    last_x = real_x;
+                    last_y = real_y;
+                    last_z = depth;
 
                     cout << "flag_detected: " << int(pose_now.detected) <<endl;
                     cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
@@ -405,14 +405,14 @@ int main(int argc, char **argv)
             // pose_now.position.z = real_y;
             pose_now.detected = true;
             pose_now.frame = 0;
-            pose_now.position[0] = depth;
-            pose_now.position[1] = real_x;
-            pose_now.position[2] = real_y;
+            pose_now.position[0] = real_x;
+            pose_now.position[1] = real_y;
+            pose_now.position[2] = depth;
             pose_pub.publish(pose_now);
 
-            last_x = depth;
-            last_y = real_x;
-            last_z = real_y;
+            last_x = real_x;
+            last_y = real_y;
+            last_z = depth;
 
             cout << "flag_detected: " << int(pose_now.detected) <<endl;
             cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;

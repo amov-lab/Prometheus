@@ -268,9 +268,9 @@ int main(int argc, char **argv)
                 prometheus_msgs::DetectionInfo pose_now;
                 pose_now.detected = true;
                 pose_now.frame = 0;
-                pose_now.position[0] = tvec.ptr<double>(0)[2];
-                pose_now.position[1] = tvec.ptr<double>(0)[0];
-                pose_now.position[2] = tvec.ptr<double>(0)[1];
+                pose_now.position[0] = tvec.ptr<double>(0)[0];
+                pose_now.position[1] = tvec.ptr<double>(0)[1];
+                pose_now.position[2] = tvec.ptr<double>(0)[2];
 
                 // geometry_msgs::Pose pose_now;                
                 // pose_now.position.x = Position_OcInW.z;
@@ -278,9 +278,9 @@ int main(int argc, char **argv)
                 // pose_now.position.z = Position_OcInW.y;
                 // pose_now.orientation.w = 1;
 
-                static_depth  = tvec.ptr<double>(0)[2];
                 static_real_x = tvec.ptr<double>(0)[0];
                 static_real_y = tvec.ptr<double>(0)[1];
+                static_depth  = tvec.ptr<double>(0)[2];
 
                 cout << "flag_detected: " << int(pose_now.detected) <<endl;
                 cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
@@ -293,9 +293,9 @@ int main(int argc, char **argv)
                 prometheus_msgs::DetectionInfo pose_now;
                 pose_now.detected = false;
                 pose_now.frame = 0;
-                pose_now.position[0] = static_depth;
-                pose_now.position[1] = static_real_x;
-                pose_now.position[2] = static_real_y;
+                pose_now.position[0] = static_real_x;
+                pose_now.position[1] = static_real_y;
+                pose_now.position[2] = static_depth;
                 // geometry_msgs::Pose pose_now;
                 // pose_now.position.x = static_depth;
                 // pose_now.position.y = static_real_x;
