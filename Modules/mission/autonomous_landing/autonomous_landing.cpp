@@ -181,18 +181,7 @@ int main(int argc, char **argv)
         Command_Now.header.stamp                    = ros::Time::now();
         Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
 
-        Detection_raw.header.stamp = ros::Time::now();
-        Detection_raw.detected = true;
-        Detection_raw.frame = 1;
-        Detection_raw.position[0] = 1.0;
-        Detection_raw.position[1] = 2.0;
-        Detection_raw.position[2] = 0.0;
-
-        Detection_raw.attitude[0] = 0.0;
-        Detection_raw.attitude[1] = 0.0;
-        Detection_raw.attitude[2] = 1.0;
-
-        state_fusion = UKF_CAR.Run(Detection_raw,0.05);
+        state_fusion = UKF_CAR.Run(Detection_ENU,0.05);
 
         printf_result();
 
@@ -261,7 +250,14 @@ void printf_result()
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Autonomous Landing<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "is_detected: " << is_detected <<endl;
+    if(is_detected)
+    {
+        cout << "is_detected: ture" <<endl;
+    }else
+    {
+        cout << "is_detected: false" <<endl;
+    }
+    
     cout << "Detection_raw(pos): " << Detection_raw.position[0] << " [m] "<< Detection_raw.position[1] << " [m] "<<endl;
     cout << "Detection_raw(yaw): " << Detection_raw.attitude[2]/3.1415926 *180 << " [du] "<<endl;
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>UKF State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
