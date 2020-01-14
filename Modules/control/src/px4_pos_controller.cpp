@@ -291,7 +291,7 @@ int main(int argc, char **argv)
 
                 if (_command_to_mavros.arm_cmd.response.success)
                 {
-                    cout<<"Disarm successfully!"<<endl;
+                    cout <<"[px4_pos_controller]: Disarm successfully! "<< endl;
                 }
             }
 
@@ -309,6 +309,29 @@ int main(int argc, char **argv)
 
             break;
 
+        // 【Disarm】 上锁
+        case prometheus_msgs::ControlCommand::Disarm:
+
+            if(_DroneState.mode == "OFFBOARD")
+            {
+                _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+                _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+            }
+
+            if(_DroneState.armed)
+            {
+                _command_to_mavros.arm_cmd.request.value = false;
+                _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
+
+            }
+
+            if (_command_to_mavros.arm_cmd.response.success)
+            {
+                cout <<"[px4_pos_controller]: Disarm successfully! "<< endl;
+            }
+            
+            break;
+
         // 【User_Mode1】 暂空。可进行自定义
         case prometheus_msgs::ControlCommand::User_Mode1:
             
@@ -316,11 +339,6 @@ int main(int argc, char **argv)
 
         // 【User_Mode2】 暂空。可进行自定义
         case prometheus_msgs::ControlCommand::User_Mode2:
-            
-            break;
-
-        // 【User_Mode3】 暂空。可进行自定义
-        case prometheus_msgs::ControlCommand::User_Mode3:
             
             break;
         }
