@@ -35,9 +35,10 @@ Eigen::Vector3f target_pos_body_raw;
 Eigen::Vector3f target_pos_enu_raw;
 Eigen::Vector3f target_pos_fusion;
 
-int flag_detected = 0;                                          // 是否检测到目标标志
+bool is_detected = false;                                          // 是否检测到目标标志
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
-int Thres_vision_lost = 0;                                                          //视觉丢失计数器阈值
+int num_count_vision_regain = 0;                                                      //视觉丢失计数器
+int Thres_vision = 0;                                                          //视觉丢失计数器阈值
 //---------------------------------------Track---------------------------------------------
 float distance_to_setpoint;
 float distance_thres;
@@ -56,18 +57,24 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 
     if(target_body.detected)
     {
-        flag_detected = 1;
+        num_count_vision_regain++;
         num_count_vision_lost = 0;
-        
     }else
     {
+        num_count_vision_regain = 0;
         num_count_vision_lost++;
     }
 
     // 当连续一段时间无法检测到目标时，认定目标丢失
-    if(num_count_vision_lost > Thres_vision_lost)
+    if(num_count_vision_lost > Thres_vision)
     {
-        flag_detected = 0;
+        is_detected = false;
+    }
+
+    // 当连续一段时间检测到目标时，认定目标得到
+    if(num_count_vision_regain > Thres_vision)
+    {
+        is_detected = true;
     }
 
     target_pos_body_raw[0] = msg->position[0];
@@ -114,7 +121,7 @@ int main(int argc, char **argv)
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //视觉丢失次数阈值
-    nh.param<int>("Thres_vision_lost", Thres_vision_lost, 20);
+    nh.param<int>("Thres_vision", Thres_vision, 20);
 
     //追踪距离阈值
     nh.param<float>("distance_thres", distance_thres, 0.2);
@@ -126,8 +133,10 @@ int main(int argc, char **argv)
 
 
     //ukf用于估计目标运动状态，此处假设目标为匀加速运动
+
+    int model_type = UKF::NCA;
     
-    UKF UKF_NCA(1);
+    UKF UKF_NCA(model_type);
 
     //打印现实检查参数
     printf_param();
@@ -189,10 +198,11 @@ int main(int argc, char **argv)
         distance_to_setpoint = cal_distance_tracking(target_pos_fusion,drone_pos,tracking_delta);
         if(distance_to_setpoint < distance_thres)
         {
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+            //Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
             cout <<"[object_tracking]: Catched the Target, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
         }
-        else if(flag_detected == 0)
+        
+        if(!is_detected)
         {
             Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
             cout <<"[object_tracking]: Lost the Target "<< endl;
@@ -230,7 +240,7 @@ void printf_result()
     cout.setf(ios::fixed);
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "flag_detected: " <<  flag_detected <<endl;
+    cout << "is_detected: " <<  is_detected <<endl;
     cout << "num_count_vision_lost: " <<  num_count_vision_lost <<endl;
 
     cout << "pos_target: [X Y Z] : " << " " << target_raw.position[0]  << " [m] "<< target_raw.position[1]  <<" [m] "<< target_raw.position[2] <<" [m] "<<endl;
@@ -242,7 +252,7 @@ void printf_result()
 void printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "Thres_vision_lost : "<< Thres_vision_lost << endl;
+    cout << "Thres_vision : "<< Thres_vision << endl;
     cout << "distance_thres : "<< distance_thres << endl;
 
     cout << "tracking_delta_x : "<< tracking_delta[0] << endl;
