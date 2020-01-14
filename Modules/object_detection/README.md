@@ -23,6 +23,7 @@ rosrun prometheus_detection web_cam
 rosrun camera_calibration cameracalibrator.py --size 8x6 --sqre 0.0245 image:=/prometheus/camera/rgb/image_raw
 ```
 size为标点板尺寸，square为每个方格宽度(m)，image:=相机话题
+
 将得到的参数写入如下文件(有关目标尺度的预定义也在这个文件中)
 ```
 Prometheus/Modules/object_detection/config/camera_param.yaml
