@@ -1,42 +1,53 @@
-/*
-降落目标识别程序 需要注意 降落板图片的左侧为冲前
-降落板的尺寸为60cmX60cm
-Update Time: 2018.10.15
-*/
+/***************************************************************************************************************************
+ * object_tracking.cpp
+ * Author: Jario
+ * Update Time: 2020.1.12
+ *
+ * 说明: 降落目标识别程序，降落板的尺寸为60cmX60cm
+ *      1. 订阅相机话题(来自web_cam)
+ *      3. 发布目标位置
+***************************************************************************************************************************/
+
+#include <time.h>
+#include <fstream>
+#include <iostream>
+#include <math.h>
 #include <pthread.h>
 #include <thread>
 #include <chrono>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
+// ros头文件
 #include <ros/ros.h>
+#include <yaml-cpp/yaml.h>
+#include <ros/package.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+
+// opencv头文件
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/aruco.hpp"
-#include "opencv2/aruco/dictionary.hpp"
-#include "opencv2/aruco/charuco.hpp"
-#include "opencv2/calib3d.hpp"
-#include "geometry_msgs/Point.h"
-#include "geometry_msgs/PoseStamped.h"
-#include "geometry_msgs/Pose.h"
-#include "eigen3/Eigen/Core"
-#include "eigen3/Eigen/Geometry"
-#include "time.h"
-#include "fstream"
-#include "iostream"
-#include "math.h"
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
+#include <opencv2/aruco.hpp>
+#include <opencv2/aruco/dictionary.hpp>
+#include <opencv2/aruco/charuco.hpp>
+#include <opencv2/calib3d.hpp>
+
+// topic 头文件
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose.h>
+#include <prometheus_msgs/DetectionInfo.h>
+
 using namespace std;
 using namespace cv;
 
 double threshold_error=0.4;
 
-//相机内部参数
-float fx,fy,x_0,y_0;
-//相机畸变系数
-float k1,k2,p1,p2,k3;
+
 //---------------------------variables---------------------------------------
 //------------ROS TOPIC---------
 //【订阅】无人机位置
@@ -47,16 +58,11 @@ ros::Subscriber vehicle_pose_sub;
 image_transport::Subscriber image_subscriber;
 //【发布】无人机和小车相对位置
 ros::Publisher position_pub;
-//【发布】无人机和小车相对偏航角
-ros::Publisher yaw_pub;
-//【发布】是否识别到目标标志位
-ros::Publisher position_flag_pub;
 //【发布】识别后的图像
 image_transport::Publisher landpad_pub;
 
 //-------------VISION-----------
 Mat img;
-
 
 
 //-------------TIME-------------
@@ -65,8 +71,18 @@ float cur_time;
 float photo_time;
 
 
-//是否检测到标志位-----Point.orientation.w=1为检测成功 =0为检测失败
-geometry_msgs::Pose flag_position;
+//! Camera related parameters.
+int frameWidth_;
+int frameHeight_;
+std_msgs::Header imageHeader_;
+cv::Mat camImageCopy_;
+boost::shared_mutex mutexImageCallback_;
+bool imageStatus_ = false;
+boost::shared_mutex mutexImageStatus_;
+
+
+// 是否检测到标志位-----Point.orientation.w=1为检测成功 =0为检测失败
+// geometry_msgs::Pose flag_position;
 //无人机位姿message
 geometry_msgs::Pose pos_drone_optitrack;
 Eigen::Vector3d euler_drone_optitrack;
@@ -152,14 +168,7 @@ float get_dt(ros::Time last)
 }
 
 
-//! Camera related parameters.
-int frameWidth_;
-int frameHeight_;
-std_msgs::Header imageHeader_;
-cv::Mat camImageCopy_;
-boost::shared_mutex mutexImageCallback_;
-bool imageStatus_ = false;
-boost::shared_mutex mutexImageStatus_;
+
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在camImageCopy_中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
@@ -204,15 +213,11 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
-    drone_pose_sub=nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
-
-    vehicle_pose_sub=nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
-
-    position_pub=nh.advertise<geometry_msgs::Pose>("/vision/relative_position",10);
-
-    yaw_pub=nh.advertise<geometry_msgs::Pose>("/relative_yaw",10);
-
-    position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
+    drone_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
+    vehicle_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
+    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 10);
+    // yaw_pub=nh.advertise<geometry_msgs::Pose>("/relative_yaw",10);
+    // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
     // 接收图像的话题
     image_subscriber = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
@@ -221,56 +226,63 @@ int main(int argc, char **argv)
 
     sensor_msgs::ImagePtr msg_ellipse;
 
+    std::string ros_path = ros::package::getPath("prometheus_detection");
+    cout << "DETECTION_PATH: " << ros_path << endl;
     //读取参数文档camera_param.yaml中的参数值；
-    nh.param<float>("fx", fx, 582.611780);
-    nh.param<float>("fy", fy, 582.283970);
-    nh.param<float>("x0", x_0, 355.598968);
-    nh.param<float>("y0", y_0, 259.508932);
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    //相机内部参数
+    double fx = camera_config["fx"].as<double>();
+    double fy = camera_config["fy"].as<double>();
+    double cx = camera_config["x0"].as<double>();
+    double cy = camera_config["y0"].as<double>();
+    //相机畸变系数
+    double k1 = camera_config["k1"].as<double>();
+    double k2 = camera_config["k2"].as<double>();
+    double p1 = camera_config["p1"].as<double>();
+    double p2 = camera_config["p2"].as<double>();
+    double k3 = camera_config["k3"].as<double>();
 
-    nh.param<float>("k1", k1, -0.401900);
-    nh.param<float>("k2", k2, 0.175110);
-    nh.param<float>("p1", p1, 0.002115);
-    nh.param<float>("p2", p2, -0.003032);
-    nh.param<float>("k3", k3, 0.0);
-
+    // cout << fx << " " << fy << " " << cx << " " << cy << " " << k1 << " " << k2 << " ";
 
     //--------------------------相机参数赋值---------------------
     //相机内参
     Mat camera_matrix;
     camera_matrix =cv::Mat(3,3,CV_64FC1,cv::Scalar::all(0));
-    camera_matrix.ptr<double>(0)[0]=582.611780;
-    camera_matrix.ptr<double>(0)[2]=355.598968;
-    camera_matrix.ptr<double>(1)[1]=582.283970;
-    camera_matrix.ptr<double>(1)[2]=259.508932;
-    camera_matrix.ptr<double>(2)[2]=1.0f;
+    camera_matrix.ptr<double>(0)[0] = fx;
+    camera_matrix.ptr<double>(0)[2] = cx;
+    camera_matrix.ptr<double>(1)[1] = fy;
+    camera_matrix.ptr<double>(1)[2] = cy;
+    camera_matrix.ptr<double>(2)[2] = 1.0f;
     //相机畸变参数k1 k2 p1 p2 k3
     Mat distortion_coefficients;
     distortion_coefficients=cv::Mat(5,1,CV_64FC1,cv::Scalar::all(0));
-    distortion_coefficients.ptr<double>(0)[0]=-0.401900;
-    distortion_coefficients.ptr<double>(1)[0]=0.175110;
-    distortion_coefficients.ptr<double>(2)[0]=0.002115;
-    distortion_coefficients.ptr<double>(3)[0]=-0.003032;
-    distortion_coefficients.ptr<double>(4)[0]=0.0;
-
+    distortion_coefficients.ptr<double>(0)[0] = k1;
+    distortion_coefficients.ptr<double>(1)[0] = k2;
+    distortion_coefficients.ptr<double>(2)[0] = p1;
+    distortion_coefficients.ptr<double>(3)[0] = p2;
+    distortion_coefficients.ptr<double>(4)[0] = k3;
 
     //ArUco Marker字典选择以及旋转向量和评议向量初始化
     Ptr<cv::aruco::Dictionary> dictionary=cv::aruco::getPredefinedDictionary(10);
     vector<double> rv(3),tv(3);
     cv::Mat rvec(rv),tvec(tv);
     // cv::VideoCapture capture(0);
+    float last_x(0), last_y(0), last_z(0), last_yaw(0);
 
 
     //节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate loopRate(20);
+    ros::Rate loopRate_1Hz(1);
     //----------------------------------------主循环------------------------------------
-    const auto wait_duration = std::chrono::milliseconds(2000);
+    // const auto wait_duration = std::chrono::milliseconds(2000);
     while (ros::ok())
     {
-        while (!getImageStatus()) 
+        while (!getImageStatus() && ros::ok()) 
         {
             printf("Waiting for image.\n");
-            std::this_thread::sleep_for(wait_duration);
+            // std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
+            loopRate_1Hz.sleep();
         }
 
         {
@@ -306,6 +318,8 @@ int main(int argc, char **argv)
                 cv::Point3f Theta_W2C;
                 cv::Point3f Position_OcInW;
 
+                // 大二维码：19，小二维码：43
+                // cout << "markerids" << markerids[t] << endl;
 
                 //--------------对每一个Marker的相对位置进行解算----------------
                 vector<vector<Point2f> > singMarkerCorner_10, singMarkerCorner_15;
@@ -437,28 +451,49 @@ int main(int argc, char **argv)
 
 
             //将解算后的位置发给控制端
-            geometry_msgs::Pose point_msg;
-            point_msg.position.x=-A1_Position_OcInW.x;
-            point_msg.position.y=A1_Position_OcInW.y;
-            point_msg.position.z=A1_Position_OcInW.z;
-            position_pub.publish(point_msg);
+            prometheus_msgs::DetectionInfo pose_now;
+            pose_now.detected = true;
+            pose_now.frame = 0;
+            pose_now.position[0] = A1_Position_OcInW.y;
+            pose_now.position[1] = A1_Position_OcInW.z;
+            pose_now.position[2] = -A1_Position_OcInW.x;
+            pose_now.yaw_error = A1_yaw;
 
-            geometry_msgs::Pose yaw_msg;
-            yaw_msg.orientation.w=A1_yaw;
-            yaw_pub.publish(yaw_msg);
+            last_x = pose_now.position[0];
+            last_y = pose_now.position[1];
+            last_z = pose_now.position[2];
+            last_yaw = pose_now.yaw_error;
+
+            // geometry_msgs::Pose point_msg;
+            // point_msg.position.x=-A1_Position_OcInW.x;
+            // point_msg.position.y=A1_Position_OcInW.y;
+            // point_msg.position.z=A1_Position_OcInW.z;
+            position_pub.publish(pose_now);
+
+            // geometry_msgs::Pose yaw_msg;
+            // yaw_msg.orientation.w=A1_yaw;
+            // yaw_pub.publish(yaw_msg);
             cur_time = get_dt(begin_time);
-            flag_position.orientation.w=1;
-            position_flag_pub.publish(flag_position);
+            // flag_position.orientation.w=1;
+            // position_flag_pub.publish(flag_position);
 
-            cout<<" flag_detected: "<< flag_position.orientation.w <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << point_msg.position.x  << " [m] "<< point_msg.position.y   <<" [m] "<< point_msg.position.z <<" [m] "<<endl;
+            cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
+            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
         }
         else
         {
-            flag_position.orientation.w=0;
-            position_flag_pub.publish(flag_position);
-            cout<<" flag_detected: "<< flag_position.orientation.w <<endl;
+            prometheus_msgs::DetectionInfo pose_now;
+            pose_now.detected = false;
+            pose_now.frame = 0;
+            pose_now.position[0] = last_x;
+            pose_now.position[1] = last_y;
+            pose_now.position[2] = last_z;
+            pose_now.yaw_error = last_yaw;
+            // flag_position.orientation.w=0;
+            // position_flag_pub.publish(flag_position);
+            cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
+            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
         }
         //画出识别到的二维码
