@@ -34,7 +34,7 @@ using namespace cv::ml;
 using namespace spire;
 
 
-#define MARKER_SIZE 0.18
+// #define MARKER_SIZE 0.18
 
 #define ELLIPSE_DET
 #define ELLIPSE_PUB
@@ -281,6 +281,8 @@ int main(int argc, char **argv)
     double p2 = camera_config["p2"].as<double>();
     double k3 = camera_config["k3"].as<double>();
 
+    double ellipse_det_r = camera_config["ellipse_det_r"].as<double>();
+
 
     // 接收图像的话题
     imageSubscriber_ = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
@@ -355,7 +357,7 @@ int main(int argc, char **argv)
                     float theta_x = atan((e.xc_ - cx) / fx);  //315.06 calibration
                     float theta_y = atan((e.yc_ - cy) / fy);  //241.27 calibration 
 
-                    float depth = MARKER_SIZE*fx/e.b_; // shendu
+                    float depth = ellipse_det_r*fx/e.b_; // shendu
 
                     float real_x = depth*tan(theta_x);
                     float real_y = depth*tan(theta_y);
@@ -392,7 +394,7 @@ int main(int argc, char **argv)
             float theta_x = atan((e.xc_ - cx) / fx);  //315.06 calibration
             float theta_y = atan((e.yc_ - cy) / fy);  //241.27 calibration 
 
-            float depth = MARKER_SIZE*fx/e.b_; // shendu
+            float depth = ellipse_det_r*fx/e.b_; // shendu
 
             float real_x = depth*tan(theta_x);
             float real_y = depth*tan(theta_y);
