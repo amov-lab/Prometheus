@@ -153,6 +153,8 @@ int main(int argc, char **argv)
     double p2 = camera_config["p2"].as<double>();
     double k3 = camera_config["k3"].as<double>();
 
+    double aruco_det_len = camera_config["aruco_det_len"].as<double>();
+
     //相机内参
     camera_matrix = cv::Mat(3,3,CV_64FC1,cv::Scalar::all(0));
     camera_matrix.ptr<double>(0)[0]=fx;
@@ -222,7 +224,7 @@ int main(int argc, char **argv)
                 cv::Point3f Theta_W2C;
                 cv::Point3f Position_OcInW;
 
-                cv::aruco::estimatePoseSingleMarkers(markerCorners,0.2,camera_matrix,distortion_coefficients,rvec,tvec);
+                cv::aruco::estimatePoseSingleMarkers(markerCorners,aruco_det_len,camera_matrix,distortion_coefficients,rvec,tvec);
 
                 /**********************************************************************
                 double rm[9];

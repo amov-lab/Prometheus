@@ -242,6 +242,8 @@ int main(int argc, char **argv)
     double p2 = camera_config["p2"].as<double>();
     double k3 = camera_config["k3"].as<double>();
 
+    double landpad_det_len = camera_config["landpad_det_len"].as<double>();
+
     // cout << fx << " " << fy << " " << cx << " " << cy << " " << k1 << " " << k2 << " ";
 
     //--------------------------相机参数赋值---------------------
@@ -322,18 +324,21 @@ int main(int argc, char **argv)
                 // cout << "markerids" << markerids[t] << endl;
 
                 //--------------对每一个Marker的相对位置进行解算----------------
-                vector<vector<Point2f> > singMarkerCorner_10, singMarkerCorner_15;
-                if (markerids[t]==1||markerids[t]==3||markerids[t]==7||markerids[t]==9)
+                vector<vector<Point2f> > singMarkerCorner_19, singMarkerCorner_43;
+                if (markerids[t] == 19)
                 {
-                  singMarkerCorner_15.push_back(markerCorners[t]);
-                  cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_15,0.15,camera_matrix,distortion_coefficients,rvec,tvec);
+                  singMarkerCorner_19.push_back(markerCorners[t]);
+                  cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.8,camera_matrix,distortion_coefficients,rvec,tvec);
 
                 }
-                else
+                else if (markerids[t] == 43)
                 {
-                   singMarkerCorner_10.push_back(markerCorners[t]);
-                   cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_10,0.10,camera_matrix,distortion_coefficients,rvec,tvec);
-
+                   singMarkerCorner_43.push_back(markerCorners[t]);
+                   cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_43,landpad_det_len*0.08,camera_matrix,distortion_coefficients,rvec,tvec);
+                }
+                else 
+                {
+                    break;
                 }
 
                 //将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
