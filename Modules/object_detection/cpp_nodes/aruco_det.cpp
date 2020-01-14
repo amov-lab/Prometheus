@@ -1,10 +1,18 @@
-/* 单个二维码识别程序
- * 识别的二维码可以利用生成二维码程序完成生成
- * 视野里只允许存在一个二维码 且二维码的字典类型要对应
- * 二维码的边长为0.2m
- * Update Time: 2020.01.12
- */
-
+/***************************************************************************************************************************
+ * aruco_det.cpp
+ * Author: Jario
+ * Update Time: 2020.1.14
+ *
+ * 说明: 单个二维码识别程序，可识别的二维码在Prometheus/Modules/object_detection/config/aruco_images文件夹中
+ *      视野里只允许存在一个二维码 且二维码的字典类型要对应
+ *      默认二维码的边长为0.2m
+ *      1. 【订阅】图像话题 (默认来自web_cam)
+ *         /prometheus/camera/rgb/image_raw
+ *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
+ *         /prometheus/target
+ *      3. 【发布】检测结果的可视化图像话题
+ *         /prometheus/camera/rgb/image_aruco_det
+***************************************************************************************************************************/
 #include <pthread.h>
 #include <thread>
 #include <chrono>
@@ -67,41 +75,41 @@ static float static_real_x = 0;
 static float static_real_y = 0;
 
 
-//! Camera related parameters.
-int frameWidth_;
-int frameHeight_;
-std_msgs::Header imageHeader_;
-cv::Mat camImageCopy_;
-boost::shared_mutex mutexImageCallback_;
-bool imageStatus_ = false;
-boost::shared_mutex mutexImageStatus_;
+// 相机话题中的图像同步相关变量
+int frame_width, frame_height;
+std_msgs::Header image_header;
+cv::Mat cam_image_copy;
+boost::shared_mutex mutex_image_callback;
+bool image_status = false;
+boost::shared_mutex mutex_image_status;
 
-// 图像接收回调函数，接收web_cam的话题，并将图像保存在camImageCopy_中
+
+// 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-    ROS_DEBUG("[LandpadDetector] USB image received.");
+    ROS_DEBUG("[ArucoDetector] USB image received.");
+
     cv_bridge::CvImagePtr cam_image;
 
     try {
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        imageHeader_ = msg->header;
+        image_header = msg->header;
     } catch (cv_bridge::Exception& e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
 
-    if (cam_image) 
-    {
+    if (cam_image) {
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            camImageCopy_ = cam_image->image.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            cam_image_copy = cam_image->image.clone();
         }
         {
-            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutexImageStatus_);
-            imageStatus_ = true;
+            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutex_image_status);
+            image_status = true;
         }
-        frameWidth_ = cam_image->image.size().width;
-        frameHeight_ = cam_image->image.size().height;
+        frame_width = cam_image->image.size().width;
+        frame_height = cam_image->image.size().height;
     }
     return;
 }
@@ -109,8 +117,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 // 用此函数查看是否收到图像话题
 bool getImageStatus(void)
 {
-    boost::shared_lock<boost::shared_mutex> lock(mutexImageStatus_);
-    return imageStatus_;
+    boost::shared_lock<boost::shared_mutex> lock(mutex_image_status);
+    return image_status;
 }
 
 
@@ -122,12 +130,12 @@ int main(int argc, char **argv)
     // 更新频率为30HZ
     ros::Rate loop_rate(30);
     //【发布】识别
-    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 1);
 
     // 接收图像的话题
-    image_subscriber = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
+    image_subscriber = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
     // 发布ArUco检测结果的话题
-    aruco_pub = it.advertise("/camera/rgb/image_aruco_det", 1);
+    aruco_pub = it.advertise("/prometheus/camera/rgb/image_aruco_det", 1);
 
     sensor_msgs::ImagePtr msg_ellipse;
     // 开启编号为0的摄像头
@@ -205,8 +213,8 @@ int main(int argc, char **argv)
         }
 
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            frame = camImageCopy_.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            frame = cam_image_copy.clone();
         }
 
         if (!frame.empty())
