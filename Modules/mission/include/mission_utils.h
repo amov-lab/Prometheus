@@ -17,11 +17,18 @@
 
 using namespace std;
 
-float cal_distance(Eigen::Vector3f a,Eigen::Vector3f b)
+float cal_distance(const Eigen::Vector3f& pos_drone,const Eigen::Vector3f& pos_target)
 {
-    float distance;
-    distance = sqrt(  (a[0] - b[0])*(a[0] - b[0]) + (a[1] - b[1])*(a[1] - b[1]) + (a[2] - b[2])*(a[2] - b[2]) );
-    return distance;
+    Eigen::Vector3f relative;
+    relative =  pos_target - pos_drone; 
+    return relative.norm(); 
+}
+
+float cal_distance_tracking(const Eigen::Vector3f& pos_drone,const Eigen::Vector3f& pos_target,const Eigen::Vector3f& delta)
+{
+    Eigen::Vector3f relative;
+    relative =  pos_target - pos_drone - delta; 
+    return relative.norm(); 
 }
 
 //constrain_function

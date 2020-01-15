@@ -29,7 +29,7 @@ float vel_track[2];                                             //追踪部分�
 float vel_track_max;                                            //追踪部分速度限幅
 int flag_land;                                                  //降落标志位
 float vel_sp[2];                                           //总速度
-prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 prometheus_msgs::DroneState _DroneState;                          //无人机状态量
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 float satfunc(float data, float Max);
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     // 本话题来自根据需求自定px4_pos_estimator.cpp
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
-    // 【发布】发送给position_control.cpp的命令
+    // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     //读取参数表中的参数

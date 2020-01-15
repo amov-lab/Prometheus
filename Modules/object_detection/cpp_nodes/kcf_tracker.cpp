@@ -1,4 +1,14 @@
-// c++
+/***************************************************************************************************************************
+ * kcf_tracker.cpp
+ * Author: Jario
+ * Update Time: 2020.1.14
+ *
+ * 说明: KCF目标跟踪程序
+ *      1. 【订阅】图像话题 (默认来自web_cam)
+ *         /prometheus/camera/rgb/image_raw
+ *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
+ *         /prometheus/target
+***************************************************************************************************************************/
 #include <math.h>
 #include <string>
 #include <vector>
@@ -9,10 +19,13 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-#include <ros/ros.h>  
+#include <ros/ros.h>
+#include <ros/package.h>
+#include <yaml-cpp/yaml.h>
 #include <image_transport/image_transport.h>  
 #include <cv_bridge/cv_bridge.h>  
-#include <sensor_msgs/image_encodings.h>  
+#include <sensor_msgs/image_encodings.h>
+#include <prometheus_msgs/DetectionInfo.h>
 #include <geometry_msgs/Pose.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
@@ -32,27 +45,25 @@ using namespace cv;
 
 static const std::string RGB_WINDOW = "RGB Image window";
 
-//! Camera related parameters.
-int frameWidth_;
-int frameHeight_;
-
-std_msgs::Header imageHeader_;
-cv::Mat camImageCopy_;
-boost::shared_mutex mutexImageCallback_;
-bool imageStatus_ = false;
-boost::shared_mutex mutexImageStatus_;
+// 相机话题中的图像同步相关变量
+int frame_width, frame_height;
+std_msgs::Header image_header;
+cv::Mat cam_image_copy;
+boost::shared_mutex mutex_image_callback;
+bool image_status = false;
+boost::shared_mutex mutex_image_status;
 
 
-// 图像接收回调函数，接收web_cam的话题，并将图像保存在camImageCopy_中
+// 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-    ROS_DEBUG("[EllipseDetector] USB image received.");
+    ROS_DEBUG("[KCFTracker] USB image received.");
 
     cv_bridge::CvImagePtr cam_image;
 
     try {
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        imageHeader_ = msg->header;
+        image_header = msg->header;
     } catch (cv_bridge::Exception& e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
@@ -60,15 +71,15 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 
     if (cam_image) {
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            camImageCopy_ = cam_image->image.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            cam_image_copy = cam_image->image.clone();
         }
         {
-            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutexImageStatus_);
-            imageStatus_ = true;
+            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutex_image_status);
+            image_status = true;
         }
-        frameWidth_ = cam_image->image.size().width;
-        frameHeight_ = cam_image->image.size().height;
+        frame_width = cam_image->image.size().width;
+        frame_height = cam_image->image.size().height;
     }
     return;
 }
@@ -76,8 +87,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 // 用此函数查看是否收到图像话题
 bool getImageStatus(void)
 {
-    boost::shared_lock<boost::shared_mutex> lock(mutexImageStatus_);
-    return imageStatus_;
+    boost::shared_lock<boost::shared_mutex> lock(mutex_image_status);
+    return image_status;
 }
 
 //! ROS subscriber and publisher.
@@ -101,7 +112,7 @@ void onMouse(int event, int x, int y, int, void*)
         selectRect.y = MIN(origin.y, y);
         selectRect.width = abs(x - origin.x);   
         selectRect.height = abs(y - origin.y);
-        selectRect &= cv::Rect(0, 0, frameWidth_, frameHeight_);
+        selectRect &= cv::Rect(0, 0, frame_width, frame_height);
     }
     if (event == CV_EVENT_LBUTTONDOWN)
     {
@@ -146,10 +157,26 @@ int main(int argc, char **argv)
     // 接收图像的话题
     imageSubscriber_ = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
 
-    // 椭圆检测结果，xyz
-    pose_pub = nh.advertise<geometry_msgs::Pose>("/vision/ellipse", 1);
+    // 跟踪结果，xyz
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
+
+    std::string ros_path = ros::package::getPath("prometheus_detection");
+    cout << "DETECTION_PATH: " << ros_path << endl;
+    //读取参数文档camera_param.yaml中的参数值；
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    //相机内部参数
+    double fx = camera_config["fx"].as<double>();
+    double fy = camera_config["fy"].as<double>();
+    double cx = camera_config["x0"].as<double>();
+    double cy = camera_config["y0"].as<double>();
+    //相机畸变系数
+    double k1 = camera_config["k1"].as<double>();
+    double k2 = camera_config["k2"].as<double>();
+    double p1 = camera_config["p1"].as<double>();
+    double p2 = camera_config["p2"].as<double>();
+    double k3 = camera_config["k3"].as<double>();
 
     const auto wait_duration = std::chrono::milliseconds(2000);
 
@@ -166,8 +193,8 @@ int main(int argc, char **argv)
 
         Mat frame;
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            frame = camImageCopy_.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            frame = cam_image_copy.clone();
         }
         static bool need_tracking_det = false;
 
