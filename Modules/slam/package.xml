@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>prometheus_stereomatching</name>
+  <name>prometheus_slam</name>
   <version>1.6.3</version>
   <description>The stereo matching package</description>
 
@@ -22,4 +22,5 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>tf</exec_depend>
   <exec_depend>message_generation</exec_depend>
+
 </package>
