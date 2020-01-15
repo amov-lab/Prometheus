@@ -1,11 +1,5 @@
 <launch>
-	<!-- run the position_control.cpp -->
-
 	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
-
-		<!-- load blacklist, config -->
 		<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
-
-
 	</node>
 </launch>
