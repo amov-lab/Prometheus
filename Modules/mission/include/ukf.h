@@ -72,17 +72,22 @@ class UKF
                 UKF_nh.param<double>("UKF/std_py_", CAR_meas_noise.std_py_, 0.0);
                 UKF_nh.param<double>("UKF/std_yaw_", CAR_meas_noise.std_yaw_, 0.0);
 
+                cout<<"CAR_proc_noise.std_a_="<<CAR_proc_noise.std_a_<<endl;
+                cout<<"CAR_proc_noise.std_yaw_dotdot_="<<CAR_proc_noise.std_yaw_dotdot_<<endl;
+                cout<<"CAR_meas_noise.std_px_="<<CAR_meas_noise.std_px_<<endl;
+                cout<<"CAR_meas_noise.std_py_="<<CAR_meas_noise.std_py_<<endl;
+                cout<<"CAR_meas_noise.std_yaw_="<<CAR_meas_noise.std_yaw_<<endl;
+
                 n_x_ = 5;
                 n_noise_ = 2;
                 n_aug_ = n_x_ + n_noise_;
                 n_z_ = 3;
                 x_ = VectorXd(n_x_);
+                x_pre = VectorXd(n_x_);
                 z_ = VectorXd(n_z_);
 
                 P_pre = MatrixXd(n_x_,n_x_);
-                S_ = MatrixXd(n_z_,n_z_);
-                T_ = MatrixXd(n_x_,n_z_);
-                K_ = MatrixXd(n_x_,n_z_);
+                
                 P_ = MatrixXd(n_x_,n_x_);
                 Q_ = MatrixXd(2,2);
                 R_ = MatrixXd(n_z_,n_z_);
@@ -99,7 +104,9 @@ class UKF
                         0, CAR_meas_noise.std_py_*CAR_meas_noise.std_py_, 0,
                         0, 0,CAR_meas_noise.std_yaw_*CAR_meas_noise.std_yaw_;
 
-                
+                cout<<"P_="<<endl<<P_<<endl<<endl;
+                cout<<"Q_="<<endl<<Q_<<endl<<endl;
+                cout<<"R_="<<endl<<R_<<endl<<endl;
                 
                 kamma_ = 3 - n_aug_;
                 
@@ -112,8 +119,6 @@ class UKF
                 }
 
                 Xsig_pred_ = MatrixXd(n_x_,2*n_aug_+1);        
-                
-
 
                 cout<<"[UKF]: "<<"CAR model selected."<<endl;
             }
@@ -136,16 +141,14 @@ class UKF
         int n_aug_;     //增广维数 = 系统状态维数 + 过程噪声维数
         int n_z_;       //测量状态维数
 
-        VectorXd x_;   //系统状态变量
-        VectorXd z_;   //测量值
-        
-        MatrixXd P_pre;     //预测状态误差协方差矩阵
-        MatrixXd S_;        //预测测量误差协方差矩阵
-        MatrixXd T_;        //状态与测量空间相关函数
-        MatrixXd K_;        //卡尔曼增益
-        MatrixXd P_;        //状态后验协方差矩阵
+        VectorXd x_;        //系统状态变量 即 x(k)
+        VectorXd x_pre;     //预测的系统状态变量 即 x(k|k-1)
+        VectorXd z_;        //测量值
+
         MatrixXd Q_;        //过程噪声协方差矩阵
         MatrixXd R_;        //测量噪声协方差矩阵
+        MatrixXd P_pre;     //预测状态误差协方差矩阵 即 P(k|k-1)
+        MatrixXd P_;        //状态后验协方差矩阵
 
         double kamma_;          //sigma点缩放系数
         VectorXd W_s;           //sigma点权重
@@ -241,7 +244,7 @@ VectorXd UKF::Run(const prometheus_msgs::DetectionInfo& mesurement, double delta
     // 预测
     Prediction(delta_t);
 
-    //UpdateVision(mesurement);
+    UpdateVision(mesurement);
 
     return x_;
 }
@@ -256,26 +259,30 @@ void UKF::Prediction(double delta_t)
     // car model
     else if (model_type == CAR)
     {
-        // 构造sigma点
+        // 【UKF第一步】 构造sigma点
+        
+        // x_aug为x_的增广状态向量 维度 = 原系统维度+系统噪声维度
         VectorXd x_aug = VectorXd(n_aug_);
-        MatrixXd Xsig_aug = MatrixXd(n_aug_, 2*n_aug_+1);
-        MatrixXd P_aug = MatrixXd(n_aug_,n_aug_);
-
         x_aug.head(5) = x_;
         x_aug[5] = 0.0;
         x_aug[6] = 0.0;
 
+        // P_aug为P_阵的增广矩阵
+        MatrixXd P_aug = MatrixXd(n_aug_,n_aug_);
         P_aug.fill(0.0);
         P_aug.topLeftCorner(5,5) = P_;
         P_aug.bottomRightCorner(2,2) = Q_;
 
         cout<<"P_aug="<<endl<<P_aug<<endl<<endl;
 
+        //Xsig_aug为产生的2na+1个sigma点
+        MatrixXd Xsig_aug = MatrixXd(n_aug_, 2*n_aug_+1);
+        Xsig_aug.fill(0.0);
+
         //llt()是Cholesky 分解
         //Cholesky分解是把一个对称正定的矩阵表示成一个下三角矩阵L和其转置的乘积的分解
         //即 P_aug = L*L^t;
         MatrixXd L = P_aug.llt().matrixL();
-        Xsig_aug.fill(0.0);
         for(int i=0; i<2*n_aug_+1; ++i)
         {
             //第i列
@@ -285,7 +292,9 @@ void UKF::Prediction(double delta_t)
         Xsig_aug.block<7,7>(0,1) += sqrt(kamma_+n_aug_)*L;
         Xsig_aug.block<7,7>(0,n_aug_+1) -= sqrt(kamma_+n_aug_)*L;
 
-        //时间更新（预测） - 利用系统方程对状态预测
+        //cout<<"Xsig_aug="<<endl<<Xsig_aug<<endl<<endl;
+
+        // 【UKF第二步】 时间更新（预测） - 利用系统方程对状态预测
         for(int i=0; i<2*n_aug_+1; ++i)
         {
             double p_x            = Xsig_aug(0,i);
@@ -317,34 +326,39 @@ void UKF::Prediction(double delta_t)
             v_pred       += nu_a*delta_t;
             yaw_pred     += 0.5*nu_yaw_dotdot*delta_t*delta_t;
             yaw_dot_pred += nu_yaw_dotdot*delta_t;
-
+            
+            // Xsig_pred_为 sigma点经过系统方程的非线性变化后得到
             Xsig_pred_(0,i) = px_pred;
             Xsig_pred_(1,i) = py_pred;
             Xsig_pred_(2,i) = v_pred;
             Xsig_pred_(3,i) = yaw_pred;
             Xsig_pred_(4,i) = yaw_dot_pred; 
         }
+        //cout<<"Xsig_pred_="<<endl<<Xsig_pred_<<endl<<endl;
 
         // 预测状态
-        x_.fill(0.0);
+        x_pre.fill(0.0);
         for (int i=0; i<2*n_aug_+1; ++i)
         {
-            x_ += W_s(i)*Xsig_pred_.col(i);
+            x_pre += W_s(i)*Xsig_pred_.col(i);
         } 
+
+        cout<<"x_pre="<<endl<<x_pre<<endl<<endl;
+
         // 预测协方差矩阵
-        P_.fill(0.0);
+        P_pre.fill(0.0);
         for (int i=0; i<2*n_aug_+1; ++i)
         {
             // state difference
-            VectorXd x_diff = Xsig_pred_.col(i) - x_;
+            VectorXd x_diff = Xsig_pred_.col(i) - x_pre;
             // angle normalization （偏航角）
             while (x_diff(3)>M_PI) x_diff(3)-=2.*M_PI;
             while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
 
-            P_ = P_ + W_s(i)*x_diff*x_diff.transpose();
+            P_pre +=  W_s(i)*x_diff*x_diff.transpose();
         }
 
-        cout<<"P_="<<endl<<P_<<endl<<endl;
+        cout<<"P_pre="<<endl<<P_pre<<endl<<endl;
     }
 }
 
@@ -357,14 +371,13 @@ void UKF::UpdateVision(const prometheus_msgs::DetectionInfo& mesurement)
     // car model
     else if (model_type == CAR)
     {
+        // 【UKF第三步】 测量更新
         z_[0] = mesurement.position[0];
         z_[1] = mesurement.position[1];
         z_[2] = mesurement.attitude[2];
-
+   
+        // Zsig为 Xsig_pred_经过测量方程的非线性变化后得到 
         MatrixXd Zsig = MatrixXd(n_z_, 2*n_aug_+1);
-        MatrixXd z_pred = VectorXd(n_z_);
-        MatrixXd T_ = MatrixXd(n_x_,n_z_);
-        
         //观测预测值 - 观测方程
         Zsig.fill(0.0);
         for (int i=0; i<2*n_aug_+1; i++)
@@ -377,15 +390,20 @@ void UKF::UpdateVision(const prometheus_msgs::DetectionInfo& mesurement)
             Zsig(1,i) = p_y;                               
             Zsig(2,i) = yaw;  
         }
+        // z_pred为预测观测值
+        MatrixXd z_pred = VectorXd(n_z_);
         z_pred.fill(0.0);
         for (int i=0; i < 2*n_aug_+1; ++i) 
         {
             z_pred = z_pred + W_s(i) * Zsig.col(i);
         }  
         
-        // Mean predicted measurement
+
+        MatrixXd S_ = MatrixXd(n_z_,n_z_); //预测测量误差协方差矩阵
+        MatrixXd T_ = MatrixXd(n_x_,n_z_);  //状态与测量空间相关函数
         S_.fill(0.0);
         T_.fill(0.0);
+    
         for (int i = 0; i < 2 * n_aug_ + 1; ++i) {  // 2n+1 simga points
             // residual
             VectorXd z_diff = Zsig.col(i) - z_pred;
@@ -402,19 +420,23 @@ void UKF::UpdateVision(const prometheus_msgs::DetectionInfo& mesurement)
 
             T_ = T_ + W_s(i) * x_diff * z_diff.transpose();
         }  
-        // Innovation covariance matrix S
 
         S_ = S_ + R_;  // add measurement noise covariance matrix
 
+        MatrixXd K_= MatrixXd(n_x_,n_z_);       //卡尔曼增益K_ 
         K_ = T_ * S_.inverse();   // Kalman gain K;
-        VectorXd z_diff = z_ - z_pred;    // residual
 
+        VectorXd z_diff = z_ - z_pred;    // residual
         while(z_diff(1)>M_PI) z_diff(1) -= 2.*M_PI;
         while(z_diff(1)<-M_PI) z_diff(1) += 2.*M_PI; // angle normalization
 
+        // 【UKF第四步】 更新状态及P_阵
         //zheli duima ?
-        x_ = x_ + K_*z_diff;
-        P_ = P_ - K_*S_*K_.transpose();
+        x_ = x_pre + K_*z_diff;
+        P_ = P_pre - K_*S_*K_.transpose();
+
+        cout<<"x_="<<endl<<x_<<endl<<endl;
+        cout<<"P_="<<endl<<P_<<endl<<endl;
     }
     
     
