@@ -1,11 +1,15 @@
 /***************************************************************************************************************************
- * object_tracking.cpp
+ * landpad_det.cpp
  * Author: Jario
  * Update Time: 2020.1.12
  *
  * 说明: 降落目标识别程序，降落板的尺寸为60cmX60cm
- *      1. 订阅相机话题(来自web_cam)
- *      3. 发布目标位置
+ *      1. 【订阅】图像话题 (默认来自web_cam)
+ *         /prometheus/camera/rgb/image_raw
+ *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
+ *         /prometheus/target
+ *      3. 【发布】检测结果的可视化图像话题
+ *         /prometheus/camera/rgb/image_landpad_det
 ***************************************************************************************************************************/
 
 #include <time.h>
@@ -71,14 +75,13 @@ float cur_time;
 float photo_time;
 
 
-//! Camera related parameters.
-int frameWidth_;
-int frameHeight_;
-std_msgs::Header imageHeader_;
-cv::Mat camImageCopy_;
-boost::shared_mutex mutexImageCallback_;
-bool imageStatus_ = false;
-boost::shared_mutex mutexImageStatus_;
+// 相机话题中的图像同步相关变量
+int frame_width, frame_height;
+std_msgs::Header image_header;
+cv::Mat cam_image_copy;
+boost::shared_mutex mutex_image_callback;
+bool image_status = false;
+boost::shared_mutex mutex_image_status;
 
 
 // 是否检测到标志位-----Point.orientation.w=1为检测成功 =0为检测失败
@@ -95,6 +98,7 @@ Eigen::Quaterniond q_vehicle;
 //保存的上次观测的位置 用于cluster算法使用
 Eigen::Vector3d last_position;
 bool bool_last_position=false;
+
 
 //-----------------利用Euler角进行三次旋转得到无人机相对目标的位置------------------
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -169,7 +173,7 @@ float get_dt(ros::Time last)
 
 
 
-// 图像接收回调函数，接收web_cam的话题，并将图像保存在camImageCopy_中
+// 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     ROS_DEBUG("[LandpadDetector] USB image received.");
@@ -178,7 +182,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 
     try {
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        imageHeader_ = msg->header;
+        image_header = msg->header;
     } catch (cv_bridge::Exception& e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
@@ -186,15 +190,15 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 
     if (cam_image) {
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            camImageCopy_ = cam_image->image.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            cam_image_copy = cam_image->image.clone();
         }
         {
-            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutexImageStatus_);
-            imageStatus_ = true;
+            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutex_image_status);
+            image_status = true;
         }
-        frameWidth_ = cam_image->image.size().width;
-        frameHeight_ = cam_image->image.size().height;
+        frame_width = cam_image->image.size().width;
+        frame_height = cam_image->image.size().height;
     }
     return;
 }
@@ -202,8 +206,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 // 用此函数查看是否收到图像话题
 bool getImageStatus(void)
 {
-    boost::shared_lock<boost::shared_mutex> lock(mutexImageStatus_);
-    return imageStatus_;
+    boost::shared_lock<boost::shared_mutex> lock(mutex_image_status);
+    return image_status;
 }
 
 
@@ -220,9 +224,9 @@ int main(int argc, char **argv)
     // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
     // 接收图像的话题
-    image_subscriber = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
+    image_subscriber = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
     // 发布ArUco检测结果的话题
-    landpad_pub = it.advertise("/camera/rgb/image_landpad_det", 1);
+    landpad_pub = it.advertise("/prometheus/camera/rgb/image_landpad_det", 1);
 
     sensor_msgs::ImagePtr msg_ellipse;
 
@@ -241,6 +245,8 @@ int main(int argc, char **argv)
     double p1 = camera_config["p1"].as<double>();
     double p2 = camera_config["p2"].as<double>();
     double k3 = camera_config["k3"].as<double>();
+
+    double landpad_det_len = camera_config["landpad_det_len"].as<double>();
 
     // cout << fx << " " << fy << " " << cx << " " << cy << " " << k1 << " " << k2 << " ";
 
@@ -286,8 +292,8 @@ int main(int argc, char **argv)
         }
 
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            img = camImageCopy_.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            img = cam_image_copy.clone();
         }
 
         clock_t start=clock();
@@ -322,18 +328,21 @@ int main(int argc, char **argv)
                 // cout << "markerids" << markerids[t] << endl;
 
                 //--------------对每一个Marker的相对位置进行解算----------------
-                vector<vector<Point2f> > singMarkerCorner_10, singMarkerCorner_15;
-                if (markerids[t]==1||markerids[t]==3||markerids[t]==7||markerids[t]==9)
+                vector<vector<Point2f> > singMarkerCorner_19, singMarkerCorner_43;
+                if (markerids[t] == 19)
                 {
-                  singMarkerCorner_15.push_back(markerCorners[t]);
-                  cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_15,0.15,camera_matrix,distortion_coefficients,rvec,tvec);
+                  singMarkerCorner_19.push_back(markerCorners[t]);
+                  cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.8,camera_matrix,distortion_coefficients,rvec,tvec);
 
                 }
-                else
+                else if (markerids[t] == 43)
                 {
-                   singMarkerCorner_10.push_back(markerCorners[t]);
-                   cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_10,0.10,camera_matrix,distortion_coefficients,rvec,tvec);
-
+                   singMarkerCorner_43.push_back(markerCorners[t]);
+                   cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_43,landpad_det_len*0.08,camera_matrix,distortion_coefficients,rvec,tvec);
+                }
+                else 
+                {
+                    break;
                 }
 
                 //将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
