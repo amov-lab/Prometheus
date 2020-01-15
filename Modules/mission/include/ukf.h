@@ -64,13 +64,44 @@ class UKF
             // car model,for autonomous landing
             else if (model_type == CAR)
             {
+
+                // Read the noise std
+                UKF_nh.param<double>("UKF/std_a_", CAR_proc_noise.std_a_, 0.0);
+                UKF_nh.param<double>("UKF/std_yaw_dotdot_", CAR_proc_noise.std_yaw_dotdot_, 0.0);
+                UKF_nh.param<double>("UKF/std_px_", CAR_meas_noise.std_px_, 0.0);
+                UKF_nh.param<double>("UKF/std_py_", CAR_meas_noise.std_py_, 0.0);
+                UKF_nh.param<double>("UKF/std_yaw_", CAR_meas_noise.std_yaw_, 0.0);
+
                 n_x_ = 5;
                 n_noise_ = 2;
                 n_aug_ = n_x_ + n_noise_;
+                n_z_ = 3;
                 x_ = VectorXd(n_x_);
-                Xsig_pred_ = MatrixXd(n_x_,2*n_aug_+1);
+                z_ = VectorXd(n_z_);
+
+                P_pre = MatrixXd(n_x_,n_x_);
+                S_ = MatrixXd(n_z_,n_z_);
+                T_ = MatrixXd(n_x_,n_z_);
+                K_ = MatrixXd(n_x_,n_z_);
+                P_ = MatrixXd(n_x_,n_x_);
+                Q_ = MatrixXd(2,2);
+                R_ = MatrixXd(n_z_,n_z_);
+
+                P_ <<   CAR_meas_noise.std_px_*CAR_meas_noise.std_px_, 0, 0, 0, 0,
+                        0, CAR_meas_noise.std_py_*CAR_meas_noise.std_py_, 0, 0, 0,
+                        0, 0, 1, 0, 0,
+                        0, 0, 0, CAR_meas_noise.std_yaw_*CAR_meas_noise.std_yaw_, 0,
+                        0, 0, 0, 0, 1;
+                Q_ <<   CAR_proc_noise.std_a_*CAR_proc_noise.std_a_, 0, 
+                        0,CAR_proc_noise.std_yaw_dotdot_*CAR_proc_noise.std_yaw_dotdot_;
+                               
+                R_ <<   CAR_meas_noise.std_px_*CAR_meas_noise.std_px_, 0, 0,
+                        0, CAR_meas_noise.std_py_*CAR_meas_noise.std_py_, 0,
+                        0, 0,CAR_meas_noise.std_yaw_*CAR_meas_noise.std_yaw_;
+
+                
+                
                 kamma_ = 3 - n_aug_;
-                P_ = MatrixXd(n_x_, n_x_);
                 
                 //set weights
                 W_s = VectorXd(2*n_aug_+1);
@@ -80,16 +111,9 @@ class UKF
                     W_s(i) = 1/(2*kamma_+2*n_aug_);
                 }
 
-                n_z_ = 3;
-                z_ = VectorXd(n_z_);
-                R = MatrixXd(n_z_,n_z_);
+                Xsig_pred_ = MatrixXd(n_x_,2*n_aug_+1);        
+                
 
-                // Read the noise std
-                UKF_nh.param<double>("UKF/std_a_", CAR_proc_noise.std_a_, 0.0);
-                UKF_nh.param<double>("UKF/std_yaw_dotdot_", CAR_proc_noise.std_yaw_dotdot_, 0.0);
-                UKF_nh.param<double>("UKF/std_px_", CAR_meas_noise.std_px_, 0.0);
-                UKF_nh.param<double>("UKF/std_py_", CAR_meas_noise.std_py_, 0.0);
-                UKF_nh.param<double>("UKF/std_yaw_", CAR_meas_noise.std_yaw_, 0.0);
 
                 cout<<"[UKF]: "<<"CAR model selected."<<endl;
             }
@@ -107,33 +131,25 @@ class UKF
         //initially set to false, set to ture in first call of Run()
         bool is_initialized;
 
-        // state dimension
-        int n_x_;
+        int n_x_;       //系统状态维数
+        int n_noise_;   //过程噪声维数
+        int n_aug_;     //增广维数 = 系统状态维数 + 过程噪声维数
+        int n_z_;       //测量状态维数
 
-        // process noise dimension
-        int n_noise_;
-
-        // augmented state dimension = state dimension + process noise dimension
-        int n_aug_;
-
-        //系统状态变量
-        VectorXd x_;
-
+        VectorXd x_;   //系统状态变量
+        VectorXd z_;   //测量值
         
-        // state covariance matrix
-        MatrixXd P_;
-        // predicted sigma points matrix
-        MatrixXd Xsig_pred_;
+        MatrixXd P_pre;     //预测状态误差协方差矩阵
+        MatrixXd S_;        //预测测量误差协方差矩阵
+        MatrixXd T_;        //状态与测量空间相关函数
+        MatrixXd K_;        //卡尔曼增益
+        MatrixXd P_;        //状态后验协方差矩阵
+        MatrixXd Q_;        //过程噪声协方差矩阵
+        MatrixXd R_;        //测量噪声协方差矩阵
 
-        int n_z_;
-        VectorXd z_;
-        MatrixXd R;
-
-        //weights of sigma point
-        VectorXd W_s;
-
-        // sigma point spreading parameter
-        double kamma_;
+        double kamma_;          //sigma点缩放系数
+        VectorXd W_s;           //sigma点权重
+        MatrixXd Xsig_pred_;    //sigma点预测矩阵
 
         // process noise standard deviation
         // NCA model
@@ -217,16 +233,6 @@ VectorXd UKF::Run(const prometheus_msgs::DetectionInfo& mesurement, double delta
             x_[2] = 0.0;
             x_[3] = mesurement.attitude[2];
             x_[4] = 0.0;
-
-            P_ <<   CAR_meas_noise.std_px_*CAR_meas_noise.std_px_, 0, 0, 0, 0,
-                    0, CAR_meas_noise.std_py_*CAR_meas_noise.std_py_, 0, 0, 0,
-                    0, 0, 1, 0, 0,
-                    0, 0, 0, CAR_meas_noise.std_yaw_*CAR_meas_noise.std_yaw_, 0,
-                    0, 0, 0, 0, 1;
-                            
-            R <<    CAR_meas_noise.std_px_*CAR_meas_noise.std_px_, 0, 0,
-                    0, CAR_meas_noise.std_py_*CAR_meas_noise.std_py_, 0,
-                    0, 0,CAR_meas_noise.std_yaw_*CAR_meas_noise.std_yaw_;
                     
             cout<<"[UKF]: "<<"CAR model is initialized."<<endl;
         }
@@ -250,7 +256,7 @@ void UKF::Prediction(double delta_t)
     // car model
     else if (model_type == CAR)
     {
-        // Augmentation (dimension = state dimension + process noise dimension)
+        // 构造sigma点
         VectorXd x_aug = VectorXd(n_aug_);
         MatrixXd Xsig_aug = MatrixXd(n_aug_, 2*n_aug_+1);
         MatrixXd P_aug = MatrixXd(n_aug_,n_aug_);
@@ -261,20 +267,25 @@ void UKF::Prediction(double delta_t)
 
         P_aug.fill(0.0);
         P_aug.topLeftCorner(5,5) = P_;
-        P_aug(5,5) = CAR_proc_noise.std_a_*CAR_proc_noise.std_a_;
-        P_aug(6,6) = CAR_proc_noise.std_yaw_dotdot_*CAR_proc_noise.std_yaw_dotdot_;
+        P_aug.bottomRightCorner(2,2) = Q_;
 
-        // Create Augmented Sigma Points
+        cout<<"P_aug="<<endl<<P_aug<<endl<<endl;
+
+        //llt()是Cholesky 分解
+        //Cholesky分解是把一个对称正定的矩阵表示成一个下三角矩阵L和其转置的乘积的分解
+        //即 P_aug = L*L^t;
         MatrixXd L = P_aug.llt().matrixL();
         Xsig_aug.fill(0.0);
         for(int i=0; i<2*n_aug_+1; ++i)
         {
+            //第i列
             Xsig_aug.col(i) = x_aug;
         }
+        //matrix.block<p,q>(i,j) : 从 (i,j) 开始，大小为 (p,q) 矩阵块
         Xsig_aug.block<7,7>(0,1) += sqrt(kamma_+n_aug_)*L;
         Xsig_aug.block<7,7>(0,n_aug_+1) -= sqrt(kamma_+n_aug_)*L;
 
-        //Sigma Point Prediction
+        //时间更新（预测） - 利用系统方程对状态预测
         for(int i=0; i<2*n_aug_+1; ++i)
         {
             double p_x            = Xsig_aug(0,i);
@@ -314,23 +325,26 @@ void UKF::Prediction(double delta_t)
             Xsig_pred_(4,i) = yaw_dot_pred; 
         }
 
-        // Predict Mean and Covariance
+        // 预测状态
         x_.fill(0.0);
         for (int i=0; i<2*n_aug_+1; ++i)
         {
             x_ += W_s(i)*Xsig_pred_.col(i);
-        } // predict state mean
+        } 
+        // 预测协方差矩阵
         P_.fill(0.0);
         for (int i=0; i<2*n_aug_+1; ++i)
         {
             // state difference
             VectorXd x_diff = Xsig_pred_.col(i) - x_;
-            // angle normalization
+            // angle normalization （偏航角）
             while (x_diff(3)>M_PI) x_diff(3)-=2.*M_PI;
             while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
 
             P_ = P_ + W_s(i)*x_diff*x_diff.transpose();
         }
+
+        cout<<"P_="<<endl<<P_<<endl<<endl;
     }
 }
 
@@ -349,9 +363,9 @@ void UKF::UpdateVision(const prometheus_msgs::DetectionInfo& mesurement)
 
         MatrixXd Zsig = MatrixXd(n_z_, 2*n_aug_+1);
         MatrixXd z_pred = VectorXd(n_z_);
-        MatrixXd S = MatrixXd(n_z_,n_z_);
-        MatrixXd Tc = MatrixXd(n_x_,n_z_);
+        MatrixXd T_ = MatrixXd(n_x_,n_z_);
         
+        //观测预测值 - 观测方程
         Zsig.fill(0.0);
         for (int i=0; i<2*n_aug_+1; i++)
         {
@@ -370,8 +384,8 @@ void UKF::UpdateVision(const prometheus_msgs::DetectionInfo& mesurement)
         }  
         
         // Mean predicted measurement
-        S.fill(0.0);
-        Tc.fill(0.0);
+        S_.fill(0.0);
+        T_.fill(0.0);
         for (int i = 0; i < 2 * n_aug_ + 1; ++i) {  // 2n+1 simga points
             // residual
             VectorXd z_diff = Zsig.col(i) - z_pred;
@@ -380,26 +394,27 @@ void UKF::UpdateVision(const prometheus_msgs::DetectionInfo& mesurement)
             while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
             while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
 
-            S = S + W_s(i) * z_diff * z_diff.transpose();
+            S_ = S_ + W_s(i) * z_diff * z_diff.transpose();
             VectorXd x_diff = Xsig_pred_.col(i) - x_;
             // angle normalization
             while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
             while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
 
-            Tc = Tc + W_s(i) * x_diff * z_diff.transpose();
+            T_ = T_ + W_s(i) * x_diff * z_diff.transpose();
         }  
         // Innovation covariance matrix S
 
-        S = S + R;  // add measurement noise covariance matrix
+        S_ = S_ + R_;  // add measurement noise covariance matrix
 
-        MatrixXd K = Tc * S.inverse();   // Kalman gain K;
+        K_ = T_ * S_.inverse();   // Kalman gain K;
         VectorXd z_diff = z_ - z_pred;    // residual
 
         while(z_diff(1)>M_PI) z_diff(1) -= 2.*M_PI;
         while(z_diff(1)<-M_PI) z_diff(1) += 2.*M_PI; // angle normalization
 
-        x_ = x_ + K*z_diff;
-        P_ = P_ - K*S*K.transpose();
+        //zheli duima ?
+        x_ = x_ + K_*z_diff;
+        P_ = P_ - K_*S_*K_.transpose();
     }
     
     
