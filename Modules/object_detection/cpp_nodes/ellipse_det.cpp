@@ -1,10 +1,16 @@
-// c++
-/* 椭圆识别程序(同时可以判断椭圆中心标识，需要训练)
- * 识别的二维码可以利用生成二维码程序完成生成
- * 视野里只允许存在一个二维码 且二维码的字典类型要对应
- * 二维码的边长为0.2m
- * Update Time: 2020.01.12
- */
+/***************************************************************************************************************************
+ * ellipse_det.cpp
+ * Author: Jario
+ * Update Time: 2020.1.14
+ *
+ * 说明: 椭圆识别程序(同时可以判断椭圆中心标识，需要训练)，具体训练方式见Prometheus/Modules/object_detection/README.md
+ *      1. 【订阅】图像话题 (默认来自web_cam)
+ *         /prometheus/camera/rgb/image_raw
+ *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
+ *         /prometheus/target
+ *      3. 【发布】检测结果的可视化图像话题
+ *         /prometheus/camera/rgb/image_ellipse_det
+***************************************************************************************************************************/
 #include <math.h>
 #include <string>
 #include <vector>
@@ -34,7 +40,7 @@ using namespace cv::ml;
 using namespace spire;
 
 
-#define MARKER_SIZE 0.18
+// #define MARKER_SIZE 0.18
 
 #define ELLIPSE_DET
 #define ELLIPSE_PUB
@@ -44,21 +50,18 @@ std::string imlist_dir = "/home/nvidia/vision_ws/src/ellipse_det_ros/labeled_img
 // images, include above information
 std::string base_path = "/home/nvidia/vision_ws/src/ellipse_det_ros/images_from_camera/";  // 同上
 
-//! Camera related parameters.
-int frameWidth_;
-int frameHeight_;
-
-std_msgs::Header imageHeader_;
-cv::Mat camImageCopy_;
-
-boost::shared_mutex mutexImageCallback_;
-
-bool imageStatus_ = false;
-boost::shared_mutex mutexImageStatus_;
+// 相机话题中的图像同步相关变量
+int frame_width, frame_height;
+std_msgs::Header image_header;
+cv::Mat cam_image_copy;
+boost::shared_mutex mutex_image_callback;
+bool image_status = false;
+boost::shared_mutex mutex_image_status;
 
 EllipseDetector ellipse_detector;
 
-// 图像接收回调函数，接收web_cam的话题，并将图像保存在camImageCopy_中
+
+// 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     ROS_DEBUG("[EllipseDetector] USB image received.");
@@ -67,7 +70,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 
     try {
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        imageHeader_ = msg->header;
+        image_header = msg->header;
     } catch (cv_bridge::Exception& e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
@@ -75,15 +78,15 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 
     if (cam_image) {
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            camImageCopy_ = cam_image->image.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            cam_image_copy = cam_image->image.clone();
         }
         {
-            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutexImageStatus_);
-            imageStatus_ = true;
+            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutex_image_status);
+            image_status = true;
         }
-        frameWidth_ = cam_image->image.size().width;
-        frameHeight_ = cam_image->image.size().height;
+        frame_width = cam_image->image.size().width;
+        frame_height = cam_image->image.size().height;
     }
     return;
 }
@@ -91,8 +94,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 // 用此函数查看是否收到图像话题
 bool getImageStatus(void)
 {
-    boost::shared_lock<boost::shared_mutex> lock(mutexImageStatus_);
-    return imageStatus_;
+    boost::shared_lock<boost::shared_mutex> lock(mutex_image_status);
+    return image_status;
 }
 
 void ellipse_det(cv::Mat& input, cv::Mat& output, std::vector<Ellipse>& ells)
@@ -281,15 +284,17 @@ int main(int argc, char **argv)
     double p2 = camera_config["p2"].as<double>();
     double k3 = camera_config["k3"].as<double>();
 
+    double ellipse_det_r = camera_config["ellipse_det_r"].as<double>();
+
 
     // 接收图像的话题
-    imageSubscriber_ = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
+    imageSubscriber_ = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
 #ifdef ELLIPSE_PUB
     // 发布椭圆检测结果的话题
-    ellipse_pub = it.advertise("/camera/rgb/image_ellipse_det", 1);
+    ellipse_pub = it.advertise("/prometheus/camera/rgb/image_ellipse_det", 1);
 #endif
     // 椭圆检测结果，xyz
-    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
 
@@ -307,8 +312,8 @@ int main(int argc, char **argv)
         Mat ellipse_show, frame;
         std::vector<Ellipse> ells, ells_copy;
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            frame = camImageCopy_.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            frame = cam_image_copy.clone();
         }
         ellipse_det(frame, ellipse_show, ells);
 
@@ -355,7 +360,7 @@ int main(int argc, char **argv)
                     float theta_x = atan((e.xc_ - cx) / fx);  //315.06 calibration
                     float theta_y = atan((e.yc_ - cy) / fy);  //241.27 calibration 
 
-                    float depth = MARKER_SIZE*fx/e.b_; // shendu
+                    float depth = ellipse_det_r*fx/e.b_; // shendu
 
                     float real_x = depth*tan(theta_x);
                     float real_y = depth*tan(theta_y);
@@ -392,7 +397,7 @@ int main(int argc, char **argv)
             float theta_x = atan((e.xc_ - cx) / fx);  //315.06 calibration
             float theta_y = atan((e.yc_ - cy) / fy);  //241.27 calibration 
 
-            float depth = MARKER_SIZE*fx/e.b_; // shendu
+            float depth = ellipse_det_r*fx/e.b_; // shendu
 
             float real_x = depth*tan(theta_x);
             float real_y = depth*tan(theta_y);
