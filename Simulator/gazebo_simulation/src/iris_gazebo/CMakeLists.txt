@@ -76,5 +76,9 @@ catkin_install_python(PROGRAMS scripts/joystick_translator
    scripts/keyboard_control_px4.py 
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+  install(PROGRAMS 
+   scripts/qrcode_control.py 
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

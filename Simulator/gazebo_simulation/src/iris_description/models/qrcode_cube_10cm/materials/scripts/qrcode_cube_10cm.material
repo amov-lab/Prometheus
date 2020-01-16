@@ -1,0 +1,15 @@
+material Cube/QRCode
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture qrcode.jpg
+      }
+    }
+  }
+}
+  
