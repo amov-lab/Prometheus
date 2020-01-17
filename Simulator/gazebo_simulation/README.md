@@ -123,3 +123,19 @@ roslaunch iris_gazebo rtabmap_depthCam_mapping.launch
 ```
 
 此时会有octomap的topic发布，运行rviz后选择add添加‘ColorOccupancyGrid’并选择octomap的topic，便会看到实时显示的octomap。
+
+## 二维码检测仿真
+
+通过运行如下launch文件启动二维码检测仿真：
+
+```
+roslaunch iris_gazebo landing_with_qrcode.launch
+```
+
+该launch文件中所使用到的model都在项目文件夹中，所以需要在bashrc文件中将模型路径加入到环境变量中，即复制以下内容到文件末尾。
+
+```
+export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_description/models
+```
+
+其中后，会出现安装了方向向下的相机的iris无人机模型，以及做圆周运动的二维码模型。
