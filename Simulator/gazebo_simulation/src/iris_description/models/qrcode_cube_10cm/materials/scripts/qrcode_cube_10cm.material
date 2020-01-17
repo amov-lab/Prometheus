@@ -7,7 +7,7 @@ material Cube/QRCode
     {
       texture_unit
       {
-        texture qrcode.jpg
+        texture qrcode2.PNG
       }
     }
   }
