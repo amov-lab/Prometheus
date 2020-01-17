@@ -124,13 +124,35 @@ prometheus_msgs::PositionReference Controller_Test::Eight_trajectory_generation(
 
     Eight_trajectory.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;
 
-    Eight_trajectory.position_ref[0] = 0;
-    Eight_trajectory.position_ref[1] = 0;
-    Eight_trajectory.position_ref[2] = 0;
+    Eigen::Vector3d position;
+    Eigen::Vector3d velocity;
+    Eigen::Vector3d acceleration;
+    double traj_omega_ = 0.4;
+    double angle = traj_omega_* time_from_start;
+    const double cos_angle = cos(angle);
+    const double sin_angle = sin(angle);
+    Eigen::Vector3d traj_origin_ ;
+    Eigen::Vector3d traj_radial_ ;
+    Eigen::Vector3d traj_axis_ ;
+    traj_origin_ << 0.0, 0.0, 2.0;
+    traj_radial_ << 2.0, 0.0, 0.0;
+    traj_axis_ << 0.0, 0.0, 2.0;
 
-    Eight_trajectory.velocity_ref[0] = 0;
-    Eight_trajectory.velocity_ref[1] = 0;
-    Eight_trajectory.velocity_ref[2] = 0;
+    position = cos_angle * traj_radial_ + sin_angle * cos_angle * traj_axis_.cross(traj_radial_)
+                 + (1 - cos_angle) * traj_axis_.dot(traj_radial_) * traj_axis_ + traj_origin_;
+
+    velocity = traj_omega_ * (-sin_angle * traj_radial_ + (pow(cos_angle, 2) - pow(sin_angle, 2)) * traj_axis_.cross(traj_radial_)
+                 + (sin_angle) * traj_axis_.dot(traj_radial_) * traj_axis_);
+
+    acceleration << 0.0, 0.0, 0.0;
+
+    Eight_trajectory.position_ref[0] = position[0];
+    Eight_trajectory.position_ref[1] = position[1];
+    Eight_trajectory.position_ref[2] = position[2];
+
+    Eight_trajectory.velocity_ref[0] = velocity[0];
+    Eight_trajectory.velocity_ref[1] = velocity[1];
+    Eight_trajectory.velocity_ref[2] = velocity[2];
 
     Eight_trajectory.acceleration_ref[0] = 0;
     Eight_trajectory.acceleration_ref[1] = 0;

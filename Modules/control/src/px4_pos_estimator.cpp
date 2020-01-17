@@ -245,7 +245,7 @@ int main(int argc, char **argv)
         _DroneState = _state_from_mavros._DroneState;
         _DroneState.header.stamp = ros::Time::now();
 
-
+        //添加测量噪声，（noise_a=0，noise_b=0时，无噪声）
         Eigen::Vector3d random;
 
         // 先生成随机数
