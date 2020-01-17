@@ -13,8 +13,8 @@ tracking_delta_y : 0.0
 tracking_delta_z : -0.2
 
 UKF:
-    std_a_: 0.02
+    std_a_: 0.01
     std_yaw_dotdot_: 0.01
-    std_px_: 0.05
-    std_py_: 0.05
-    std_yaw_: 0.03
+    std_px_: 0.02
+    std_py_: 0.02
+    std_yaw_: 0.01

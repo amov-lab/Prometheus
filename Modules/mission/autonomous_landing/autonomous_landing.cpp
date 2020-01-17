@@ -239,7 +239,7 @@ void printf_result()
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
-    cout<<setprecision(2);
+    cout<<setprecision(4);
     //左对齐
     cout.setf(ios::left);
     // 强制显示小数点

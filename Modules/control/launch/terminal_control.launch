@@ -1,10 +1,13 @@
 <launch>
+<arg name="visualization" default="true"/>
+
 	<!-- run the terminal_control.cpp -->
-
 	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen">
-
-	<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
-
+		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
 	</node>
+
+	<group if="$(arg visualization)">
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_control)/launch/config_file.rviz" />
+    </group>
 </launch>
 
