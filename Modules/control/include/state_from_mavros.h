@@ -16,6 +16,7 @@
 #define STATE_FROM_MAVROS_H
 
 #include <ros/ros.h>
+#include <bitset>
 #include <math_utils.h>
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
@@ -27,9 +28,10 @@
 #include <mavros_msgs/ActuatorControl.h>
 #include <sensor_msgs/Imu.h>
 #include <prometheus_msgs/DroneState.h>
-#include <bitset>
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_msgs/DroneState.h>
+#include <nav_msgs/Path.h>
+
 
 using namespace std;
 
@@ -55,6 +57,17 @@ class state_from_mavros
         // 【订阅】无人机当前欧拉角 坐标系:ENU系
         //  本话题来自飞控(通过Mavros功能包 /plugins/imu.cpp读取), 对应Mavlink消息为ATTITUDE (#30), 对应的飞控中的uORB消息为vehicle_attitude.msg
         attitude_sub = state_nh.subscribe<sensor_msgs::Imu>("/mavros/imu/data", 10, &state_from_mavros::att_cb,this);
+
+        trajectory_pub = state_nh.advertise<nav_msgs::Path>("/prometheus/drone_trajectory", 10);
+        
+        drone_trajectory.header.stamp = ros::Time::now();
+        drone_trajectory.header.frame_id = "map";
+        //geometry_msgs::PoseStamped null_pose;
+        //for(int i=0;i<100;i++)
+        //{
+        //    drone_trajectory.poses.push_back(null_pose);
+        //}
+
     }
 
     //变量声明 
@@ -68,6 +81,9 @@ class state_from_mavros
         ros::Subscriber position_sub;
         ros::Subscriber velocity_sub;
         ros::Subscriber attitude_sub;
+        ros::Publisher trajectory_pub;
+
+        nav_msgs::Path drone_trajectory;
 
         void state_cb(const mavros_msgs::State::ConstPtr &msg)
         {
@@ -81,6 +97,17 @@ class state_from_mavros
             _DroneState.position[0] = msg->pose.position.x;
             _DroneState.position[1] = msg->pose.position.y;
             _DroneState.position[2] = msg->pose.position.z;
+            // 2020.1.15备注：目前/mavros/local_position/pose消息中也包含了四元数信息，但究其本质还是来自/plugins/imu.cpp，故此处并不复制其四元数
+            // 但刚好借用其 发布无人机运动轨迹，用作rviz画图显示
+            drone_trajectory.poses.push_back(*msg);
+
+            //geometry_msgs::PoseStamped a;
+           // a = drone_trajectory.poses.front();
+
+            //drone_trajectory.poses.erase(a);
+            //drone_trajectory.poses.pop_back();
+
+            trajectory_pub.publish(drone_trajectory);
         }
 
         void vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
