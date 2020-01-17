@@ -75,34 +75,12 @@ int main(int argc, char **argv)
     Command_Now.Reference_State.yaw_ref             = 0;
 
 
-    // 本程序将自动解锁并切换至offboard模式
-    while(current_state.mode != "OFFBOARD")
-    {
-        mode_cmd.request.custom_mode = "OFFBOARD";
-        set_mode_client.call(mode_cmd);
-        cout << "Setting to OFFBOARD Mode..." <<endl;
-        //执行回调函数
-        ros::spinOnce();
-        ros::Duration(1.0).sleep();
-    }
-
-    while(!current_state.armed)
-    {
-        arm_cmd.request.value = true;
-        arming_client.call(arm_cmd);
-        cout << "Arming..." <<endl;
-        //执行回调函数
-        ros::spinOnce();
-        ros::Duration(1.0).sleep();
-    }
-    cout << "Set to OFFBOARD Mode Susscess!!!" <<endl;
-    cout << "Arm Susscess!!!" <<endl;
-
     while(ros::ok())
     {
         // Waiting for input
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Control Test<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
         cout << "Input the Mode: 0 for Idle, 1 for Takeoff, 2 for Hold, 3 for Land, 4 for Move, 5 for Disarm, 6 for User_Mode1, 7 for User_Mode2"<<endl;
+        cout << "Input 999 to switch to offboard mode and arm the drone"<<endl;
         cin >> Control_Mode;
 
         if(Control_Mode == prometheus_msgs::ControlCommand::Move)
@@ -130,6 +108,30 @@ int main(int argc, char **argv)
                 cout << "setpoint_t[3] --- yaw [du] : "<< endl;
                 cin >> state_desired[3];
             }
+        }else if(Control_Mode == 999)
+        {
+            // 切换至offboard模式
+            while(current_state.mode != "OFFBOARD")
+            {
+                mode_cmd.request.custom_mode = "OFFBOARD";
+                set_mode_client.call(mode_cmd);
+                cout << "Setting to OFFBOARD Mode..." <<endl;
+                //执行回调函数
+                ros::spinOnce();
+                ros::Duration(1.0).sleep();
+            }
+            // 解锁
+            while(!current_state.armed)
+            {
+                arm_cmd.request.value = true;
+                arming_client.call(arm_cmd);
+                cout << "Arming..." <<endl;
+                //执行回调函数
+                ros::spinOnce();
+                ros::Duration(1.0).sleep();
+            }
+            cout << "Set to OFFBOARD Mode Susscess!!!" <<endl;
+            cout << "Arm Susscess!!!" <<endl;
         }
 
         switch (Control_Mode)

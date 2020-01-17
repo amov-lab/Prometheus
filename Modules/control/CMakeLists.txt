@@ -11,9 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation  
   roscpp
   geometry_msgs
+  nav_msgs
   sensor_msgs
   mavros
-  nav_msgs
   std_msgs
   std_srvs
   tf2_ros
@@ -35,6 +35,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 generate_messages(
   DEPENDENCIES
   geometry_msgs 
+  nav_msgs
   sensor_msgs
   std_msgs
 )
