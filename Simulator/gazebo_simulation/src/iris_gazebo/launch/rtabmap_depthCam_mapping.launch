@@ -7,7 +7,7 @@
             <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
             <arg name="frame_id"           value="base_link"/>
             <arg name="visual_odometry"    value="false"/>
-            <arg name="odom_topic"         value="/mavros/local_position/odom"/> 
+            <arg name="odom_topic"         value="/ground_truth/state"/> 
 	    <arg name="odom_frame_id"      value="odom"/>      
             <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
             <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
