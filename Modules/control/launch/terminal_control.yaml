@@ -10,8 +10,8 @@ Controller_Test:
     Center_x: 0.0
     Center_y: 0.0
     Center_z: 1.0
-    radial: 5.0               ## m   半径越小越难追踪
-    omega: 0.1                ## rad/s  角速度越大越难追踪
+    radial: 2.0               ## m   半径越小越难追踪
+    omega: 0.3                ## rad/s  角速度越大越难追踪
   Step:
     step_length: 2.0          ## m    长度越大越难追踪
     step_interval: 5.0

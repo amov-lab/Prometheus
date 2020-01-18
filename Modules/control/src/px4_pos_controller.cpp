@@ -176,7 +176,7 @@ int main(int argc, char **argv)
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
     
-    // 位置控制类 - 根据controller_number选择其中一个使用，默认为PID
+    // 位置控制器声明
     pos_controller_cascade_PID pos_controller_cascade_pid;
     pos_controller_PID pos_controller_pid;
     // 可以设置自定义位置环控制算法
@@ -431,7 +431,6 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
 
 void printf_param()
 {
