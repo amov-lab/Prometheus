@@ -36,14 +36,14 @@ add_definitions( ${PCL_DEFINITIONS} )
 link_directories(${PCL_LIBRARY_DIRS})
 
 add_executable(${PROJECT_NAME}_node 
-    src/stereo_matching/sineva_stereo_node.cpp
-    src/stereo_matching/descriptor.cpp
-    src/stereo_matching/elas.cpp
-    src/stereo_matching/filter.cpp
-    src/stereo_matching/matrix.cpp
-    src/stereo_matching/stereomatch.cpp
-    src/stereo_matching/pointcloud.cpp
-    src/stereo_matching/triangle.cpp
+    src/stereo_matching/elas_stereo_node.cpp
+    src/stereo_matching/lib/descriptor.cpp
+    src/stereo_matching/lib/elas.cpp
+    src/stereo_matching/lib/filter.cpp
+    src/stereo_matching/lib/matrix.cpp
+    src/stereo_matching/lib/stereomatch.cpp
+    src/stereo_matching/lib/pointcloud.cpp
+    src/stereo_matching/lib/triangle.cpp
 )
 add_executable(map_building_node src/map_building/pointcloud_to_octomap_node.cpp)
 
