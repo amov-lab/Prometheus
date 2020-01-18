@@ -40,6 +40,7 @@ pos_estimator:
   noise_a : 0.0
   noise_b : 0.0
   noise_T : 1.0
+  state_fromposehistory_window : 300
 
 ## 限制参数 
 Limit:
