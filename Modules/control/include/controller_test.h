@@ -12,7 +12,11 @@
 #include <Eigen/Eigen>
 #include <math.h>
 #include <math_utils.h>
+#include <prometheus_control_utils.h>
 #include <prometheus_msgs/PositionReference.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Path.h>
+
 
 using namespace std;
 
@@ -32,8 +36,20 @@ class Controller_Test
 
             Controller_Test_nh.param<float>("Controller_Test/Step/step_length", step_length, 0.0);
             Controller_Test_nh.param<float>("Controller_Test/Step/step_interval", step_interval, 0.0);
+
+            Controller_Test_nh.param<float>("Quad/mass", Quad_MASS, 1.0);
+            Controller_Test_nh.param<float>("Limit/tilt_max", tilt_max, 20.0);
+
+            ref_trajectory_pub = Controller_Test_nh.advertise<nav_msgs::Path>("/prometheus/reference_trajectory", 10);
+            ref_pose_pub = Controller_Test_nh.advertise<geometry_msgs::PoseStamped>("/prometheus/reference_pose", 10);
+            
+            reference_trajectory.header.stamp = ros::Time::now();
+            reference_trajectory.header.frame_id = "map";
         }
         
+        float Quad_MASS;
+        float tilt_max;
+
         // Circle Parameter
         Eigen::Vector3f circle_center;
         float circle_radius;
@@ -60,6 +76,12 @@ class Controller_Test
     private:
 
         ros::NodeHandle Controller_Test_nh;
+
+        ros::Publisher ref_pose_pub;
+        ros::Publisher ref_trajectory_pub;
+        
+        geometry_msgs::PoseStamped reference_pose;
+        nav_msgs::Path reference_trajectory;
 };
 
 
@@ -110,6 +132,33 @@ prometheus_msgs::PositionReference Controller_Test::Circle_trajectory_generation
     Circle_trajectory.yaw_ref = 0;
     // Circle_trajectory.yaw_rate_ref = 0;
     // Circle_trajectory.yaw_acceleration_ref = 0;
+
+    reference_pose.header.stamp = ros::Time::now();
+    reference_pose.header.frame_id = "map";
+
+    reference_pose.pose.position.x = Circle_trajectory.position_ref[0];
+    reference_pose.pose.position.y = Circle_trajectory.position_ref[1];
+    reference_pose.pose.position.z = Circle_trajectory.position_ref[2];
+
+    // 待补充：增加期望加速度转期望角度
+    Eigen::Vector3d accel_sp;
+    Eigen::Vector3d thrust_sp;
+    Eigen::Vector3d throttle_sp;
+    accel_sp[0] = Circle_trajectory.acceleration_ref[0];
+    accel_sp[1] = Circle_trajectory.acceleration_ref[1];
+    accel_sp[2] = Circle_trajectory.acceleration_ref[2];
+
+    thrust_sp =  prometheus_control_utils::accelToThrust(accel_sp, Quad_MASS, tilt_max);
+    throttle_sp = prometheus_control_utils::thrustToThrottle(thrust_sp);
+    prometheus_msgs::AttitudeReference _AttitudeReference;           //位置控制器输出，即姿态环参考量
+    _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Circle_trajectory.yaw_ref);
+
+    reference_pose.pose.orientation = _AttitudeReference.desired_att_q;
+    
+    reference_trajectory.poses.push_back(reference_pose);
+
+    ref_pose_pub.publish(reference_pose);
+    ref_trajectory_pub.publish(reference_trajectory);
 
     return Circle_trajectory;
 }
