@@ -46,6 +46,9 @@ prometheus_control为Prometheus项目的控制模块。依赖Mavros功能包及p
    话题名称: "/prometheus/control_command"
    话题类型: prometheus_msgs::ControlCommand
 
+**px4_pos_estimator.cpp**为位置估计器,应重点阅读。
+
+发布无人机运动轨迹，话题为/prometheus/drone_trajectory，可通过参数pos_estimator/state_fromposehistory_window来设置轨迹的长短
 
 ## 关于作者
 
