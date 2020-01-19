@@ -166,10 +166,16 @@ int main(int argc, char **argv)
     Command_Now.Reference_State.yaw_ref             = 0;
 
     // 起飞
-    cout<<"[autonomous_landing]: "<<"Takeoff."<<endl;
+    cout<<"[autonomous_landing]: "<<"Takeoff to predefined position."<<endl;
     Command_Now.header.stamp                    = ros::Time::now();
-    Command_Now.Mode                            = prometheus_msgs::ControlCommand::Takeoff;
-    Command_Now.Command_ID                      = 1;
+    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+    Command_Now.Command_ID                          = 1;
+    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+    Command_Now.Reference_State.position_ref[0]     = 0;
+    Command_Now.Reference_State.position_ref[1]     = 0;
+    Command_Now.Reference_State.position_ref[2]     = 5.0;
+    Command_Now.Reference_State.yaw_ref             = 0;
 
     command_pub.publish(Command_Now);
 
