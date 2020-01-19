@@ -201,13 +201,13 @@ int main(int argc, char **argv)
         distance_to_setpoint = cal_distance_tracking(target_pos_fusion,drone_pos,tracking_delta);
         if(distance_to_setpoint < distance_thres)
         {
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
+            //Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
             cout <<"[autonomous_landing]: Catched the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
         }
 
         if(!is_detected)
         {
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+            //Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
             cout <<"[autonomous_landing]: Lost the Landing Pad. "<< endl;
         }else
         {
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
         //Publish
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Command_ID   = Command_Now.Command_ID + 1;
-        command_pub.publish(Command_Now);
+        //command_pub.publish(Command_Now);
 
         rate.sleep();
 
