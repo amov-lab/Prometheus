@@ -461,6 +461,7 @@ int main(int argc, char **argv)
 
             //将解算后的位置发给控制端
             prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
             pose_now.detected = true;
             pose_now.frame = 0;
             pose_now.position[0] = A1_Position_OcInW.y;
@@ -493,6 +494,7 @@ int main(int argc, char **argv)
         else
         {
             prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
             pose_now.detected = false;
             pose_now.frame = 0;
             pose_now.position[0] = last_x;
