@@ -24,7 +24,7 @@ sudo gedit ~/.bashrc
 
 ```
 source /home/fly-vision/Prometheus/devel/setup.bash
-export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/models:~/gazebo_models
+export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulator/models:~/gazebo_models
 source ${your px4 path}/Firmware/Tools/setup_gazebo.bash ${your px4 path}/Firmware ${your px4 path}/Firmware/build/posix_sitl_default
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware/Tools/sitl_gazebo
