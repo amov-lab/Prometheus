@@ -38,6 +38,13 @@ rosrun prometheus_detection web_cam  # 启动相机节点，如需修改相机ID
 1.降落板检测(降落板的具体描述见附录1.1)
 ```
 rosrun prometheus_detection landpad_det
+# 对于默认的web_cam 
+# 默认话题为: /prometheus/camera/rgb/image_raw
+roslaunch prometheus_detection landpad_det.launch
+# 对于Simulator中gazebo二维码降落板仿真环境
+# 运行仿真环境 Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/launch/landing_with_qrcode.launch
+# 仿真环境中的图像话题为: /realsense_plugin/camera/color/image_raw
+roslaunch prometheus_detection landpad_det_gazebo.launch
 ```
 2.单个二维码检测(二维码示例见附录1.2)
 ```
