@@ -49,11 +49,11 @@ class pos_controller_PID
             pos_pid_nh.param<float>("Limit/vxy_error_max", vel_error_max[0], 0.3);
             pos_pid_nh.param<float>("Limit/vxy_error_max", vel_error_max[1], 0.3);
             pos_pid_nh.param<float>("Limit/vz_error_max" , vel_error_max[2], 1.0);
-            pos_pid_nh.param<float>("Limit/pxy_int_max"  , int_max[0], 0.5);
-            pos_pid_nh.param<float>("Limit/pxy_int_max"  , int_max[1], 0.5);
-            pos_pid_nh.param<float>("Limit/pz_int_max"   , int_max[2], 0.5);
+            pos_pid_nh.param<float>("Limit/pxy_int_max"  , int_max[0], 1.0);
+            pos_pid_nh.param<float>("Limit/pxy_int_max"  , int_max[1], 1.0);
+            pos_pid_nh.param<float>("Limit/pz_int_max"   , int_max[2], 1.0);
             pos_pid_nh.param<float>("Limit/tilt_max", tilt_max, 20.0);
-            pos_pid_nh.param<float>("Limit/int_start_error"  , int_start_error, 0.3);
+            pos_pid_nh.param<float>("Limit/int_start_error"  , int_start_error, 10.0);
 
             integral = Eigen::Vector3f(0.0,0.0,0.0);
         }
