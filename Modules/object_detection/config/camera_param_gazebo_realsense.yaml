@@ -1,0 +1,24 @@
+## 相机参数
+fx: 554.3826904296875
+fy: 554.3826904296875
+x0: 320.0
+y0: 240.0
+
+## 畸变参数
+k1: 0.0
+k2: 0.0
+p1: 0.0
+p2: 0.0
+k3: 0.0
+
+## aruco_det 二维码的边长(默认0.2m)
+aruco_det_len: 0.2
+
+## ellipse_det 圆的半径(默认0.2m)
+ellipse_det_r: 0.2
+
+## kcf_tracker 目标高度(默认1.7m)
+kcf_tracker_h: 1.7
+
+## landpad_det 降落板边长(默认0.6m)，0.6m包括边缘白色部分，黑色部分边长为0.48m
+landpad_det_len: 0.6

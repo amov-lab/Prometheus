@@ -217,12 +217,19 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
-    std::string camera_topic;
-    if(nh.getParam("camera_topic", camera_topic)) {
+    std::string camera_topic, camera_info;
+    if (nh.getParam("camera_topic", camera_topic)) {
         ROS_INFO("camera_topic is %s", camera_topic.c_str());
     } else {
         ROS_WARN("didn't find parameter camera_topic");
         camera_topic = "/prometheus/camera/rgb/image_raw";
+    }
+
+    if (nh.getParam("camera_info", camera_info)) {
+        ROS_INFO("camera_info is %s", camera_info.c_str());
+    } else {
+        ROS_WARN("didn't find parameter camera_info");
+        camera_info = "camera_param.yaml";
     }
 
     drone_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
@@ -241,7 +248,7 @@ int main(int argc, char **argv)
     std::string ros_path = ros::package::getPath("prometheus_detection");
     cout << "DETECTION_PATH: " << ros_path << endl;
     //读取参数文档camera_param.yaml中的参数值；
-    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/" + camera_info);
     //相机内部参数
     double fx = camera_config["fx"].as<double>();
     double fy = camera_config["fy"].as<double>();
@@ -324,6 +331,7 @@ int main(int argc, char **argv)
             vector<double> vec_yaw;
             cv::Point3f A1_Sum_Position_OcInW(0,0,0);
             double A1_Sum_yaw=0.0;
+            double tx, ty, tz;
             for(int t=0;t<markerids.size();t++)
             {
                 cv::Mat RoteM, TransM;
@@ -339,14 +347,14 @@ int main(int argc, char **argv)
                 vector<vector<Point2f> > singMarkerCorner_19, singMarkerCorner_43;
                 if (markerids[t] == 19)
                 {
-                  singMarkerCorner_19.push_back(markerCorners[t]);
-                  cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.8,camera_matrix,distortion_coefficients,rvec,tvec);
+                    singMarkerCorner_19.push_back(markerCorners[t]);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.8,camera_matrix,distortion_coefficients,rvec,tvec);
 
                 }
                 else if (markerids[t] == 43)
                 {
-                   singMarkerCorner_43.push_back(markerCorners[t]);
-                   cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_43,landpad_det_len*0.08,camera_matrix,distortion_coefficients,rvec,tvec);
+                    singMarkerCorner_43.push_back(markerCorners[t]);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_43,landpad_det_len*0.08,camera_matrix,distortion_coefficients,rvec,tvec);
                 }
                 else 
                 {
@@ -381,9 +389,9 @@ int main(int argc, char **argv)
                 Theta_W2C.y = -1 * thetay;
                 Theta_W2C.z = -1 * thetaz;
                 //偏移向量
-                double tx = tvec.ptr<double>(0)[0];
-                double ty = tvec.ptr<double>(0)[1];
-                double tz = tvec.ptr<double>(0)[2];
+                tx = tvec.ptr<double>(0)[0];
+                ty = tvec.ptr<double>(0)[1];
+                tz = tvec.ptr<double>(0)[2];
                 double x = tx, y = ty, z = tz;
 
                 //进行三次旋转得到相机光心在世界坐标系的位置
@@ -472,9 +480,9 @@ int main(int argc, char **argv)
             pose_now.header.stamp = ros::Time::now();
             pose_now.detected = true;
             pose_now.frame = 0;
-            pose_now.position[0] = A1_Position_OcInW.y;
-            pose_now.position[1] = A1_Position_OcInW.z;
-            pose_now.position[2] = -A1_Position_OcInW.x;
+            pose_now.position[0] = tx;
+            pose_now.position[1] = ty;
+            pose_now.position[2] = tz;
             pose_now.yaw_error = A1_yaw;
 
             last_x = pose_now.position[0];
@@ -496,7 +504,7 @@ int main(int argc, char **argv)
             // position_flag_pub.publish(flag_position);
 
             cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+            cout << "pos_target: [X Y Z Yaw] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<< pose_now.yaw_error <<" [rad] "<<endl;
 
         }
         else
@@ -513,7 +521,7 @@ int main(int argc, char **argv)
             // position_flag_pub.publish(flag_position);
             position_pub.publish(pose_now);
             cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+            cout << "pos_target: [X Y Z Yaw] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<< pose_now.yaw_error <<" [rad] "<<endl;
 
         }
         //画出识别到的二维码
