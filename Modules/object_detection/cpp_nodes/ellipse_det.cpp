@@ -367,6 +367,7 @@ int main(int argc, char **argv)
 
                     // geometry_msgs::Pose pose_now;
                     prometheus_msgs::DetectionInfo pose_now;
+                    pose_now.header.stamp = ros::Time::now();
                     // pose_now.orientation.w = 1;
                     // pose_now.position.x = depth;
                     // pose_now.position.y = real_x;
@@ -404,6 +405,7 @@ int main(int argc, char **argv)
 
             // geometry_msgs::Pose pose_now;
             prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
             // pose_now.orientation.w = 1;
             // pose_now.position.x = depth;
             // pose_now.position.y = real_x;
@@ -429,6 +431,7 @@ int main(int argc, char **argv)
             // 如果没检测到，则发布上次的检测结果，并用标志orientation.w = 0告知未检测到
             // geometry_msgs::Pose pose_now;
             prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
             // pose_now.orientation.w = 0;
             // pose_now.position.x = last_x;
             // pose_now.position.y = last_y;
