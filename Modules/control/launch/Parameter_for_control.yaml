@@ -1,6 +1,6 @@
 ## 飞机参数
 Quad:
-  mass: 1.2
+  mass: 1.5
 
   ## parameter for px4_pos_controller.cpp
 ## 起飞高度
@@ -22,12 +22,12 @@ Input_disturbance:
 
 ##geo fence
 geo_fence:
-  x_min: -10.0
-  x_max: 10.0
-  y_min: -10.0
-  y_max: 10.0
+  x_min: -100.0
+  x_max: 100.0
+  y_min: -100.0
+  y_max: 100.0
   z_min: -0.5
-  z_max: 10.0
+  z_max: 100.0
 
 ## parameter for px4_pos_estimator.cpp
 pos_estimator:
@@ -40,6 +40,7 @@ pos_estimator:
   noise_a : 0.0
   noise_b : 0.0
   noise_T : 1.0
+  state_fromposehistory_window : 1100
 
 ## 限制参数 
 Limit:
@@ -65,17 +66,17 @@ Pos_cascade_pid:
    Ki_vz : 0.02
    Kd_vxvy : 0.01
    Kd_vz : 0.0
-   Hover_throttle : 0.4
+   Hover_throttle : 0.5
    MPC_VELD_LP: 5.0
 
 # 位置环参数 - normal pid
 Pos_pid:
-  Kp_xy : 2.5
-  Kp_z : 2.5
+  Kp_xy : 4.0
+  Kp_z : 4.0
   Ki_xy : 0.5
   Ki_z : 0.5
-  Kd_xy : 3.0
-  Kd_z : 3.0
+  Kd_xy : 4.0
+  Kd_z : 4.0
 
 # 位置环参数 for ude
 Pos_ude:

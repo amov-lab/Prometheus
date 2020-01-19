@@ -276,6 +276,7 @@ int main(int argc, char **argv)
                 **********************************************************************/
 
                 prometheus_msgs::DetectionInfo pose_now;
+                pose_now.header.stamp = ros::Time::now();
                 pose_now.detected = true;
                 pose_now.frame = 0;
                 pose_now.position[0] = tvec.ptr<double>(0)[0];
@@ -301,6 +302,7 @@ int main(int argc, char **argv)
             if (!deted)
             {
                 prometheus_msgs::DetectionInfo pose_now;
+                pose_now.header.stamp = ros::Time::now();
                 pose_now.detected = false;
                 pose_now.frame = 0;
                 pose_now.position[0] = static_real_x;

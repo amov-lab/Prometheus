@@ -217,6 +217,14 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
+    std::string camera_topic;
+    if(nh.getParam("camera_topic", camera_topic)) {
+        ROS_INFO("camera_topic is %s", camera_topic.c_str());
+    } else {
+        ROS_WARN("didn't find parameter camera_topic");
+        camera_topic = "/prometheus/camera/rgb/image_raw";
+    }
+
     drone_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
     vehicle_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
     position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 10);
@@ -224,7 +232,7 @@ int main(int argc, char **argv)
     // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
     // 接收图像的话题
-    image_subscriber = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
+    image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
     // 发布ArUco检测结果的话题
     landpad_pub = it.advertise("/prometheus/camera/rgb/image_landpad_det", 1);
 
@@ -461,6 +469,7 @@ int main(int argc, char **argv)
 
             //将解算后的位置发给控制端
             prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
             pose_now.detected = true;
             pose_now.frame = 0;
             pose_now.position[0] = A1_Position_OcInW.y;
@@ -493,6 +502,7 @@ int main(int argc, char **argv)
         else
         {
             prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
             pose_now.detected = false;
             pose_now.frame = 0;
             pose_now.position[0] = last_x;
@@ -501,6 +511,7 @@ int main(int argc, char **argv)
             pose_now.yaw_error = last_yaw;
             // flag_position.orientation.w=0;
             // position_flag_pub.publish(flag_position);
+            position_pub.publish(pose_now);
             cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
             cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
@@ -510,7 +521,7 @@ int main(int argc, char **argv)
         //计算算法运行时间
         clock_t finish=clock();
         double time=(finish-start)/1000;
-        std::cout<<"time="<<time<<std::endl;
+        std::cout << "time = " << time << "ms" << std::endl;
         msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
         landpad_pub.publish(msg_ellipse);
         // cv::imshow("test",img);
