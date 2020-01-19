@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <actor name="actor">
+     <skin>
+        <filename>model://actor_walk/meshes/SKIN_man_green_shirt.dae</filename>
+        <scale>1.0</scale>
+     </skin>
+     <pose>0 0 0 0 0 0</pose>
+     <animation name="walking">
+        <filename>model://actor_walk/meshes/ANIMATION_walking.dae</filename>
+        <scale>1.000000</scale>
+        <interpolate_x>true</interpolate_x>
+     </animation>
+     <script>
+        <loop>true</loop>
+        <delay_start>0.000000</delay_start>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>0 2 0 0 0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>2</time>
+            <pose>0 -2 0 0 0 -1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>2.5</time>
+            <pose>0 -2 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>7</time>
+            <pose>0 2 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>7.5</time>
+            <pose>0 2 0 0 0 -1.57</pose>
+          </waypoint>
+        </trajectory>
+     </script>
+  </actor>
+</sdf>

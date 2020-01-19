@@ -242,7 +242,6 @@ void pos_controller_cascade_PID::_velocityController
     vel_D_output[1] = Kd_vxvy * vel_error_deriv[1];
     vel_D_output[2] = Kd_vz  * vel_error_deriv[2];
 
-
     // Consider thrust in Z-direction. [Here Hover_throttle is added]
     float thrust_desired_Z  = _Reference_State.acceleration_ref[2] + vel_P_output[2] + thurst_int[2] + vel_D_output[2] + Hover_throttle;
 

@@ -1,0 +1,18 @@
+<launch>
+    <arg name="use_rviz"                  default="false"/>
+    <arg name="use_rtabmapviz"            default="true"/>
+    
+    <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
+            <arg name="rtabmap_args"       value="--delete_db_on_start"/>
+            <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
+            <arg name="frame_id"           value="base_link"/>
+            <arg name="visual_odometry"    value="false"/>
+            <arg name="odom_topic"         value="/ground_truth/state"/> 
+	    <arg name="odom_frame_id"      value="odom"/>      
+            <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
+            <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
+            <arg name="queue_size"         value="200"/>
+            <arg name="rviz"               value="$(arg use_rviz)"/>
+            <arg name="rtabmapviz"         value="$(arg use_rtabmapviz)"/>
+    </include>
+</launch>
