@@ -10,9 +10,9 @@ from gazebo_msgs.msg import ModelState
 def pose_publisher():
     pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
     pose_msg = ModelState()
-    pose_msg.model_name = 'qrcode_cube_10cm'
+    pose_msg.model_name = 'qrcode_cube'
     rate = rospy.Rate(30)
-    radius = 0.5
+    radius = 1.
     theta = 0.
     while not rospy.is_shutdown():
            theta += (30./30)%360
