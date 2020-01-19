@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <model name="qrcode_cube_10cm">
+  <model name="qrcode_cube">
     <link name="link">
       <pose>0 0 0.05 0 0 0</pose>
       <inertial>
@@ -18,7 +18,7 @@
       <collision name="collision">
         <geometry>
           <box>
-            <size>0.2 0.2 0.002</size>
+            <size>0.6 0.6 0.001</size>
           </box>
         </geometry>
         <surface>
@@ -50,8 +50,8 @@
         </geometry>
         <material>
           <script>
-            <uri>model://qrcode_cube_10cm/materials/scripts</uri>
-	    <uri>model://qrcode_cube_10cm/materials/textures</uri>
+            <uri>model://qrcode_cube/materials/scripts</uri>
+	    <uri>model://qrcode_cube/materials/textures</uri>
             <name>Cube/QRCode</name>
           </script>
         </material>
