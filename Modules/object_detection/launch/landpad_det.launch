@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="prometheus_detection" type="landpad_det" name="landpad_det" output="screen">
+        <param name="camera_topic" type="string" value="/prometheus/camera/rgb/image_raw" />
+    </node>
+</launch>

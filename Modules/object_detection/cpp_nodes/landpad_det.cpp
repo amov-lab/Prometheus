@@ -217,6 +217,12 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
+    std::string camera_topic;
+    if(nh.getParam("camera_topic", camera_topic))
+        ROS_INFO("camera_topic is %s", camera_topic.c_str());
+    else
+        ROS_WARN("didn't find parameter camera_topic");
+
     drone_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
     vehicle_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
     position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 10);
@@ -224,7 +230,7 @@ int main(int argc, char **argv)
     // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
     // 接收图像的话题
-    image_subscriber = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
+    image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
     // 发布ArUco检测结果的话题
     landpad_pub = it.advertise("/prometheus/camera/rgb/image_landpad_det", 1);
 
