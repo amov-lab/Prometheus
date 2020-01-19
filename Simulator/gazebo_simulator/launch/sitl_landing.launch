@@ -27,8 +27,8 @@
     </include>
 
 	<!-- Spawn vehicle model iris_realsense_camera_qrcode-->
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera/iris_realsense_camera.sdf"/>
-	<arg name="model" default="iris_realsense_camera"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera_qrcode/iris_realsense_camera_qrcode.sdf"/>
+	<arg name="model" default="iris_realsense_camera_qrcode"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
 	</node>
@@ -74,6 +74,11 @@
 	<!-- run the autonomous_landing.cpp -->
 	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
 		<rosparam command="load" file="$(find prometheus_mission)/autonomous_landing/autonomous_landing.yaml" />	
+	</node>
+
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
 	</node>
 
 	<!-- run the landpad_det.cpp -->

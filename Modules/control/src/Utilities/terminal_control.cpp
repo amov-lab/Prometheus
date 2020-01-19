@@ -118,7 +118,7 @@ int main(int argc, char **argv)
                 cout << "Setting to OFFBOARD Mode..." <<endl;
                 //执行回调函数
                 ros::spinOnce();
-                ros::Duration(1.0).sleep();
+                ros::Duration(0.5).sleep();
             }
             // 解锁
             while(!current_state.armed)
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
                 cout << "Arming..." <<endl;
                 //执行回调函数
                 ros::spinOnce();
-                ros::Duration(1.0).sleep();
+                ros::Duration(0.5).sleep();
             }
             cout << "Set to OFFBOARD Mode Susscess!!!" <<endl;
             cout << "Arm Susscess!!!" <<endl;
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
         
         ROS_INFO("..................................");
         
-        sleep(2.0);
+        sleep(1.0);
     }
 
     return 0;
