@@ -59,6 +59,10 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
+add_executable(planning planning/planning.cpp)
+add_dependencies(planning prometheus_mission_gencpp)
+target_link_libraries(planning ${catkin_LIBRARIES})
+
 add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
 add_dependencies(waypoint_tracking prometheus_mission_gencpp)
 target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
