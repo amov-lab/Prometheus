@@ -1,0 +1,9 @@
+# editor temporary files
+*.swp
+*~
+
+# Vim Ctags file
+tags
+
+# Compiled python files
+*.pyc
