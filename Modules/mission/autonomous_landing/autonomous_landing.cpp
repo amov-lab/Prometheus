@@ -32,8 +32,7 @@ Eigen::Vector3f drone_pos;
 //---------------------------------------Vision---------------------------------------------
 prometheus_msgs::DetectionInfo Detection_raw;          //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
 Eigen::Vector3f pos_body_frame;
-
-Eigen::Vector3f tracking_delta;
+Eigen::Vector3f pos_des_prev;
 float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
 
 bool is_detected = false;                                          // 是否检测到目标标志
@@ -56,7 +55,7 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 
     pos_body_frame[0] = -Detection_raw.position[1];
     pos_body_frame[1] = -Detection_raw.position[0];
-    pos_body_frame[2] = Detection_raw.position[2]; //这个值是正数，越近越小
+    pos_body_frame[2] = -Detection_raw.position[2]; 
 
     
     if(Detection_raw.detected)
@@ -121,9 +120,9 @@ int main(int argc, char **argv)
     nh.param<float>("landing_pad_height", landing_pad_height, 0.0);
 
     //追踪的前后间隔
-    nh.param<float>("kpx_land", kpx_land, 0.3);
-    nh.param<float>("kpy_land", kpy_land, 0.3);
-    nh.param<float>("kpz_land", kpz_land, 0.3);
+    nh.param<float>("kpx_land", kpx_land, 0.1);
+    nh.param<float>("kpy_land", kpy_land, 0.1);
+    nh.param<float>("kpz_land", kpz_land, 0.1);
 
     //打印现实检查参数
     printf_param();
@@ -137,6 +136,17 @@ int main(int argc, char **argv)
     {
         return -1;
     }
+
+    // 先读取一些飞控的数据
+    for(int i=0;i<10;i++)
+    {
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    pos_des_prev[0] = drone_pos[0];
+    pos_des_prev[1] = drone_pos[1];
+    pos_des_prev[2] = drone_pos[2];
 
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
     Command_Now.Command_ID                          = 0;
@@ -160,12 +170,14 @@ int main(int argc, char **argv)
     Command_Now.Command_ID                          = 1;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0]     = 0;
-    Command_Now.Reference_State.position_ref[1]     = 0;
-    Command_Now.Reference_State.position_ref[2]     = 5.0;
+    Command_Now.Reference_State.position_ref[0]     = 1;
+    Command_Now.Reference_State.position_ref[1]     = 1;
+    Command_Now.Reference_State.position_ref[2]     = 2.5;
     Command_Now.Reference_State.yaw_ref             = 0;
 
-    command_pub.publish(Command_Now);
+    //command_pub.publish(Command_Now);
+
+    //sleep(8.0);
 
     while (ros::ok())
     {
@@ -187,17 +199,38 @@ int main(int argc, char **argv)
 
         if(!is_detected)
         {
-            //Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+            pos_des_prev[0] = drone_pos[0];
+            pos_des_prev[1] = drone_pos[1];
+            pos_des_prev[2] = drone_pos[2];
             cout <<"[autonomous_landing]: Lost the Landing Pad. "<< endl;
+        }else if(abs(pos_body_frame[2]) < 0.3)
+        {
+            cout <<"[autonomous_landing]: Reach the lowest height. "<< endl;
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
         }else
         {
             cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
             Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_VEL;   //xy velocity z position
-            Command_Now.Reference_State.velocity_ref[0]     = kpx_land * pos_body_frame[0];
-            Command_Now.Reference_State.velocity_ref[1]     = kpx_land * pos_body_frame[1];
-            Command_Now.Reference_State.velocity_ref[2]     = - kpz_land * pos_body_frame[2];
+            Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME;
+            Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
+
+            Eigen::Vector3f vel_command;
+            vel_command[0] = kpx_land * pos_body_frame[0];
+            vel_command[1] = kpy_land * pos_body_frame[1];
+            vel_command[2] = kpz_land * pos_body_frame[2];
+
+            for (int i=0; i<3; i++)
+            {
+                Command_Now.Reference_State.position_ref[i] = pos_des_prev[i] + vel_command[i]* 0.05;
+            }
             Command_Now.Reference_State.yaw_ref             = 0.0;
+            
+            for (int i=0; i<3; i++)
+            {
+                pos_des_prev[i] = Command_Now.Reference_State.position_ref[i];
+            }
+
         }
 
         //Publish
@@ -244,6 +277,7 @@ void printf_result()
     cout << "pos_body_frame: " << pos_body_frame[0] << " [m] "<< pos_body_frame[1] << " [m] "<< pos_body_frame[2] << " [m] "<<endl;
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>Land Control State<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout << "pos_des: " << Command_Now.Reference_State.position_ref[0] << " [m] "<< Command_Now.Reference_State.position_ref[1] << " [m] "<< Command_Now.Reference_State.position_ref[2] << " [m] "<<endl;
 }
 void printf_param()
 {
@@ -251,8 +285,8 @@ void printf_param()
     cout << "Thres_vision : "<< Thres_vision << endl;
     cout << "distance_thres : "<< distance_thres << endl;
     cout << "landing_pad_height : "<< landing_pad_height << endl;
-    cout << "tracking_delta_x : "<< tracking_delta[0] << endl;
-    cout << "tracking_delta_y : "<< tracking_delta[1] << endl;
-    cout << "tracking_delta_z : "<< tracking_delta[2] << endl;
+    cout << "kpx_land : "<< kpx_land << endl;
+    cout << "kpy_land : "<< kpy_land << endl;
+    cout << "kpz_land : "<< kpz_land << endl;
 }
 

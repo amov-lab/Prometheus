@@ -23,11 +23,9 @@
     </include>
 
 	<!-- Spawn vehicle model iris_realsense_camera_qrcode-->
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera_qrcode/iris_realsense_camera_qrcode.sdf"/>
-	<arg name="model" default="iris_realsense_camera_qrcode"/>
-	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
-		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
-	</node>
+    <!-- Move the QRCode -->
+    <node pkg="prometheus_gazebo" type="qrcode_control.py" name="qrcode_control">
+    </node>
 
 
 </launch>

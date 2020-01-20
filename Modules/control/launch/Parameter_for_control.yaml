@@ -71,12 +71,12 @@ Pos_cascade_pid:
 
 # 位置环参数 - normal pid
 Pos_pid:
-  Kp_xy : 4.0
-  Kp_z : 4.0
-  Ki_xy : 0.5
-  Ki_z : 0.5
-  Kd_xy : 4.0
-  Kd_z : 4.0
+  Kp_xy : 0.01
+  Kp_z : 0.01
+  Ki_xy : 0.01
+  Ki_z : 0.01
+  Kd_xy : 0.01
+  Kd_z : 0.01
 
 # 位置环参数 for ude
 Pos_ude:
