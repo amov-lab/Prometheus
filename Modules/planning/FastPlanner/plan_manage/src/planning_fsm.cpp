@@ -28,22 +28,21 @@ void PlanningFSM::init(ros::NodeHandle& nh)
   have_goal_ = false;
 
   /* ---------- init edt environment ---------- */
-  nh.param("sdf_map/SDF_MODE", sdf_mode, -1);
-  ROS_INFO("sdf_mode: %d", sdf_mode);
+  // now we use global map
+  nh.param("sdf_map/SDF_MODE", sdf_mode, 0);
+  ROS_INFO("sdf_mode: %s", sdf_mode==0? "local sdf" : "global sdf");
   if(sdf_mode==0){
       sdf_map_.reset(new SDFMap);
       sdf_map_->init(nh);
 
       edt_env_.reset(new EDTEnvironment);
       edt_env_->setMap(sdf_map_);
-      // edt_env_->set_mode(sdf_mode);
   } else{
       sdf_map_global.reset(new SDFMap_Global);
       sdf_map_global->init(nh);
 
       edt_env_.reset(new EDTEnvironment);
       edt_env_->setMap(sdf_map_global);
-      // edt_env_->set_mode(sdf_mode);
   }
 
 
@@ -85,8 +84,6 @@ void PlanningFSM::init(ros::NodeHandle& nh)
 
   safety_timer_ = node_.createTimer(ros::Duration(0.1), &PlanningFSM::safetyCallback, this);
 
-  // waypoint_sub_ = node_.subscribe("/planning/waypoints", 1, &PlanningFSM::waypointCallback, this);
-
   waypoint_sub_ = node_.subscribe("/planning/goal", 1, &PlanningFSM::waypointCallback, this);
 
   replan_pub_ = node_.advertise<std_msgs::Empty>("planning/replan", 10);
@@ -102,8 +99,9 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
   if (msg->pose.position.z < 0.0)
     return;
   trigger_ = true;
-
   double goal_z;
+
+  // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
   if (flight_type_ == FLIGHT_TYPE::MANUAL_GOAL)
   {
     goal_z = msg->pose.position.z;
@@ -303,7 +301,7 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
     // cout << "[safety callback]: no map." << endl;
     return;
   }
-  else 
+  // else 
     // printf("[safety callback]: has map!\n");
   
   /* ---------- check goal safety ---------- */

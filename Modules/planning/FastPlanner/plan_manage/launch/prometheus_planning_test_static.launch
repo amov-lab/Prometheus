@@ -2,6 +2,7 @@
   <arg name="max_vel" value="2.0" />
   <arg name="max_acc" value="1.0" />
   <arg name="dynamic" value="0" />
+  <arg name="pcd_file" value="$(find prometheus_plan_manage)/config/cloud0115.pcd" />
 
   <!-- main node -->
   <node pkg="prometheus_plan_manage" name="dyn_planner_node" type="dyn_planner_node" output="screen">
@@ -102,6 +103,9 @@
       <param name="test/init_odom_x" value="1.0" type="double"/>
       <param name="test/init_odom_y" value="1.0" type="double"/>
       <param name="test/init_odom_z" value="1.0" type="double"/>
+      <param name="test/file_name" value="$(arg pcd_file)" type="string"/>
   </node>
+
+
 
 </launch>
