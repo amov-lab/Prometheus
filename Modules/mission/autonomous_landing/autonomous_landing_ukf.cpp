@@ -22,6 +22,7 @@
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <geometry_msgs/Point.h>
+#include <gazebo_msgs/ModelStates.h>
 
 
 using namespace std;
@@ -36,7 +37,8 @@ prometheus_msgs::DetectionInfo Detection_ENU;
 
 Eigen::VectorXd state_fusion;
 Eigen::Vector3f tracking_delta;
-
+Eigen::Vector3f pos_des_prev;
+float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
 bool is_detected = false;                                          // 是否检测到目标标志
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
 int num_count_vision_regain = 0;                                                      //视觉丢失计数器
@@ -80,10 +82,12 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     // Body frame to Inertial frame
     Detection_ENU.frame = 1;
 
-    Detection_ENU.position[0] = _DroneState.position[0] + Detection_raw.position[0];
-    Detection_ENU.position[1] = _DroneState.position[1] + Detection_raw.position[1];
+    Detection_ENU.position[0] = _DroneState.position[0] - Detection_raw.position[1];
+    Detection_ENU.position[1] = _DroneState.position[1] - Detection_raw.position[0];
 
-    Detection_ENU.attitude[2] = _DroneState.attitude[2] + Detection_raw.attitude[2];
+   // Detection_ENU.attitude[2] = _DroneState.attitude[2] + Detection_raw.attitude[2];
+    Detection_ENU.attitude[2] = 0.0;
+
 }
 
 
@@ -100,7 +104,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "autonomous_landing");
+    ros::init(argc, argv, "autonomous_landing_ukf");
     ros::NodeHandle nh("~");
 
     //节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
@@ -111,6 +115,8 @@ int main(int argc, char **argv)
     ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
 
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
+
+    //ros::Subscriber qr_code_sub = nh.subscribe<gazebo_msgs/ModelStates>("/prometheus/drone_state", 10, drone_state_cb);
 
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
@@ -131,6 +137,10 @@ int main(int argc, char **argv)
     nh.param<float>("tracking_delta_y", tracking_delta[1], 0.0);
     nh.param<float>("tracking_delta_z", tracking_delta[2], 0.0);
 
+    nh.param<float>("kpx_land", kpx_land, 0.1);
+    nh.param<float>("kpy_land", kpy_land, 0.1);
+    nh.param<float>("kpz_land", kpz_land, 0.1);
+
 
     //ukf用于估计目标运动状态，此处假设目标为恒定转弯速率和速度模型（CTRV）模型
     int model_type = UKF::CAR;
@@ -149,6 +159,17 @@ int main(int argc, char **argv)
     {
         return -1;
     }
+
+    // 先读取一些飞控的数据
+    for(int i=0;i<10;i++)
+    {
+        ros::spinOnce();
+        rate.sleep();
+    }
+
+    pos_des_prev[0] = drone_pos[0];
+    pos_des_prev[1] = drone_pos[1];
+    pos_des_prev[2] = drone_pos[2];
 
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
     Command_Now.Command_ID                          = 0;
@@ -177,7 +198,7 @@ int main(int argc, char **argv)
     Command_Now.Reference_State.position_ref[2]     = 5.0;
     Command_Now.Reference_State.yaw_ref             = 0;
 
-    command_pub.publish(Command_Now);
+    //command_pub.publish(Command_Now);
 
     while (ros::ok())
     {
@@ -209,27 +230,48 @@ int main(int argc, char **argv)
         {
             //Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
             cout <<"[autonomous_landing]: Lost the Landing Pad. "<< endl;
+        }else if(drone_pos[2] < 0.3)
+        {
+            cout <<"[autonomous_landing]: Reach the lowest height. "<< endl;
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
         }else
         {
             cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
             Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;   //xy velocity z position
-            Command_Now.Reference_State.position_ref[0]     = state_fusion[0];
-            Command_Now.Reference_State.position_ref[1]     = state_fusion[1];
-            Command_Now.Reference_State.position_ref[2]     = landing_pad_height - tracking_delta[2];
+            //Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;   //xy velocity z position
+            Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME;
+            Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
+
+
+            Eigen::Vector3f vel_command;
+            vel_command[0] = kpx_land * (state_fusion[0] - drone_pos[0]);
+            vel_command[1] = kpy_land * (state_fusion[1] - drone_pos[1]);
+            vel_command[2] = kpz_land * (0.0 - drone_pos[2]);
+
+            for (int i=0; i<3; i++)
+            {
+                Command_Now.Reference_State.position_ref[i] = pos_des_prev[i] + vel_command[i]* 0.05;
+            }
+            
+            for (int i=0; i<3; i++)
+            {
+                pos_des_prev[i] = Command_Now.Reference_State.position_ref[i];
+            }
+
+
             Command_Now.Reference_State.velocity_ref[0]     = state_fusion[2]*cos(state_fusion[3]);
             Command_Now.Reference_State.velocity_ref[1]     = state_fusion[2]*sin(state_fusion[3]);
             Command_Now.Reference_State.velocity_ref[2]     = 0;
             Command_Now.Reference_State.acceleration_ref[0] = 0;
             Command_Now.Reference_State.acceleration_ref[1] = 0;
             Command_Now.Reference_State.acceleration_ref[2] = 0;
-            Command_Now.Reference_State.yaw_ref             = state_fusion[3];
+            Command_Now.Reference_State.yaw_ref             = 0.0;
         }
 
         //Publish
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Command_ID   = Command_Now.Command_ID + 1;
-        //command_pub.publish(Command_Now);
+        command_pub.publish(Command_Now);
 
         rate.sleep();
 

@@ -59,11 +59,16 @@ roslaunch prometheus_gazebo sitl_control.launch
 ### 自主降落仿真
 
 ```
-roslaunch iris_gazebo landing_with_qrcode.launch
+roslaunch prometheus_gazebo sitl_landing.launch
+```
+或者
+```
+roslaunch prometheus_gazebo sitl_landing_ukf.launch
 ```
 
 
-
+[测试视频1](https://www.bilibili.com/video/av84249695/)
+[测试视频1](https://www.bilibili.com/video/av84262462/)
 
 ## Gazebo
 

@@ -13,9 +13,9 @@ tracking_delta_y : 0.0
 tracking_delta_z : -0.2
 
 ##降落追踪 的比例参数
-kpx_land: 0.3
-kpy_land: 0.3
-kpz_land: 0.3
+kpx_land: 0.15
+kpy_land: 0.15
+kpz_land: 0.08
 
 UKF:
     std_a_: 0.01
