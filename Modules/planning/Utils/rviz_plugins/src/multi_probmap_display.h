@@ -30,15 +30,15 @@
 #ifndef MULTI_PROB_MAP_DISPLAY_H
 #define MULTI_PROB_MAP_DISPLAY_H
 
-#include <OGRE/OgreMaterial.h>
 #include <OGRE/OgreTexture.h>
+#include <OGRE/OgreMaterial.h>
 #include <OGRE/OgreVector3.h>
 
 #include <nav_msgs/MapMetaData.h>
 #include <ros/time.h>
 
-#include <multi_map_server/MultiOccupancyGrid.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <multi_map_server/MultiOccupancyGrid.h>
 
 #include "rviz/display.h"
 
@@ -61,9 +61,9 @@ class VectorProperty;
  * \class MultiProbMapDisplay
  * \brief Displays a map along the XY plane.
  */
-class MultiProbMapDisplay : public Display
+class MultiProbMapDisplay: public Display
 {
-  Q_OBJECT
+Q_OBJECT
 public:
   MultiProbMapDisplay();
   virtual ~MultiProbMapDisplay();
@@ -71,11 +71,12 @@ public:
   // Overrides from Display
   virtual void onInitialize();
   virtual void reset();
-  virtual void update(float wall_dt, float ros_dt);
+  virtual void update( float wall_dt, float ros_dt );
 
 protected Q_SLOTS:
   void updateTopic();
   void updateDrawUnder();
+
 
 protected:
   // overrides from Display
@@ -88,11 +89,11 @@ protected:
   void incomingMap(const multi_map_server::MultiOccupancyGrid::ConstPtr& msg);
 
   void clear();
-
+  
   std::vector<Ogre::ManualObject*> manual_object_;
-  std::vector<Ogre::TexturePtr>    texture_;
-  std::vector<Ogre::MaterialPtr>   material_;
-
+  std::vector<Ogre::TexturePtr> texture_;
+  std::vector<Ogre::MaterialPtr> material_;  
+  
   bool loaded_;
 
   std::string topic_;
@@ -100,14 +101,14 @@ protected:
   ros::Subscriber map_sub_;
 
   RosTopicProperty* topic_property_;
-  Property*         draw_under_property_;
+  Property* draw_under_property_;
 
   multi_map_server::MultiOccupancyGrid::ConstPtr updated_map_;
   multi_map_server::MultiOccupancyGrid::ConstPtr current_map_;
-  boost::mutex                                   mutex_;
-  bool                                           new_map_;
+  boost::mutex mutex_;
+  bool new_map_;
 };
 
 } // namespace rviz
 
-#endif
+ #endif
