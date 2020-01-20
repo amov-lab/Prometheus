@@ -4,7 +4,8 @@
 #include "nav_msgs/Odometry.h"
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
-#include "prometheus_msgs/PlanningPositionCommand.h"
+// #include "prometheus_msgs/PlanningPositionCommand.h"
+#include "prometheus_msgs/PositionReference.h"
 
 using namespace dyn_planner;
 
@@ -13,7 +14,8 @@ ros::Publisher state_pub, pos_cmd_pub, traj_pub;
 nav_msgs::Odometry odom;
 
 // the interference with controller
-prometheus_msgs::PlanningPositionCommand cmd;
+// prometheus_msgs::PlanningPositionCommand cmd;
+prometheus_msgs::PositionReference cmd;
 // double pos_gain[3] = {5.7, 5.7, 6.2};
 // double vel_gain[3] = {3.4, 3.4, 4.0};
 double pos_gain[3] = {5.7, 5.7, 6.2};
@@ -179,21 +181,26 @@ void cmdCallback(const ros::TimerEvent& e) {
 
   cmd.header.stamp = time_now;
   cmd.header.frame_id = "world";
-  cmd.trajectory_flag =
-          prometheus_msgs::PlanningPositionCommand::TRAJECTORY_STATUS_READY;
-  cmd.trajectory_id = traj_id;
+  // cmd.trajectory_flag =
+  //         prometheus_msgs::PlanningPositionCommand::TRAJECTORY_STATUS_READY;
+  // cmd.trajectory_id = traj_id;
+  cmd.Move_mode = 4;  //TRAJECTORY
+  cmd.Move_frame = 1; //ENU_FRAME
+  cmd.time_from_start = t_cur;
 
-  cmd.position.x = pos(0);
-  cmd.position.y = pos(1);
-  cmd.position.z = pos(2);
+  cmd.position_ref[0] = pos(0);
+  cmd.position_ref[1] = pos(1);
+  cmd.position_ref[2] = pos(2);
 
-  cmd.velocity.x = vel(0);
-  cmd.velocity.y = vel(1);
-  cmd.velocity.z = vel(2);
+  cmd.velocity_ref[0] = vel(0);
+  cmd.velocity_ref[1] = vel(1);
+  cmd.velocity_ref[2] = vel(2);
 
-  cmd.acceleration.x = acc(0);
-  cmd.acceleration.y = acc(1);
-  cmd.acceleration.z = acc(2);
+  cmd.acceleration_ref[0] = acc(0);
+  cmd.acceleration_ref[1] = acc(1);
+  cmd.acceleration_ref[2] = acc(2);
+
+  cmd.yaw_ref = 0.0;
 
   pos_cmd_pub.publish(cmd);
 
@@ -220,9 +227,10 @@ int main(int argc, char** argv) {
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
   state_pub = node.advertise<visualization_msgs::Marker>("planning/state", 10);
 
+  // pos_cmd_pub =
+  //     node.advertise<prometheus_msgs::PlanningPositionCommand>("/position_cmd", 50);
   pos_cmd_pub =
-      node.advertise<prometheus_msgs::PlanningPositionCommand>("/position_cmd", 50);
-
+    node.advertise<prometheus_msgs::PositionReference>("/position_cmd", 50);
 
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.5), visCallback);
   traj_pub = node.advertise<visualization_msgs::Marker>("planning/traj", 10);

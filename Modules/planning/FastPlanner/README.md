@@ -18,7 +18,8 @@ Fast-planner可以在及其短的时间内（几毫秒）生成高质量轨迹(�
 ## 3. Run the Simulation
 $ roslaunch prometheus_plan_manage prometheus_planning_test_static.launch  
  > 修改 pcd_file 为自己的配置参数  
-$ roslaunch plan_manage rviz_static.launch  
+
+$ roslaunch prometheus_plan_manage rviz_static.launch  
 
 
 
@@ -28,7 +29,7 @@ $ roslaunch plan_manage rviz_static.launch
 
 ## 5. 说明
 * 与控制接口  plan_manage/src/traj_server.cpp  （未完，待补充）  
-> msgs/msg/PlanningPositionCommand.msg  
+> msgs/msg/PositionReference.msg  
 
 * 输入odom信息（topic: "/planning/odom_world"）  
 * 输入pcd地图信息（目前地图只支持有限空间地图，地图大小、分辨率在launch文件设置，topic： "/planning/global_point_cloud"）  
