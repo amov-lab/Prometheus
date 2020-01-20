@@ -11,6 +11,7 @@ Fast-planner可以在及其短的时间内（几毫秒）生成高质量轨迹(�
 ## 1. 安装
 
 - 软件开发环境为 Ubuntu 16.04, [ROS Kinetic](http://wiki.ros.org/kinetic/Installation/Ubuntu).
+- 非线性优化工具箱 [**NLopt**](https://nlopt.readthedocs.io/en/latest/NLopt_Installation)
 >编译  
 * cd Prometheus/  
 * ./compile_control_planning.sh
@@ -24,7 +25,7 @@ $ roslaunch prometheus_plan_manage rviz_static.launch
 
 
 ## 4. 致谢
-  * 使用 **nlopt**作为非线性优化工具 （位于/ThirdParty）
+  * 使用 **nlopt**作为非线性优化工具 （位于/ThirdParty）(https://nlopt.readthedocs.io/en/latest/NLopt_Installation)  
   * 使用 **sdf_tool**为地图转化工具
 
 ## 5. 说明
