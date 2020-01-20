@@ -222,7 +222,7 @@ int main(int argc, char** argv) {
   ros::Subscriber replan_sub =
       node.subscribe("planning/replan", 10, replanCallback);
 
-  ros::Subscriber odom_sub = node.subscribe("/odom_world", 50, odomCallbck);
+  ros::Subscriber odom_sub = node.subscribe("/planning/odom_world", 50, odomCallbck);
 
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
   state_pub = node.advertise<visualization_msgs::Marker>("planning/state", 10);
@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
   // pos_cmd_pub =
   //     node.advertise<prometheus_msgs::PlanningPositionCommand>("/position_cmd", 50);
   pos_cmd_pub =
-    node.advertise<prometheus_msgs::PositionReference>("/position_cmd", 50);
+    node.advertise<prometheus_msgs::PositionReference>("planning/position_cmd", 50);
 
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.5), visCallback);
   traj_pub = node.advertise<visualization_msgs::Marker>("planning/traj", 10);

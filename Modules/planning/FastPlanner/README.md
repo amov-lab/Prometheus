@@ -1,8 +1,9 @@
 # Planning
 
-Planning模块从香港科技大学的fast-planner框架裁剪而来，可以实现四旋翼无人机快速自主飞行。
+Planning模块从香港科技大学的fast-planner框架而来，可以实现无人机快速自主飞行。
 框架前端kinodynamic路径搜索，后端采用基于样条的轨迹生成，同时还包含了时间调节系统。
-Fast-planner可以在及其短的时间内（几毫秒）生成高质量轨迹(依赖增量式sdf地图构建)。
+Fast-planner可以在及其短的时间内（几毫秒）生成高质量轨迹(依赖增量式sdf地图构建，速度很快，但不是全局更新)。
+这里由于建图工作（mapping模块）在别处完成，采用引入全局地图输入，利用sdf_tool生产全局sdf图，然后对系统做软约束优化。
 
 >参考文献  
 >[__Robust and Efficient Quadrotor Trajectory Generation for Fast Autonomous Flight__](https://ieeexplore.ieee.org/document/8758904), Boyu Zhou, Fei Gao, Luqi Wang, Chuhao Liu and Shaojie Shen, IEEE Robotics and Automation Letters (RA-L), 2019.
@@ -21,7 +22,7 @@ Fast-planner可以在及其短的时间内（几毫秒）生成高质量轨迹(�
   $ make  
   $ sudo make install  
 
-* 编译  
+## 2. 编译  
 $ cd Prometheus/  
 $ ./compile_control_planning.sh
 
@@ -48,6 +49,3 @@ $ roslaunch prometheus_plan_manage rviz_static.launch
 * 输入odom信息（topic: "/planning/odom_world"）  
 * 输入pcd地图信息（目前地图只支持有限空间地图，地图大小、分辨率在launch文件设置，topic： "/planning/global_point_cloud"）  
   
-
-
-
