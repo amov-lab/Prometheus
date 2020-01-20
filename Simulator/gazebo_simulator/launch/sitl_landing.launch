@@ -4,7 +4,7 @@
     <!-- PX4 configs -->
 	<arg name="x" default="0"/>
     <arg name="y" default="0"/>
-    <arg name="z" default="0"/>
+    <arg name="z" default="0.05"/>
     <arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0"/>
@@ -34,8 +34,10 @@
 	</node>
 
 	<!-- Move the QRCode -->
-    <node pkg="prometheus_gazebo" type="qrcode_control.py" name="qrcode_control" output="screen" launch-prefix="gnome-terminal --tab --">
-    </node>
+	<arg name="qrcode_move" default="false"/>
+	<group if="$(arg qrcode_move)">
+	<node pkg="prometheus_gazebo" type="qrcode_control.py" name="qrcode_control" output="screen" launch-prefix="gnome-terminal --tab --"/>
+    </group>
 
     <!-- MAVROS configs -->
     <arg name="fcu_url" default="udp://:14540@localhost:14557"/>
