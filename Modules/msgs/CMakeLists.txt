@@ -21,13 +21,11 @@ add_message_files(
   FILES
   DetectionInfo.msg
   ControlCommand.msg
-  TrajectoryPoint.msg
-  Trajectory.msg
+  PositionReference.msg
   AttitudeReference.msg
   DroneState.msg
-  Topic_for_log.msg
+  GroundStation.msg
   ControlOutput.msg
-  PlanningPositionCommand.msg
 )
 
 generate_messages(

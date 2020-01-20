@@ -1,4 +1,16 @@
-// c++
+/***************************************************************************************************************************
+ * ellipse_det.cpp
+ * Author: Jario
+ * Update Time: 2020.1.14
+ *
+ * 说明: 椭圆识别程序(同时可以判断椭圆中心标识，需要训练)，具体训练方式见Prometheus/Modules/object_detection/README.md
+ *      1. 【订阅】图像话题 (默认来自web_cam)
+ *         /prometheus/camera/rgb/image_raw
+ *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
+ *         /prometheus/target
+ *      3. 【发布】检测结果的可视化图像话题
+ *         /prometheus/camera/rgb/image_ellipse_det
+***************************************************************************************************************************/
 #include <math.h>
 #include <string>
 #include <vector>
@@ -9,10 +21,13 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-#include <ros/ros.h>  
+#include <ros/ros.h>
+#include <ros/package.h>
+#include <yaml-cpp/yaml.h>
 #include <image_transport/image_transport.h>  
 #include <cv_bridge/cv_bridge.h>  
-#include <sensor_msgs/image_encodings.h>  
+#include <sensor_msgs/image_encodings.h>
+#include <prometheus_msgs/DetectionInfo.h>
 #include <geometry_msgs/Pose.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
@@ -25,11 +40,7 @@ using namespace cv::ml;
 using namespace spire;
 
 
-#define MARKER_SIZE 0.18
-//相机内部参数
-float fx,fy,x_0,y_0;
-//相机畸变系数
-float k1,k2,p1,p2,k3;
+// #define MARKER_SIZE 0.18
 
 #define ELLIPSE_DET
 #define ELLIPSE_PUB
@@ -39,21 +50,18 @@ std::string imlist_dir = "/home/nvidia/vision_ws/src/ellipse_det_ros/labeled_img
 // images, include above information
 std::string base_path = "/home/nvidia/vision_ws/src/ellipse_det_ros/images_from_camera/";  // 同上
 
-//! Camera related parameters.
-int frameWidth_;
-int frameHeight_;
-
-std_msgs::Header imageHeader_;
-cv::Mat camImageCopy_;
-
-boost::shared_mutex mutexImageCallback_;
-
-bool imageStatus_ = false;
-boost::shared_mutex mutexImageStatus_;
+// 相机话题中的图像同步相关变量
+int frame_width, frame_height;
+std_msgs::Header image_header;
+cv::Mat cam_image_copy;
+boost::shared_mutex mutex_image_callback;
+bool image_status = false;
+boost::shared_mutex mutex_image_status;
 
 EllipseDetector ellipse_detector;
 
-// 图像接收回调函数，接收web_cam的话题，并将图像保存在camImageCopy_中
+
+// 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     ROS_DEBUG("[EllipseDetector] USB image received.");
@@ -62,7 +70,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 
     try {
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        imageHeader_ = msg->header;
+        image_header = msg->header;
     } catch (cv_bridge::Exception& e) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
@@ -70,15 +78,15 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 
     if (cam_image) {
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            camImageCopy_ = cam_image->image.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            cam_image_copy = cam_image->image.clone();
         }
         {
-            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutexImageStatus_);
-            imageStatus_ = true;
+            boost::unique_lock<boost::shared_mutex> lockImageStatus(mutex_image_status);
+            image_status = true;
         }
-        frameWidth_ = cam_image->image.size().width;
-        frameHeight_ = cam_image->image.size().height;
+        frame_width = cam_image->image.size().width;
+        frame_height = cam_image->image.size().height;
     }
     return;
 }
@@ -86,8 +94,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 // 用此函数查看是否收到图像话题
 bool getImageStatus(void)
 {
-    boost::shared_lock<boost::shared_mutex> lock(mutexImageStatus_);
-    return imageStatus_;
+    boost::shared_lock<boost::shared_mutex> lock(mutex_image_status);
+    return image_status;
 }
 
 void ellipse_det(cv::Mat& input, cv::Mat& output, std::vector<Ellipse>& ells)
@@ -260,25 +268,33 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(nh); 
     ros::Rate loop_rate(30);
     
+    std::string ros_path = ros::package::getPath("prometheus_detection");
+    cout << "DETECTION_PATH: " << ros_path << endl;
     //读取参数文档camera_param.yaml中的参数值；
-    nh.param<float>("fx", fx, 582.611780);
-    nh.param<float>("fy", fy, 582.283970);
-    nh.param<float>("x0", x_0, 355.598968);
-    nh.param<float>("y0", y_0, 259.508932);
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    //相机内部参数
+    double fx = camera_config["fx"].as<double>();
+    double fy = camera_config["fy"].as<double>();
+    double cx = camera_config["x0"].as<double>();
+    double cy = camera_config["y0"].as<double>();
+    //相机畸变系数
+    double k1 = camera_config["k1"].as<double>();
+    double k2 = camera_config["k2"].as<double>();
+    double p1 = camera_config["p1"].as<double>();
+    double p2 = camera_config["p2"].as<double>();
+    double k3 = camera_config["k3"].as<double>();
 
-    nh.param<float>("k1", k1, -0.401900);
-    nh.param<float>("k2", k2, 0.175110);
-    nh.param<float>("p1", p1, 0.002115);
-    nh.param<float>("p2", p2, -0.003032);
-    nh.param<float>("k3", k3, 0.0);
+    double ellipse_det_r = camera_config["ellipse_det_r"].as<double>();
+
+
     // 接收图像的话题
-    imageSubscriber_ = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
+    imageSubscriber_ = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
 #ifdef ELLIPSE_PUB
     // 发布椭圆检测结果的话题
-    ellipse_pub = it.advertise("/camera/rgb/image_ellipse_det", 1);
+    ellipse_pub = it.advertise("/prometheus/camera/rgb/image_ellipse_det", 1);
 #endif
     // 椭圆检测结果，xyz
-    pose_pub = nh.advertise<geometry_msgs::Pose>("/vision/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
 
@@ -296,8 +312,8 @@ int main(int argc, char **argv)
         Mat ellipse_show, frame;
         std::vector<Ellipse> ells, ells_copy;
         {
-            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-            frame = camImageCopy_.clone();
+            boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
+            frame = cam_image_copy.clone();
         }
         ellipse_det(frame, ellipse_show, ells);
 
@@ -340,27 +356,35 @@ int main(int argc, char **argv)
                 if (pred == 1)
                 {
                     deted = true;
-                    geometry_msgs::Pose pose_now;
-                    float theta_x = atan((e.xc_ - x_0) / fx);  //315.06 calibration
-                    float theta_y = atan((e.yc_ - y_0) / fy);  //241.27 calibration 
+                    
+                    float theta_x = atan((e.xc_ - cx) / fx);  //315.06 calibration
+                    float theta_y = atan((e.yc_ - cy) / fy);  //241.27 calibration 
 
-                    float depth = MARKER_SIZE*fx/e.b_; // shendu
+                    float depth = ellipse_det_r*fx/e.b_; // shendu
 
                     float real_x = depth*tan(theta_x);
                     float real_y = depth*tan(theta_y);
 
-                    pose_now.orientation.w = 1;
-                    pose_now.position.x = depth;
-                    pose_now.position.y = real_x;
-                    pose_now.position.z = real_y;
+                    // geometry_msgs::Pose pose_now;
+                    prometheus_msgs::DetectionInfo pose_now;
+                    pose_now.header.stamp = ros::Time::now();
+                    // pose_now.orientation.w = 1;
+                    // pose_now.position.x = depth;
+                    // pose_now.position.y = real_x;
+                    // pose_now.position.z = real_y;
+                    pose_now.detected = true;
+                    pose_now.frame = 0;
+                    pose_now.position[0] = real_x;
+                    pose_now.position[1] = real_y;
+                    pose_now.position[2] = depth;
                     pose_pub.publish(pose_now);
 
-                    last_x = depth;
-                    last_y = real_x;
-                    last_z = real_y;
+                    last_x = real_x;
+                    last_y = real_y;
+                    last_z = depth;
 
-                    cout << "flag_detected: " <<  pose_now.orientation.w <<endl;
-                    cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<endl;
+                    cout << "flag_detected: " << int(pose_now.detected) <<endl;
+                    cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
                     ells_copy.push_back(e);
                 }
@@ -370,42 +394,57 @@ int main(int argc, char **argv)
         {
             Ellipse e = ells[0];
             deted = true;
-            geometry_msgs::Pose pose_now;
-            float theta_x = atan((e.xc_ - x_0) / fx);  //315.06 calibration
-            float theta_y = atan((e.yc_ - y_0) / fy);  //241.27 calibration 
+            
+            float theta_x = atan((e.xc_ - cx) / fx);  //315.06 calibration
+            float theta_y = atan((e.yc_ - cy) / fy);  //241.27 calibration 
 
-            float depth = MARKER_SIZE*fx/e.b_; // shendu
+            float depth = ellipse_det_r*fx/e.b_; // shendu
 
             float real_x = depth*tan(theta_x);
             float real_y = depth*tan(theta_y);
 
-            pose_now.orientation.w = 1;
-            pose_now.position.x = depth;
-            pose_now.position.y = real_x;
-            pose_now.position.z = real_y;
+            // geometry_msgs::Pose pose_now;
+            prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
+            // pose_now.orientation.w = 1;
+            // pose_now.position.x = depth;
+            // pose_now.position.y = real_x;
+            // pose_now.position.z = real_y;
+            pose_now.detected = true;
+            pose_now.frame = 0;
+            pose_now.position[0] = real_x;
+            pose_now.position[1] = real_y;
+            pose_now.position[2] = depth;
             pose_pub.publish(pose_now);
 
-            last_x = depth;
-            last_y = real_x;
-            last_z = real_y;
+            last_x = real_x;
+            last_y = real_y;
+            last_z = depth;
 
-            cout << "flag_detected: " <<  pose_now.orientation.w <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<endl;
+            cout << "flag_detected: " << int(pose_now.detected) <<endl;
+            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
             ells_copy.push_back(e);
         }
         if (!deted)
         {
             // 如果没检测到，则发布上次的检测结果，并用标志orientation.w = 0告知未检测到
-            geometry_msgs::Pose pose_now;
-            pose_now.orientation.w = 0;
-            pose_now.position.x = last_x;
-            pose_now.position.y = last_y;
-            pose_now.position.z = last_z;
+            // geometry_msgs::Pose pose_now;
+            prometheus_msgs::DetectionInfo pose_now;
+            pose_now.header.stamp = ros::Time::now();
+            // pose_now.orientation.w = 0;
+            // pose_now.position.x = last_x;
+            // pose_now.position.y = last_y;
+            // pose_now.position.z = last_z;
+            pose_now.detected = false;
+            pose_now.frame = 0;
+            pose_now.position[0] = last_x;
+            pose_now.position[1] = last_y;
+            pose_now.position[2] = last_z;
             pose_pub.publish(pose_now);
 
-            cout << "flag_detected: " <<  pose_now.orientation.w <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<endl;
+            cout << "flag_detected: " << int(pose_now.detected) <<endl;
+            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
         }
 #ifdef ELLIPSE_PUB

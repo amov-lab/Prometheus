@@ -183,7 +183,7 @@ int main(int argc, char **argv)
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
     Command_Now.Command_ID = 0;
     Command_Now.Mode = Command_Now.Idle;
-    Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XYZ_POS;
+    Command_Now.Move_mode  = Command_Now.Reference_State.XYZ_POS;
     Command_Now.Reference_State.position_ref[0] = 0;
     Command_Now.Reference_State.position_ref[1] = 0;
     Command_Now.Reference_State.position_ref[2] = 0;
@@ -352,7 +352,7 @@ void prinft_command_state()
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Command State<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
     int sub_mode;
-    sub_mode = Command_Now.Reference_State.Sub_mode ;
+    sub_mode = Command_Now.Move_mode ;
 
     switch(Command_Now.Mode)
     {
