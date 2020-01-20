@@ -5,7 +5,6 @@
 #include "plan_env/global_point_sdf.h"
 
 
-
 namespace dyn_planner {
 
     void constrains(double &n, double min, double max)
@@ -26,29 +25,18 @@ namespace dyn_planner {
         // cout << "grid num:" << grid_size_.transpose() << endl;
         min_range_ = origin_;
         max_range_ = origin_ + map_size_;
-
-        // initialize size of buffer
-//        occupancy_buffer_.resize(grid_size_(0) * grid_size_(1) * grid_size_(2));
-//        distance_buffer_.resize(grid_size_(0) * grid_size_(1) * grid_size_(2));
-//        tmp_buffer1_.resize(grid_size_(0) * grid_size_(1) * grid_size_(2));
-//        tmp_buffer2_.resize(grid_size_(0) * grid_size_(1) * grid_size_(2));
-//
-//        fill(distance_buffer_.begin(), distance_buffer_.end(), 10000);
-//        fill(occupancy_buffer_.begin(), occupancy_buffer_.end(), 0.0);
     }
 
 
     bool SDFMap_Global::isInMap(Eigen::Vector3d pos) {
         if (pos(0) < min_range_(0) + 1e-4 || pos(1) < min_range_(1) + 1e-4 || pos(2) < min_range_(2) + 1e-4) {
-            ROS_INFO("excess min range: pos: [%f, %f, %f], min range: [%f, %f, %f]", pos(0), pos(1), pos(2), min_range_(0), min_range_(1), min_range_(2));
+            // ROS_INFO("excess min range: pos: [%f, %f, %f], min range: [%f, %f, %f]", pos(0), pos(1), pos(2), min_range_(0), min_range_(1), min_range_(2));
             return false;
         }
-
         if (pos(0) > max_range_(0) - 1e-4 || pos(1) > max_range_(1) - 1e-4 || pos(2) > max_range_(2) - 1e-4) {
-            ROS_INFO("excess max range: pos: [%f, %f, %f], max range: [%f, %f, %f]", pos(0), pos(1), pos(2), max_range_(0), max_range_(1), max_range_(2));
+            // ROS_INFO("excess max range: pos: [%f, %f, %f], max range: [%f, %f, %f]", pos(0), pos(1), pos(2), max_range_(0), max_range_(1), max_range_(2));
             return false;
         }
-
         return true;
     }
 
@@ -66,18 +54,19 @@ namespace dyn_planner {
 
     double SDFMap_Global::evaluateEDTWithGrad(const Eigen::Vector3d& pos, double& dist,
                                Eigen::Vector3d& grad){
-        auto f_sat = [](double a, double sat)->double{
-            return fabs(a) < sat? 0: (a>0 ? a-sat : a+sat);
+        auto f_sat = [](double a, double sat_l, double sat_h)->double{
+            return a < sat_l? a-sat_l: (a>sat_h ? a-sat_h : 0);
         };
         if (!isInMap(pos))
         {
             printf("[evaluateEDTWithGrad]: pos is not in map!\n");
             dist = 0.0;
-            grad(0) = -f_sat(pos(0), map_size_(0)/2);
-            grad(1) = -f_sat(pos(1), map_size_(1)/2);
-            grad(2) = 0.0;
+            grad(0) = -f_sat(pos(0), min_range_(0), max_range_(0));
+            grad(1) = -f_sat(pos(1), min_range_(1), max_range_(1));
+            grad(2) = -f_sat(pos(2), min_range_(2), max_range_(2));;
             return -1;
         }
+
         std::vector<double> location_gradient_query = sdf_map->GetGradient(pos(0), pos(1), pos(2), true);
         grad(0) = location_gradient_query[0];
         grad(1) = location_gradient_query[1];
@@ -106,8 +95,8 @@ namespace dyn_planner {
         std::pair<float, bool> location_sdf_query = sdf_map->GetSafe(pos(0), pos(1), pos(2));
         double dist = location_sdf_query.first;
 
-        // if(dist < 0)
-        //   cout << "pos:" << pos << "dist:" << dist << "grad:" << grad << endl;
+        if(dist < 0)
+          cout << "pos:" << pos << "dist:" << dist  << endl;
 
 //        // update distance and gradient using boundary
 //        double dtb = getDistanceToBoundary(ori_pos(0), ori_pos(1), ori_pos(2));
@@ -118,8 +107,6 @@ namespace dyn_planner {
 //            recaluculateGradient(ori_pos(0), ori_pos(1), ori_pos(2), grad);
 //        }
 
-        // (x, y, z) -> x*ny*nz + y*nz + z
-//        return distance_buffer_[id(0) * grid_size_(1) * grid_size_(2) + id(1) * grid_size_(2) + id(2)];
         return dist;
     }
 
@@ -143,9 +130,6 @@ namespace dyn_planner {
         new_map_ = false;
         has_global_point = true;
         
-
-//        this->resetBuffer(center - disp, center + disp);
-
         pcl::PointXYZ pt, pt_inf;
         Eigen::Vector3d p3d, p3d_inf;
         const int ifn = ceil(inflate_ * resolution_inv_);
@@ -172,15 +156,7 @@ namespace dyn_planner {
                             p3d_inf(0) = pt_inf.x = pt.x + x * resolution_sdf_;
                             p3d_inf(1) = pt_inf.y = pt.y + y * resolution_sdf_;
                             p3d_inf(2) = pt_inf.z = pt.z + 0.5 * z * resolution_sdf_;
-//                            // ensure that each obstacle is far enough from others
-//                            if(i == 0)
-//                            {
-//                                obstacles.push_back(p3d_inf);
-//                                ++i;
-//                            }
-//                            else{
-//
-//                            }
+
                             if(p3d_inf(2)>ceil_height_ || p3d_inf(2)<0) break;
 
                             obstacles.push_back(p3d_inf);
@@ -207,9 +183,10 @@ namespace dyn_planner {
         if (ceil_height_ > 0.0) {
             for (double cx = center(0) - update_range_; cx <= center(0) + update_range_; cx += resolution_sdf_)
                 for (double cy = center(1) - update_range_; cy <= center(1) + update_range_; cy += resolution_sdf_) {
-//                    this->setOccupancy(Eigen::Vector3d(cx, cy, ceil_height_));
                     obstacles.push_back(Eigen::Vector3d(cx, cy, ceil_height_));
+                    obstacles.push_back(Eigen::Vector3d(cx, cy, 0.0));
                     collision_map->Set(cx, cy, ceil_height_, obstacle_cell);
+                    collision_map->Set(cx, cy, 0.0, obstacle_cell);
                 }
         }
         int num_obstacle_2 = obstacles.size();
@@ -274,7 +251,6 @@ namespace dyn_planner {
         ROS_INFO("global_point_sdf: sub pub finished!");
         /* ---------- setting ---------- */
         have_odom_ = false;
-//        new_map_ = false;
         map_valid_ = false;
 
         has_global_point = false;
@@ -292,8 +268,8 @@ namespace dyn_planner {
         ROS_INFO("global_point_sdf: begin init sdf_tools: rotation and trans!");
         //---------------------create a map using sdf_tools-----------------------------
         // sdf collision map parameter
-        // Eigen::Translation3d origin_translation(origin_(0), origin_(1), origin_(2));
-        Eigen::Translation3d origin_translation(-map_size_(0)/2, -map_size_(1)/2, 0.0);
+        Eigen::Translation3d origin_translation(origin_(0), origin_(1), origin_(2));
+        // Eigen::Translation3d origin_translation(-map_size_(0)/2, -map_size_(1)/2, 0.0);
 
         Eigen::Quaterniond origin_rotation(1.0, 0.0, 0.0, 0.0);
         const Eigen::Isometry3d origin_transform = origin_translation * origin_rotation;
@@ -338,6 +314,5 @@ namespace dyn_planner {
                     pos_vec.push_back(current_pos);
                 }
     }
-
 
 }  // namespace dyn_planner

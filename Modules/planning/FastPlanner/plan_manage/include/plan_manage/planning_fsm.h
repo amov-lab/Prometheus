@@ -50,7 +50,7 @@ private:
   void printExecState();
 
   /* ---------- planning utils ---------- */
-  int sdf_mode{1};
+  int sdf_mode{1};  // 0: local sdf; 1: global sdf
   SDFMap::Ptr sdf_map_;
   SDFMap_Global::Ptr sdf_map_global;
 
