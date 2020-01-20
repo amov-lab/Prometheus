@@ -367,7 +367,7 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
           changeExecState(REPLAN_TRAJ, "SAFETY");
         }
 
-        visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));
+        visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));  // red
       }
       else
       {
@@ -430,10 +430,10 @@ bool PlanningFSM::planSearchOpt()
     /* visulization */
     vector<Eigen::Vector3d> kino_path = path_finder_->getKinoTraj(0.02);
 
-    visualization_->drawPath(kino_path, 0.1, Eigen::Vector4d(1, 0, 0, 1));
+    visualization_->drawPath(kino_path, 0.1, Eigen::Vector4d(1, 0, 0, 1));  // red
 
     visualization_->drawBspline(planner_manager_->traj_pos_, 0.1, Eigen::Vector4d(1.0, 1.0, 0.0, 1), true, 0.12,
-                                Eigen::Vector4d(0, 1, 0, 1));
+                                Eigen::Vector4d(0, 1, 0, 1));   // bspline; ctr_pts
     return true;
   }
   else

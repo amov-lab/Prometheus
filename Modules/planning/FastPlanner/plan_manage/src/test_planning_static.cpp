@@ -152,9 +152,10 @@ int main(int argc,char** argv)
     // 3. set the triggle frequece for different events. 
     
     int odom_mode; // 0: manual; 1: sub 
+    ros::Timer pub_odom_timer_;
     node_.param("test/odom_mode", odom_mode, 0);
     if(odom_mode==0){
-        ros::Timer pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
+        pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
     }else if(odom_mode==1){
         // ros::Subscriber odom_sub = node.subscribe("/planning/odom_world", 50, odomCallbck);
     }

@@ -32,6 +32,8 @@ $ ./compile_control_planning.sh
 $ roslaunch prometheus_plan_manage prometheus_planning_test_static.launch  
  > 修改 pcd_file 为自己的配置参数  
 
+ $ 
+
 * 运行rviz显示地图、轨迹，同时给出目标点.  
 $ roslaunch prometheus_plan_manage rviz_static.launch  
 
