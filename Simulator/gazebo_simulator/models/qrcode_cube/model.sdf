@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="qrcode_cube">
+    <link name="link">
+      <pose>1.0 1.0 0.05 0 0 0</pose>
+      <inertial>
+        <mass>0.5167</mass>
+        <inertia>
+          <ixx>0.0008611666666666669</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0008611666666666669</iyy>
+          <iyz>0</iyz>
+          <izz>0.0008611666666666669</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.6 0.6 0.001</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <poissons_ratio>0.347</poissons_ratio>
+            <elastic_modulus>8.8e+09</elastic_modulus>
+            <ode>
+              <kp>100000</kp>
+              <kd>100</kd>
+              <max_vel>100.0</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <torsional>
+              <coefficient>1.0</coefficient>
+              <use_patch_radius>0</use_patch_radius>
+              <surface_radius>0.01</surface_radius>
+            </torsional>
+          </friction>
+        </surface>
+      </collision>
+
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.6 0.6 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://qrcode_cube/materials/scripts</uri>
+	    <uri>model://qrcode_cube/materials/textures</uri>
+            <name>Cube/QRCode</name>
+          </script>
+        </material>
+      </visual>
+
+    </link>
+  </model>
+</sdf>

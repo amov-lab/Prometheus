@@ -7,7 +7,7 @@
 
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_control_utils.h>
 #include <prometheus_msgs/Trajectory.h>
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
     Command_Now.Mode = command_to_mavros::Idle;
     Command_Now.Command_ID = 0;
-    Command_Now.Reference_State.Sub_mode  = command_to_mavros::XYZ_POS;
+    Command_Now.Move_mode  = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.position_ref[0] = 0;
     Command_Now.Reference_State.position_ref[1] = 0;
     Command_Now.Reference_State.position_ref[2] = 0;
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
             break;
 
         // 不支持复合模式
-        case command_to_mavros::Move_ENU:
+        case prometheus_msgs::ControlCommand::Move:
 
             
             //Bitmask toindicate which dimensions should be ignored (1 means ignore,0 means not ignore; Bit 10 must set to 0)
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
             break;
 
 
-        case command_to_mavros::Land:
+        case prometheus_msgs::ControlCommand::Land:
 
             break;
 

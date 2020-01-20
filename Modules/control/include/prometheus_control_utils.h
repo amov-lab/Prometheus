@@ -15,8 +15,7 @@
 
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/TrajectoryPoint.h>
+#include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
 
 using namespace std;
@@ -55,53 +54,69 @@ void printf_command_control(const prometheus_msgs::ControlCommand& _ControlComma
 
     switch(_ControlCommand.Mode)
     {
-        case command_to_mavros::Idle:
+        case prometheus_msgs::ControlCommand::Idle:
             cout << "Command: [ Idle ] " <<endl;
             break;
 
-        case command_to_mavros::Takeoff:
+        case prometheus_msgs::ControlCommand::Takeoff:
             cout << "Command: [ Takeoff ] " <<endl;
             cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
             cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
             break;
 
-        case command_to_mavros::Move_ENU:
-            cout << "Command: [ Move_ENU ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
-
-            break;
-        case command_to_mavros::Move_Body:
-            cout << "Command: [ Move_Body ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
-            break;
-
-        case command_to_mavros::Hold:
+        case prometheus_msgs::ControlCommand::Hold:
             cout << "Command: [ Hold ] " <<endl;
             cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
             cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
             break;
 
-        case command_to_mavros::Land:
+        case prometheus_msgs::ControlCommand::Land:
             cout << "Command: [ Land ] " <<endl;
             cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
             cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
             break;
 
-        case command_to_mavros::Disarm:
+        case prometheus_msgs::ControlCommand::Move:
+            if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::XYZ_POS)
+            {
+                cout << "Command: [ Move ] " << "Move_mode: [ XYZ_POS ] " <<endl;
+            }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::XY_POS_Z_VEL)
+            {
+                cout << "Command: [ Move ] " << "Move_mode: [ XY_POS_Z_VEL ] " <<endl;
+            }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::XY_VEL_Z_POS)
+            {
+                cout << "Command: [ Move ] " << "Move_mode: [ XY_VEL_Z_POS ] " <<endl;
+            }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::XYZ_VEL)
+            {
+                cout << "Command: [ Move ] " << "Move_mode: [ XYZ_VEL ] " <<endl;
+            }else if(_ControlCommand.Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+            {
+                cout << "Command: [ Move ] " << "Move_mode: [ TRAJECTORY ] " <<endl;
+            }
+
+            if(_ControlCommand.Reference_State.Move_frame == prometheus_msgs::PositionReference::ENU_FRAME)
+            {
+                cout << "Move_frame: [ ENU_FRAME ] " <<endl;
+            }else if(_ControlCommand.Reference_State.Move_frame == prometheus_msgs::PositionReference::BODY_FRAME)
+            {
+                cout << "Move_frame: [ BODY_FRAME ] " <<endl;
+            }
+
+            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
+
+            break;
+
+        case prometheus_msgs::ControlCommand::Disarm:
             cout << "Command: [ Disarm ] " <<endl;
             break;
 
-        case command_to_mavros::User_Mode:
-            cout << "Command: [ User_Mode ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
+        case prometheus_msgs::ControlCommand::User_Mode1:
+            cout << "Command: [ User_Mode1 ] " <<endl;
             break;
-        case command_to_mavros::Trajectory_Tracking:
-            cout << "Command: [ Trajectory_Tracking ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
+        
+        case prometheus_msgs::ControlCommand::User_Mode2:
+            cout << "Command: [ User_Mode2 ] " <<endl;
             break;
     }
 
@@ -197,7 +212,7 @@ void rotation_yaw(float yaw_angle, float body_frame[2], float enu_frame[2])
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 控 制 辅 助 函 数 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 
 //计算位置误差
-Eigen::Vector3f cal_pos_error(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State)
+Eigen::Vector3f cal_pos_error(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::PositionReference& _Reference_State)
 {
     Eigen::Vector3f pos_error;
 
@@ -206,27 +221,14 @@ Eigen::Vector3f cal_pos_error(const prometheus_msgs::DroneState& _DroneState, co
         pos_error[i] = _Reference_State.position_ref[i] - _DroneState.position[i];
     }
 
-    // 对于速度追踪子模式，则无位置反馈
-    if(_Reference_State.Sub_mode == command_to_mavros::XY_VEL_Z_POS || _Reference_State.Sub_mode == command_to_mavros::XY_VEL_Z_VEL) 
-    {
-        for (int i=0; i<2; i++)
-        {
-            pos_error[i] = 0;
-        }
-    }
-
-    if(_Reference_State.Sub_mode == command_to_mavros::XY_POS_Z_VEL || _Reference_State.Sub_mode == command_to_mavros::XY_VEL_Z_VEL) 
-    {
-        pos_error[3] = 0;
-    }
-
     return pos_error;
 }
 
 //计算速度误差
-Eigen::Vector3f cal_vel_error(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::TrajectoryPoint& _Reference_State)
+Eigen::Vector3f cal_vel_error(const prometheus_msgs::DroneState& _DroneState, const prometheus_msgs::PositionReference& _Reference_State)
 {
     Eigen::Vector3f vel_error;
+
     for (int i=0; i<3; i++)
     {
         vel_error[i] = _Reference_State.velocity_ref[i] - _DroneState.velocity[i];

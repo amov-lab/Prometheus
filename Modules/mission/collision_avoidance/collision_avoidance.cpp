@@ -60,7 +60,8 @@ int flag_land;                                                  //降落标志�
 std_msgs::Bool flag_collision_avoidance;                       //是否进入避障模式标志位
 float vel_sp_body[2];                                           //总速度
 float vel_sp_max;                                               //总速度限幅
-prometheus_msgs::ControlCommand Command_Now;                               //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
+prometheus_msgs::DroneState _DroneState;                          //无人机状态量
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void cal_min_distance();
 float satfunc(float data, float Max);
@@ -105,10 +106,11 @@ void lidar_cb(const sensor_msgs::LaserScan::ConstPtr& scan)
 
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
-    prometheus_msgs::DroneState state;
-    pos_drone.position.x = state.position[0];
-    pos_drone.position.y = state.position[1];
-    pos_drone.position.z = state.position[2];
+    _DroneState = *msg;
+
+    pos_drone.position.x = _DroneState.position[0];
+    pos_drone.position.y = _DroneState.position[1];
+    pos_drone.position.z = _DroneState.position[2];
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -127,7 +129,7 @@ int main(int argc, char **argv)
     // 本话题来自根据需求自定px4_pos_estimator.cpp
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
-    // 【发布】发送给position_control.cpp的命令
+    // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     //读取参数表中的参数
@@ -177,9 +179,28 @@ int main(int argc, char **argv)
     //四向最小距离 初值
     flag_land = 0;
 
-    //输出指令初始化
-    int comid = 1;
+    // 无人机未解锁或者未进入offboard模式前，循环等待
+    while(_DroneState.armed != true || _DroneState.mode != "OFFBOARD")
+    {
+        cout<<"[sqaure]: "<<"Please arm and switch to OFFBOARD mode."<<endl;
+        ros::spinOnce();
+        rate.sleep();
+    }
 
+    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
+    Command_Now.Command_ID                          = 0;
+    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+    Command_Now.Reference_State.position_ref[0]     = 0;
+    Command_Now.Reference_State.position_ref[1]     = 0;
+    Command_Now.Reference_State.position_ref[2]     = 0;
+    Command_Now.Reference_State.velocity_ref[0]     = 0;
+    Command_Now.Reference_State.velocity_ref[1]     = 0;
+    Command_Now.Reference_State.velocity_ref[2]     = 0;
+    Command_Now.Reference_State.acceleration_ref[0] = 0;
+    Command_Now.Reference_State.acceleration_ref[1] = 0;
+    Command_Now.Reference_State.acceleration_ref[2] = 0;
+    Command_Now.Reference_State.yaw_ref             = 0;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Main Loop<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
     {
@@ -273,15 +294,18 @@ int main(int argc, char **argv)
         }
 
         //5. 发布Command指令给position_controller.cpp
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = Command_Now.Move_Body;     //机体系下移动
-        Command_Now.Command_ID = comid;
-        comid++;
-        Command_Now.Reference_State.Sub_mode  = Command_Now.Reference_State.XY_VEL_Z_POS; // xy 速度控制模式 z 位置控制模式
-        Command_Now.Reference_State.velocity_ref[0] =  vel_sp_body[0];
-        Command_Now.Reference_State.velocity_ref[1] =  - vel_sp_body[1];  //ENU frame
-        Command_Now.Reference_State.position_ref[2] =  0;
-        Command_Now.Reference_State.yaw_ref = 0 ;
+        Command_Now.header.stamp                        = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::BODY_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = 0;
+        Command_Now.Reference_State.position_ref[1]     = 0;
+        Command_Now.Reference_State.position_ref[2]     = 0;
+        Command_Now.Reference_State.velocity_ref[0]     = vel_sp_body[0];
+        Command_Now.Reference_State.velocity_ref[1]     = - vel_sp_body[1];
+        Command_Now.Reference_State.velocity_ref[2]     = 0;
+        Command_Now.Reference_State.yaw_ref             = 0;
 
         float abs_distance;
         abs_distance = sqrt((pos_drone.position.x - target_x) * (pos_drone.position.x - target_x) + (pos_drone.position.y - target_y) * (pos_drone.position.y - target_y));
@@ -323,7 +347,6 @@ void cal_min_distance()
 
 
 }
-
 
 //饱和函数
 float satfunc(float data, float Max)

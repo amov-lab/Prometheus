@@ -6,8 +6,29 @@
 
 # define U_KEY_NONE -1
 # define U_KEY_SPACE 32
+# define U_KEY_LEFT 37
+# define U_KEY_UP 38
+# define U_KEY_RIGHT 39
+# define U_KEY_DOWN 40
+
+# define U_KEY_0 48
+# define U_KEY_1 49
+# define U_KEY_2 50
+# define U_KEY_3 51
+# define U_KEY_4 52
+# define U_KEY_5 53
+# define U_KEY_6 54
+# define U_KEY_7 55
+# define U_KEY_8 56
+# define U_KEY_9 57
+
+# define U_KEY_A 97
+# define U_KEY_D 100
 # define U_KEY_E 101
 # define U_KEY_F 102
+# define U_KEY_L 108
+# define U_KEY_O 111
+# define U_KEY_P 112
 # define U_KEY_Q 113
 # define U_KEY_R 114
 # define U_KEY_S 115

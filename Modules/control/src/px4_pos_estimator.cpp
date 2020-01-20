@@ -13,20 +13,6 @@
  *      5. 选择激光SLAM或者Mocap设备作为位置来源，发布位置及偏航角(xyz+yaw)给飞控
  *
 ***************************************************************************************************************************/
-/***************************************************************************************************************************
-* px4_pos_controller.cpp
-*
-* Author: Qyp
-*
-* Update Time: 2019.3.16
-*
-* Introduction:  PX4 Position Estimator using external positioning equipment
-*         1. Subscribe position and yaw information from Lidar SLAM node(cartorgrapher_ros节点), transfrom from laser frame to ENU frame
-*         2. Subscribe position and yaw information from Vicon node(vrpn-client-ros节点), transfrom from vicon frame to ENU frame
-*         3. Send the position and yaw information to FCU using Mavros package (/mavros/mocap/pose or /mavros/vision_estimate/pose)
-*         4. Subscribe position and yaw information from FCU, used for compare
-***************************************************************************************************************************/
-
 
 //头文件
 #include <ros/ros.h>
@@ -36,11 +22,11 @@
 #include <state_from_mavros.h>
 #include <OptiTrackFeedBackRigidBody.h>
 #include <math_utils.h>
-#include <Frame_tf_utils.h>
+#include <Filter/LowPassFilter.h>
+#include <prometheus_control_utils.h>
+
 //msg 头文件
-#include <mavros_msgs/CommandBool.h>
-#include <mavros_msgs/SetMode.h>
-#include <mavros_msgs/State.h>
+
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -56,8 +42,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/Range.h>
 #include <prometheus_msgs/DroneState.h>
-#include <LowPassFilter.h>
-#include <prometheus_control_utils.h>
+
 using namespace std;
 //---------------------------------------相关参数-----------------------------------------------
 int flag_use_laser_or_vicon;                               //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
@@ -260,7 +245,7 @@ int main(int argc, char **argv)
         _DroneState = _state_from_mavros._DroneState;
         _DroneState.header.stamp = ros::Time::now();
 
-
+        //添加测量噪声，（noise_a=0，noise_b=0时，无噪声）
         Eigen::Vector3d random;
 
         // 先生成随机数

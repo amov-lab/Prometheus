@@ -1,0 +1,5 @@
+<launch>
+	<node pkg="prometheus_mission" type="waypoint_tracking" name="waypoint_tracking" output="screen">
+		<rosparam command="load" file="$(find prometheus_mission)/waypoint_tracking/waypoint_tracking.yaml" />
+	</node>
+</launch>
