@@ -149,7 +149,7 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware/Tools/sitl_g
 打开终端，运行如下命令，启动iris的仿真：
 
 ```
-roslaunch iris_gazebo iris_with_realsense.launch
+roslaunch prometheus_gazebo iris_with_realsense.launch
 ```
 
  keyboard control的节点也会一同启动，但程序不能单独使用,需要在QGC中配置遥控器通道相关参数，具体参数如下：
@@ -167,7 +167,13 @@ RC_MAP_YAW = Channel 4
 
 ## Octomap地图
 
-首先使用如下命令安装Octomap:
+运行建图之前首先安装rtabmap：
+
+```
+sudo apt-get install ros-melodic-rtabmap-ros
+```
+
+然后使用如下命令安装Octomap:
 
 For Ubuntu 16.04:
 
@@ -188,8 +194,8 @@ sudo apt-get install ros-kinetic-octomap-rviz-plugins
 通过如下命令运行带有realsense相机的iris无人机仿真，并运行rtabmap，其作用是接受RGBD相机发布的深度图及里程计发布的相机位姿，并以此为基础发布的各种地图topic，包括pointcloud, grid map和octomap。
 
 ```
-roslaunch iris_gazebo iris_with_realsense.launch
-roslaunch iris_gazebo rtabmap_depthCam_mapping.launch
+roslaunch prometheus_gazebo iris_with_realsense.launch
+roslaunch prometheus_gazebo rtabmap_depthCam_mapping.launch
 ```
 
 此时会有octomap的topic发布，运行rviz后选择add添加‘ColorOccupancyGrid’并选择octomap的topic，便会看到实时显示的octomap。
@@ -199,7 +205,7 @@ roslaunch iris_gazebo rtabmap_depthCam_mapping.launch
 通过运行如下launch文件启动二维码检测仿真：
 
 ```
-roslaunch iris_gazebo landing_with_qrcode.launch
+roslaunch prometheus_gazebo landing_with_qrcode.launch
 ```
 
 该launch文件中所使用到的model都在项目文件夹中，所以需要在bashrc文件中将模型路径加入到环境变量中，即复制以下内容到文件末尾。
