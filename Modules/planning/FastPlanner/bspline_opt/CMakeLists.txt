@@ -30,7 +30,7 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS} 
     ${PCL_INCLUDE_DIRS}
-    ${PROJECT_SOURCE_DIR}/../ThirdParty/nlopt/include # add include path for nlopt
+    /usr/local/include # add include path for nlopt
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS} -O3 -Wall")
@@ -45,5 +45,5 @@ add_library( bspline_opt
 )
 target_link_libraries( bspline_opt
     ${catkin_LIBRARIES}
-    ${PROJECT_SOURCE_DIR}/../ThirdParty/nlopt/lib/libnlopt.so
+    /usr/local/lib/libnlopt.so
     )  
