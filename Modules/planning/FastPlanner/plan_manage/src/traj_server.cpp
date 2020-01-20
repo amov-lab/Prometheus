@@ -184,8 +184,8 @@ void cmdCallback(const ros::TimerEvent& e) {
   // cmd.trajectory_flag =
   //         prometheus_msgs::PlanningPositionCommand::TRAJECTORY_STATUS_READY;
   // cmd.trajectory_id = traj_id;
-  cmd.Move_mode = 4;  //TRAJECTORY
-  cmd.Move_frame = 1; //ENU_FRAME
+  cmd.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;  //TRAJECTORY
+  cmd.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME; //ENU_FRAME
   cmd.time_from_start = t_cur;
 
   cmd.position_ref[0] = pos(0);
