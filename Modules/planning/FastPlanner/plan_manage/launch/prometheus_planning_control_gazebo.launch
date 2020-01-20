@@ -104,7 +104,7 @@
       <param name="test/init_odom_y" value="1.0" type="double"/>
       <param name="test/init_odom_z" value="1.0" type="double"/>
       <param name="test/file_name" value="$(arg pcd_file)" type="string"/>
-      <param name="test/odom_mode" value="0" type="int"/>
+      <param name="test/odom_mode" value="1" type="int"/>
   </node>
 
 

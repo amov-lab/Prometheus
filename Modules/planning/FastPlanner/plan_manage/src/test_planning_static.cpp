@@ -150,7 +150,15 @@ int main(int argc,char** argv)
     // ros::Subscriber waypoint_sub_ = node_.subscribe("/planning/goal", 1, &waypointCallback);
 
     // 3. set the triggle frequece for different events. 
-    ros::Timer pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
+    
+    int odom_mode; // 0: manual; 1: sub 
+    node_.param("test/odom_mode", odom_mode, 0);
+    if(odom_mode==0){
+        ros::Timer pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
+    }else if(odom_mode==1){
+        // ros::Subscriber odom_sub = node.subscribe("/planning/odom_world", 50, odomCallbck);
+    }
+    
     ros::Timer pub_pcd_timer = node_.createTimer(ros::Duration(5.0), &pcdpubCallback);
     // ros::Timer pub_waypoint_timer = node_.createTimer(ros::Duration(2.0), &waypointpubCallback);
     
