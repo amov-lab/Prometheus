@@ -67,13 +67,12 @@ image_transport::Publisher landpad_pub;
 
 //-------------VISION-----------
 Mat img;
-
+prometheus_msgs::DetectionInfo pose_now;
 
 //-------------TIME-------------
 ros::Time begin_time;
-float cur_time;
 float photo_time;
-
+double calculation_time;
 
 // 相机话题中的图像同步相关变量
 int frame_width, frame_height;
@@ -83,9 +82,6 @@ boost::shared_mutex mutex_image_callback;
 bool image_status = false;
 boost::shared_mutex mutex_image_status;
 
-
-// 是否检测到标志位-----Point.orientation.w=1为检测成功 =0为检测失败
-// geometry_msgs::Pose flag_position;
 //无人机位姿message
 geometry_msgs::Pose pos_drone_optitrack;
 Eigen::Vector3d euler_drone_optitrack;
@@ -98,7 +94,6 @@ Eigen::Quaterniond q_vehicle;
 //保存的上次观测的位置 用于cluster算法使用
 Eigen::Vector3d last_position;
 bool bool_last_position=false;
-
 
 //-----------------利用Euler角进行三次旋转得到无人机相对目标的位置------------------
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -210,7 +205,7 @@ bool getImageStatus(void)
     return image_status;
 }
 
-
+void printf_result();
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "landpad_det");
@@ -476,7 +471,6 @@ int main(int argc, char **argv)
 
 
             //将解算后的位置发给控制端
-            prometheus_msgs::DetectionInfo pose_now;
             pose_now.header.stamp = ros::Time::now();
             pose_now.detected = true;
             pose_now.frame = 0;
@@ -494,22 +488,16 @@ int main(int argc, char **argv)
             // point_msg.position.x=-A1_Position_OcInW.x;
             // point_msg.position.y=A1_Position_OcInW.y;
             // point_msg.position.z=A1_Position_OcInW.z;
-            position_pub.publish(pose_now);
+            
 
             // geometry_msgs::Pose yaw_msg;
             // yaw_msg.orientation.w=A1_yaw;
             // yaw_pub.publish(yaw_msg);
-            cur_time = get_dt(begin_time);
             // flag_position.orientation.w=1;
             // position_flag_pub.publish(flag_position);
-
-            cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z Yaw] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<< pose_now.yaw_error <<" [rad] "<<endl;
-
         }
         else
         {
-            prometheus_msgs::DetectionInfo pose_now;
             pose_now.header.stamp = ros::Time::now();
             pose_now.detected = false;
             pose_now.frame = 0;
@@ -517,23 +505,49 @@ int main(int argc, char **argv)
             pose_now.position[1] = last_y;
             pose_now.position[2] = last_z;
             pose_now.yaw_error = last_yaw;
-            // flag_position.orientation.w=0;
-            // position_flag_pub.publish(flag_position);
-            position_pub.publish(pose_now);
-            cout<<" flag_detected: "<< int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z Yaw] : " << " " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<< pose_now.yaw_error <<" [rad] "<<endl;
-
         }
-        //画出识别到的二维码
-        cv::aruco::drawDetectedMarkers(img,markerCorners,markerids);
+        position_pub.publish(pose_now);
+        
         //计算算法运行时间
         clock_t finish=clock();
-        double time=(finish-start)/1000;
-        std::cout << "time = " << time << "ms" << std::endl;
+        calculation_time=(finish-start)/1000;
+        
+        //打印
+        printf_result();
+
+        //画出识别到的二维码
+        cv::aruco::drawDetectedMarkers(img,markerCorners,markerids);
+
+        
         msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
         landpad_pub.publish(msg_ellipse);
         // cv::imshow("test",img);
         cv::waitKey(1);
         loopRate.sleep();
     }
+}
+void printf_result()
+{
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(4);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Landpad Detection<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    if(pose_now.detected)
+    {
+        cout << "is_detected: ture" <<endl;
+    }else
+    {
+        cout << "is_detected: false" <<endl;
+    }
+    cout << "pos_target: [X Y Z] : " << pose_now.position[0]  << " [m] "<< pose_now.position[1] <<" [m] " << pose_now.position[2] << " [m] "<<endl;
+    cout << "pos_target: [Yaw] :   " << pose_now.yaw_error/3.1415926 *180    << " [du] "<<endl;
+    cout << "calculation_time =    " << time << " [ms] " << endl;
 }

@@ -15,6 +15,7 @@
 #include <Eigen/Eigen>
 #include <iostream>
 #include <mission_utils.h>
+#include <ukf.h>
 
 //topic 头文件
 #include <prometheus_msgs/DroneState.h>
@@ -31,10 +32,10 @@ prometheus_msgs::DroneState _DroneState;
 Eigen::Vector3f drone_pos;
 //---------------------------------------Vision---------------------------------------------
 prometheus_msgs::DetectionInfo Detection_raw;          //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
-Eigen::Vector3f pos_body_frame;
+prometheus_msgs::DetectionInfo Detection_ENU;
 
+Eigen::VectorXd state_fusion;
 Eigen::Vector3f tracking_delta;
-float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
 
 bool is_detected = false;                                          // 是否检测到目标标志
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
@@ -54,11 +55,6 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
     Detection_raw = *msg;
 
-    pos_body_frame[0] = -Detection_raw.position[1];
-    pos_body_frame[1] = -Detection_raw.position[0];
-    pos_body_frame[2] = Detection_raw.position[2]; //这个值是正数，越近越小
-
-    
     if(Detection_raw.detected)
     {
         num_count_vision_regain++;
@@ -80,7 +76,17 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     {
         is_detected = true;
     }
+
+    // Body frame to Inertial frame
+    Detection_ENU.frame = 1;
+
+    Detection_ENU.position[0] = _DroneState.position[0] + Detection_raw.position[0];
+    Detection_ENU.position[1] = _DroneState.position[1] + Detection_raw.position[1];
+
+    Detection_ENU.attitude[2] = _DroneState.attitude[2] + Detection_raw.attitude[2];
 }
+
+
 
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
@@ -121,9 +127,15 @@ int main(int argc, char **argv)
     nh.param<float>("landing_pad_height", landing_pad_height, 0.0);
 
     //追踪的前后间隔
-    nh.param<float>("kpx_land", kpx_land, 0.3);
-    nh.param<float>("kpy_land", kpy_land, 0.3);
-    nh.param<float>("kpz_land", kpz_land, 0.3);
+    nh.param<float>("tracking_delta_x", tracking_delta[0], 0.0);
+    nh.param<float>("tracking_delta_y", tracking_delta[1], 0.0);
+    nh.param<float>("tracking_delta_z", tracking_delta[2], 0.0);
+
+
+    //ukf用于估计目标运动状态，此处假设目标为恒定转弯速率和速度模型（CTRV）模型
+    int model_type = UKF::CAR;
+    
+    UKF UKF_CAR(model_type);
 
     //打印现实检查参数
     printf_param();
@@ -175,10 +187,18 @@ int main(int argc, char **argv)
         Command_Now.header.stamp                    = ros::Time::now();
         Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
 
+        state_fusion = UKF_CAR.Run(Detection_ENU,0.05);
+
         printf_result();
 
+        Eigen::Vector3f target_pos_fusion;
+
+        target_pos_fusion[0] = state_fusion[0];
+        target_pos_fusion[1] = state_fusion[1];
+        target_pos_fusion[2] = 0.0;
+
         //判断是否满足降落条件
-        distance_to_setpoint = pos_body_frame.norm();
+        distance_to_setpoint = cal_distance_tracking(target_pos_fusion,drone_pos,tracking_delta);
         if(distance_to_setpoint < distance_thres)
         {
             //Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
@@ -193,17 +213,23 @@ int main(int argc, char **argv)
         {
             cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
             Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_VEL;   //xy velocity z position
-            Command_Now.Reference_State.velocity_ref[0]     = kpx_land * pos_body_frame[0];
-            Command_Now.Reference_State.velocity_ref[1]     = kpx_land * pos_body_frame[1];
-            Command_Now.Reference_State.velocity_ref[2]     = - kpz_land * pos_body_frame[2];
-            Command_Now.Reference_State.yaw_ref             = 0.0;
+            Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;   //xy velocity z position
+            Command_Now.Reference_State.position_ref[0]     = state_fusion[0];
+            Command_Now.Reference_State.position_ref[1]     = state_fusion[1];
+            Command_Now.Reference_State.position_ref[2]     = landing_pad_height - tracking_delta[2];
+            Command_Now.Reference_State.velocity_ref[0]     = state_fusion[2]*cos(state_fusion[3]);
+            Command_Now.Reference_State.velocity_ref[1]     = state_fusion[2]*sin(state_fusion[3]);
+            Command_Now.Reference_State.velocity_ref[2]     = 0;
+            Command_Now.Reference_State.acceleration_ref[0] = 0;
+            Command_Now.Reference_State.acceleration_ref[1] = 0;
+            Command_Now.Reference_State.acceleration_ref[2] = 0;
+            Command_Now.Reference_State.yaw_ref             = state_fusion[3];
         }
 
         //Publish
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Command_ID   = Command_Now.Command_ID + 1;
-        command_pub.publish(Command_Now);
+        //command_pub.publish(Command_Now);
 
         rate.sleep();
 
@@ -238,11 +264,12 @@ void printf_result()
         cout << "is_detected: false" <<endl;
     }
     
-    cout << "Detection_raw: " << Detection_raw.position[0] << " [m] "<< Detection_raw.position[1] << " [m] "<< Detection_raw.position[2] << " [m] "<<endl;
-    cout << "Detection_raw: " << Detection_raw.attitude[2]/3.1415926 *180 << " [du] "<<endl;
-    
-    cout << "pos_body_frame: " << pos_body_frame[0] << " [m] "<< pos_body_frame[1] << " [m] "<< pos_body_frame[2] << " [m] "<<endl;
-
+    cout << "Detection_raw(pos): " << Detection_raw.position[0] << " [m] "<< Detection_raw.position[1] << " [m] "<<endl;
+    cout << "Detection_raw(yaw): " << Detection_raw.attitude[2]/3.1415926 *180 << " [du] "<<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>UKF State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout << "State_fusion(pos): " << state_fusion[0] << " [m] "<< state_fusion[1] << " [m] "<<endl;
+    cout << "State_fusion(vel): " << state_fusion[2] << " [m/s] "<<endl;
+    cout << "State_fusion(yaw): " << state_fusion[3]/3.1415926 *180 << " [du] "<< state_fusion[4]/3.1415926 *180 << " [du/s] "<<endl;
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>Land Control State<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 }
 void printf_param()
