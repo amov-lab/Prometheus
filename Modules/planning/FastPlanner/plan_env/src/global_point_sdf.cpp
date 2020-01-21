@@ -27,7 +27,7 @@ namespace dyn_planner {
         max_range_ = origin_ + map_size_;
     }
 
-
+    //判断是否越界
     bool SDFMap_Global::isInMap(Eigen::Vector3d pos) {
         if (pos(0) < min_range_(0) + 1e-4 || pos(1) < min_range_(1) + 1e-4 || pos(2) < min_range_(2) + 1e-4) {
             // ROS_INFO("excess min range: pos: [%f, %f, %f], min range: [%f, %f, %f]", pos(0), pos(1), pos(2), min_range_(0), min_range_(1), min_range_(2));
@@ -51,7 +51,7 @@ namespace dyn_planner {
     }
 
 
-
+    // 从sdf图得到最近距离和相应梯度
     double SDFMap_Global::evaluateEDTWithGrad(const Eigen::Vector3d& pos, double& dist,
                                Eigen::Vector3d& grad){
         auto f_sat = [](double a, double sat_l, double sat_h)->double{
@@ -59,7 +59,7 @@ namespace dyn_planner {
         };
         if (!isInMap(pos))
         {
-            printf("[evaluateEDTWithGrad]: pos is not in map!\n");
+            // printf("[evaluateEDTWithGrad]: pos is not in map!\n");
             dist = 0.0;
             grad(0) = -f_sat(pos(0), min_range_(0), max_range_(0));
             grad(1) = -f_sat(pos(1), min_range_(1), max_range_(1));
@@ -77,6 +77,7 @@ namespace dyn_planner {
         // printf("esdf gradient: %f, %f, %f\n", grad(0), grad(1), grad(2));
     }
 
+    // 从sdf地图，感知最近距离
     double SDFMap_Global::getDistance(Eigen::Vector3d pos) {
 
         if (!isInMap(pos))
@@ -259,13 +260,9 @@ namespace dyn_planner {
 
         for (int i = 0; i < 3; ++i)
             grid_size_(i) = ceil(map_size_(i) / resolution_sdf_);
-        // SETY << "grid num:" << grid_size_.transpose() << REC;
         min_range_ = origin_;
         max_range_ = origin_ + map_size_;
 
-
-        // initialize size of buffer
-        ROS_INFO("global_point_sdf: begin init sdf_tools: rotation and trans!");
         //---------------------create a map using sdf_tools-----------------------------
         // sdf collision map parameter
         Eigen::Translation3d origin_translation(origin_(0), origin_(1), origin_(2));
@@ -275,7 +272,7 @@ namespace dyn_planner {
         const Eigen::Isometry3d origin_transform = origin_translation * origin_rotation;
         const std::string frame = "world";
         // create map
-        ROS_INFO("global_point_sdf: creat std_tools!");
+        // ROS_INFO("global_point_sdf: creat std_tools!");
         sdf_tools::COLLISION_CELL oob_cell;
         oob_cell.occupancy = 0.0;
         oob_cell.component = 0;
