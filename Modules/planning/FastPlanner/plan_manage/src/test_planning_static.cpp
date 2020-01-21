@@ -20,7 +20,10 @@
 
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
+#include "prometheus_msgs/PositionReference.h"
 
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明及定义<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+prometheus_msgs::PositionReference traj_now;
 ros::Publisher map_pub;
 ros::Publisher odom_pub;
 ros::Publisher waypoint_pub;
@@ -29,15 +32,36 @@ bool is_load_map{false};
 sensor_msgs::PointCloud2 cloud_map_msg;
 nav_msgs::Path waypoints;
 nav_msgs::Odometry init_odom;
-
+nav_msgs::Odometry odom_now;
+bool is_run_odom(false);
+bool is_static_mode(true);
+int odom_mode; // 0: manual; 1: sub 
 using namespace std;
 
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+void trajCallbck(const prometheus_msgs::PositionReference& msg);
 void visualizer_one_points(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,std::string name);
 void load_map(std::string file_name);
 void pcdpubCallback(const ros::TimerEvent& e);
 void omdpubCallback(const ros::TimerEvent& e);
 
-// pcl 显示点云
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数定义<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// 【订阅】订阅轨迹，并赋值给odom，实现近似动态
+void trajCallbck(const prometheus_msgs::PositionReference& msg){
+    traj_now = msg; 
+    odom_now.header.stamp = ros::Time::now();;
+    odom_now.header.frame_id = "world";
+    odom_now.pose.pose.position.x = traj_now.position_ref[0];
+    odom_now.pose.pose.position.y = traj_now.position_ref[1];
+    odom_now.pose.pose.position.z = traj_now.position_ref[2];
+
+    odom_now.twist.twist.linear.x = traj_now.velocity_ref[0];
+    odom_now.twist.twist.linear.y = traj_now.velocity_ref[1];
+    odom_now.twist.twist.linear.z = traj_now.velocity_ref[2];
+    is_run_odom = true;
+}
+
+// pcl 中显示点云地图
 void visualizer_one_points(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,std::string name)
 {
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer(name));
@@ -49,6 +73,7 @@ void visualizer_one_points(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,std::string
     viewer->spinOnce(100);
 }
 
+// 【加载】加载离线地图
 void load_map(std::string file_name){
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
@@ -57,8 +82,6 @@ void load_map(std::string file_name){
     ROS_INFO("begin:%f",begin.toSec());
 
     // read pcd file
-    // pcl::io::loadPCDFile("/home/taojiang/Desktop/cloud2.pcd",*cloud_map);
-    // pcl::io::loadPCDFile("/home/taojiang/Desktop/cloud0115.pcd",*cloud_map);
     pcl::io::loadPCDFile(file_name,*cloud_map);
     visualizer_one_points(cloud_map,"map");
 
@@ -74,7 +97,7 @@ void load_map(std::string file_name){
     is_load_map = true;
 }
 
-// pub the pcd map
+// 【发布】 发布点云地图
 void pcdpubCallback(const ros::TimerEvent& e) {
     if (!is_load_map) {
         printf("no point map!\n");
@@ -84,30 +107,38 @@ void pcdpubCallback(const ros::TimerEvent& e) {
 
 }
 
-// pub odom 
+// 【发布】处理里程计信息，根据模式选择是否发布
 void omdpubCallback(const ros::TimerEvent& e) {
 
     //we'll publish the odometry message over ROS
-    nav_msgs::Odometry odom;
-    odom.header.stamp = ros::Time::now();;
-    odom.header.frame_id = "world";
+    if (is_run_odom==false){
+        nav_msgs::Odometry odom;
+        odom.header.stamp = ros::Time::now();;
+        odom.header.frame_id = "world";
 
-    //set the position and quaternion
-    odom.pose.pose.position.x = init_odom.pose.pose.position.x;
-    odom.pose.pose.position.y = init_odom.pose.pose.position.y;
-    odom.pose.pose.position.z = init_odom.pose.pose.position.z;
+        //set the position and quaternion
+        odom.pose.pose.position.x = init_odom.pose.pose.position.x;
+        odom.pose.pose.position.y = init_odom.pose.pose.position.y;
+        odom.pose.pose.position.z = init_odom.pose.pose.position.z;
 
-    geometry_msgs::Quaternion odom_quat;
-    odom_quat.x = 0;
-    odom_quat.y = 0;
-    odom_quat.z = 0;
-    odom_quat.w = 0;
-    odom.pose.pose.orientation = odom_quat;
+        geometry_msgs::Quaternion odom_quat;
+        odom_quat.x = 0;
+        odom_quat.y = 0;
+        odom_quat.z = 0;
+        odom_quat.w = 0;
+        odom.pose.pose.orientation = odom_quat;
 
-    //publish odm
-    odom_pub.publish(odom);
+        // 发布odom
+        odom_pub.publish(odom);
+    }else if (is_run_odom==true && odom_mode==2)    //如果模式为动态模式，就是odom会随生成轨迹运动
+    {
+        odom_pub.publish(odom_now);
+    }
+    
+
 
 }
+
 
 // void waypointpubCallback(const ros::TimerEvent &e){
 //     geometry_msgs::PoseStamped pt;
@@ -133,6 +164,8 @@ void omdpubCallback(const ros::TimerEvent& e) {
 // }
 
 
+
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // test: 
 // $ roscore
@@ -143,7 +176,7 @@ int main(int argc,char** argv)
     ros::init(argc,argv,"pub_map_odom");
     ros::NodeHandle node_("~");
 
-    // 2. pub some topic
+    // 2. 发布odom和点云地图
     odom_pub = node_.advertise<nav_msgs::Odometry>("/planning/odom_world", 50);
     map_pub =node_.advertise<sensor_msgs::PointCloud2>("/planning/global_point_cloud",1);
     // waypoint_pub = node_.advertise<geometry_msgs::PoseStamped>("/planning/waypoint", 50);
@@ -151,15 +184,21 @@ int main(int argc,char** argv)
 
     // 3. set the triggle frequece for different events. 
     
-    int odom_mode; // 0: manual; 1: sub 
     ros::Timer pub_odom_timer_;
+    ros::Subscriber traj_sub;
     node_.param("test/odom_mode", odom_mode, 0);
+    
     if(odom_mode==0){
+        // 认为无人机不动，进行静态规划
         pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
     }else if(odom_mode==1){
-        // ros::Subscriber odom_sub = node.subscribe("/planning/odom_world", 50, odomCallbck);
+       // 由px4发布odom信息 
+    }else if(odom_mode==2){
+        // 无人机随轨迹运动，订阅轨迹，更新odom
+        traj_sub = node_.subscribe("/planning/position_cmd", 50, trajCallbck);
+        pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
     }
-    
+    // 时间触发发布点云
     ros::Timer pub_pcd_timer = node_.createTimer(ros::Duration(5.0), &pcdpubCallback);
     // ros::Timer pub_waypoint_timer = node_.createTimer(ros::Duration(2.0), &waypointpubCallback);
     

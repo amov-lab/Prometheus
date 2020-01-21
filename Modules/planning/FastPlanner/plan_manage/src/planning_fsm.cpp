@@ -99,15 +99,19 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
   if (msg->pose.position.z < 0.0)
     return;
   trigger_ = true;
-  double goal_z;
+  double goal_x, goal_y, goal_z;
 
   // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
+  auto conf=[](double v, double min_v, double max_v)->double{
+    return v<min_v? min_v:(v>max_v?max_v:v);
+  };
   if (flight_type_ == FLIGHT_TYPE::MANUAL_GOAL)
   {
     goal_z = msg->pose.position.z;
     // end_pt_ << msg->pose.position.x, msg->pose.position.y, 1.0;
-    if (msg->pose.position.z < 0.3) goal_z = 0.3;
-    if (msg->pose.position.z > 3.5) goal_z = 3.5;
+    // if (msg->pose.position.z < 0.3) goal_z = 0.3;
+    // if (msg->pose.position.z > 3.5) goal_z = 3.5;
+    goal_z = conf(msg->pose.position.z, 0.3, 3.5);
     end_pt_ << msg->pose.position.x, msg->pose.position.y, goal_z;
   }
   else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)
