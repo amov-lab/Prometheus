@@ -1,0 +1,1144 @@
+<sdf version='1.6'>
+  <world name='dubai_track'>
+    <physics name='default_physics' default='0' type='ode'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_update_rate>2000</real_time_update_rate>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+    <model name='ground_plane'>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>120 120</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>120 120</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://race_track/iros_materials/materials/scripts/asphalt.material</uri>
+              <uri>model://race_track/iros_materials/materials/textures</uri>
+              <name>iros/asphalt</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wall_1'>
+      <pose frame=''>-10 35 34 0 -0 0</pose>
+      <static>1</static>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.1 90 70</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.1 90 70</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://race_track/iros_materials/materials/scripts/sky.material</uri>
+              <uri>model://race_track/iros_materials/materials/textures</uri>
+              <name>iros/sky</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wall_2'>
+      <pose frame=''>60 35 34 0 -0 0</pose>
+      <static>1</static>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.1 90 70</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.1 90 70</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://race_track/iros_materials/materials/scripts/sky.material</uri>
+              <uri>model://race_track/iros_materials/materials/textures</uri>
+              <name>iros/sky</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wall_3'>
+      <pose frame=''>35 60 34 0 -0 0</pose>
+      <static>1</static>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>90 0.1 70</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>90 0.1 70</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://race_track/iros_materials/materials/scripts/sky.material</uri>
+              <uri>model://race_track/iros_materials/materials/textures</uri>
+              <name>iros/sky</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='wall_4'>
+      <pose frame=''>35 -10 34 0 -0 0</pose>
+      <static>1</static>
+      <link name='link'>
+        <inertial>
+          <mass>1</mass>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>90 0.1 70</size>
+            </box>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>90 0.1 70</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://race_track/iros_materials/materials/scripts/sky.material</uri>
+              <uri>model://race_track/iros_materials/materials/textures</uri>
+              <name>iros/sky</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_1'>
+      <pose frame=''>10.7 0 2 0 -0 0</pose>
+      <static>1</static>
+      <link name='gate_1_body'>
+        <collision name='gate_1_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_1_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_2'>
+      <pose frame=''>20 0 1.5 0 -0 0</pose>
+      <static>1</static>
+      <link name='gate_2_body'>
+        <collision name='gate_2_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_2_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_3'>
+      <pose frame=''>35 3 1.4 0 -0 1</pose>
+      <static>1</static>
+      <link name='gate_3_body'>
+        <collision name='gate_3_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_3_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_4'>
+      <pose frame=''>32 15 1.5 0 -0 1.57</pose>
+      <static>1</static>
+      <link name='gate_4_body'>
+        <collision name='gate_4_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_4_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_5'>
+      <pose frame=''>35 25 1.4 0 -0 1.57</pose>
+      <static>1</static>
+      <link name='gate_5_body'>
+        <collision name='gate_5_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_5_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_6'>
+      <pose frame=''>25 31.5 1.3 0 -0 3</pose>
+      <static>1</static>
+      <link name='gate_6_body'>
+        <collision name='gate_6_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_6_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_7'>
+      <pose frame=''>8 27 1.4 0 -0 -2.48319</pose>
+      <static>1</static>
+      <link name='gate_7_body'>
+        <collision name='gate_7_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_7_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_8'>
+      <pose frame=''>-4 10 0.9 0 0 -1.5</pose>
+      <static>1</static>
+      <link name='gate_8_body'>
+        <collision name='gate_8_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_8_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_9'>
+      <pose frame=''>10 27 1.4 0 -0 -2.48319</pose>
+      <static>1</static>
+      <link name='gate_9_body'>
+        <collision name='gate_9_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_9_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_10'>
+      <pose frame=''>-5 10 0.9 0 0 -1.5</pose>
+      <static>1</static>
+      <link name='gate_10_body'>
+        <collision name='gate_10_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_10_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_11'>
+      <pose frame=''>-5 10 0.9 0 0 -1.5</pose>
+      <static>1</static>
+      <link name='gate_11_body'>
+        <collision name='gate_11_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_11_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_12'>
+      <pose frame=''>-5 10 0.9 0 0 -1.5</pose>
+      <static>1</static>
+      <link name='gate_12_body'>
+        <collision name='gate_12_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_12_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_13'>
+      <pose frame=''>-5 10 0.9 0 0 -1.5</pose>
+      <static>1</static>
+      <link name='gate_13_body'>
+        <collision name='gate_13_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_13_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <model name='gate_14'>
+      <pose frame=''>-5 10 0.9 0 0 -1.5</pose>
+      <static>1</static>
+      <link name='gate_14_body'>
+        <collision name='gate_14_collision'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.stl</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='gate_14_visual'>
+          <geometry>
+            <mesh>
+              <uri>model://race_track/real_world/gate/meshes/gate.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <scene>
+      <ambient>1 1 1 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+    <state world_name='dubai_track'>
+      <sim_time>2911 802000000</sim_time>
+      <real_time>99 90560595</real_time>
+      <wall_time>1547145353 904135232</wall_time>
+      <iterations>197062</iterations>
+      <model name='gate_1'>
+        <pose frame=''>2.67719 6.70695 2 0 0 -0.447182</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_1_body'>
+          <pose frame=''>2.67719 6.70695 2 0 0 -0.447182</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_10'>
+        <pose frame=''>26.0125 9.41809 0.9 0 0 -0.514769</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_10_body'>
+          <pose frame=''>26.0125 9.41809 0.9 0 0 -0.514769</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_11'>
+        <pose frame=''>18.2181 20.0025 2 0 0 -0.874979</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_11_body'>
+          <pose frame=''>18.2181 20.0025 2 0 0 -0.874979</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_12'>
+        <pose frame=''>10.2397 25.0567 0.9 0 0 -3.10152</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_12_body'>
+          <pose frame=''>10.2397 25.0567 0.9 0 0 -3.10152</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_13'>
+        <pose frame=''>2.12946 22.0464 2 0 -0 0.822026</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_13_body'>
+          <pose frame=''>2.12946 22.0464 2 0 -0 0.822026</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_14'>
+        <pose frame=''>-1.15213 13.1935 0.9 0 0 -1.5</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_14_body'>
+          <pose frame=''>-1.15213 13.1935 0.9 0 0 -1.5</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_2'>
+        <pose frame=''>10.5951 4.23611 1.5 0 -0 0.011479</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_2_body'>
+          <pose frame=''>10.5951 4.23611 1.5 0 -0 0.011479</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_3'>
+        <pose frame=''>19.0796 10.0924 1.4 0 -0 0.974806</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_3_body'>
+          <pose frame=''>19.0796 10.0924 1.4 0 -0 0.974806</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_4'>
+        <pose frame=''>25.6675 20.6245 1.5 0 0 -2.2117</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_4_body'>
+          <pose frame=''>25.6675 20.6245 1.5 0 -0 -2.2117</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_5'>
+        <pose frame=''>35.1417 26.4984 1.4 0 -0 3.10375</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_5_body'>
+          <pose frame=''>35.1417 26.4984 1.4 0 -0 3.10375</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_6'>
+        <pose frame=''>45.0346 22.2569 1.3 0 -0 2.17527</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_6_body'>
+          <pose frame=''>45.0346 22.2569 1.3 0 -0 2.17527</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_7'>
+        <pose frame=''>47.4443 13.6256 1.4 0 -0 1.57973</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_7_body'>
+          <pose frame=''>47.4443 13.6256 1.4 0 -0 1.57973</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_8'>
+        <pose frame=''>42.4307 5.78127 0.9 0 0 -2.63864</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_8_body'>
+          <pose frame=''>42.4307 5.78127 0.9 0 0 -2.63864</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='gate_9'>
+        <pose frame=''>33.6687 4.71178 1.4 0 -0 3.10979</pose>
+        <scale>1 1 1</scale>
+        <link name='gate_9_body'>
+          <pose frame=''>33.6687 4.71178 1.4 0 -0 3.10979</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='ground_plane'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wall_1'>
+        <pose frame=''>-10 35 34 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>-10 35 34 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wall_2'>
+        <pose frame=''>60 35 34 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>60 35 34 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wall_3'>
+        <pose frame=''>35 60 34 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>35 60 34 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='wall_4'>
+        <pose frame=''>35 -10 34 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>35 -10 34 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <light name='user_directional_light_0'>
+        <pose frame=''>20.2832 -37.1175 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_0'>
+        <pose frame=''>14.3744 -31.3614 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_1'>
+        <pose frame=''>22.1188 -31.6852 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_2'>
+        <pose frame=''>31.4331 -33.084 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_3'>
+        <pose frame=''>37.135 -35.0607 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_4'>
+        <pose frame=''>6.84622 -30.4097 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_5'>
+        <pose frame=''>1.43993 -35.6145 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_6'>
+        <pose frame=''>14.8 -41.0504 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_7'>
+        <pose frame=''>23.6794 -39.9093 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_8'>
+        <pose frame=''>30.8131 -42.2014 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_9'>
+        <pose frame=''>42.6462 -44.2737 1 0 -0 0</pose>
+      </light>
+    </state>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <audio>
+      <device>default</device>
+    </audio>
+    <wind/>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>36.7608 -87.8857 129.318 0 0.825801 1.63609</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+    <light name='user_point_light_0' type='point'>
+      <pose frame=''>14.3744 -31.3614 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_1' type='point'>
+      <pose frame=''>22.1188 -31.6852 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_2' type='point'>
+      <pose frame=''>31.4331 -33.084 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_3' type='point'>
+      <pose frame=''>37.135 -35.0607 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_4' type='point'>
+      <pose frame=''>6.84622 -30.4097 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_5' type='point'>
+      <pose frame=''>1.43993 -35.6145 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_6' type='point'>
+      <pose frame=''>14.8 -41.0504 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_7' type='point'>
+      <pose frame=''>23.6794 -39.9093 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_8' type='point'>
+      <pose frame=''>30.8131 -42.2014 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_point_light_9' type='point'>
+      <pose frame=''>42.6462 -44.2737 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+    <light name='user_directional_light_0' type='directional'>
+      <pose frame=''>20.2832 -37.1175 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.1 0.1 -0.9</direction>
+      <attenuation>
+        <range>100</range>
+        <constant>1.0</constant>
+        <linear>0.0</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <cast_shadows>1</cast_shadows>
+    </light>
+  </world>
+</sdf>
