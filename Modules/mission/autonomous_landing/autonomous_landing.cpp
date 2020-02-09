@@ -193,7 +193,7 @@ int main(int argc, char **argv)
         distance_to_setpoint = pos_body_frame.norm();
         if(distance_to_setpoint < distance_thres)
         {
-            //Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
             cout <<"[autonomous_landing]: Catched the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
         }
 

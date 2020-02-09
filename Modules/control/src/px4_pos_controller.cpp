@@ -93,10 +93,10 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         ROS_WARN("Wrong Command ID.");
     }
     
-    // 无人机一旦接受到Land指令，则会屏蔽其他指令
-    if(Command_Last.Mode == prometheus_msgs::ControlCommand::Land)
+    // 无人机一旦接受到Land或者Disarm指令，则会屏蔽其他指令
+    if(Command_Last.Mode == prometheus_msgs::ControlCommand::Land || Command_Last.Mode == prometheus_msgs::ControlCommand::Disarm)
     {
-        Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+        Command_Now = Command_Last;
     }
 
     // Check for geo fence: If drone is out of the geo fence, it will land now.
@@ -294,11 +294,11 @@ int main(int argc, char **argv)
             //如果距离起飞高度小于10厘米，则直接上锁并切换为手动模式；
             if(abs(_DroneState.position[2] - Takeoff_position[2]) < Disarm_height)
             {
-                //if(_DroneState.mode == "OFFBOARD")
-                //{
-                 //   _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
-                 //   _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-                //}
+                if(_DroneState.mode == "OFFBOARD")
+                {
+                    _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+                    _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+                }
 
                 if(_DroneState.armed)
                 {
@@ -330,11 +330,11 @@ int main(int argc, char **argv)
         // 【Disarm】 上锁
         case prometheus_msgs::ControlCommand::Disarm:
 
-            //if(_DroneState.mode == "OFFBOARD")
-            //{
-            //    _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
-            //    _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-            //}
+            if(_DroneState.mode == "OFFBOARD")
+            {
+                _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+                _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+            }
 
             if(_DroneState.armed)
             {
