@@ -294,11 +294,11 @@ int main(int argc, char **argv)
             //如果距离起飞高度小于10厘米，则直接上锁并切换为手动模式；
             if(abs(_DroneState.position[2] - Takeoff_position[2]) < Disarm_height)
             {
-                if(_DroneState.mode == "OFFBOARD")
-                {
-                    _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
-                    _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-                }
+                //if(_DroneState.mode == "OFFBOARD")
+                //{
+                 //   _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+                 //   _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+                //}
 
                 if(_DroneState.armed)
                 {
@@ -330,17 +330,16 @@ int main(int argc, char **argv)
         // 【Disarm】 上锁
         case prometheus_msgs::ControlCommand::Disarm:
 
-            if(_DroneState.mode == "OFFBOARD")
-            {
-                _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
-                _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-            }
+            //if(_DroneState.mode == "OFFBOARD")
+            //{
+            //    _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+            //    _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+            //}
 
             if(_DroneState.armed)
             {
                 _command_to_mavros.arm_cmd.request.value = false;
                 _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
-
             }
 
             if (_command_to_mavros.arm_cmd.response.success)
