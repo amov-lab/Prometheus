@@ -15,7 +15,7 @@
 #include <Eigen/Eigen>
 #include <iostream>
 #include <mission_utils.h>
-#include <ukf.h>
+#include <ukf_car.h>
 
 //topic 头文件
 #include <prometheus_msgs/DroneState.h>
@@ -90,8 +90,6 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 
 }
 
-
-
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
@@ -143,9 +141,7 @@ int main(int argc, char **argv)
 
 
     //ukf用于估计目标运动状态，此处假设目标为恒定转弯速率和速度模型（CTRV）模型
-    int model_type = UKF::CAR;
-    
-    UKF UKF_CAR(model_type);
+    UKF_CAR UKF_CAR;
 
     //打印现实检查参数
     printf_param();
