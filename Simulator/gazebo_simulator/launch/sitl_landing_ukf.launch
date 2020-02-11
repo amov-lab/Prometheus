@@ -37,9 +37,9 @@
 	</node>
 
 	<!-- Move the QRCode -->
-	<arg name="qrcode_move" default="false"/>
+	<arg name="qrcode_move" default="true"/>
 	<group if="$(arg qrcode_move)">
-	<node pkg="prometheus_gazebo" type="qrcode_control.py" name="qrcode_control" output="screen" launch-prefix="gnome-terminal --tab --"/>
+	<node pkg="prometheus_gazebo" type="qrcode_control" name="qrcode_control" output="screen" launch-prefix="gnome-terminal --tab --"/>
     </group>
 
     <!-- MAVROS configs -->
@@ -87,7 +87,7 @@
 	</node>
 
 	<!-- run the landpad_det.cpp -->
-	<node pkg="prometheus_detection" type="landpad_det" name="landpad_det" output="screen" launch-prefix="gnome-terminal --">	
+	<node pkg="prometheus_detection" type="landpad_det" name="landpad_det" output="screen" launch-prefix="gnome-terminal --tab --">	
 		<remap from="/prometheus/camera/rgb/image_raw" to="/realsense_plugin/camera/color/image_raw"/>
 	</node>	
 
