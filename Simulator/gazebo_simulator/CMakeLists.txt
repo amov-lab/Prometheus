@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
     cv_bridge
     rostest
     std_msgs
+    gazebo_msgs
+    prometheus_msgs
     message_generation
 )
 find_package(Boost REQUIRED COMPONENTS thread)
@@ -56,6 +58,10 @@ add_library(
 target_link_libraries(realsense_gazebo_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 add_dependencies(realsense_gazebo_plugin ${catkin_EXPORTED_TARGETS})
 
+
+add_executable(qrcode_control src/qrcode_control.cpp)
+add_dependencies(qrcode_control prometheus_gazebo_gencpp) 
+target_link_libraries(qrcode_control ${catkin_LIBRARIES})
 
 #add_library(irlock_gazebo_ros_plugin gazebo_plugin/irlock_gazebo_ros_plugin.cpp)
 #target_link_libraries(irlock_gazebo_ros_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})

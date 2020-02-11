@@ -18,6 +18,7 @@ def pose_publisher():
            theta += (30./30)%2000
            pose_msg.pose.position.x = radius*math.cos(math.radians(theta))
            pose_msg.pose.position.y = radius*math.sin(math.radians(theta))
+           pose_msg.pose.position.z = 0.05
            pub.publish(pose_msg)
            print('Pos_x :',pose_msg.pose.position.x)
            print('Pos_y :',pose_msg.pose.position.y)
