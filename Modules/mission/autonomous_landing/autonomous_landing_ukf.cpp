@@ -21,9 +21,6 @@
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/ControlCommand.h>
-#include <geometry_msgs/Point.h>
-#include <gazebo_msgs/ModelStates.h>
-
 
 using namespace std;
 using namespace Eigen;
@@ -225,6 +222,9 @@ int main(int argc, char **argv)
         if(!is_detected)
         {
             //Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+            pos_des_prev[0] = drone_pos[0];
+            pos_des_prev[1] = drone_pos[1];
+            pos_des_prev[2] = drone_pos[2];
             cout <<"[autonomous_landing]: Lost the Landing Pad. "<< endl;
         }else if(drone_pos[2] < 0.3)
         {

@@ -11,13 +11,13 @@ tracking_delta_x : 1.5
 tracking_delta_y : 0.0
 tracking_delta_z : 0.0
 
-UKF:
-  std_ax_: 0.02
-  std_ay_: 0.02
-  std_az_: 0.02
-  std_px_: 0.05
-  std_py_: 0.05
-  std_pz_: 0.05
+UKF_NCV:
+    std_ax_: 0.01
+    std_ay_: 0.01
+    std_az_: 0.01
+    std_px_: 0.02
+    std_py_: 0.02
+    std_pz_: 0.02
 
 
 
