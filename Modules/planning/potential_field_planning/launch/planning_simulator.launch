@@ -1,0 +1,18 @@
+<launch>
+    <arg name="max_vel" value="2.0" />
+    <arg name="max_acc" value="1.0" />
+    <arg name="dynamic" value="0" />
+
+        <!-- trajectory server -->
+    <node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
+        <!-- <remap from="/odom_world" to="/state_ukf/odom"/>
+        <remap from="/position_cmd" to="planning/pos_cmd"/> -->
+        <param name="apf/obs_distance" value="1.0" type="double"/>
+        <param name="apf/k_push" value="1.0" type="double"/>
+    </node>
+        
+    <!-- use simulator -->
+    <include file="$(find prometheus_local_planning)/launch/simulator.xml">
+    </include>
+
+</launch>
