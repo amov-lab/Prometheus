@@ -96,7 +96,7 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
 {
   cout << "[waypointCallback]: Triggered!" << endl;
 
-  if (msg->pose.position.z < 0.0)
+  if (msg->pose.position.z < 0.1)  // the minimal goal height 
     return;
   trigger_ = true;
   double goal_x, goal_y, goal_z;
