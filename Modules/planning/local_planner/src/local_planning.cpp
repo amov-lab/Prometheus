@@ -2,7 +2,7 @@
 // Created by taojiang on 2019/12/9.
 //
 
-#include "potential_field_planning.h"
+#include "local_planning.h"
 
 namespace local_planner
 {
