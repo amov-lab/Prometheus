@@ -80,10 +80,11 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
 void APF::init(ros::NodeHandle& nh){
     has_local_map_ = false;
 
-    nh.param("apf/obs_distance", obs_distance, 1.5);
+    nh.param("apf/obs_distance", obs_distance, 1.2);
+    nh.param("apf/k_push", k_push, 1.5);
     // obs_distance = 2.0;
     min_dist = 0.1;
-    k_push = 1.0;
+    // k_push = 1.0;
 
     max_att_dist = 4;
     k_att = 1.0;

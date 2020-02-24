@@ -80,6 +80,7 @@ private:
 
     // 控制接口
     prometheus_msgs::PositionReference cmd;
+    geometry_msgs::Point px4_cmd;
 
     /* ---------- sub and pub ---------- */
     ros::NodeHandle node_;
@@ -87,11 +88,12 @@ private:
     ros::Timer exec_timer_;
     ros::Time control_time;
 
-    ros::Publisher pos_cmd_pub, local_map_marker_Pub;
+    ros::Publisher pos_cmd_pub, local_map_marker_Pub, px4_pos_cmd_pub;
 
     APF::Ptr apf_planner_ptr;
 
     PlanningVisualization::Ptr visualization_;
+    int is_simulation;
 public:
 
     nav_msgs::Odometry odom_, odom__last;
