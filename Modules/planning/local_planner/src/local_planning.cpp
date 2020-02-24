@@ -16,6 +16,8 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     sensor_msgs::PointCloud2ConstPtr init_local_map(new sensor_msgs::PointCloud2());
     local_map_ptr_ = init_local_map;
 
+    nh.param("local_planning/is_simulation", is_simulation, 0);
+
     // init visualization
     ROS_INFO("---init visualization!---");
     visualization_.reset(new PlanningVisualization(nh));
@@ -34,7 +36,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     this);
 
     pos_cmd_pub = node_.advertise<prometheus_msgs::PositionReference>("/planning/position_cmd", 10);
-
+    px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
     exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
 
     /*   bool  state    */
@@ -84,7 +86,7 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     // 发布控制指令
     generate_cmd(desired_vel);
     control_time = ros::Time::now();
-    pos_cmd_pub.publish(cmd);
+    // pos_cmd_pub.publish(cmd);
     if((end_pt_-start_pt_).norm() < 0.05){
         printf("reach the goal!\n");
     }
@@ -117,8 +119,17 @@ void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel){
     cmd.yaw_ref = 0.0;
 
     // 发布控制指令
-    pos_cmd_pub.publish(cmd);
-
+    if(is_simulation==1){
+        pos_cmd_pub.publish(cmd);
+    }
+    else
+    {
+        px4_cmd.x = desired_vel(0);
+        px4_cmd.y = desired_vel(1);
+        px4_cmd.z = desired_vel(2);
+        px4_pos_cmd_pub.publish(px4_cmd);
+    }
+    
     // 可视化
     visualization_->drawVel(start_pt_, desired_vel * 0.5, Eigen::Vector4d(0, 1, 0, 1.0), 0);
 
