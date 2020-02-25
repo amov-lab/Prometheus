@@ -17,12 +17,14 @@
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>camera_info_manager</depend>
+  <depend>geometry_msgs</depend>
   <exec_depend>depth_image_proc</exec_depend>
 
   <test_depend>rostest</test_depend>
 
   <exec_depend>urdf</exec_depend>
   <exec_depend>xacro</exec_depend>
+
 
  <export>
     <gazebo_ros

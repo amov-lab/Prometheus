@@ -1,0 +1,6 @@
+<launch>
+    <arg name="PATH_TO_VOCABULARY" value="$(find ORB_SLAM2)/../../../Vocabulary/ORBvoc.txt"/>
+    <arg name="PATH_TO_SETTINGS_FILE" value="$(find ORB_SLAM2)/../../RGB-D/TUM1.yaml "/>
+    
+    <node name="RGBD" pkg="ORB_SLAM2" type="RGBD" args="$(arg PATH_TO_VOCABULARY) $(arg PATH_TO_SETTINGS_FILE)"/>
+</launch>
