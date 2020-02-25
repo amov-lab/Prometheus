@@ -13,13 +13,13 @@
 		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
 	</node>
 
-	<node pkg="prometheus_mission" type="local_planning" name="local_planning" output="screen" launch-prefix="gnome-terminal --">	
+	<node pkg="prometheus_mission" type="planning" name="planning" output="screen" launch-prefix="gnome-terminal --">	
 	</node>
 
-    <include file="$(find prometheus_local_planning)/launch/planning_px4.launch">
+    <include file="$(find prometheus_plan_manage)/launch/prometheus_planning_control_gazebo.launch">
     </include>
 
-    <include file="$(find prometheus_local_planning)/launch/rviz.launch">
+    <include file="$(find prometheus_plan_manage)/launch/rviz_static.launch">
     </include>
 
 </launch>
