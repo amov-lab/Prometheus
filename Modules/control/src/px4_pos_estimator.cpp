@@ -153,7 +153,10 @@ void optitrack_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
     Euler_mocap = quaternion_to_euler(q_mocap);
 
 }
-
+void timerCallback(const ros::TimerEvent& e)
+{
+    cout << "[px4_pos_estimator]: " << "Program is running. "<<endl;
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -210,6 +213,9 @@ int main(int argc, char **argv)
     vision_pub = nh.advertise<geometry_msgs::PoseStamped>("/mavros/vision_pose/pose", 100);
 
     drone_state_pub = nh.advertise<prometheus_msgs::DroneState>("/prometheus/drone_state", 10);
+
+    // 10秒定时打印，以确保程序在正确运行
+    ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
 
     // 用于与mavros通讯的类，通过mavros接收来至飞控的消息【飞控->mavros->本程序】
     state_from_mavros _state_from_mavros;
@@ -334,7 +340,7 @@ void send_to_fcu()
 
 void printf_param()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> px4_pos estimator Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
     cout << "noise_a: "<< noise_a<<" [m] "<<endl;
     cout << "noise_b: "<< noise_b<<" [m] "<<endl;

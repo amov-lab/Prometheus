@@ -112,7 +112,10 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 
     _DroneState.time_from_start = cur_time;
 }
-
+void timerCallback(const ros::TimerEvent& e)
+{
+    cout << "[px4_pos_controller]: " << "Program is running. "<<endl;
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -136,6 +139,8 @@ int main(int argc, char **argv)
     //【发布】参考轨迹，可通过参数pos_estimator/state_fromposehistory_window来设置轨迹的长短
     ref_trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/reference_trajectory", 10);
 
+    // 10秒定时打印，以确保程序在正确运行
+    ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
 
     // 参数读取
     nh.param<float>("pos_controller/Takeoff_height", Takeoff_height, 1.0);
@@ -239,9 +244,6 @@ int main(int argc, char **argv)
 
         //执行回调函数
         ros::spinOnce();
-
-        //定期打印
-        ROS_INFO_STREAM_THROTTLE(10.0, "px4_pos_controller is running.");
 
         switch (Command_Now.Mode)
         {
@@ -433,7 +435,7 @@ int main(int argc, char **argv)
 
 void printf_param()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> px4_pos_controller Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     cout << "Takeoff_height: "<< Takeoff_height<<" [m] "<<endl;
     cout << "Disarm_height : "<< Disarm_height <<" [m] "<<endl;
     cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
