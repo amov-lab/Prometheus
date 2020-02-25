@@ -212,6 +212,14 @@ roslaunch prometheus_gazebo landing_with_qrcode.launch
 
 ```
 export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_description/models
+export TURTLEBOT3_MODEL=waffle
 ```
 
-其中后，会出现安装了方向向下的相机的iris无人机模型，以及做圆周运动的二维码模型。
+其中后，会出现安装了方向向下的相机的iris无人机模型，以及装在turtlebot上面的二维码。
+
+运行使用键盘控制turtlebot
+
+```
+roslaunch prometheus_gazebo turtlebot3_teleop_key.launch 
+```
+
