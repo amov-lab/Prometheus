@@ -1,0 +1,52 @@
+<launch>
+    <arg name="gui" default="true"/>
+    <arg name="ns" default="/"/>
+    <arg name="model" default="iris_realsense_camera"/>
+    <arg name="fcu_url" default="udp://:14540@localhost:14557"/>
+    <arg name="gcs_url" default="" />   <!-- GCS link is provided by SITL -->
+    <arg name="tgt_system" default="1" />
+    <arg name="tgt_component" default="1" />
+    <arg name="vehicle" default="iris"/>
+
+    <param name="use_sim_time" value="true" />
+
+  <!-- Define a static transform from a camera internal frame to the fcu for every camera used -->
+  <node pkg="tf" type="static_transform_publisher" name="tf_realsense_camera"
+          args="0 0 0 -1.57 0 -1.57 base_link realsense_camera_link 10"/>
+
+    <!-- Ros transformation -->
+    <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
+          args="0 0 0 0 0 0 world odom 10"/>
+
+    <!-- Launch PX4 SITL -->
+    <include file="$(find px4)/launch/px4.launch">
+        <arg name="vehicle" value="$(arg vehicle)"/>
+    </include>
+
+    <!-- Launch MavROS -->
+    <group ns="$(arg ns)">
+        <include file="$(find mavros)/launch/node.launch">
+            <arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
+            <!-- Need to change the config file to get the tf topic and get local position in terms of local origin -->
+            <arg name="config_yaml" value="$(find prometheus_gazebo)/config/px4_config.yaml" />
+            <arg name="fcu_url" value="$(arg fcu_url)" />
+            <arg name="gcs_url" value="$(arg gcs_url)" />
+            <arg name="tgt_system" value="$(arg tgt_system)" />
+            <arg name="tgt_component" value="$(arg tgt_component)" />
+        </include>
+    </group>
+
+    <!-- Launch Gazebo -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="gui" value="$(arg gui)"/>
+      <arg name="world_name" value="$(find prometheus_gazebo)/worlds/race_track.world"/>
+    </include>
+
+    <!-- Spawn vehicle model -->
+    <node name="spawn_model" pkg="gazebo_ros" type="spawn_model" output="screen"
+          args="-sdf -database iris_realsense_camera -model $(arg vehicle)">
+    </node>
+    
+    <node pkg="prometheus_gazebo" type="keyboard_control_px4.py" name="keyboard_control_px4" output="screen" launch-prefix="gnome-terminal --tab -e">
+    </node>
+</launch>
