@@ -11,6 +11,7 @@ find_package(catkin REQUIRED
     rospy
     geometry_msgs
     sensor_msgs
+    nav_msgs
     std_msgs
     cv_bridge
     tf
@@ -47,6 +48,8 @@ add_executable(${PROJECT_NAME}_node
 )
 add_executable(map_building_node src/map_building/pointcloud_to_octomap_node.cpp)
 
+add_executable(rgbd_map_node src/map_building/rgbd_octomap_node.cpp)
+
 target_link_libraries(${PROJECT_NAME}_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBS}
@@ -56,6 +59,12 @@ target_link_libraries(${PROJECT_NAME}_node
 target_link_libraries(map_building_node
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
+    ${OCTOMAP_LIBRARIES} 
+)
+target_link_libraries(rgbd_map_node
+    ${catkin_LIBRARIES}
+    ${PCL_LIBRARIES}
+    ${OpenCV_LIBS}
     ${OCTOMAP_LIBRARIES} 
 )
 
