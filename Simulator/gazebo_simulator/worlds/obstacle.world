@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Testing the automatic population of objects -->
+    <population name="pillar_s_population">
+      <model name="pillar_s">
+        <include>
+          <static>true</static>
+          <uri>model://pillar_s</uri>
+        </include>
+      </model>
+      <pose>0 0 0 0 0 0</pose>
+      <box>
+        <size>8 8 0.01</size>
+      </box>
+      <model_count>9</model_count>
+      <distribution>
+        <type>random</type>
+      </distribution>
+    </population>
+    <population name="pillar_m_population">
+      <model name="pillar_m">
+        <include>
+          <static>true</static>
+          <uri>model://pillar_m</uri>
+        </include>
+      </model>
+      <pose>0 0 0 0 0 0</pose>
+      <box>
+        <size>8 8 0.01</size>
+      </box>
+      <model_count>5</model_count>
+      <distribution>
+        <type>random</type>
+      </distribution>
+    </population>
+
+  </world>
+</sdf>
+
