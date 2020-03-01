@@ -1,80 +1,12 @@
 <launch>
-    <!-- vehicle pose -->
-	<arg name="x" default="0"/>
-    <arg name="y" default="0"/>
-    <arg name="z" default="0"/>
-    <arg name="R" default="0"/>
-    <arg name="P" default="0"/>
-    <arg name="Y" default="0"/>
-	<!-- vehicle model and world -->
-    <arg name="est" default="ekf2"/>
-    <arg name="vehicle" default="iris"/>
-	<env name="PX4_SIM_MODEL" value="$(arg vehicle)" />
-    <env name="PX4_ESTIMATOR" value="$(arg est)" />
-	
-	<!-- PX4 configs -->
-    <arg name="interactive" default="true"/>
-    <!-- PX4 SITL -->
-	<arg unless="$(arg interactive)" name="px4_command_arg1" value="-d"/>
-    <arg     if="$(arg interactive)" name="px4_command_arg1" value=""/>
-    <node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)" required="true"/>
-
-	<!-- Gazebo configs -->
-    <arg name="gui" default="true"/>
+	<!-- Launch Gazebo Simulation -->
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/qrcode.world"/>
-	<!-- Launch Gazebo -->
-    <include file="$(find gazebo_ros)/launch/empty_world.launch">
-      <arg name="gui" value="$(arg gui)"/>
-      <arg name="world_name" value="$(arg world)"/>
-    </include>
-
-	<!-- Spawn vehicle model -->
-	<!--<arg name="sdf" default="$(find prometheus_gazebo)/models/iris/iris.sdf"/>-->
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera_qrcode/iris_realsense_camera_qrcode.sdf"/>
 	<arg name="model" default="iris_realsense_camera_qrcode"/>
-	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
-		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
-	</node>
-
-	<!-- Move the QRCode -->
-	<arg name="qrcode_move" default="false"/>
-	<group if="$(arg qrcode_move)">
-	<node pkg="prometheus_gazebo" type="qrcode_control.py" name="qrcode_control" output="screen" launch-prefix="gnome-terminal --tab --"/>
-    </group>
-
-    <!-- MAVROS configs -->
-    <arg name="fcu_url" default="udp://:14540@localhost:14557"/>
-	<arg name="gcs_url" default="" />
-	<arg name="tgt_system" default="1" />
-	<arg name="tgt_component" default="1" />
-	<arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
-	<!-- Need to change the config file to get the tf topic and get local position in terms of local origin -->
-	<arg name="config_yaml" value="$(find prometheus_gazebo)/config/px4_config.yaml" />
-
-	<!-- MAVROS -->
-	<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
-		<param name="fcu_url" value="$(arg fcu_url)" />
-		<param name="gcs_url" value="$(arg gcs_url)" />
-		<param name="target_system_id" value="$(arg tgt_system)" />
-		<param name="target_component_id" value="$(arg tgt_component)" />
-		<!-- load blacklist, config -->
-		<rosparam command="load" file="$(arg pluginlists_yaml)" />
-		<rosparam command="load" file="$(arg config_yaml)" />
-	</node>
-	
-	<!-- run the px4_pos_estimator.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen" launch-prefix="gnome-terminal --tab --">
-		<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
-	</node>
-	
-	<!-- run the px4_pos_controller.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen" launch-prefix="gnome-terminal --tab --">
-		<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
-	</node>
-	
-	<!-- run the ground_station.cpp -->
-	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --">	
-	</node>
+    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+	  <arg name="world" value="$(arg world)"/>
+	  <arg name="sdf" value="$(arg sdf)"/>
+    </include>
 
 	<!-- run the autonomous_landing.cpp -->
 	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
