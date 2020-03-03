@@ -1,0 +1,125 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <physics type='ode'>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>1000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1000.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+    <!-- Testing the automatic population of objects -->
+    <model name='room'>
+      <include>
+        <uri>model://room_obs</uri>
+        <pose>0 0 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_l_1'>
+      <include>
+        <uri>model://pillar_l</uri>
+        <pose>0 0 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_m_1'>
+      <include>
+        <uri>model://pillar_m</uri>
+        <pose>2 1.6 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_m_2'>
+      <include>
+        <uri>model://pillar_m</uri>
+        <pose>1.8 -2.3 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_m_3'>
+      <include>
+        <uri>model://pillar_m</uri>
+        <pose>-1 2 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_m_4'>
+      <include>
+        <uri>model://pillar_m</uri>
+        <pose>-2.5 -1 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_1'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>1 3 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_2'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>3.5 3.5 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_3'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>3 -1 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_4'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>0.5 -3.4 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_5'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>0 -2 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_6'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>-1 -3 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_7'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>-3.4 -3.3 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_8'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>-2.5 1 0 0 0 0</pose>
+      </include>
+    </model>
+    <model name='pillar_s_9'>
+      <include>
+        <uri>model://pillar_s</uri>
+        <pose>-2.5 3 0 0 0 0</pose>
+      </include>
+    </model>
+  </world>
+</sdf>

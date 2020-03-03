@@ -82,23 +82,23 @@ boost::shared_mutex mutex_image_callback;
 bool image_status = false;
 boost::shared_mutex mutex_image_status;
 
-//无人机位姿message
+// 无人机位姿message
 geometry_msgs::Pose pos_drone_optitrack;
 Eigen::Vector3d euler_drone_optitrack;
 Eigen::Quaterniond q_drone;
-//小车位姿message
+// 小车位姿message
 geometry_msgs::Pose pos_vehicle_optitrack;
 Eigen::Vector3d euler_vehicle_optitrack;
 Eigen::Quaterniond q_vehicle;
 
-//保存的上次观测的位置 用于cluster算法使用
+// 保存的上次观测的位置 用于cluster算法使用
 Eigen::Vector3d last_position;
 bool bool_last_position=false;
 
 //-----------------利用Euler角进行三次旋转得到无人机相对目标的位置------------------
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
 {
-    double x1 = x;//将变量拷贝一次，保证&x == &outx这种情况下也能计算正确
+    double x1 = x;  // 将变量拷贝一次，保证&x == &outx这种情况下也能计算正确
     double y1 = y;
     double rz = thetaz * CV_PI / 180;
     outx = cos(rz) * x1 - sin(rz) * y1;
@@ -114,7 +114,7 @@ void CodeRotateByY(double x, double z, double thetay, double& outx, double& outz
 }
 void CodeRotateByX(double y, double z, double thetax, double& outy, double& outz)
 {
-    double y1 = y;//将变量拷贝一次，保证&y == &y这种情况下也能计算正确
+    double y1 = y;  // 将变量拷贝一次，保证&y == &y这种情况下也能计算正确
     double z1 = z;
     double rx = thetax * CV_PI / 180;
     outy = cos(rx) * y1 - sin(rx) * z1;
@@ -127,12 +127,12 @@ void quaternion_2_euler(Eigen::Quaterniond quat, Eigen::Vector3d &angle)
 {
     angle(0) = atan2(2.0 * (quat.z() * quat.y() + quat.w() * quat.x()), 1.0 - 2.0 * (quat.x() * quat.x() + quat.y() * quat.y()));
     angle(1) = asin(2.0 * (quat.y() * quat.w() - quat.z() * quat.x()));
-  //angle[2] = atan2(2.0 * (quat[3] * quat[0] + quat[1] * quat[2]), -1.0 + 2.0 * (quat[0] * quat[0] + quat[1] * quat[1]));
+    // angle[2] = atan2(2.0 * (quat[3] * quat[0] + quat[1] * quat[2]), -1.0 + 2.0 * (quat[0] * quat[0] + quat[1] * quat[1]));
     angle(2) = atan2(2.0 * (quat.z() * quat.w() + quat.x() * quat.y()), 1.0 - 2.0 * (quat.y() * quat.y() + quat.z() * quat.z()));
 }
 
 //--------------------------利用optitrack获取真值-------------------------------
-//optitrack获取无人机位姿
+// optitrack获取无人机位姿
 void optitrack_drone_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
     pos_drone_optitrack.position.x = msg->pose.position.y;
@@ -144,7 +144,7 @@ void optitrack_drone_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
     q_drone.z()=msg->pose.orientation.z;
     quaternion_2_euler(q_drone,euler_drone_optitrack);
 }
-//optitrack获取地面小车位姿
+// optitrack获取地面小车位姿
 void optitrack_vehicle_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
     pos_vehicle_optitrack.position.x = msg->pose.position.y;
@@ -157,7 +157,7 @@ void optitrack_vehicle_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
     quaternion_2_euler(q_vehicle,euler_vehicle_optitrack);
 }
 
-//获取系统时间
+// 获取系统时间
 float get_dt(ros::Time last)
 {
     ros::Time time_now = ros::Time::now();
@@ -242,14 +242,14 @@ int main(int argc, char **argv)
 
     std::string ros_path = ros::package::getPath("prometheus_detection");
     cout << "DETECTION_PATH: " << ros_path << endl;
-    //读取参数文档camera_param.yaml中的参数值；
+    // 读取参数文档camera_param.yaml中的参数值；
     YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/" + camera_info);
-    //相机内部参数
+    // 相机内部参数
     double fx = camera_config["fx"].as<double>();
     double fy = camera_config["fy"].as<double>();
     double cx = camera_config["x0"].as<double>();
     double cy = camera_config["y0"].as<double>();
-    //相机畸变系数
+    // 相机畸变系数
     double k1 = camera_config["k1"].as<double>();
     double k2 = camera_config["k2"].as<double>();
     double p1 = camera_config["p1"].as<double>();
@@ -257,11 +257,11 @@ int main(int argc, char **argv)
     double k3 = camera_config["k3"].as<double>();
 
     double landpad_det_len = camera_config["landpad_det_len"].as<double>();
-
+    // DEBUG
     // cout << fx << " " << fy << " " << cx << " " << cy << " " << k1 << " " << k2 << " ";
 
     //--------------------------相机参数赋值---------------------
-    //相机内参
+    // 相机内参
     Mat camera_matrix;
     camera_matrix =cv::Mat(3,3,CV_64FC1,cv::Scalar::all(0));
     camera_matrix.ptr<double>(0)[0] = fx;
@@ -269,7 +269,7 @@ int main(int argc, char **argv)
     camera_matrix.ptr<double>(1)[1] = fy;
     camera_matrix.ptr<double>(1)[2] = cy;
     camera_matrix.ptr<double>(2)[2] = 1.0f;
-    //相机畸变参数k1 k2 p1 p2 k3
+    // 相机畸变参数k1 k2 p1 p2 k3
     Mat distortion_coefficients;
     distortion_coefficients=cv::Mat(5,1,CV_64FC1,cv::Scalar::all(0));
     distortion_coefficients.ptr<double>(0)[0] = k1;
@@ -278,7 +278,7 @@ int main(int argc, char **argv)
     distortion_coefficients.ptr<double>(3)[0] = p2;
     distortion_coefficients.ptr<double>(4)[0] = k3;
 
-    //ArUco Marker字典选择以及旋转向量和评议向量初始化
+    // ArUco Marker字典选择以及旋转向量和评议向量初始化
     Ptr<cv::aruco::Dictionary> dictionary=cv::aruco::getPredefinedDictionary(10);
     vector<double> rv(3),tv(3);
     cv::Mat rvec(rv),tvec(tv);
@@ -286,7 +286,7 @@ int main(int argc, char **argv)
     float last_x(0), last_y(0), last_z(0), last_yaw(0);
 
 
-    //节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
+    // 节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate loopRate(20);
     ros::Rate loopRate_1Hz(1);
     //----------------------------------------主循环------------------------------------
@@ -312,7 +312,7 @@ int main(int argc, char **argv)
 
 
         //------------------调用ArUco Marker库对图像进行识别--------------
-        //markerids存储每个识别到二维码的编号  markerCorners每个二维码对应的四个角点的像素坐标
+        // markerids存储每个识别到二维码的编号  markerCorners每个二维码对应的四个角点的像素坐标
         std::vector<int> markerids;
         vector<vector<Point2f> > markerCorners,rejectedCandidate;
         Ptr<cv::aruco::DetectorParameters> parameters=cv::aruco::DetectorParameters::create();
@@ -321,7 +321,7 @@ int main(int argc, char **argv)
         //-------------------多于一个目标被识别到，进入算法-----------------
         if (markerids.size()>0)
         {
-            //未处理后的位置
+            // 未处理后的位置
             vector<cv::Point3f> vec_Position_OcInW;
             vector<double> vec_yaw;
             cv::Point3f A1_Sum_Position_OcInW(0,0,0);
@@ -330,14 +330,12 @@ int main(int argc, char **argv)
             for(int t=0;t<markerids.size();t++)
             {
                 cv::Mat RoteM, TransM;
-                //C2W代表 相机坐标系转换到世界坐标系  W2C代表 世界坐标系转换到相机坐标系 Theta为欧拉角
+                // C2W代表 相机坐标系转换到世界坐标系  W2C代表 世界坐标系转换到相机坐标系 Theta为欧拉角
                 cv::Point3f Theta_C2W;
                 cv::Point3f Theta_W2C;
                 cv::Point3f Position_OcInW;
 
                 // 大二维码：19，小二维码：43
-                // cout << "markerids" << markerids[t] << endl;
-
                 //--------------对每一个Marker的相对位置进行解算----------------
                 vector<vector<Point2f> > singMarkerCorner_19, singMarkerCorner_43;
                 if (markerids[t] == 19)
@@ -356,10 +354,10 @@ int main(int argc, char **argv)
                     break;
                 }
 
-                //将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
+                // 将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
                 double rm[9];
                 RoteM = cv::Mat(3, 3, CV_64FC1, rm);
-                //利用罗德里格斯公式将旋转向量转成旋转矩阵
+                // 利用罗德里格斯公式将旋转向量转成旋转矩阵
                 Rodrigues(rvec, RoteM);
                 double r11 = RoteM.ptr<double>(0)[0];
                 double r12 = RoteM.ptr<double>(0)[1];
@@ -371,7 +369,7 @@ int main(int argc, char **argv)
                 double r32 = RoteM.ptr<double>(2)[1];
                 double r33 = RoteM.ptr<double>(2)[2];
                 TransM = tvec;
-                //计算欧拉角
+                // 计算欧拉角
                 double thetaz = atan2(r21, r11) / CV_PI * 180;
                 double thetay = atan2(-1 * r31, sqrt(r32*r32 + r33*r33)) / CV_PI * 180;
                 double thetax = atan2(r32, r33) / CV_PI * 180;
@@ -383,13 +381,13 @@ int main(int argc, char **argv)
                 Theta_W2C.x = -1 * thetax;
                 Theta_W2C.y = -1 * thetay;
                 Theta_W2C.z = -1 * thetaz;
-                //偏移向量
+                // 偏移向量
                 tx = tvec.ptr<double>(0)[0];
                 ty = tvec.ptr<double>(0)[1];
                 tz = tvec.ptr<double>(0)[2];
                 double x = tx, y = ty, z = tz;
 
-                //进行三次旋转得到相机光心在世界坐标系的位置
+                // 进行三次旋转得到相机光心在世界坐标系的位置
                 CodeRotateByZ(x, y, -1 * thetaz, x, y);
                 CodeRotateByY(x, z, -1 * thetay, x, z);
                 CodeRotateByX(y, z, -1 * thetax, y, z);
@@ -397,80 +395,28 @@ int main(int argc, char **argv)
                 Position_OcInW.y = y*-1;
                 Position_OcInW.z = z*-1;
 
-                //计算偏航角之差
+                // 计算偏航角之差
                 Eigen::Matrix3d rotateMatrix;
-                rotateMatrix<<r11,r12,r13,r21,r22,r23,r31,r32,r33;
+                rotateMatrix << r11,r12,r13,r21,r22,r23,r31,r32,r33;
                 Eigen::Vector3d eulerVec;
-                eulerVec(0)=(Theta_C2W.z+90)/180*CV_PI;
+                eulerVec(0) = (Theta_C2W.z + 90) / 180 * CV_PI;
                 vec_yaw.push_back(eulerVec(0));
-
-                //根据Marker ID对相对位置进行偏移
-                switch (markerids[t])
-                {
-                    case 1:
-                    {
-                        Position_OcInW.x-=0.175;
-                        Position_OcInW.y+=0.175;
-                        break;
-                    }
-                    case 2:
-                    {
-                        Position_OcInW.y+=0.2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        Position_OcInW.x+=0.175;
-                        Position_OcInW.y+=0.175;
-                        break;
-                    }
-                    case 4:
-                    {
-                        Position_OcInW.x-=0.2;
-                        break;
-                    }
-                    case 5:
-                        break;
-                    case 6:
-                    {
-                        Position_OcInW.x+=0.2;
-                        break;
-                    }
-                    case 7:
-                    {
-                        Position_OcInW.x-=0.175;
-                        Position_OcInW.y-=0.175;
-                        break;
-                    }
-                    case 8:
-                    {
-                        Position_OcInW.y-=0.2;
-                        break;
-                    }
-                    case 9:
-                    {
-                        Position_OcInW.x+=0.175;
-                        Position_OcInW.y-=0.175;
-                        break;
-                    }
-                }
-                //------------switch结束------------
                 vec_Position_OcInW.push_back(Position_OcInW);
 
-                A1_Sum_Position_OcInW+=Position_OcInW;
-                A1_Sum_yaw+=eulerVec(0); //待修改
+                A1_Sum_Position_OcInW += Position_OcInW;
+                A1_Sum_yaw += eulerVec(0); // 待修改
                 
                 
             }
-            //解算位置的平均值
+            // 解算位置的平均值
             cv::Point3f A1_Position_OcInW(0,0,0);
-            double A1_yaw=0.0;
-            int marker_count=markerids.size();
-            A1_Position_OcInW=A1_Sum_Position_OcInW/marker_count;
-            A1_yaw=A1_Sum_yaw/marker_count;
+            double A1_yaw = 0.0;
+            int marker_count = markerids.size();
+            A1_Position_OcInW = A1_Sum_Position_OcInW / marker_count;
+            A1_yaw = A1_Sum_yaw / marker_count;
 
 
-            //将解算后的位置发给控制端
+            // 将解算后的位置发给控制端
             pose_now.header.stamp = ros::Time::now();
             pose_now.detected = true;
             pose_now.frame = 0;
@@ -483,18 +429,6 @@ int main(int argc, char **argv)
             last_y = pose_now.position[1];
             last_z = pose_now.position[2];
             last_yaw = pose_now.yaw_error;
-
-            // geometry_msgs::Pose point_msg;
-            // point_msg.position.x=-A1_Position_OcInW.x;
-            // point_msg.position.y=A1_Position_OcInW.y;
-            // point_msg.position.z=A1_Position_OcInW.z;
-            
-
-            // geometry_msgs::Pose yaw_msg;
-            // yaw_msg.orientation.w=A1_yaw;
-            // yaw_pub.publish(yaw_msg);
-            // flag_position.orientation.w=1;
-            // position_flag_pub.publish(flag_position);
         }
         else
         {
@@ -508,14 +442,14 @@ int main(int argc, char **argv)
         }
         position_pub.publish(pose_now);
         
-        //计算算法运行时间
+        // 计算算法运行时间
         clock_t finish=clock();
         calculation_time=(finish-start)/1000;
         
-        //打印
+        // 打印
         printf_result();
 
-        //画出识别到的二维码
+        // 画出识别到的二维码
         cv::aruco::drawDetectedMarkers(img,markerCorners,markerids);
 
         
@@ -528,11 +462,11 @@ int main(int argc, char **argv)
 }
 void printf_result()
 {
-    //固定的浮点显示
+    // 固定的浮点显示
     cout.setf(ios::fixed);
-    //setprecision(n) 设显示小数精度为n位
+    // setprecision(n) 设显示小数精度为n位
     cout<<setprecision(4);
-    //左对齐
+    // 左对齐
     cout.setf(ios::left);
     // 强制显示小数点
     cout.setf(ios::showpoint);
