@@ -37,12 +37,6 @@ using namespace std;
 using namespace cv;
 
 
-#define MARKER_SIZE 0.18
-#define F1 300
-#define F2 300
-#define C1 320
-#define C2 240
-
 static const std::string RGB_WINDOW = "RGB Image window";
 
 // 相机话题中的图像同步相关变量
@@ -92,9 +86,11 @@ bool getImageStatus(void)
 }
 
 //! ROS subscriber and publisher.
+//【订阅】输入图像
 image_transport::Subscriber imageSubscriber_;
+//【发布】目标位置
 ros::Publisher pose_pub;
-
+prometheus_msgs::DetectionInfo pose_now;
 
 cv::Rect selectRect;
 cv::Point origin;
@@ -155,36 +151,40 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(30);
     
     // 接收图像的话题
-    imageSubscriber_ = it.subscribe("/camera/rgb/image_raw", 1, cameraCallback);
+    imageSubscriber_ = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
 
     // 跟踪结果，xyz
-    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/vision/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
 
     std::string ros_path = ros::package::getPath("prometheus_detection");
     cout << "DETECTION_PATH: " << ros_path << endl;
-    //读取参数文档camera_param.yaml中的参数值；
+    // 读取参数文档camera_param.yaml中的参数值；
     YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
-    //相机内部参数
+    // 相机内部参数
     double fx = camera_config["fx"].as<double>();
     double fy = camera_config["fy"].as<double>();
     double cx = camera_config["x0"].as<double>();
     double cy = camera_config["y0"].as<double>();
-    //相机畸变系数
+    // 相机畸变系数
     double k1 = camera_config["k1"].as<double>();
     double k2 = camera_config["k2"].as<double>();
     double p1 = camera_config["p1"].as<double>();
     double p2 = camera_config["p2"].as<double>();
     double k3 = camera_config["k3"].as<double>();
 
+    double kcf_tracker_h = camera_config["kcf_tracker_h"].as<double>();
+
     const auto wait_duration = std::chrono::milliseconds(2000);
 
     cv::namedWindow(RGB_WINDOW);
     cv::setMouseCallback(RGB_WINDOW, onMouse, 0);
+    float last_x(0), last_y(0), last_z(0);
+
     while (ros::ok())
     {
-        while (!getImageStatus()) 
+        while (!getImageStatus() && ros::ok()) 
         {
             printf("Waiting for image.\n");
             std::this_thread::sleep_for(wait_duration);
@@ -198,6 +198,7 @@ int main(int argc, char **argv)
         }
         static bool need_tracking_det = false;
 
+        bool detected = false;
         if (bRenewROI)
         {
             tracker.init(selectRect, frame);
@@ -209,7 +210,35 @@ int main(int argc, char **argv)
         {
             result = tracker.update(frame);
             cv::rectangle(frame, result, cv::Scalar(255, 0, 0), 2, 8, 0);
+
+            // 将解算后的位置发给控制端
+            detected = true;
+            pose_now.header.stamp = ros::Time::now();
+            pose_now.detected = true;
+            pose_now.frame = 0;
+            double depth = kcf_tracker_h / result.height * fy;
+            double cx = result.x + result.width / 2 - frame.cols / 2;
+            double cy = result.y + result.height / 2 - frame.rows / 2;
+            pose_now.position[0] = depth * cx / fx;
+            pose_now.position[1] = depth * cy / fy;
+            pose_now.position[2] = depth;
+
+            last_x = pose_now.position[0];
+            last_y = pose_now.position[1];
+            last_z = pose_now.position[2];
         }
+
+        if (!detected)
+        {
+            pose_now.header.stamp = ros::Time::now();
+            pose_now.detected = false;
+            pose_now.frame = 0;
+            pose_now.position[0] = last_x;
+            pose_now.position[1] = last_y;
+            pose_now.position[2] = last_z;
+        }
+
+        pose_pub.publish(pose_now);
 
         imshow(RGB_WINDOW, frame);
         waitKey(5);

@@ -416,7 +416,7 @@ int main(int argc, char **argv)
             A1_yaw = A1_Sum_yaw / marker_count;
 
 
-            //将解算后的位置发给控制端
+            // 将解算后的位置发给控制端
             pose_now.header.stamp = ros::Time::now();
             pose_now.detected = true;
             pose_now.frame = 0;
