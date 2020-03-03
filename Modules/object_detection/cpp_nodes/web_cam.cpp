@@ -30,12 +30,13 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "web_cam");
     ros::NodeHandle nh;
     image_transport::ImageTransport it(nh);
-    ros::Rate loop_rate(30);
+    ros::Rate loop_rate(60);
     // 在这里修改发布话题名称
     image_pub = it.advertise("/prometheus/camera/rgb/image_raw", 1);
 
     // 用系统默认驱动读取摄像头0，使用其他摄像头ID，请在这里修改
-    cv::VideoCapture cap(0);
+    int camera_id = 0;
+    cv::VideoCapture cap(camera_id);
     // 设置摄像头分辨率
     // cap.set(CAP_PROP_FRAME_WIDTH, image_size.height);
     // cap.set(CAP_PROP_FRAME_HEIGHT, image_size.width);
@@ -46,8 +47,10 @@ int main(int argc, char **argv)
 
     sensor_msgs::ImagePtr msg;
 
+    long frame_cnt(0);
+    bool cant_open(false);
     while (ros::ok())
-  {
+    {
         cap >> frame;
         if (!frame.empty())
         {
@@ -55,10 +58,24 @@ int main(int argc, char **argv)
             // resize(frame, frame, image_size);
             // imshow("web_cam frame", frame);
             // waitKey(5);
+            if (0 == frame_cnt)
+            {
+                int fps = cap.get(CAP_PROP_FPS);
+                ROS_INFO("Camera %d opened, resolution: %d x %d, fps: %d", camera_id, frame.cols, frame.rows, fps);
+            }
             // 设置图像帧格式->bgr8
             msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
             // 将图像通过话题发布出去
             image_pub.publish(msg);
+            frame_cnt += 1;
+        }
+        else
+        {
+            if (!cant_open)
+            {
+                cant_open = true;
+                ROS_WARN("Can not open camera %d.", camera_id);
+            }
         }
         ros::spinOnce();
         // 按照设定的帧率延时，ros::Rate loop_rate(30)
