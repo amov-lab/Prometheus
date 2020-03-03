@@ -34,9 +34,11 @@ const std::string kCoordinateType("world");
 typedef pcl::PointXYZRGB PointT;
 typedef pcl::PointCloud<PointT> PointCloud;
 PointCloud *pointCloud = new PointCloud;
+sensor_msgs::PointCloud2 output;
 // 构造八叉树
 auto kOctoTree = std::make_shared<octomap::ColorOcTree>(kOctomapResolution);
 ros::Publisher k_octomap_pub;
+ros::Publisher pcl_pub;
 //【构造八叉树】 将点云的消息构造八叉树
 void PointcloudToOctomap(const sensor_msgs::PointCloud2ConstPtr &pointCloudMsg)
 {
@@ -71,6 +73,7 @@ void cloud_to_octomap_callback(const sensor_msgs::PointCloud2ConstPtr &pointClou
   octomapMsg.header.stamp = ros::Time::now();
   k_octomap_pub.publish(octomapMsg);
 }
+
 void rgbd_mapping_callback(const nav_msgs::OdometryConstPtr &odom, const sensor_msgs::ImageConstPtr &depth)
 {
   // Transfer quaternion into matrix
@@ -119,6 +122,9 @@ void rgbd_mapping_callback(const nav_msgs::OdometryConstPtr &odom, const sensor_
       pointCloud->points.push_back(p);
     }
   pointCloud->is_dense = false;
+  pcl::toROSMsg(*pointCloud, output);
+  output.header.frame_id = "map";
+  pcl_pub.publish(output);
   pcl::io::savePCDFileBinary("map.pcd", *pointCloud);
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -138,6 +144,7 @@ int main(int argc, char **argv)
 
   sync.registerCallback(boost::bind(&rgbd_mapping_callback, _1, _2));
   //k_octomap_pub = nh.advertise<octomap_msgs::Octomap>("prometheus/octomap_output", 1);
+  pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("prometheus/pointcloud", 1);
   ros::spin();
 
   return 0;
