@@ -1,4 +1,4 @@
-<sdf version='1.6'>
+<sdf version='1.5'>
   <world name='default'>
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
