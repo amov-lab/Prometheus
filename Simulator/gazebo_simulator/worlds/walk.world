@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<sdf version="1.6">
+<sdf version="1.5">
   <world name="default">
     <include>
       <uri>model://sun</uri>
@@ -8,6 +8,7 @@
       <uri>model://ground_plane</uri>
     </include>
     <physics type='ode'>
+      <gravity>0 0 -9.8066</gravity>
       <ode>
         <solver>
           <type>quick</type>
@@ -25,6 +26,7 @@
       <max_step_size>0.004</max_step_size>
       <real_time_factor>1000.0</real_time_factor>
       <real_time_update_rate>250</real_time_update_rate>
+      <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
     </physics>
     <include>
       <uri>model://gas_station</uri>
