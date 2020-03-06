@@ -37,6 +37,7 @@ rosrun prometheus_detection web_cam  # 启动相机节点，如需修改相机ID
 ```
 1.降落板检测(降落板的具体描述见附录1.1)
 ```
+# 请尽量选择后面两个roslaunch来运行节点
 rosrun prometheus_detection landpad_det
 # 对于默认的web_cam 
 # 默认话题为: /prometheus/camera/rgb/image_raw
@@ -57,7 +58,15 @@ rosrun prometheus_detection ellipse_det -wt # 带训练的指定椭圆
 ```
 4.目标跟踪
 ```
-rosrun prometheus_detection tracker_kcf
+# 请尽量选择后面两个roslaunch来运行节点
+rosrun prometheus_detection kcf_tracker
+# 对于默认的web_cam 
+# 默认话题为: /prometheus/camera/rgb/image_raw
+roslaunch prometheus_detection tracker_kcf.launch
+# 对于Simulator中gazebo行人跟踪仿真环境
+# 运行仿真环境 roslaunch prometheus_gazebo sitl_pedestrain_detection.launch
+# 仿真环境中的图像话题为: /realsense_plugin/camera/color/image_raw
+roslaunch prometheus_detection tracker_kcf_gazebo.launch
 ```
 3.YOLO检测
 ```
