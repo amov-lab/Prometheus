@@ -629,7 +629,7 @@ namespace dyn_planner {
 
         fill(distance_buffer_.begin(), distance_buffer_.end(), 10000);
         fill(distance_buffer_neg_.begin(), distance_buffer_neg_.end(), 10000);
-        fill(occupancy_buffer_.begin(), occupancy_buffer_.end(), 0.0);
+        fill(occupancy_buffer_.begin(), occupancy_buffer_.end(), 0);
 
     }
 
@@ -661,39 +661,6 @@ namespace dyn_planner {
                     pos_vec.push_back(current_pos);
                 }
     }
-
-
-// jiangtao add
-bool SDFMap::get_arround_force(const Eigen::Matrix<double, 3, 1> current_odom, const double detect_distance,
-                           Eigen::Matrix<double, 3, 1> &pull_force){
-        Eigen::Vector3i idx;
-        posToIndex(current_odom, idx);
-
-        Eigen::Vector3i idx_ijk;
-        Eigen::Matrix<double, 3, 1> force_single;
-        int ind_dist = floor(detect_distance * resolution_inv_);
-        for(int i(-ind_dist); i<=ind_dist; i++){
-            for(int j(-ind_dist); j<=ind_dist; j++){
-                for(int k(-ind_dist); k<=ind_dist; k++){
-                    idx_ijk = idx + Eigen::Matrix<int, 3, 1>(i, j, k);
-                    if(getOccupancy(idx_ijk)){
-                        Eigen::Matrix<double, 3, 1> pos_ijk;
-
-                        indexToPos(idx_ijk, pos_ijk);
-                        Eigen::Matrix<double, 3, 1> error_ijk = (current_odom - pos_ijk);
-                        double ijk_norm = error_ijk.norm();
-                        if(ijk_norm<1e-3){
-//                            error_ijk =
-                        }
-                        force_single += (pos_ijk - current_odom);
-
-                    }
-                }
-            }
-        }
-        printf("total force: \n");
-
-}
 
 
 // SDFMap::

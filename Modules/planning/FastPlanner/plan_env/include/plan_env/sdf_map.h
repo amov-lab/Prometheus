@@ -108,9 +108,6 @@ public:
   void getESDFMarker(vector<visualization_msgs::Marker>& markers, int id, Eigen::Vector3d color);
   double getMaxDistance();
 
-  bool get_arround_force(const Eigen::Matrix<double, 3, 1> current_odom, const double detect_distance,
-          Eigen::Matrix<double, 3, 1> &pull_force);
-
   void publishESDF();
 
   typedef shared_ptr<SDFMap> Ptr;
