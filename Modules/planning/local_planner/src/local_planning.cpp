@@ -8,14 +8,16 @@ namespace local_planner
 {
 
 void PotentialFiledPlanner::init(ros::NodeHandle& nh){
-
+    // set mode
     flight_type_ = FLIGHT_TYPE::MANUAL_GOAL;
+    // set algorithm
     apf_planner_ptr.reset(new APF);
     apf_planner_ptr->init(nh);
 
     sensor_msgs::PointCloud2ConstPtr init_local_map(new sensor_msgs::PointCloud2());
     local_map_ptr_ = init_local_map;
-
+    
+    // ros param
     nh.param("local_planning/is_simulation", is_simulation, 0);
 
     // init visualization
@@ -46,7 +48,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     have_odom_=false;
     ROS_INFO("---planning_fsm: init finished!---");
 
-    // 6. loop
+    // loop
     ros::spin();
 }
 

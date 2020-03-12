@@ -117,11 +117,14 @@ void rcvOdometryCallbck(const nav_msgs::Odometry odom)
 int i = 0;
 void pubSensedPoints()
 {
-  // if (i < 10) {
-  pcl::toROSMsg(cloudMap, globalMap_pcd);
-  globalMap_pcd.header.frame_id = "world";
-  _all_map_pub.publish(globalMap_pcd);
-  // }
+  if (i  == 50) {
+    pcl::toROSMsg(cloudMap, globalMap_pcd);
+    globalMap_pcd.header.frame_id = "world";
+    _all_map_pub.publish(globalMap_pcd);
+    i=0;
+  }else{
+    i++;
+  }
 
 
   if (!_map_ok || !_has_odom){
@@ -181,8 +184,8 @@ int main(int argc, char** argv)
   n.param("init_state_x", _init_x, 0.0);
   n.param("init_state_y", _init_y, 0.0);
 
-  n.param("map/x_size", _x_size, 50.0);
-  n.param("map/y_size", _y_size, 50.0);
+  n.param("map/x_size", _x_size, 10.0);
+  n.param("map/y_size", _y_size, 10.0);
   n.param("map/z_size", _z_size, 5.0);
   n.param("map/obs_num", _obs_num, 30);
   n.param("map/resolution", _resolution, 0.2);
@@ -193,7 +196,7 @@ int main(int argc, char** argv)
   n.param("ObstacleShape/upper_hei", _h_h, 7.0);
 
   n.param("sensing/radius", _sensing_range, 10.0);
-  n.param("sensing/radius", _sense_rate, 10.0);
+  n.param("sensing/sense_rate", _sense_rate, 10.0);
 
   _x_l = -_x_size / 2.0;
   _x_h = +_x_size / 2.0;

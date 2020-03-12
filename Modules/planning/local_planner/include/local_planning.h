@@ -7,7 +7,7 @@
 #include <Eigen/Eigen>
 #include <iostream>
 #include <algorithm>
-#include <iostream>
+
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
@@ -90,10 +90,12 @@ private:
 
     ros::Publisher pos_cmd_pub, local_map_marker_Pub, px4_pos_cmd_pub;
 
+    // APF 算法 算子
     APF::Ptr apf_planner_ptr;
 
     PlanningVisualization::Ptr visualization_;
     int is_simulation;
+
 public:
 
     nav_msgs::Odometry odom_, odom__last;
