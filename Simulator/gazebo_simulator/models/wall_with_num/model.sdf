@@ -30,14 +30,15 @@
         </meta>
       </visual>
       <pose frame=''>0 -0.075 0 0 -0 0</pose>
-    <!--the model of number 0-->
+
     </link>
+
     <link name="num_0">
       <pose frame=''>3 0.05 1.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -54,7 +55,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -67,13 +68,13 @@
           </material>
        </visual>
     </link>
-    <!--the model of number 1-->
+
     <link name="num_1">
       <pose frame=''>1.5 0.05 1.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -90,7 +91,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -104,13 +105,13 @@
        </visual>
     </link>
 
-    <!--the model of number 2-->
+
     <link name="num_2">
       <pose frame=''>0 0.05 1.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -127,7 +128,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -141,13 +142,13 @@
        </visual>
     </link>
 
-    <!--the model of number 3-->
+
     <link name="num_3">
       <pose frame=''>-1.5 0.05 1.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -164,7 +165,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -178,13 +179,13 @@
        </visual>
     </link>
 
-    <!--the model of number 4-->
+
     <link name="num_4">
       <pose frame=''>-3 0.05 1.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -201,7 +202,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -215,13 +216,13 @@
        </visual>
     </link>
 
-    <!--the model of number 5-->
+
     <link name="num_5">
       <pose frame=''>3 0.05 0.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -238,7 +239,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -252,13 +253,13 @@
        </visual>
     </link>
 
-    <!--the model of number 6-->
+
     <link name="num_6">
       <pose frame=''>1.5 0.05 0.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -275,7 +276,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -289,13 +290,13 @@
        </visual>
     </link>
 
-    <!--the model of number 7-->
+
     <link name="num_7">
       <pose frame=''>0 0.05 0.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -312,7 +313,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -326,13 +327,13 @@
        </visual>
     </link>
 
-    <!--the model of number 8-->
+
     <link name="num_8">
       <pose frame=''>-1.5 0.05 0.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -349,7 +350,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -363,13 +364,13 @@
        </visual>
     </link>
 
-    <!--the model of number 9-->
+
     <link name="num_9">
       <pose frame=''>-3 0.05 0.5 1.5707963 0 -3.1415926</pose>
       <collision name="collision">
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
@@ -386,7 +387,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
              <plane>
-                <normal>0 0 1</normal>
+                <normal>0 0 0</normal>
                 <size>0.5 0.5</size>
              </plane>
           </geometry>
