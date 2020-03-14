@@ -15,7 +15,7 @@ find_package(catkin REQUIRED
     cv_bridge
     tf
 )
-find_package(OpenCV 3.2.0 REQUIRED)
+find_package(OpenCV REQUIRED)
 #find_package(PCL REQUIRED)
 
 catkin_package()
