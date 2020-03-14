@@ -1,0 +1,76 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='wall'>
+    <pose frame=''>-3.0225 -0.676 0 0 -0 0</pose>
+    <link name='Wall_2'>
+      <collision name='Wall_2_Collision'>
+        <geometry>
+          <box>
+            <size>5 0.15 2</size>
+          </box>
+        </geometry>
+        <pose frame=''>0 0 1 0 -0 0</pose>
+      </collision>
+      <visual name='Wall_2_Visual'>
+        <pose frame=''>0 0 1 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>5 0.15 2</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Bricks</name>
+          </script>
+          <ambient>1 1 1 1</ambient>
+        </material>
+        <meta>
+          <layer>0</layer>
+        </meta>
+      </visual>
+      <pose frame=''>-0.5225 -0.601 0 0 -0 0</pose>
+    </link>
+      <link name="link">
+         <collision name="collision">
+            <geometry>
+               <plane>
+                  <normal>0 0 1</normal>
+                  <size>1 1</size>
+               </plane>
+            </geometry>
+            <surface>
+               <friction>
+                  <ode>
+                     <mu>100</mu>
+                     <mu2>50</mu2>
+                  </ode>
+               </friction>
+            </surface>
+         </collision>
+         <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+               <plane>
+                  <normal>0 0 1</normal>
+                  <size>1 1</size>
+               </plane>
+            </geometry>
+            <material>
+               <script>
+                  <uri>model://chessboard/materials/scripts</uri>
+                  <uri>model://chessboard/materials/textures/</uri>
+                  <name>qrcode/Image</name>
+               </script>
+            </material>
+         </visual>
+      </link>
+    <static>1</static>
+
+
+
+
+
+
+  </model>
+</sdf>
