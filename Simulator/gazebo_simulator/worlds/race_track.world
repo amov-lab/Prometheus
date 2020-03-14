@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <sdf version='1.6'>
   <world name='dubai_track'>
     <physics name='default_physics' default='0' type='ode'>
