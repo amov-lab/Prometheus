@@ -1,0 +1,404 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='wall_with_num'>
+    <pose frame=''>0 0 0 0 0 0</pose>
+    <link name='Wall_2'>
+      <collision name='Wall_2_Collision'>
+        <geometry>
+          <box>
+            <size>7 0.15 2</size>
+          </box>
+        </geometry>
+        <pose frame=''>0 0 1 0 -0 0</pose>
+      </collision>
+      <visual name='Wall_2_Visual'>
+        <pose frame=''>0 0 1 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>7 0.15 2</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Bricks</name>
+          </script>
+          <ambient>1 1 1 1</ambient>
+        </material>
+        <meta>
+          <layer>0</layer>
+        </meta>
+      </visual>
+      <pose frame=''>0 -0.075 0 0 -0 0</pose>
+    <!--the model of number 0-->
+    </link>
+    <link name="num_0">
+      <pose frame=''>3 0.05 1.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/0</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+    <!--the model of number 1-->
+    <link name="num_1">
+      <pose frame=''>1.5 0.05 1.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/1</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 2-->
+    <link name="num_2">
+      <pose frame=''>0 0.05 1.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/2</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 3-->
+    <link name="num_3">
+      <pose frame=''>-1.5 0.05 1.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/3</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 4-->
+    <link name="num_4">
+      <pose frame=''>-3 0.05 1.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/4</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 5-->
+    <link name="num_5">
+      <pose frame=''>3 0.05 0.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/5</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 6-->
+    <link name="num_6">
+      <pose frame=''>1.5 0.05 0.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/6</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 7-->
+    <link name="num_7">
+      <pose frame=''>0 0.05 0.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/7</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 8-->
+    <link name="num_8">
+      <pose frame=''>-1.5 0.05 0.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/8</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+
+    <!--the model of number 9-->
+    <link name="num_9">
+      <pose frame=''>-3 0.05 0.5 1.5707963 0 -3.1415926</pose>
+      <collision name="collision">
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <surface>
+             <friction>
+                <ode>
+                   <mu>100</mu>
+                   <mu2>50</mu2>
+                </ode>
+             </friction>
+          </surface>
+       </collision>
+       <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+             <plane>
+                <normal>0 0 1</normal>
+                <size>0.5 0.5</size>
+             </plane>
+          </geometry>
+          <material>
+             <script>
+                <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
+                <uri>model://wall_with_num/materials/textures/</uri>
+                <name>Numbers/9</name>
+             </script>
+          </material>
+       </visual>
+    </link>
+    <static>1</static>
+  </model>
+</sdf>
