@@ -1,0 +1,179 @@
+material Numbers/0
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 0.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/1
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 1.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/2
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 2.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/3
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 3.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/4
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 4.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/5
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 5.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/6
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 6.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/7
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 7.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/8
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 8.jpg
+              }
+            }
+          }
+        }
+
+material Numbers/9
+        {
+          technique
+          {
+            pass
+            {
+              ambient 1 1 1 1.000000
+              diffuse 1 1 1 1.000000
+              specular 0.03 0.03 0.03 1.000000 
+
+              texture_unit
+              {
+                texture 9.jpg
+              }
+            }
+          }
+        }
