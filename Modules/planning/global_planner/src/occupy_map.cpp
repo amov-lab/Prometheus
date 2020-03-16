@@ -88,7 +88,7 @@ void Occupy_map::inflate_point_cloud(void){
     cloud_inflate_vis_.width = cloud_inflate_vis_.points.size();
     cloud_inflate_vis_.height = 1;
     cloud_inflate_vis_.is_dense = true;
-    cloud_inflate_vis_.header.frame_id = "world";
+    cloud_inflate_vis_.header.frame_id = "map";
 
     sensor_msgs::PointCloud2 map_inflate_vis;
     pcl::toROSMsg(cloud_inflate_vis_, map_inflate_vis);

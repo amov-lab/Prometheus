@@ -18,7 +18,7 @@
 #include <octomap/octomap.h>
 #include <octomap/ColorOcTree.h>
 
-#include <octomap_ros/conversions.h>
+// #include <octomap_ros/conversions.h>
 #include <octomap/OcTreeKey.h>
 
 
