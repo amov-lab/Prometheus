@@ -100,7 +100,7 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel){
     ros::Time time_now = ros::Time::now();
     cmd.header.stamp = time_now;
-    cmd.header.frame_id = "world";
+    cmd.header.frame_id = "map";
 
     cmd.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;  //TRAJECTORY
     cmd.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME; //ENU_FRAME
@@ -180,7 +180,7 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
 
 void PotentialFiledPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     odom_ = *msg;
-    odom_.header.frame_id = "world";
+    odom_.header.frame_id = "map";
     have_odom_ = true;
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
 }
@@ -213,7 +213,7 @@ void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2Con
 }
 
 void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
-    m.header.frame_id = "world";
+    m.header.frame_id = "map";
     m.id = id;
     m.type = visualization_msgs::Marker::CUBE_LIST;
     m.action = visualization_msgs::Marker::MODIFY;

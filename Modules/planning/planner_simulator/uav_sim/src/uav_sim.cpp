@@ -27,7 +27,7 @@ void trajCallbck(const prometheus_msgs::PositionReference& msg){
     ROS_INFO("*******[uav sim]: recieve cmd *******");
     traj_now = msg; 
     odom_now.header.stamp = ros::Time::now();;
-    odom_now.header.frame_id = "world";
+    odom_now.header.frame_id = "map";
     odom_now.pose.pose.position.x = traj_now.position_ref[0];
     odom_now.pose.pose.position.y = traj_now.position_ref[1];
     odom_now.pose.pose.position.z = traj_now.position_ref[2];
@@ -46,7 +46,7 @@ void omdpubCallback() {
     if (is_run_odom==false){
         nav_msgs::Odometry odom;
         odom.header.stamp = ros::Time::now();;
-        odom.header.frame_id = "world";
+        odom.header.frame_id = "map";
 
         //set the position and quaternion
         odom.pose.pose.position.x = init_odom.pose.pose.position.x;

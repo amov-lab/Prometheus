@@ -71,7 +71,7 @@ void cmdCallback(const ros::TimerEvent& e){
     if (octomap_msgs::fullMapToMsg(*m_octree, map_msg))
     {
         //转换成功，可以发布了
-        map_msg.header.frame_id = "world";
+        map_msg.header.frame_id = "map";
         map_msg.header.stamp = ros::Time::now();
         pub_octomap.publish(map_msg);
     } 
@@ -81,7 +81,7 @@ void cmdCallback(const ros::TimerEvent& e){
     if (octomap_msgs::fullMapToMsg(*inf_m_octree, inf_map_msg))
     {
         //转换成功，可以发布了
-        inf_map_msg.header.frame_id = "world";
+        inf_map_msg.header.frame_id = "map";
         inf_map_msg.header.stamp = ros::Time::now();
         pub_inf_octomap.publish(inf_map_msg);
     }
@@ -94,7 +94,7 @@ void cmdCallback(const ros::TimerEvent& e){
     pcl::toROSMsg(inf_pclCloud, output_inf_PC);
 
     output_inf_PC.header.stamp = outputPC.header.stamp = ros::Time::now();
-    output_inf_PC.header.frame_id = outputPC.header.frame_id = "world";
+    output_inf_PC.header.frame_id = outputPC.header.frame_id = "map";
 
     pub_pcd.publish(outputPC);
     pub_inf_pcd.publish(output_inf_PC);
