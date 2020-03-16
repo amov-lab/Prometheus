@@ -119,7 +119,7 @@ void pubSensedPoints()
 {
   if (i  == 50) {
     pcl::toROSMsg(cloudMap, globalMap_pcd);
-    globalMap_pcd.header.frame_id = "world";
+    globalMap_pcd.header.frame_id = "map";
     _all_map_pub.publish(globalMap_pcd);
     i=0;
   }else{
@@ -166,7 +166,7 @@ void pubSensedPoints()
   localMap.is_dense = true;
 
   pcl::toROSMsg(localMap, localMap_pcd);
-  localMap_pcd.header.frame_id = "world";
+  localMap_pcd.header.frame_id = "map";
   _local_map_pub.publish(localMap_pcd);
   // printf("[generate random map]: publish the local map!\n");
 }
