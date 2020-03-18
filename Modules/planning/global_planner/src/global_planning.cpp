@@ -133,6 +133,7 @@ geometry_msgs/PoseStamped[] poses
     A_star_path_cmd.header.frame_id = "map";
     A_star_path_cmd.header.stamp = ros::Time::now();
     printf("Path:  \n");
+    A_star_path_cmd.poses.clear();
     for (int i=0; i<path.size(); ++i){
         geometry_msgs::PoseStamped path_i_pose;
         path_i_pose .header.frame_id = "map";
