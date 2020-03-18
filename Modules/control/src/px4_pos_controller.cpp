@@ -88,7 +88,7 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         Command_Now = *msg;
     }else
     {
-        ROS_WARN("Wrong Command ID.");
+        ROS_WARN_STREAM_ONCE("Wrong Command ID");
     }
     
     // 无人机一旦接受到Land或者Disarm指令，则会屏蔽其他指令
