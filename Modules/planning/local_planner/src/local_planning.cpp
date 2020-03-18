@@ -55,11 +55,11 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
 void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
-    if(!trigger_)
-    {
-        printf("don't trigger!\n");
-        return;
-    }
+    // if(!trigger_)
+    // {
+    //     printf("don't trigger!\n");
+    //     return;
+    // }
 
     if(!have_odom_){
         printf("don't have odometry!\n");
@@ -231,13 +231,29 @@ void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, in
 
     // iterate the map
     pcl::PointXYZ pt;
+    Eigen::Matrix<double, 3, 3> rotation_mat_local_to_global = Eigen::Quaterniond(odom_.pose.pose.orientation.w,
+                                                                                                                                                                            odom_.pose.pose.orientation.x,
+                                                                                                                                                                            odom_.pose.pose.orientation.y,
+                                                                                                                                                                            odom_.pose.pose.orientation.z).toRotationMatrix();
+    Eigen::Matrix<double, 3, 1> position_world_to_local (odom_.pose.pose.position.x,
+                                                                                                                    odom_.pose.pose.position.y,
+                                                                                                                    odom_.pose.pose.position.z);
+    Eigen::Matrix<double, 3, 1> pointd;
     for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
         pt = latest_local_pcl_.points[i];
-
         geometry_msgs::Point p;
-        p.x = pt.x;
-        p.y = pt.y;
-        p.z = pt.z;
+        pointd(0) = pt.x;
+        pointd(1) = pt.y;
+        pointd(2) = pt.z;
+        // transform to world frame
+        pointd =  rotation_mat_local_to_global * pointd + position_world_to_local;
+
+        p.x = pointd(0);
+        p.y = pointd(1);
+        p.z=pointd(2);
+        // p.x = pt.x;
+        // p.y = pt.y;
+        // p.z = pt.z;
         m.points.push_back(p);
 
     }
