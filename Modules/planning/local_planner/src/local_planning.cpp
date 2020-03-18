@@ -34,7 +34,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1, &PotentialFiledPlanner::globalcloudCallback,
                                                                             this);
 
-    local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/rtabmap/cloud_map", 1, &PotentialFiledPlanner::localcloudCallback,
+    local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/realsense_d400/prometheus/local_pointclouds", 1, &PotentialFiledPlanner::localcloudCallback,
     this);
 
     pos_cmd_pub = node_.advertise<prometheus_msgs::PositionReference>("/planning/position_cmd", 10);
