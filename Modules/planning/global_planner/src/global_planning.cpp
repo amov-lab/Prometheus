@@ -20,8 +20,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
 
     odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/planning/odom_world", 10, &GlobalPlanner::odomCallback, this);
 
-    global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1, &GlobalPlanner::globalcloudCallback,
-                                                                            this);
+    global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/rtabmap/cloud_map", 1, &GlobalPlanner::globalcloudCallback, this);
 
     // publish 
     global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/global_map_marker",  10);  
@@ -145,6 +144,7 @@ geometry_msgs/PoseStamped[] poses
     }
     printf("goal position: %f, %f, %f\n", end_pt_(0), end_pt_(1), end_pt_(2));
     path_cmd_Pub.publish(A_star_path_cmd);
+    
 }
 
 void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
