@@ -114,7 +114,7 @@ namespace dyn_planner {
     }
 
     void SDFMap::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
-        m.header.frame_id = "world";
+        m.header.frame_id = "map";
         m.id = id;
         m.type = visualization_msgs::Marker::CUBE_LIST;
         m.action = visualization_msgs::Marker::MODIFY;
@@ -418,7 +418,7 @@ namespace dyn_planner {
 
         for (int i = 0; i < level; ++i) {
             visualization_msgs::Marker m;
-            m.header.frame_id = "world";
+            m.header.frame_id = "map";
             m.id = i + level * id;
             m.type = visualization_msgs::Marker::CUBE_LIST;
             m.action = visualization_msgs::Marker::ADD;
@@ -493,7 +493,7 @@ namespace dyn_planner {
             return;
 
         odom_ = *msg;
-        odom_.header.frame_id = "world";
+        odom_.header.frame_id = "map";
         have_odom_ = true;
     }
 
@@ -551,7 +551,7 @@ namespace dyn_planner {
         cloud_inflate_vis_.width = cloud_inflate_vis_.points.size();
         cloud_inflate_vis_.height = 1;
         cloud_inflate_vis_.is_dense = true;
-        cloud_inflate_vis_.header.frame_id = "world";
+        cloud_inflate_vis_.header.frame_id = "map";
         cloud_inflate_vis_.header.seq = latest_cloud_.header.seq;
         cloud_inflate_vis_.header.stamp = latest_cloud_.header.stamp;
         sensor_msgs::PointCloud2 map_inflate_vis;

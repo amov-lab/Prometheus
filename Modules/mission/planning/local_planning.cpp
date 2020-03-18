@@ -47,7 +47,8 @@ void desired_vel_cb(const geometry_msgs::Point::ConstPtr& msg)
 
     float desired_yaw;  //[rad]
 
-    desired_yaw = atan2(Desired_vel.y, Desired_vel.x);
+    //desired_yaw = atan2(Desired_vel.y, Desired_vel.x);
+    desired_yaw = 0.0;
 
     Command_Now.header.stamp = ros::Time::now();
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
@@ -69,7 +70,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
     _DroneState = *msg;
     nav_msgs::Odometry Odom_Now;
     Odom_Now.header.stamp = ros::Time::now();
-    Odom_Now.header.frame_id = "world";
+    Odom_Now.header.frame_id = "map";
 
     Odom_Now.pose.pose.position.x = _DroneState.position[0];
     Odom_Now.pose.pose.position.y = _DroneState.position[1];
@@ -80,7 +81,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
         Odom_Now.pose.pose.position.z = 0.01;
     }
 
-//    Odom_Now.pose.pose.orientation = geometry_msgs::Quaternion(_DroneState.attitude[2],_DroneState.attitude[1], _DroneState.attitude[0]); // yaw, pitch, roll
+//  Odom_Now.pose.pose.orientation = geometry_msgs::Quaternion(_DroneState.attitude[2],_DroneState.attitude[1], _DroneState.attitude[0]); // yaw, pitch, roll
     Odom_Now.pose.pose.orientation = _DroneState.attitude_q;
     Odom_Now.twist.twist.linear.x = _DroneState.velocity[0];
     Odom_Now.twist.twist.linear.y = _DroneState.velocity[1];
@@ -89,7 +90,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 
     
     drone_pos.header.stamp = ros::Time::now();
-    drone_pos.header.frame_id = "world";
+    drone_pos.header.frame_id = "map";
     drone_pos.pose.position.x = _DroneState.position[0];
     drone_pos.pose.position.y = _DroneState.position[1];
     drone_pos.pose.position.z = _DroneState.position[2];
@@ -105,7 +106,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
     
     nav_msgs::Path drone_trajectory;
     drone_trajectory.header.stamp = ros::Time::now();
-    drone_trajectory.header.frame_id = "world";
+    drone_trajectory.header.frame_id = "map";
     drone_trajectory.poses = posehistory_vector_;
     trajectory_pub.publish(drone_trajectory);
 

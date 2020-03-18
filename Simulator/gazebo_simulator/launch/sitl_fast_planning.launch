@@ -1,7 +1,7 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
-    <arg name="x" default="5.0"/>
-    <arg name="y" default="0"/>
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera/iris_realsense_camera.sdf"/>
@@ -21,9 +21,6 @@
     <!-- Ros transformation -->
     <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
           args="0 0 0 0 0 0 map odom 10"/>
-
-    <arg name="use_rviz"                  default="false"/>
-    <arg name="use_rtabmapviz"            default="false"/>
     
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
         <arg name="rtabmap_args"       value="--delete_db_on_start"/>
@@ -34,10 +31,22 @@
         <arg name="visual_odometry"    value="false"/>
         <arg name="odom_topic"         value="/ground_truth/state"/>  
         <arg name="queue_size"         value="200"/>
-        <arg name="rviz"               value="$(arg use_rviz)"/>
-        <arg name="rtabmapviz"         value="$(arg use_rtabmapviz)"/>
+		<arg name="rtabmapviz"         value="false"/>
     </include>
 
-    
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
+	</node>
+
+	<node pkg="prometheus_mission" type="planning" name="planning" output="screen" launch-prefix="gnome-terminal --">	
+	</node>
+
+    <include file="$(find prometheus_plan_manage)/launch/prometheus_planning_control_gazebo.launch">
+    </include>
+
+    <include file="$(find prometheus_plan_manage)/launch/rviz_static.launch">
+    </include>
+
 </launch>
 

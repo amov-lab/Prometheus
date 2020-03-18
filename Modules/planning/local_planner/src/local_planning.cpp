@@ -34,7 +34,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1, &PotentialFiledPlanner::globalcloudCallback,
                                                                             this);
 
-    local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/local_point_cloud", 1, &PotentialFiledPlanner::localcloudCallback,
+    local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/rtabmap/cloud_map", 1, &PotentialFiledPlanner::localcloudCallback,
     this);
 
     pos_cmd_pub = node_.advertise<prometheus_msgs::PositionReference>("/planning/position_cmd", 10);
@@ -55,11 +55,11 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
 void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
-    if(!trigger_)
-    {
-        printf("don't trigger!\n");
-        return;
-    }
+    // if(!trigger_)
+    // {
+    //     printf("don't trigger!\n");
+    //     return;
+    // }
 
     if(!have_odom_){
         printf("don't have odometry!\n");
@@ -78,6 +78,9 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
     printf("begin  apf \n");
     apf_planner_ptr->set_local_map(local_map_ptr_);
+    
+    apf_planner_ptr->set_odom(odom_);
+
     apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
 
     if(desired_vel.norm() > 1.0)
@@ -100,7 +103,7 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel){
     ros::Time time_now = ros::Time::now();
     cmd.header.stamp = time_now;
-    cmd.header.frame_id = "world";
+    cmd.header.frame_id = "map";
 
     cmd.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;  //TRAJECTORY
     cmd.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME; //ENU_FRAME
@@ -137,6 +140,7 @@ void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel){
 
 }
 
+//  the goal is in the world frame. 
 void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg){
     cout << "[waypointCallback]: Triggered!" << endl;
 
@@ -180,7 +184,7 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
 
 void PotentialFiledPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     odom_ = *msg;
-    odom_.header.frame_id = "world";
+    odom_.header.frame_id = "map";
     have_odom_ = true;
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
 }
@@ -190,7 +194,7 @@ void PotentialFiledPlanner::globalcloudCallback(const sensor_msgs::PointCloud2Co
 
 }
 
-
+//  the local cloud is in the local frame. 
 void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg){
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
@@ -213,7 +217,7 @@ void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2Con
 }
 
 void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
-    m.header.frame_id = "world";
+    m.header.frame_id = "map";
     m.id = id;
     m.type = visualization_msgs::Marker::CUBE_LIST;
     m.action = visualization_msgs::Marker::MODIFY;
@@ -227,13 +231,29 @@ void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, in
 
     // iterate the map
     pcl::PointXYZ pt;
+    Eigen::Matrix<double, 3, 3> rotation_mat_local_to_global = Eigen::Quaterniond(odom_.pose.pose.orientation.w,
+                                                                                                                                                                            odom_.pose.pose.orientation.x,
+                                                                                                                                                                            odom_.pose.pose.orientation.y,
+                                                                                                                                                                            odom_.pose.pose.orientation.z).toRotationMatrix();
+    Eigen::Matrix<double, 3, 1> position_world_to_local (odom_.pose.pose.position.x,
+                                                                                                                    odom_.pose.pose.position.y,
+                                                                                                                    odom_.pose.pose.position.z);
+    Eigen::Matrix<double, 3, 1> pointd;
     for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
         pt = latest_local_pcl_.points[i];
-
         geometry_msgs::Point p;
-        p.x = pt.x;
-        p.y = pt.y;
-        p.z = pt.z;
+        pointd(0) = pt.x;
+        pointd(1) = pt.y;
+        pointd(2) = pt.z;
+        // transform to world frame
+        pointd =  rotation_mat_local_to_global * pointd + position_world_to_local;
+
+        p.x = pointd(0);
+        p.y = pointd(1);
+        p.z=pointd(2);
+        // p.x = pt.x;
+        // p.y = pt.y;
+        // p.z = pt.z;
         m.points.push_back(p);
 
     }

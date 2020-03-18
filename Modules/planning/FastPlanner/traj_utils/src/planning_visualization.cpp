@@ -15,7 +15,7 @@ void PlanningVisualization::displaySphereList(vector<Eigen::Vector3d> list, doub
                                               int id)
 {
   visualization_msgs::Marker mk;
-  mk.header.frame_id = "world";
+  mk.header.frame_id = "map";
   mk.header.stamp = ros::Time::now();
   mk.type = visualization_msgs::Marker::SPHERE_LIST;
   mk.action = visualization_msgs::Marker::DELETE;

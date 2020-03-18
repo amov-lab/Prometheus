@@ -20,8 +20,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
 
     odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/planning/odom_world", 10, &GlobalPlanner::odomCallback, this);
 
-    global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1, &GlobalPlanner::globalcloudCallback,
-                                                                            this);
+    global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/rtabmap/cloud_map", 1, &GlobalPlanner::globalcloudCallback, this);
 
     // publish 
     global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/global_map_marker",  10);  
@@ -130,12 +129,12 @@ geometry_msgs/PoseStamped[] poses
       float64 z
       float64 w
 */
-    A_star_path_cmd.header.frame_id = "world";
+    A_star_path_cmd.header.frame_id = "map";
     A_star_path_cmd.header.stamp = ros::Time::now();
     printf("Path:  \n");
     for (int i=0; i<path.size(); ++i){
         geometry_msgs::PoseStamped path_i_pose;
-        path_i_pose .header.frame_id = "world";
+        path_i_pose .header.frame_id = "map";
         path_i_pose.pose.position.x = path[i](0);
         path_i_pose.pose.position.y = path[i](1);
         path_i_pose.pose.position.z = path[i](2);
@@ -144,11 +143,12 @@ geometry_msgs/PoseStamped[] poses
     }
     printf("goal position: %f, %f, %f\n", end_pt_(0), end_pt_(1), end_pt_(2));
     path_cmd_Pub.publish(A_star_path_cmd);
+    
 }
 
 void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     odom_ = *msg;
-    odom_.header.frame_id = "world";
+    odom_.header.frame_id = "map";
     have_odom_ = true;
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
 }
@@ -174,7 +174,7 @@ void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &
 }
 
 void GlobalPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
-    m.header.frame_id = "world";
+    m.header.frame_id = "map";
     m.id = id;
     m.type = visualization_msgs::Marker::CUBE_LIST;
     m.action = visualization_msgs::Marker::MODIFY;

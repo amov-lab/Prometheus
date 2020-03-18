@@ -1,0 +1,46 @@
+<launch>
+    <arg name="max_vel" value="0.5" />
+    <arg name="max_acc" value="0.5" />
+    <arg name="dynamic" value="0" />
+    <arg name="map_size_x" value="20.0"/>
+    <arg name="map_size_y" value="20.0"/>
+    <arg name="map_size_z" value=" 5.0"/>
+
+    <arg name="init_x" value="0.0"/>
+     <arg name="init_y" value="0.0"/>
+    <arg name="init_z" value="1.0"/> 
+
+        <!-- trajectory server -->
+    <node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
+        <!-- <remap from="/odom_world" to="/state_ukf/odom"/>
+        <remap from="/position_cmd" to="planning/pos_cmd"/> -->
+        <param name="local_planning/is_simulation" value="0" type="int"/>
+        <param name="apf/obs_distance" value="0.8" type="double"/>
+        <param name="apf/k_push" value="1.5" type="double"/>
+    </node>
+        
+
+
+
+  <!-- map generation -->
+  <!--node pkg ="prometheus_map_generator" name ="random_forest" type ="random_forest" output = "screen">    
+    <!-- <remap from="~odometry"   to="/odom/fake_odom"/>     -->
+    <param name="init_state_x"   value="$(arg init_x)"/>
+    <param name="init_state_y"   value="$(arg init_y)"/>
+    <param name="map/x_size"     value="$(arg map_size_x)" />
+    <param name="map/y_size"     value="$(arg map_size_y)" />
+    <param name="map/z_size"     value="$(arg map_size_z)" />
+    <param name="map/obs_num"    value="500"/>        
+    <param name="map/resolution" value="0.2"/>        
+    <param name="ObstacleShape/lower_rad" value="0.5"/>
+    <param name="ObstacleShape/upper_rad" value="1.5"/>
+    <param name="ObstacleShape/lower_hei" value="0.0"/>
+    <param name="ObstacleShape/upper_hei" value="5.0"/>        
+    <param name="sensing/radius" value="5.0"/>        
+    <param name="sensing/rate"   value="10.0"/>        
+  </node>
+
+
+
+
+</launch>
