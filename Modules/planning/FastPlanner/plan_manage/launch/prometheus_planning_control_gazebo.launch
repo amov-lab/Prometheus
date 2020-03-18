@@ -99,13 +99,13 @@
   </node>
 
     <!-- trajectory server -->
-  <node pkg="prometheus_plan_manage" name="test_planning_static" type="test_planning_static" output="screen">
-      <param name="test/init_odom_x" value="1.0" type="double"/>
-      <param name="test/init_odom_y" value="1.0" type="double"/>
-      <param name="test/init_odom_z" value="1.0" type="double"/>
-      <param name="test/file_name" value="$(arg pcd_file)" type="string"/>
-      <param name="test/odom_mode" value="1" type="int"/>
-  </node>
+  <!-- <node pkg="prometheus_plan_manage" name="test_planning_static" type="test_planning_static" output="screen"> -->
+      <!-- <param name="test/init_odom_x" value="1.0" type="double"/> -->
+      <!-- <param name="test/init_odom_y" value="1.0" type="double"/> -->
+      <!-- <param name="test/init_odom_z" value="1.0" type="double"/> -->
+      <!-- <param name="test/file_name" value="$(arg pcd_file)" type="string"/> -->
+      <!-- <param name="test/odom_mode" value="1" type="int"/> -->
+  <!-- </node> -->
 
 
 

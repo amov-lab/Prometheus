@@ -12,7 +12,7 @@ if __name__ == "__main__":
 	msg = Odometry()
 
 	msg.header.stamp = rospy.Time.now()-rospy.Duration(0.2)
-	msg.header.frame_id = "world"
+	msg.header.frame_id = "map"
 
 	q = tfs.quaternion_from_euler(0,0,0,"rzyx")
 

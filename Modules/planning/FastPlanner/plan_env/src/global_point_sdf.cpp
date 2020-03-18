@@ -172,7 +172,7 @@ namespace dyn_planner {
         // cloud_inflate_vis_.width = cloud_inflate_vis_.points.size();
         // cloud_inflate_vis_.height = 1;
         // cloud_inflate_vis_.is_dense = true;
-        cloud_inflate_vis_.header.frame_id = "world";
+        cloud_inflate_vis_.header.frame_id = "map";
         // cloud_inflate_vis_.header.seq = latest_global_cloud_.header.seq;
         // cloud_inflate_vis_.header.stamp = latest_global_cloud_.header.stamp;
         sensor_msgs::PointCloud2 map_inflate_vis;
@@ -213,7 +213,7 @@ namespace dyn_planner {
         // if (msg->child_frame_id == "X" || msg->child_frame_id == "O")
         //     return;
         odom_ = *msg;
-        odom_.header.frame_id = "world";
+        odom_.header.frame_id = "map";
         have_odom_ = true;
     }
 
@@ -244,8 +244,8 @@ namespace dyn_planner {
         /* ---------- sub and pub ---------- */
         odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/planning/odom_world", 10, &SDFMap_Global::odomCallback, this);
 
-        global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1, &SDFMap_Global::globalcloudCallback,
-                                                                             this);
+        global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/rtabmap/cloud_map", 1, &SDFMap_Global::globalcloudCallback, this);
+        
         inflate_cloud_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/inflate_cloud", 1);
         
         boundary = Eigen::VectorXd::Zero(6);
@@ -270,7 +270,7 @@ namespace dyn_planner {
 
         Eigen::Quaterniond origin_rotation(1.0, 0.0, 0.0, 0.0);
         const Eigen::Isometry3d origin_transform = origin_translation * origin_rotation;
-        const std::string frame = "world";
+        const std::string frame = "map";
         // create map
         // ROS_INFO("global_point_sdf: creat std_tools!");
         sdf_tools::COLLISION_CELL oob_cell;

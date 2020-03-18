@@ -50,7 +50,7 @@ void omdpubCallback(const ros::TimerEvent& e);
 void trajCallbck(const prometheus_msgs::PositionReference& msg){
     traj_now = msg; 
     odom_now.header.stamp = ros::Time::now();;
-    odom_now.header.frame_id = "world";
+    odom_now.header.frame_id = "map";
     odom_now.pose.pose.position.x = traj_now.position_ref[0];
     odom_now.pose.pose.position.y = traj_now.position_ref[1];
     odom_now.pose.pose.position.z = traj_now.position_ref[2];
@@ -91,7 +91,7 @@ void load_map(std::string file_name){
 
     //转成 ros msg
     pcl::toROSMsg(*cloud_map,cloud_map_msg);		
-    cloud_map_msg.header.frame_id = "world";
+    cloud_map_msg.header.frame_id = "map";
 
     // now, we have map. So can send it. 
     is_load_map = true;
@@ -114,7 +114,7 @@ void omdpubCallback(const ros::TimerEvent& e) {
     if (is_run_odom==false){
         nav_msgs::Odometry odom;
         odom.header.stamp = ros::Time::now();;
-        odom.header.frame_id = "world";
+        odom.header.frame_id = "map";
 
         //set the position and quaternion
         odom.pose.pose.position.x = init_odom.pose.pose.position.x;
@@ -142,7 +142,7 @@ void omdpubCallback(const ros::TimerEvent& e) {
 
 // void waypointpubCallback(const ros::TimerEvent &e){
 //     geometry_msgs::PoseStamped pt;
-//     pt.header.frame_id = "world";
+//     pt.header.frame_id = "map";
 //     pt.header.stamp = ros::Time::now();
 //     pt.pose.position.x = 0.0;
 //     pt.pose.position.y = -2.0;
@@ -150,7 +150,7 @@ void omdpubCallback(const ros::TimerEvent& e) {
 
 //     // waypoints.poses.clear();
 //     // waypoints.poses.push_back(pt);
-//     // waypoints.header.frame_id = std::string("world");
+//     // waypoints.header.frame_id = std::string("map");
 //     // waypoints.header.stamp = ros::Time::now();
 //     // waypoint_pub.publish(waypoints);
 //     waypoint_pub.publish(pt);
