@@ -99,15 +99,6 @@ namespace dyn_planner {
         if(dist < 0)
           cout << "pos:" << pos << "dist:" << dist  << endl;
 
-//        // update distance and gradient using boundary
-//        double dtb = getDistanceToBoundary(ori_pos(0), ori_pos(1), ori_pos(2));
-//
-//        if(dtb < dist)
-//        {
-//            dist = dtb;
-//            recaluculateGradient(ori_pos(0), ori_pos(1), ori_pos(2), grad);
-//        }
-
         return dist;
     }
 
