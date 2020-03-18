@@ -43,7 +43,8 @@ void desired_vel_cb(const geometry_msgs::Point::ConstPtr& msg)
     Desired_vel = *msg;
 
     float desired_yaw;  //[rad]
-
+    //莫长 决定是否更新， 更新的话加滤波平滑
+    
     //desired_yaw = atan2(Desired_vel.y, Desired_vel.x);
     desired_yaw = 0.0;
 
