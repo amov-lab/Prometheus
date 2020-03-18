@@ -13,6 +13,10 @@ void APF::set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr){
     has_local_map_=true;
 }
 
+void APF::set_odom(nav_msgs::Odometry cur_odom){
+    cur_odom_ = cur_odom;
+}
+
 
 bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel){
     if(!has_local_map_)
@@ -48,7 +52,10 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         pt = latest_local_pcl_.points[i];
         p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
 
-        double dist_push = (current_odom - p3d).norm();
+        Eigen::Matrix<double, 3,1> current_odom_local(0.0, 0,0);
+        // Eigen::Matrix<double, 3,1> current_odom_local = current_odom;
+
+        double dist_push = (current_odom_local - p3d).norm();
         if(dist_push > obs_distance)
             continue;
         if(dist_push < min_dist){
@@ -62,12 +69,21 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
             push_gain *= dist_att;  // to gaurantee to reach the goal.
         }
         
-        push_force += push_gain * (current_odom - p3d)/dist_push;
-        
+        push_force += push_gain * (current_odom_local - p3d)/dist_push;
     }
+
     if(obstacles.size() != 0){
         push_force = push_force/double(obstacles.size());
     }
+
+    Eigen::Quaterniond cur_rotation_local_to_global(cur_odom_.pose.pose.orientation.w, 
+                                                                                                            cur_odom_.pose.pose.orientation.x,  
+                                                                                                            cur_odom_.pose.pose.orientation.y,  
+                                                                                                            cur_odom_.pose.pose.orientation.z); 
+
+    Eigen::Matrix<double,3,3> rotation_mat_local_to_global = cur_rotation_local_to_global.toRotationMatrix();
+    push_force = rotation_mat_local_to_global * push_force; 
+
     ROS_INFO("push force: [%f, %f, %f], attractive force: [%f, %f, %f], obs size: %d, obs_dis: %f, k_push: %f", push_force(0), push_force(1), 
     push_force(2), attractive_force(0), attractive_force(1), attractive_force(2), obstacles.size(), obs_distance, k_push);
     
