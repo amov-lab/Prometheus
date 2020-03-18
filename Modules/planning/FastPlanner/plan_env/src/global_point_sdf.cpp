@@ -244,8 +244,8 @@ namespace dyn_planner {
         /* ---------- sub and pub ---------- */
         odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/planning/odom_world", 10, &SDFMap_Global::odomCallback, this);
 
-        global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1, &SDFMap_Global::globalcloudCallback,
-                                                                             this);
+        global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/rtabmap/cloud_map", 1, &SDFMap_Global::globalcloudCallback, this);
+        
         inflate_cloud_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/inflate_cloud", 1);
         
         boundary = Eigen::VectorXd::Zero(6);

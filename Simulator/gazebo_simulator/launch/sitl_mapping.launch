@@ -1,11 +1,17 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/cloister.world"/>
+    <arg name="x" default="5.0"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="0"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera/iris_realsense_camera.sdf"/>
 	<arg name="model" default="iris_realsense_camera"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
     </include>
 
     <!-- Define a static transform from a camera internal frame to the fcu for every camera used -->
