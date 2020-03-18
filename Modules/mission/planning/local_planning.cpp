@@ -69,7 +69,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
     _DroneState = *msg;
     nav_msgs::Odometry Odom_Now;
     Odom_Now.header.stamp = ros::Time::now();
-    Odom_Now.header.frame_id = "world";
+    Odom_Now.header.frame_id = "map";
 
     Odom_Now.pose.pose.position.x = _DroneState.position[0];
     Odom_Now.pose.pose.position.y = _DroneState.position[1];
@@ -89,7 +89,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 
     
     drone_pos.header.stamp = ros::Time::now();
-    drone_pos.header.frame_id = "world";
+    drone_pos.header.frame_id = "map";
     drone_pos.pose.position.x = _DroneState.position[0];
     drone_pos.pose.position.y = _DroneState.position[1];
     drone_pos.pose.position.z = _DroneState.position[2];
@@ -105,7 +105,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
     
     nav_msgs::Path drone_trajectory;
     drone_trajectory.header.stamp = ros::Time::now();
-    drone_trajectory.header.frame_id = "world";
+    drone_trajectory.header.frame_id = "map";
     drone_trajectory.poses = posehistory_vector_;
     trajectory_pub.publish(drone_trajectory);
 
