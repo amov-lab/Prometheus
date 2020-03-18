@@ -78,6 +78,9 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
     printf("begin  apf \n");
     apf_planner_ptr->set_local_map(local_map_ptr_);
+    
+    apf_planner_ptr->set_odom(odom_);
+
     apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
 
     if(desired_vel.norm() > 1.0)
@@ -137,6 +140,7 @@ void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel){
 
 }
 
+//  the goal is in the world frame. 
 void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg){
     cout << "[waypointCallback]: Triggered!" << endl;
 
@@ -190,7 +194,7 @@ void PotentialFiledPlanner::globalcloudCallback(const sensor_msgs::PointCloud2Co
 
 }
 
-
+//  the local cloud is in the local frame. 
 void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg){
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
