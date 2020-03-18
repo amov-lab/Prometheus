@@ -34,7 +34,7 @@
 		<arg name="rtabmapviz"         value="false"/>
     </include>
 
-	<node pkg="prometheus_mission" type="local_planning" name="local_planning" output="screen" launch-prefix="gnome-terminal --">	
+	<node pkg="prometheus_mission" type="global_planning" name="global_planning" output="screen" launch-prefix="gnome-terminal --">	
 	</node>
 
 	<include file="$(find prometheus_global_planning)/launch/planning_simulator.launch">

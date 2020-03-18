@@ -1,11 +1,17 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
+    <arg name="x" default="0"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/qrcode.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris/iris.sdf"/>
 	<arg name="model" default="iris"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
     </include>
 
 	<!-- run the terminal_control.cpp -->

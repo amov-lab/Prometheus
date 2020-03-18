@@ -33,14 +33,6 @@ geo_fence:
 pos_estimator:
   ## 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM
   flag_use_laser_or_vicon : 0
-  ## 0 for use the data from fcu, 1 for use the mocap raw data(only position), 2 for use the mocap raw data(position and velocity)
-  Use_mocap_raw : 0
-  linear_window : 3
-  angular_window : 3
-  noise_a : 0.0
-  noise_b : 0.0
-  noise_T : 1.0
-  state_fromposehistory_window : 1100
 
 ## 限制参数 
 Limit:
