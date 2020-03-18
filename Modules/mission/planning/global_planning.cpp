@@ -34,8 +34,7 @@ int flag_get_cmd = 0;
 geometry_msgs::PoseStamped goal;
 prometheus_msgs::DroneState _DroneState;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-int posehistory_window_ = 1000;
-std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void path_cb(const nav_msgs::Path::ConstPtr& msg)
 {
@@ -162,6 +161,7 @@ int main(int argc, char **argv)
         }
         
         cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Planning<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+        cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
         cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
 
         rate.sleep();
