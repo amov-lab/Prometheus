@@ -109,7 +109,10 @@ void rcvOdometryCallbck(const nav_msgs::Odometry odom)
              odom.twist.twist.linear.x,
              odom.twist.twist.linear.y,
              odom.twist.twist.linear.z,
-             0.0,
+             odom.pose.pose.orientation.w,
+             odom.pose.pose.orientation.x,
+             odom.pose.pose.orientation.y,
+             odom.pose.pose.orientation.z,
              0.0,
              0.0 };
 }
@@ -140,19 +143,35 @@ void pubSensedPoints()
   pointRadiusSquaredDistance.clear();
 
   pcl::PointXYZ pt;
+  pcl::PointXYZ pt_new;
 
   if (isnan(searchPoint.x) || isnan(searchPoint.y) || isnan(searchPoint.z)){
     printf("[generate random map]: the odom state is bad, can't generate the local map!\n");
     return;
   }
     
+Eigen::Vector3d p3d;
+Eigen::Matrix<double, 3,3> rotaion_mat_global_to_local = Eigen::Quaterniond(_state[6], 
+                                                                                                                                                                  _state[7],
+                                                                                                                                                                  _state[8],
+                                                                                                                                                                  _state[9]).toRotationMatrix().transpose();
 
   if (kdtreeLocalMap.radiusSearch(searchPoint, _sensing_range, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0)
   {
     for (size_t i = 0; i < pointIdxRadiusSearch.size(); ++i)
     {
       pt = cloudMap.points[pointIdxRadiusSearch[i]];
-      localMap.points.push_back(pt);
+      {
+        p3d(0)=pt.x-searchPoint.x;
+        p3d(1)=pt.y-searchPoint.y;
+        p3d(2)=pt.z-searchPoint.z;
+        p3d = rotaion_mat_global_to_local *(p3d);
+        pt_new.x = p3d(0);
+        pt_new.y = p3d(1);
+        pt_new.z = p3d(2);
+      }
+      localMap.points.push_back(pt_new);
+      // localMap.points.push_back(pt);
     }
   }
   else
