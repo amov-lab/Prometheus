@@ -47,7 +47,8 @@ void desired_vel_cb(const geometry_msgs::Point::ConstPtr& msg)
 
     float desired_yaw;  //[rad]
 
-    desired_yaw = atan2(Desired_vel.y, Desired_vel.x);
+    //desired_yaw = atan2(Desired_vel.y, Desired_vel.x);
+    desired_yaw = 0.0;
 
     Command_Now.header.stamp = ros::Time::now();
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
@@ -80,7 +81,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
         Odom_Now.pose.pose.position.z = 0.01;
     }
 
-//    Odom_Now.pose.pose.orientation = geometry_msgs::Quaternion(_DroneState.attitude[2],_DroneState.attitude[1], _DroneState.attitude[0]); // yaw, pitch, roll
+//  Odom_Now.pose.pose.orientation = geometry_msgs::Quaternion(_DroneState.attitude[2],_DroneState.attitude[1], _DroneState.attitude[0]); // yaw, pitch, roll
     Odom_Now.pose.pose.orientation = _DroneState.attitude_q;
     Odom_Now.twist.twist.linear.x = _DroneState.velocity[0];
     Odom_Now.twist.twist.linear.y = _DroneState.velocity[1];
