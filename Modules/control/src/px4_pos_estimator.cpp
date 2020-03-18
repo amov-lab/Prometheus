@@ -20,13 +20,10 @@
 #include <iostream>
 #include <Eigen/Eigen>
 #include <state_from_mavros.h>
-#include <OptiTrackFeedBackRigidBody.h>
 #include <math_utils.h>
-#include <Filter/LowPassFilter.h>
 #include <prometheus_control_utils.h>
 
 //msg 头文件
-
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -42,16 +39,15 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/Range.h>
 #include <prometheus_msgs/DroneState.h>
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 
 using namespace std;
+#define TRA_WINDOW 1000
+
 //---------------------------------------相关参数-----------------------------------------------
 int flag_use_laser_or_vicon;                               //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
-float Use_mocap_raw;
-int linear_window;
-int angular_window;
-float noise_a,noise_b;
-float noise_T;
-rigidbody_state UAVstate;
+
 //---------------------------------------vicon定位相关------------------------------------------
 Eigen::Vector3d pos_drone_mocap;                          //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -63,19 +59,17 @@ Eigen::Vector3d Euler_laser;                                         //无人机
 
 geometry_msgs::TransformStamped laser;                          //当前时刻cartorgrapher发布的数据
 geometry_msgs::TransformStamped laser_last;
-//---------------------------------------无人机位置及速度--------------------------------------------
-Eigen::Vector3d pos_drone_fcu;                           //无人机当前位置 (来自fcu)
-Eigen::Vector3d vel_drone_fcu;                           //无人机上一时刻位置 (来自fcu)
-Eigen::Vector3d Att_fcu;                               //无人机当前欧拉角(来自fcu)
-Eigen::Vector3d Att_rate_fcu;
 //---------------------------------------发布相关变量--------------------------------------------
 ros::Publisher vision_pub;
 ros::Publisher drone_state_pub;
-prometheus_msgs::DroneState _DroneState;  
+ros::Publisher odom_pub;
+ros::Publisher trajectory_pub;
+prometheus_msgs::DroneState Drone_State;  
+nav_msgs::Odometry Drone_odom;
+std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void send_to_fcu();
-void publish_drone_state();
-void printf_param();
+void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void laser_cb(const tf2_msgs::TFMessage::ConstPtr& msg)
 {
@@ -107,26 +101,6 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr& msg)
 
         laser_last = laser;
     }
-}
-void sonic_cb(const std_msgs::UInt16::ConstPtr& msg)
-{
-    std_msgs::UInt16 sonic;
-
-    sonic = *msg;
-
-    //位置
-    pos_drone_laser[2]  = (float)sonic.data / 1000;
-}
-
-void tfmini_cb(const sensor_msgs::Range::ConstPtr& msg)
-{
-    sensor_msgs::Range tfmini;
-
-    tfmini = *msg;
-
-    //位置
-    pos_drone_laser[2]  = tfmini.range ;
-
 }
 
 void optitrack_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
@@ -167,43 +141,10 @@ int main(int argc, char **argv)
     // 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM
     nh.param<int>("pos_estimator/flag_use_laser_or_vicon", flag_use_laser_or_vicon, 0);
 
-    // 0 for use the data from fcu, 1 for use the mocap raw data(only position), 2 for use the mocap raw data(position and velocity)
-    nh.param<float>("pos_estimator/Use_mocap_raw", Use_mocap_raw, 0.0);
-
-    // window for linear velocity
-    nh.param<int>("pos_estimator/linear_window", linear_window, 3);
-
-    // window for linear velocity
-    nh.param<int>("pos_estimator/angular_window", angular_window, 3);
-
-    nh.param<float>("pos_estimator/noise_a", noise_a, 0.0);
-
-    nh.param<float>("pos_estimator/noise_b", noise_b, 0.0);
-
-    nh.param<float>("pos_estimator/noise_T", noise_T, 0.5);
-
-    printf_param();
-
     //nh.param<string>("pos_estimator/rigid_body_name", rigid_body_name, '/vrpn_client_node/UAV/pose');
-
-
-    LowPassFilter LPF_x;
-    LowPassFilter LPF_y;
-    LowPassFilter LPF_z;
-
-    LPF_x.set_Time_constant(noise_T);
-    LPF_y.set_Time_constant(noise_T);
-    LPF_z.set_Time_constant(noise_T);
-
 
     // 【订阅】cartographer估计位置
     ros::Subscriber laser_sub = nh.subscribe<tf2_msgs::TFMessage>("/tf", 1000, laser_cb);
-
-    // 【订阅】超声波的数据
-    ros::Subscriber sonic_sub = nh.subscribe<std_msgs::UInt16>("/sonic", 100, sonic_cb);
-
-    // 【订阅】tf mini的数据
-    ros::Subscriber tfmini_sub = nh.subscribe<sensor_msgs::Range>("/TFmini/TFmini", 100, tfmini_cb);
 
     // 【订阅】optitrack估计位置
     ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/UAV/pose", 1000, optitrack_cb);
@@ -214,13 +155,17 @@ int main(int argc, char **argv)
 
     drone_state_pub = nh.advertise<prometheus_msgs::DroneState>("/prometheus/drone_state", 10);
 
+    //【发布】无人机odometry
+    odom_pub = nh.advertise<nav_msgs::Odometry>("/planning/odom_world", 10);
+    
+    trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/drone_trajectory", 10);
+
+
     // 10秒定时打印，以确保程序在正确运行
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
 
     // 用于与mavros通讯的类，通过mavros接收来至飞控的消息【飞控->mavros->本程序】
     state_from_mavros _state_from_mavros;
-
-    OptiTrackFeedBackRigidBody UAV("/vrpn_client_node/UAV/pose",nh,linear_window,angular_window);
 
     // 频率
     ros::Rate rate(100.0);
@@ -231,77 +176,16 @@ int main(int argc, char **argv)
         //回调一次 更新传感器状态
         ros::spinOnce();
 
-        // 将定位信息及偏航角信息发送至飞控，根据参数flag_use_laser_or_vicon选择定位信息来源
+        // 将采集的机载设备的定位信息及偏航角信息发送至飞控，根据参数flag_use_laser_or_vicon选择定位信息来源
         send_to_fcu();
 
-        //利用OptiTrackFeedBackRigidBody类获取optitrack的数据 -- for test -code by longhao
-        UAV.RosWhileLoopRun();
-        UAV.GetState(UAVstate);
-
-        for (int i=0;i<3;i++)
-        {
-            pos_drone_fcu[i] = _state_from_mavros._DroneState.position[i];                           
-            vel_drone_fcu[i] = _state_from_mavros._DroneState.velocity[i];                           
-            Att_fcu[i] = _state_from_mavros._DroneState.attitude[i];  
-            Att_rate_fcu[i] = _state_from_mavros._DroneState.attitude_rate[i];  
-        }
-
-        // 发布无人机状态至px4_pos_controller.cpp节点，根据参数Use_mocap_raw选择位置速度消息来源
-        // get drone state from _state_from_mavros
-        _DroneState = _state_from_mavros._DroneState;
-        _DroneState.header.stamp = ros::Time::now();
-
-        //添加测量噪声，（noise_a=0，noise_b=0时，无噪声）
-        Eigen::Vector3d random;
-
-        // 先生成随机数
-        random[0] = prometheus_control_utils::random_num(noise_a, noise_b);
-        random[1] = prometheus_control_utils::random_num(noise_a, noise_b);
-        random[2] = prometheus_control_utils::random_num(noise_a, noise_b);
-
-        // 低通滤波
-        random[0] = LPF_x.apply(random[0], 0.01);
-        random[1] = LPF_y.apply(random[1], 0.01);
-        random[2] = LPF_z.apply(random[2], 0.01);
-
-
-        for (int i=0;i<3;i++)
-        {
-            _DroneState.velocity[i] = _DroneState.velocity[i] + random[i];
-        }
-
-        //cout << "Random [X Y Z] : " << random[0]<<" " << random[1]<<" "<< random[2]<<endl;
-        
-                
-        // 根据Use_mocap_raw来选择位置和速度的来源
-        if (Use_mocap_raw == 1)
-        {
-            for (int i=0;i<3;i++)
-            {
-                _DroneState.position[i] = pos_drone_mocap[i];
-            }
-        }
-        else if (Use_mocap_raw == 2) 
-        {
-            for (int i=0;i<3;i++)
-            {
-                _DroneState.position[i] = UAVstate.Position[i];
-                _DroneState.velocity[i] = UAVstate.V_I[i];
-            }
-        }
-
-        drone_state_pub.publish(_DroneState);
+        // 发布无人机状态至其他节点，如px4_pos_controller.cpp节点
+        pub_to_nodes(_state_from_mavros._DroneState);
 
         rate.sleep();
     }
 
     return 0;
-
-}
-
-
-void publish_drone_state()
-{
 
 }
 
@@ -338,11 +222,56 @@ void send_to_fcu()
     vision_pub.publish(vision);
 }
 
-void printf_param()
-{
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> px4_pos estimator Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
+{   
+    // 发布无人机状态，具体内容参见 prometheus_msgs::DroneState
+    Drone_State.header.stamp = ros::Time::now();
+    Drone_State = State_from_fcu;
+    
+    drone_state_pub.publish(Drone_State);
 
-    cout << "noise_a: "<< noise_a<<" [m] "<<endl;
-    cout << "noise_b: "<< noise_b<<" [m] "<<endl;
-    cout << "noise_T: "<< noise_T<<" [m] "<<endl;
+    // 发布无人机当前odometry,用于导航及rviz显示
+    nav_msgs::Odometry Drone_odom;
+    Drone_odom.header.stamp = ros::Time::now();
+    Drone_odom.header.frame_id = "map";
+
+    Drone_odom.pose.pose.position.x = Drone_State.position[0];
+    Drone_odom.pose.pose.position.y = Drone_State.position[1];
+    Drone_odom.pose.pose.position.z = Drone_State.position[2];
+
+    // 导航算法规定 高度不能小于0
+    if(Drone_odom.pose.pose.position.z <= 0)
+    {
+        Drone_odom.pose.pose.position.z = 0.01;
+    }
+
+    Drone_odom.pose.pose.orientation = Drone_State.attitude_q;
+    Drone_odom.twist.twist.linear.x = Drone_State.velocity[0];
+    Drone_odom.twist.twist.linear.y = Drone_State.velocity[1];
+    Drone_odom.twist.twist.linear.z = Drone_State.velocity[2];
+    odom_pub.publish(Drone_odom);
+        
+    // 发布无人机运动轨迹，用于rviz显示
+    geometry_msgs::PoseStamped drone_pos;
+    drone_pos.header.stamp = ros::Time::now();
+    drone_pos.header.frame_id = "map";
+    drone_pos.pose.position.x = Drone_State.position[0];
+    drone_pos.pose.position.y = Drone_State.position[1];
+    drone_pos.pose.position.z = Drone_State.position[2];
+
+    drone_pos.pose.orientation = Drone_State.attitude_q;
+    //drone_pub.publish(drone_pos);
+
+    //发布无人机的位姿 和 轨迹 用作rviz中显示
+    posehistory_vector_.insert(posehistory_vector_.begin(), drone_pos);
+    if(posehistory_vector_.size() > TRA_WINDOW)
+    {
+        posehistory_vector_.pop_back();
+    }
+    
+    nav_msgs::Path drone_trajectory;
+    drone_trajectory.header.stamp = ros::Time::now();
+    drone_trajectory.header.frame_id = "map";
+    drone_trajectory.poses = posehistory_vector_;
+    trajectory_pub.publish(drone_trajectory);
 }

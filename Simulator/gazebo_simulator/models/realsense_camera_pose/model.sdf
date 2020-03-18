@@ -171,11 +171,30 @@
         <always_on>1</always_on>
         <update_rate>60</update_rate>
         <visualize>0</visualize>
+        <plugin name="camera_plugin" filename="libgazebo_ros_depth_camera.so">
+            <alwaysOn>true</alwaysOn>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+	    <pointCloudTopicName>prometheus/local_pointclouds</pointCloudTopicName>
+            <updateRate>30.0</updateRate>
+            <cameraName>realsense_d400</cameraName>
+            <frameName>/realsense_camera_link</frameName>
+            <hackBaseline>0</hackBaseline>
+            <focalLength>320.000101</focalLength>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+        </plugin>
       </sensor>
 
     </link>
     <plugin name="realsense_plugin" filename="librealsense_gazebo_plugin.so">
     </plugin>
+
+
+
     <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
       <alwaysOn>true</alwaysOn>
       <updateRate>50.0</updateRate>
