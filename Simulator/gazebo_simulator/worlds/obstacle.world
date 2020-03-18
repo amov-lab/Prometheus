@@ -11,7 +11,8 @@
     <include>
       <uri>model://ground_plane</uri>
     </include>
-    <physics type='ode'>
+    <physics name='default_physics' default='0' type='ode'>
+      <gravity>0 0 -9.8066</gravity>
       <ode>
         <solver>
           <type>quick</type>
@@ -29,6 +30,7 @@
       <max_step_size>0.004</max_step_size>
       <real_time_factor>1000.0</real_time_factor>
       <real_time_update_rate>250</real_time_update_rate>
+      <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
     </physics>
     <!-- Testing the automatic population of objects -->
     <model name='room'>
