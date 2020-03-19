@@ -8,3 +8,6 @@
 > roslaunch prometheus_global_planning rviz.launch
 > 选中 3D goal 工具,鼠标的左、右键同时按下，在前后移动鼠标（设置目标飞行高度），完成目标点设置。
 
+* 如果运行px4仿真，运行
+> roslaunch prometheus_global_planning planning_sim_px4_.launch  
+

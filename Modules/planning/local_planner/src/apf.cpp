@@ -60,9 +60,11 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         if(dist_push > obs_distance)
             continue;
         if(dist_push < min_dist){
-            dist_push = 0.2;
             // should be addressed carefully.
-            // printf("the distance is very dangerous, dist: %f\n", dist_push);
+            printf("the distance is very dangerous, dist: %f\n", dist_push);
+
+            dist_push = 0.2;
+
         }
         obstacles.push_back(p3d);
         double push_gain = k_push * (1/dist_push - 1/obs_distance)* 1.0/(dist_push * dist_push);
@@ -100,9 +102,7 @@ void APF::init(ros::NodeHandle& nh){
 
     nh.param("apf/obs_distance", obs_distance, 1.8);
     nh.param("apf/k_push", k_push, 1.5);
-    // obs_distance = 2.0;
-    min_dist = 0.2;
-    // k_push = 1.0;
+    min_dist = 0.1;
 
     max_att_dist = 4;
     k_att = 1.0;

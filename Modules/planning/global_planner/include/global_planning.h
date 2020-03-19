@@ -11,6 +11,7 @@
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Int8.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
@@ -60,6 +61,7 @@ private:
     bool has_point_map_;
     bool trigger_; // waypoint 
     bool have_goal_; 
+    std_msgs::Int8 replan;
 
     nav_msgs::Odometry odom_, odom__last;
     nav_msgs::Path A_star_path_cmd;
@@ -73,14 +75,16 @@ private:
     void waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg);
     void globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
+    void safetyCallback(const ros::TimerEvent& e);
 
     ros::NodeHandle node_;
     ros::Subscriber waypoint_sub_, odom_sub_, global_point_clound_sub_, local_point_clound_sub_;
-    ros::Timer exec_timer_;
+    ros::Timer exec_timer_, safety_timer_;
     ros::Time control_time;
 
     ros::Publisher pos_cmd_pub, global_map_marker_Pub, px4_pos_cmd_pub;
     ros::Publisher path_cmd_Pub;
+    ros::Publisher replan_cmd_Pub;
 
     // visual 
     PlanningVisualization::Ptr visualization_;

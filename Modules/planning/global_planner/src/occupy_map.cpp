@@ -4,7 +4,7 @@ namespace global_planner{
 
 void Occupy_map::setparam(ros::NodeHandle& nh){
     nh.param("astar/resolution_astar", resolution_,  0.2);
-    nh.param("astar/inflate", inflate_,  0.2);
+    nh.param("astar/inflate", inflate_,  0.3);
 //       /* ---------- map params ---------- */
     this->inv_resolution_ = 1.0 / resolution_;
 //     // initialize size of buffer
@@ -148,6 +148,41 @@ bool Occupy_map::isInMap(Eigen::Vector3d pos) {
     }
 
     return true;
+}
+
+bool Occupy_map::check_safety(Eigen::Vector3d& pos/*, Eigen::Vector3d& map_point*/){
+    if(!isInMap(pos)){
+        printf("[check_safety]: the odom point is not in map\n");
+        return 0;
+    }
+    Eigen::Vector3i id;
+    posToIndex(pos, id);
+    Eigen::Vector3i id_occ;
+    Eigen::Vector3d pos_occ;
+
+    int check_dist_xy = 1;
+    int check_dist_z=0;
+    for(int ix=-check_dist_xy; ix<=check_dist_xy; ix++){
+        for(int iy=-check_dist_xy; iy<=check_dist_xy; iy++){
+            for(int iz=-check_dist_z; iz<=check_dist_z; iz++){
+                id_occ(0) = id(0)+ix;
+                id_occ(1) = id(1)+iy;
+                id_occ(2) = id(2)+iz;
+                indexToPos(id_occ, pos_occ);
+                if(!isInMap(pos_occ)){
+                    printf("[check_safety]: current odom is near the boundary of the map\n");
+                    return 0;
+                }
+                if(getOccupancy(id_occ)){
+                    printf("[check_safety]: current state is dagerous, the pos [%d, %d, %d], is occupied\n", ix, iy, iz);
+                    return 0;
+                }
+
+            }
+        }
+    }
+    return 1;
+
 }
 
 void Occupy_map::posToIndex(Eigen::Vector3d pos, Eigen::Vector3i &id) {
