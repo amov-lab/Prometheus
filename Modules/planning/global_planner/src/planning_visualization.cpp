@@ -23,10 +23,11 @@ void PlanningVisualization::displaySphereList(vector<Eigen::Vector3d> list, doub
   traj_pub.publish(mk);
 
   mk.action = visualization_msgs::Marker::DELETE;
+  mk.pose.orientation.w = 1.0;
   mk.pose.orientation.x = 0.0;
   mk.pose.orientation.y = 0.0;
   mk.pose.orientation.z = 0.0;
-  mk.pose.orientation.w = 1.0;
+
   mk.color.r = color(0), mk.color.g = color(1), mk.color.b = color(2), mk.color.a = color(3);
   mk.scale.x = resolution, mk.scale.y = resolution, mk.scale.z = resolution;
   geometry_msgs::Point pt;
@@ -58,11 +59,11 @@ void PlanningVisualization::drawVel(Eigen::Vector3d pos, Eigen::Vector3d vec, Ei
     mk_state.header.stamp = ros::Time::now();
     mk_state.id = id;
     mk_state.type = visualization_msgs::Marker::ARROW;
-    mk_state.action = visualization_msgs::Marker::DELETE;
+    mk_state.action = visualization_msgs::Marker::ADD;
     mk_state.pose.orientation.w = 1.0;
-    mk_state.pose.orientation.x = 1.0;
-    mk_state.pose.orientation.y = 1.0;
-    mk_state.pose.orientation.z = 1.0;
+    mk_state.pose.orientation.x = 0.0;
+    mk_state.pose.orientation.y = 0.0;
+    mk_state.pose.orientation.z = 0.0;
     mk_state.scale.x = 0.1;
     mk_state.scale.y = 0.2;
     mk_state.scale.z = 0.3;
