@@ -78,7 +78,7 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
 
 }
 
-void execCallback(const ros::TimerEvent& e){
+void GlobalPlanner::execCallback(const ros::TimerEvent& e){
         // execute A star
     // if(!trigger_)
     // {
