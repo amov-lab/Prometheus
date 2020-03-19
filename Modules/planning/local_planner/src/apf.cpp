@@ -78,7 +78,8 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
 
     if(obstacles.size() != 0){
         printf("obstacle size: %d\n", obstacles.size());
-        push_force = push_force/double(obstacles.size());
+        // push_force = push_force/double(obstacles.size());
+        push_force=push_force/obstacles.size();
     }
 
     Eigen::Quaterniond cur_rotation_local_to_global(cur_odom_.pose.pose.orientation.w, 
@@ -88,6 +89,8 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
 
     Eigen::Matrix<double,3,3> rotation_mat_local_to_global = cur_rotation_local_to_global.toRotationMatrix();
     push_force = rotation_mat_local_to_global * push_force; 
+
+    push_force = push_force;
 
     ROS_INFO("push force: [%f, %f, %f], attractive force: [%f, %f, %f], obs size: %d, obs_dis: %f, k_push: %f", push_force(0), push_force(1), 
     push_force(2), attractive_force(0), attractive_force(1), attractive_force(2), obstacles.size(), obs_distance, k_push);

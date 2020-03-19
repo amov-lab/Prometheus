@@ -57,9 +57,9 @@ void PlanningVisualization::drawVel(Eigen::Vector3d pos, Eigen::Vector3d vec, Ei
     mk_state.type = visualization_msgs::Marker::ARROW;
     mk_state.action = visualization_msgs::Marker::ADD;
     mk_state.pose.orientation.w = 1.0;
-    mk_state.scale.x = 0.1;
-    mk_state.scale.y = 0.2;
-    mk_state.scale.z = 0.3;
+    mk_state.scale.x = 0.4;
+    mk_state.scale.y = 0.4;
+    mk_state.scale.z = 0.8;
     geometry_msgs::Point pt;
     pt.x = pos(0);
     pt.y = pos(1);
