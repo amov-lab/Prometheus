@@ -59,6 +59,7 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         double dist_push = (current_odom_local - p3d).norm();
         if(dist_push > obs_distance)
             continue;
+            
         if(dist_push < min_dist){
             // should be addressed carefully.
             printf("the distance is very dangerous, dist: %f\n", dist_push);
