@@ -15,7 +15,7 @@
         <!-- <remap from="/position_cmd" to="planning/pos_cmd"/>  -->
         <param name="local_planning/is_simulation" value="0" type="int"/>
         <param name="apf/obs_distance" value="1.0" type="double"/>
-        <param name="apf/k_push" value="1.5" type="double"/>
+        <param name="apf/k_push" value="1.0" type="double"/>
     </node>
         
 

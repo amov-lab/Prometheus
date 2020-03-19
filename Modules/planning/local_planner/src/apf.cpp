@@ -109,7 +109,7 @@ void APF::init(ros::NodeHandle& nh){
     min_dist = 0.1;
 
     max_att_dist = 4;
-    k_att = 1.0;
+    k_att = 0.6;
 }
 
 

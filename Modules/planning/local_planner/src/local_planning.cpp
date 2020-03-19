@@ -85,7 +85,7 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
     if(desired_vel.norm() > 1.0)
     {
-        desired_vel = desired_vel / desired_vel.norm() * 0.8;  // the max velocity is 0.2m
+        desired_vel = desired_vel / desired_vel.norm() * 0.4;  // the max velocity is 0.2m
     }
     printf("desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
     // 发布控制指令
