@@ -5,7 +5,7 @@
 
         <!-- trajectory server -->
     <node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen">
-        <!--<remap from="/rtabmap/cloud_map" to="/planning/global_point_cloud"/>-->
+        <!-- <remap from="/rtabmap/cloud_map" to="/planning/global_point_cloud"/> -->
         <!-- <remap from="/position_cmd" to="planning/pos_cmd"/>  -->
         <!-- <param name="global_planning/is_simulation" value="1" type="int"/> -->
         <param name="astar/allocate_num" value="10000" type="int"/>
