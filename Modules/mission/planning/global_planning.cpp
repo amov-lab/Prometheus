@@ -19,6 +19,8 @@
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_msgs/DroneState.h>
 #include <nav_msgs/Path.h>
+#include <std_msgs/Int8.h>
+
 using namespace std;
  
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -33,6 +35,7 @@ ros::Publisher command_pub;
 int flag_get_cmd = 0;
 geometry_msgs::PoseStamped goal;
 prometheus_msgs::DroneState _DroneState;
+std_msgs::Int8 replan_cmd;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -52,6 +55,10 @@ void goal_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
     goal = *msg;
 }
+void replan_cmd_cb(const std_msgs::Int8::ConstPtr& msg)
+{
+    replan_cmd = *msg;
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -66,6 +73,11 @@ int main(int argc, char **argv)
 
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
+
+    // 1代表危险，需要replan
+    ros::Subscriber replan_cmd_sub = nh.subscribe<std_msgs::Int8>("/planning/replan_cmd", 10, replan_cmd_cb);  
+
+    replan_cmd.data = 0;
 
     // 频率 [10Hz]
     ros::Rate rate(10.0);
@@ -110,6 +122,14 @@ int main(int argc, char **argv)
 
             command_pub.publish(Command_Now);
             cout << "waiting for trajectory" << endl;
+        }else if(replan_cmd.data == 1)
+        {
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Hold;
+            Command_Now.Command_ID                          = 1;
+
+            command_pub.publish(Command_Now);
+            cout << "Dangerous! Hold there." << endl; 
         }else
         {
             //只要当前航点中有未执行完的航点，就继续执行
