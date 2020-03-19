@@ -26,7 +26,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     // publish 
     global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/global_map_marker",  10);  
     safety_timer_ = node_.createTimer(ros::Duration(0.1), &GlobalPlanner::safetyCallback, this);
-    exec_timer_ = node_.createTimer(ros::Duration(0.1), &GlobalPlanner::execCallback, this);
+    exec_timer_ = node_.createTimer(ros::Duration(1.0), &GlobalPlanner::execCallback, this);
 
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/planning/path_cmd",  10);  
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/planning/replan_cmd", 1);  
