@@ -14,7 +14,7 @@
       <visual name='visual'>
         <geometry>
           <cylinder>
-            <radius>0.25</radius>
+            <radius>0.3</radius>
             <length>3.5</length>
           </cylinder>
         </geometry>
