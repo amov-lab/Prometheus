@@ -67,7 +67,7 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Alpha: 1
-      Buffer Length: 30
+      Buffer Length: 1
       Class: rviz/Path
       Color: 255; 25; 0
       Enabled: true
@@ -105,10 +105,10 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Alpha: 1
-      Buffer Length: 30
+      Buffer Length: 1
       Class: rviz/Path
       Color: 25; 255; 0
-      Enabled: false
+      Enabled: true
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
       Length: 0.30000001192092896
@@ -126,7 +126,7 @@ Visualization Manager:
       Shaft Length: 0.10000000149011612
       Topic: /planning/path_cmd
       Unreliable: false
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -195,7 +195,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.041192531585693
+      Distance: 13.464160919189453
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -210,10 +210,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4953984022140503
+      Pitch: 0.45039838552474976
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.31728458404541
+      Yaw: 5.374157905578613
     Saved: ~
 Window Geometry:
   Displays:
@@ -231,5 +231,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1239
-  X: 205
-  Y: 46
+  X: 383
+  Y: 33
