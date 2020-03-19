@@ -77,7 +77,7 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
     }
 
     if(obstacles.size() != 0){
-        printf("obstacle size: %d\n", obstacle.size());
+        printf("obstacle size: %d\n", obstacles.size());
         push_force = push_force/double(obstacles.size());
     }
 
