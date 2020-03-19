@@ -31,8 +31,6 @@
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_msgs/DroneState.h>
-#include <nav_msgs/Path.h>
-
 
 using namespace std;
 
@@ -43,8 +41,6 @@ class state_from_mavros
     state_from_mavros(void):
         state_nh("~")
     {
-        state_nh.param<int>("pos_estimator/state_fromposehistory_window", posehistory_window_, 200);
-
         // 【订阅】无人机当前状态 - 来自飞控
         //  本话题来自飞控(通过Mavros功能包 /plugins/sys_status.cpp)
         state_sub = state_nh.subscribe<mavros_msgs::State>("/mavros/state", 10, &state_from_mavros::state_cb,this);
@@ -59,11 +55,7 @@ class state_from_mavros
 
         // 【订阅】无人机当前欧拉角 坐标系:ENU系
         //  本话题来自飞控(通过Mavros功能包 /plugins/imu.cpp读取), 对应Mavlink消息为ATTITUDE (#30), 对应的飞控中的uORB消息为vehicle_attitude.msg
-        attitude_sub = state_nh.subscribe<sensor_msgs::Imu>("/mavros/imu/data", 10, &state_from_mavros::att_cb,this);
-
-        // 【发布】无人机运动轨迹，可通过参数pos_estimator/state_fromposehistory_window来设置轨迹的长短
-        trajectory_pub = state_nh.advertise<nav_msgs::Path>("/prometheus/drone_trajectory", 10);
-        
+        attitude_sub = state_nh.subscribe<sensor_msgs::Imu>("/mavros/imu/data", 10, &state_from_mavros::att_cb,this); 
     }
 
     //变量声明 
@@ -79,9 +71,6 @@ class state_from_mavros
         ros::Subscriber attitude_sub;
         ros::Publisher trajectory_pub;
 
-        int posehistory_window_;
-        std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
-
         void state_cb(const mavros_msgs::State::ConstPtr &msg)
         {
             _DroneState.connected = msg->connected;
@@ -94,19 +83,6 @@ class state_from_mavros
             _DroneState.position[0] = msg->pose.position.x;
             _DroneState.position[1] = msg->pose.position.y;
             _DroneState.position[2] = msg->pose.position.z;
-            
-            // 2020.1.15备注：目前/mavros/local_position/pose消息中也包含了四元数信息，但究其本质还是来自/plugins/imu.cpp，故此处并不复制其四元数
-            // 但刚好借用其 发布无人机运动轨迹，用作rviz画图显示
-            posehistory_vector_.insert(posehistory_vector_.begin(), *msg);
-            if(posehistory_vector_.size() > posehistory_window_){
-                posehistory_vector_.pop_back();
-            }
-            
-            nav_msgs::Path drone_trajectory;
-            drone_trajectory.header.stamp = ros::Time::now();
-            drone_trajectory.header.frame_id = "map";
-            drone_trajectory.poses = posehistory_vector_;
-            trajectory_pub.publish(drone_trajectory);
         }
 
         void vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)

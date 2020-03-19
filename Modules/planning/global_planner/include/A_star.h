@@ -159,7 +159,8 @@ public:
   void setParam(ros::NodeHandle& nh);
   void init(ros::NodeHandle& nh);
   void reset();
-
+  bool check_safety(Eigen::Vector3d &cur_pos);
+  
   int search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt);
 
   void setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point);

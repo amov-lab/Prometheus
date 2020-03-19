@@ -15,26 +15,35 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <nav_msgs/Path.h>
+
+#define TRA_WINDOW 1000
 
 using namespace std;
 
 prometheus_msgs::ControlCommand Command_Now;
-mavros_msgs::State current_state;                       //无人机当前状态[包含上锁状态 模式] (从飞控中读取)
-void state_cb(const mavros_msgs::State::ConstPtr& msg)
+prometheus_msgs::DroneState _DroneState;
+std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
+
+ros::Publisher ref_trajectory_pub;
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
-    current_state = *msg;
+    _DroneState = *msg;
 }
 void generate_com(int Move_mode, float state_desired[4]);
+void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_trajectory);
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "move");
     ros::NodeHandle nh;
 
-    // 【订阅】无人机当前状态 - 来自飞控
-    //  本话题来自飞控(通过/plugins/sys_status.cpp)
-    ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("/mavros/state", 10, state_cb);
+    // 【订阅】无人机当前状态
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
     ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+
+    //【发布】参考轨迹
+    ref_trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/reference_trajectory", 10);
 
     // 【服务】修改系统模式
     ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
@@ -111,7 +120,7 @@ int main(int argc, char **argv)
         }else if(Control_Mode == 999)
         {
             // 切换至offboard模式
-            while(current_state.mode != "OFFBOARD")
+            while(_DroneState.mode != "OFFBOARD")
             {
                 mode_cmd.request.custom_mode = "OFFBOARD";
                 set_mode_client.call(mode_cmd);
@@ -121,7 +130,7 @@ int main(int argc, char **argv)
                 ros::Duration(0.5).sleep();
             }
             // 解锁
-            while(!current_state.armed)
+            while(!_DroneState.armed)
             {
                 arm_cmd.request.value = true;
                 arming_client.call(arm_cmd);
@@ -191,9 +200,11 @@ int main(int argc, char **argv)
 
                         cout << "Trajectory tracking: "<< time_trajectory << " / " << trajectory_total_time  << " [ s ]" <<endl;
 
+                        Draw_in_rviz(Command_Now.Reference_State, true);
+
                         ros::Duration(0.01).sleep();
                     }
-
+                    
                 }else
                 {
                     Command_Now.header.stamp = ros::Time::now();
@@ -202,6 +213,7 @@ int main(int argc, char **argv)
                     Command_Now.Reference_State.Move_mode  = Move_mode;
                     Command_Now.Reference_State.Move_frame = Move_frame;
                     generate_com(Move_mode, state_desired);
+        
                     move_pub.publish(Command_Now);
                 }
                 break;
@@ -276,4 +288,41 @@ void generate_com(int Move_mode, float state_desired[4])
 
 
     Command_Now.Reference_State.yaw_ref = state_desired[3]/180.0*M_PI;
+}
+
+void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_trajectory)
+{
+    geometry_msgs::PoseStamped reference_pose;
+
+    reference_pose.header.stamp = ros::Time::now();
+    reference_pose.header.frame_id = "map";
+
+    reference_pose.pose.position.x = pos_ref.position_ref[0];
+    reference_pose.pose.position.y = pos_ref.position_ref[1];
+    reference_pose.pose.position.z = pos_ref.position_ref[2];
+
+    //ref_pose_pub.publish(reference_pose);
+
+    if(draw_trajectory)
+    {
+        posehistory_vector_.insert(posehistory_vector_.begin(), reference_pose);
+        if(posehistory_vector_.size() > TRA_WINDOW){
+            posehistory_vector_.pop_back();
+        }
+        
+        nav_msgs::Path reference_trajectory;
+        reference_trajectory.header.stamp = ros::Time::now();
+        reference_trajectory.header.frame_id = "map";
+        reference_trajectory.poses = posehistory_vector_;
+        ref_trajectory_pub.publish(reference_trajectory);
+    }else
+    {
+        posehistory_vector_.clear();
+        
+        nav_msgs::Path reference_trajectory;
+        reference_trajectory.header.stamp = ros::Time::now();
+        reference_trajectory.header.frame_id = "map";
+        reference_trajectory.poses = posehistory_vector_;
+        ref_trajectory_pub.publish(reference_trajectory);
+    }
 }

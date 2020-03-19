@@ -24,7 +24,7 @@
     
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
         <arg name="rtabmap_args"       value="--delete_db_on_start"/>
-        <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
+        <arg name="depth_topic"        value="/realsense_d400/depth/image_raw"/>
 		<arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
         <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
         <arg name="frame_id"           value="base_link"/>
@@ -34,14 +34,17 @@
 		<arg name="rtabmapviz"         value="false"/>
     </include>
 
-	<node pkg="prometheus_mission" type="local_planning" name="local_planning" output="screen" launch-prefix="gnome-terminal --">	
+	<node pkg="prometheus_mission" type="global_planning" name="global_planning" output="screen" launch-prefix="gnome-terminal --">	
 	</node>
 
 	<include file="$(find prometheus_global_planning)/launch/planning_simulator.launch">
     </include>
 
-    <include file="$(find prometheus_global_planning)/launch/rviz.launch">
-    </include>
-
+	<!-- run the rviz -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_global_planning.rviz" />
+        <!--<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_global_planning)/launch/default.rviz" />-->
+    </group>
 </launch>
 
