@@ -47,7 +47,7 @@ public:
     void indexToPos(Eigen::Vector3i id, Eigen::Vector3d &pos);
     int getOccupancy(Eigen::Vector3d pos) ;
     int getOccupancy(Eigen::Vector3i id);
-
+    bool check_safety(Eigen::Vector3d& pos/*, Eigen::Vector3d& map_point*/);
     typedef std::shared_ptr<Occupy_map> Ptr;
 };
 

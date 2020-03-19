@@ -37,7 +37,8 @@
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_msgs/GroundStation.h>
 #include <prometheus_msgs/ControlOutput.h>
-
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 
 using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -68,11 +69,8 @@ prometheus_msgs::ControlOutput _ControlOutput;
 prometheus_msgs::AttitudeReference _AttitudeReference;           //位置控制器输出，即姿态环参考量
 prometheus_msgs::GroundStation _GroundStation;                   //用于发送至地面站及log的消息
 
-int posehistory_window_;
-std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
-
+ros::Publisher GS_pub;
 ros::Publisher ref_pose_pub;
-ros::Publisher ref_trajectory_pub;
 
 Eigen::Vector3d throttle_sp;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -80,7 +78,7 @@ int check_failsafe();
 void printf_param();
 void Body_to_ENU();
 void add_disturbance();
-void Pub_Ref_Trajectory(const prometheus_msgs::PositionReference& pos_ref, const prometheus_msgs::AttitudeReference& att_ref);
+void Ref_pose_to_rviz(const prometheus_msgs::PositionReference& pos_ref, const prometheus_msgs::AttitudeReference& att_ref);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
 {
@@ -90,7 +88,7 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         Command_Now = *msg;
     }else
     {
-        ROS_WARN("Wrong Command ID.");
+        ROS_WARN_STREAM_ONCE("Wrong Command ID");
     }
     
     // 无人机一旦接受到Land或者Disarm指令，则会屏蔽其他指令
@@ -131,13 +129,10 @@ int main(int argc, char **argv)
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
     //【发布】log消息至ground_station.cpp
-    ros::Publisher GS_pub = nh.advertise<prometheus_msgs::GroundStation>("/prometheus/GroundStation", 10);      
-    
+    GS_pub = nh.advertise<prometheus_msgs::GroundStation>("/prometheus/GroundStation", 10);      
+        
     //【发布】参考位姿
     ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/reference_pose", 10);
-
-    //【发布】参考轨迹，可通过参数pos_estimator/state_fromposehistory_window来设置轨迹的长短
-    ref_trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/reference_trajectory", 10);
 
     // 10秒定时打印，以确保程序在正确运行
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
@@ -164,8 +159,6 @@ int main(int argc, char **argv)
     nh.param<float>("geo_fence/y_max", geo_fence_y[1], 100.0);
     nh.param<float>("geo_fence/z_min", geo_fence_z[0], -100.0);
     nh.param<float>("geo_fence/z_max", geo_fence_z[1], 100.0);
-
-    nh.param<int>("pos_estimator/state_fromposehistory_window", posehistory_window_, 200);
 
     // 位置控制一般选取为50Hz，主要取决于位置状态的更新频率
     ros::Rate rate(50.0);
@@ -402,10 +395,10 @@ int main(int argc, char **argv)
         throttle_sp[2] = _ControlOutput.Throttle[2];
 
         _AttitudeReference = prometheus_control_utils::ThrottleToAttitude(throttle_sp, Command_Now.Reference_State.yaw_ref);
-        
-        _command_to_mavros.send_attitude_setpoint(_AttitudeReference); 
 
-        Pub_Ref_Trajectory(Command_Now.Reference_State, _AttitudeReference);
+        Ref_pose_to_rviz(Command_Now.Reference_State, _AttitudeReference);
+
+        _command_to_mavros.send_attitude_setpoint(_AttitudeReference); 
 
         // For log
         if(time_trajectory == 0)
@@ -526,7 +519,8 @@ void add_disturbance()
 
 }
 
-void Pub_Ref_Trajectory(const prometheus_msgs::PositionReference& pos_ref, const prometheus_msgs::AttitudeReference& att_ref)
+
+void Ref_pose_to_rviz(const prometheus_msgs::PositionReference& pos_ref, const prometheus_msgs::AttitudeReference& att_ref)
 {
     geometry_msgs::PoseStamped reference_pose;
 
@@ -539,15 +533,4 @@ void Pub_Ref_Trajectory(const prometheus_msgs::PositionReference& pos_ref, const
     reference_pose.pose.orientation = att_ref.desired_att_q;
 
     ref_pose_pub.publish(reference_pose);
-
-    posehistory_vector_.insert(posehistory_vector_.begin(), reference_pose);
-    if(posehistory_vector_.size() > posehistory_window_){
-        posehistory_vector_.pop_back();
-    }
-    
-    nav_msgs::Path reference_trajectory;
-    reference_trajectory.header.stamp = ros::Time::now();
-    reference_trajectory.header.frame_id = "map";
-    reference_trajectory.poses = posehistory_vector_;
-    ref_trajectory_pub.publish(reference_trajectory);
 }

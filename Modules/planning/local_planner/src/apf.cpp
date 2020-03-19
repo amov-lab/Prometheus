@@ -35,7 +35,8 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
     pcl::PointXYZ pt;
     Eigen::Vector3d p3d;
     ros::Time begin_collision = ros::Time::now();
-    ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f", begin_collision.toSec()-begin_update_map.toSec());
+    ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f,  obs_distance: %f, min_dist: %f", begin_collision.toSec()-begin_update_map.toSec(), 
+                                                                                                                                                                                                        obs_distance, min_dist);
     ROS_INFO("point size: %d", latest_local_pcl_.points.size());
 
     // 引力
@@ -60,7 +61,10 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
             continue;
         if(dist_push < min_dist){
             // should be addressed carefully.
-            // printf("the distance is very dangerous, dist: %f\n", dist_push);
+            printf("the distance is very dangerous, dist: %f\n", dist_push);
+
+            dist_push = 0.2;
+
         }
         obstacles.push_back(p3d);
         double push_gain = k_push * (1/dist_push - 1/obs_distance)* 1.0/(dist_push * dist_push);
@@ -96,11 +100,9 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
 void APF::init(ros::NodeHandle& nh){
     has_local_map_ = false;
 
-    nh.param("apf/obs_distance", obs_distance, 1.2);
+    nh.param("apf/obs_distance", obs_distance, 1.8);
     nh.param("apf/k_push", k_push, 1.5);
-    // obs_distance = 2.0;
     min_dist = 0.1;
-    // k_push = 1.0;
 
     max_att_dist = 4;
     k_att = 1.0;
