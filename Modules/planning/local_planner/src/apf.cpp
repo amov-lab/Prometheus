@@ -57,7 +57,7 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         // Eigen::Matrix<double, 3,1> current_odom_local = current_odom;
 
         double dist_push = (current_odom_local - p3d).norm();
-        if(dist_push > obs_distance)
+        if(dist_push > obs_distance || isnan(dist_push))
             continue;
 
         if(dist_push < min_dist){
@@ -72,7 +72,9 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         if(dist_att<1.0){
             push_gain *= dist_att;  // to gaurantee to reach the goal.
         }
-        
+        std::cout<<"dist_push" << dist_push << std::endl;
+        std::cout << "push_gain: " << push_gain << std::endl;
+        std::cout << "p3d: " << p3d << std::endl;
         push_force += push_gain * (current_odom_local - p3d)/dist_push;
     }
 
@@ -87,13 +89,13 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
                                                                                                             cur_odom_.pose.pose.orientation.y,  
                                                                                                             cur_odom_.pose.pose.orientation.z); 
 
-    printf("odom q:[%f, %f, %f, %f]\n", cur_odom_.pose.pose.orientation.w, 
-                                                                                                            cur_odom_.pose.pose.orientation.x,  
-                                                                                                            cur_odom_.pose.pose.orientation.y,  
-                                                                                                            cur_odom_.pose.pose.orientation.z);
+    // printf("odom q:[%f, %f, %f, %f]\n", cur_odom_.pose.pose.orientation.w, 
+    //                                                                                                         cur_odom_.pose.pose.orientation.x,  
+    //                                                                                                         cur_odom_.pose.pose.orientation.y,  
+    //                                                                                                         cur_odom_.pose.pose.orientation.z);
 
     Eigen::Matrix<double,3,3> rotation_mat_local_to_global = cur_rotation_local_to_global.toRotationMatrix();
-    std::cout<< "rotation_mat_local_to_global:  " << rotation_mat_local_to_global<<std::endl;
+    // std::cout<< "rotation_mat_local_to_global:  " << rotation_mat_local_to_global<<std::endl;
     push_force = rotation_mat_local_to_global * push_force; 
 
     push_force = push_force;
