@@ -87,7 +87,13 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
                                                                                                             cur_odom_.pose.pose.orientation.y,  
                                                                                                             cur_odom_.pose.pose.orientation.z); 
 
+    printf("odom q:[%f, %f, %f, %f]\n", cur_odom_.pose.pose.orientation.w, 
+                                                                                                            cur_odom_.pose.pose.orientation.x,  
+                                                                                                            cur_odom_.pose.pose.orientation.y,  
+                                                                                                            cur_odom_.pose.pose.orientation.z);
+
     Eigen::Matrix<double,3,3> rotation_mat_local_to_global = cur_rotation_local_to_global.toRotationMatrix();
+    std::cout<< "rotation_mat_local_to_global:  " << rotation_mat_local_to_global<<std::endl;
     push_force = rotation_mat_local_to_global * push_force; 
 
     push_force = push_force;
