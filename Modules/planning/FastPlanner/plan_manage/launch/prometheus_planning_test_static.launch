@@ -100,6 +100,7 @@
 
     <!-- trajectory server -->
   <node pkg="prometheus_plan_manage" name="test_planning_static" type="test_planning_static" output="screen">
+      <remap from="/planning/global_point_cloud" to="/rtabmap/cloud_map"/>
       <param name="test/init_odom_x" value="1.0" type="double"/>
       <param name="test/init_odom_y" value="1.0" type="double"/>
       <param name="test/init_odom_z" value="1.0" type="double"/>

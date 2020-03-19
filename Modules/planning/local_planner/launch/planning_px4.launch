@@ -12,10 +12,9 @@
 
         <!-- trajectory server -->
     <node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
-        <!-- <remap from="/odom_world" to="/state_ukf/odom"/>
-        <remap from="/position_cmd" to="planning/pos_cmd"/> -->
+        <!-- <remap from="/position_cmd" to="planning/pos_cmd"/>  -->
         <param name="local_planning/is_simulation" value="0" type="int"/>
-        <param name="apf/obs_distance" value="0.8" type="double"/>
+        <param name="apf/obs_distance" value="1.0" type="double"/>
         <param name="apf/k_push" value="1.5" type="double"/>
     </node>
         

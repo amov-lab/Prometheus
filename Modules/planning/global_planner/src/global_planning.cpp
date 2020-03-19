@@ -13,6 +13,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     // init visualization
     ROS_INFO("---init visualization!---");
     visualization_.reset(new PlanningVisualization(nh));
+    string point_map_name;
 
     /* ---------- callback ---------- */
     ROS_INFO("---init sub and pub!---");
@@ -24,7 +25,12 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
 
     // publish 
     global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/global_map_marker",  10);  
+    safety_timer_ = node_.createTimer(ros::Duration(0.1), &GlobalPlanner::safetyCallback, this);
+
+
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/planning/path_cmd",  10);  
+    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/planning/replan_cmd", 1);  
+
     // a* algorithm
     Astar_ptr.reset(new Astar);
     Astar_ptr->setParam(nh);
@@ -139,10 +145,12 @@ geometry_msgs/PoseStamped[] poses
         path_i_pose.pose.position.x = path[i](0);
         path_i_pose.pose.position.y = path[i](1);
         path_i_pose.pose.position.z = path[i](2);
-        printf("%d: >>> %f,   %f,   %f >>>>\n", path[i](0), path[i](1), path[i](2));
+        printf("%d: >>> %f,   %f,   %f >>>>\n", i, path[i](0), path[i](1), path[i](2));
         A_star_path_cmd.poses.push_back(path_i_pose);
     }
     printf("goal position: %f, %f, %f\n", end_pt_(0), end_pt_(1), end_pt_(2));
+    control_time = ros::Time::now();
+    replan.data = 0;
     path_cmd_Pub.publish(A_star_path_cmd);
     
 }
@@ -199,6 +207,54 @@ void GlobalPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Ei
         m.points.push_back(p);
 
     }
+}
+
+void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
+//     rosmsg show nav_msgs/Odometry 
+// std_msgs/Header header
+//   uint32 seq
+//   time stamp
+//   string frame_id
+// string child_frame_id
+// geometry_msgs/PoseWithCovariance pose
+//   geometry_msgs/Pose pose
+//     geometry_msgs/Point position
+//       float64 x
+//       float64 y
+//       float64 z
+//     geometry_msgs/Quaternion orientation
+//       float64 x
+//       float64 y
+//       float64 z
+//       float64 w
+//   float64[36] covariance
+// geometry_msgs/TwistWithCovariance twist
+//   geometry_msgs/Twist twist
+//     geometry_msgs/Vector3 linear
+//       float64 x
+//       float64 y
+//       float64 z
+//     geometry_msgs/Vector3 angular
+//       float64 x
+//       float64 y
+//       float64 z
+//   float64[36] covariance
+
+    Eigen::Vector3d cur_pos(odom_.pose.pose.position.x, 
+                                                        odom_.pose.pose.position.y, 
+                                                        odom_.pose.pose.position.z);
+    bool is_safety = Astar_ptr->check_safety(cur_pos);
+
+    // give some for replan.
+    if(!is_safety && (ros::Time::now()-control_time).toSec()>3.0 && replan.data==0){
+        printf("[safetyCallback]: not safety, pls re select the goal point.\n");
+        replan.data = 1;
+        replan_cmd_Pub.publish(replan);
+    }
+    else{
+        replan.data = 0;
+    }
+
 }
 
 }
