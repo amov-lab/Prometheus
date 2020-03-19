@@ -3,15 +3,7 @@
   <model name='pillar_s'>
     <link name='link'>
       <inertial>
-        <mass>1</mass>
-        <inertia>
-          <ixx>0.145833</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0.145833</iyy>
-          <iyz>0</iyz>
-          <izz>0.125</izz>
-        </inertia>
+        <mass>1000</mass>
         <pose frame=''>0 0 0 0 -0 0</pose>
       </inertial>
       <self_collide>0</self_collide>
