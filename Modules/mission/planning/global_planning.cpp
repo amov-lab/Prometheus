@@ -45,6 +45,7 @@ void path_cb(const nav_msgs::Path::ConstPtr& msg)
     path = *msg;
     Num_total_wp = path.poses.size();
     wp_id = 0;
+    replan_cmd.data = 0;
     cout << "Get a new path!"<<endl;
 }
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
@@ -136,7 +137,11 @@ int main(int argc, char **argv)
             while( wp_id < Num_total_wp )
             {
                 float desired_yaw;  //[rad]
+                // 更新的话加滤波平滑期望航向角，然后航向角速度现幅度
+                // 或者直接冲着目标点
+                // to do
                 
+                //desired_yaw = atan2(Desired_vel.y, Desired_vel.x);
                 desired_yaw = 0.0;
 
                 Command_Now.header.stamp = ros::Time::now();
