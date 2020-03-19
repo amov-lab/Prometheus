@@ -59,14 +59,13 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         double dist_push = (current_odom_local - p3d).norm();
         if(dist_push > obs_distance)
             continue;
-            
+
         if(dist_push < min_dist){
             // should be addressed carefully.
             printf("the distance is very dangerous, dist: %f\n", dist_push);
-
             dist_push = 0.2;
-
         }
+
         obstacles.push_back(p3d);
         double push_gain = k_push * (1/dist_push - 1/obs_distance)* 1.0/(dist_push * dist_push);
 
@@ -78,6 +77,7 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
     }
 
     if(obstacles.size() != 0){
+        printf("obstacle size: %d\n", obstacle.size());
         push_force = push_force/double(obstacles.size());
     }
 
