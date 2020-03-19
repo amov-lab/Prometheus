@@ -136,7 +136,7 @@ void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel){
     }
     
     // 可视化
-    visualization_->drawVel(start_pt_, desired_vel * 0.5, Eigen::Vector4d(0, 0.6, 0.6, 1.0), 0);
+    visualization_->drawVel(start_pt_, desired_vel * 0.5, Eigen::Vector4d(1, 0.3, 0.3, 1.0), 0);
 
 }
 
