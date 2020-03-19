@@ -159,7 +159,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /planning/global_map_marker
+      Marker Topic: /planning_vis/trajectory
       Name: Marker
       Namespaces:
         "": true
@@ -195,7 +195,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 13.464160919189453
+      Distance: 18.91617774963379
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -210,10 +210,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.45039838552474976
+      Pitch: 0.5453982949256897
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.374157905578613
+      Yaw: 6.16917610168457
     Saved: ~
 Window Geometry:
   Displays:
@@ -231,5 +231,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1239
-  X: 383
+  X: 117
   Y: 33
