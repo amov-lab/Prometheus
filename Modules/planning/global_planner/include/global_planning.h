@@ -76,6 +76,8 @@ private:
     void globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
     void safetyCallback(const ros::TimerEvent& e);
+    void execCallback(const ros::TimerEvent& e);
+    
 
     ros::NodeHandle node_;
     ros::Subscriber waypoint_sub_, odom_sub_, global_point_clound_sub_, local_point_clound_sub_;
