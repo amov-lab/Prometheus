@@ -3,6 +3,7 @@
     <arg name="x" default="0.0"/>
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
+    <arg name="Y" default="1.57"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera/iris_realsense_camera.sdf"/>
 	<arg name="model" default="iris_realsense_camera"/>
@@ -12,6 +13,7 @@
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>
       <arg name="z" value="$(arg z)"/>
+      <arg name="Y" value="$(arg Y)"/>
     </include>
 
     <!-- Define a static transform from a camera internal frame to the fcu for every camera used -->
@@ -28,7 +30,10 @@
 	<include file="$(find prometheus_local_planning)/launch/planning_px4.launch">
     </include>
 
-    
+    <!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
+	</node>	
     
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>

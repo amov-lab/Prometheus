@@ -24,7 +24,7 @@ using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 geometry_msgs::Point Desired_vel;
 
-
+float desired_yaw = 0;  //[rad]
 prometheus_msgs::PositionReference pos_cmd;
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 
@@ -42,20 +42,23 @@ void desired_vel_cb(const geometry_msgs::Point::ConstPtr& msg)
     flag_get_cmd = 1;
     Desired_vel = *msg;
 
-    float desired_yaw;  //[rad]
-    //莫长 决定是否更新， 更新的话加滤波平滑
     
-    //desired_yaw = atan2(Desired_vel.y, Desired_vel.x);
-    desired_yaw = 0.0;
+    //莫长 决定是否更新， 更新的话加滤波平滑
+
+    if( sqrt(Desired_vel.x*Desired_vel.x + Desired_vel.y*Desired_vel.y)  >  0.2   )
+    {
+        desired_yaw = (0.6*desired_yaw + 0.4*atan2(Desired_vel.y, Desired_vel.x) );
+    }
+    
 
     Command_Now.header.stamp = ros::Time::now();
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_VEL;
+    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.velocity_ref[0]     = Desired_vel.x;
     Command_Now.Reference_State.velocity_ref[1]     = Desired_vel.y;
-    Command_Now.Reference_State.velocity_ref[2]     = Desired_vel.z;
+    Command_Now.Reference_State.position_ref[2]     = 1.5;
     Command_Now.Reference_State.yaw_ref             = desired_yaw;
 
     command_pub.publish(Command_Now);
