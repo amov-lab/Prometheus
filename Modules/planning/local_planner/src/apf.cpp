@@ -67,10 +67,11 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         if(dist_push > obs_distance || isnan(dist_push))
             continue;
 
+        dist_push = dist_push - inflate_distance;
         if(dist_push < min_dist){
             // should be addressed carefully.
             printf("the distance is very dangerous, dist: %f\n", dist_push);
-            dist_push = 0.25;
+            dist_push = min_dist * 2;
         }
 
         obstacles.push_back(p3d);
@@ -124,14 +125,15 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
 void APF::init(ros::NodeHandle& nh){
     has_local_map_ = false;
 
+    nh.param("apf/inflate_distance", inflate_distance, 0.20);  // 感知障碍物距离
     nh.param("apf/obs_distance", obs_distance, 2.5);  // 感知障碍物距离
-    nh.param("apf/k_push", k_push, 1.0);                         // 推力增益
+    nh.param("apf/k_push", k_push, 0.8);                         // 推力增益
     nh.param("apf/k_att", k_att, 0.4);                                  // 引力增益
-    nh.param("apf/min_dist", min_dist, 0.3);                            // 最小壁障距离
+    nh.param("apf/min_dist", min_dist, 0.2);                            // 最小壁障距离
     nh.param("apf/max_att_dist", max_att_dist, 5.0);             // 最大吸引距离
     nh.param("apf/ground_height", ground_height, 0.1);  // 地面高度
     nh.param("apf/ground_safe_height", ground_safe_height, 0.2);  // 地面安全距离
-    
+
 }
 
 
