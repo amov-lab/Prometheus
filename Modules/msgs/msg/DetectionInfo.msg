@@ -14,3 +14,7 @@ float32[3] attitude
 
 ## 偏航角误差
 float32 yaw_error
+
+## 类别
+int32 category
+
