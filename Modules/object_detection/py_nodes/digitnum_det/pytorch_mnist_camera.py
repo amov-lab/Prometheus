@@ -71,8 +71,9 @@ def sort4points(points):
 
 def box_extractor(img, net):
     edges = cv2.Canny(img, 100, 200)
-    image, cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     num = -1
+    det_nums = []
     for cnt in cnts:
         peri = cv2.arcLength(cnt, True)
         approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
@@ -103,9 +104,10 @@ def box_extractor(img, net):
                     N_in = N_in.to(device)
                     outputs = net(N_in)
                 num = np.argmax(outputs.cpu().numpy())
+                if num not in det_nums:
+                    det_nums.append(num)
 
-                cv2.putText(img, 'num: %d' % num, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
-                pass
+    cv2.putText(img, 'nums: {}'.format(det_nums), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
 
     return img, num
 
