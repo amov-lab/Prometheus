@@ -309,8 +309,8 @@ void A_star_planner()
 
 void Fast_planner()
 {
-    float next_desired_yaw      = atan2( fast_planner.fast_planner_cmd.position_ref[1] - _DroneState.position[1], 
-                                         fast_planner.fast_planner_cmd.position_ref[0] - _DroneState.position[0]);
+    float next_desired_yaw      = atan2( fast_planner.fast_planner_cmd.velocity_ref[1] , 
+                                         fast_planner.fast_planner_cmd.velocity_ref[0]);
 
     desired_yaw = (0.8*desired_yaw + 0.2*next_desired_yaw);
     Command_Now.header.stamp = ros::Time::now();
