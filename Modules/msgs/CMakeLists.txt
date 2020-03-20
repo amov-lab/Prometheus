@@ -20,6 +20,7 @@ add_message_files(
   DIRECTORY msg
   FILES
   DetectionInfo.msg
+  MultiDetectionInfo.msg
   ControlCommand.msg
   PositionReference.msg
   AttitudeReference.msg
