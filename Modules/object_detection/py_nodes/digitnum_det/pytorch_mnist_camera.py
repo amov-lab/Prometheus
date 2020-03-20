@@ -4,6 +4,7 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import String
+from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
 import torch
 from pytorch_mnist import LeNet
 import torchvision as tv
@@ -22,8 +23,8 @@ camera_matrix = np.zeros((3, 3), np.float32)
 distortion_coefficients = np.zeros((5,), np.float32)
 digitnum_det_len = 1.0
 
-rmat_s = dict()
-tvec_s = dict()
+rospy.init_node('num_det', anonymous=True)
+pub = rospy.Publisher('/prometheus/target', MultiDetectionInfo, queue_size=10)
 
 
 # load LeNet model trained on mnist dataset
@@ -88,6 +89,9 @@ def box_extractor(img, net):
     _, cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     num = -1
     det_nums = []
+    m_info = MultiDetectionInfo()
+    m_info.num_objs = 0
+
     for cnt in cnts:
         peri = cv2.arcLength(cnt, True)
         approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
@@ -119,57 +123,42 @@ def box_extractor(img, net):
                     outputs = net(N_in)
                 num = np.argmax(outputs.cpu().numpy())
                 if num not in det_nums:
-                    det_nums.append(num)
-                    rmat_s[num] = np.eye(3).astype(np.float32)
-                    tvec_s[num] = np.zeros((3,), np.float32)
-                
-                obj_pts = np.array([[-digitnum_det_len/2, -digitnum_det_len/2, 0],
-                                    [digitnum_det_len/2, -digitnum_det_len/2, 0],
-                                    [digitnum_det_len/2, digitnum_det_len/2, 0],
-                                    [-digitnum_det_len/2, digitnum_det_len/2, 0]], np.float32)
-                # rvec = cv2.Rodrigues(rmat_s[num])[0]
-                ret, rvec, tvec = cv2.solvePnP(obj_pts, approx, camera_matrix, distortion_coefficients)
-                print(tvec)
+                    det_nums.append(num)         
+                    obj_pts = np.array([[-digitnum_det_len/2, -digitnum_det_len/2, 0],
+                                        [digitnum_det_len/2, -digitnum_det_len/2, 0],
+                                        [digitnum_det_len/2, digitnum_det_len/2, 0],
+                                        [-digitnum_det_len/2, digitnum_det_len/2, 0]], np.float32)
+                    # rvec = cv2.Rodrigues(rmat)[0]
+                    ret, rvec, tvec = cv2.solvePnP(obj_pts, approx, camera_matrix, distortion_coefficients)
+                    # print(tvec)
+                    d_info = DetectionInfo()
+                    d_info.detected = True
+                    d_info.frame = 0
+                    d_info.position = tvec
+                    d_info.attitude = rvec
+                    d_info.category = num
+                    m_info.detection_infos.append(d_info)
 
     cv2.putText(img, 'nums: {}'.format(det_nums), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
 
-    return img, num
+    return img, m_info
 
 
 def image_callback(imgmsg):
     bridge = CvBridge()
     frame = bridge.imgmsg_to_cv2(imgmsg, "bgr8")
     # processing
-    frame, num = box_extractor(frame, net)
+    frame, m_info = box_extractor(frame, net)
+    # print(m_info)
+    pub.publish(m_info)
     # end
     cv2.imshow("color", frame)
     cv2.waitKey(10)
 
 
 def num_det():
-    pub = rospy.Publisher('/vision/num_det', String, queue_size=10)
-    rospy.init_node('num_det', anonymous=True)
     rospy.Subscriber("/prometheus/camera/rgb/image_raw", Image, image_callback)
-    
-    # cap = cv2.VideoCapture(0)
     rospy.spin()
-    
-    # rate = rospy.Rate(30) # 30hz
-    while not rospy.is_shutdown():
-        
-        state, frame = cap.read()
-        frame, num = box_extractor(frame, net)
-        cv2.imshow("capture", frame)
-        if cv2.waitKey(5) & 0xFF == ord('q'):
-            break
-        
-        num_str = "num: %d" % num
-        rospy.loginfo(num_str)
-        pub.publish(num_str)
-        # rate.sleep()
-
-    cap.release()
-    cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
