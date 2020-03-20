@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<sdf version='1.5'>
+  <model name='P300'>
+    
+    <include>
+      <uri>model://iris</uri>
+    </include>
+    
+    <include>
+      <uri>model://realsense_camera_pose</uri>
+      <pose>0.1 0 0 0 0 0</pose>
+    </include>
+    <joint name="realsense_camera_joint" type="revolute">
+      <child>realsense_camera_pose::link</child>
+      <parent>iris::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+
+    <include>
+      <uri>model://3Dlidar_16</uri>
+      <pose>0 0 0.1 0 0 0</pose>
+    </include>
+    <joint name="3Dlidar_VLP16_joint" type="fixed">
+      <child>3Dlidar_16::link</child>
+      <parent>iris::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+
+  </model>
+</sdf>

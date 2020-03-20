@@ -162,8 +162,38 @@ Visualization Manager:
       Marker Topic: /planning_vis/trajectory
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 0
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic: /3Dlidar16_scan
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
@@ -213,7 +243,7 @@ Visualization Manager:
       Pitch: 0.5453982949256897
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.16917610168457
+      Yaw: 6.039173126220703
     Saved: ~
 Window Geometry:
   Displays:
@@ -232,4 +262,4 @@ Window Geometry:
     collapsed: false
   Width: 1239
   X: 117
-  Y: 33
+  Y: 27

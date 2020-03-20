@@ -7,12 +7,13 @@
     <arg name="map_size_z" value=" 5.0"/>
 
     <arg name="init_x" value="0.0"/>
-     <arg name="init_y" value="0.0"/>
+    <arg name="init_y" value="0.0"/>
     <arg name="init_z" value="1.0"/> 
 
         <!-- trajectory server -->
     <node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
         <!-- <remap from="/position_cmd" to="planning/pos_cmd"/>  -->
+        <remap from="/planning/local_pcl" to="/3Dlidar16_scan" />
         <param name="local_planning/is_simulation" value="0" type="int"/>
         <param name="apf/obs_distance" value="1.0" type="double"/>
         <param name="apf/k_push" value="1.0" type="double"/>
