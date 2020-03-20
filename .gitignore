@@ -9,7 +9,7 @@ devel/
 dist/
 
 # pytorch/python/numpy formats
-*.pth
+# *.pth
 *.pkl
 *.npy
 
