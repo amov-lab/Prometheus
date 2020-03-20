@@ -32,11 +32,13 @@
 
 
     <!-- Fast Planner -->
+    <arg name="topic_of_global_pcl" default="/rtabmap/cloud_map"/>
     <arg name="max_vel" value="1.0" />
     <arg name="max_acc" value="0.5" />
     <arg name="dynamic" value="0" />
     <arg name="pcd_file" value="$(find prometheus_plan_manage)/config/cloud0115.pcd" />
     <node pkg="prometheus_plan_manage" name="dyn_planner_node" type="dyn_planner_node" output="screen">
+        <remap from="/prometheus/planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- sdf map updating -->
         <param name="sdf_map/SDF_MODE" value="1" type="int"/>
         <param name="sdf_map/origin_x" value="-8.0" type="double"/>
@@ -115,8 +117,6 @@
 
     <!-- trajectory server -->
     <node pkg="prometheus_plan_manage" name="traj_server" type="traj_server" output="log">
-        <remap from="/odom_world" to="/prometheus/planning/odom_world"/>
-        <remap from="/position_cmd" to="/prometheus/planning/pos_cmd"/>
     </node>
 
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
@@ -125,7 +125,7 @@
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_global_planning.rviz" />
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
     </group>
 </launch>
 
