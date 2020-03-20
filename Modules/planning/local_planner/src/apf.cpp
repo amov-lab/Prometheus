@@ -47,14 +47,21 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
     {
         attractive_force = k_att * (goal - current_odom);
     }
+
     // 排斥力
+    double uav_height = cur_odom_.pose.pose.position.z;
     push_force = Eigen::Vector3d(0.0, 0, 0);
     for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
         pt = latest_local_pcl_.points[i];
         p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
+        
 
         Eigen::Matrix<double, 3,1> current_odom_local(0.0, 0,0);
         // Eigen::Matrix<double, 3,1> current_odom_local = current_odom;
+        // remove the ground point 
+        double point_height_global = uav_height+p3d(2);
+        if(fabs(point_height_global)<ground_height)
+            continue;
 
         double dist_push = (current_odom_local - p3d).norm();
         if(dist_push > obs_distance || isnan(dist_push))
@@ -63,7 +70,7 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
         if(dist_push < min_dist){
             // should be addressed carefully.
             printf("the distance is very dangerous, dist: %f\n", dist_push);
-            dist_push = 0.2;
+            dist_push = 0.25;
         }
 
         obstacles.push_back(p3d);
@@ -80,7 +87,6 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
 
     if(obstacles.size() != 0){
         printf("obstacle size: %d\n", obstacles.size());
-        // push_force = push_force/double(obstacles.size());
         push_force=push_force/obstacles.size();
     }
 
@@ -95,8 +101,14 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
     //                                                                                                         cur_odom_.pose.pose.orientation.z);
 
     Eigen::Matrix<double,3,3> rotation_mat_local_to_global = cur_rotation_local_to_global.toRotationMatrix();
-    // std::cout<< "rotation_mat_local_to_global:  " << rotation_mat_local_to_global<<std::endl;
+
+
     push_force = rotation_mat_local_to_global * push_force; 
+
+    if(uav_height<ground_safe_height){
+            printf("[compute_force]: near the ground, the height%f \n", uav_height);
+            push_force = push_force + Eigen::Matrix<double, 3, 1>(0, 0, (ground_safe_height-uav_height)*3.0);
+    }
 
     push_force = push_force;
 
@@ -112,12 +124,14 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
 void APF::init(ros::NodeHandle& nh){
     has_local_map_ = false;
 
-    nh.param("apf/obs_distance", obs_distance, 1.8);
-    nh.param("apf/k_push", k_push, 1.5);
-    min_dist = 0.1;
-
-    max_att_dist = 4;
-    k_att = 0.6;
+    nh.param("apf/obs_distance", obs_distance, 2.5);  // 感知障碍物距离
+    nh.param("apf/k_push", k_push, 1.0);                         // 推力增益
+    nh.param("apf/k_att", k_att, 0.4);                                  // 引力增益
+    nh.param("apf/min_dist", min_dist, 0.3);                            // 最小壁障距离
+    nh.param("apf/max_att_dist", max_att_dist, 5.0);             // 最大吸引距离
+    nh.param("apf/ground_height", ground_height, 0.1);  // 地面高度
+    nh.param("apf/ground_safe_height", ground_safe_height, 0.2);  // 地面安全距离
+    
 }
 
 

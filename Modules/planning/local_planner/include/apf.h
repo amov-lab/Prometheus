@@ -34,6 +34,8 @@ private:
 
     double max_att_dist;
     double k_att;
+    double ground_height;
+    double ground_safe_height;
 
     Eigen::Matrix<double, 3, 1> push_force;
     Eigen::Matrix<double, 3, 1> attractive_force;
