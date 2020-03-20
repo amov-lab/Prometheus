@@ -23,6 +23,7 @@
 using namespace std;
 
 #define MIN_DIS 0.1
+#define FLY_HEIGHT 1.0
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 prometheus_msgs::DroneState _DroneState;                                   //无人机状态量
@@ -178,7 +179,13 @@ int main(int argc, char **argv)
             Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
             Command_Now.Reference_State.position_ref[0]     = goal.pose.position.x;
             Command_Now.Reference_State.position_ref[1]     = goal.pose.position.y;
-            Command_Now.Reference_State.position_ref[2]     = goal.pose.position.z;
+            if (start_flag == 1)
+            {
+                Command_Now.Reference_State.position_ref[2]     = FLY_HEIGHT;
+            }else
+            {
+                Command_Now.Reference_State.position_ref[2]     = goal.pose.position.z;
+            }
             Command_Now.Reference_State.yaw_ref             = desired_yaw;
             command_pub.publish(Command_Now);
             cout << "Arrived the goal, waiting for a new goal... " << endl;
@@ -232,7 +239,7 @@ void APF_planner()
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.velocity_ref[0]     = APF.desired_vel.x;
     Command_Now.Reference_State.velocity_ref[1]     = APF.desired_vel.y;
-    Command_Now.Reference_State.position_ref[2]     = 1.0;
+    Command_Now.Reference_State.position_ref[2]     = FLY_HEIGHT;
     Command_Now.Reference_State.yaw_ref             = desired_yaw;
     command_pub.publish(Command_Now);
     cout << "APF planner:"<<endl;
@@ -302,8 +309,8 @@ void A_star_planner()
 
 void Fast_planner()
 {
-    float next_desired_yaw      = atan2( fast_planner.fast_planner_cmd.position_ref[1] - _DroneState.position[1], 
-                                         fast_planner.fast_planner_cmd.position_ref[0] - _DroneState.position[0]);
+    float next_desired_yaw      = atan2( fast_planner.fast_planner_cmd.velocity_ref[1] , 
+                                         fast_planner.fast_planner_cmd.velocity_ref[0]);
 
     desired_yaw = (0.8*desired_yaw + 0.2*next_desired_yaw);
     Command_Now.header.stamp = ros::Time::now();

@@ -234,22 +234,22 @@ int main(int argc, char** argv) {
 
   // 订阅bspline, replan标志， odom信息（只用于显示）
   ros::Subscriber bspline_sub =
-      node.subscribe("planning/bspline", 10, bsplineCallback);
+      node.subscribe("/prometheus/planning/bspline", 10, bsplineCallback);
 
   ros::Subscriber replan_sub =
-      node.subscribe("planning/replan", 10, replanCallback);
+      node.subscribe("/prometheusplanning/replan", 10, replanCallback);
 
-  ros::Subscriber odom_sub = node.subscribe("/planning/odom_world", 50, odomCallbck);
+  ros::Subscriber odom_sub = node.subscribe("/prometheus/planning/odom_world", 50, odomCallbck);
 
   // 发布当前机器人指令状态
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
-  state_pub = node.advertise<visualization_msgs::Marker>("planning/state", 10);
+  state_pub = node.advertise<visualization_msgs::Marker>("/prometheus/planning/state", 10);
   
   pos_cmd_pub =
-    node.advertise<prometheus_msgs::PositionReference>("planning/position_cmd", 50);
+    node.advertise<prometheus_msgs::PositionReference>("/prometheus/planning/position_cmd", 50);
   // 发布轨迹控制指令，无人机实际轨迹
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.5), visCallback);
-  traj_pub = node.advertise<visualization_msgs::Marker>("planning/traj", 10);
+  traj_pub = node.advertise<visualization_msgs::Marker>("/prometheus/planning/traj", 10);
 
   ros::Duration(1.0).sleep();
 
