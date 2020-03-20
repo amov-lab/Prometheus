@@ -73,13 +73,11 @@ private:
     }
   
     void waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg);
-    void globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
     void localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
     void execFSMCallback(const ros::TimerEvent& e);
 
     // 控制接口
-    prometheus_msgs::PositionReference cmd;
     geometry_msgs::Point px4_cmd;
 
     /* ---------- sub and pub ---------- */
@@ -88,7 +86,7 @@ private:
     ros::Timer exec_timer_;
     ros::Time control_time;
 
-    ros::Publisher pos_cmd_pub, local_map_marker_Pub, px4_pos_cmd_pub;
+    ros::Publisher local_map_marker_Pub, px4_pos_cmd_pub;
 
     // APF 算法 算子
     APF::Ptr apf_planner_ptr;

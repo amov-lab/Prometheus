@@ -103,12 +103,12 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "planning_mission");
     ros::NodeHandle nh("~");
         
-    ros::Subscriber global_planner_sub =    nh.subscribe<nav_msgs::Path>("/planning/path_cmd", 50, global_planner_cmd_cb);
+    ros::Subscriber global_planner_sub =    nh.subscribe<nav_msgs::Path>("/prometheus/planning/path_cmd", 50, global_planner_cmd_cb);
     ros::Subscriber local_planner_sub  =    nh.subscribe<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 50, local_planner_cmd_cb);
-    ros::Subscriber fast_planner_sub   =    nh.subscribe<prometheus_msgs::PositionReference>("/planning/position_cmd", 50, fast_planner_cmd_cb);
-    ros::Subscriber replan_cmd_sub = nh.subscribe<std_msgs::Int8>("/planning/replan_cmd", 10, replan_cmd_cb);  
+    ros::Subscriber fast_planner_sub   =    nh.subscribe<prometheus_msgs::PositionReference>("/prometheus/planning/position_cmd", 50, fast_planner_cmd_cb);
+    ros::Subscriber replan_cmd_sub = nh.subscribe<std_msgs::Int8>("/prometheus/planning/replan_cmd", 10, replan_cmd_cb);  
 
-    ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/planning/goal", 10,goal_cb);
+    ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 10,goal_cb);
     
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);

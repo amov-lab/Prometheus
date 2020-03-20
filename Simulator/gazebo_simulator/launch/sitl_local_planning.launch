@@ -3,38 +3,38 @@
     <arg name="x" default="0.0"/>
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
-    <arg name="Y" default="1.57"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera/iris_realsense_camera.sdf"/>
-	<arg name="model" default="iris_realsense_camera"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300/P300.sdf"/>
+	<arg name="model" default="P300"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>
       <arg name="z" value="$(arg z)"/>
-      <arg name="Y" value="$(arg Y)"/>
     </include>
 
-    <!-- Define a static transform from a camera internal frame to the fcu for every camera used -->
-    <node pkg="tf" type="static_transform_publisher" name="tf_realsense_camera"
-            args="0 0 0 -1.57 0 -1.57 base_link realsense_camera_link 10"/>
-
-    <!-- Ros transformation -->
-    <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
-          args="0 0 0 0 0 0 map odom 10"/>
-	
-    <include file="$(find prometheus_local_planning)/launch/planning_px4.launch">
+    <include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
     </include>
+
+	<!-- 选择输入源 -->
+	<!-- <arg name="topic_of_local_pcl" default="/3Dlidar16_scan"/> -->
+	<arg name="topic_of_local_pcl" default="/realsense_d400/prometheus/local_pointclouds"/>
+	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
+		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
+		<!-- 引一些参数出来，在这里 -->
+		<param name="local_planning/is_simulation" value="0" type="int"/>
+		<param name="apf/obs_distance" value="1.0" type="double"/>
+		<param name="apf/k_push" value="1.0" type="double"/>
+	</node>	
 
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
 	</node>
-    
+
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
 		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_local_planning.rviz" />
-        <!--<include file="$(find prometheus_local_planning)/launch/rviz.launch"> </include> --> 
-    </group>
+	</group>
 </launch>
-
