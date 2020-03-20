@@ -32,6 +32,7 @@ prometheus_msgs::ControlCommand Command_Now;                               //发
 prometheus_msgs::DroneState _DroneState;                                   //无人机状态量
 ros::Publisher command_pub;
 int flag_get_cmd = 0;
+int flag_get_goal = 0;
 geometry_msgs::PoseStamped goal;
 
 float desired_yaw = 0;  //[rad]
@@ -44,55 +45,17 @@ void desired_vel_cb(const geometry_msgs::Point::ConstPtr& msg)
 {
     flag_get_cmd = 1;
     Desired_vel = *msg;
-
-    distance_to_goal = sqrt(  pow(_DroneState.position[0] - goal.pose.position.x, 2) 
-                            + pow(_DroneState.position[1] - goal.pose.position.y, 2) );
-
-    // 抵达目标附近，则停止速度控制，改为位置控制
-    if (distance_to_goal < MIN_DIS)
-    {
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.position_ref[0]     = goal.pose.position.x;
-        Command_Now.Reference_State.position_ref[1]     = goal.pose.position.y;
-        Command_Now.Reference_State.position_ref[2]     = 1.5;
-        Command_Now.Reference_State.yaw_ref             = desired_yaw;
-    }else
-    {
-        //根据速度大小决定是否更新期望偏航角， 更新采用平滑滤波的方式，系数可调
-        if( sqrt(Desired_vel.x*Desired_vel.x + Desired_vel.y*Desired_vel.y)  >  0.2   )
-        {
-            desired_yaw = (0.6*desired_yaw + 0.4*atan2(Desired_vel.y, Desired_vel.x) );
-        }
-        
-        //高度改为定高飞行
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.velocity_ref[0]     = Desired_vel.x;
-        Command_Now.Reference_State.velocity_ref[1]     = Desired_vel.y;
-        Command_Now.Reference_State.position_ref[2]     = 1.5;
-        Command_Now.Reference_State.yaw_ref             = desired_yaw;
-    }
-
-    command_pub.publish(Command_Now);
-    cout << "desired_yaw: " << desired_yaw / M_PI * 180 << " [deg] "<<endl;
-    cout << "desired_vel: " << Desired_vel.x << " [m/s] "<< Desired_vel.y << " [m/s] "<< Desired_vel.z << " [m/s] "<<endl;
 }
-
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
+    distance_to_goal = sqrt(  pow(_DroneState.position[0] - goal.pose.position.x, 2) 
+                            + pow(_DroneState.position[1] - goal.pose.position.y, 2) );
 }
-
 void goal_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
     goal = *msg;
+    flag_get_goal = 1;
     cout << "Get a new goal!"<<endl;
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -113,22 +76,6 @@ int main(int argc, char **argv)
     // 频率 [20Hz]
     ros::Rate rate(20.0);
 
-    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
-    Command_Now.Command_ID                          = 0;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0]     = 0;
-    Command_Now.Reference_State.position_ref[1]     = 0;
-    Command_Now.Reference_State.position_ref[2]     = 0;
-    Command_Now.Reference_State.velocity_ref[0]     = 0;
-    Command_Now.Reference_State.velocity_ref[1]     = 0;
-    Command_Now.Reference_State.velocity_ref[2]     = 0;
-    Command_Now.Reference_State.acceleration_ref[0] = 0;
-    Command_Now.Reference_State.acceleration_ref[1] = 0;
-    Command_Now.Reference_State.acceleration_ref[2] = 0;
-    Command_Now.Reference_State.yaw_ref             = 0;
-    command_pub.publish(Command_Now);
-
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
@@ -140,24 +87,96 @@ int main(int argc, char **argv)
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    
+    // Waiting for input
+    int start_flag = 0;
+    while(start_flag == 0)
+    {
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Local Planning Mission<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << "Input 1 for start"<<endl;
+        cin >> start_flag;
+    }
+
+    // takeoff firstly
+    while( _DroneState.position[2] < 0.3)
+    {
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+        Command_Now.Command_ID = 1;
+        Command_Now.Reference_State.yaw_ref = 999;
+        command_pub.publish(Command_Now);   
+        cout << "Switch to OFFBOARD and arm ..."<<endl;
+        ros::Duration(5.0).sleep();
+        
+
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        command_pub.publish(Command_Now);
+        cout << "Takeoff ..."<<endl;
+        ros::Duration(5.0).sleep();
+
+        ros::spinOnce();
+    }
+
+
     while (ros::ok())
     {
         //回调
         ros::spinOnce();
+
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>> Local Planning Mission <<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
         if( flag_get_cmd == 0)
         {
+            cout << "Waiting for trajectory" << endl;
+        }else if (distance_to_goal < MIN_DIS)
+        {
+            // 抵达目标附近，则停止速度控制，改为位置控制
             Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Hold;
-            Command_Now.Command_ID                          = 1;
-
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+            Command_Now.Reference_State.position_ref[0]     = goal.pose.position.x;
+            Command_Now.Reference_State.position_ref[1]     = goal.pose.position.y;
+            Command_Now.Reference_State.position_ref[2]     = 1.5;
+            Command_Now.Reference_State.yaw_ref             = desired_yaw;
             command_pub.publish(Command_Now);
-            cout << "waiting for trajectory" << endl;
-        }
-        cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Planning<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
-        cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
+            cout << "Arrived the goal, waiting for a new goal" << endl;
+            cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
+            cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
+            flag_get_goal = 0;
+            while (flag_get_goal == 0)
+            {
+                ros::spinOnce();
+                rate.sleep();
+            }
+        }else
+        {
+            // 运动阶段，根据规划的速度前进
+            
+            // 根据速度大小决定是否更新期望偏航角， 更新采用平滑滤波的方式，系数可调
+            if( sqrt(Desired_vel.x*Desired_vel.x + Desired_vel.y*Desired_vel.y)  >  0.2   )
+            {
+                desired_yaw = (0.6*desired_yaw + 0.4*atan2(Desired_vel.y, Desired_vel.x) );
+            }
+            
+            // 高度改为定高飞行
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+            Command_Now.Reference_State.velocity_ref[0]     = Desired_vel.x;
+            Command_Now.Reference_State.velocity_ref[1]     = Desired_vel.y;
+            Command_Now.Reference_State.position_ref[2]     = 1.5;
+            Command_Now.Reference_State.yaw_ref             = desired_yaw;
+            command_pub.publish(Command_Now);
+            cout << "desired_yaw: " << desired_yaw / M_PI * 180 << " [deg] "<<endl;
+            cout << "desired_vel: " << Desired_vel.x << " [m/s] "<< Desired_vel.y << " [m/s] "<< Desired_vel.z << " [m/s] "<<endl;
+            cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
+            cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
 
+        }
 
         rate.sleep();
     }
