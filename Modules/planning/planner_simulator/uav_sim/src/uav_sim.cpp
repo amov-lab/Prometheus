@@ -80,7 +80,7 @@ int main(int argc,char** argv)
     ros::init(argc,argv,"uav_sim");
     ros::NodeHandle node_("~");
     // 2. 发布odom和点云地图
-    odom_pub = node_.advertise<nav_msgs::Odometry>("/planning/odom_world", 50);
+    odom_pub = node_.advertise<nav_msgs::Odometry>("/prometheus/planning/odom_world", 50);
 
 
 
@@ -92,7 +92,7 @@ int main(int argc,char** argv)
 
     // 3. set the triggle frequece for different events. 
 
-    ros::Subscriber traj_sub = node_.subscribe("/planning/position_cmd", 50, trajCallbck);
+    ros::Subscriber traj_sub = node_.subscribe("/prometheus/planning/position_cmd", 50, trajCallbck);
     // ros::Timer pub_odom_timer_ = node_.createTimer(ros::Duration(0.02), omdpubCallback);
 
     ROS_INFO(" the simulator initialization successful!");

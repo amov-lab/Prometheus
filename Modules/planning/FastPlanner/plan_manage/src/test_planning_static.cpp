@@ -177,8 +177,8 @@ int main(int argc,char** argv)
     ros::NodeHandle node_("~");
 
     // 2. 发布odom和点云地图
-    odom_pub = node_.advertise<nav_msgs::Odometry>("/planning/odom_world", 50);
-    map_pub =node_.advertise<sensor_msgs::PointCloud2>("/planning/global_point_cloud",1);
+    odom_pub = node_.advertise<nav_msgs::Odometry>("/prometheus/planning/odom_world", 50);
+    map_pub =node_.advertise<sensor_msgs::PointCloud2>("/prometheus/planning/global_pcl",1);
     // waypoint_pub = node_.advertise<geometry_msgs::PoseStamped>("/planning/waypoint", 50);
     // ros::Subscriber waypoint_sub_ = node_.subscribe("/planning/goal", 1, &waypointCallback);
 
@@ -195,7 +195,7 @@ int main(int argc,char** argv)
        // 由px4发布odom信息 
     }else if(odom_mode==2){
         // 无人机随轨迹运动，订阅轨迹，更新odom
-        traj_sub = node_.subscribe("/planning/position_cmd", 50, trajCallbck);
+        traj_sub = node_.subscribe("/prometheus/planning/position_cmd", 50, trajCallbck);
         pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
     }
     // 时间触发发布点云

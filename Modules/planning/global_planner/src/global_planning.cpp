@@ -29,7 +29,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     exec_timer_ = node_.createTimer(ros::Duration(1.0), &GlobalPlanner::execCallback, this);
 
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/planning/path_cmd",  10);  
-    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/replan_cmd", 1);  
+    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
     
     // a* algorithm
     Astar_ptr.reset(new Astar);
@@ -249,13 +249,14 @@ void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
     bool is_safety = Astar_ptr->check_safety(cur_pos);
 
     // give some for replan.
-    if(!is_safety && (ros::Time::now()-control_time).toSec()>3.0 && replan.data==0){
+    if(!is_safety /*&& (ros::Time::now()-control_time).toSec()>3.0*/){
         printf("[safetyCallback]: not safety, pls re select the goal point.\n");
         replan.data = 1;
         replan_cmd_Pub.publish(replan);
     }
     else{
         replan.data = 0;
+        replan_cmd_Pub.publish(replan);
     }
 
 }

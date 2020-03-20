@@ -35,6 +35,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     this);
 
     px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
+    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
     exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
 
     /*   bool  state    */
@@ -77,7 +78,17 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     
     apf_planner_ptr->set_odom(odom_);
 
-    apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
+    int planner_state = apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
+    if(planner_state==2){
+        // dangerous
+        replan.data = 1;
+        replan_cmd_Pub.publish(replan);
+    } else if(planner_state==1){
+        replan.data = 0;
+        replan_cmd_Pub.publish(replan);
+    }
+
+    
 
     if(desired_vel.norm() > 1.0)
     {

@@ -18,18 +18,21 @@ void APF::set_odom(nav_msgs::Odometry cur_odom){
 }
 
 
-bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel){
+int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel){
+    int local_planner_state=0;  // 0 for not init; 1for safe; 2 for dangerous
+    int safe_cnt=0;
+
     if(!has_local_map_)
-        return false;
+        return 0;
 
     if ((int)latest_local_pcl_.points.size() == 0) 
-        return false;
+        return 0;
 
     if (isnan(current_odom(0)) || isnan(current_odom(1)) || isnan(current_odom(2)))
-        return false;
+        return 0;
 
     if (isnan(goal(0)) || isnan(goal(1)) || isnan(goal(2)))
-        return false;
+        return 0;
 
     vector<Eigen::Vector3d> obstacles;
     pcl::PointXYZ pt;
@@ -68,10 +71,14 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
             continue;
 
         dist_push = dist_push - inflate_distance;
+        if(dist_push < 0.1){
+            safe_cnt++;
+        }
+        
         if(dist_push < min_dist){
             // should be addressed carefully.
             printf("the distance is very dangerous, dist: %f\n", dist_push);
-            dist_push = min_dist * 2;
+            dist_push = min_dist /1.5;
         }
 
         obstacles.push_back(p3d);
@@ -118,8 +125,13 @@ bool APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double,
     
     // 合力
     desired_vel = push_force + attractive_force;
+    if(safe_cnt>10){
+        local_planner_state = 2;
+    }else{
+        local_planner_state =1;
+    }
 
-    return true;
+    return local_planner_state;
 }
 
 void APF::init(ros::NodeHandle& nh){
