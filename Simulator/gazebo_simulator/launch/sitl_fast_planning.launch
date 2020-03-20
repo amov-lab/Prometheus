@@ -34,16 +34,11 @@
 		<arg name="rtabmapviz"         value="false"/>
     </include>
 
-	<!-- run the terminal_control.cpp -->
-	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
-	</node>
-
-	<node pkg="prometheus_mission" type="fast_planner" name="fast_planner" output="screen" launch-prefix="gnome-terminal --">	
-	</node>
-
     <include file="$(find prometheus_plan_manage)/launch/prometheus_planning_control_gazebo.launch">
     </include>
+
+	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+	</node>
 
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>

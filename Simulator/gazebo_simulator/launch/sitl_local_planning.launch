@@ -23,12 +23,12 @@
     <!-- Ros transformation -->
     <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
           args="0 0 0 0 0 0 map odom 10"/>
-
-	<node pkg="prometheus_mission" type="local_planning" name="local_planning" output="screen" launch-prefix="gnome-terminal --">	
-	</node>
-
-	<include file="$(find prometheus_local_planning)/launch/planning_px4.launch">
+	
+    <include file="$(find prometheus_local_planning)/launch/planning_px4.launch">
     </include>
+
+	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+	</node>
     
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>
