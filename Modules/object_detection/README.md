@@ -43,7 +43,13 @@ rosrun prometheus_detection landpad_det
 # 默认话题为: /prometheus/camera/rgb/image_raw
 roslaunch prometheus_detection landpad_det.launch
 # 对于Simulator中gazebo二维码降落板仿真环境
+source /home/fly-vision/Prometheus/devel/setup.bash
+export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/models:~/gazebo_models
+source ${your px4 path}/Firmware/Tools/setup_gazebo.bash ${your px4 path}/Firmware ${your px4 path}/Firmware/build/px4_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware/Tools/sitl_gazebo
 # 运行仿真环境 Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/launch/landing_with_qrcode.launch
+roslaunch prometheus_gazebo landing_with_qrcode.launch
 # 仿真环境中的图像话题为: /realsense_plugin/camera/color/image_raw
 roslaunch prometheus_detection landpad_det_gazebo.launch
 ```
@@ -64,7 +70,13 @@ rosrun prometheus_detection kcf_tracker
 # 默认话题为: /prometheus/camera/rgb/image_raw
 roslaunch prometheus_detection tracker_kcf.launch
 # 对于Simulator中gazebo行人跟踪仿真环境
-# 运行仿真环境 roslaunch prometheus_gazebo sitl_pedestrain_detection.launch
+source /home/fly-vision/Prometheus/devel/setup.bash
+export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/models:~/gazebo_models
+source ${your px4 path}/Firmware/Tools/setup_gazebo.bash ${your px4 path}/Firmware ${your px4 path}/Firmware/build/px4_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware/Tools/sitl_gazebo
+# 运行仿真环境sitl_pedestrain_detection.launch
+roslaunch prometheus_gazebo sitl_pedestrain_detection.launch
 # 仿真环境中的图像话题为: /realsense_plugin/camera/color/image_raw
 roslaunch prometheus_detection tracker_kcf_gazebo.launch
 ```
@@ -74,6 +86,12 @@ roslaunch prometheus_detection darknet_ros.launch
 ```
 4.数字检测
 ```
+# 对于gazebo仿真环境
+source /home/fly-vision/Prometheus/devel/setup.bash
+export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/models:~/gazebo_models
+source ${your px4 path}/Firmware/Tools/setup_gazebo.bash ${your px4 path}/Firmware ${your px4 path}/Firmware/build/px4_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:${your px4 path}/Firmware/Tools/sitl_gazebo
 # 启动gazebo中的数字检测仿真环境
 roslaunch prometheus_gazebo sitl_number_detection.launch
 # 仿真环境中的图像话题为: /realsense_plugin/camera/color/image_raw
