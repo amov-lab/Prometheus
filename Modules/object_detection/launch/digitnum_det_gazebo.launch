@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="prometheus_detection" type="pytorch_mnist_gazebo.py" name="digitnum_det" output="screen">
+    </node>
+</launch>

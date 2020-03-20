@@ -74,7 +74,11 @@ roslaunch prometheus_detection darknet_ros.launch
 ```
 4.数字检测
 ```
-roslaunch prometheus_detection num_det.launch
+# 启动gazebo中的数字检测仿真环境
+roslaunch prometheus_gazebo sitl_number_detection.launch
+# 仿真环境中的图像话题为: /realsense_plugin/camera/color/image_raw
+# 运行数字检测程序
+roslaunch prometheus_detection digitnum_det_gazebo.launch
 ```
 
 ## 附录

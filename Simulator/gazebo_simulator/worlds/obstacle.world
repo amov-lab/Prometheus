@@ -2,15 +2,6 @@
 <sdf version="1.5">
   <world name="default">
 
-    <!-- A global light source -->
-    <include>
-      <uri>model://sun</uri>
-    </include>
-
-    <!-- A ground plane -->
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
     <physics name='default_physics' default='0' type='ode'>
       <gravity>0 0 -9.8066</gravity>
       <ode>
@@ -33,94 +24,153 @@
       <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
     </physics>
     <!-- Testing the automatic population of objects -->
-    <model name='room'>
+    <!--model name='room'>
       <include>
         <uri>model://room_obs</uri>
         <pose>0 0 0 0 0 0</pose>
       </include>
+    </model-->
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A ground plane -->
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <bounce/>
+            <contact>
+              <ode/>
+            </contact>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+        <velocity_decay>
+          <linear>0</linear>
+          <angular>0</angular>
+        </velocity_decay>
+        <self_collide>0</self_collide>
+        <kinematic>0</kinematic>
+        <gravity>1</gravity>
+      </link>
     </model>
+
     <model name='pillar_l_1'>
       <include>
         <uri>model://pillar_l</uri>
-        <pose>0 0 0 0 0 0</pose>
+	<pose frame=''>0 0 0 0 0 0 </pose>
       </include>
     </model>
     <model name='pillar_m_1'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose>2 1.6 0 0 0 0</pose>
+        <pose frame=''>4 3.6 0 1 0 0 </pose>
       </include>
     </model>
     <model name='pillar_m_2'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose>1.8 -2.3 0 0 0 0</pose>
+        <pose>3.6 -4.6 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_m_3'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose>-1 2 0 0 0 0</pose>
+        <pose>-2 4 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_m_4'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose>-2.5 -1 0 0 0 0</pose>
+        <pose>-5 -2 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_1'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>1 3 0 0 0 0</pose>
+        <pose>2 6 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_2'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>3.5 3.5 0 0 0 0</pose>
+        <pose>7 7 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_3'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>3 -1 0 0 0 0</pose>
+        <pose>6 -2 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_4'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>0.5 -3.4 0 0 0 0</pose>
+        <pose>1 -6.8 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_5'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>0 -2 0 0 0 0</pose>
+        <pose>0 -4 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_6'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-1 -3 0 0 0 0</pose>
+        <pose>-2 -6 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_7'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-3.4 -3.3 0 0 0 0</pose>
+        <pose>-6.8 -6.6 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_8'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-2.5 1 0 0 0 0</pose>
+        <pose>-5 2 0 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_9'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-2.5 3 0 0 0 0</pose>
+        <pose>-5 6 0 0 0 0</pose>
       </include>
     </model>
   </world>
