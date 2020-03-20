@@ -19,17 +19,15 @@
     </include>
 
 	<!-- 选择输入源 -->
-	<!-- <arg name="topic_of_local_pcl" default="/3Dlidar16_scan"/> -->
-	<arg name="topic_of_local_pcl" default="/realsense_d400/prometheus/local_pointclouds"/>
+	<arg name="topic_of_local_pcl" default="/3Dlidar16_scan"/>
+	<!-- <arg name="topic_of_local_pcl" default="/realsense_d400/prometheus/local_pointclouds"/> -->
 	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
 		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
-
 		<!-- 参数 -->
 		<param name="apf/inflate_distance" value="0.2" type="double"/>
 		<!-- 感知距离 -->
 		<param name="apf/obs_distance" value="5.0" type="double"/>  
 		<!-- 增益 -->
-
 		<param name="apf/k_push" value="1.0" type="double"/>
 		<param name="apf/k_att" value="0.4" type="double"/>
 		<!-- 安全距离 -->
@@ -40,7 +38,6 @@
 		<param name="apf/ground_height" value="0.1" type="double"/>
 		<!-- 地面安全高度，小于该高度，会产生向上推力 -->
 		<param name="apf/ground_safe_height" value="0.2" type="double"/>
-
 	</node>	
 
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
