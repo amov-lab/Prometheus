@@ -79,6 +79,10 @@ roslaunch prometheus_gazebo sitl_number_detection.launch
 # 仿真环境中的图像话题为: /realsense_plugin/camera/color/image_raw
 # 运行数字检测程序
 roslaunch prometheus_detection digitnum_det_gazebo.launch
+# 对于实际的相机，默认的web_cam 
+# 默认话题为: /prometheus/camera/rgb/image_raw
+# 在真实的网络摄像头中 运行数字检测程序
+roslaunch prometheus_detection digitnum_det.launch
 ```
 
 ## 附录
