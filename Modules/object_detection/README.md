@@ -86,6 +86,9 @@ roslaunch prometheus_detection darknet_ros.launch
 ```
 4.数字检测
 ```
+# 安装python2运行时环境，pytorch和opencv-python
+pip install torch==1.4.0+cpu torchvision==0.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+pip install opencv-python=='3.4.2.16'
 # 对于gazebo仿真环境
 source /home/fly-vision/Prometheus/devel/setup.bash
 export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/models:~/gazebo_models
