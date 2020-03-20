@@ -195,10 +195,10 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "random_map_sensing");
   ros::NodeHandle n("~");
 
-  _local_map_pub = n.advertise<sensor_msgs::PointCloud2>("/planning/local_point_cloud", 1);
-  _all_map_pub = n.advertise<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1);
+  _local_map_pub = n.advertise<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1);
+  _all_map_pub = n.advertise<sensor_msgs::PointCloud2>("/prometheus/planning/global_point_cloud", 1);
 
-  _odom_sub = n.subscribe("/planning/odom_world", 50, rcvOdometryCallbck);
+  _odom_sub = n.subscribe("/prometheus/planning/odom_world", 50, rcvOdometryCallbck);
 
   n.param("init_state_x", _init_x, 0.0);
   n.param("init_state_y", _init_y, 0.0);

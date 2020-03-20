@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import rospy
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 from std_msgs.msg import String
+from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
 import torch
 from pytorch_mnist import LeNet
 import torchvision as tv
@@ -9,10 +12,19 @@ import torchvision.transforms as transforms
 import cv2
 import numpy as np
 import os
+import yaml
 
+
+# pip install opencv-python=='3.4.2.16'
 model_name = os.path.dirname(os.path.abspath(__file__)) + '/model/net_012.pth'
 # define use GPU or not
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+camera_matrix = np.zeros((3, 3), np.float32)
+distortion_coefficients = np.zeros((5,), np.float32)
+digitnum_det_len = 1.0
+
+rospy.init_node('num_det', anonymous=True)
+pub = rospy.Publisher('/prometheus/target', MultiDetectionInfo, queue_size=10)
 
 
 # load LeNet model trained on mnist dataset
@@ -24,6 +36,9 @@ def load_mnist_model():
     net.load_state_dict(checkpoint)
 
     return net
+
+
+net = load_mnist_model()
 
 
 def draw_approx_curve(img, approx):
@@ -71,8 +86,12 @@ def sort4points(points):
 
 def box_extractor(img, net):
     edges = cv2.Canny(img, 100, 200)
-    image, cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     num = -1
+    det_nums = []
+    m_info = MultiDetectionInfo()
+    m_info.num_objs = 0
+
     for cnt in cnts:
         peri = cv2.arcLength(cnt, True)
         approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
@@ -103,39 +122,69 @@ def box_extractor(img, net):
                     N_in = N_in.to(device)
                     outputs = net(N_in)
                 num = np.argmax(outputs.cpu().numpy())
+                if num not in det_nums:
+                    det_nums.append(num)         
+                    obj_pts = np.array([[-digitnum_det_len/2, -digitnum_det_len/2, 0],
+                                        [digitnum_det_len/2, -digitnum_det_len/2, 0],
+                                        [digitnum_det_len/2, digitnum_det_len/2, 0],
+                                        [-digitnum_det_len/2, digitnum_det_len/2, 0]], np.float32)
+                    # rvec = cv2.Rodrigues(rmat)[0]
+                    ret, rvec, tvec = cv2.solvePnP(obj_pts, approx, camera_matrix, distortion_coefficients)
+                    # print(tvec)
+                    d_info = DetectionInfo()
+                    d_info.detected = True
+                    d_info.frame = 0
+                    d_info.position = tvec
+                    d_info.attitude = rvec
+                    d_info.category = num
+                    m_info.detection_infos.append(d_info)
 
-                cv2.putText(img, 'num: %d' % num, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
-                pass
+    cv2.putText(img, 'nums: {}'.format(det_nums), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
 
-    return img, num
+    return img, m_info
+
+
+def image_callback(imgmsg):
+    bridge = CvBridge()
+    frame = bridge.imgmsg_to_cv2(imgmsg, "bgr8")
+    # processing
+    frame, m_info = box_extractor(frame, net)
+    # print(m_info)
+    pub.publish(m_info)
+    # end
+    cv2.imshow("color", frame)
+    cv2.waitKey(10)
 
 
 def num_det():
-    pub = rospy.Publisher('/vision/num_det', String, queue_size=10)
-    rospy.init_node('num_det', anonymous=True)
-    
-    cap = cv2.VideoCapture(0)
-    net = load_mnist_model()
-    
-    # rate = rospy.Rate(30) # 30hz
-    while not rospy.is_shutdown():
-        
-        state, frame = cap.read()
-        frame, num = box_extractor(frame, net)
-        cv2.imshow("capture", frame)
-        if cv2.waitKey(5) & 0xFF == ord('q'):
-            break
-        
-        num_str = "num: %d" % num
-        rospy.loginfo(num_str)
-        pub.publish(num_str)
-        # rate.sleep()
-
-    cap.release()
-    cv2.destroyAllWindows()
+    rospy.Subscriber("/prometheus/camera/rgb/image_raw", Image, image_callback)
+    rospy.spin()
 
 
 if __name__ == '__main__':
+    inparam = 'camera_param.yaml'
+    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + inparam
+    print('Input config file: {}'.format(inparam))
+
+    yaml_config = yaml.load(open(yaml_config_fn))
+
+    camera_matrix[0,0] = yaml_config['fx']
+    camera_matrix[1,1] = yaml_config['fy']
+    camera_matrix[2,2] = 1
+    camera_matrix[0,2] = yaml_config['x0']
+    camera_matrix[1,2] = yaml_config['y0']
+    print(camera_matrix)
+
+    distortion_coefficients[0] = yaml_config['k1']
+    distortion_coefficients[1] = yaml_config['k2']
+    distortion_coefficients[2] = yaml_config['p1']
+    distortion_coefficients[3] = yaml_config['p2']
+    distortion_coefficients[4] = yaml_config['k3']
+    print(distortion_coefficients)
+
+    digitnum_det_len = yaml_config['digitnum_det_len']
+    print(digitnum_det_len)
+
     try:
         num_det()
     except rospy.ROSInterruptException:

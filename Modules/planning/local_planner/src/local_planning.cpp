@@ -27,18 +27,15 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
     /* ---------- callback ---------- */
     ROS_INFO("---init sub and pub!---");
-    waypoint_sub_ = node_.subscribe("/planning/goal", 1, &PotentialFiledPlanner::waypointCallback, this);
+    waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &PotentialFiledPlanner::waypointCallback, this);
 
-    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/planning/odom_world", 10, &PotentialFiledPlanner::odomCallback, this);
+    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &PotentialFiledPlanner::odomCallback, this);
 
-    global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/planning/global_point_cloud", 1, &PotentialFiledPlanner::globalcloudCallback,
-                                                                            this);
-
-    local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/realsense_d400/prometheus/local_pointclouds", 1, &PotentialFiledPlanner::localcloudCallback,
+    local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1, &PotentialFiledPlanner::localcloudCallback,
     this);
 
-    pos_cmd_pub = node_.advertise<prometheus_msgs::PositionReference>("/planning/position_cmd", 10);
     px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
+    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
     exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
 
     /*   bool  state    */
@@ -81,11 +78,21 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     
     apf_planner_ptr->set_odom(odom_);
 
-    apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
+    int planner_state = apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
+    if(planner_state==2){
+        // dangerous
+        replan.data = 1;
+        replan_cmd_Pub.publish(replan);
+    } else if(planner_state==1){
+        replan.data = 0;
+        replan_cmd_Pub.publish(replan);
+    }
+
+    
 
     if(desired_vel.norm() > 1.0)
     {
-        desired_vel = desired_vel / desired_vel.norm() * 0.8;  // the max velocity is 0.2m
+        desired_vel = desired_vel / desired_vel.norm() * 0.4;  // the max velocity is 0.2m
     }
     printf("desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
     // 发布控制指令
@@ -100,44 +107,16 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
 }
 
-void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel){
-    ros::Time time_now = ros::Time::now();
-    cmd.header.stamp = time_now;
-    cmd.header.frame_id = "map";
-
-    cmd.Move_mode = prometheus_msgs::PositionReference::TRAJECTORY;  //TRAJECTORY
-    cmd.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME; //ENU_FRAME
-    cmd.time_from_start = 0.0;
-
-    cmd.position_ref[0] = start_pt_(0) + desired_vel(0) * 0.01;
-    cmd.position_ref[1] = start_pt_(1) + desired_vel(1)* 0.01;
-    cmd.position_ref[2] = start_pt_(2) + desired_vel(2) * 0.01;;
-
-    cmd.velocity_ref[0] = desired_vel(0);
-    cmd.velocity_ref[1] = desired_vel(1);
-    cmd.velocity_ref[2] = desired_vel(2);
-
-    cmd.acceleration_ref[0] = 0.0;
-    cmd.acceleration_ref[1] = 0.0;
-    cmd.acceleration_ref[2] = 0.0;
-
-    cmd.yaw_ref = 0.0;
-
+void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel)
+{
     // 发布控制指令
-    if(is_simulation==1){
-        pos_cmd_pub.publish(cmd);
-    }
-    else
-    {
-        px4_cmd.x = desired_vel(0);
-        px4_cmd.y = desired_vel(1);
-        px4_cmd.z = desired_vel(2);
-        px4_pos_cmd_pub.publish(px4_cmd);
-    }
-    
-    // 可视化
-    visualization_->drawVel(start_pt_, desired_vel * 0.5, Eigen::Vector4d(0, 1, 0, 1.0), 0);
+    px4_cmd.x = desired_vel(0);
+    px4_cmd.y = desired_vel(1);
+    px4_cmd.z = desired_vel(2);
+    px4_pos_cmd_pub.publish(px4_cmd);
 
+    // 可视化
+    visualization_->drawVel(start_pt_, desired_vel * 0.5, Eigen::Vector4d(1, 0.3, 0.3, 1.0), 0);
 }
 
 //  the goal is in the world frame. 
@@ -187,11 +166,6 @@ void PotentialFiledPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     odom_.header.frame_id = "map";
     have_odom_ = true;
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
-}
-
-
-void PotentialFiledPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg){
-
 }
 
 //  the local cloud is in the local frame. 
