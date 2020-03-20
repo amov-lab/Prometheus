@@ -156,7 +156,7 @@ int main(int argc, char **argv)
     drone_state_pub = nh.advertise<prometheus_msgs::DroneState>("/prometheus/drone_state", 10);
 
     //【发布】无人机odometry
-    odom_pub = nh.advertise<nav_msgs::Odometry>("/planning/odom_world", 10);
+    odom_pub = nh.advertise<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10);
     
     trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/drone_trajectory", 10);
 

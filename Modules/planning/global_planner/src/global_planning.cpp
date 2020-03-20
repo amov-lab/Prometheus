@@ -17,20 +17,20 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
 
     /* ---------- callback ---------- */
     ROS_INFO("---init sub and pub!---");
-    waypoint_sub_ = node_.subscribe("/planning/goal", 1, &GlobalPlanner::waypointCallback, this);
+    waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &GlobalPlanner::waypointCallback, this);
 
-    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/planning/odom_world", 10, &GlobalPlanner::odomCallback, this);
+    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &GlobalPlanner::odomCallback, this);
 
-    global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/rtabmap/cloud_map", 1, &GlobalPlanner::globalcloudCallback, this);
+    global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/global_pcl", 1, &GlobalPlanner::globalcloudCallback, this);
 
     // publish 
-    global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/global_map_marker",  10);  
+    global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/prometheus/planning/global_map_marker",  10);  
     safety_timer_ = node_.createTimer(ros::Duration(0.1), &GlobalPlanner::safetyCallback, this);
+    exec_timer_ = node_.createTimer(ros::Duration(1.0), &GlobalPlanner::execCallback, this);
 
-
-    path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/planning/path_cmd",  10);  
-    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/planning/replan_cmd", 1);  
-
+    path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/planning/path_cmd",  10);  
+    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
+    
     // a* algorithm
     Astar_ptr.reset(new Astar);
     Astar_ptr->setParam(nh);
@@ -76,12 +76,15 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
     end_vel_.setZero();
     have_goal_ = true;
 
-    // execute A star
-    if(!trigger_)
-    {
-        printf("don't trigger!\n");
-        return;
-    }
+}
+
+void GlobalPlanner::execCallback(const ros::TimerEvent& e){
+        // execute A star
+    // if(!trigger_)
+    // {
+    //     printf("don't trigger!\n");
+    //     return;
+    // }
 
     if(!have_odom_){
         printf("don't have odometry!\n");
@@ -246,13 +249,14 @@ void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
     bool is_safety = Astar_ptr->check_safety(cur_pos);
 
     // give some for replan.
-    if(!is_safety && (ros::Time::now()-control_time).toSec()>3.0 && replan.data==0){
+    if(!is_safety /*&& (ros::Time::now()-control_time).toSec()>3.0*/){
         printf("[safetyCallback]: not safety, pls re select the goal point.\n");
         replan.data = 1;
         replan_cmd_Pub.publish(replan);
     }
     else{
         replan.data = 0;
+        replan_cmd_Pub.publish(replan);
     }
 
 }

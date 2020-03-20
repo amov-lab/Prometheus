@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     //【发布】log消息至ground_station.cpp
     GS_pub = nh.advertise<prometheus_msgs::GroundStation>("/prometheus/GroundStation", 10);      
         
-    //【发布】参考位姿
+    //【发布】参考位姿 RVIZ用，速度控制下无用
     ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/reference_pose", 10);
 
     // 10秒定时打印，以确保程序在正确运行
@@ -244,7 +244,41 @@ int main(int argc, char **argv)
         case prometheus_msgs::ControlCommand::Idle:
             
             _command_to_mavros.idle();
-            
+
+            // 设定yaw_ref=999时，切换offboard模式，并解锁
+            if(Command_Now.Reference_State.yaw_ref == 999)
+            {
+                while(_DroneState.mode != "OFFBOARD")
+                {
+                    _command_to_mavros.mode_cmd.request.custom_mode = "OFFBOARD";
+                    _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+                    cout << "[px4_pos_controller]: Setting to OFFBOARD Mode..." <<endl;
+                    //执行回调函数
+                    ros::spinOnce();
+                    ros::Duration(0.5).sleep();
+
+                    if (_command_to_mavros.mode_cmd.response.mode_sent)
+                    {
+                        cout <<"[px4_pos_controller]: Set to OFFBOARD Mode Susscess! "<< endl;
+                    }
+                }
+
+                while(!_DroneState.armed)
+                {
+                    _command_to_mavros.arm_cmd.request.value = true;
+                    _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
+                    cout << "[px4_pos_controller]: Arming..." <<endl;
+                    //执行回调函数
+                    ros::spinOnce();
+                    ros::Duration(0.5).sleep();
+
+                    if (_command_to_mavros.arm_cmd.response.success)
+                    {
+                        cout <<"[px4_pos_controller]: Arm Susscess! "<< endl;
+                    }
+                }
+            }
+        
             break;
 
         // 【Takeoff】 从摆放初始位置原地起飞至指定高度，偏航角也保持当前角度
@@ -299,7 +333,6 @@ int main(int argc, char **argv)
                 {
                     _command_to_mavros.arm_cmd.request.value = false;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
-
                 }
 
                 if (_command_to_mavros.arm_cmd.response.success)

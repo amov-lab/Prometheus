@@ -22,14 +22,9 @@
 using namespace std;
 
 prometheus_msgs::ControlCommand Command_Now;
-prometheus_msgs::DroneState _DroneState;
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
-
+ros::Publisher move_pub;
 ros::Publisher ref_trajectory_pub;
-void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
-{
-    _DroneState = *msg;
-}
 void generate_com(int Move_mode, float state_desired[4]);
 void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_trajectory);
 int main(int argc, char **argv)
@@ -37,23 +32,10 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "move");
     ros::NodeHandle nh;
 
-    // 【订阅】无人机当前状态
-    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
-
-    ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+    move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     //【发布】参考轨迹
     ref_trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/reference_trajectory", 10);
-
-    // 【服务】修改系统模式
-    ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
-
-    ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
-
-    mavros_msgs::SetMode mode_cmd;
-
-    mavros_msgs::CommandBool arm_cmd;
-    arm_cmd.request.value = true;
 
     int Control_Mode = 0;
     int Move_mode = 0;
@@ -119,28 +101,11 @@ int main(int argc, char **argv)
             }
         }else if(Control_Mode == 999)
         {
-            // 切换至offboard模式
-            while(_DroneState.mode != "OFFBOARD")
-            {
-                mode_cmd.request.custom_mode = "OFFBOARD";
-                set_mode_client.call(mode_cmd);
-                cout << "Setting to OFFBOARD Mode..." <<endl;
-                //执行回调函数
-                ros::spinOnce();
-                ros::Duration(0.5).sleep();
-            }
-            // 解锁
-            while(!_DroneState.armed)
-            {
-                arm_cmd.request.value = true;
-                arming_client.call(arm_cmd);
-                cout << "Arming..." <<endl;
-                //执行回调函数
-                ros::spinOnce();
-                ros::Duration(0.5).sleep();
-            }
-            cout << "Set to OFFBOARD Mode Susscess!!!" <<endl;
-            cout << "Arm Susscess!!!" <<endl;
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Idle;
+            Command_Now.Command_ID = Command_Now.Command_ID + 1;
+            Command_Now.Reference_State.yaw_ref = 999;
+            move_pub.publish(Command_Now);
         }
 
         switch (Control_Mode)
