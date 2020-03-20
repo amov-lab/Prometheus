@@ -138,6 +138,7 @@ def box_extractor(img, net):
                     d_info.attitude = rvec
                     d_info.category = num
                     m_info.detection_infos.append(d_info)
+                    m_info.num_objs += 1
 
     cv2.putText(img, 'nums: {}'.format(det_nums), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
 
