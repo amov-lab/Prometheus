@@ -121,7 +121,7 @@ Visualization Manager:
       Single click: true
       Topic: /clicked_point
     - Class: rviz_plugins/Goal3DTool
-      Topic: /planning/goal
+      Topic: /prometheus/planning/goal
   Value: true
   Views:
     Current:

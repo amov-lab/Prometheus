@@ -51,7 +51,7 @@ public:
     int replan{0};
     void set_odom(nav_msgs::Odometry cur_odom);
     void set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr);
-    bool compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel);
+    int compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel);
     void init(ros::NodeHandle& nh);
     APF(){}
     ~APF(){}

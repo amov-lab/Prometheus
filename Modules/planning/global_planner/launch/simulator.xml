@@ -9,8 +9,6 @@
 
   <!-- map generation -->
   <node pkg ="prometheus_map_generator" name ="random_forest" type ="random_forest" output = "screen">    
-    <!-- <remap from="~odometry"   to="/odom/fake_odom"/>     -->
-    <remap from="/planning/global_point_cloud" to="/rtabmap/cloud_map"/>
     <param name="init_state_x"   value="$(arg init_x)"/>
     <param name="init_state_y"   value="$(arg init_y)"/>
     <param name="map/x_size"     value="$(arg map_size_x)" />

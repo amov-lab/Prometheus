@@ -13,6 +13,7 @@
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Int8.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Odometry.h>
 
@@ -58,6 +59,7 @@ private:
     int flight_type_;
     Eigen::Vector3d start_pt_, start_vel_,  end_pt_, end_vel_;
     pcl::PointCloud<pcl::PointXYZ> latest_local_pcl_;
+    std_msgs::Int8 replan;
 
     Eigen::Vector3d desired_vel;
 
@@ -87,6 +89,7 @@ private:
     ros::Time control_time;
 
     ros::Publisher local_map_marker_Pub, px4_pos_cmd_pub;
+    ros::Publisher replan_cmd_Pub;
 
     // APF 算法 算子
     APF::Ptr apf_planner_ptr;

@@ -8,8 +8,4 @@
 > roslaunch prometheus_local_planning planning_simulator.launch  
 > roslaunch prometheus_local_planning rviz.launch
 
-* 如果使用px4仿真运行
-> roslaunch prometheus_local_planning planning_px4.launch  
-> roslaunch prometheus_local_planning rviz.launch  
-
 ### ctrl+shift+v 预览 
