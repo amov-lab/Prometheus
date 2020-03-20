@@ -30,6 +30,8 @@ prometheus_msgs::DroneState _DroneState;                                   //无
 ros::Publisher command_pub;
 
 geometry_msgs::PoseStamped goal;                              // goal                    
+// 停止指令
+std_msgs::Int8 stop_cmd; 
 
 struct local_planner
 {
@@ -42,9 +44,7 @@ struct global_planner
     // 规划路径
     nav_msgs::Path path_cmd;
     int Num_total_wp;
-    int wp_id;
-    // 重规划 cmd
-    std_msgs::Int8 replan_cmd;   
+    int wp_id;  
 }A_star;
 
 struct fast_planner
@@ -69,11 +69,10 @@ void global_planner_cmd_cb(const nav_msgs::Path::ConstPtr& msg)
     A_star.path_cmd = *msg;
     A_star.Num_total_wp = A_star.path_cmd.poses.size();
     A_star.wp_id = 0;
-    A_star.replan_cmd.data = 0;
 }
-void replan_cmd_cb(const std_msgs::Int8::ConstPtr& msg)
+void stop_cmd_cb(const std_msgs::Int8::ConstPtr& msg)
 {
-    A_star.replan_cmd = *msg;
+    stop_cmd = *msg;
 }
 void local_planner_cmd_cb(const geometry_msgs::Point::ConstPtr& msg)
 {
@@ -103,19 +102,22 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "planning_mission");
     ros::NodeHandle nh("~");
-        
+    
+    //【订阅】无人机当前状态
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
+    
+    //【订阅】来自planning的指令
     ros::Subscriber global_planner_sub =    nh.subscribe<nav_msgs::Path>("/prometheus/planning/path_cmd", 50, global_planner_cmd_cb);
     ros::Subscriber local_planner_sub  =    nh.subscribe<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 50, local_planner_cmd_cb);
     ros::Subscriber fast_planner_sub   =    nh.subscribe<prometheus_msgs::PositionReference>("/prometheus/planning/position_cmd", 50, fast_planner_cmd_cb);
-    ros::Subscriber replan_cmd_sub = nh.subscribe<std_msgs::Int8>("/prometheus/planning/replan_cmd", 10, replan_cmd_cb);  
+    ros::Subscriber stop_cmd_sub = nh.subscribe<std_msgs::Int8>("/prometheus/planning/stop_cmd", 10, stop_cmd_cb);  
+    stop_cmd.data = 0;
 
+    //【订阅】目标点
     ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 10,goal_cb);
     
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
-
-    //【订阅】无人机当前状态
-    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -137,7 +139,7 @@ int main(int argc, char **argv)
         cin >> start_flag;
     }
 
-    // takeoff firstly
+    // 起飞
     while( _DroneState.position[2] < 0.3)
     {
         Command_Now.header.stamp = ros::Time::now();
@@ -148,7 +150,6 @@ int main(int argc, char **argv)
         cout << "Switch to OFFBOARD and arm ..."<<endl;
         ros::Duration(3.0).sleep();
         
-
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
@@ -158,7 +159,6 @@ int main(int argc, char **argv)
 
         ros::spinOnce();
     }
-
 
     while (ros::ok())
     {
@@ -197,6 +197,16 @@ int main(int argc, char **argv)
                 ros::spinOnce();
                 ros::Duration(0.05).sleep();
             }
+        }else if(stop_cmd.data == 1)
+        {
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Hold;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+
+            command_pub.publish(Command_Now);
+            cout << "Dangerous! Hold there." << endl; 
+
+            ros::Duration(0.1).sleep();
         }else
         {
             // 运动阶段，执行规划指令
@@ -249,60 +259,49 @@ void APF_planner()
 
 void A_star_planner()
 {
-    if(A_star.replan_cmd.data == 1)
+    //只要当前航点中有未执行完的航点，就继续执行
+    while( A_star.wp_id < A_star.Num_total_wp )
     {
+        // 更新的话加滤波平滑期望航向角
+        float next_desired_yaw = atan2(A_star.path_cmd.poses[A_star.wp_id].pose.position.y - _DroneState.position[1], 
+                                        A_star.path_cmd.poses[A_star.wp_id].pose.position.x - _DroneState.position[0]);
+        desired_yaw = (0.6*desired_yaw + 0.4*next_desired_yaw);
+
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Hold;
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.x ;
+        Command_Now.Reference_State.position_ref[1]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.y;
+        Command_Now.Reference_State.position_ref[2]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.z;
+        Command_Now.Reference_State.yaw_ref             = desired_yaw;
+        A_star.wp_id++;
 
         command_pub.publish(Command_Now);
-        cout << "Dangerous! Hold there." << endl; 
-    }else
-    {
-        //只要当前航点中有未执行完的航点，就继续执行
-        while( A_star.wp_id < A_star.Num_total_wp )
+        cout << "A star planner:"<<endl;
+        cout << "Moving to Waypoint: [ " << A_star.wp_id << " / "<< A_star.Num_total_wp<< " ] "<<endl;
+        cout << "desired_point: "   << A_star.path_cmd.poses[A_star.wp_id].pose.position.x << " [m] "
+                                    << A_star.path_cmd.poses[A_star.wp_id].pose.position.y << " [m] "
+                                    << A_star.path_cmd.poses[A_star.wp_id].pose.position.z << " [m] "<<endl;     
+        
+        //计算当前位置与下一个航点的距离，预估此处等待时间,最大速度为0.1m/s
+        double distance_to_next_wp = sqrt(  pow(_DroneState.position[0] - A_star.path_cmd.poses[A_star.wp_id].pose.position.x, 2) +
+                                            pow(_DroneState.position[1] - A_star.path_cmd.poses[A_star.wp_id].pose.position.y, 2) +
+                                            pow(_DroneState.position[2] - A_star.path_cmd.poses[A_star.wp_id].pose.position.z, 2)  );
+        float wait_time = distance_to_next_wp / 0.05;
+
+        int total_k = wait_time/0.01;
+
+        int k = 0;
+
+        while(distance_to_next_wp > 0.05 && k<total_k)
         {
-            // 更新的话加滤波平滑期望航向角
-            float next_desired_yaw = atan2(A_star.path_cmd.poses[A_star.wp_id].pose.position.y - _DroneState.position[1], 
-                                           A_star.path_cmd.poses[A_star.wp_id].pose.position.x - _DroneState.position[0]);
-            desired_yaw = (0.6*desired_yaw + 0.4*next_desired_yaw);
-
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-            Command_Now.Reference_State.position_ref[0]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.x ;
-            Command_Now.Reference_State.position_ref[1]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.y;
-            Command_Now.Reference_State.position_ref[2]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.z;
-            Command_Now.Reference_State.yaw_ref             = desired_yaw;
-            A_star.wp_id++;
-
-            command_pub.publish(Command_Now);
-            cout << "A star planner:"<<endl;
-            cout << "Moving to Waypoint: [ " << A_star.wp_id << " / "<< A_star.Num_total_wp<< " ] "<<endl;
-            cout << "desired_point: "   << A_star.path_cmd.poses[A_star.wp_id].pose.position.x << " [m] "
-                                        << A_star.path_cmd.poses[A_star.wp_id].pose.position.y << " [m] "
-                                        << A_star.path_cmd.poses[A_star.wp_id].pose.position.z << " [m] "<<endl;     
-            
-            //计算当前位置与下一个航点的距离，预估此处等待时间,最大速度为0.1m/s
             double distance_to_next_wp = sqrt(  pow(_DroneState.position[0] - A_star.path_cmd.poses[A_star.wp_id].pose.position.x, 2) +
                                                 pow(_DroneState.position[1] - A_star.path_cmd.poses[A_star.wp_id].pose.position.y, 2) +
                                                 pow(_DroneState.position[2] - A_star.path_cmd.poses[A_star.wp_id].pose.position.z, 2)  );
-            float wait_time = distance_to_next_wp / 0.05;
-
-            int total_k = wait_time/0.01;
-
-            int k = 0;
-
-            while(distance_to_next_wp > 0.05 && k<total_k)
-            {
-                double distance_to_next_wp = sqrt(  pow(_DroneState.position[0] - A_star.path_cmd.poses[A_star.wp_id].pose.position.x, 2) +
-                                                    pow(_DroneState.position[1] - A_star.path_cmd.poses[A_star.wp_id].pose.position.y, 2) +
-                                                    pow(_DroneState.position[2] - A_star.path_cmd.poses[A_star.wp_id].pose.position.z, 2)  );
-                sleep(0.01);
-                k = k+1;  
-            }
+            sleep(0.01);
+            k = k+1;  
         }
     }
 }
