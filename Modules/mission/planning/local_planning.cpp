@@ -20,11 +20,12 @@
 #include <prometheus_msgs/DroneState.h>
 #include <nav_msgs/Path.h>
 using namespace std;
- 
+
+#define MIN_DIS 0.1
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 geometry_msgs::Point Desired_vel;
 
-float desired_yaw = 0;  //[rad]
+
 prometheus_msgs::PositionReference pos_cmd;
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 
@@ -32,7 +33,9 @@ prometheus_msgs::DroneState _DroneState;                                   //无
 ros::Publisher command_pub;
 int flag_get_cmd = 0;
 geometry_msgs::PoseStamped goal;
-geometry_msgs::PoseStamped drone_pos;
+
+float desired_yaw = 0;  //[rad]
+float distance_to_goal = 0;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -42,24 +45,40 @@ void desired_vel_cb(const geometry_msgs::Point::ConstPtr& msg)
     flag_get_cmd = 1;
     Desired_vel = *msg;
 
-    
-    //莫长 决定是否更新， 更新的话加滤波平滑
+    distance_to_goal = sqrt(  pow(_DroneState.position[0] - goal.pose.position.x, 2) 
+                            + pow(_DroneState.position[1] - goal.pose.position.y, 2) );
 
-    if( sqrt(Desired_vel.x*Desired_vel.x + Desired_vel.y*Desired_vel.y)  >  0.2   )
+    // 抵达目标附近，则停止速度控制，改为位置控制
+    if (distance_to_goal < MIN_DIS)
     {
-        desired_yaw = (0.6*desired_yaw + 0.4*atan2(Desired_vel.y, Desired_vel.x) );
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = goal.pose.position.x;
+        Command_Now.Reference_State.position_ref[1]     = goal.pose.position.y;
+        Command_Now.Reference_State.position_ref[2]     = 1.5;
+        Command_Now.Reference_State.yaw_ref             = desired_yaw;
+    }else
+    {
+        //根据速度大小决定是否更新期望偏航角， 更新采用平滑滤波的方式，系数可调
+        if( sqrt(Desired_vel.x*Desired_vel.x + Desired_vel.y*Desired_vel.y)  >  0.2   )
+        {
+            desired_yaw = (0.6*desired_yaw + 0.4*atan2(Desired_vel.y, Desired_vel.x) );
+        }
+        
+        //高度改为定高飞行
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.velocity_ref[0]     = Desired_vel.x;
+        Command_Now.Reference_State.velocity_ref[1]     = Desired_vel.y;
+        Command_Now.Reference_State.position_ref[2]     = 1.5;
+        Command_Now.Reference_State.yaw_ref             = desired_yaw;
     }
-    
-
-    Command_Now.header.stamp = ros::Time::now();
-    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-    Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.velocity_ref[0]     = Desired_vel.x;
-    Command_Now.Reference_State.velocity_ref[1]     = Desired_vel.y;
-    Command_Now.Reference_State.position_ref[2]     = 1.5;
-    Command_Now.Reference_State.yaw_ref             = desired_yaw;
 
     command_pub.publish(Command_Now);
     cout << "desired_yaw: " << desired_yaw / M_PI * 180 << " [deg] "<<endl;
@@ -74,6 +93,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 void goal_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
     goal = *msg;
+    cout << "Get a new goal!"<<endl;
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
