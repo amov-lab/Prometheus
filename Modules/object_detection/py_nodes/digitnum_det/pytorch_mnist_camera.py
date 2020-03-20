@@ -127,7 +127,7 @@ def box_extractor(img, net):
                                     [digitnum_det_len/2, -digitnum_det_len/2, 0],
                                     [digitnum_det_len/2, digitnum_det_len/2, 0],
                                     [-digitnum_det_len/2, digitnum_det_len/2, 0]], np.float32)
-                rvec = cv2.Rodrigues(rmat_s[num])[0]
+                # rvec = cv2.Rodrigues(rmat_s[num])[0]
                 ret, rvec, tvec = cv2.solvePnP(obj_pts, approx, camera_matrix, distortion_coefficients)
                 print(tvec)
 
