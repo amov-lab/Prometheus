@@ -3,7 +3,7 @@
   <model name='pillar_s_yellow'>
     <link name='link'>
       <inertial>
-        <mass>1000</mass>
+        <mass>500</mass>
         <pose frame=''>0 0 0 0 -0 0</pose>
       </inertial>
       <self_collide>0</self_collide>
