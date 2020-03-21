@@ -7,7 +7,7 @@
     <arg name="tgt_system" default="1" />
     <arg name="tgt_component" default="1" />
     <arg name="vehicle" default="iris"/>
-    <arg name="use_rviz"                  default="false"/>
+    <arg name="use_rviz"                  default="true"/>
     <arg name="use_rtabmapviz"            default="false"/>
 
     <param name="use_sim_time" value="true" />
