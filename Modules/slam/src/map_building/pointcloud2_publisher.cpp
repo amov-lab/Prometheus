@@ -15,7 +15,7 @@ main(int argc, char **argv)
     pcl::io::loadPCDFile("/home/colin/Desktop/obstacle.pcd", cloud);
     //Convert the cloud to ROS message
     pcl::toROSMsg(cloud, output);
-    output.header.frame_id = "map"; //this has been done in order to be able to visualize our PointCloud2 message on the RViz visualizer
+    output.header.frame_id = "world"; //this has been done in order to be able to visualize our PointCloud2 message on the RViz visualizer
     ros::Rate loop_rate(1);
     while (ros::ok())
     {
