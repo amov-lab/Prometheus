@@ -223,8 +223,7 @@ int main(int argc, char **argv)
                 Fast_planner();
                 ros::Duration(0.05).sleep();
             }
-            cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
-            cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
+
         }
     }
 
@@ -255,6 +254,8 @@ void APF_planner()
     cout << "APF planner:"<<endl;
     cout << "desired_vel: " << APF.desired_vel.x << " [m/s] "<< APF.desired_vel.y << " [m/s] "<< APF.desired_vel.z << " [m/s] "<<endl;
     cout << "desired_yaw: " << desired_yaw / M_PI * 180 << " [deg] "<<endl;
+    cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
+    cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
 }
 
 void A_star_planner()
@@ -303,6 +304,9 @@ void A_star_planner()
             sleep(0.01);
             k = k+1;  
         }
+        ros::spinOnce();
+        cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
+        cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
     }
 }
 
@@ -324,4 +328,6 @@ void Fast_planner()
                                 << Command_Now.Reference_State.position_ref[1] << " [m] "
                                 << Command_Now.Reference_State.position_ref[2] << " [m] "<<endl;  
     cout << "desired_yaw: " << desired_yaw / M_PI * 180 << " [deg] "<<endl;
+    cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
+    cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
 }

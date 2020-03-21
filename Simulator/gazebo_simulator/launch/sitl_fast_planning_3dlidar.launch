@@ -18,21 +18,18 @@
     <include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
     </include>
     
-    <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
-        <arg name="rtabmap_args"       value="--delete_db_on_start"/>
-        <arg name="depth_topic"        value="/realsense_d400/depth/image_raw"/>
-		<arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
-        <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="frame_id"           value="base_link"/>
-        <arg name="visual_odometry"    value="false"/>
-        <arg name="odom_topic"         value="/ground_truth/state"/>  
-        <arg name="queue_size"         value="200"/>
-		<arg name="rtabmapviz"         value="false"/>
-    </include>
-
-
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+        <param name="resolution" value="0.05" />
+        <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+        <param name="frame_id" type="string" value="map" />
+        <!-- maximum range to integrate (speedup!) -->
+        <param name="sensor_model/max_range" value="5.0" />
+        <!-- data source to integrate (PointCloud2) -->
+        <remap from="cloud_in" to="/3Dlidar16_scan" />
+    </node>
+    
     <!-- Fast Planner -->
-    <arg name="topic_of_global_pcl" default="/rtabmap/cloud_map"/>
+    <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
     <arg name="max_vel" value="1.0" />
     <arg name="max_acc" value="0.5" />
     <arg name="dynamic" value="0" />
@@ -58,7 +55,6 @@
         <param name="fsm/flight_type" value="1" type="int"/>
         <param name="fsm/thresh_replan" value="2.0" type="double"/>
         <param name="fsm/thresh_no_replan" value="3.0" type="double"/>
-        <param name="fsm/safety_distance" value="0.2" type="double"/>
         <param name="fsm/wp_num" value="3" type="int"/>
         <param name="fsm/wp0_x" value="-5.5" type="double"/>
         <param name="fsm/wp0_y" value="-4.0" type="double"/>
