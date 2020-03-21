@@ -88,7 +88,7 @@ void PlanningFSM::init(ros::NodeHandle& nh)
   waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &PlanningFSM::waypointCallback, this);
 
   replan_pub_ = node_.advertise<std_msgs::Empty>("/prometheus/fast_planning/replan", 10);
-  safety_pub_ = node_.advertise<std_msgs::Int8>("/prometheus/planning/replan", 10);
+  safety_pub_ = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 10);
   bspline_pub_ = node_.advertise<prometheus_plan_manage::Bspline>("/prometheus/planning/bspline", 10);
   ROS_INFO("---planning_fsm: init finished!---");
 }
