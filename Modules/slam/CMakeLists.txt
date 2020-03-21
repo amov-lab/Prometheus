@@ -47,6 +47,8 @@ add_executable(${PROJECT_NAME}_node
 )
 add_executable(map_building_node src/map_building/pointcloud_to_octomap_node.cpp)
 
+add_executable(pc2_publisher_node src/map_building/pointcloud2_publisher.cpp)
+
 target_link_libraries(${PROJECT_NAME}_node
     ${catkin_LIBRARIES}
     ${OpenCV_LIBS}
@@ -58,5 +60,8 @@ target_link_libraries(map_building_node
     ${PCL_LIBRARIES}
     ${OCTOMAP_LIBRARIES} 
 )
-
+target_link_libraries(pc2_publisher_node
+    ${catkin_LIBRARIES}
+    ${PCL_LIBRARIES}
+)
 
