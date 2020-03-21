@@ -72,6 +72,9 @@ private:
 
   /* ---------- planning api ---------- */
   Eigen::Vector3d start_pt_, start_vel_, start_acc_, end_pt_, end_vel_;
+  double safety_distance;
+  std_msgs::Int8 replan;
+
   int current_wp_;
 
   bool planSearchOpt();  // front-end and back-end method
@@ -84,7 +87,7 @@ private:
 
   ros::Subscriber waypoint_sub_;
 
-  ros::Publisher replan_pub_, bspline_pub_;
+  ros::Publisher replan_pub_, bspline_pub_, safety_pub_;
 
   void execFSMCallback(const ros::TimerEvent& e);
   void safetyCallback(const ros::TimerEvent& e);
