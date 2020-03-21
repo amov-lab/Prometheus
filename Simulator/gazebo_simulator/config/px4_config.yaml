@@ -228,7 +228,7 @@ px4flow:
 vision_pose:
   tf:
     listen: false           # enable tf listener (disable topic subscribers)
-    frame_id: "odom"
+    frame_id: "map"
     child_frame_id: "vision_estimate"
     rate_limit: 10.0
 
@@ -249,12 +249,12 @@ wheel_odometry:
   wheel1: {x: 0.0, y:  0.15, radius: 0.05} # x-, y-offset (m,NED) and radius (m)
   send_raw: true              # send wheel's RPM and cumulative distance (~/wheel_odometry/rpm, ~/wheel_odometry/distance)
   send_twist: false           # send geometry_msgs/TwistWithCovarianceStamped instead of nav_msgs/Odometry
-  frame_id: "odom"             # origin frame
+  frame_id: "map"             # origin frame
   child_frame_id: "base_link" # body-fixed frame
   vel_error: 0.1              # wheel velocity measurement error 1-std (m/s)
   tf:
     send: false
-    frame_id: "odom"
+    frame_id: "map"
     child_frame_id: "base_link"
 
 # vim:set ts=2 sw=2 et:
