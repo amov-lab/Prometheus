@@ -5,7 +5,8 @@ namespace global_planner
 
 void GlobalPlanner::init(ros::NodeHandle& nh){
     // set mode
-
+    safe_distance
+    nh.param("planning/safe_distance", safe_distance, 0.2);
     // set algorithm
     sensor_msgs::PointCloud2ConstPtr init_global_map(new sensor_msgs::PointCloud2());
     global_map_ptr_ = init_global_map;
@@ -246,7 +247,7 @@ void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
     Eigen::Vector3d cur_pos(odom_.pose.pose.position.x, 
                                                         odom_.pose.pose.position.y, 
                                                         odom_.pose.pose.position.z);
-    bool is_safety = Astar_ptr->check_safety(cur_pos);
+    bool is_safety = Astar_ptr->check_safety(cur_pos, safe_distance);
 
     // give some for replan.
     if(!is_safety /*&& (ros::Time::now()-control_time).toSec()>3.0*/){

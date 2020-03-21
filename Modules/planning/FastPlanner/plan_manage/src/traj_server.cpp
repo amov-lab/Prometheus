@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
       node.subscribe("/prometheus/planning/bspline", 10, bsplineCallback);
 
   ros::Subscriber replan_sub =
-      node.subscribe("/prometheusplanning/replan", 10, replanCallback);
+      node.subscribe("/prometheus/fast_planning/replan", 10, replanCallback);
 
   ros::Subscriber odom_sub = node.subscribe("/prometheus/planning/odom_world", 50, odomCallbck);
 
