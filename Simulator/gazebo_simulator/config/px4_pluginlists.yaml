@@ -1,13 +1,29 @@
 plugin_blacklist:
-# common
+- actuator_control
+- adsb
 - safety_area
-# extras
-- image_pub
-- vibration
+- 3dr_radio
+- cam_imu_sync
+- altitude
 - distance_sensor
-- rangefinder
+- fake_gps
+- gps_rtk
+- hil
+- home_position
+- landing_target
+- mocap_pose_estimate
+- mount_control
+- obstacle_distance
+- rc_io
+- vfr_hud
+- waypoint
+- wind_estimation
+- px4flow
+- global_position
+- companion_process_status
+- debug_value
 - wheel_odometry
-
-
+- vibration
+- odom
 plugin_whitelist: []
 #- 'sys_*'

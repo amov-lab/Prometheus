@@ -71,7 +71,8 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
             continue;
 
         dist_push = dist_push - inflate_distance;
-        if(dist_push < 0.1){
+
+        if(dist_push < safe_distance){
             safe_cnt++;
         }
         
@@ -125,7 +126,7 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     
     // 合力
     desired_vel = push_force + attractive_force;
-    if(safe_cnt>10){
+    if(safe_cnt>5){
         local_planner_state = 2;
     }else{
         local_planner_state =1;
@@ -145,6 +146,7 @@ void APF::init(ros::NodeHandle& nh){
     nh.param("apf/max_att_dist", max_att_dist, 5.0);             // 最大吸引距离
     nh.param("apf/ground_height", ground_height, 0.1);  // 地面高度
     nh.param("apf/ground_safe_height", ground_safe_height, 0.2);  // 地面安全距离
+    nh.param("apf/safe_distance", safe_distance, 0.15);
 
 }
 

@@ -23,7 +23,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     // init visualization
     ROS_INFO("---init visualization!---");
     visualization_.reset(new PlanningVisualization(nh));
-    local_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/local_map",  10);  
+    local_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/local_map_marker",  10);  
 
     /* ---------- callback ---------- */
     ROS_INFO("---init sub and pub!---");
@@ -38,6 +38,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
     exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
 
+    nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
     /*   bool  state    */
     trigger_=false;
     have_goal_=false;
@@ -88,11 +89,10 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
         replan_cmd_Pub.publish(replan);
     }
 
-    
 
-    if(desired_vel.norm() > 1.0)
+    if(desired_vel.norm() > max_planning_vel)
     {
-        desired_vel = desired_vel / desired_vel.norm() * 0.4;  // the max velocity is 0.2m
+        desired_vel = desired_vel / desired_vel.norm() * max_planning_vel;  // the max velocity is max_planning_vel
     }
     printf("desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
     // 发布控制指令

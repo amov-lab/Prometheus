@@ -364,9 +364,9 @@ void Astar::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point
 
 }
 
-bool Astar::check_safety(Eigen::Vector3d &cur_pos){
+bool Astar::check_safety(Eigen::Vector3d &cur_pos, double safe_distance){
   bool is_safety;
-  is_safety = Occupy_map_ptr->check_safety(cur_pos);
+  is_safety = Occupy_map_ptr->check_safety(cur_pos, safe_distance);
   return is_safety;
 }
 

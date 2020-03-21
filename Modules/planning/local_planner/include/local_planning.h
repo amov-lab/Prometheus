@@ -57,6 +57,7 @@ private:
     bool trigger_, have_goal_, has_point_map_;
     bool have_odom_;
     int flight_type_;
+    double max_planning_vel;
     Eigen::Vector3d start_pt_, start_vel_,  end_pt_, end_vel_;
     pcl::PointCloud<pcl::PointXYZ> latest_local_pcl_;
     std_msgs::Int8 replan;

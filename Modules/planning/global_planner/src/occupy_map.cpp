@@ -150,7 +150,7 @@ bool Occupy_map::isInMap(Eigen::Vector3d pos) {
     return true;
 }
 
-bool Occupy_map::check_safety(Eigen::Vector3d& pos/*, Eigen::Vector3d& map_point*/){
+bool Occupy_map::check_safety(Eigen::Vector3d& pos, double check_distance/*, Eigen::Vector3d& map_point*/){
     if(!isInMap(pos)){
         printf("[check_safety]: the odom point is not in map\n");
         return 0;
@@ -160,8 +160,9 @@ bool Occupy_map::check_safety(Eigen::Vector3d& pos/*, Eigen::Vector3d& map_point
     Eigen::Vector3i id_occ;
     Eigen::Vector3d pos_occ;
 
-    int check_dist_xy = 1;
+    int check_dist_xy = int(check_distance/resolution_);
     int check_dist_z=0;
+    int cnt=0;
     for(int ix=-check_dist_xy; ix<=check_dist_xy; ix++){
         for(int iy=-check_dist_xy; iy<=check_dist_xy; iy++){
             for(int iz=-check_dist_z; iz<=check_dist_z; iz++){
@@ -175,11 +176,13 @@ bool Occupy_map::check_safety(Eigen::Vector3d& pos/*, Eigen::Vector3d& map_point
                 }
                 if(getOccupancy(id_occ)){
                     printf("[check_safety]: current state is dagerous, the pos [%d, %d, %d], is occupied\n", ix, iy, iz);
-                    return 0;
+                    cnt++;             
                 }
-
             }
         }
+    }
+    if(cnt>5){
+        return 0;
     }
     return 1;
 
