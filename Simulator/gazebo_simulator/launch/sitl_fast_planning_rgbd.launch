@@ -30,7 +30,6 @@
 		<arg name="rtabmapviz"         value="false"/>
     </include>
 
-
     <!-- Fast Planner -->
     <arg name="topic_of_global_pcl" default="/rtabmap/cloud_map"/>
     <arg name="max_vel" value="1.0" />
