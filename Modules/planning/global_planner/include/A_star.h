@@ -159,7 +159,7 @@ public:
   void setParam(ros::NodeHandle& nh);
   void init(ros::NodeHandle& nh);
   void reset();
-  bool check_safety(Eigen::Vector3d &cur_pos);
+  bool check_safety(Eigen::Vector3d &cur_pos, double safe_distance);
   
   int search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt);
 

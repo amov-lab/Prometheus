@@ -14,6 +14,7 @@ void PlanningFSM::init(ros::NodeHandle& nh)
   nh.param("fsm/flight_type", flight_type_, -1);
   nh.param("fsm/thresh_replan", thresh_replan_, -1.0);
   nh.param("fsm/thresh_no_replan", thresh_no_replan_, -1.0);
+  nh.param("fsm/safety_distance", safety_distance, 0.3);
   nh.param("fsm/wp_num", wp_num_, -1);
 
   for (int i = 0; i < wp_num_; i++)
@@ -86,7 +87,8 @@ void PlanningFSM::init(ros::NodeHandle& nh)
 
   waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &PlanningFSM::waypointCallback, this);
 
-  replan_pub_ = node_.advertise<std_msgs::Empty>("/prometheus/planning/replan", 10);
+  replan_pub_ = node_.advertise<std_msgs::Empty>("/prometheus/fast_planning/replan", 10);
+  safety_pub_ = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 10);
   bspline_pub_ = node_.advertise<prometheus_plan_manage::Bspline>("/prometheus/planning/bspline", 10);
   ROS_INFO("---planning_fsm: init finished!---");
 }
@@ -316,7 +318,21 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
             edt_env_->evaluateCoarseEDT(end_pt_, planner_manager_->time_start_ + planner_manager_->traj_duration_) :
             edt_env_->evaluateCoarseEDT(end_pt_, -1.0);
     // ROS_INFO("goal sdf: %f", dist);
-
+    // check whether the current position is safe 
+      nav_msgs::Odometry odom = edt_env_->getOdom();
+      Eigen::Matrix<double, 3, 1> cur_pt(
+        odom.pose.pose.position.x,
+        odom.pose.pose.position.y,
+        odom.pose.pose.position.z
+     );
+     double cur_safe_dist = edt_env_->evaluateCoarseEDT(end_pt_, -1.0);
+    if(cur_safe_dist< safety_distance){
+      replan.data = 1;
+    }else{
+      replan.data = 0;
+    }
+    safety_pub_.publish(replan);
+    
     if (dist <= planner_manager_->margin_)
     {
       ROS_INFO("[safetyCallback]: goal dangerous");

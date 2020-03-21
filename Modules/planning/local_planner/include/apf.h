@@ -37,6 +37,7 @@ private:
     double ground_height;
     double ground_safe_height;
     double inflate_distance;
+    double safe_distance;
 
     Eigen::Matrix<double, 3, 1> push_force;
     Eigen::Matrix<double, 3, 1> attractive_force;

@@ -5,7 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Fast_Planner1/Reference_Tra1
-      Splitter Ratio: 0.5
+        - /Octomap_Mapping1/PointCloud21
+      Splitter Ratio: 0.5617647171020508
     Tree Height: 695
   - Class: rviz/Selection
     Name: Selection
@@ -273,6 +274,52 @@ Visualization Manager:
           Value: true
       Enabled: false
       Name: Fast_Planner
+    - Class: rviz/Group
+      Displays:
+        - Class: octomap_rviz_plugin/OccupancyGrid
+          Enabled: true
+          Max. Height Display: inf
+          Max. Octree Depth: 16
+          Min. Height Display: -inf
+          Name: OccupancyGrid
+          Octomap Topic: /octomap_full
+          Queue Size: 5
+          Value: true
+          Voxel Alpha: 1
+          Voxel Coloring: Z-Axis
+          Voxel Rendering: Occupied Voxels
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 255; 255; 255
+          Color Transformer: Intensity
+          Decay Time: 0
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Max Intensity: 0
+          Min Color: 0; 0; 0
+          Min Intensity: 0
+          Name: PointCloud2
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 3
+          Size (m): 0.009999999776482582
+          Style: Flat Squares
+          Topic: /octomap_point_cloud_centers
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
+      Enabled: false
+      Name: Octomap_Mapping
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -292,7 +339,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.09981632232666
+      Distance: 1.9845744371414185
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -307,10 +354,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3909483551979065
+      Pitch: 0.3859483599662781
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.2938326895236969
+      Yaw: 0.07883277535438538
     Saved: ~
 Window Geometry:
   Displays:
