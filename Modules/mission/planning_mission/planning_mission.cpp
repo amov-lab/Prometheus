@@ -53,7 +53,7 @@ struct fast_planner
 
 }fast_planner;
 
-
+bool control_yaw_flag;
 int flag_get_cmd = 0;
 int flag_get_goal = 0;
 float desired_yaw = 0;  //[rad]
@@ -73,6 +73,8 @@ void global_planner_cmd_cb(const nav_msgs::Path::ConstPtr& msg)
 void stop_cmd_cb(const std_msgs::Int8::ConstPtr& msg)
 {
     stop_cmd = *msg;
+    // APF的stop_cmd判断条件： 障碍物在停止距离之内
+
 }
 void local_planner_cmd_cb(const geometry_msgs::Point::ConstPtr& msg)
 {
@@ -102,6 +104,8 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "planning_mission");
     ros::NodeHandle nh("~");
+
+    nh.param<bool>("planning_mission/control_yaw_flag", control_yaw_flag, true);
     
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
@@ -232,12 +236,18 @@ int main(int argc, char **argv)
 }
 
 void APF_planner()
-{
-    // 根据速度大小决定是否更新期望偏航角， 更新采用平滑滤波的方式，系数可调
-    if( sqrt(APF.desired_vel.x*APF.desired_vel.x + APF.desired_vel.y*APF.desired_vel.y)  >  0.1   )
+{   
+    if (control_yaw_flag)
     {
-        float next_desired_yaw = atan2(APF.desired_vel.y, APF.desired_vel.x);
-        desired_yaw = (0.6*desired_yaw + 0.4*next_desired_yaw);
+        // 根据速度大小决定是否更新期望偏航角， 更新采用平滑滤波的方式，系数可调
+        if( sqrt(APF.desired_vel.x*APF.desired_vel.x + APF.desired_vel.y*APF.desired_vel.y)  >  0.1   )
+        {
+            float next_desired_yaw = atan2(APF.desired_vel.y, APF.desired_vel.x);
+            desired_yaw = (0.8*desired_yaw + 0.2*next_desired_yaw);
+        }
+    }else
+    {
+        desired_yaw = 0.0;
     }
     
     // 高度改为定高飞行
@@ -263,10 +273,17 @@ void A_star_planner()
     //只要当前航点中有未执行完的航点，就继续执行
     while( A_star.wp_id < A_star.Num_total_wp )
     {
-        // 更新的话加滤波平滑期望航向角
-        float next_desired_yaw = atan2(A_star.path_cmd.poses[A_star.wp_id].pose.position.y - _DroneState.position[1], 
-                                        A_star.path_cmd.poses[A_star.wp_id].pose.position.x - _DroneState.position[0]);
-        desired_yaw = (0.6*desired_yaw + 0.4*next_desired_yaw);
+
+        if (control_yaw_flag)
+        {
+            // 更新的话加滤波平滑期望航向角
+            float next_desired_yaw = atan2(A_star.path_cmd.poses[A_star.wp_id].pose.position.y - _DroneState.position[1], 
+                                            A_star.path_cmd.poses[A_star.wp_id].pose.position.x - _DroneState.position[0]);
+            desired_yaw = (0.7*desired_yaw + 0.3*next_desired_yaw);
+        }else
+        {
+            desired_yaw = 0.0;
+        }
 
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
@@ -312,10 +329,17 @@ void A_star_planner()
 
 void Fast_planner()
 {
-    float next_desired_yaw      = atan2( fast_planner.fast_planner_cmd.velocity_ref[1] , 
-                                         fast_planner.fast_planner_cmd.velocity_ref[0]);
+    if (control_yaw_flag)
+    {
+        float next_desired_yaw      = atan2( fast_planner.fast_planner_cmd.velocity_ref[1] , 
+                                            fast_planner.fast_planner_cmd.velocity_ref[0]);
 
-    desired_yaw = (0.8*desired_yaw + 0.2*next_desired_yaw);
+        desired_yaw = (0.9*desired_yaw + 0.1*next_desired_yaw);
+    }else
+    {
+        desired_yaw = 0.0;
+    }
+
     Command_Now.header.stamp = ros::Time::now();
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;

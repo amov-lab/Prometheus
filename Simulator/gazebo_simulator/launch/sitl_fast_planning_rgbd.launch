@@ -50,13 +50,15 @@
         <param name="sdf_map/ceil_height" value="3.5" type="double"/>
         <param name="sdf_map/update_rate" value="2.0" type="double"/>
         <param name="sdf_map/update_range" value="8.0" type="double"/>
-        <param name="sdf_map/inflate" value="0.1" type="double"/>
+        <!-- 膨胀参数 -->
+        <param name="sdf_map/inflate" value="0.4" type="double"/>
         <param name="sdf_map/radius_ignore" value="1.0" type="double"/>
 
         <!-- planning fsm -->
         <param name="fsm/flight_type" value="1" type="int"/>
         <param name="fsm/thresh_replan" value="2.0" type="double"/>
         <param name="fsm/thresh_no_replan" value="3.0" type="double"/>
+        <!-- 停止距离 -->
         <param name="fsm/safety_distance" value="0.2" type="double"/>
         <param name="fsm/wp_num" value="3" type="int"/>
         <param name="fsm/wp0_x" value="-5.5" type="double"/>
@@ -119,7 +121,9 @@
     <node pkg="prometheus_plan_manage" name="traj_server" type="traj_server" output="log">
     </node>
 
+    <!-- 规划 mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+        <param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
 	</node>
 
 	<!-- run the rviz -->

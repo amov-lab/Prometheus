@@ -116,7 +116,9 @@
     <node pkg="prometheus_plan_manage" name="traj_server" type="traj_server" output="log">
     </node>
 
+    <!-- 规划 mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为ture-->
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+        <param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
 	</node>
 
 	<!-- run the rviz -->
