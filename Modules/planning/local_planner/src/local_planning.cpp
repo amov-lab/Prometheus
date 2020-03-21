@@ -23,7 +23,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     // init visualization
     ROS_INFO("---init visualization!---");
     visualization_.reset(new PlanningVisualization(nh));
-    local_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/local_map",  10);  
+    local_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/local_map_marker",  10);  
 
     /* ---------- callback ---------- */
     ROS_INFO("---init sub and pub!---");

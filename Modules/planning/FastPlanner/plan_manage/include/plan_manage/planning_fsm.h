@@ -9,6 +9,7 @@
 #include <visualization_msgs/Marker.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Int8.h>
 
 #include <traj_utils/planning_visualization.h>
 #include <plan_env/sdf_map.h>

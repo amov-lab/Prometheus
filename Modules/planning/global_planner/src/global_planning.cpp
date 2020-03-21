@@ -5,8 +5,8 @@ namespace global_planner
 
 void GlobalPlanner::init(ros::NodeHandle& nh){
     // set mode
-    safe_distance
-    nh.param("planning/safe_distance", safe_distance, 0.2);
+    // safe_distance
+    nh.param("planning/safe_distance", safe_distance, 0.25);
     // set algorithm
     sensor_msgs::PointCloud2ConstPtr init_global_map(new sensor_msgs::PointCloud2());
     global_map_ptr_ = init_global_map;
@@ -253,13 +253,13 @@ void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
     if(!is_safety /*&& (ros::Time::now()-control_time).toSec()>3.0*/){
         printf("[safetyCallback]: not safety, pls re select the goal point.\n");
         replan.data = 1;
-        replan_cmd_Pub.publish(replan);
+        // replan_cmd_Pub.publish(replan);
     }
     else{
         replan.data = 0;
-        replan_cmd_Pub.publish(replan);
+        
     }
-
+    replan_cmd_Pub.publish(replan);
 }
 
 }
