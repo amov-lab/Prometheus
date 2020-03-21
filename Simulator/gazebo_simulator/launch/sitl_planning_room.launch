@@ -18,10 +18,10 @@
 
     <!-- Ros transformation -->
     <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
-          args="0 0 0 0 0 0 world odom 10"/>
+          args="0 0 0 0 0 0 map odom 10"/>
 
     <node pkg="tf" type="static_transform_publisher" name="tf_realsense_pose"
-          	args="0 5 0 0 0 0 map realsense_camera_pose::link 10"/>
+          	args="0 -5 0 0 0 0 world map 10"/>
 
     <!-- Launch PX4 SITL -->
     <include file="$(find px4)/launch/px4.launch">
