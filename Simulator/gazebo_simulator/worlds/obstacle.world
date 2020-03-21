@@ -92,85 +92,85 @@
     <model name='pillar_l_1'>
       <include>
         <uri>model://pillar_l</uri>
-	<pose frame=''>0 0 0 0 0 0 </pose>
+	<pose> 0 0 1.75 0 0 0 </pose>
       </include>
     </model>
     <model name='pillar_m_1'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose frame=''>4 3.6 0 1 0 0 </pose>
+        <pose> 4 3.6 1.75 0 0 0 </pose>
       </include>
     </model>
     <model name='pillar_m_2'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose>3.6 -4.6 0 0 0 0</pose>
+        <pose>3.6 -4.6 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_m_3'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose>-2 4 0 0 0 0</pose>
+        <pose>-2 4 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_m_4'>
       <include>
         <uri>model://pillar_m</uri>
-        <pose>-5 -2 0 0 0 0</pose>
+        <pose>-5 -2 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_1'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>2 6 0 0 0 0</pose>
+        <pose>2 6 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_2'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>7 7 0 0 0 0</pose>
+        <pose>7 7 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_3'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>6 -2 0 0 0 0</pose>
+        <pose>6 -2 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_4'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>1 -6.8 0 0 0 0</pose>
+        <pose>1 -6.8 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_5'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>0 -4 0 0 0 0</pose>
+        <pose>0 -4 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_6'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-2 -6 0 0 0 0</pose>
+        <pose>-2 -6 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_7'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-6.8 -6.6 0 0 0 0</pose>
+        <pose>-6.8 -6.6 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_8'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-5 2 0 0 0 0</pose>
+        <pose>-5 2 1.75 0 0 0</pose>
       </include>
     </model>
     <model name='pillar_s_9'>
       <include>
         <uri>model://pillar_s</uri>
-        <pose>-5 6 0 0 0 0</pose>
+        <pose>-5 6 1.75 0 0 0</pose>
       </include>
     </model>
   </world>

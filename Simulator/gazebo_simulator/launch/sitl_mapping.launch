@@ -23,7 +23,7 @@
           args="0 0 0 0 0 0 map odom 10"/>
 
     <arg name="use_rviz"                  default="false"/>
-    <arg name="use_rtabmapviz"            default="false"/>
+    <arg name="use_rtabmapviz"            default="true"/>
     
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
         <arg name="rtabmap_args"       value="--delete_db_on_start"/>
