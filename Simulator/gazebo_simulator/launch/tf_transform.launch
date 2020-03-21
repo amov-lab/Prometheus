@@ -10,4 +10,5 @@
     <!-- Ros transformation -->
     <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
           	args="0 0 0 0 0 0 map odom 10"/>
+
 </launch>
