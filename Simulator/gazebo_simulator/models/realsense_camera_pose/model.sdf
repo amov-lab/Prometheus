@@ -175,7 +175,7 @@
             <alwaysOn>true</alwaysOn>
             <imageTopicName>image_raw</imageTopicName>
             <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-	    <pointCloudTopicName>prometheus/local_pointclouds</pointCloudTopicName>
+	          <pointCloudTopicName>prometheus/local_pointclouds</pointCloudTopicName>
             <updateRate>30.0</updateRate>
             <cameraName>realsense_d400</cameraName>
             <frameName>/realsense_camera_link</frameName>
