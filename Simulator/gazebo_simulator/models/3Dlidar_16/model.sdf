@@ -60,7 +60,7 @@
         <frameName>3Dlidar_16_link</frameName>
         <min_range>0.9</min_range>
         <max_range>130</max_range>
-		<gaussianNoise>0.008</gaussianNoise>
+		    <gaussianNoise>0.008</gaussianNoise>
       </plugin>
       <always_on>1</always_on>
       <update_rate>10</update_rate>
