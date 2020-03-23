@@ -15,24 +15,26 @@
 #include <Eigen/Eigen>
 #include <iostream>
 #include <mission_utils.h>
-
+#include <tf/transform_datatypes.h>
 //topic 头文件
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/ControlCommand.h>
-
+#include <nav_msgs/Odometry.h>
 using namespace std;
 using namespace Eigen;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //---------------------------------------Drone---------------------------------------------
 prometheus_msgs::DroneState _DroneState;   
 Eigen::Vector3f drone_pos;
+nav_msgs::Odometry GroundTruth;
 //---------------------------------------Vision---------------------------------------------
 prometheus_msgs::DetectionInfo Detection_raw;          //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
 Eigen::Vector3f pos_body_frame;
+Eigen::Vector3f pos_map_frame;
 Eigen::Vector3f pos_des_prev;
 float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
-
+float start_point_x,start_point_y,start_point_z;
 bool is_detected = false;                                          // 是否检测到目标标志
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
 int num_count_vision_regain = 0;                                                      //视觉丢失计数器
@@ -54,6 +56,10 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     pos_body_frame[0] = -Detection_raw.position[1];
     pos_body_frame[1] = -Detection_raw.position[0];
     pos_body_frame[2] = -Detection_raw.position[2]; 
+
+    pos_map_frame[0] = drone_pos[0] + pos_body_frame[0];
+    pos_map_frame[1] = drone_pos[1] + pos_body_frame[1];
+    pos_map_frame[2] = drone_pos[2] + pos_body_frame[2];
     
     if(Detection_raw.detected)
     {
@@ -87,6 +93,10 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
     drone_pos[2] = _DroneState.position[2];
 }
 
+void groundtruth_cb(const nav_msgs::Odometry::ConstPtr& msg)
+{
+    GroundTruth = *msg;
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -101,6 +111,8 @@ int main(int argc, char **argv)
     ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
 
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
+
+    ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/landing_pad", 10, groundtruth_cb);
 
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
@@ -121,18 +133,61 @@ int main(int argc, char **argv)
     nh.param<float>("kpy_land", kpy_land, 0.1);
     nh.param<float>("kpz_land", kpz_land, 0.1);
 
+    nh.param<float>("start_point_x", start_point_x, 0.0);
+    nh.param<float>("start_point_y", start_point_y, 0.0);
+    nh.param<float>("start_point_z", start_point_z, 2.0);
+
     //打印现实检查参数
     printf_param();
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(4);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
 
-    int check_flag;
-    //输入1,继续，其他，退出程序
-    cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
-    cin >> check_flag;
-
-    if(check_flag != 1)
+    // Waiting for input
+    int start_flag = 0;
+    while(start_flag == 0)
     {
-        return -1;
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
+        cin >> start_flag;
     }
+
+    // 起飞
+    cout<<"[autonomous_landing]: "<<"Takeoff to predefined position."<<endl;
+    Command_Now.Command_ID = 1;
+    while( _DroneState.position[2] < 0.3)
+    {
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.yaw_ref = 999;
+        command_pub.publish(Command_Now);   
+        cout << "Switch to OFFBOARD and arm ..."<<endl;
+        ros::Duration(3.0).sleep();
+        
+        Command_Now.header.stamp                    = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = start_point_x;
+        Command_Now.Reference_State.position_ref[1]     = start_point_y;
+        Command_Now.Reference_State.position_ref[2]     = start_point_z;
+        Command_Now.Reference_State.yaw_ref             = 0;
+        command_pub.publish(Command_Now);
+        cout << "Takeoff ..."<<endl;
+        ros::Duration(3.0).sleep();
+
+        ros::spinOnce();
+    }
+
 
     // 先读取一些飞控的数据
     for(int i=0;i<10;i++)
@@ -145,36 +200,7 @@ int main(int argc, char **argv)
     pos_des_prev[1] = drone_pos[1];
     pos_des_prev[2] = drone_pos[2];
 
-    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
-    Command_Now.Command_ID                          = 0;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0]     = 0;
-    Command_Now.Reference_State.position_ref[1]     = 0;
-    Command_Now.Reference_State.position_ref[2]     = 0;
-    Command_Now.Reference_State.velocity_ref[0]     = 0;
-    Command_Now.Reference_State.velocity_ref[1]     = 0;
-    Command_Now.Reference_State.velocity_ref[2]     = 0;
-    Command_Now.Reference_State.acceleration_ref[0] = 0;
-    Command_Now.Reference_State.acceleration_ref[1] = 0;
-    Command_Now.Reference_State.acceleration_ref[2] = 0;
-    Command_Now.Reference_State.yaw_ref             = 0;
-
-    // 起飞
-    cout<<"[autonomous_landing]: "<<"Takeoff to predefined position."<<endl;
-    Command_Now.header.stamp                    = ros::Time::now();
-    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-    Command_Now.Command_ID                          = 1;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0]     = 1;
-    Command_Now.Reference_State.position_ref[1]     = 1;
-    Command_Now.Reference_State.position_ref[2]     = 2.5;
-    Command_Now.Reference_State.yaw_ref             = 0;
-
-    //command_pub.publish(Command_Now);
-
-    //sleep(8.0);
+    ros::Duration(5.0).sleep();
 
     while (ros::ok())
     {
@@ -246,17 +272,6 @@ int main(int argc, char **argv)
 
 void printf_result()
 {
-    //固定的浮点显示
-    cout.setf(ios::fixed);
-    //setprecision(n) 设显示小数精度为n位
-    cout<<setprecision(4);
-    //左对齐
-    cout.setf(ios::left);
-    // 强制显示小数点
-    cout.setf(ios::showpoint);
-    // 强制显示符号
-    cout.setf(ios::showpos);
-
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Autonomous Landing<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
@@ -268,12 +283,24 @@ void printf_result()
         cout << "is_detected: false" <<endl;
     }
     
-    cout << "Detection_raw: " << Detection_raw.position[0] << " [m] "<< Detection_raw.position[1] << " [m] "<< Detection_raw.position[2] << " [m] "<<endl;
-    cout << "Detection_raw: " << Detection_raw.attitude[2]/3.1415926 *180 << " [du] "<<endl;
+   
     
     cout << "pos_body_frame: " << pos_body_frame[0] << " [m] "<< pos_body_frame[1] << " [m] "<< pos_body_frame[2] << " [m] "<<endl;
 
+    cout << "pos_map_frame: " << pos_map_frame[0] << " [m] "<< pos_map_frame[1] << " [m] "<< pos_map_frame[2] << " [m] "<<endl;
+    cout << "ground_truth: " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
+    cout << "Yaw_detect: " << Detection_raw.yaw_error/3.1415926 *180 << " [deg] "<<endl;
+
+    tf::Quaternion quat;
+    tf::quaternionMsgToTF(GroundTruth.pose.pose.orientation, quat);
+ 
+    double roll, pitch, yaw;//定义存储r\p\y的容器
+    tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
+
+    cout << "Yaw_gt: " << yaw/3.1415926 *180 << " [du] "<<endl;
+
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>Land Control State<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+
     cout << "pos_des: " << Command_Now.Reference_State.position_ref[0] << " [m] "<< Command_Now.Reference_State.position_ref[1] << " [m] "<< Command_Now.Reference_State.position_ref[2] << " [m] "<<endl;
 }
 void printf_param()
@@ -285,5 +312,8 @@ void printf_param()
     cout << "kpx_land : "<< kpx_land << endl;
     cout << "kpy_land : "<< kpy_land << endl;
     cout << "kpz_land : "<< kpz_land << endl;
+    cout << "start_point_x : "<< start_point_x << endl;
+    cout << "start_point_y : "<< start_point_y << endl;
+    cout << "start_point_z : "<< start_point_z << endl;
 }
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
-<sdf version="1.5">
+<sdf version="1.6">
   <model name="landing_pad">
-    <pose>5.0 0 0.01 0 0 0</pose>
+    <pose>0 0 0.01 0 0 0</pose>
     <static>true</static>
     <link name="link">
       <inertial>
@@ -37,5 +37,16 @@
         </material>
       </visual>
     </link>
+
+    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>30.0</updateRate>
+      <bodyName>link</bodyName>
+      <topicName>ground_truth/landing_pad</topicName>
+      <gaussianNoise>0.00</gaussianNoise>
+      <frameName>map</frameName>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
+    </plugin>
   </model>
 </sdf>

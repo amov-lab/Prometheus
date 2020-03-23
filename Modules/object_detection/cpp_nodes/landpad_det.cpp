@@ -132,30 +132,6 @@ void quaternion_2_euler(Eigen::Quaterniond quat, Eigen::Vector3d &angle)
 }
 
 //--------------------------利用optitrack获取真值-------------------------------
-// optitrack获取无人机位姿
-void optitrack_drone_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
-{
-    pos_drone_optitrack.position.x = msg->pose.position.y;
-    pos_drone_optitrack.position.y = msg->pose.position.x;
-    pos_drone_optitrack.position.z = - msg->pose.position.z;
-    q_drone.w()=msg->pose.orientation.w;
-    q_drone.x()=msg->pose.orientation.x;
-    q_drone.y()=msg->pose.orientation.y;
-    q_drone.z()=msg->pose.orientation.z;
-    quaternion_2_euler(q_drone,euler_drone_optitrack);
-}
-// optitrack获取地面小车位姿
-void optitrack_vehicle_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
-{
-    pos_vehicle_optitrack.position.x = msg->pose.position.y;
-    pos_vehicle_optitrack.position.y = msg->pose.position.x;
-    pos_vehicle_optitrack.position.z = - msg->pose.position.z;
-    q_vehicle.w()=msg->pose.orientation.w;
-    q_vehicle.x()=msg->pose.orientation.x;
-    q_vehicle.y()=msg->pose.orientation.y;
-    q_vehicle.z()=msg->pose.orientation.z;
-    quaternion_2_euler(q_vehicle,euler_vehicle_optitrack);
-}
 
 // 获取系统时间
 float get_dt(ros::Time last)
@@ -227,11 +203,7 @@ int main(int argc, char **argv)
         camera_info = "camera_param.yaml";
     }
 
-    drone_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/Quad/pose", 10, optitrack_drone_cb);
-    vehicle_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/vehicle/pose", 30, optitrack_vehicle_cb);
     position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 10);
-    // yaw_pub=nh.advertise<geometry_msgs::Pose>("/relative_yaw",10);
-    // position_flag_pub=nh.advertise<geometry_msgs::Pose>("/vision/vision_flag",10);
 
     // 接收图像的话题
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
@@ -451,7 +423,6 @@ int main(int argc, char **argv)
 
         // 画出识别到的二维码
         cv::aruco::drawDetectedMarkers(img,markerCorners,markerids);
-
         
         msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
         landpad_pub.publish(msg_ellipse);
