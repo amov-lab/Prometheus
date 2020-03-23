@@ -6,7 +6,7 @@
     </include>
     <include>
       <uri>model://Monocular_down</uri>
-      <pose>0.0 0 -0.1 0 1.5707963 0</pose>
+      <pose>0 0 -0.1 0 1.5707963 0</pose>
     </include>
     <joint name="Monocular_down_joint" type="fixed">
       <child>Monocular_down::link</child>

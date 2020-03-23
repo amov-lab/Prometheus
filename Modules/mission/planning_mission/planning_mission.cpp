@@ -144,11 +144,12 @@ int main(int argc, char **argv)
     }
 
     // 起飞
+    Command_Now.Command_ID = 1;
     while( _DroneState.position[2] < 0.3)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
-        Command_Now.Command_ID = 1;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
         cout << "Switch to OFFBOARD and arm ..."<<endl;

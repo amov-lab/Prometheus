@@ -17,6 +17,11 @@ kpx_land: 0.15
 kpy_land: 0.15
 kpz_land: 0.08
 
+##降落起始点
+start_point_x: 2
+start_point_y: 2
+start_point_z: 3
+
 UKF_CAR:
     std_a_: 0.01
     std_yaw_dotdot_: 0.01
