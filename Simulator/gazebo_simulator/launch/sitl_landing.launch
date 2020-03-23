@@ -3,7 +3,7 @@
 	<arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/landing_pad.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/autonomous_landing.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
 	<arg name="model" default="P300_Monocular_down"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">

@@ -3,7 +3,7 @@
 Thres_vision_lost : 10
 
 ##追踪距离阈值
-distance_thres: 0.4
+distance_thres: 0.55
 
 landing_pad_height: 0.0
 
@@ -13,14 +13,14 @@ tracking_delta_y : 0.0
 tracking_delta_z : -0.2
 
 ##降落追踪 的比例参数
-kpx_land: 0.15
-kpy_land: 0.15
-kpz_land: 0.08
+kpx_land: 0.5
+kpy_land: 0.5
+kpz_land: 0.1
 
 ##降落起始点
 start_point_x: 2
 start_point_y: 2
-start_point_z: 3
+start_point_z: 5
 
 UKF_CAR:
     std_a_: 0.01

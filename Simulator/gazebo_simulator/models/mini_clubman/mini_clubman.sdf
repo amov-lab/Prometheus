@@ -1,16 +1,17 @@
 <?xml version="1.0" ?>
-<sdf version="1.4">
+<sdf version="1.6">
   <model name="mini_clubman">
+  <static>1</static>
     <link name="link">
       <inertial>
-        <mass>15</mass>
+        <mass>500.0</mass>
         <inertia>
-          <ixx>0.0</ixx>
+          <ixx>200.0</ixx>
           <ixy>0.0</ixy>
           <ixz>0.0</ixz>
-          <iyy>0.0</iyy>
+          <iyy>200.0</iyy>
           <iyz>0.0</iyz>
-          <izz>0.0</izz>
+          <izz>200.0</izz>
         </inertia>
       </inertial>
       <collision name="collision">
@@ -30,6 +31,5 @@
         </geometry>
       </visual>
     </link>
-    <static>1</static>
   </model>
 </sdf>

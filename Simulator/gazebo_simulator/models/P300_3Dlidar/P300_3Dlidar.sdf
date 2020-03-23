@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<sdf version='1.6'>
-  <model name='P300_3Dlidar'>
+<sdf version="1.6">
+  <model name="P300_3Dlidar">
     <include>
       <uri>model://P300_basic</uri>
     </include>
