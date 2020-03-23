@@ -4,8 +4,8 @@
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300/P300.sdf"/>
-	<arg name="model" default="P300"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
+	<arg name="model" default="P300_3Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -15,18 +15,15 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-    <include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
-    </include>
-    
-	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
-		<param name="resolution" value="0.05" />
-		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
-		<param name="frame_id" type="string" value="map" />
-		<!-- maximum range to integrate (speedup!) -->
-		<param name="sensor_model/max_range" value="5.0" />
-		<!-- data source to integrate (PointCloud2) -->
-		<remap from="cloud_in" to="/3Dlidar16_scan" />
-	</node>
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+        <param name="resolution" value="0.1" />
+        <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+        <param name="frame_id" type="string" value="map" />
+        <!-- maximum range to integrate (speedup!) -->
+        <param name="sensor_model/max_range" value="5.0" />
+        <!-- data source to integrate (PointCloud2) -->
+        <remap from="cloud_in" to="/prometheus/sensors/3Dlidar_scan" />
+    </node>
 
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>

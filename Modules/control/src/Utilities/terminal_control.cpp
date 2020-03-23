@@ -17,7 +17,7 @@
 #include <mavros_msgs/State.h>
 #include <nav_msgs/Path.h>
 
-#define TRA_WINDOW 1000
+#define TRA_WINDOW 2000
 
 using namespace std;
 

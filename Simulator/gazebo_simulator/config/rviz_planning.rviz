@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Local_Planner1/Realsense_Local_PCL1
         - /Fast_Planner1/Reference_Tra1
         - /Octomap_Mapping1/PointCloud21
       Splitter Ratio: 0.5617647171020508
@@ -24,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: Realsense_Local_PCL
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -138,7 +139,7 @@ Visualization Manager:
           Size (Pixels): 3
           Size (m): 0.009999999776482582
           Style: Flat Squares
-          Topic: /3Dlidar16_scan
+          Topic: /prometheus/sensors/3Dlidar_scan
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -168,7 +169,7 @@ Visualization Manager:
           Size (Pixels): 3
           Size (m): 0.009999999776482582
           Style: Flat Squares
-          Topic: /realsense_d400/prometheus/local_pointclouds
+          Topic: /realsense_d435i/local_pointclouds
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -278,9 +279,9 @@ Visualization Manager:
       Displays:
         - Class: octomap_rviz_plugin/OccupancyGrid
           Enabled: true
-          Max. Height Display: inf
+          Max. Height Display: 3.4028234663852886e+38
           Max. Octree Depth: 16
-          Min. Height Display: -inf
+          Min. Height Display: -3.4028234663852886e+38
           Name: OccupancyGrid
           Octomap Topic: /octomap_full
           Queue Size: 5
@@ -354,10 +355,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3859483599662781
+      Pitch: 0.4709482789039612
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.07883277535438538
+      Yaw: 0.5588287115097046
     Saved: ~
 Window Geometry:
   Displays:

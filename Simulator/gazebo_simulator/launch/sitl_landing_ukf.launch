@@ -1,11 +1,18 @@
 <launch>
 	<!-- Launch Gazebo Simulation -->
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/qrcode.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris_realsense_camera_qrcode/iris_realsense_camera_qrcode.sdf"/>
-	<arg name="model" default="iris_realsense_camera_qrcode"/>
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.0"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/landing_pad.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
+	<arg name="model" default="P300_Monocular_down"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
     </include>
 
 	<!-- run the autonomous_landing.cpp -->

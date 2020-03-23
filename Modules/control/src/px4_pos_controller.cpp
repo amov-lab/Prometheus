@@ -47,14 +47,6 @@ int controller_number;                                      //所选择控制器
 float Takeoff_height;                                       //默认起飞高度
 float Disarm_height;                                        //自动上锁高度
 
-//人工外界干扰
-int use_disturbance;
-float disturbance_a_xy,disturbance_b_xy;
-float disturbance_a_z,disturbance_b_z;
-float disturbance_T;
-float disturbance_start_time;
-float disturbance_end_time;
-
 //Geigraphical fence 地理围栏
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
@@ -141,17 +133,6 @@ int main(int argc, char **argv)
     nh.param<float>("pos_controller/Takeoff_height", Takeoff_height, 1.0);
     nh.param<float>("pos_controller/Disarm_height", Disarm_height, 0.15);
     nh.param<int>("pos_controller/controller_number", controller_number, 0);
-
-    nh.param<int>("Input_disturbance/use_disturbance", use_disturbance, 0);
-    nh.param<float>("Input_disturbance/disturbance_a_xy", disturbance_a_xy, 0.0);
-    nh.param<float>("Input_disturbance/disturbance_b_xy", disturbance_b_xy, 0.0);
-
-    nh.param<float>("Input_disturbance/disturbance_a_z", disturbance_a_z, 0.0);
-    nh.param<float>("Input_disturbance/disturbance_b_z", disturbance_b_z, 0.0);
-    nh.param<float>("Input_disturbance/disturbance_T", disturbance_T, 0.0);
-
-    nh.param<float>("Input_disturbance/disturbance_start_time", disturbance_start_time, 0.0);
-    nh.param<float>("Input_disturbance/disturbance_end_time", disturbance_end_time, 0.0);
     
     nh.param<float>("geo_fence/x_min", geo_fence_x[0], -100.0);
     nh.param<float>("geo_fence/x_max", geo_fence_x[1], 100.0);
@@ -162,14 +143,6 @@ int main(int argc, char **argv)
 
     // 位置控制一般选取为50Hz，主要取决于位置状态的更新频率
     ros::Rate rate(50.0);
-
-    LowPassFilter LPF_x;
-    LowPassFilter LPF_y;
-    LowPassFilter LPF_z;
-
-    LPF_x.set_Time_constant(disturbance_T);
-    LPF_y.set_Time_constant(disturbance_T);
-    LPF_z.set_Time_constant(disturbance_T);
 
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
@@ -396,27 +369,6 @@ int main(int argc, char **argv)
             //_ControlOutput = pos_controller_ps.pos_controller(_DroneState, Command_Now.Reference_State, dt);
             //_ControlOutput = pos_controller_ne.pos_controller(_DroneState, Command_Now.Reference_State, dt);
 
-            if(use_disturbance == 1 && time_trajectory>disturbance_start_time && time_trajectory<disturbance_end_time)
-            {
-                add_disturbance();
-                // 输入干扰
-                Eigen::Vector3d random;
-
-                // 先生成随机数
-                random[0] = prometheus_control_utils::random_num(disturbance_a_xy, disturbance_b_xy);
-                random[1] = prometheus_control_utils::random_num(disturbance_a_xy, disturbance_b_xy);
-                random[2] = prometheus_control_utils::random_num(disturbance_a_z, disturbance_b_z);
-
-                // 低通滤波
-                random[0] = LPF_x.apply(random[0], 0.02);
-                random[1] = LPF_y.apply(random[1], 0.02);
-                random[2] = LPF_z.apply(random[2], 0.02);
-
-                // 应用输入干扰信号
-                _ControlOutput.Throttle[0] = _ControlOutput.Throttle[0] + random[0];
-                _ControlOutput.Throttle[1] = _ControlOutput.Throttle[1] + random[1];
-                _ControlOutput.Throttle[2] = _ControlOutput.Throttle[2] + random[2];
-            }
         }else if(Command_Now.Mode != prometheus_msgs::ControlCommand::Idle)
         {
             //除轨迹追踪及idle之外,统统使用串级PID控制器
@@ -467,17 +419,6 @@ void printf_param()
     cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
     cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
     cout << "geo_fence_z : "<< geo_fence_z[0] << " [m]  to  "<<geo_fence_z[1] << " [m]"<< endl;
-
-
-    cout << "disturbance_a_xy: "<< disturbance_a_xy<<" [m] "<<endl;
-    cout << "disturbance_b_xy: "<< disturbance_b_xy<<" [m] "<<endl;
-
-    cout << "disturbance_a_z: "<< disturbance_a_z<<" [m] "<<endl;
-    cout << "disturbance_b_z: "<< disturbance_b_z<<" [m] "<<endl;
-    cout << "disturbance_T: "<< disturbance_T<<" [m] "<<endl;
-
-    cout << "disturbance_start_time: "<< disturbance_start_time<<" [s] "<<endl;
-    cout << "disturbance_end_time: "<< disturbance_end_time<<" [s] "<<endl;
 }
 
 int check_failsafe()

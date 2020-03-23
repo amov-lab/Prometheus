@@ -8,11 +8,11 @@
 
         <!-- TF for 3D lidar-->
   	<node pkg="tf" type="static_transform_publisher" name="tf_3Dlidar"
-          	args="0 0 0 0 0 0 base_link 3Dlidar_16_link 20"/>
+          	args="0 0 0 0 0 0 base_link 3Dlidar_link 20"/>
 
         <!-- Ros transformation -->
-        <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
-          	args="0 0 0 0 0 0 map odom 10"/>
+        <!-- <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
+          	args="0 0 0 0 0 0 map odom 10"/> -->
 
 </launch>
 
