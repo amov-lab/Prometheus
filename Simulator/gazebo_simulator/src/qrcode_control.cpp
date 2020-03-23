@@ -21,7 +21,7 @@ void modelStatesCallback(const gazebo_msgs::ModelStates::ConstPtr& msg)
     int modelCount = msg->name.size();
     for(int modelInd = 0;modelInd<modelCount;++modelInd)
     {
-        if(msg->name[modelInd] == "qrcode_cube")
+        if(msg->name[modelInd] == "car_landing_pad")
         {
             qrcode_pose = msg->pose[modelInd];
             qrcode_twist = msg->twist[modelInd];
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
     ros::Publisher state_pub = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 10);
 
-    set_state.model_name = "qrcode_cube";
+    set_state.model_name = "car_landing_pad";
 
     float time = 0;
     while (ros::ok())

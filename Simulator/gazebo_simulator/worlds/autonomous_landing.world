@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
-<sdf version="1.6">
-  <world name="landing_pad">
+<sdf version="1.5">
+  <world name="autonomous_landing">
     <!-- A global light source -->
     <include>
       <uri>model://sun</uri>
@@ -9,12 +9,10 @@
     <include>
       <uri>model://ground_plane</uri>
     </include>
-    <model name='landing_pad'>
-      <include>
-        <uri>model://landing_pad</uri>
-	      <pose> 2 2 0.01 0 0 1.5707963 </pose>
-      </include>
-    </model>
+    <include>
+      <uri>model://car_landing_pad</uri>
+      <pose> 2.0 2.0 0.01 0 0 0 </pose>
+    </include>
     <physics name='default_physics' default='0' type='ode'>
       <gravity>0 0 -9.8066</gravity>
       <ode>

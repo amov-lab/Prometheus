@@ -200,7 +200,7 @@ int main(int argc, char **argv)
     pos_des_prev[1] = drone_pos[1];
     pos_des_prev[2] = drone_pos[2];
 
-    ros::Duration(5.0).sleep();
+    ros::Duration(3.0).sleep();
 
     while (ros::ok())
     {
@@ -218,9 +218,7 @@ int main(int argc, char **argv)
         {
             Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
             cout <<"[autonomous_landing]: Catched the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
-        }
-
-        if(!is_detected)
+        }else if(!is_detected)
         {
             Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
             pos_des_prev[0] = drone_pos[0];

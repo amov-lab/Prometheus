@@ -10,19 +10,24 @@ from gazebo_msgs.msg import ModelState
 def pose_publisher():
     pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
     pose_msg = ModelState()
-    pose_msg.model_name = 'qrcode_cube'
-    rate = rospy.Rate(30)
-    radius = 0.5
-    theta = 0.
+    pose_msg.model_name = 'car_landing_pad'
+    rate = rospy.Rate(100)
+    linear_vel = 0.2
+    circle_radius = 3.0
+    omega = math.fabs(linear_vel / circle_radius)
+    time = 0.0
     while not rospy.is_shutdown():
-           theta += (15./30)%2000
-           pose_msg.pose.position.x = radius*math.cos(math.radians(theta))
-           pose_msg.pose.position.y = radius*math.sin(math.radians(theta))
-           pose_msg.pose.position.z = 1
-           pub.publish(pose_msg)
-           print('Pos_x :',pose_msg.pose.position.x)
-           print('Pos_y :',pose_msg.pose.position.y)
-           rate.sleep()
+        angle = time * omega
+        cos_angle = math.cos(angle)
+        sin_angle = math.sin(angle)
+        time = time + 0.01
+        pose_msg.pose.position.x = circle_radius*cos_angle
+        pose_msg.pose.position.y = circle_radius*sin_angle
+        pose_msg.pose.position.z = 0.01
+        pub.publish(pose_msg)
+        print('Pos_x :',pose_msg.pose.position.x)
+        print('Pos_y :',pose_msg.pose.position.y)
+        rate.sleep()
 
 if __name__ == '__main__':
       rospy.init_node('qrcode_pose_publisher')
