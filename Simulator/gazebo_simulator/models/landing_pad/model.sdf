@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="landing_pad">
+    <pose>5.0 0 0.01 0 0 0</pose>
+    <static>true</static>
+    <link name="link">
+      <inertial>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.6 0.6 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.6 0.6 0.02</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://landing_pad/materials/scripts</uri>
+	          <uri>model://landing_pad/materials/textures</uri>
+            <name>Cube/landing_pad</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

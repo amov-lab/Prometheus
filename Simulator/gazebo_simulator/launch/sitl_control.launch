@@ -3,12 +3,13 @@
     <arg name="x" default="0"/>
     <arg name="y" default="0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/qrcode.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris/iris.sdf"/>
-	<arg name="model" default="iris"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/landing_pad.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
+	<arg name="model" default="P300_basic"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>
       <arg name="z" value="$(arg z)"/>
@@ -22,7 +23,7 @@
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_control)/launch/rviz_config.rviz" />
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_controller_test.rviz" />
     </group>
 </launch>
 

@@ -234,6 +234,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     nav_msgs::Odometry Drone_odom;
     Drone_odom.header.stamp = ros::Time::now();
     Drone_odom.header.frame_id = "map";
+    Drone_odom.child_frame_id = "base_link";
 
     Drone_odom.pose.pose.position.x = Drone_State.position[0];
     Drone_odom.pose.pose.position.y = Drone_State.position[1];

@@ -22,14 +22,15 @@
     </include>
 
 	<!-- Spawn vehicle model -->
+	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
     <arg name="x" default="0"/>
     <arg name="y" default="0"/>
     <arg name="z" default="0"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/iris/iris.sdf"/>
-	<arg name="model" default="iris"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
+	<arg name="model" default="P300_basic"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
 	</node>
@@ -43,6 +44,10 @@
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
 	</node>
+	
+	<!-- TF transform -->
+	<include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
+    </include>
 
 	<!-- run the px4_pos_estimator.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">

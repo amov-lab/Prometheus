@@ -303,11 +303,11 @@ void A_star_planner()
                                     << A_star.path_cmd.poses[A_star.wp_id].pose.position.y << " [m] "
                                     << A_star.path_cmd.poses[A_star.wp_id].pose.position.z << " [m] "<<endl;     
         
-        //计算当前位置与下一个航点的距离，预估此处等待时间,最大速度为0.1m/s
+        //计算当前位置与下一个航点的距离，预估此处等待时间,最大速度为0.2m/s
         double distance_to_next_wp = sqrt(  pow(_DroneState.position[0] - A_star.path_cmd.poses[A_star.wp_id].pose.position.x, 2) +
                                             pow(_DroneState.position[1] - A_star.path_cmd.poses[A_star.wp_id].pose.position.y, 2) +
                                             pow(_DroneState.position[2] - A_star.path_cmd.poses[A_star.wp_id].pose.position.z, 2)  );
-        float wait_time = distance_to_next_wp / 0.05;
+        float wait_time = distance_to_next_wp / 0.2;
 
         int total_k = wait_time/0.01;
 

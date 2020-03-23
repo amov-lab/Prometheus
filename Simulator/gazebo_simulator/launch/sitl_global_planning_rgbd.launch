@@ -4,8 +4,8 @@
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300/P300.sdf"/>
-	<arg name="model" default="P300"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
+	<arg name="model" default="P300_D435i"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -15,17 +15,15 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-    <include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
-    </include>
-
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
         <arg name="rtabmap_args"       value="--delete_db_on_start"/>
-        <arg name="depth_topic"        value="/realsense_d400/depth/image_raw"/>
-		<arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
-        <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="frame_id"           value="base_link"/>
+        <arg name="depth_topic"        value="/realsense_d435i/depth/image_raw"/>
+		<arg name="frame_id"           value="base_link"/>
+        <arg name="map_frame_id"       value="rtabmap_frame"/>
         <arg name="visual_odometry"    value="false"/>
-        <arg name="odom_topic"         value="/ground_truth/state"/>  
+        <arg name="odom_topic"         value="/prometheus/planning/odom_world"/> 
+        <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
+        <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
         <arg name="queue_size"         value="200"/>
 		<arg name="rtabmapviz"         value="false"/>
     </include>

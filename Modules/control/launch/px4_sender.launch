@@ -1,5 +1,0 @@
-<launch>
-	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
-		<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
-	</node>
-</launch>
