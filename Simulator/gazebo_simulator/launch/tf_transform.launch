@@ -1,7 +1,12 @@
 <launch>
-        <!-- map系 以飞机起飞点为原点的坐标系  base_link 是机体坐标系 -->
+        <!-- map系 以飞机起飞点为原点的坐标系  base_link 是机体坐标系 gazebo 中原点坐标系为world-->
         <!-- 注意，gazebo中的坐标系并非与map系的原点重合 -->
-
+        <arg name="x" default="0"/>
+        <arg name="y" default="0"/>
+        <arg name="z" default="1"/>
+	<arg name="R" default="0"/>
+         <arg name="P" default="0"/>
+        <arg name="Y" default="0"/>
         <!-- TF for realsense_camera-->
         <node pkg="tf" type="static_transform_publisher" name="tf_realsense_camera"
                 args="0 0 0 -1.57 0 -1.57 base_link realsense_camera_link 10"/>
@@ -10,6 +15,9 @@
   	<node pkg="tf" type="static_transform_publisher" name="tf_3Dlidar"
           	args="0 0 0 0 0 0 base_link 3Dlidar_link 20"/>
 
+         <!-- TF for world-->
+        <node pkg="tf" type="static_transform_publisher" name="tf_world_map"
+          	args="0 $(arg y) 0 0 0 0 world map 10"/>
         <!-- Ros transformation -->
         <!-- <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
           	args="0 0 0 0 0 0 map odom 10"/> -->

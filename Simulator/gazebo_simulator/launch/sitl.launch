@@ -47,6 +47,9 @@
 	
 	<!-- TF transform -->
 	<include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
+		<arg name="x" value="$(arg x)"/>
+    	<arg name="y" value="$(arg y)"/>
+    	<arg name="z" value="$(arg z)"/>
     </include>
 
 	<!-- run the px4_pos_estimator.cpp -->
