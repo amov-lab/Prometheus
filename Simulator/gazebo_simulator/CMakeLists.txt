@@ -86,6 +86,7 @@ catkin_install_python(PROGRAMS nodes/joystick_translator
 )
   install(PROGRAMS 
    nodes/qrcode_control.py 
+   nodes/box_control.py
    nodes/turtlebot3_teleop_key
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
