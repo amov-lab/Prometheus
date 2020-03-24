@@ -1,8 +1,0 @@
-<launch>
-  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
-  <param name="model" value="$(arg model)"/>
-
-  <!-- turtlebot3_teleop_key already has its own built in velocity smoother -->
-  <node pkg="prometheus_gazebo" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard"  output="screen">
-  </node>
-</launch>
