@@ -32,7 +32,7 @@ def load_mnist_model():
     # the def of LeNet
     net = LeNet().to(device)
     # load paramet.
-    checkpoint = torch.load(model_name)
+    checkpoint = torch.load(model_name, map_location=torch.device(device))
     net.load_state_dict(checkpoint)
 
     return net
