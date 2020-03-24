@@ -14,7 +14,7 @@
 	
 	<!-- Gazebo configs -->
     <arg name="gui" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/color_detection.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/outdoor2.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -25,7 +25,7 @@
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
     <arg name="x" default="0"/>
     <arg name="y" default="0"/>
-    <arg name="z" default="0.02"/>
+    <arg name="z" default="1"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0"/>

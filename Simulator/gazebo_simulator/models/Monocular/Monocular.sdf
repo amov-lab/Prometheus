@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-    <model name='Monocular_down'>
+    <model name='Monocular'>
     <pose>0.0 0.0 -0.05 0 0 0</pose>
       <link name='link'>
         <inertial>
@@ -76,7 +76,7 @@
               <imageTopicName>image_raw</imageTopicName>
               <cameraInfoTopicName>camera_info</cameraInfoTopicName>
               <updateRate>30.0</updateRate>
-              <cameraName>Monocular_down</cameraName>
+              <cameraName>Monocular</cameraName>
               <frameName>/robot_camera_link</frameName>
               <CxPrime>640</CxPrime>
               <Cx>640</Cx>

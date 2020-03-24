@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <sdf version='1.6'>
-  <model name='P300_Monocular_down'>
+  <model name='P300_Monocular_front'>
     <include>
       <uri>model://P300_basic</uri>
     </include>
     <include>
       <uri>model://Monocular</uri>
-      <pose>0 0 -0.1 0 1.5707963 0</pose>
+      <pose>0.2 0 -0.05 0 0 0</pose>
     </include>
     <joint name="Monocular_down_joint" type="fixed">
       <child>Monocular::link</child>
