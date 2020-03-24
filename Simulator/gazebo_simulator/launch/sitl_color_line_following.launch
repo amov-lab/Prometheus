@@ -1,0 +1,27 @@
+<launch>
+	<!-- Launch Gazebo Simulation -->
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.03"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/color_line_following.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
+	<arg name="model" default="P300_Monocular_down"/>
+    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+	  <arg name="world" value="$(arg world)"/>
+	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
+    </include>
+
+	<!-- run the color_detection.cpp -->
+
+
+	<!-- run the line_following.cpp -->
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
+	</node>
+</launch>
+
