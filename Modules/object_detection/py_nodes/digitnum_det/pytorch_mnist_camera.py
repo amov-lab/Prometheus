@@ -18,7 +18,7 @@ import yaml
 # pip install opencv-python=='3.4.2.16'
 model_name = os.path.dirname(os.path.abspath(__file__)) + '/model/net_012.pth'
 # define use GPU or not
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"  # torch.device("cuda" if torch.cuda.is_available() else "cpu")
 camera_matrix = np.zeros((3, 3), np.float32)
 distortion_coefficients = np.zeros((5,), np.float32)
 digitnum_det_len = 1.0
