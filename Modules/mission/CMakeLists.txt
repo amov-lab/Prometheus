@@ -59,7 +59,7 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
-add_executable(color_line_following planning_mission/color_line_following.cpp)
+add_executable(color_line_following color_line_following/color_line_following.cpp)
 add_dependencies(color_line_following prometheus_mission_gencpp)
 target_link_libraries(color_line_following ${catkin_LIBRARIES})
 
