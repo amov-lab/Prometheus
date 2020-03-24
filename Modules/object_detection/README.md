@@ -89,6 +89,12 @@ roslaunch prometheus_detection darknet_ros.launch
 # 安装python2运行时环境，pytorch和opencv-python
 pip install torch==1.4.0+cpu torchvision==0.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 pip install opencv-python=='3.4.2.16'
+# 如果出现以下报错
+# No module named 'skbuild'，执行：
+pip install scikit-build
+# ft2build.h: No such file or directory，执行：
+sudo apt-get install libfreetype6-dev
+sudo apt-get install libpng-dev
 # 对于gazebo仿真环境
 source /home/fly-vision/Prometheus/devel/setup.bash
 export GAZEBO_MODEL_PATH=:${your path}/Prometheus/Simulator/gazebo_simulation/src/iris_gazebo/models:~/gazebo_models
