@@ -18,7 +18,7 @@ import yaml
 # pip install opencv-python=='3.4.2.16'
 model_name = os.path.dirname(os.path.abspath(__file__)) + '/model/net_012.pth'
 # define use GPU or not
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"  # torch.device("cuda" if torch.cuda.is_available() else "cpu")
 camera_matrix = np.zeros((3, 3), np.float32)
 distortion_coefficients = np.zeros((5,), np.float32)
 digitnum_det_len = 1.0
@@ -158,12 +158,16 @@ def image_callback(imgmsg):
 
 
 def num_det():
-    rospy.Subscriber("/realsense_plugin/camera/color/image_raw", Image, image_callback)
+    # /P300_Monocular_down/Monocular_down/image_raw
+    # /realsense_plugin/camera/color/image_raw
+    rospy.Subscriber("/P300_Monocular_down/Monocular_down/image_raw", Image, image_callback)
     rospy.spin()
 
 
 if __name__ == '__main__':
-    inparam = 'camera_param_gazebo_realsense.yaml'
+    # camera_param_gazebo_monocular.yaml
+    # camera_param_gazebo_realsense.yaml
+    inparam = 'camera_param_gazebo_monocular.yaml'
     yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + inparam
     print('Input config file: {}'.format(inparam))
 
