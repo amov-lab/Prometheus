@@ -158,9 +158,9 @@ def image_callback(imgmsg):
 
 
 def num_det():
-    # /P300_Monocular_down/Monocular_down/image_raw
+    # /P300_Monocular_front/Monocular/image_raw
     # /realsense_plugin/camera/color/image_raw
-    rospy.Subscriber("/P300_Monocular_down/Monocular_down/image_raw", Image, image_callback)
+    rospy.Subscriber("/P300_Monocular_front/Monocular/image_raw", Image, image_callback)
     rospy.spin()
 
 

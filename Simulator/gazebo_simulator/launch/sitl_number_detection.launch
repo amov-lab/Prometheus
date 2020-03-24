@@ -2,10 +2,11 @@
 	<!-- Launch Gazebo Simulation -->
 	<arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
-    <arg name="z" default="0.0"/>
+    <arg name="z" default="0.05"/>
+    <arg name="Y" default="1.57"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/wall_num.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
-	<arg name="model" default="P300_Monocular_down"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_front/P300_Monocular_front.sdf"/>
+	<arg name="model" default="P300_Monocular_front"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -13,16 +14,16 @@
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>
       <arg name="z" value="$(arg z)"/>
+      <arg name="Y" value="$(arg Y)"/>
     </include>
 
-	<!-- run the landpad_det.cpp -->
-    <node pkg="prometheus_detection" type="landpad_det" name="landpad_det" output="screen">
-        <param name="camera_topic" type="string" value="/P300_Monocular_down/Monocular_down/image_raw" />
-        <param name="camera_info" type="string" value="camera_param_gazebo_monocular.yaml" />
+	<!-- run the digitnum_det -->
+    <node pkg="prometheus_detection" type="pytorch_mnist_gazebo.py" name="digitnum_det" output="screen">
     </node>
 
-	<!-- run the autonomous_landing.cpp -->
-	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
-		<rosparam command="load" file="$(find prometheus_mission)/autonomous_landing/autonomous_landing.yaml" />	
-	</node>
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
+	</node>	
+	
 </launch>
