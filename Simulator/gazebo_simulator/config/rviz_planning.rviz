@@ -7,6 +7,7 @@ Panels:
         - /Local_Planner1/Realsense_Local_PCL1
         - /Fast_Planner1/Reference_Tra1
         - /Octomap_Mapping1/PointCloud21
+        - /Ground_Truth1/PointCloud21
       Splitter Ratio: 0.5617647171020508
     Tree Height: 360
   - Class: rviz/Selection
@@ -332,8 +333,8 @@ Visualization Manager:
           Axis: Z
           Channel Name: intensity
           Class: rviz/PointCloud2
-          Color: 255; 255; 255
-          Color Transformer: Intensity
+          Color: 0; 255; 0
+          Color Transformer: FlatColor
           Decay Time: 0
           Enabled: true
           Invert Rainbow: false
@@ -411,4 +412,4 @@ Window Geometry:
     collapsed: false
   Width: 1239
   X: 259
-  Y: 184
+  Y: 147
