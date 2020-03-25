@@ -5,8 +5,9 @@
         <arg name="y" default="0"/>
         <arg name="z" default="1"/>
 	<arg name="R" default="0"/>
-         <arg name="P" default="0"/>
+        <arg name="P" default="0"/>
         <arg name="Y" default="0"/>
+        
         <!-- TF for realsense_camera-->
         <node pkg="tf" type="static_transform_publisher" name="tf_realsense_camera"
                 args="0 0 0 -1.57 0 -1.57 base_link realsense_camera_link 10"/>
