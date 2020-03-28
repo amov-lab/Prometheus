@@ -19,13 +19,11 @@ Astar::~Astar()
 
 void Astar::setParam(ros::NodeHandle& nh)
 {
-  nh.param("astar/resolution_astar", resolution_, 0.2);
-  nh.param("astar/lambda_heu", lambda_heu_, 2.0);
-//   nh.param("astar/margin", margin_, -1.0);
-  nh.param("astar/allocate_num", allocate_num_, 1000);
-  tie_breaker_ = 1.0 + 1.0 / 10000;
+  nh.param("astar/resolution_astar", resolution_, 0.2);  // 地图分辨率
+  nh.param("astar/lambda_heu", lambda_heu_, 2.0);  // 加速引导
+  nh.param("astar/allocate_num", allocate_num_, 100000); //最大节点数
+  tie_breaker_ = 1.0 + 1.0 / allocate_num_;
 
-//   cout << "margin:" << margin_ << endl;
 }
 
 void Astar::retrievePath(NodePtr end_node)
@@ -93,8 +91,8 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
   {
     /* ---------- get lowest f_score node ---------- */
     cur_node = open_set_.top();
-    printf("cur pos ind: [%d, %d, %d], end pos index: [%d, %d, %d]\n", cur_node->index(0), cur_node->index(1), cur_node->index(2),
-                                                                                                               end_index(0), end_index(1), end_index(2) );
+    // printf("cur pos ind: [%d, %d, %d], end pos index: [%d, %d, %d]\n", cur_node->index(0), cur_node->index(1), cur_node->index(2),
+    //                                                                                                            end_index(0), end_index(1), end_index(2) );
     
     /* ---------- determine termination ---------- */
     bool reach_end = abs(cur_node->index(0) - end_index(0)) <= 1 && abs(cur_node->index(1) - end_index(1)) <= 1 &&
@@ -147,7 +145,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
           if (pro_pos(0) <= origin_(0) || pro_pos(0) >= map_size_3d_(0) || pro_pos(1) <= origin_(1) ||
               pro_pos(1) >= map_size_3d_(1) || pro_pos(2) <= origin_(2) || pro_pos(2) >= map_size_3d_(2))
           {
-            cout << "outside map" << endl;
+            // cout << "outside map" << endl;
             continue;
           }
 
