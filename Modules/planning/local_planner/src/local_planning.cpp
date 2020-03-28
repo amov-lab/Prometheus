@@ -152,11 +152,6 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
     end_vel_.setZero();
     have_goal_ = true;
 
-    // if (exec_state_ == WAIT_GOAL)
-    //     changeExecState(GEN_NEW_TRAJ, "TRIG");
-    // else if (exec_state_ == EXEC_TRAJ)
-    //     changeExecState(REPLAN_TRAJ, "TRIG");
-
 }
 
 
