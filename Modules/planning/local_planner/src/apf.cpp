@@ -38,9 +38,9 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     pcl::PointXYZ pt;
     Eigen::Vector3d p3d;
     ros::Time begin_collision = ros::Time::now();
-    ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f,  obs_distance: %f, min_dist: %f", begin_collision.toSec()-begin_update_map.toSec(), 
+    // ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f,  obs_distance: %f, min_dist: %f", begin_collision.toSec()-begin_update_map.toSec(), 
                                                                                                                                                                                                         obs_distance, min_dist);
-    ROS_INFO("point size: %d", latest_local_pcl_.points.size());
+    // ROS_INFO("point size: %d", latest_local_pcl_.points.size());
 
     // 引力
     double dist_att = (goal - current_odom).norm();
@@ -71,7 +71,7 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
             continue;
 
         dist_push = dist_push - inflate_distance;
-
+        // 如果当前的观测点中，包含小于安全停止距离的点，进行计数
         if(dist_push < safe_distance){
             safe_cnt++;
         }
@@ -126,10 +126,11 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     
     // 合力
     desired_vel = push_force + attractive_force;
+    // 如果不安全的点超出，
     if(safe_cnt>5){
-        local_planner_state = 2;
+        local_planner_state = 2;  //成功规划，但是飞机不安全
     }else{
-        local_planner_state =1;
+        local_planner_state =1;  //成功规划， 安全
     }
 
     return local_planner_state;
@@ -146,7 +147,7 @@ void APF::init(ros::NodeHandle& nh){
     nh.param("apf/max_att_dist", max_att_dist, 5.0);             // 最大吸引距离
     nh.param("apf/ground_height", ground_height, 0.1);  // 地面高度
     nh.param("apf/ground_safe_height", ground_safe_height, 0.2);  // 地面安全距离
-    nh.param("apf/safe_distance", safe_distance, 0.15);
+    nh.param("apf/safe_distance", safe_distance, 0.15); // 安全停止距离
 
 }
 

@@ -59,8 +59,9 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
 
     if (flight_type_ == FLIGHT_TYPE::MANUAL_GOAL)
     {
+        // indoor flight, to keep safe
         goal_z = msg->pose.position.z;
-        goal_z = conf(msg->pose.position.z, 0.3, 3.5);
+        goal_z = conf(msg->pose.position.z, 0.5, 4.9);
         end_pt_ << msg->pose.position.x, msg->pose.position.y, goal_z;
     }
     else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)
@@ -149,10 +150,10 @@ geometry_msgs/PoseStamped[] poses
         path_i_pose.pose.position.x = path[i](0);
         path_i_pose.pose.position.y = path[i](1);
         path_i_pose.pose.position.z = path[i](2);
-        printf("%d: >>> %f,   %f,   %f >>>>\n", i, path[i](0), path[i](1), path[i](2));
+        // printf("%d: >>> %f,   %f,   %f >>>>\n", i, path[i](0), path[i](1), path[i](2));
         A_star_path_cmd.poses.push_back(path_i_pose);
     }
-    printf("goal position: %f, %f, %f\n", end_pt_(0), end_pt_(1), end_pt_(2));
+    // printf("goal position: %f, %f, %f\n", end_pt_(0), end_pt_(1), end_pt_(2));
     control_time = ros::Time::now();
     replan.data = 0;
     path_cmd_Pub.publish(A_star_path_cmd);
@@ -251,7 +252,7 @@ void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
 
     // give some for replan.
     if(!is_safety /*&& (ros::Time::now()-control_time).toSec()>3.0*/){
-        printf("[safetyCallback]: not safety, pls re select the goal point.\n");
+        // printf("[safetyCallback]: not safety, pls re select the goal point.\n");
         replan.data = 1;
         // replan_cmd_Pub.publish(replan);
     }
