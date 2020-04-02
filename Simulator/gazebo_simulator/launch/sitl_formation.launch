@@ -64,20 +64,6 @@
 			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
 			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
 		</node>
-
-		<!-- run the px4_pos_estimator.cpp -->
-		<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
-			<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
-		</node>
-		
-		<!-- run the px4_pos_controller.cpp -->
-		<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-			<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
-		</node>
-		
-		<!-- run the ground_station.cpp -->
-		<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
-		</node>
     </group>
 
 
