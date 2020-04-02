@@ -230,8 +230,5 @@
 			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
 		</node>
     </group>
-	<!-- TF transform -->
-	<include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
-    </include>
 </launch>
 
