@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     // Waiting for input
     int start_flag = 0;
 
-    ros::Duration(2.0).sleep();
+    ros::Duration(1.0).sleep();
 
     while(start_flag == 0)
     {

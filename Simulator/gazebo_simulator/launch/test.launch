@@ -4,15 +4,14 @@
     </node>
 
 	<!-- 启动编队节点 -->
-	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --tab --">
+	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen">
 	</node>
 
 	<arg name="k_p" default="0.95"/>
-	<arg name="k_aij" default="0.0"/>
+	<arg name="k_aij" default="0.1"/>
 
 	<!-- 启动编队节点 -->
 	<node pkg="prometheus_control" type="formation_control" name="formation_control_uav1" output="screen" launch-prefix="gnome-terminal --tab --">
-		<param name="ID" value="1"/>
 		<param name="uav_name" value="/uav1"/>
 		<param name="neighbour_name1" value="/uav2" />
 		<param name="neighbour_name2" value="/uav5"/>
@@ -22,7 +21,6 @@
 
 	<!-- 启动编队节点 -->
 	<node pkg="prometheus_control" type="formation_control" name="formation_control_uav2" output="screen" launch-prefix="gnome-terminal --tab --">
-		<param name="ID" value="2"/>
 		<param name="uav_name" value="/uav2"/>
 		<param name="neighbour_name1" value="/uav1" />
 		<param name="neighbour_name2" value="/uav3"/>
@@ -32,7 +30,6 @@
 
 	<!-- 启动编队节点 -->
 	<node pkg="prometheus_control" type="formation_control" name="formation_control_uav3" output="screen" launch-prefix="gnome-terminal --tab --">
-		<param name="ID" value="3"/>
 		<param name="uav_name" value="/uav3"/>
 		<param name="neighbour_name1" value="/uav2" />
 		<param name="neighbour_name2" value="/uav4"/>
@@ -42,7 +39,6 @@
 
 	<!-- 启动编队节点 -->
 	<node pkg="prometheus_control" type="formation_control" name="formation_control_uav4" output="screen" launch-prefix="gnome-terminal --tab --">
-		<param name="ID" value="4"/>
 		<param name="uav_name" value="/uav4"/>
 		<param name="neighbour_name1" value="/uav3" />
 		<param name="neighbour_name2" value="/uav5"/>
@@ -52,7 +48,6 @@
 
 	<!-- 启动编队节点 -->
 	<node pkg="prometheus_control" type="formation_control" name="formation_control_uav5" output="screen" launch-prefix="gnome-terminal --tab --">
-		<param name="ID" value="5"/>
 		<param name="uav_name" value="/uav5"/>
 		<param name="neighbour_name1" value="/uav4" />
 		<param name="neighbour_name2" value="/uav1"/>
