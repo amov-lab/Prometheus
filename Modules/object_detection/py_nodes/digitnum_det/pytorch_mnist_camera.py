@@ -115,7 +115,7 @@ def box_extractor(img, net):
                 N_gray = cv2.cvtColor(N, cv2.COLOR_BGR2GRAY).astype(np.float32)
                 N_gray /= 255
                 N_gray = 1 - N_gray
-                cv2.imshow("N", N_gray)
+                # cv2.imshow("N", N_gray)
                 N_gray = np.expand_dims(np.expand_dims(N_gray, axis=0), axis=0)
                 with torch.no_grad():
                     N_in = torch.from_numpy(N_gray)
