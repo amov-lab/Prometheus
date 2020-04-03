@@ -1,11 +1,11 @@
 <launch>
 	<!-- 环境变量，PX4仿真启动脚本rcS中需要用到 -->
-	<env name="PX4_SIM_MODEL" value="solo" />
+	<env name="PX4_SIM_MODEL" value="solo_vision" />
     <env name="PX4_ESTIMATOR" value="ekf2" />
 
 	<!-- 启动Gazebo，可选择仿真所用的world -->
     <arg name="gui" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/wall_num.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
         <arg name="world_name" value="$(arg world)"/>
@@ -34,7 +34,7 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav1/P300_uav1.sdf"/>
 		<arg name="model" default="P300_uav1"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="$(arg ID)"/>
+		<arg name="x" default="1"/>
 		<arg name="y" default="0"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
@@ -76,8 +76,8 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav2/P300_uav2.sdf"/>
 		<arg name="model" default="P300_uav2"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="$(arg ID)"/>
-		<arg name="y" default="0"/>
+		<arg name="x" default="0"/>
+		<arg name="y" default="1"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -117,8 +117,8 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav3/P300_uav3.sdf"/>
 		<arg name="model" default="P300_uav3"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="$(arg ID)"/>
-		<arg name="y" default="0"/>
+		<arg name="x" default="-1"/>
+		<arg name="y" default="0.5"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -158,8 +158,8 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav4/P300_uav4.sdf"/>
 		<arg name="model" default="P300_uav4"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="$(arg ID)"/>
-		<arg name="y" default="0"/>
+		<arg name="x" default="-1"/>
+		<arg name="y" default="-0.5"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -199,8 +199,8 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav5/P300_uav5.sdf"/>
 		<arg name="model" default="P300_uav5"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="$(arg ID)"/>
-		<arg name="y" default="0"/>
+		<arg name="x" default="0"/>
+		<arg name="y" default="-1"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->

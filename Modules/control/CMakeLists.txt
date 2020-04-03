@@ -78,6 +78,11 @@ add_dependencies(px4_pos_estimator prometheus_control_gencpp)
 target_link_libraries(px4_pos_estimator ${catkin_LIBRARIES})
 target_link_libraries(px4_pos_estimator OptiTrackFeedbackRigidBody)
 
+##
+add_executable(formation_control src/formation_control.cpp)
+add_dependencies(formation_control prometheus_control_gencpp)
+target_link_libraries(formation_control ${catkin_LIBRARIES})
+
 ##ground_station.cpp
 add_executable(ground_station src/ground_station.cpp)
 add_dependencies(ground_station prometheus_control_gencpp)

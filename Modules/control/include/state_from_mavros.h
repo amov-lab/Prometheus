@@ -41,26 +41,34 @@ class state_from_mavros
     state_from_mavros(void):
         state_nh("~")
     {
+        state_nh.param<string>("uav_name", uav_name, "/uav0");
+
+        if (uav_name == "/uav0")
+        {
+            uav_name = "";
+        }
+
         // 【订阅】无人机当前状态 - 来自飞控
         //  本话题来自飞控(通过Mavros功能包 /plugins/sys_status.cpp)
-        state_sub = state_nh.subscribe<mavros_msgs::State>("/mavros/state", 10, &state_from_mavros::state_cb,this);
+        state_sub = state_nh.subscribe<mavros_msgs::State>(uav_name + "/mavros/state", 10, &state_from_mavros::state_cb,this);
 
         // 【订阅】无人机当前位置 坐标系:ENU系 （此处注意，所有状态量在飞控中均为NED系，但在ros中mavros将其转换为ENU系处理。所以，在ROS中，所有和mavros交互的量都为ENU系）
         //  本话题来自飞控(通过Mavros功能包 /plugins/local_position.cpp读取), 对应Mavlink消息为LOCAL_POSITION_NED (#32), 对应的飞控中的uORB消息为vehicle_local_position.msg
-        position_sub = state_nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, &state_from_mavros::pos_cb,this);
+        position_sub = state_nh.subscribe<geometry_msgs::PoseStamped>(uav_name + "/mavros/local_position/pose", 10, &state_from_mavros::pos_cb,this);
 
         // 【订阅】无人机当前速度 坐标系:ENU系
         //  本话题来自飞控(通过Mavros功能包 /plugins/local_position.cpp读取), 对应Mavlink消息为LOCAL_POSITION_NED (#32), 对应的飞控中的uORB消息为vehicle_local_position.msg
-        velocity_sub = state_nh.subscribe<geometry_msgs::TwistStamped>("/mavros/local_position/velocity_local", 10, &state_from_mavros::vel_cb,this);
+        velocity_sub = state_nh.subscribe<geometry_msgs::TwistStamped>(uav_name + "/mavros/local_position/velocity_local", 10, &state_from_mavros::vel_cb,this);
 
         // 【订阅】无人机当前欧拉角 坐标系:ENU系
         //  本话题来自飞控(通过Mavros功能包 /plugins/imu.cpp读取), 对应Mavlink消息为ATTITUDE (#30), 对应的飞控中的uORB消息为vehicle_attitude.msg
-        attitude_sub = state_nh.subscribe<sensor_msgs::Imu>("/mavros/imu/data", 10, &state_from_mavros::att_cb,this); 
+        attitude_sub = state_nh.subscribe<sensor_msgs::Imu>(uav_name + "/mavros/imu/data", 10, &state_from_mavros::att_cb,this); 
     }
 
     //变量声明 
     prometheus_msgs::DroneState _DroneState;
-
+    string uav_name;
+    
     private:
 
         ros::NodeHandle state_nh;
