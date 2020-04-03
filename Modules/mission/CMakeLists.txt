@@ -59,6 +59,10 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
+add_executable(formation_flight formation_flight/formation_flight.cpp)
+add_dependencies(formation_flight prometheus_mission_gencpp)
+target_link_libraries(formation_flight ${catkin_LIBRARIES})
+
 add_executable(color_line_following color_line_following/color_line_following.cpp)
 add_dependencies(color_line_following prometheus_mission_gencpp)
 target_link_libraries(color_line_following ${catkin_LIBRARIES})
@@ -98,10 +102,6 @@ target_link_libraries(object_tracking ${catkin_LIBRARIES})
 add_executable(fake_detectioninfo test/fake_detectioninfo.cpp)
 add_dependencies(fake_detectioninfo prometheus_mission_gencpp)
 target_link_libraries(fake_detectioninfo ${catkin_LIBRARIES})
-
-#add_executable(formation_control_sitl formation_control_sitl/formation_control_sitl.cpp)
-#add_dependencies(formation_control_sitl prometheus_mission_gencpp)
-#target_link_libraries(formation_control_sitl ${catkin_LIBRARIES})
 
 
 #############

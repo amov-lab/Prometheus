@@ -77,19 +77,14 @@ target_link_libraries(qrcode_control ${catkin_LIBRARIES})
 #target_link_libraries(PriusHybridPlugin ${GAZEBO_LIBRARIES} ${IGNITION-MSGS_LIBRARIES})
 #add_dependencies(PriusHybridPlugin ${catkin_EXPORTED_TARGETS})
 
-catkin_install_python(PROGRAMS nodes/joystick_translator
-                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS 
+    nodes/joystick_translator
+    nodes/keyboard_control_px4.py 
+    nodes/qrcode_control.py 
+    nodes/get_ground_truth_formation.py  
+    nodes/box_control.py
+DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-  install(PROGRAMS 
-   nodes/keyboard_control_px4.py 
-   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-  install(PROGRAMS 
-   nodes/qrcode_control.py 
-   nodes/box_control.py
-   nodes/turtlebot3_teleop_key
-   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
 install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY  models/turtlebot3_description/meshes models/turtlebot3_description/rviz models/turtlebot3_description/urdf DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
