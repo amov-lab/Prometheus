@@ -24,4 +24,4 @@ kcf_tracker_h: 1.7
 landpad_det_len: 0.8
 
 ## digitnum_det 数字周围的方框边长(默认1m)
-digitnum_det_len: 1.0
+digitnum_det_len: 0.5
