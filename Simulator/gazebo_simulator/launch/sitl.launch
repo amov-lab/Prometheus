@@ -1,18 +1,19 @@
 <launch>
 	<!-- vehicle model and world -->
 	<env name="PX4_SIM_MODEL" value="solo" />
-    <env name="PX4_ESTIMATOR" value="ekf2" />
+    <env name="PX4_ESTIMATOR" value="ekf2_gps" />
 	
 	<!-- PX4 configs -->
     <arg name="interactive" default="true"/>
     <!-- PX4 SITL -->
 	<arg unless="$(arg interactive)" name="px4_command_arg1" value="-d"/>
     <arg     if="$(arg interactive)" name="px4_command_arg1" value=""/>
-    <node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)" required="true"/>
-	
+    <!-- <node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)" required="true"/> -->
+	<node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)"/>
+
 	<!-- Gazebo configs -->
     <arg name="gui" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/wall_num.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
