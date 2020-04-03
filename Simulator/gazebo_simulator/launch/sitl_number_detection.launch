@@ -2,8 +2,8 @@
 	<!-- Launch Gazebo Simulation -->
 	<arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
-    <arg name="z" default="0.05"/>
-    <arg name="Y" default="1.57"/>
+    <arg name="z" default="0.06"/>
+    <arg name="Y" default="0.0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/wall_num.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_front/P300_Monocular_front.sdf"/>
 	<arg name="model" default="P300_Monocular_front"/>
@@ -21,9 +21,8 @@
     <node pkg="prometheus_detection" type="pytorch_mnist_gazebo.py" name="digitnum_det" output="screen">
     </node>
 
-	<!-- run the terminal_control.cpp -->
-	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
+	<!-- run the number_detection.cpp -->
+	<node pkg="prometheus_mission" type="number_detection" name="number_detection" output="screen" launch-prefix="gnome-terminal --">	
 	</node>	
 	
 </launch>
