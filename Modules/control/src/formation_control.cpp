@@ -33,30 +33,26 @@ mavros_msgs::State current_state;
 Eigen::Vector3d pos_drone;
 Eigen::Vector3d vel_drone;
 
-//mavros_msgs::State current_state_nei[2];
-Eigen::Vector3d pos_nei[2];
-Eigen::Vector3d vel_nei[2];
-
-double leader_pos[3];
+Eigen::Vector3d pos_leader;
 Eigen::Vector3d relative_pos_to_leader;
-float ID = 0;
 
 Eigen::Vector3d state_sp(0,0,0);
 float yaw_sp = 0;
 bool get_new_cmd = false;
 
-
 float k_p;
 float k_aij;
+
+//mavros_msgs::State current_state_nei[2];
+Eigen::Vector3d pos_nei[2];
+Eigen::Vector3d vel_nei[2];
+//2020.4.2 这里有个十分神奇的bug： 这个语句后面不要再放任何变量声明了，不然变量的值会各种变化。。
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void leader_pos_cb(const geometry_msgs::Point::ConstPtr &msg)
+void pos_leader_cb(const geometry_msgs::Point::ConstPtr &msg)
 {
-    leader_pos[0] = msg->x;
-    leader_pos[1] = msg->y;
-    //leader_pos  = Eigen::Vector3d(msg->x,msg->y,msg->z);
-    cout << "P_Leader [X Y Z] : " << leader_pos[0] << " [ m ] "<< leader_pos[1]<<" [ m ] "<<leader_pos[2]<<" [ m ] "<<endl;
+    pos_leader = Eigen::Vector3d(msg->x,msg->y,msg->z);
     get_new_cmd = true;
 }
 void formation_cb(const geometry_msgs::Point::ConstPtr &msg)
@@ -84,7 +80,6 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     ros::Rate rate(20.0);
 
-    nh.param<float>("ID", ID, 0);
     //无人机编号 1号无人机则为1
     nh.param<string>("uav_name", uav_name, "/uav0");
     nh.param<float>("k_p", k_p, 0.95);
@@ -94,7 +89,7 @@ int main(int argc, char **argv)
     nh.param<string>("neighbour_name2", neighbour_name2, "/uav0");
 
     //订阅虚拟主机的位置，及阵型
-    ros::Subscriber leader_sub = nh.subscribe<geometry_msgs::Point>("/prometheus/formation/leader_pos", 10, leader_pos_cb);
+    ros::Subscriber leader_sub = nh.subscribe<geometry_msgs::Point>("/prometheus/formation/leader_pos", 10, pos_leader_cb);
     ros::Subscriber formation_sub = nh.subscribe<geometry_msgs::Point>("/prometheus/formation" + uav_name, 10, formation_cb);
 
     //订阅本台飞机的状态
@@ -102,8 +97,8 @@ int main(int argc, char **argv)
     ros::Subscriber odom_sub = nh.subscribe<nav_msgs::Odometry>(uav_name + "/mavros/local_position/odom", 100, odom_cb);
 
     //订阅邻居飞机的状态信息
-    ros::Subscriber odom_nei_sub_1 = nh.subscribe<nav_msgs::Odometry>(neighbour_name1 + "/mavros/local_position/odom", 100, boost::bind(&odom_nei_cb,_1, 1));   
-    ros::Subscriber odom_nei_sub_2 = nh.subscribe<nav_msgs::Odometry>(neighbour_name2 + "/mavros/local_position/odom", 100, boost::bind(&odom_nei_cb,_1, 2)); 
+    ros::Subscriber odom_nei_sub_1 = nh.subscribe<nav_msgs::Odometry>(neighbour_name1 + "/mavros/local_position/odom", 100, boost::bind(&odom_nei_cb,_1, 0));   
+    ros::Subscriber odom_nei_sub_2 = nh.subscribe<nav_msgs::Odometry>(neighbour_name2 + "/mavros/local_position/odom", 100, boost::bind(&odom_nei_cb,_1, 1)); 
 
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
@@ -174,19 +169,14 @@ int main(int argc, char **argv)
         ros::spinOnce();
     }
 
-    leader_pos[0] = 0.0;
-    leader_pos[1] = 0.0;
-    leader_pos[2] = 0.0;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主  循  环<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
     {
         ros::spinOnce();
 
         //formation control， 平面阵型，xy控制速度，z轴高度定高
-        state_sp[0] = k_p * (leader_pos[0] + relative_pos_to_leader[0] - pos_drone[0]) + k_aij*(pos_nei[0][0] - pos_drone[0]) + k_aij*(pos_nei[1][0] - pos_drone[0]);
-        state_sp[1] = k_p * (leader_pos[1] + relative_pos_to_leader[1] - pos_drone[1]) + k_aij*(pos_nei[0][1] - pos_drone[1]) + k_aij*(pos_nei[1][1] - pos_drone[1]);
-        //state_sp[2] = kp * (leader_pos[2] + relative_pos_to_leader[2] - pos_drone[2]);
-
+        state_sp[0] = k_p * (pos_leader[0] + relative_pos_to_leader[0] - pos_drone[0]) + k_aij*(pos_nei[0][0] - pos_drone[0]) + k_aij*(pos_nei[1][0] - pos_drone[0]);
+        state_sp[1] = k_p * (pos_leader[1] + relative_pos_to_leader[1] - pos_drone[1]) + k_aij*(pos_nei[0][1] - pos_drone[1]) + k_aij*(pos_nei[1][1] - pos_drone[1]);
         state_sp[2] = 1.0;
         yaw_sp = 0.0;
         _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
@@ -195,7 +185,9 @@ int main(int argc, char **argv)
         cout << "UAV_name : " << uav_name <<"   UAV_mode: "<< current_state.mode <<"   arm or not: "<< current_state.armed << endl;
         cout << "Position [X Y Z] : " << pos_drone[0] << " [ m ] "<< pos_drone[1]<<" [ m ] "<<pos_drone[2]<<" [ m ] "<<endl;
         cout << "Velocity [X Y Z] : " << vel_drone[0] << " [m/s] "<< vel_drone[1]<<" [m/s] "<<vel_drone[2]<<" [m/s] "<<endl;
-        cout << "P_Leader [X Y Z] : " << leader_pos[0] << " [ m ] "<< leader_pos[1]<<" [ m ] "<<leader_pos[2]<<" [ m ] "<<endl;
+        cout << "P_Leader [X Y Z] : " << pos_leader[0] << " [ m ] "<< pos_leader[1]<<" [ m ] "<<pos_leader[2]<<" [ m ] "<<endl;
+        cout << "Pos_Nei1 [X Y Z] : " << pos_nei[0][0] << " [ m ] "<< pos_nei[0][1]<<" [ m ] "<<pos_nei[0][2]<<" [ m ] "<<endl;
+        cout << "Pos_Nei2 [X Y Z] : " << pos_nei[1][0] << " [ m ] "<< pos_nei[1][1]<<" [ m ] "<<pos_nei[1][2]<<" [ m ] "<<endl;
         cout << "Relative [X Y Z] : " << relative_pos_to_leader[0] << " [ m ] "<< relative_pos_to_leader[1]<<" [ m ] "<<relative_pos_to_leader[2]<<" [ m ] "<<endl;
         cout << "state_sp [X Y Z] : " << state_sp[0]  << " [m/s] "<< state_sp[1] <<" [m/s] "<<state_sp[2] <<" [m/s] "<<endl;
         
