@@ -140,6 +140,7 @@ def box_extractor(img, net):
                     m_info.detection_infos.append(d_info)
                     m_info.num_objs += 1
 
+    det_nums.sort()
     cv2.putText(img, 'nums: {}'.format(det_nums), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 4)
 
     return img, m_info
