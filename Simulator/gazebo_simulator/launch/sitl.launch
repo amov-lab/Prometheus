@@ -22,7 +22,7 @@
 	<!-- Spawn vehicle model -->
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
     <arg name="x" default="0"/>
-    <arg name="y" default="0"/>
+    <arg name="y" default="10"/>
     <arg name="z" default="0.1"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
