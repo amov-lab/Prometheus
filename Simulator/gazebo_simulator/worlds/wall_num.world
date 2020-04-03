@@ -9,8 +9,8 @@
     </include>
     <include>
       <uri>model://wall_with_num</uri>
-      <name>wall_with_num</name>
-      <pose>0 5 0 0 0 3.14</pose>
+      <name>wall</name>
+      <pose>0 5 1.5 0 0 3.14</pose>
     </include>
     <model name='logo_ground'>
       <include>
