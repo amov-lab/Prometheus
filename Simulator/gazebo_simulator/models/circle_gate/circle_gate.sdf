@@ -27,6 +27,7 @@
         <geometry>
           <mesh>
             <uri>model://circle_gate/meshes/circle_gate.stl</uri>
+            <scale>0.1 0.1 0.1</scale>
           </mesh>
         </geometry>
         <material>

@@ -83,6 +83,7 @@ catkin_install_python(PROGRAMS
     nodes/qrcode_control.py 
     nodes/get_ground_truth_formation.py  
     nodes/box_control.py
+    nodes/get_ground_truth.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

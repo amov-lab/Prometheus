@@ -18,13 +18,13 @@
     <model name='gate_1'>
       <include>
         <uri>model://circle_gate</uri>
-	      <pose> 0 0 0.01 0 0 0</pose>
+	      <pose> 5 0 0.01 0 0 0</pose>
       </include>
     </model>
     <model name='gate_2'>
       <include>
         <uri>model://circle_gate</uri>
-	      <pose> 0 1.5 0.01 0 0 0</pose>
+	      <pose> 0 5 0.01 0 0 1.57</pose>
       </include>
     </model>
    <physics name='default_physics' default='0' type='ode'>

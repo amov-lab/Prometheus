@@ -1,0 +1,27 @@
+<launch>
+	<!-- Launch Gazebo Simulation -->
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.06"/>
+    <arg name="Y" default="0.0"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/multi_gate.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_front/P300_Monocular_front.sdf"/>
+	<arg name="model" default="P300_Monocular_front"/>
+    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+	  <arg name="world" value="$(arg world)"/>
+	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
+      <arg name="Y" value="$(arg Y)"/>
+    </include>
+
+	<!-- run the digitnum_det -->
+
+
+	<!-- run the number_detection.cpp -->
+	<node pkg="prometheus_mission" type="number_detection" name="number_detection" output="screen" launch-prefix="gnome-terminal --">	
+	</node>	
+	
+</launch>

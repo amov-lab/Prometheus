@@ -23,5 +23,10 @@
 	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
 		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
 	</node>
+	
+	<!-- Get Ground Truth (需要等到gazebo启动后，方可运行该节点)-->
+	<node pkg="prometheus_gazebo" type="get_ground_truth.py" name="get_ground_truth" output="screen">
+		<param name="uav_name" value="$(arg model)"/>
+    </node>	
 </launch>
 

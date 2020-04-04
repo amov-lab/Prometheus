@@ -29,7 +29,4 @@
 	<!-- run the box_control.cpp -->
 	<node pkg="prometheus_gazebo" name="box_control" type="box_control.py" output="screen">
 	</node>
-	
-
-
 </launch>

@@ -9,9 +9,15 @@
     <include>
       <uri>model://ground_plane</uri>
     </include>
+    <model name='logo_ground'>
+      <include>
+        <uri>model://logo_ground</uri>
+	      <pose> 0 0 0.01 0 0 0</pose>
+      </include>
+    </model>
     <include>
       <uri>model://car_landing_pad</uri>
-      <pose> 2.0 2.0 0.01 0 0 0 </pose>
+      <pose> 2.0 2.0 0.02 0 0 0 </pose>
     </include>
     <physics name='default_physics' default='0' type='ode'>
       <gravity>0 0 -9.8066</gravity>
