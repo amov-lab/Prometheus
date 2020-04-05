@@ -92,6 +92,8 @@ int main(int argc, char **argv)
     ros::Subscriber leader_sub = nh.subscribe<geometry_msgs::Point>("/prometheus/formation/leader_pos", 10, pos_leader_cb);
     ros::Subscriber formation_sub = nh.subscribe<geometry_msgs::Point>("/prometheus/formation" + uav_name, 10, formation_cb);
 
+    //
+
     //订阅本台飞机的状态
     ros::Subscriber state_sub    = nh.subscribe<mavros_msgs::State>(uav_name + "/mavros/state", 10, state_cb);
     ros::Subscriber odom_sub = nh.subscribe<nav_msgs::Odometry>(uav_name + "/mavros/local_position/odom", 100, odom_cb);

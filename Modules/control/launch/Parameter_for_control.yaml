@@ -21,8 +21,8 @@ geo_fence:
 
 ## parameter for px4_pos_estimator.cpp
 pos_estimator:
-  ## 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM
-  flag_use_laser_or_vicon : 0
+  ## 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用)
+  input_source : 2
 
 ## 限制参数 
 Limit:
