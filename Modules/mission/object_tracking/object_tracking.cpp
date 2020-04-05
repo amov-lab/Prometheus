@@ -38,7 +38,6 @@ int num_count_vision_regain = 0;                                                
 int Thres_vision = 0;                                                          //视觉丢失计数器阈值
 //---------------------------------------Track---------------------------------------------
 float distance_to_setpoint;
-float distance_thres;
 Eigen::Vector3f tracking_delta;
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
@@ -108,9 +107,6 @@ int main(int argc, char **argv)
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //视觉丢失次数阈值
     nh.param<int>("Thres_vision", Thres_vision, 10);
-
-    //追踪距离阈值
-    nh.param<float>("distance_thres", distance_thres, 0.2);
 
     //追踪的前后间隔
     nh.param<float>("tracking_delta_x", tracking_delta[0], 0.0);
@@ -282,7 +278,6 @@ void printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     cout << "Thres_vision : "<< Thres_vision << endl;
-    cout << "distance_thres : "<< distance_thres << endl;
 
     cout << "tracking_delta_x : "<< tracking_delta[0] << endl;
     cout << "tracking_delta_y : "<< tracking_delta[1] << endl;
