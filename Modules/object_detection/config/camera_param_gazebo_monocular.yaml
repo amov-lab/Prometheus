@@ -15,7 +15,7 @@ k3: 0.0
 aruco_det_len: 0.2
 
 ## ellipse_det 圆的半径(默认0.2m)
-ellipse_det_r: 0.2
+ellipse_det_r: 0.45
 
 ## kcf_tracker 目标高度(默认1.7m)
 kcf_tracker_h: 1.7
