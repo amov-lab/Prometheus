@@ -9,7 +9,18 @@ distance_thres: 0.4
 ##追踪的间隔 tracking_delta_x  = target_pos_x - drone_pos_x
 tracking_delta_x : 1.5
 tracking_delta_y : 0.0
-tracking_delta_z : 0.0
+tracking_delta_z : 0.3
+
+##比例参数
+kpx_track: 0.3
+kpy_track: 0.3
+kpz_track: 0.3
+
+##降落起始点 静止目标建议起飞点：[1,2,6] 移动目标建议起飞点[-5,0,5]
+start_point_x: -3.0
+start_point_y: 0
+start_point_z: 1.5
+start_yaw: 0.0
 
 UKF_NCV:
     std_ax_: 0.01

@@ -30,8 +30,8 @@ Eigen::Vector3f drone_pos;
 prometheus_msgs::DetectionInfo Detection_raw;          //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
 Eigen::Vector3f pos_body_frame;
 Eigen::Vector3f pos_des_prev;
-float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
-
+float kpx_track,kpy_track,kpz_track;                                                 //控制参数 - 比例参数
+float start_point_x,start_point_y,start_point_z,start_yaw;
 bool is_detected = false;                                          // 是否检测到目标标志
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
 int num_count_vision_regain = 0;                                                      //视觉丢失计数器
@@ -50,9 +50,9 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
     Detection_raw = *msg;
 
-    pos_body_frame[0] = -Detection_raw.position[1];
-    pos_body_frame[1] = -Detection_raw.position[0];
-    pos_body_frame[2] = -Detection_raw.position[2]; 
+    pos_body_frame[0] = Detection_raw.position[2] - tracking_delta[0];
+    pos_body_frame[1] = -Detection_raw.position[0] + tracking_delta[1];
+    pos_body_frame[2] = -Detection_raw.position[1] + tracking_delta[2];
     
     if(Detection_raw.detected)
     {
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     ros::Rate rate(20.0);
 
     // 【订阅】视觉消息 来自视觉节点
-    //  方向定义： 目标位置[机体系下：前方x为正，右方y为正，下方z为正]
+    //  方向定义： 目标位置[机体系下：右方x为正，下方y为正，前方z为正]
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
     // 注意这里为了复用程序使用了/prometheus/target作为话题名字，适用于椭圆、二维码、yolo等视觉算法
     // 故同时只能运行一种视觉识别程序，如果想同时追踪多个目标，这里请修改接口话题的名字
@@ -118,21 +118,64 @@ int main(int argc, char **argv)
     nh.param<float>("tracking_delta_z", tracking_delta[2], 0.0);
 
     //追踪控制参数
-    nh.param<float>("kpx_land", kpx_land, 0.1);
-    nh.param<float>("kpy_land", kpy_land, 0.1);
-    nh.param<float>("kpz_land", kpz_land, 0.1);
+    nh.param<float>("kpx_track", kpx_track, 0.1);
+    nh.param<float>("kpy_track", kpy_track, 0.1);
+    nh.param<float>("kpz_track", kpz_track, 0.1);
+
+    nh.param<float>("start_point_x", start_point_x, 0.0);
+    nh.param<float>("start_point_y", start_point_y, 0.0);
+    nh.param<float>("start_point_z", start_point_z, 2.0);
+    nh.param<float>("start_yaw", start_yaw, 0.0);
 
     //打印现实检查参数
     printf_param();
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(2);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
 
-    int check_flag;
-    //输入1,继续，其他，退出程序
-    cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
-    cin >> check_flag;
-
-    if(check_flag != 1)
+    // Waiting for input
+    int start_flag = 0;
+    while(start_flag == 0)
     {
-        return -1;
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Object Tracking Mission<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
+        cin >> start_flag;
+    }
+
+    // 起飞
+    cout<<"[autonomous_landing]: "<<"Takeoff to predefined position."<<endl;
+    Command_Now.Command_ID = 1;
+    while( _DroneState.position[2] < 0.3)
+    {
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.yaw_ref = 999;
+        command_pub.publish(Command_Now);   
+        cout << "Switch to OFFBOARD and arm ..."<<endl;
+        ros::Duration(3.0).sleep();
+        
+        Command_Now.header.stamp                    = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = start_point_x;
+        Command_Now.Reference_State.position_ref[1]     = start_point_y;
+        Command_Now.Reference_State.position_ref[2]     = start_point_z;
+        Command_Now.Reference_State.yaw_ref             = start_yaw/180*3.1415926;
+        command_pub.publish(Command_Now);
+        cout << "Takeoff ..."<<endl;
+        ros::Duration(3.0).sleep();
+
+        ros::spinOnce();
     }
 
     // 先读取一些飞控的数据
@@ -146,36 +189,7 @@ int main(int argc, char **argv)
     pos_des_prev[1] = drone_pos[1];
     pos_des_prev[2] = drone_pos[2];
 
-    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
-    Command_Now.Command_ID                          = 0;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0]     = 0;
-    Command_Now.Reference_State.position_ref[1]     = 0;
-    Command_Now.Reference_State.position_ref[2]     = 0;
-    Command_Now.Reference_State.velocity_ref[0]     = 0;
-    Command_Now.Reference_State.velocity_ref[1]     = 0;
-    Command_Now.Reference_State.velocity_ref[2]     = 0;
-    Command_Now.Reference_State.acceleration_ref[0] = 0;
-    Command_Now.Reference_State.acceleration_ref[1] = 0;
-    Command_Now.Reference_State.acceleration_ref[2] = 0;
-    Command_Now.Reference_State.yaw_ref             = 0;
-
-    // 起飞
-    cout<<"[object_tracking]: "<<"Takeoff to predefined position."<<endl;
-    Command_Now.header.stamp                    = ros::Time::now();
-    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-    Command_Now.Command_ID                          = 1;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0]     = 1;
-    Command_Now.Reference_State.position_ref[1]     = 1;
-    Command_Now.Reference_State.position_ref[2]     = 2.5;
-    Command_Now.Reference_State.yaw_ref             = 0;
-
-    //command_pub.publish(Command_Now);
-
-    //sleep(8.0);
+    ros::Duration(3.0).sleep();
 
     while (ros::ok())
     {
@@ -203,15 +217,15 @@ int main(int argc, char **argv)
             Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
 
             Eigen::Vector3f vel_command;
-            vel_command[0] = kpx_land * pos_body_frame[0];
-            vel_command[1] = kpy_land * pos_body_frame[1];
-            vel_command[2] = kpz_land * pos_body_frame[2];
+            vel_command[0] = kpx_track * pos_body_frame[0];
+            vel_command[1] = kpy_track * pos_body_frame[1];
+            vel_command[2] = kpz_track * pos_body_frame[2];
 
             for (int i=0; i<3; i++)
             {
                 Command_Now.Reference_State.position_ref[i] = pos_des_prev[i] + vel_command[i]* 0.05;
             }
-            Command_Now.Reference_State.yaw_ref             = 0.0;
+            Command_Now.Reference_State.yaw_ref             = start_yaw/180*3.1415926;
             
             for (int i=0; i<3; i++)
             {
@@ -244,7 +258,7 @@ void printf_result()
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Obeject Tracking<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>Obeject Tracking<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     if(is_detected)
@@ -274,9 +288,12 @@ void printf_param()
     cout << "tracking_delta_y : "<< tracking_delta[1] << endl;
     cout << "tracking_delta_z : "<< tracking_delta[2] << endl;
 
-    cout << "kpx_land : "<< kpx_land << endl;
-    cout << "kpy_land : "<< kpy_land << endl;
-    cout << "kpz_land : "<< kpz_land << endl;
+    cout << "kpx_track : "<< kpx_track << endl;
+    cout << "kpy_track : "<< kpy_track << endl;
+    cout << "kpz_track : "<< kpz_track << endl;
+    cout << "start_point_x : "<< start_point_x << endl;
+    cout << "start_point_y : "<< start_point_y << endl;
+    cout << "start_point_z : "<< start_point_z << endl;
 }
 
 
