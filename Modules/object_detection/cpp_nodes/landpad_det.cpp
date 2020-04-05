@@ -310,20 +310,41 @@ int main(int argc, char **argv)
                 // 大二维码：19，小二维码：43
                 //--------------对每一个Marker的相对位置进行解算----------------
                 vector<vector<Point2f> > singMarkerCorner_19, singMarkerCorner_43;
+                vector<vector<Point2f> > singMarkerCorner_1, singMarkerCorner_2, singMarkerCorner_3, singMarkerCorner_4;
                 if (markerids[t] == 19)
                 {
                     singMarkerCorner_19.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.8,camera_matrix,distortion_coefficients,rvec,tvec);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.666667,camera_matrix,distortion_coefficients,rvec,tvec);
 
                 }
                 else if (markerids[t] == 43)
                 {
                     singMarkerCorner_43.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_43,landpad_det_len*0.08,camera_matrix,distortion_coefficients,rvec,tvec);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_43,landpad_det_len*0.066667,camera_matrix,distortion_coefficients,rvec,tvec);
+                }
+                else if (markerids[t] == 1)
+                {
+                    singMarkerCorner_1.push_back(markerCorners[t]);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_1,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
+                }
+                else if (markerids[t] == 2)
+                {
+                    singMarkerCorner_2.push_back(markerCorners[t]);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_2,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
+                }
+                else if (markerids[t] == 3)
+                {
+                    singMarkerCorner_3.push_back(markerCorners[t]);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_3,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
+                }
+                else if (markerids[t] == 4)
+                {
+                    singMarkerCorner_4.push_back(markerCorners[t]);
+                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_4,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
                 }
                 else 
                 {
-                    break;
+                    continue;
                 }
 
                 // 将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
@@ -373,6 +394,35 @@ int main(int argc, char **argv)
                 Eigen::Vector3d eulerVec;
                 eulerVec(0) = (Theta_C2W.z + 90) / 180 * CV_PI;
                 vec_yaw.push_back(eulerVec(0));
+
+                //根据Marker ID对相对位置进行偏移
+                switch (markerids[t])
+                {
+                    case 1:
+                    {
+                        Position_OcInW.x += landpad_det_len*0.4;
+                        Position_OcInW.y += landpad_det_len*0.4;
+                        break;
+                    }
+                    case 2:
+                    {
+                        Position_OcInW.x += landpad_det_len*0.4;
+                        Position_OcInW.y -= landpad_det_len*0.4;
+                        break;
+                    }
+                    case 3:
+                    {
+                        Position_OcInW.x -= landpad_det_len*0.4;
+                        Position_OcInW.y -= landpad_det_len*0.4;
+                        break;
+                    }
+                    case 4:
+                    {
+                        Position_OcInW.x -= landpad_det_len*0.4;
+                        Position_OcInW.y += landpad_det_len*0.4;
+                        break;
+                    }
+                }
                 vec_Position_OcInW.push_back(Position_OcInW);
 
                 A1_Sum_Position_OcInW += Position_OcInW;
@@ -422,7 +472,7 @@ int main(int argc, char **argv)
         printf_result();
 
         // 画出识别到的二维码
-        cv::aruco::drawDetectedMarkers(img,markerCorners,markerids);
+        cv::aruco::drawDetectedMarkers(img, markerCorners, markerids);
         
         msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
         landpad_pub.publish(msg_ellipse);
