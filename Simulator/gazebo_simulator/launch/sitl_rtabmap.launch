@@ -3,7 +3,7 @@
     <arg name="x" default="0.0"/>
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/indoor_house.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
 	<arg name="model" default="P300_D435i"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
