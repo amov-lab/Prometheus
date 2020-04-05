@@ -7,12 +7,39 @@ import rospy
 import math
 from gazebo_msgs.msg import ModelState
 
-def pose_publisher():
+move_type = 1
+
+
+def pose_publisher_line():
     pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
     pose_msg = ModelState()
     pose_msg.model_name = 'car_landing_pad'
     rate = rospy.Rate(100)
-    linear_vel = 0.2
+    linear_vel = 1.0
+    time = 0.0
+    while not rospy.is_shutdown():
+        pos = -5 + time * linear_vel
+        time = time + 0.01
+        if pos > 30.0:
+            time = 0
+        else:
+            pass
+        
+        pose_msg.pose.position.x = pos
+        pose_msg.pose.position.y = -2.0
+        pose_msg.pose.position.z = 0.01
+        pub.publish(pose_msg)
+        print('Pos_x :',pose_msg.pose.position.x)
+        print('Pos_y :',pose_msg.pose.position.y)
+        rate.sleep()
+
+
+def pose_publisher_circle():
+    pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
+    pose_msg = ModelState()
+    pose_msg.model_name = 'car_landing_pad'
+    rate = rospy.Rate(100)
+    linear_vel = 0.5
     circle_radius = 3.0
     omega = math.fabs(linear_vel / circle_radius)
     time = 0.0
@@ -30,8 +57,12 @@ def pose_publisher():
         rate.sleep()
 
 if __name__ == '__main__':
-      rospy.init_node('qrcode_pose_publisher')
+      rospy.init_node('car_pose_publisher')
       try:
-          pose_publisher()
+          if move_type == 0:
+            pose_publisher_circle()
+          elif move_type == 1:
+            pose_publisher_line()
+          
       except rospy.ROSInterruptException:
           pass
