@@ -2,10 +2,10 @@
 	<!-- Launch Gazebo Simulation -->
 	<arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
-    <arg name="z" default="0.0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/multi_box.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
-	<arg name="model" default="P300_Monocular_down"/>
+    <arg name="z" default="0.1"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/multi_person.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_front/P300_Monocular_front.sdf"/>
+	<arg name="model" default="P300_Monocular_front"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -15,18 +15,20 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-	<!-- run the terminal_control.cpp -->
-	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
-	</node>
-
     <!-- run the kcf_tracker.cpp -->
     <node pkg="prometheus_detection" type="kcf_tracker" name="kcf_tracker" output="screen">
-        <param name="camera_topic" type="string" value="/P300_Monocular_down/Monocular/image_raw" />
+        <param name="camera_topic" type="string" value="/P300_Monocular_front/Monocular/image_raw" />
         <param name="camera_info" type="string" value="camera_param_gazebo_monocular.yaml" />
     </node>
 
-	<!-- run the box_control.cpp -->
-	<node pkg="prometheus_gazebo" name="box_control" type="box_control.py" output="screen">
+	<!-- run the object_tracking.cpp -->
+	<node pkg="prometheus_mission" type="object_tracking" name="object_tracking" output="screen" launch-prefix="gnome-terminal --">
+		<rosparam command="load" file="$(find prometheus_mission)/object_tracking/object_tracking.yaml" />	
 	</node>
 </launch>
+
+
+
+
+	
+
