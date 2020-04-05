@@ -90,5 +90,22 @@ float min(float data1,float data2)
     }
 }
 
+//旋转矩阵：机体系到惯性系
+Eigen::Matrix3f get_rotation_matrix(float phi, float theta, float psi)
+{
+    Eigen::Matrix3f R_Body_to_ENU;
 
+    float r11 = cos(theta)*cos(psi);
+    float r12 = - cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi);
+    float r13 = sin(phi)*sin(psi) + cos(phi)*sin(theta)*cos(psi);
+    float r21 = cos(theta)*sin(psi);
+    float r22 = cos(phi)*cos(psi) + sin(phi)*sin(theta)*sin(psi);
+    float r23 = - sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi);
+    float r31 = - sin(theta);
+    float r32 = sin(phi)*cos(theta);
+    float r33 = cos(phi)*cos(theta); 
+    R_Body_to_ENU << r11,r12,r13,r21,r22,r23,r31,r32,r33;
+
+    return R_Body_to_ENU;
+}
 #endif

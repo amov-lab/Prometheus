@@ -3,10 +3,14 @@
 ##视觉丢失次数阈值
 Thres_vision_lost : 10
 
-##追踪的间隔 tracking_delta_x  = target_pos_x - drone_pos_x
+##追踪的间隔 
 tracking_delta_x : 1.5
 tracking_delta_y : 0.0
-tracking_delta_z : 0.3
+tracking_delta_z : -0.3
+
+camera_offset_x: 0.2
+camera_offset_y: 0.0
+camera_offset_z: -0.05
 
 ##比例参数
 kpx_track: 0.3
