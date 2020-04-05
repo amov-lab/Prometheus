@@ -2,7 +2,7 @@
 	<!-- 启动PX4中的SITL功能 -->
 	<!-- vehicle model and world -->
 	<env name="PX4_SIM_MODEL" value="solo" />
-    <env name="PX4_ESTIMATOR" value="ekf2_gps" />
+    <env name="PX4_ESTIMATOR" value="ekf2_vision" />
 	
 	<!-- PX4 configs -->
     <arg name="interactive" default="true"/>

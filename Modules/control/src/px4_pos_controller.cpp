@@ -321,7 +321,7 @@ int main(int argc, char **argv)
         case prometheus_msgs::ControlCommand::Move:
 
             //对于机体系的指令,需要转换成ENU坐标系执行,且同一ID号内,只执行一次.
-            if(Command_Now.Reference_State.Move_frame == prometheus_msgs::PositionReference::BODY_FRAME)
+            if(Command_Now.Reference_State.Move_frame == prometheus_msgs::PositionReference::BODY_FRAME && Command_Now.Command_ID  >  Command_Last.Command_ID )
             {
                 Body_to_ENU();
             }
