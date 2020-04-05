@@ -1,4 +1,5 @@
 <launch>
+	<!-- 启动PX4中的SITL功能 -->
 	<!-- vehicle model and world -->
 	<env name="PX4_SIM_MODEL" value="solo" />
     <env name="PX4_ESTIMATOR" value="ekf2_gps" />
@@ -11,6 +12,7 @@
     <!-- <node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)" required="true"/> -->
 	<node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)"/>
 
+	<!-- 启动Gazebo -->
 	<!-- Gazebo configs -->
     <arg name="gui" default="true"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
@@ -34,7 +36,7 @@
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
 	</node>
 
-	<!-- MAVROS -->
+	<!-- 启动MAVROS -->
 	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
 		<param name="fcu_url" value="udp://:14540@localhost:14557" />
 		<param name="gcs_url" value="" />
@@ -51,6 +53,7 @@
     	<arg name="z" value="$(arg z)"/>
     </include>
 
+	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />

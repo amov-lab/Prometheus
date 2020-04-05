@@ -5,22 +5,23 @@ Thres_vision_lost : 10
 ##追踪距离阈值
 distance_thres: 0.55
 
-landing_pad_height: 0.0
+landing_pad_height: 0.99
 
-##追踪的间隔 tracking_delta_x  = target_pos_x - drone_pos_x
-tracking_delta_x : 0.0
-tracking_delta_y : 0.0
-tracking_delta_z : -0.2
+## ukf仍有bug 建议不使用
+use_ukf: false
+
+## 移动目标需要已知目标运动速度，并进行反馈
+moving_target: false
 
 ##降落追踪 的比例参数
-kpx_land: 0.5
-kpy_land: 0.5
+kpx_land: 0.35
+kpy_land: 0.35
 kpz_land: 0.1
 
-##降落起始点
-start_point_x: 2
+##降落起始点 静止目标建议起飞点：[1,2,6] 移动目标建议起飞点[-5,0,5]
+start_point_x: 1
 start_point_y: 2
-start_point_z: 5
+start_point_z: 4.5
 
 UKF_CAR:
     std_a_: 0.01

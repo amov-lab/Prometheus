@@ -17,11 +17,11 @@
       <arg name="Y" value="$(arg Y)"/>
     </include>
 
-	<!-- run the digitnum_det -->
+	<!-- run the circle_det -->
 
 
-	<!-- run the number_detection.cpp -->
-	<node pkg="prometheus_mission" type="number_detection" name="number_detection" output="screen" launch-prefix="gnome-terminal --">	
+	<!-- run the circle_crossing.cpp -->
+	<node pkg="prometheus_mission" type="circle_crossing" name="circle_crossing" output="screen" launch-prefix="gnome-terminal --">	
 	</node>	
 	
 </launch>

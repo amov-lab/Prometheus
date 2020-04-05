@@ -452,7 +452,7 @@
     <!-- 模拟GPS模型，发布GPS数据（/.../gps）及地面真值（/.../groundtruth） -->
     <plugin name="gps_plugin" filename="libgazebo_gps_plugin.so">
         <robotNamespace></robotNamespace>
-        <gpsNoise>true</gpsNoise>
+        <gpsNoise>false</gpsNoise>
     </plugin>
     <!-- plugins: magnetometer plugin -->
     <plugin name='magnetometer_plugin' filename='libgazebo_magnetometer_plugin.so'>
