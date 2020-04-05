@@ -1,21 +1,9 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
   <model name="mini_clubman">
-  <static>1</static>
+  <static>true</static>
     <link name="link">
-      <inertial>
-        <mass>500.0</mass>
-        <inertia>
-          <ixx>200.0</ixx>
-          <ixy>0.0</ixy>
-          <ixz>0.0</ixz>
-          <iyy>200.0</iyy>
-          <iyz>0.0</iyz>
-          <izz>200.0</izz>
-        </inertia>
-      </inertial>
       <collision name="collision">
-        <pose>0 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://mini_clubman/meshes/mini_clubman.dae</uri>
@@ -23,7 +11,6 @@
         </geometry>
       </collision>
       <visual name="visual">
-        <pose>0 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://mini_clubman/meshes/mini_clubman.dae</uri>
