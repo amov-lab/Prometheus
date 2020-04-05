@@ -34,6 +34,7 @@ prometheus_msgs::DetectionInfo Detection_raw;          //目标位置[机体系�
 prometheus_msgs::DetectionInfo Detection_ENU;
 Eigen::Vector3f pos_body_frame;
 Eigen::Vector3f pos_des_prev;
+Eigen::Vector3f pos_body_enu_frame;
 float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
 float start_point_x,start_point_y,start_point_z;
 bool is_detected = false;                                          // 是否检测到目标标志
@@ -43,6 +44,7 @@ int Thres_vision = 0;                                                          /
 bool use_ukf;
 bool moving_target;
 Eigen::VectorXd state_fusion;
+Eigen::Vector3f camera_offset;
 //---------------------------------------Track---------------------------------------------
 float distance_to_setpoint;
 float distance_thres;
@@ -57,22 +59,28 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
     Detection_raw = *msg;
 
-    // 
-    pos_body_frame[0] = -Detection_raw.position[1];
-    pos_body_frame[1] = -Detection_raw.position[0];
-    pos_body_frame[2] = -Detection_raw.position[2]; 
+    // 注意这里相机冲下安装 
+    pos_body_frame[0] = - Detection_raw.position[1];
+    pos_body_frame[1] = - Detection_raw.position[0];
+    pos_body_frame[2] = - Detection_raw.position[2]; 
+
+    Eigen::Matrix3f R_Body_to_ENU;
+
+    R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
+
+    pos_body_enu_frame = R_Body_to_ENU * pos_body_frame;
 
     //test, 用于纯控制及逻辑测试
-    // pos_body_frame[0] = GroundTruth.pose.pose.position.x - drone_pos[0];
-    // pos_body_frame[1] = GroundTruth.pose.pose.position.y - drone_pos[1];
+    // pos_body_enu_frame[0] = GroundTruth.pose.pose.position.x - drone_pos[0];
+    // pos_body_enu_frame[1] = GroundTruth.pose.pose.position.y - drone_pos[1];
     //若已知降落板高度，则无需使用深度信息。
-    pos_body_frame[2] = landing_pad_height - drone_pos[2];
+    pos_body_enu_frame[2] = landing_pad_height - drone_pos[2];
 
     // Body frame to Inertial frame
     Detection_ENU.frame = 1;
-    Detection_ENU.position[0] = drone_pos[0] + pos_body_frame[0];
-    Detection_ENU.position[1] = drone_pos[1] + pos_body_frame[1];
-    Detection_ENU.position[2] = drone_pos[2] + pos_body_frame[2];
+    Detection_ENU.position[0] = drone_pos[0] + pos_body_enu_frame[0];
+    Detection_ENU.position[1] = drone_pos[1] + pos_body_enu_frame[1];
+    Detection_ENU.position[2] = drone_pos[2] + pos_body_enu_frame[2];
     // Detection_ENU.attitude[2] = _DroneState.attitude[2] + Detection_raw.attitude[2];
     Detection_ENU.attitude[2] = 0.0;
 
@@ -123,7 +131,8 @@ int main(int argc, char **argv)
     ros::Rate rate(20.0);
 
     //【订阅】降落板与无人机的相对位置及相对偏航角  单位：米   单位：弧度
-    // 来自视觉节点 方向定义：[机体系下：前方x为正，右方y为正，下方z为正]
+    //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
+    //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
     ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
 
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
@@ -154,6 +163,10 @@ int main(int argc, char **argv)
     nh.param<float>("kpx_land", kpx_land, 0.1);
     nh.param<float>("kpy_land", kpy_land, 0.1);
     nh.param<float>("kpz_land", kpz_land, 0.1);
+
+    nh.param<float>("camera_offset_x", camera_offset[0], 0.0);
+    nh.param<float>("camera_offset_y", camera_offset[1], 0.0);
+    nh.param<float>("camera_offset_z", camera_offset[2], 0.0);
 
     nh.param<float>("start_point_x", start_point_x, 0.0);
     nh.param<float>("start_point_y", start_point_y, 0.0);
@@ -239,10 +252,10 @@ int main(int argc, char **argv)
 
             Eigen::Vector3f target_pos_fusion;
 
-            pos_body_frame[0] = state_fusion[0] - drone_pos[0];
-            pos_body_frame[1] = state_fusion[1] - drone_pos[1];
-            pos_body_frame[2] = state_fusion[2] - drone_pos[2];
-            //pos_body_frame[2] = landing_pad_height - drone_pos[2];
+            pos_body_enu_frame[0] = state_fusion[0] - drone_pos[0];
+            pos_body_enu_frame[1] = state_fusion[1] - drone_pos[1];
+            pos_body_enu_frame[2] = state_fusion[2] - drone_pos[2];
+            //pos_body_enu_frame[2] = landing_pad_height - drone_pos[2];
         }
 
         Command_Now.header.stamp                    = ros::Time::now();
@@ -251,7 +264,7 @@ int main(int argc, char **argv)
         printf_result();
 
         //判断是否满足降落条件
-        distance_to_setpoint = pos_body_frame.norm();
+        distance_to_setpoint = pos_body_enu_frame.norm();
         if(distance_to_setpoint < distance_thres)
         {
             Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
@@ -263,7 +276,7 @@ int main(int argc, char **argv)
             pos_des_prev[1] = drone_pos[1];
             pos_des_prev[2] = drone_pos[2];
             cout <<"[autonomous_landing]: Lost the Landing Pad. "<< endl;
-        }else if(abs(pos_body_frame[2]) < 0.3)
+        }else if(abs(pos_body_enu_frame[2]) < 0.3)
         {
             cout <<"[autonomous_landing]: Reach the lowest height. "<< endl;
             Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
@@ -277,13 +290,13 @@ int main(int argc, char **argv)
             Eigen::Vector3f vel_command;
             if(moving_target)
             {
-                vel_command[0] = 1.0 + kpx_land * (pos_body_frame[0] + 0.1);
+                vel_command[0] = 1.0 + kpx_land * (pos_body_enu_frame[0] + 0.1);
             }else{
-                vel_command[0] = kpx_land * pos_body_frame[0];
+                vel_command[0] = kpx_land * pos_body_enu_frame[0];
             }
             
-            vel_command[1] = kpy_land * pos_body_frame[1];
-            vel_command[2] = kpz_land * pos_body_frame[2];
+            vel_command[1] = kpy_land * pos_body_enu_frame[1];
+            vel_command[2] = kpz_land * pos_body_enu_frame[2];
 
             for (int i=0; i<3; i++)
             {

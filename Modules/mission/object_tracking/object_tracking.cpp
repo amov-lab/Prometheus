@@ -29,6 +29,7 @@ Eigen::Vector3f drone_pos;
 //---------------------------------------Vision---------------------------------------------
 prometheus_msgs::DetectionInfo Detection_raw;          //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
 Eigen::Vector3f pos_body_frame;
+Eigen::Vector3f pos_body_enu_frame;     //原点位于质心，x轴指向前方，y轴指向左，z轴指向上的坐标系
 Eigen::Vector3f pos_des_prev;
 float kpx_track,kpy_track,kpz_track;                                                 //控制参数 - 比例参数
 float start_point_x,start_point_y,start_point_z,start_yaw;
@@ -36,6 +37,7 @@ bool is_detected = false;                                          // 是否检�
 int num_count_vision_lost = 0;                                                      //视觉丢失计数器
 int num_count_vision_regain = 0;                                                      //视觉丢失计数器
 int Thres_vision = 0;                                                          //视觉丢失计数器阈值
+Eigen::Vector3f camera_offset;
 //---------------------------------------Track---------------------------------------------
 float distance_to_setpoint;
 Eigen::Vector3f tracking_delta;
@@ -49,9 +51,15 @@ void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
     Detection_raw = *msg;
 
-    pos_body_frame[0] = Detection_raw.position[2] - tracking_delta[0];
-    pos_body_frame[1] = -Detection_raw.position[0] + tracking_delta[1];
-    pos_body_frame[2] = -Detection_raw.position[1] + tracking_delta[2];
+    pos_body_frame[0] =   Detection_raw.position[2] + camera_offset[0];
+    pos_body_frame[1] = - Detection_raw.position[0] + camera_offset[1];
+    pos_body_frame[2] = - Detection_raw.position[1] + camera_offset[2];
+
+    Eigen::Matrix3f R_Body_to_ENU;
+
+    R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
+
+    pos_body_enu_frame = R_Body_to_ENU * pos_body_frame;
     
     if(Detection_raw.detected)
     {
@@ -93,7 +101,7 @@ int main(int argc, char **argv)
     ros::Rate rate(20.0);
 
     // 【订阅】视觉消息 来自视觉节点
-    //  方向定义： 目标位置[机体系下：右方x为正，下方y为正，前方z为正]
+    //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
     // 注意这里为了复用程序使用了/prometheus/target作为话题名字，适用于椭圆、二维码、yolo等视觉算法
     // 故同时只能运行一种视觉识别程序，如果想同时追踪多个目标，这里请修改接口话题的名字
@@ -112,6 +120,10 @@ int main(int argc, char **argv)
     nh.param<float>("tracking_delta_x", tracking_delta[0], 0.0);
     nh.param<float>("tracking_delta_y", tracking_delta[1], 0.0);
     nh.param<float>("tracking_delta_z", tracking_delta[2], 0.0);
+
+    nh.param<float>("camera_offset_x", camera_offset[0], 0.0);
+    nh.param<float>("camera_offset_y", camera_offset[1], 0.0);
+    nh.param<float>("camera_offset_z", camera_offset[2], 0.0);
 
     //追踪控制参数
     nh.param<float>("kpx_track", kpx_track, 0.1);
@@ -213,9 +225,9 @@ int main(int argc, char **argv)
             Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
 
             Eigen::Vector3f vel_command;
-            vel_command[0] = kpx_track * pos_body_frame[0];
-            vel_command[1] = kpy_track * pos_body_frame[1];
-            vel_command[2] = kpz_track * pos_body_frame[2];
+            vel_command[0] = kpx_track * (pos_body_enu_frame[0] - tracking_delta[0]);
+            vel_command[1] = kpy_track * (pos_body_enu_frame[1] - tracking_delta[1]);
+            vel_command[2] = kpz_track * (pos_body_enu_frame[2] - tracking_delta[2]);
 
             for (int i=0; i<3; i++)
             {
