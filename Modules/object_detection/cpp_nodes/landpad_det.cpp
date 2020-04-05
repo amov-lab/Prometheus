@@ -299,7 +299,56 @@ int main(int argc, char **argv)
             cv::Point3f A1_Sum_Position_OcInW(0,0,0);
             double A1_Sum_yaw=0.0;
             double tx, ty, tz;
-            for(int t=0;t<markerids.size();t++)
+            int marker_count = 0;
+
+            std::vector<int> markerids_sel;
+            int t = -1;
+            for(int tt=0; tt<markerids.size(); tt++)
+            {
+                if (19 == markerids[tt])
+                    t = tt;
+            }
+            if (-1 == t)
+            {
+                for(int tt=0; tt<markerids.size(); tt++)
+                {
+                    if (43 == markerids[tt])
+                        t = tt;
+                }
+            }
+            if (-1 == t)
+            {
+                for(int tt=0; tt<markerids.size(); tt++)
+                {
+                    if (1 == markerids[tt])
+                        t = tt;
+                }
+            }
+            if (-1 == t)
+            {
+                for(int tt=0; tt<markerids.size(); tt++)
+                {
+                    if (2 == markerids[tt])
+                        t = tt;
+                }
+            }
+            if (-1 == t)
+            {
+                for(int tt=0; tt<markerids.size(); tt++)
+                {
+                    if (3 == markerids[tt])
+                        t = tt;
+                }
+            }
+            if (-1 == t)
+            {
+                for(int tt=0; tt<markerids.size(); tt++)
+                {
+                    if (4 == markerids[tt])
+                        t = tt;
+                }
+            }
+            if (-1 != t)
             {
                 cv::Mat RoteM, TransM;
                 // C2W代表 相机坐标系转换到世界坐标系  W2C代表 世界坐标系转换到相机坐标系 Theta为欧拉角
@@ -315,7 +364,6 @@ int main(int argc, char **argv)
                 {
                     singMarkerCorner_19.push_back(markerCorners[t]);
                     cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.666667,camera_matrix,distortion_coefficients,rvec,tvec);
-
                 }
                 else if (markerids[t] == 43)
                 {
@@ -378,79 +426,58 @@ int main(int argc, char **argv)
                 tx = tvec.ptr<double>(0)[0];
                 ty = tvec.ptr<double>(0)[1];
                 tz = tvec.ptr<double>(0)[2];
-                double x = tx, y = ty, z = tz;
 
-                // 进行三次旋转得到相机光心在世界坐标系的位置
-                CodeRotateByZ(x, y, -1 * thetaz, x, y);
-                CodeRotateByY(x, z, -1 * thetay, x, z);
-                CodeRotateByX(y, z, -1 * thetax, y, z);
-                Position_OcInW.x = x*-1;
-                Position_OcInW.y = y*-1;
-                Position_OcInW.z = z*-1;
+                Position_OcInW.x = tx;
+                Position_OcInW.y = ty;
+                Position_OcInW.z = tz;
 
                 // 计算偏航角之差
                 Eigen::Matrix3d rotateMatrix;
                 rotateMatrix << r11,r12,r13,r21,r22,r23,r31,r32,r33;
-                Eigen::Vector3d eulerVec;
-                eulerVec(0) = (Theta_C2W.z + 90) / 180 * CV_PI;
-                vec_yaw.push_back(eulerVec(0));
 
-                //根据Marker ID对相对位置进行偏移
-                switch (markerids[t])
-                {
-                    case 1:
-                    {
-                        Position_OcInW.x += landpad_det_len*0.4;
-                        Position_OcInW.y += landpad_det_len*0.4;
-                        break;
-                    }
-                    case 2:
-                    {
-                        Position_OcInW.x += landpad_det_len*0.4;
-                        Position_OcInW.y -= landpad_det_len*0.4;
-                        break;
-                    }
-                    case 3:
-                    {
-                        Position_OcInW.x -= landpad_det_len*0.4;
-                        Position_OcInW.y -= landpad_det_len*0.4;
-                        break;
-                    }
-                    case 4:
-                    {
-                        Position_OcInW.x -= landpad_det_len*0.4;
-                        Position_OcInW.y += landpad_det_len*0.4;
-                        break;
-                    }
-                }
+                Eigen::Vector3d eulerVec;
+                eulerVec(0) = (Theta_C2W.z) / 180 * CV_PI;
+                vec_yaw.push_back(eulerVec(0));
                 vec_Position_OcInW.push_back(Position_OcInW);
 
                 A1_Sum_Position_OcInW += Position_OcInW;
                 A1_Sum_yaw += eulerVec(0); // 待修改
                 
-                
+                marker_count += 1;
             }
-            // 解算位置的平均值
-            cv::Point3f A1_Position_OcInW(0,0,0);
-            double A1_yaw = 0.0;
-            int marker_count = markerids.size();
-            A1_Position_OcInW = A1_Sum_Position_OcInW / marker_count;
-            A1_yaw = A1_Sum_yaw / marker_count;
+            if (-1 != t)
+            {
+                // 解算位置的平均值
+                cout << marker_count << endl;
+                cv::Point3f A1_Position_OcInW(0,0,0);
+                double A1_yaw = 0.0;
+                A1_Position_OcInW = A1_Sum_Position_OcInW / marker_count;
+                A1_yaw = A1_Sum_yaw / marker_count;
 
+                // 将解算后的位置发给控制端
+                pose_now.header.stamp = ros::Time::now();
+                pose_now.detected = true;
+                pose_now.frame = 0;
+                pose_now.position[0] = tx;
+                pose_now.position[1] = ty;
+                pose_now.position[2] = tz;
+                pose_now.yaw_error = A1_yaw;
 
-            // 将解算后的位置发给控制端
-            pose_now.header.stamp = ros::Time::now();
-            pose_now.detected = true;
-            pose_now.frame = 0;
-            pose_now.position[0] = tx;
-            pose_now.position[1] = ty;
-            pose_now.position[2] = tz;
-            pose_now.yaw_error = A1_yaw;
-
-            last_x = pose_now.position[0];
-            last_y = pose_now.position[1];
-            last_z = pose_now.position[2];
-            last_yaw = pose_now.yaw_error;
+                last_x = pose_now.position[0];
+                last_y = pose_now.position[1];
+                last_z = pose_now.position[2];
+                last_yaw = pose_now.yaw_error;
+            }
+            else
+            {
+                pose_now.header.stamp = ros::Time::now();
+                pose_now.detected = false;
+                pose_now.frame = 0;
+                pose_now.position[0] = last_x;
+                pose_now.position[1] = last_y;
+                pose_now.position[2] = last_z;
+                pose_now.yaw_error = last_yaw;
+            }
         }
         else
         {
