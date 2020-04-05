@@ -151,9 +151,9 @@ int main(int argc, char **argv)
     pos_controller_cascade_PID pos_controller_cascade_pid;
     pos_controller_PID pos_controller_pid;
     // 可以设置自定义位置环控制算法
-    // pos_controller_UDE pos_controller_ude;
-    // pos_controller_passivity pos_controller_ps;
-    // pos_controller_NE pos_controller_ne;
+    pos_controller_UDE pos_controller_ude;
+    pos_controller_passivity pos_controller_ps;
+    pos_controller_NE pos_controller_ne;
 
     float time_trajectory = 0.0;
 
@@ -361,18 +361,26 @@ int main(int argc, char **argv)
             break;
         }
 
-        if(Command_Now.Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+        if(Command_Now.Mode != prometheus_msgs::ControlCommand::Idle)
         {
-            // 轨迹追踪控制选用PID控制器,也可选用其他自定义控制器
-            _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
-            //_ControlOutput = pos_controller_ude.pos_controller(_DroneState, Command_Now.Reference_State, dt);
-            //_ControlOutput = pos_controller_ps.pos_controller(_DroneState, Command_Now.Reference_State, dt);
-            //_ControlOutput = pos_controller_ne.pos_controller(_DroneState, Command_Now.Reference_State, dt);
-
-        }else if(Command_Now.Mode != prometheus_msgs::ControlCommand::Idle)
-        {
-            //除轨迹追踪及idle之外,统统使用串级PID控制器
-            _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+            //选择控制器
+            if(controller_number == 0)
+            {
+                _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+            }else if(controller_number == 1)
+            {
+                _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+            }else if(controller_number == 2)
+            {
+                _ControlOutput = pos_controller_ude.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+            }else if(controller_number == 3)
+            {
+                _ControlOutput = pos_controller_ps.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+            }else if(controller_number == 4)
+            {
+                _ControlOutput = pos_controller_ne.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+            }
+            
         }
 
         throttle_sp[0] = _ControlOutput.Throttle[0];
