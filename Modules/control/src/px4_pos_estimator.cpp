@@ -140,7 +140,7 @@ void gazebo_cb(const nav_msgs::Odometry::ConstPtr& msg)
     // Transform the Quaternion to Euler Angles
     Euler_gazebo = quaternion_to_euler(q_gazebo);
 
-    cout << "euler " << Euler_gazebo[0]/3.1415926 *180 << " [deg] "<< Euler_gazebo[1]/3.1415926 *180 << " [deg] "<< Euler_gazebo[2]/3.1415926 *180 << " [deg] "<<endl;
+    // cout << "euler " << Euler_gazebo[0]/3.1415926 *180 << " [deg] "<< Euler_gazebo[1]/3.1415926 *180 << " [deg] "<< Euler_gazebo[2]/3.1415926 *180 << " [deg] "<<endl;
 
     // tf::Quaternion quat;
     // tf::quaternionMsgToTF(GroundTruth.pose.pose.orientation, quat);

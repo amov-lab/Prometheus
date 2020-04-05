@@ -42,7 +42,7 @@ bool get_new_cmd = false;
 
 float k_p;
 float k_aij;
-
+ros::Publisher vision_pub;
 //mavros_msgs::State current_state_nei[2];
 Eigen::Vector3d pos_nei[2];
 Eigen::Vector3d vel_nei[2];
@@ -73,6 +73,23 @@ void odom_nei_cb(const nav_msgs::Odometry::ConstPtr &msg, int nei_id)
     pos_nei[nei_id]  = Eigen::Vector3d(msg->pose.pose.position.x,msg->pose.pose.position.y,msg->pose.pose.position.z);
     vel_nei[nei_id]  = Eigen::Vector3d(msg->twist.twist.linear.x,msg->twist.twist.linear.y,msg->twist.twist.linear.z);
 }
+void gazebo_cb(const nav_msgs::Odometry::ConstPtr& msg)
+{
+
+    geometry_msgs::PoseStamped vision;
+    
+    vision.pose.position.x = msg->pose.pose.position.x;
+    vision.pose.position.y = msg->pose.pose.position.y;
+    vision.pose.position.z = msg->pose.pose.position.z;
+
+    vision.pose.orientation.x = msg->pose.pose.orientation.x;
+    vision.pose.orientation.y = msg->pose.pose.orientation.y;
+    vision.pose.orientation.z = msg->pose.pose.orientation.z;
+    vision.pose.orientation.w = msg->pose.pose.orientation.w;
+
+    vision.header.stamp = ros::Time::now();
+    vision_pub.publish(vision);
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -92,7 +109,9 @@ int main(int argc, char **argv)
     ros::Subscriber leader_sub = nh.subscribe<geometry_msgs::Point>("/prometheus/formation/leader_pos", 10, pos_leader_cb);
     ros::Subscriber formation_sub = nh.subscribe<geometry_msgs::Point>("/prometheus/formation" + uav_name, 10, formation_cb);
 
-    //
+    // 【订阅】gazebo仿真真值
+    ros::Subscriber gazebo_sub = nh.subscribe<nav_msgs::Odometry>("/prometheus/ground_truth"+ uav_name, 100, gazebo_cb);
+    vision_pub = nh.advertise<geometry_msgs::PoseStamped>(uav_name + "/mavros/vision_pose/pose", 100);
 
     //订阅本台飞机的状态
     ros::Subscriber state_sub    = nh.subscribe<mavros_msgs::State>(uav_name + "/mavros/state", 10, state_cb);
