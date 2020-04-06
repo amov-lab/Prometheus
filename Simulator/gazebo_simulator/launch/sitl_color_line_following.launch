@@ -19,10 +19,13 @@
 
 
 	<!-- run the line_following.cpp -->
-	
-	<!-- run the terminal_control.cpp -->
-	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_control)/launch/terminal_control.yaml" />
-	</node>
+	<node pkg="prometheus_mission" type="color_line_following" name="color_line_following" output="screen" launch-prefix="gnome-terminal --">
+        <param name="start_point_x" value="0.0" />
+        <param name="start_point_y" value="2.0" />
+		<param name="start_point_z" value="1.0" />
+		<param name="velocity" value="0.2" />
+		<param name="k_p" value="0.5" />
+	</node>	
+
 </launch>
 
