@@ -19,11 +19,6 @@ geo_fence:
   z_min: -0.5
   z_max: 100.0
 
-## parameter for px4_pos_estimator.cpp
-pos_estimator:
-  ## 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM
-  flag_use_laser_or_vicon : 0
-
 ## 限制参数 
 Limit:
   pxy_error_max: 10.0
@@ -44,11 +39,11 @@ Pos_cascade_pid:
    Kp_z : 1.0
    Kp_vxvy : 0.09
    Kp_vz : 0.2
-   Ki_vxvy : 0.02
-   Ki_vz : 0.02
+   Ki_vxvy : 0.04
+   Ki_vz : 0.04
    Kd_vxvy : 0.01
    Kd_vz : 0.0
-   Hover_throttle : 0.5
+   Hover_throttle : 0.46
    MPC_VELD_LP: 5.0
 
 # 位置环参数 - normal pid

@@ -1,8 +1,4 @@
 <launch>
-	<node pkg="prometheus_gazebo" type="get_ground_truth_formation.py" name="get_ground_truth_formation" output="screen">
-		<param name="uav_num" value="5"/>
-    </node>
-
 	<!-- 启动编队节点 -->
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen">
 	</node>
