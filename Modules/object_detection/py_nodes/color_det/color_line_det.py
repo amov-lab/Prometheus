@@ -107,8 +107,18 @@ def image_callback(imgmsg):
 
     pub.publish(pose)
     # end
+
+    h, w = frame.shape[:2]
+    img_resize = 360
+    if h > w:
+        h = int(float(h) / w * img_resize)
+        w = img_resize
+    else:
+        w = int(float(w) / h * img_resize)
+        h = img_resize
+    frame = cv2.resize(frame, (w, h))
     cv2.imshow("cap", frame)
-    cv2.imshow("area", area)
+    # cv2.imshow("area", area)
     cv2.waitKey(10)
 
 
