@@ -24,12 +24,12 @@
 
 	<!-- Spawn vehicle model -->
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
-    <arg name="x" default="0"/>
-    <arg name="y" default="0"/>
+    <arg name="x" default="1.0"/>
+    <arg name="y" default="1.0"/>
     <arg name="z" default="0.1"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
-    <arg name="Y" default="0"/>
+    <arg name="Y" default="1.57"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
 	<arg name="model" default="P300_basic"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
@@ -56,7 +56,8 @@
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
-		<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
+		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
+		<param name="input_source" value="2" />
 	</node>
 	
 	<!-- run the px4_pos_controller.cpp -->
