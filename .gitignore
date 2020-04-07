@@ -3,6 +3,8 @@ __pycache__
 _ext
 *.pyc
 *.so
+nano.save
+.catkin_workspace
 
 build/
 devel/
