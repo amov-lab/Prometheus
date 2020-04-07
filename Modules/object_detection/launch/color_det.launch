@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="prometheus_detection" type="color_line_camera.py" name="color_det" output="screen">
+    </node>
+</launch>
