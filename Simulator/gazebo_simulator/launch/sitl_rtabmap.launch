@@ -18,7 +18,7 @@
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
         <arg name="rtabmap_args"       value="--delete_db_on_start"/>
         <arg name="depth_topic"        value="/realsense_d435i/depth/image_raw"/>
-		<arg name="frame_id"           value="base_link"/>
+		<arg name="frame_id"           value="realsense_camera_link"/>
         <arg name="map_frame_id"       value="world"/>
         <arg name="visual_odometry"    value="false"/>
         <arg name="odom_topic"         value="/prometheus/planning/odom_world"/> 
