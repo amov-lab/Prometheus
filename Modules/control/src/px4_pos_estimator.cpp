@@ -47,7 +47,8 @@ using namespace std;
 
 //---------------------------------------相关参数-----------------------------------------------
 int input_source;                               //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
-
+Eigen::Vector3f pos_offset;
+float yaw_offset;
 //---------------------------------------vicon定位相关------------------------------------------
 Eigen::Vector3d pos_drone_mocap;                          //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -134,19 +135,20 @@ void optitrack_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 
 void gazebo_cb(const nav_msgs::Odometry::ConstPtr& msg)
 {
-    pos_drone_gazebo = Eigen::Vector3d(msg->pose.pose.position.x,msg->pose.pose.position.y,msg->pose.pose.position.z);
-    q_gazebo = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
-
-    // Transform the Quaternion to Euler Angles
-    Euler_gazebo = quaternion_to_euler(q_gazebo);
-
-    // cout << "euler " << Euler_gazebo[0]/3.1415926 *180 << " [deg] "<< Euler_gazebo[1]/3.1415926 *180 << " [deg] "<< Euler_gazebo[2]/3.1415926 *180 << " [deg] "<<endl;
-
-    // tf::Quaternion quat;
-    // tf::quaternionMsgToTF(GroundTruth.pose.pose.orientation, quat);
- 
-    // double roll, pitch, yaw;//定义存储r\p\y的容器
-    // tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
+    if(msg->header.frame_id == "world")
+    {
+        pos_drone_gazebo = Eigen::Vector3d(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+        // pos_drone_gazebo[0] = msg->pose.pose.position.x + pos_offset[0];
+        // pos_drone_gazebo[1] = msg->pose.pose.position.y + pos_offset[1];
+        // pos_drone_gazebo[2] = msg->pose.pose.position.z + pos_offset[2];
+        
+        q_gazebo = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+        Euler_gazebo = quaternion_to_euler(q_gazebo);
+        // Euler_gazebo[2] = Euler_gazebo[2] + yaw_offset;
+        // q_gazebo = quaternion_from_rpy(Euler_gazebo);
+    }else{
+        cout << "[px4_pos_estimator]: " << "wrong gazebo ground truth frame id. "<<endl;
+    }
 }
 
 void timerCallback(const ros::TimerEvent& e)
@@ -160,9 +162,13 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     //读取参数表中的参数
-    // 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM
-    nh.param<int>("pos_estimator/input_source", input_source, 0);
-
+    // 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth
+    nh.param<int>("input_source", input_source, 0);
+    // 
+    nh.param<float>("offset_x", pos_offset[0], 0);
+    nh.param<float>("offset_y", pos_offset[1], 0);
+    nh.param<float>("offset_z", pos_offset[2], 0);
+    nh.param<float>("offset_yaw", yaw_offset, 0);
     //nh.param<string>("pos_estimator/rigid_body_name", rigid_body_name, '/vrpn_client_node/UAV/pose');
 
     // 【订阅】cartographer估计位置

@@ -54,6 +54,7 @@ Eigen::Vector3d quaternion_to_euler(const Eigen::Quaterniond &q)
     return ans;
 }
 
+
 //旋转矩阵转欧拉角
 void rotation_to_euler(const Eigen::Matrix3d& dcm, Eigen::Vector3d& euler_angle)
 {

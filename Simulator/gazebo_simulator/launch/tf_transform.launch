@@ -22,7 +22,7 @@
 
          <!-- TF for world-->
         <node pkg="tf" type="static_transform_publisher" name="tf_world_map"
-          	args="0 $(arg y) 0 0 0 0 world map 10"/>
+          	args="0 0 0 0 0 0 world map 10"/>
 
         <!-- Ros transformation -->
         <!-- <node pkg="tf" type="static_transform_publisher" name="tf_local_origin"
