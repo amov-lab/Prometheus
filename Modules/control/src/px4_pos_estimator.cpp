@@ -46,8 +46,9 @@ using namespace std;
 #define TRA_WINDOW 1000
 
 //---------------------------------------相关参数-----------------------------------------------
-int flag_use_laser_or_vicon;                               //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
-
+int input_source;                               //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
+Eigen::Vector3f pos_offset;
+float yaw_offset;
 //---------------------------------------vicon定位相关------------------------------------------
 Eigen::Vector3d pos_drone_mocap;                          //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -59,6 +60,10 @@ Eigen::Vector3d Euler_laser;                                         //无人机
 
 geometry_msgs::TransformStamped laser;                          //当前时刻cartorgrapher发布的数据
 geometry_msgs::TransformStamped laser_last;
+//---------------------------------------gazebo真值相关------------------------------------------
+Eigen::Vector3d pos_drone_gazebo;                          //无人机当前位置 (laser)
+Eigen::Quaterniond q_gazebo;
+Eigen::Vector3d Euler_gazebo;                                         //无人机当前姿态(laser)
 //---------------------------------------发布相关变量--------------------------------------------
 ros::Publisher vision_pub;
 ros::Publisher drone_state_pub;
@@ -127,6 +132,25 @@ void optitrack_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
     Euler_mocap = quaternion_to_euler(q_mocap);
 
 }
+
+void gazebo_cb(const nav_msgs::Odometry::ConstPtr& msg)
+{
+    if(msg->header.frame_id == "world")
+    {
+        pos_drone_gazebo = Eigen::Vector3d(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+        // pos_drone_gazebo[0] = msg->pose.pose.position.x + pos_offset[0];
+        // pos_drone_gazebo[1] = msg->pose.pose.position.y + pos_offset[1];
+        // pos_drone_gazebo[2] = msg->pose.pose.position.z + pos_offset[2];
+        
+        q_gazebo = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+        Euler_gazebo = quaternion_to_euler(q_gazebo);
+        // Euler_gazebo[2] = Euler_gazebo[2] + yaw_offset;
+        // q_gazebo = quaternion_from_rpy(Euler_gazebo);
+    }else{
+        cout << "[px4_pos_estimator]: " << "wrong gazebo ground truth frame id. "<<endl;
+    }
+}
+
 void timerCallback(const ros::TimerEvent& e)
 {
     cout << "[px4_pos_estimator]: " << "Program is running. "<<endl;
@@ -138,9 +162,13 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     //读取参数表中的参数
-    // 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM
-    nh.param<int>("pos_estimator/flag_use_laser_or_vicon", flag_use_laser_or_vicon, 0);
-
+    // 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth
+    nh.param<int>("input_source", input_source, 0);
+    // 
+    nh.param<float>("offset_x", pos_offset[0], 0);
+    nh.param<float>("offset_y", pos_offset[1], 0);
+    nh.param<float>("offset_z", pos_offset[2], 0);
+    nh.param<float>("offset_yaw", yaw_offset, 0);
     //nh.param<string>("pos_estimator/rigid_body_name", rigid_body_name, '/vrpn_client_node/UAV/pose');
 
     // 【订阅】cartographer估计位置
@@ -148,6 +176,9 @@ int main(int argc, char **argv)
 
     // 【订阅】optitrack估计位置
     ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/UAV/pose", 1000, optitrack_cb);
+
+    // 【订阅】gazebo仿真真值
+    ros::Subscriber gazebo_sub = nh.subscribe<nav_msgs::Odometry>("/prometheus/ground_truth/p300_basic", 100, gazebo_cb);
 
     // 【发布】无人机位置和偏航角 坐标系 ENU系
     //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#??), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
@@ -176,7 +207,7 @@ int main(int argc, char **argv)
         //回调一次 更新传感器状态
         ros::spinOnce();
 
-        // 将采集的机载设备的定位信息及偏航角信息发送至飞控，根据参数flag_use_laser_or_vicon选择定位信息来源
+        // 将采集的机载设备的定位信息及偏航角信息发送至飞控，根据参数input_source选择定位信息来源
         send_to_fcu();
 
         // 发布无人机状态至其他节点，如px4_pos_controller.cpp节点
@@ -194,11 +225,11 @@ void send_to_fcu()
     geometry_msgs::PoseStamped vision;
     
     //vicon
-    if(flag_use_laser_or_vicon == 0)
+    if(input_source == 0)
     {
-        vision.pose.position.x = pos_drone_mocap[0] ;
-        vision.pose.position.y = pos_drone_mocap[1] ;
-        vision.pose.position.z = pos_drone_mocap[2] ;
+        vision.pose.position.x = pos_drone_mocap[0];
+        vision.pose.position.y = pos_drone_mocap[1];
+        vision.pose.position.z = pos_drone_mocap[2];
 
         vision.pose.orientation.x = q_mocap.x();
         vision.pose.orientation.y = q_mocap.y();
@@ -206,7 +237,7 @@ void send_to_fcu()
         vision.pose.orientation.w = q_mocap.w();
 
     }//laser
-    else if (flag_use_laser_or_vicon == 1)
+    else if (input_source == 1)
     {
         vision.pose.position.x = pos_drone_laser[0];
         vision.pose.position.y = pos_drone_laser[1];
@@ -216,6 +247,16 @@ void send_to_fcu()
         vision.pose.orientation.y = q_laser.y();
         vision.pose.orientation.z = q_laser.z();
         vision.pose.orientation.w = q_laser.w();
+    }else if(input_source == 2)
+    {
+        vision.pose.position.x = pos_drone_gazebo[0];
+        vision.pose.position.y = pos_drone_gazebo[1];
+        vision.pose.position.z = pos_drone_gazebo[2];
+
+        vision.pose.orientation.x = q_gazebo.x();
+        vision.pose.orientation.y = q_gazebo.y();
+        vision.pose.orientation.z = q_gazebo.z();
+        vision.pose.orientation.w = q_gazebo.w();
     }
 
     vision.header.stamp = ros::Time::now();

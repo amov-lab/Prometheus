@@ -38,8 +38,7 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     pcl::PointXYZ pt;
     Eigen::Vector3d p3d;
     ros::Time begin_collision = ros::Time::now();
-    // ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f,  obs_distance: %f, min_dist: %f", begin_collision.toSec()-begin_update_map.toSec(), 
-                                                                                                                                                                                                        obs_distance, min_dist);
+    // ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f,  obs_distance: %f, min_dist: %f", begin_collision.toSec()-begin_update_map.toSec(),obs_distance, min_dist);
     // ROS_INFO("point size: %d", latest_local_pcl_.points.size());
 
     // 引力

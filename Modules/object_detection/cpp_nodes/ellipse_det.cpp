@@ -253,6 +253,25 @@ Ptr<SVM> svm;
 
 int main(int argc, char **argv)
 { 
+    ros::init(argc, argv, "ellipse_det");
+    ros::NodeHandle nh("~");
+    image_transport::ImageTransport it(nh); 
+
+    std::string camera_topic, camera_info;
+    if (nh.getParam("camera_topic", camera_topic)) {
+        ROS_INFO("camera_topic is %s", camera_topic.c_str());
+    } else {
+        ROS_WARN("didn't find parameter camera_topic");
+        camera_topic = "/prometheus/camera/rgb/image_raw";
+    }
+
+    if (nh.getParam("camera_info", camera_info)) {
+        ROS_INFO("camera_info is %s", camera_info.c_str());
+    } else {
+        ROS_WARN("didn't find parameter camera_info");
+        camera_info = "camera_param.yaml";
+    }
+
     // With Training
     bool wt = false;
     for (int i=0; i<argc; i++)
@@ -263,15 +282,12 @@ int main(int argc, char **argv)
     if (wt)
         svm = train_svm_classifier();
 
-    ros::init(argc, argv, "ellipse_det");
-    ros::NodeHandle nh;
-    image_transport::ImageTransport it(nh); 
     ros::Rate loop_rate(30);
     
     std::string ros_path = ros::package::getPath("prometheus_detection");
     cout << "DETECTION_PATH: " << ros_path << endl;
     //读取参数文档camera_param.yaml中的参数值；
-    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/" + camera_info);
     //相机内部参数
     double fx = camera_config["fx"].as<double>();
     double fy = camera_config["fy"].as<double>();
@@ -288,7 +304,7 @@ int main(int argc, char **argv)
 
 
     // 接收图像的话题
-    imageSubscriber_ = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
+    imageSubscriber_ = it.subscribe(camera_topic, 1, cameraCallback);
 #ifdef ELLIPSE_PUB
     // 发布椭圆检测结果的话题
     ellipse_pub = it.advertise("/prometheus/camera/rgb/image_ellipse_det", 1);

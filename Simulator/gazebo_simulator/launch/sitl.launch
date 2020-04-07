@@ -1,7 +1,8 @@
 <launch>
+	<!-- 启动PX4中的SITL功能 -->
 	<!-- vehicle model and world -->
 	<env name="PX4_SIM_MODEL" value="solo" />
-    <env name="PX4_ESTIMATOR" value="ekf2_gps" />
+    <env name="PX4_ESTIMATOR" value="ekf2_vision" />
 	
 	<!-- PX4 configs -->
     <arg name="interactive" default="true"/>
@@ -11,6 +12,7 @@
     <!-- <node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)" required="true"/> -->
 	<node name="sitl" pkg="px4" type="px4" output="screen" args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)"/>
 
+	<!-- 启动Gazebo -->
 	<!-- Gazebo configs -->
     <arg name="gui" default="true"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
@@ -22,19 +24,19 @@
 
 	<!-- Spawn vehicle model -->
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
-    <arg name="x" default="0"/>
-    <arg name="y" default="0"/>
+    <arg name="x" default="1.0"/>
+    <arg name="y" default="1.0"/>
     <arg name="z" default="0.1"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
-    <arg name="Y" default="0"/>
+    <arg name="Y" default="1.57"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
 	<arg name="model" default="P300_basic"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
 	</node>
 
-	<!-- MAVROS -->
+	<!-- 启动MAVROS -->
 	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
 		<param name="fcu_url" value="udp://:14540@localhost:14557" />
 		<param name="gcs_url" value="" />
@@ -51,9 +53,11 @@
     	<arg name="z" value="$(arg z)"/>
     </include>
 
+	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
-		<rosparam command="load" file="$(find prometheus_control)/launch/Parameter_for_control.yaml" />
+		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
+		<param name="input_source" value="2" />
 	</node>
 	
 	<!-- run the px4_pos_controller.cpp -->

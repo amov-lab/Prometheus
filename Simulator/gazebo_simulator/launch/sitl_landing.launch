@@ -2,7 +2,7 @@
 	<!-- Launch Gazebo Simulation -->
 	<arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
-    <arg name="z" default="0.0"/>
+    <arg name="z" default="0.05"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/autonomous_landing.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
 	<arg name="model" default="P300_Monocular_down"/>
@@ -21,19 +21,10 @@
         <param name="camera_info" type="string" value="camera_param_gazebo_monocular.yaml" />
     </node>
 	
-	<!-- choose the landing solution -->
 	<!-- run the autonomous_landing.cpp -->
-	<arg name="use_ukf" default="false"/>
-	<group if="$(arg use_ukf)">
-		<node pkg="prometheus_mission" type="autonomous_landing_ukf" name="autonomous_landing_ukf" output="screen" launch-prefix="gnome-terminal --">
-			<rosparam command="load" file="$(find prometheus_mission)/autonomous_landing/autonomous_landing.yaml" />	
-		</node>
-    </group>
-	<group unless="$(arg use_ukf)">
-		<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
-			<rosparam command="load" file="$(find prometheus_mission)/autonomous_landing/autonomous_landing.yaml" />	
-		</node>
-    </group>
+	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
+		<rosparam command="load" file="$(find prometheus_mission)/autonomous_landing/autonomous_landing.yaml" />	
+	</node>
 
 </launch>
 

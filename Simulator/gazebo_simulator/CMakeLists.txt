@@ -23,11 +23,6 @@ find_package(Boost REQUIRED COMPONENTS thread)
 find_package(gazebo REQUIRED)
 find_package(Threads REQUIRED)
 
-add_message_files(
-	FILES
-	IRLock.msg
-    Control.msg 
-)
 
 generate_messages(DEPENDENCIES 
 	std_msgs
@@ -64,7 +59,7 @@ target_link_libraries(realsense_gazebo_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRA
 add_dependencies(realsense_gazebo_plugin ${catkin_EXPORTED_TARGETS})
 
 
-add_executable(qrcode_control src/qrcode_control.cpp)
+add_executable(qrcode_control cpp_nodes/qrcode_control.cpp)
 add_dependencies(qrcode_control prometheus_gazebo_gencpp) 
 target_link_libraries(qrcode_control ${catkin_LIBRARIES})
 
@@ -78,12 +73,12 @@ target_link_libraries(qrcode_control ${catkin_LIBRARIES})
 #add_dependencies(PriusHybridPlugin ${catkin_EXPORTED_TARGETS})
 
 catkin_install_python(PROGRAMS 
-    nodes/joystick_translator
-    nodes/keyboard_control_px4.py 
-    nodes/qrcode_control.py 
-    nodes/get_ground_truth_formation.py  
-    nodes/box_control.py
-    nodes/get_ground_truth.py
+    py_nodes/joystick_translator
+    py_nodes/keyboard_control_px4.py 
+    py_nodes/move_landing_pad.py 
+    py_nodes/get_ground_truth_formation.py  
+    py_nodes/move_boxes.py
+    py_nodes/get_ground_truth.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(DIRECTORY models DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
