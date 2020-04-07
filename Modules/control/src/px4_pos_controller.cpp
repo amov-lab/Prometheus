@@ -321,7 +321,7 @@ int main(int argc, char **argv)
         case prometheus_msgs::ControlCommand::Move:
 
             //对于机体系的指令,需要转换成ENU坐标系执行,且同一ID号内,只执行一次.
-            if(Command_Now.Reference_State.Move_frame == prometheus_msgs::PositionReference::BODY_FRAME && Command_Now.Command_ID  >  Command_Last.Command_ID )
+            if(Command_Now.Reference_State.Move_frame != prometheus_msgs::PositionReference::ENU_FRAME && Command_Now.Command_ID  >  Command_Last.Command_ID )
             {
                 Body_to_ENU();
             }
@@ -447,9 +447,10 @@ int check_failsafe()
 //【Body_to_ENU】 机体系移动。
 void Body_to_ENU()
 {
-    //xy velocity mode
+    
     if( Command_Now.Reference_State.Move_mode  & 0b10 )
     {
+        //xy velocity mode
         float d_vel_body[2] = {Command_Now.Reference_State.velocity_ref[0], Command_Now.Reference_State.velocity_ref[1]};         //the desired xy velocity in Body Frame
         float d_vel_enu[2];                                                           //the desired xy velocity in NED Frame
 
@@ -460,9 +461,9 @@ void Body_to_ENU()
         Command_Now.Reference_State.velocity_ref[0] = d_vel_enu[0];
         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
     }
-    //xy position mode
     else
-    {
+    {   
+        //xy position mode
         float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
         float d_pos_enu[2];                                                           //the desired xy position in enu Frame (The origin point is the drone)
         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_pos_body, d_pos_enu);
@@ -473,20 +474,28 @@ void Body_to_ENU()
         Command_Now.Reference_State.velocity_ref[1] = 0;
     }
 
-    //z velocity mode
-    if( Command_Now.Reference_State.Move_mode  & 0b01 )
+    if(Command_Now.Reference_State.Move_frame == prometheus_msgs::PositionReference::MIX_FRAME)
     {
-        Command_Now.Reference_State.position_ref[2] = 0;
-        Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
-    }
-    //z posiiton mode
+        Command_Now.Reference_State.position_ref[2] = Command_Now.Reference_State.position_ref[2];
+        //Command_Now.Reference_State.yaw_ref = Command_Now.Reference_State.yaw_ref;
+    }else
     {
-        Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.position_ref[2];
-        Command_Now.Reference_State.velocity_ref[2] = 0; 
+        if( Command_Now.Reference_State.Move_mode  & 0b01 )
+        {
+            //z velocity mode
+            Command_Now.Reference_State.position_ref[2] = 0;
+            Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
+        }
+        else
+        {   
+            //z posiiton mode
+            Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.position_ref[2];
+            Command_Now.Reference_State.velocity_ref[2] = 0; 
+        }
+        
     }
 
     Command_Now.Reference_State.yaw_ref = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
-
     float d_acc_body[2] = {Command_Now.Reference_State.acceleration_ref[0], Command_Now.Reference_State.acceleration_ref[1]};       
     float d_acc_enu[2]; 
 
