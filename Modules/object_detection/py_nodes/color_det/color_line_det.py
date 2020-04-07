@@ -23,6 +23,7 @@ camera_matrix = np.zeros((3, 3), np.float32)
 distortion_coefficients = np.zeros((5,), np.float32)
 
 rospy.init_node('color_det', anonymous=True)
+# Pose.x 为检测到的误差角度，Pose.y 为检测标志位（1代表正常检测，-1代表未检测到）
 pub = rospy.Publisher('/prometheus/vision/color_line_angle', Pose, queue_size=10)
 
 
