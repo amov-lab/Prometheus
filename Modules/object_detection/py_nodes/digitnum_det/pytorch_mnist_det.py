@@ -158,19 +158,17 @@ def image_callback(imgmsg):
     cv2.waitKey(10)
 
 
-def num_det():
-    # /P300_Monocular_front/Monocular/image_raw
-    # /realsense_plugin/camera/color/image_raw
-    rospy.Subscriber("/P300_Monocular_front/Monocular/image_raw", Image, image_callback)
+def num_det(topic_name):
+    rospy.Subscriber(topic_name, Image, image_callback)
     rospy.spin()
 
 
 if __name__ == '__main__':
-    # camera_param_gazebo_monocular.yaml
-    # camera_param_gazebo_realsense.yaml
-    inparam = 'camera_param_gazebo_monocular.yaml'
-    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + inparam
-    print('Input config file: {}'.format(inparam))
+    subscriber = rospy.get_param('~subscriber', '/prometheus/camera/rgb/image_raw')
+    config = rospy.get_param('~config', 'camera_param.yaml')
+
+    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + config
+    print('Input config file: {}'.format(config))
 
     yaml_config = yaml.load(open(yaml_config_fn))
 
@@ -192,6 +190,6 @@ if __name__ == '__main__':
     print(digitnum_det_len)
 
     try:
-        num_det()
+        num_det(subscriber)
     except rospy.ROSInterruptException:
         pass
