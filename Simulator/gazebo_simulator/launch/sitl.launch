@@ -29,7 +29,7 @@
     <arg name="z" default="0.1"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
-    <arg name="Y" default="1.57"/>
+    <arg name="Y" default="0.0"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
 	<arg name="model" default="P300_basic"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
