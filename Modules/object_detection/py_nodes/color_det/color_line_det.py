@@ -12,11 +12,11 @@ import os
 import yaml
 import math
 
+
 # 线距底边的距离，0-1，0.5表示在图像中间
-line_location = 0.5
 # 待检测颜色，没有此颜色时，默认检测黑色
 # 可选：black，red，yellow，green，blue
-line_color = 'black'
+global line_location, line_color
 
 
 camera_matrix = np.zeros((3, 3), np.float32)
@@ -28,6 +28,7 @@ pub = rospy.Publisher('/prometheus/vision/color_line_angle', Pose, queue_size=10
 
 
 def get_line_area(frame):
+    global line_location, line_color
     h = frame.shape[0]
     l1 = int(h * (1 - line_location - 0.05))
     l2 = int(h * (1 - line_location))
@@ -40,20 +41,20 @@ def cnt_area(cnt):
     return area
 
 
-def seg(line_area, line_color='black'):
-    if line_color == 'black':
+def seg(line_area, _line_color='black'):
+    if _line_color == 'black':
         hmin, smin, vmin = 0, 0, 0
         hmax, smax, vmax = 180, 255, 46
-    elif line_color == 'red':
+    elif _line_color == 'red':
         hmin, smin, vmin = 0, 43, 46
         hmax, smax, vmax = 10, 255, 255
-    elif line_color == 'yellow':
+    elif _line_color == 'yellow':
         hmin, smin, vmin = 26, 43, 46
         hmax, smax, vmax = 34, 255, 255
-    elif line_color == 'green':
+    elif _line_color == 'green':
         hmin, smin, vmin = 35, 43, 46
         hmax, smax, vmax = 77, 255, 255
-    elif line_color == 'blue':
+    elif _line_color == 'blue':
         hmin, smin, vmin = 100, 43, 46
         hmax, smax, vmax = 124, 255, 255
     else:
@@ -83,11 +84,13 @@ def seg(line_area, line_color='black'):
 
 
 def image_callback(imgmsg):
+    global line_location, line_color
+
     bridge = CvBridge()
     frame = bridge.imgmsg_to_cv2(imgmsg, "bgr8")
     # processing
     area_base = get_line_area(frame)
-    area, cxcy, a = seg(area_base, line_color=line_color)
+    area, cxcy, a = seg(area_base, _line_color=line_color)
 
     pose = Pose(Point(0, -1, 0), Quaternion(0., 0., 0., 0.))
     if a > 0:
@@ -108,15 +111,24 @@ def image_callback(imgmsg):
     cv2.waitKey(10)
 
 
-def color_det():
-    rospy.Subscriber("/prometheus/camera/rgb/image_raw", Image, image_callback)
+def color_det(topic_name):
+    rospy.Subscriber(topic_name, Image, image_callback)
     rospy.spin()
 
 
 if __name__ == '__main__':
-    inparam = 'camera_param.yaml'
-    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + inparam
-    print('Input config file: {}'.format(inparam))
+    global line_location, line_color
+
+    subscriber = rospy.get_param('~subscriber', '/prometheus/camera/rgb/image_raw')
+    config = rospy.get_param('~config', 'camera_param.yaml')
+
+    # global line_location, line_color
+    line_location = rospy.get_param('~line_location', 0.5)
+    line_color = rospy.get_param('~line_color', 'black')    
+
+
+    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + config
+    print('Input config file: {}'.format(config))
 
     yaml_config = yaml.load(open(yaml_config_fn))
 
@@ -135,6 +147,6 @@ if __name__ == '__main__':
     print(distortion_coefficients)
 
     try:
-        color_det()
+        color_det(subscriber)
     except rospy.ROSInterruptException:
         pass
