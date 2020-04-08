@@ -180,7 +180,7 @@
         <update_rate>60</update_rate>
         <visualize>0</visualize>
         <!-- 这个插件用于深度转局部点云，实际运行中，D435i可直出局部点云 -->
-        <plugin name="camera_plugin" filename="libgazebo_ros_depth_camera.so">
+        <!-- <plugin name="camera_plugin" filename="libgazebo_ros_depth_camera.so">
             <alwaysOn>true</alwaysOn>
             <imageTopicName>image_raw</imageTopicName>
             <cameraInfoTopicName>camera_info</cameraInfoTopicName>
@@ -195,7 +195,7 @@
             <distortionK3>0.0</distortionK3>
             <distortionT1>0.0</distortionT1>
             <distortionT2>0.0</distortionT2>
-        </plugin>
+        </plugin> -->
       </sensor>
     </link>
     <plugin name="realsense_plugin" filename="librealsense_gazebo_plugin.so">

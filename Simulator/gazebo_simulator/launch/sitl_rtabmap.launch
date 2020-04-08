@@ -3,7 +3,7 @@
     <arg name="x" default="0.0"/>
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/indoor_house.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
 	<arg name="model" default="P300_D435i"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
@@ -17,24 +17,26 @@
 
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
         <arg name="rtabmap_args"       value="--delete_db_on_start"/>
-        <arg name="depth_topic"        value="/realsense_d435i/depth/image_raw"/>
-		<arg name="frame_id"           value="realsense_camera_link"/>
+        <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
+		<arg name="frame_id"           value="base_link"/>
         <arg name="map_frame_id"       value="world"/>
         <arg name="visual_odometry"    value="false"/>
         <arg name="odom_topic"         value="/prometheus/planning/odom_world"/> 
         <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
         <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="queue_size"         value="200"/>
-		<arg name="rtabmapviz"         value="false"/>
+        <!--arg name="queue_size"         value="200"/-->
+		<arg name="rtabmapviz"         value="true"/>
+        <arg name="rviz"               value="false"/>
+        <arg name="approx_sync"         value="true"/>
     </include>
 
     <!-- 真实点云 -->
-	<node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+	<!--node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
 		<param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
-	</node>
+	</node-->
 
 	<!-- run the rviz -->
-	<arg name="visualization" default="true"/>
+	<arg name="visualization" default="false"/>
 	<group if="$(arg visualization)">
 		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
     </group>
