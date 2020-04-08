@@ -3,7 +3,7 @@
     <arg name="x" default="0.0"/>
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/indoor_house.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
 	<arg name="model" default="P300_D435i"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
@@ -25,7 +25,7 @@
         <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
         <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
         <!--arg name="queue_size"         value="200"/-->
-		<arg name="rtabmapviz"         value="true"/>
+		<arg name="rtabmapviz"         value="false"/>
         <arg name="rviz"               value="false"/>
         <arg name="approx_sync"         value="true"/>
     </include>
@@ -36,7 +36,7 @@
 	</node-->
 
 	<!-- run the rviz -->
-	<arg name="visualization" default="false"/>
+	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
 		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
     </group>
