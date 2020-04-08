@@ -1,0 +1,16 @@
+material Floor
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture floor.jpg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.05 0.05
+     }
+   }
+ }
+}

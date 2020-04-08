@@ -69,13 +69,13 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>100 100</size>
+              <size>40 40</size>
             </plane>
           </geometry>
           <material>
             <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
+              <uri>model://texture/texture.material</uri>
+              <name>Floor</name>
             </script>
           </material>
         </visual>
