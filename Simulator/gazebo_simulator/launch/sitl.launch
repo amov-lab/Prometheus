@@ -1,8 +1,13 @@
 <launch>
 	<!-- 启动PX4中的SITL功能 -->
-	<!-- vehicle model and world -->
+	<!-- 这里的环境变量将传递到rcS启动脚本中-->
+	<!-- 模型选择 -->
 	<env name="PX4_SIM_MODEL" value="solo" />
+	<!-- 估计器参数选择 -->
     <env name="PX4_ESTIMATOR" value="ekf2_vision" />
+	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
+	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
+	
 	
 	<!-- PX4 configs -->
     <arg name="interactive" default="true"/>
