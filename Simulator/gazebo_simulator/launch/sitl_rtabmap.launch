@@ -24,8 +24,9 @@
         <arg name="odom_topic"         value="/prometheus/planning/odom_world"/> 
         <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
         <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="queue_size"         value="200"/>
+        <!--arg name="queue_size"         value="200"/-->
 		<arg name="rtabmapviz"         value="true"/>
+        <arg name="rviz"               value="false"/>
         <arg name="approx_sync"         value="true"/>
     </include>
 
