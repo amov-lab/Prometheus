@@ -9,7 +9,7 @@
       <pose>0.1 0 0 0 0 0</pose>
     </include>
     <joint name="D435i_joint" type="fixed">
-      <child>D435i::link</child>
+      <child>D435i::realsense_camera_link</child>
       <parent>P300_basic::base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
