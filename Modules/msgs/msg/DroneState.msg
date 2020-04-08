@@ -4,6 +4,8 @@ std_msgs/Header header
 bool connected
 ## 是否解锁，true为已解锁，false则不是
 bool armed
+## 是否降落，true为已降落，false则代表在空中
+bool landed
 ## PX4飞控当前飞行模式
 string mode
 

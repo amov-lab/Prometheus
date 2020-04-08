@@ -22,6 +22,7 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
+#include <mavros_msgs/ExtendedState.h>
 #include <mavros_msgs/AttitudeTarget.h>
 #include <mavros_msgs/PositionTarget.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -52,6 +53,9 @@ class state_from_mavros
         //  本话题来自飞控(通过Mavros功能包 /plugins/sys_status.cpp)
         state_sub = state_nh.subscribe<mavros_msgs::State>(uav_name + "/mavros/state", 10, &state_from_mavros::state_cb,this);
 
+        // 【订阅】无人机当前状态 - 来自飞控
+        extended_state_sub = state_nh.subscribe<mavros_msgs::ExtendedState>(uav_name + "/mavros/extended_state", 10, &state_from_mavros::extended_state_cb,this);
+
         // 【订阅】无人机当前位置 坐标系:ENU系 （此处注意，所有状态量在飞控中均为NED系，但在ros中mavros将其转换为ENU系处理。所以，在ROS中，所有和mavros交互的量都为ENU系）
         //  本话题来自飞控(通过Mavros功能包 /plugins/local_position.cpp读取), 对应Mavlink消息为LOCAL_POSITION_NED (#32), 对应的飞控中的uORB消息为vehicle_local_position.msg
         position_sub = state_nh.subscribe<geometry_msgs::PoseStamped>(uav_name + "/mavros/local_position/pose", 10, &state_from_mavros::pos_cb,this);
@@ -77,6 +81,7 @@ class state_from_mavros
         ros::Subscriber position_sub;
         ros::Subscriber velocity_sub;
         ros::Subscriber attitude_sub;
+        ros::Subscriber extended_state_sub;
         ros::Publisher trajectory_pub;
 
         void state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -84,6 +89,17 @@ class state_from_mavros
             _DroneState.connected = msg->connected;
             _DroneState.armed = msg->armed;
             _DroneState.mode = msg->mode;
+        }
+
+        void extended_state_cb(const mavros_msgs::ExtendedState::ConstPtr &msg)
+        {
+            if(msg->landed_state == msg->LANDED_STATE_ON_GROUND)
+            {
+                _DroneState.landed = true;
+            }else
+            {
+                _DroneState.landed = false;
+            }
         }
 
         void pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)

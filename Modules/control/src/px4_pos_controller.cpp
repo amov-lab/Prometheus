@@ -46,7 +46,7 @@ float cur_time;                                             //程序运行时间
 int controller_number;                                      //所选择控制器编号
 float Takeoff_height;                                       //默认起飞高度
 float Disarm_height;                                        //自动上锁高度
-
+float Land_speed;                                           //降落速度
 //Geigraphical fence 地理围栏
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
@@ -83,8 +83,8 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         ROS_WARN_STREAM_ONCE("Wrong Command ID");
     }
     
-    // 无人机一旦接受到Land或者Disarm指令，则会屏蔽其他指令
-    if(Command_Last.Mode == prometheus_msgs::ControlCommand::Land || Command_Last.Mode == prometheus_msgs::ControlCommand::Disarm)
+    // 无人机一旦接受到Disarm指令，则会屏蔽其他指令
+    if(Command_Last.Mode == prometheus_msgs::ControlCommand::Disarm)
     {
         Command_Now = Command_Last;
     }
@@ -132,6 +132,7 @@ int main(int argc, char **argv)
     // 参数读取
     nh.param<float>("pos_controller/Takeoff_height", Takeoff_height, 1.0);
     nh.param<float>("pos_controller/Disarm_height", Disarm_height, 0.15);
+    nh.param<float>("pos_controller/Land_speed", Land_speed, 0.2);
     nh.param<int>("pos_controller/controller_number", controller_number, 0);
     
     nh.param<float>("geo_fence/x_min", geo_fence_x[0], -100.0);
@@ -171,12 +172,12 @@ int main(int argc, char **argv)
     Takeoff_position[0] = _DroneState.position[0];
     Takeoff_position[1] = _DroneState.position[1];
     Takeoff_position[2] = _DroneState.position[2];
-
     // NE控制律需要设置起飞初始值
     //if(controller_number == 4)
     //{
     //    pos_controller_ne.set_initial_pos(Takeoff_position);
-   // }
+    //}
+
 
     // 初始化命令-
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
@@ -285,11 +286,11 @@ int main(int argc, char **argv)
 
             if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
             {
-                Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+                Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
                 Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
                 Command_Now.Reference_State.position_ref[0] = _DroneState.position[0];
                 Command_Now.Reference_State.position_ref[1] = _DroneState.position[1];
-                Command_Now.Reference_State.position_ref[2] = Takeoff_position[2];
+                Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
                 Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2]; //rad
             }
 
@@ -298,6 +299,7 @@ int main(int argc, char **argv)
             {
                 if(_DroneState.mode == "OFFBOARD")
                 {
+                    //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁
                     _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
                 }
@@ -312,6 +314,11 @@ int main(int argc, char **argv)
                 {
                     cout <<"[px4_pos_controller]: Disarm successfully! "<< endl;
                 }
+            }
+
+            if(_DroneState.landed)
+            {
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Idle;
             }
 
             break;
@@ -361,6 +368,7 @@ int main(int argc, char **argv)
             break;
         }
 
+        //执行控制
         if(Command_Now.Mode != prometheus_msgs::ControlCommand::Idle)
         {
             //选择控制器
