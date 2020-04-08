@@ -69,13 +69,13 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>100 100</size>
+              <size>40 40</size>
             </plane>
           </geometry>
           <material>
             <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Grey</name>
+              <uri>model://texture/texture.material</uri>
+              <name>Floor</name>
             </script>
           </material>
         </visual>
@@ -94,7 +94,23 @@
       <uri>model://mini_clubman</uri>
       <pose>-5.0 -5.0 0.1 0 0 0</pose>
     </include>
-
+    
+    <include>
+      <uri>model://bed</uri>
+      <pose>5.0 2.0 0.1 0 0 -1.57</pose>
+    </include>
+    <include>
+      <uri>model://sofa</uri>
+      <pose>1.0 3.5 0.1 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://shelf</uri>
+      <pose>0.5 4.5 0.1 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://table_chair</uri>
+      <pose>-2.5 0.5 0.1 0 0 1.57</pose>
+    </include>
     <include>
       <uri>model://turtlebot3_house</uri>
       <pose>0.0 0.0 0.1 0 0 0</pose>
