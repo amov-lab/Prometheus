@@ -140,12 +140,12 @@ void bsplineCallback(prometheus_plan_manage::BsplineConstPtr msg) {
   receive_traj = true;
 }
 
-// 【订阅】replan出现的话，更新时间，近似停止一下
+// 【订阅】replan出现的话，更新时间，在0.25s后或轨迹运行完后轨迹发布停止
 void replanCallback(std_msgs::Empty msg) {
   /* reset duration */
   const double time_out = 0.25;
   ros::Time time_now = ros::Time::now();
-  double t_stop = (time_now - time_traj_start).toSec() + time_out;
+  double t_stop = (time_now - time_traj_start).toSec() + time_out;  //在0.25s后停止发布轨迹
   traj_duration = min(t_stop, traj_duration);
   t_cmd_end = t_cmd_start + traj_duration;
 }
@@ -159,7 +159,7 @@ void odomCallbck(const nav_msgs::Odometry& msg) {
   traj_real.push_back(Eigen::Vector3d(odom.pose.pose.position.x,
                                       odom.pose.pose.position.y,
                                       odom.pose.pose.position.z));
-
+  // 只存储最多10000个轨迹点
   if (traj_real.size() > 10000)
     traj_real.erase(traj_real.begin(), traj_real.begin() + 1000);
 }

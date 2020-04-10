@@ -157,7 +157,7 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
   bspline_optimizer_->setBSplineInterval(ts);
 
   if (status != KinodynamicAstar::REACH_END){
-    cout << "Kinodynamic Astar reach end!" <<endl;
+    cout << "Kinodynamic Astar not reach end!" <<endl;
     bspline_optimizer_->optimize(BsplineOptimizer::SOFT_CONSTRAINT, dynamic_, time_start_);
   }
   else{
