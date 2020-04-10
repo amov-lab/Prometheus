@@ -29,11 +29,11 @@
         <arg name="rviz"               value="false"/>
         <arg name="approx_sync"         value="true"/>
     </include>
-    <include file="$(find prometheus_gazebo)/launch/depth_proc.launch"></include>
+    
     <!-- 真实点云 -->
-	<!--node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+	<node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
 		<param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
-	</node-->
+	</node>
 
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>

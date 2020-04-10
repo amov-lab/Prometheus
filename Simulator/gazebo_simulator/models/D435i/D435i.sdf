@@ -179,8 +179,8 @@
         <always_on>1</always_on>
         <update_rate>60</update_rate>
         <visualize>0</visualize>
-        <!-- 这个插件用于深度转局部点云，实际运行中，D435i可直出局部点云 robotNamespace -->
-        <!--plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
+        <!-- 这个插件用于深度转局部点云，实际运行中，D435i可直出局部点云 -->
+        <!-- <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
           <baseline>0.2</baseline>
           <alwaysOn>true</alwaysOn>
           <updateRate>20.0</updateRate>
@@ -189,7 +189,7 @@
           <cameraInfoTopicName>/realsense_d435i/color/camera_info</cameraInfoTopicName>
           <depthImageTopicName>/realsense_d435i/depth/image_raw</depthImageTopicName>
           <depthImageCameraInfoTopicName>/realsense_d435i/depth/camera_info</depthImageCameraInfoTopicName>
-          <pointCloudTopicName>/realsense_d435i/local_pointclouds</pointCloudTopicName>
+          <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
           <frameName>/realsense_camera_link</frameName>
           <pointCloudCutoff>0.1</pointCloudCutoff>
           <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
@@ -203,7 +203,7 @@
           <Cy>0</Cy>
           <focalLength>639.997649</focalLength>
           <hackBaseline>0</hackBaseline>
-        </plugin-->
+        </plugin> -->
       </sensor>
     </link>
     <plugin name="realsense_plugin" filename="librealsense_gazebo_plugin.so">
