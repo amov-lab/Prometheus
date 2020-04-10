@@ -8,7 +8,7 @@
   <arg name="rgb_img_rect" value="/$(arg camera_name)/camera/color/image_raw"/>  <!--Rectified color image-->
   <arg name="depReg_imgraw" value="/$(arg camera_name)/camera/depth/image_raw"/>  <!--Raw depth image-->
   <arg name="depReg_imgrect" value="/$(arg camera_name)/camera/depth/image_rect"/>  <!--Raw depth image-->
-  <arg name="out_cloud" value="/$(arg camera_name)/camera/depth_registered/points"/>
+  <arg name="out_cloud" value="/$(arg camera_name)/camera/local_pointclouds"/>
 
   <node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager" output="screen"/>
 
