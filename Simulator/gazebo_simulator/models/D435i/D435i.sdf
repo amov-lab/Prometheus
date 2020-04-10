@@ -180,7 +180,7 @@
         <update_rate>60</update_rate>
         <visualize>0</visualize>
         <!-- 这个插件用于深度转局部点云，实际运行中，D435i可直出局部点云 robotNamespace -->
-        <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
+        <!--plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
           <baseline>0.2</baseline>
           <alwaysOn>true</alwaysOn>
           <updateRate>20.0</updateRate>
@@ -203,7 +203,7 @@
           <Cy>0</Cy>
           <focalLength>639.997649</focalLength>
           <hackBaseline>0</hackBaseline>
-        </plugin>
+        </plugin-->
       </sensor>
     </link>
     <plugin name="realsense_plugin" filename="librealsense_gazebo_plugin.so">
