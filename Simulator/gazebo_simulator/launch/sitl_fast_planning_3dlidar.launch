@@ -27,8 +27,8 @@
     
     <!-- Fast Planner -->
     <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
-    <arg name="max_vel" value="1.0" />
-    <arg name="max_acc" value="0.5" />
+    <arg name="max_vel" value="0.5" />
+    <arg name="max_acc" value="0.2" />
     <arg name="dynamic" value="0" />
     <arg name="pcd_file" value="$(find prometheus_plan_manage)/config/cloud0115.pcd" />
     <node pkg="prometheus_plan_manage" name="dyn_planner_node" type="dyn_planner_node" output="screen">

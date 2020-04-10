@@ -110,7 +110,7 @@ namespace dyn_planner {
         }
         
         ros::Time begin_load_pcl = ros::Time::now();
-        ROS_INFO("--- SDFMAP_GLOBAL: have pcl, begin ---");
+        // ROS_INFO("--- SDFMAP_GLOBAL: have pcl, begin ---");
         pcl::fromROSMsg(*msg, latest_global_cloud_);
 
          if ((int)latest_global_cloud_.points.size() == 0) return;
@@ -132,8 +132,8 @@ namespace dyn_planner {
         sdf_tools::COLLISION_CELL obstacle_cell(1.0);
         vector<Eigen::Vector3d> obstacles;
         ros::Time begin_collision = ros::Time::now();
-        ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f", begin_collision.toSec()-begin_load_pcl.toSec());
-        ROS_INFO("point size: %d, ifn_num: %d", latest_global_cloud_.points.size(), ifn);
+        // ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f", begin_collision.toSec()-begin_load_pcl.toSec());
+        // ROS_INFO("point size: %d, ifn_num: %d", latest_global_cloud_.points.size(), ifn);
         int map_num{0};
         for (size_t i = 0; i < latest_global_cloud_.points.size(); ++i) {
             pt = latest_global_cloud_.points[i];
@@ -182,19 +182,19 @@ namespace dyn_planner {
                 }
         }
         int num_obstacle_2 = obstacles.size();
-        ROS_INFO("obstacle point number 1:  %d,  2: %d", num_obstacle_1, num_obstacle_2);
+        // ROS_INFO("obstacle point number 1:  %d,  2: %d", num_obstacle_1, num_obstacle_2);
 
         ros::Time endcollisiion_map = ros::Time::now();
-        ROS_INFO("--- SDFMAP_GLABAL: begin sdf, time: %f", endcollisiion_map.toSec()-begin_collision.toSec());
+        // ROS_INFO("--- SDFMAP_GLABAL: begin sdf, time: %f", endcollisiion_map.toSec()-begin_collision.toSec());
         // Build the signed distance field
         float oob_value = INFINITY;
         std::pair<sdf_tools::SignedDistanceField, std::pair<double, double>> sdf_with_extrema =
                 collision_map->ExtractSignedDistanceField(oob_value);
 
         ros::Time end_sdf_time = ros::Time::now();
-        ROS_INFO("--- SDFMAP_GLABAL: end sdf, time: %f", end_sdf_time.toSec()-endcollisiion_map.toSec());
+        // ROS_INFO("--- SDFMAP_GLABAL: end sdf, time: %f", end_sdf_time.toSec()-endcollisiion_map.toSec());
         sdf_map.reset(new sdf_tools::SignedDistanceField(sdf_with_extrema.first));
-        ROS_INFO("successfully build esdf");
+        // ROS_INFO("successfully build esdf");
 
         map_valid_ = true;
     }
@@ -222,7 +222,7 @@ namespace dyn_planner {
         node_.param("sdf_map/map_size_z", map_size_(2), 5.0);
 
         node_.param("sdf_map/resolution_sdf", resolution_sdf_, 0.2);
-        node_.param("sdf_map/ceil_height", ceil_height_, 3.0);
+        node_.param("sdf_map/ceil_height", ceil_height_, 5.0);
 //        node_.param("sdf_map/update_rate", update_rate_, 10.0);
         node_.param("sdf_map/update_range", update_range_, 5.0);
         node_.param("sdf_map/inflate", inflate_, 0.2);

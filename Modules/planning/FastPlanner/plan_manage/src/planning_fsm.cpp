@@ -15,8 +15,8 @@ void PlanningFSM::init(ros::NodeHandle& nh)
   nh.param("fsm/thresh_replan", thresh_replan_, -1.0);
   nh.param("fsm/thresh_no_replan", thresh_no_replan_, -1.0);
   nh.param("fsm/safety_distance", safety_distance, 0.3);
-  nh.param("fsm/wp_num", wp_num_, -1);
 
+  nh.param("fsm/wp_num", wp_num_, -1);
   for (int i = 0; i < wp_num_; i++)
   {
     nh.param("fsm/wp" + to_string(i) + "_x", waypoints_[i][0], -1.0);
@@ -325,7 +325,7 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
         odom.pose.pose.position.y,
         odom.pose.pose.position.z
      );
-     double cur_safe_dist = edt_env_->evaluateCoarseEDT(end_pt_, -1.0);
+     double cur_safe_dist = edt_env_->evaluateCoarseEDT(cur_pt, -1.0);
     if(cur_safe_dist< safety_distance){
       replan.data = 1;
     }else{
