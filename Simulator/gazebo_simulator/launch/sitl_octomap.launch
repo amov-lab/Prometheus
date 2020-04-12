@@ -4,8 +4,8 @@
     <arg name="y" default="-5.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-    <arg name="lidar" default="false"/>
-    <arg name="rgbd" default="true"/>
+    <arg name="lidar" default="true"/>
+    <arg name="rgbd" default="false"/>
 	<arg if="$(arg lidar)" name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
     <arg if="$(arg rgbd)" name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
 	<arg if="$(arg lidar)" name="model" default="P300_3Dlidar"/>
@@ -17,7 +17,8 @@
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>
       <arg name="z" value="$(arg z)"/>
-    </include>  
+    </include>
+      
     <!-- build octomap via lidar data -->
     <group if="$(arg lidar)">
         <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
