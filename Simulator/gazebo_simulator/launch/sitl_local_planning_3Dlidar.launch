@@ -15,8 +15,9 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-	<!-- 选择输入源 可选激光输入，或者RGBD输入,或者使用离线地图-->
+	<!-- 设定局部点云话题-->
 	<arg name="topic_of_local_pcl" default="/prometheus/sensors/3Dlidar_scan"/>
+	<!-- 启动局部规划算法 -->
 	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
 		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
 		<!-- 参数 -->
@@ -41,19 +42,18 @@
 		<param name="apf/safe_distance" value="0.2" type="double"/>
 	</node>	
 
-	<!-- 规划 mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
+	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
-		<param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
+		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
 	</node>
 
-	<!-- 真实点云 -->
-	<node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
-		<param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
-	</node>
-
-	<!-- run the rviz -->
+	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
-	</group>
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <!-- obstacle.world 真实点云 -->
+        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
+	    </node>
+    </group>
 </launch>

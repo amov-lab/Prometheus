@@ -23,11 +23,11 @@
     <group if="$(arg lidar)">
         <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
             <param name="resolution" value="0.1" />
-            <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+            <!-- 发布地图的坐标系 -->
             <param name="frame_id" type="string" value="world" />
-            <!-- maximum range to integrate (speedup!) -->
+            <!-- 传感器最大感知范围 (speedup!) -->
             <param name="sensor_model/max_range" value="5.0" />
-            <!-- data source to integrate (PointCloud2) -->
+            <!-- 局部点云输入,该话题定义在3Dlidar.sdf中 (PointCloud2) -->
             <remap from="cloud_in" to="/prometheus/sensors/3Dlidar_scan" />
         </node>
     </group> 
@@ -36,24 +36,24 @@
         <include file="$(find prometheus_gazebo)/launch/depth_proc.launch"></include>
         <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
             <param name="resolution" value="0.1" />
-            <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+            <!-- 发布地图的坐标系 -->
             <param name="frame_id" type="string" value="world" />
-            <!-- maximum range to integrate (speedup!) -->
+            <!-- 传感器最大感知范围 (speedup!) -->
             <param name="sensor_model/max_range" value="5.0" />
-            <!-- data source to integrate (PointCloud2) -->
+            <!-- 局部点云输入 (PointCloud2) -->
             <remap from="cloud_in" to="/realsense_plugin/camera/local_pointclouds" />
         </node>
     </group>      
     
-    <!-- 真实点云 -->
-	<node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
-		<param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
-	</node>
-	
-    <!-- run the rviz -->
+    
+	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <!-- obstacle.world 真实点云 -->
+        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
+	    </node>
     </group>
 </launch>
 
