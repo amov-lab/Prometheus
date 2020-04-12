@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Ground_Truth1/PointCloud21
         - /全局规划1/Realsense_Global_PCL1
         - /Fast_Planner1/Reference_Tra1
       Splitter Ratio: 0.5617647171020508
@@ -24,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: Realsense_Local_PCL
+    SyncSource: PointCloud2
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -50,59 +51,63 @@ Visualization Manager:
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
-      Class: rviz/Pose
-      Color: 255; 25; 0
+    - Class: rviz/Group
+      Displays:
+        - Alpha: 1
+          Axes Length: 1
+          Axes Radius: 0.10000000149011612
+          Class: rviz/Pose
+          Color: 255; 25; 0
+          Enabled: true
+          Head Length: 0.30000001192092896
+          Head Radius: 0.10000000149011612
+          Name: Drone_Pose
+          Shaft Length: 1
+          Shaft Radius: 0.05000000074505806
+          Shape: Axes
+          Topic: /mavros/local_position/pose
+          Unreliable: false
+          Value: true
+        - Alpha: 1
+          Buffer Length: 30
+          Class: rviz/Path
+          Color: 255; 25; 0
+          Enabled: true
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.20000000298023224
+          Length: 0.30000001192092896
+          Line Style: Billboards
+          Line Width: 0.029999999329447746
+          Name: Drone_Path
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0
+          Pose Color: 255; 85; 255
+          Pose Style: None
+          Radius: 0.029999999329447746
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.10000000149011612
+          Topic: /prometheus/drone_trajectory
+          Unreliable: false
+          Value: true
+        - Alpha: 1
+          Axes Length: 0.5
+          Axes Radius: 0.15000000596046448
+          Class: rviz/Pose
+          Color: 255; 25; 0
+          Enabled: true
+          Head Length: 0.30000001192092896
+          Head Radius: 0.10000000149011612
+          Name: Reference_Pose
+          Shaft Length: 1
+          Shaft Radius: 0.05000000074505806
+          Shape: Axes
+          Topic: /prometheus/reference_pose
+          Unreliable: false
+          Value: true
       Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
-      Name: Drone_Pose
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
-      Shape: Axes
-      Topic: /mavros/local_position/pose
-      Unreliable: false
-      Value: true
-    - Alpha: 1
-      Buffer Length: 30
-      Class: rviz/Path
-      Color: 255; 25; 0
-      Enabled: true
-      Head Diameter: 0.30000001192092896
-      Head Length: 0.20000000298023224
-      Length: 0.30000001192092896
-      Line Style: Billboards
-      Line Width: 0.029999999329447746
-      Name: Drone_Path
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Pose Color: 255; 85; 255
-      Pose Style: None
-      Radius: 0.029999999329447746
-      Shaft Diameter: 0.10000000149011612
-      Shaft Length: 0.10000000149011612
-      Topic: /prometheus/drone_trajectory
-      Unreliable: false
-      Value: true
-    - Alpha: 1
-      Axes Length: 0.5
-      Axes Radius: 0.15000000596046448
-      Class: rviz/Pose
-      Color: 255; 25; 0
-      Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
-      Name: Reference_Pose
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
-      Shape: Axes
-      Topic: /prometheus/reference_pose
-      Unreliable: false
-      Value: true
+      Name: 无人机状态
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -130,7 +135,7 @@ Visualization Manager:
           Size (Pixels): 3
           Size (m): 0.009999999776482582
           Style: Flat Squares
-          Topic: /pc2_publisher_node/prometheus/pcl_groundtruth
+          Topic: /prometheus/pcl_groundtruth
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -407,25 +412,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 23.027685165405273
+      Distance: 20.209545135498047
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 10.722599983215332
-        Y: 2.2874608039855957
-        Z: 4.050446033477783
+        X: 8.551337242126465
+        Y: -0.3060327172279358
+        Z: 5.092179298400879
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.11020269989967346
+      Pitch: -0.025202684104442596
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.356991291046143
+      Yaw: 5.597019195556641
     Saved: ~
 Window Geometry:
   Displays:

@@ -10,15 +10,46 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
  - **配套硬件购买：** 阿木淘宝店 或 联系微信：****
 
 ## 功能展示
+ - RGBD相机建图
+ 
+    ![GWhyFO.gif](https://s1.ax1x.com/2020/04/08/GWhyFO.gif)
+ - 3D激光雷达建图(暂无演示图片)
 
-（此处配图或视频展示）
+ - 局部规划(APF)
+	
+    ![GLvcpq.gif](https://s1.ax1x.com/2020/04/12/GLvcpq.gif)
+ - 全局规划(A star)
+ 	
+    ![GOSrAe.gif](https://s1.ax1x.com/2020/04/12/GOSrAe.gif)
+ - 轨迹优化(Fast_Planner)
 
- - 无GPS环境建图及定位
- - 移动平台自主降落
- - 外环控制器二次开发
- - 全局路径规划
- - 局部路径规划
- - 框选目标追踪
+	[![GOCvHf.md.png](https://s1.ax1x.com/2020/04/12/GOCvHf.md.png)](https://imgchr.com/i/GOCvHf)
+
+- 外环控制器二次开发
+	
+    ![GOADfS.gif](https://s1.ax1x.com/2020/04/12/GOADfS.gif)
+    
+- 多机编队飞行
+    
+    ![GOAqmR.gif](https://s1.ax1x.com/2020/04/12/GOAqmR.gif)
+    
+- 圆形穿越
+![GOFrAf.gif](https://s1.ax1x.com/2020/04/12/GOFrAf.gif)
+
+- 颜色巡线
+
+	![GOkLi8.gif](https://s1.ax1x.com/2020/04/12/GOkLi8.gif)
+- 数字识别
+
+	![GOkVbt.gif](https://s1.ax1x.com/2020/04/12/GOkVbt.gif)
+- KCF框选追踪
+
+	![GOkhxH.gif](https://s1.ax1x.com/2020/04/12/GOkhxH.gif)
+- YOLO通用目标检测(暂缺)
+
+- 移动平台自主降落
+
+	![GOAZQJ.gif](https://s1.ax1x.com/2020/04/12/GOAZQJ.gif)
 
 ## 开发团队
 
