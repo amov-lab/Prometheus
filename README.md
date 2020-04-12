@@ -14,45 +14,45 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 配图:roadmap 及 项目总览图(说明结构和功能)
 
 ## 功能展示
- - RGBD相机建图
+ - **RGBD相机建图**
  	
     <img width="400" src="https://s1.ax1x.com/2020/04/08/GWhyFO.gif"/>
- - 3D激光雷达建图(暂无演示图片)
+ - **3D激光雷达建图(暂无演示图片)**
 
- - 局部规划(APF)
+ - **局部规划(APF)**
 	
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GLvcpq.gif"/>
- - 全局规划(A star)
+ - **全局规划(A star)**
  	
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GOSrAe.gif"/>
- - 轨迹优化(Fast_Planner)
+ - **轨迹优化(Fast_Planner)**
 
 	<img width="400" src="https://s1.ax1x.com/2020/04/12/GOCvHf.md.png"/>
 
-- 外环控制器二次开发
+- **外环控制器二次开发**
 	
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GOADfS.gif"/>
     
-- 多机编队飞行
+- **多机编队飞行**
     
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GOAqmR.gif"/>
     
-- 圆形穿越
+- **圆形穿越**
 
 	<img width="400" src="https://s1.ax1x.com/2020/04/12/GOFrAf.gif"/>
 
-- 颜色巡线
+- **颜色巡线**
 
 	<img width="400" src="https://s1.ax1x.com/2020/04/12/GOkLi8.gif"/>
-- 数字识别
+- **数字识别**
 
 	<img width="400" src="https://s1.ax1x.com/2020/04/12/GOkVbt.gif"/>
-- KCF框选追踪
+- **KCF框选追踪**
 
 	<img width="400" src="https://s1.ax1x.com/2020/04/12/GOkhxH.gif"/>
-- YOLO通用目标检测(暂缺)
+- **YOLO通用目标检测(暂缺)**
 
-- 移动平台自主降落
+- **移动平台自主降落**
 
 	<img width="400" src="https://s1.ax1x.com/2020/04/12/GOAZQJ.gif"/>
 
