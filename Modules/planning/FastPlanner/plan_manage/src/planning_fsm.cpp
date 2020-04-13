@@ -81,9 +81,9 @@ void PlanningFSM::init(ros::NodeHandle& nh)
 
   /* ---------- callback ---------- */
   ROS_INFO("---init sub and pub!---");
-  exec_timer_ = node_.createTimer(ros::Duration(0.01), &PlanningFSM::execFSMCallback, this);
+  exec_timer_ = node_.createTimer(ros::Duration(0.02), &PlanningFSM::execFSMCallback, this);
 
-  safety_timer_ = node_.createTimer(ros::Duration(0.1), &PlanningFSM::safetyCallback, this);
+  safety_timer_ = node_.createTimer(ros::Duration(0.25), &PlanningFSM::safetyCallback, this);
 
   waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &PlanningFSM::waypointCallback, this);
 
