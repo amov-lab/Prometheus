@@ -130,10 +130,10 @@ int main(int argc, char **argv)
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
 
     // 参数读取
-    nh.param<float>("pos_controller/Takeoff_height", Takeoff_height, 1.0);
-    nh.param<float>("pos_controller/Disarm_height", Disarm_height, 0.15);
-    nh.param<float>("pos_controller/Land_speed", Land_speed, 0.2);
-    nh.param<int>("pos_controller/controller_number", controller_number, 0);
+    nh.param<int>("controller_number", controller_number, 0);
+    nh.param<float>("Takeoff_height", Takeoff_height, 1.5);
+    nh.param<float>("Disarm_height", Disarm_height, 0.15);
+    nh.param<float>("Land_speed", Land_speed, 0.2);
     
     nh.param<float>("geo_fence/x_min", geo_fence_x[0], -100.0);
     nh.param<float>("geo_fence/x_max", geo_fence_x[1], 100.0);
@@ -429,9 +429,11 @@ int main(int argc, char **argv)
 
 void printf_param()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> px4_pos_controller Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "Takeoff_height: "<< Takeoff_height<<" [m] "<<endl;
-    cout << "Disarm_height : "<< Disarm_height <<" [m] "<<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> px4_pos_controller Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout << "controller_number: "<< controller_number <<endl;
+    cout << "Takeoff_height   : "<< Takeoff_height<<" [m] "<<endl;
+    cout << "Disarm_height    : "<< Disarm_height <<" [m] "<<endl;
+    cout << "Land_speed       : "<< Land_speed <<" [m/s] "<<endl;
     cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
     cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
     cout << "geo_fence_z : "<< geo_fence_z[0] << " [m]  to  "<<geo_fence_z[1] << " [m]"<< endl;
