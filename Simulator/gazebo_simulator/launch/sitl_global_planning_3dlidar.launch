@@ -32,7 +32,7 @@
         <remap from="/prometheus/planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
         <!-- 停止距离 -->
-        <param name="planning/safe_distance" value="0.1" type="double"/>
+        <param name="planning/safe_distance" value="0.01" type="double"/>
         <!-- 最大搜索步数 -->
         <param name="astar/allocate_num" value="100000" type="int"/>
         <!-- 启发式函数系数 -->

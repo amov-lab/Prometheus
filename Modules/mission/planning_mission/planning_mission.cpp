@@ -45,6 +45,7 @@ struct global_planner
     nav_msgs::Path path_cmd;
     int Num_total_wp;
     int wp_id;  
+    int start_id;
 }A_star;
 
 struct fast_planner
@@ -65,13 +66,30 @@ void Fast_planner();
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void global_planner_cmd_cb(const nav_msgs::Path::ConstPtr& msg)
 {
-    flag_get_cmd = 1;
+    flag_get_cmd = flag_get_cmd + 1;
     A_star.path_cmd = *msg;
     A_star.Num_total_wp = A_star.path_cmd.poses.size();
-    //当距离目标点大于一定距离时,不需要从第一个航点开始跟随
-    if(A_star.Num_total_wp > 5)
+
+    //选择与当前无人机所在位置最近的点,并从该点开始追踪
+    A_star.start_id = 0;
+    float distance_to_wp_min = abs(A_star.path_cmd.poses[0].pose.position.x - _DroneState.position[0])
+                                + abs(A_star.path_cmd.poses[0].pose.position.y - _DroneState.position[1]);
+    for (int j=1;j<A_star.Num_total_wp;j++)
     {
-        A_star.wp_id = 5;
+        float distance_to_wp = abs(A_star.path_cmd.poses[j].pose.position.x - _DroneState.position[0])
+                                + abs(A_star.path_cmd.poses[j].pose.position.y - _DroneState.position[1]);
+        if(distance_to_wp < distance_to_wp_min)
+        {
+            distance_to_wp_min = distance_to_wp;
+            A_star.start_id = j;
+        }
+    }
+
+    //这里增大开始路径点是为了解决当得到新路径时,无人机会回头的问题
+    A_star.wp_id = A_star.start_id + 1;
+    if(A_star.Num_total_wp - A_star.start_id > 8)
+    {
+        A_star.wp_id = A_star.start_id + 7;
     }
 }
 void stop_cmd_cb(const std_msgs::Int8::ConstPtr& msg)
@@ -228,7 +246,7 @@ int main(int argc, char **argv)
             }else if (start_flag == 2)
             {
                 A_star_planner();
-                ros::Duration(0.1).sleep();
+                ros::Duration(0.05).sleep();
             }else if (start_flag == 3)
             {
                 Fast_planner();
@@ -250,6 +268,14 @@ void APF_planner()
         if( sqrt(APF.desired_vel.x*APF.desired_vel.x + APF.desired_vel.y*APF.desired_vel.y)  >  0.15  )
         {
             float next_desired_yaw = atan2(APF.desired_vel.y, APF.desired_vel.x);
+            if(next_desired_yaw > 1.0)
+            {
+                next_desired_yaw = 1.0;
+            }
+            if(next_desired_yaw < -1.0)
+            {
+                next_desired_yaw = -1.0;
+            }
             desired_yaw = (0.95*desired_yaw + 0.05*next_desired_yaw);
         }
     }else
@@ -277,24 +303,23 @@ void APF_planner()
 
 void A_star_planner()
 {
-    float running_time = 0;
+    float current_cmd_id = flag_get_cmd;
     //执行给定航点
-    //running_time退出的条件取决于A_star发布的频率及是否有动态障碍物
-    while( A_star.wp_id < A_star.Num_total_wp && running_time < 4.0)
+    while( A_star.wp_id < A_star.Num_total_wp && flag_get_cmd == current_cmd_id)
     {
-
         if (control_yaw_flag)
         {
-            // 更新的话加滤波平滑期望航向角
-            float next_desired_yaw = atan2(A_star.path_cmd.poses[A_star.wp_id].pose.position.y - _DroneState.position[1], 
-                                            A_star.path_cmd.poses[A_star.wp_id].pose.position.x - _DroneState.position[0]);
-
-            if(abs(next_desired_yaw)>1.3)
+            float next_desired_yaw;
+            if(A_star.wp_id > 1)
+            {            
+                next_desired_yaw = atan2(A_star.path_cmd.poses[A_star.wp_id].pose.position.y - A_star.path_cmd.poses[A_star.wp_id -1].pose.position.y, 
+                                        A_star.path_cmd.poses[A_star.wp_id].pose.position.x - A_star.path_cmd.poses[A_star.wp_id-1].pose.position.x);
+            }else
             {
-                next_desired_yaw = next_desired_yaw/2;
+                next_desired_yaw = desired_yaw;
             }
 
-            desired_yaw = (0.8*desired_yaw + 0.2*next_desired_yaw);
+            desired_yaw = (0.92*desired_yaw + 0.08*next_desired_yaw);
         }else
         {
             desired_yaw = 0.0;
@@ -320,9 +345,9 @@ void A_star_planner()
         cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
         
         float wait_time = 0.25;
-        ros::Duration(wait_time).sleep();
+        ros::spinOnce();
         A_star.wp_id++;
-        running_time = running_time + wait_time;  
+        ros::Duration(wait_time).sleep();
     }
 }
 
