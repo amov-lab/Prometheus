@@ -10,7 +10,7 @@ main(int argc, char **argv)
 {
     ros::init(argc, argv, "pc2_publisher");
     ros::NodeHandle nh("~");
-    ros::Publisher pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("prometheus/pcl_groundtruth", 1);
+    ros::Publisher pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/prometheus/pcl_groundtruth", 1);
     pcl::PointCloud<pcl::PointXYZ> cloud;
     sensor_msgs::PointCloud2 output;
 

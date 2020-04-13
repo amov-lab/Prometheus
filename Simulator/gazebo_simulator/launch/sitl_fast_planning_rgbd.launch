@@ -15,20 +15,25 @@
       <arg name="z" value="$(arg z)"/>
     </include>
     
+    <!-- 启动rtabmap_ros建图 -->
     <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
         <arg name="rtabmap_args"       value="--delete_db_on_start"/>
-        <arg name="depth_topic"        value="/realsense_d435i/depth/image_raw"/>
-		<arg name="frame_id"           value="base_link"/>
-        <arg name="map_frame_id"       value="rtabmap_frame"/>
+        <arg name="frame_id"           value="base_link"/>
         <arg name="visual_odometry"    value="false"/>
-        <arg name="odom_topic"         value="/prometheus/planning/odom_world"/> 
+        <!-- RGB-D related topics -->
+        <arg name="approx_sync"         value="true"/>
         <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
+        <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
         <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="queue_size"         value="200"/>
+        <arg name="odom_topic"         value="/prometheus/planning/odom_world"/> 
+        <!-- 发布地图的坐标系 -->
+        <arg name="map_frame_id"       value="world"/>   
+        <!--visualization-->
 		<arg name="rtabmapviz"         value="false"/>
+        <arg name="rviz"               value="false"/>
     </include>
 
-    <!-- Fast Planner -->
+    <!-- 启动Fast Planner -->
     <arg name="topic_of_global_pcl" default="/rtabmap/cloud_map"/>
     <arg name="max_vel" value="1.0" />
     <arg name="max_acc" value="0.5" />
@@ -119,15 +124,19 @@
     <node pkg="prometheus_plan_manage" name="traj_server" type="traj_server" output="log">
     </node>
 
-    <!-- 规划 mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
+	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
-        <param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
+		<param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
 	</node>
 
-	<!-- run the rviz -->
+	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <!-- obstacle.world 真实点云 -->
+        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
+	    </node>
     </group>
 </launch>
 
