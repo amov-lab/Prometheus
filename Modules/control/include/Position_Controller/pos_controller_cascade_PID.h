@@ -39,22 +39,22 @@ class pos_controller_cascade_PID
         pos_controller_cascade_PID(void):
             pos_cascade_pid_nh("~")
         {
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Kp_xy", Kp_xy, 1.0);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Kp_z", Kp_z, 1.0);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Kp_vxvy", Kp_vxvy, 0.1);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Kp_vz", Kp_vz, 0.1);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Ki_vxvy", Ki_vxvy, 0.02);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Ki_vz", Ki_vz, 0.02);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Kd_vxvy", Kd_vxvy, 0.01);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Kd_vz", Kd_vz, 0.01);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/Hover_throttle", Hover_throttle, 0.5);
-            pos_cascade_pid_nh.param<float>("Pos_cascade_pid/MPC_VELD_LP", MPC_VELD_LP, 5.0);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Kp_xy", Kp_xy, 0.8);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Kp_z", Kp_z, 1.0);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Kp_vxvy", Kp_vxvy, 0.2);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Kp_vz", Kp_vz, 0.4);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Ki_vxvy", Ki_vxvy, 0.02);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Ki_vz", Ki_vz, 0.15);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Kd_vxvy", Kd_vxvy, 0.016);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Kd_vz", Kd_vz, 0.00);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/Hover_throttle", Hover_throttle, 0.43);
+            pos_cascade_pid_nh.param<float>("/Pos_cascade_pid/MPC_VELD_LP", MPC_VELD_LP, 5.0);
 
-            pos_cascade_pid_nh.param<float>("Limit/XY_VEL_MAX", MPC_XY_VEL_MAX, 1.0);
-            pos_cascade_pid_nh.param<float>("Limit/Z_VEL_MAX", MPC_Z_VEL_MAX, 0.5);
-            pos_cascade_pid_nh.param<float>("Limit/THR_MIN", MPC_THR_MIN, 0.1);
-            pos_cascade_pid_nh.param<float>("Limit/THR_MAX", MPC_THR_MAX, 0.9);
-            pos_cascade_pid_nh.param<float>("Limit/tilt_max", tilt_max, 5.0);
+            pos_cascade_pid_nh.param<float>("/Limit/XY_VEL_MAX", MPC_XY_VEL_MAX, 2.0);
+            pos_cascade_pid_nh.param<float>("/Limit/Z_VEL_MAX", MPC_Z_VEL_MAX, 0.5);
+            pos_cascade_pid_nh.param<float>("/Limit/THR_MIN", MPC_THR_MIN, 0.1);
+            pos_cascade_pid_nh.param<float>("/Limit/THR_MAX", MPC_THR_MAX, 0.9);
+            pos_cascade_pid_nh.param<float>("/Limit/tilt_max", tilt_max, 20.0);
 
             vel_setpoint    = Eigen::Vector3d(0.0,0.0,0.0);
             thrust_sp       = Eigen::Vector3d(0.0,0.0,0.0);
@@ -64,6 +64,7 @@ class pos_controller_cascade_PID
             error_vel_dot_last  = Eigen::Vector3d(0.0,0.0,0.0);
             error_vel_last      = Eigen::Vector3d(0.0,0.0,0.0);
             delta_time      = 0.02;
+            printf_param();
         }
 
         //PID parameter for the control law

@@ -1,5 +1,0 @@
-<launch>
-	<node pkg="prometheus_mission" type="object_tracking" name="object_tracking" output="screen">
-			<rosparam command="load" file="$(find prometheus_mission)/object_tracking/object_tracking.yaml" />
-	</node>
-</launch>
