@@ -71,7 +71,7 @@ void global_planner_cmd_cb(const nav_msgs::Path::ConstPtr& msg)
     //当距离目标点大于一定距离时,不需要从第一个航点开始跟随
     if(A_star.Num_total_wp > 5)
     {
-        A_star.wp_id = 4;
+        A_star.wp_id = 5;
     }
 }
 void stop_cmd_cb(const std_msgs::Int8::ConstPtr& msg)
@@ -247,10 +247,10 @@ void APF_planner()
     if (control_yaw_flag)
     {
         // 根据速度大小决定是否更新期望偏航角， 更新采用平滑滤波的方式，系数可调
-        if( sqrt(APF.desired_vel.x*APF.desired_vel.x + APF.desired_vel.y*APF.desired_vel.y)  >  0.1   )
+        if( sqrt(APF.desired_vel.x*APF.desired_vel.x + APF.desired_vel.y*APF.desired_vel.y)  >  0.15  )
         {
             float next_desired_yaw = atan2(APF.desired_vel.y, APF.desired_vel.x);
-            desired_yaw = (0.8*desired_yaw + 0.2*next_desired_yaw);
+            desired_yaw = (0.95*desired_yaw + 0.05*next_desired_yaw);
         }
     }else
     {
@@ -288,7 +288,13 @@ void A_star_planner()
             // 更新的话加滤波平滑期望航向角
             float next_desired_yaw = atan2(A_star.path_cmd.poses[A_star.wp_id].pose.position.y - _DroneState.position[1], 
                                             A_star.path_cmd.poses[A_star.wp_id].pose.position.x - _DroneState.position[0]);
-            desired_yaw = (0.7*desired_yaw + 0.3*next_desired_yaw);
+
+            if(abs(next_desired_yaw)>1.3)
+            {
+                next_desired_yaw = next_desired_yaw/2;
+            }
+
+            desired_yaw = (0.8*desired_yaw + 0.2*next_desired_yaw);
         }else
         {
             desired_yaw = 0.0;
