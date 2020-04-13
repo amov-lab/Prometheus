@@ -173,10 +173,10 @@ int main(int argc, char **argv)
     Takeoff_position[1] = _DroneState.position[1];
     Takeoff_position[2] = _DroneState.position[2];
     // NE控制律需要设置起飞初始值
-    //if(controller_number == 4)
-    //{
-    //    pos_controller_ne.set_initial_pos(Takeoff_position);
-    //}
+    if(controller_number == 4)
+    {
+       pos_controller_ne.set_initial_pos(Takeoff_position);
+    }
 
 
     // 初始化命令-
@@ -374,7 +374,15 @@ int main(int argc, char **argv)
             //选择控制器
             if(controller_number == 0)
             {
-                _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                //轨迹追踪控制,直接改为PID控制器
+                if(Command_Now.Reference_State.Move_mode != prometheus_msgs::PositionReference::TRAJECTORY)
+                {
+                    _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                }else
+                {
+                    _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                }
+                
             }else if(controller_number == 1)
             {
                 _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
