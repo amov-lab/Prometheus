@@ -39,7 +39,7 @@
 		<!-- 地面安全高度，小于该高度，会产生向上推力 -->
 		<param name="apf/ground_safe_height" value="0.3" type="double"/>
 		<!-- 停止距离，小于该距离，停止自动飞行 -->
-		<param name="apf/safe_distance" value="0.1" type="double"/>
+		<param name="apf/safe_distance" value="0.01" type="double"/>
 	</node>	
 
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
