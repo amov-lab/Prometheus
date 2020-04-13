@@ -355,10 +355,27 @@ void Fast_planner()
 {
     if (control_yaw_flag)
     {
-        float next_desired_yaw      = atan2( fast_planner.fast_planner_cmd.velocity_ref[1] , 
-                                            fast_planner.fast_planner_cmd.velocity_ref[0]);
+        // 根据速度大小决定是否更新期望偏航角， 更新采用平滑滤波的方式，系数可调
+        // fastplanner航向策略仍然可以进一步优化
+        if( sqrt(fast_planner.fast_planner_cmd.velocity_ref[1]*fast_planner.fast_planner_cmd.velocity_ref[1]
+                 + fast_planner.fast_planner_cmd.velocity_ref[0]*fast_planner.fast_planner_cmd.velocity_ref[0])  >  0.05  )
+        {
+            float next_desired_yaw_vel      = atan2( fast_planner.fast_planner_cmd.velocity_ref[1] , 
+                                                fast_planner.fast_planner_cmd.velocity_ref[0]);
+            float next_desired_yaw_pos      = atan2( fast_planner.fast_planner_cmd.position_ref[1] - _DroneState.position[1],
+                                                fast_planner.fast_planner_cmd.position_ref[0] - _DroneState.position[0]);
 
-        desired_yaw = (0.9*desired_yaw + 0.1*next_desired_yaw);
+            if(next_desired_yaw_pos > 0.8)
+            {
+                next_desired_yaw_pos = 0.8;
+            }
+            if(next_desired_yaw_pos < -0.8)
+            {
+                next_desired_yaw_pos = -0.8;
+            }
+
+            desired_yaw = (0.92*desired_yaw + 0.04*next_desired_yaw_pos + 0.04*next_desired_yaw_vel );
+        }
     }else
     {
         desired_yaw = 0.0;

@@ -1,3 +1,8 @@
+
+## 控制器编号: 0 for 串级PID, 1 for PID, 2 for UDE, 3 for passivity, 4 for NE
+px4_pos_controller:
+  controller_number: 1
+
 ## 位置环参数 - cascade pid
 ## 目前参数为PX4默认参数
 Pos_cascade_pid:
@@ -15,9 +20,9 @@ Pos_cascade_pid:
 
 ## 限制参数 
 Limit:
-  tilt_max: 5.0
+  tilt_max: 20.0
   XY_VEL_MAX : 1.0
-  Z_VEL_MAX : 0.5
+  Z_VEL_MAX : 1.0
   THR_MIN: 0.1
   THR_MAX: 0.9
   pxy_error_max: 10.0
@@ -30,12 +35,12 @@ Limit:
 
 ## 飞机参数
 Quad:
-  mass: 1.5
+  mass: 0.9
 
 # 位置环参数 - normal pid
 Pos_pid:
   Kp_xy : 2.5
-  Kp_z : 2.5
+  Kp_z : 2.0
   Ki_xy : 0.5
   Ki_z : 0.5
   Kd_xy : 3.0

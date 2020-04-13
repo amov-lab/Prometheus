@@ -46,7 +46,7 @@
         <param name="astar/lambda_heu" value="2.0" type="double"/>
         <!-- 分辨率 -->
         <param name="astar/resolution_astar" value="0.1" type="double"/>
-        <!-- 障碍物膨胀距离 -->
+        <!-- 障碍物膨胀距离,rgbd视场小,可以适当增大膨胀距离,更加安全-->
         <param name="astar/inflate" value="0.55" type="double"/>
         <!-- 地图范围 -->
         <param name="map/map_size_x" value="30.0" type="double"/>
