@@ -1,7 +1,7 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
-    <arg name="y" default="-10.0"/>
+    <arg name="y" default="-9.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
@@ -35,11 +35,11 @@
         <remap from="/prometheus/planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- sdf map updating -->
         <param name="sdf_map/SDF_MODE" value="1" type="int"/>
-        <param name="sdf_map/origin_x" value="-8.0" type="double"/>
-        <param name="sdf_map/origin_y" value="-7.0" type="double"/>
+        <param name="sdf_map/origin_x" value="-10.0" type="double"/>
+        <param name="sdf_map/origin_y" value="-10.0" type="double"/>
         <param name="sdf_map/origin_z" value="0.0" type="double"/>
-        <param name="sdf_map/map_size_x" value="16.0" type="double"/>
-        <param name="sdf_map/map_size_y" value="14.0" type="double"/>
+        <param name="sdf_map/map_size_x" value="20.0" type="double"/>
+        <param name="sdf_map/map_size_y" value="20.0" type="double"/>
         <param name="sdf_map/map_size_z" value="5.0" type="double"/>
         <param name="sdf_map/resolution_sdf" value="0.2" type="double"/>
         <param name="sdf_map/ceil_height" value="3.5" type="double"/>
