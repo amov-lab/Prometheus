@@ -6,7 +6,7 @@ namespace local_planner
 void APF::set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr){
     local_map_ptr_ = local_map_ptr;
     ros::Time begin_load_point_cloud = ros::Time::now();
-    ROS_INFO("--- SDFMAP_GLOBAL: have pcl, begin ---");
+
     pcl::fromROSMsg(*local_map_ptr, latest_local_pcl_);
 
     begin_update_map = ros::Time::now();
@@ -38,16 +38,18 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     pcl::PointXYZ pt;
     Eigen::Vector3d p3d;
     ros::Time begin_collision = ros::Time::now();
-    // ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f,  obs_distance: %f, min_dist: %f", begin_collision.toSec()-begin_update_map.toSec(),obs_distance, min_dist);
     // ROS_INFO("point size: %d", latest_local_pcl_.points.size());
 
     // 引力
-    double dist_att = (goal - current_odom).norm();
+    Eigen::Vector3d odom2goal = goal - current_odom;
+    // 不考虑高度影响
+    odom2goal(2) = 0.0;
+    double dist_att = odom2goal.norm();
     if(dist_att > max_att_dist){
-        attractive_force = k_att * max_att_dist * (goal - current_odom)/dist_att;
+        attractive_force = k_att * max_att_dist * odom2goal/dist_att;
     }else
     {
-        attractive_force = k_att * (goal - current_odom);
+        attractive_force = k_att * odom2goal;
     }
 
     // 排斥力
@@ -56,6 +58,8 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
         pt = latest_local_pcl_.points[i];
         p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
+        // 不考虑高度的影响
+        p3d(2) = 0.0;
         
 
         Eigen::Matrix<double, 3,1> current_odom_local(0.0, 0,0);
@@ -125,6 +129,8 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     
     // 合力
     desired_vel = push_force + attractive_force;
+    // 处理高度
+    desired_vel(2) = 0.0;
     // 如果不安全的点超出，
     if(safe_cnt>5){
         local_planner_state = 2;  //成功规划，但是飞机不安全
