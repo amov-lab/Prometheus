@@ -81,15 +81,15 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
     int planner_state = apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
     static int fix_pub = 0;
-    if (fix_pub==int(1.0/0.05)){
+    if (fix_pub==int(2.0/0.05)){
         if(planner_state==2){
         // dangerous
-        replan.data = 1;
-        replan_cmd_Pub.publish(replan);
-    } else if(planner_state==1){
-        replan.data = 0;
-        replan_cmd_Pub.publish(replan);
-    }
+            replan.data = 1;
+            replan_cmd_Pub.publish(replan);
+        } else if(planner_state==1){
+            replan.data = 0;
+            replan_cmd_Pub.publish(replan);
+        }
         fix_pub = 0;
     }else{
         fix_pub++;
