@@ -14,7 +14,7 @@ void PlanningFSM::init(ros::NodeHandle& nh)
   nh.param("fsm/flight_type", flight_type_, -1);
   nh.param("fsm/thresh_replan", thresh_replan_, -1.0);
   nh.param("fsm/thresh_no_replan", thresh_no_replan_, -1.0);
-  nh.param("fsm/safety_distance", safety_distance, 0.3);
+  nh.param("fsm/safety_distance", safety_distance, 0.01);
 
   nh.param("fsm/wp_num", wp_num_, -1);
   for (int i = 0; i < wp_num_; i++)
