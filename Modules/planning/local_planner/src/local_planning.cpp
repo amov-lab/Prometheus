@@ -80,7 +80,9 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     apf_planner_ptr->set_odom(odom_);
 
     int planner_state = apf_planner_ptr->compute_force(end_pt_, start_pt_, desired_vel);
-    if(planner_state==2){
+    static int fix_pub = 0;
+    if (fix_pub==int(1.0/0.05)){
+        if(planner_state==2){
         // dangerous
         replan.data = 1;
         replan_cmd_Pub.publish(replan);
@@ -88,7 +90,11 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
         replan.data = 0;
         replan_cmd_Pub.publish(replan);
     }
-
+        fix_pub = 0;
+    }else{
+        fix_pub++;
+    }
+    
 
     if(desired_vel.norm() > max_planning_vel)
     {
@@ -113,6 +119,7 @@ void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel)
     px4_cmd.x = desired_vel(0);
     px4_cmd.y = desired_vel(1);
     px4_cmd.z = desired_vel(2);
+    // px4_cmd.z = 0.0; //高度通道不做控制
     px4_pos_cmd_pub.publish(px4_cmd);
 
     // 可视化
