@@ -192,7 +192,7 @@
           <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
           <frameName>/realsense_camera_link</frameName>
           <pointCloudCutoff>0.1</pointCloudCutoff>
-          <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+          <pointCloudCutoffMax>5.0</pointCloudCutoffMax>
           <distortionK1>0</distortionK1>
           <distortionK2>0</distortionK2>
           <distortionK3>0</distortionK3>

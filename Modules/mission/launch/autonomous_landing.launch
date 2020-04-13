@@ -1,5 +1,0 @@
-<launch>
-	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen">
-		<rosparam command="load" file="$(find prometheus_mission)/autonomous_landing/autonomous_landing.yaml" />
-	</node>
-</launch>

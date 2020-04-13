@@ -1,5 +1,0 @@
-<launch>
-	<node pkg="prometheus_mission" type="collision_avoidance" name="collision_avoidance" output="screen">
-		<rosparam command="load" file="$(find prometheus_mission)/collision_avoidance/collision_avoidance.yaml" />
-	</node>
-</launch>
