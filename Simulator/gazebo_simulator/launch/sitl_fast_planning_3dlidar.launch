@@ -25,7 +25,7 @@
         <remap from="cloud_in" to="/prometheus/sensors/3Dlidar_scan" />
     </node>
     
-    <!-- Fast Planner -->
+    <!-- 启动Fast Planner -->
     <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
     <arg name="max_vel" value="0.5" />
     <arg name="max_acc" value="0.2" />
@@ -113,15 +113,19 @@
     <node pkg="prometheus_plan_manage" name="traj_server" type="traj_server" output="log">
     </node>
 
-    <!-- 规划 mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为ture-->
+	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
-        <param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
+		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
 	</node>
 
-	<!-- run the rviz -->
+	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <!-- obstacle.world 真实点云 -->
+        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
+	    </node>
     </group>
 </launch>
 
