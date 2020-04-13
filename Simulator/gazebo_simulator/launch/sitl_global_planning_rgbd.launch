@@ -1,7 +1,7 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
-    <arg name="y" default="-5.0"/>
+    <arg name="y" default="-10.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
@@ -39,7 +39,7 @@
         <remap from="/prometheus/planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
         <!-- 停止距离 -->
-        <param name="planning/safe_distance" value="0.3" type="double"/>
+        <param name="planning/safe_distance" value="0.1" type="double"/>
         <!-- 最大搜索步数 -->
         <param name="astar/allocate_num" value="100000" type="int"/>
         <!-- 启发式函数系数 -->
@@ -47,7 +47,7 @@
         <!-- 分辨率 -->
         <param name="astar/resolution_astar" value="0.1" type="double"/>
         <!-- 障碍物膨胀距离 -->
-        <param name="astar/inflate" value="0.4" type="double"/>
+        <param name="astar/inflate" value="0.5" type="double"/>
         <!-- 地图范围 -->
         <param name="map/map_size_x" value="30.0" type="double"/>
         <param name="map/map_size_y" value="30.0" type="double"/>
