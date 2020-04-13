@@ -31,6 +31,7 @@
 #include <prometheus_control_utils.h>
 #include <Filter/LowPassFilter.h>
 
+#include <prometheus_msgs/Message.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/PositionReference.h>
@@ -60,9 +61,11 @@ prometheus_msgs::ControlCommand Command_Last;                     //无人机上
 prometheus_msgs::ControlOutput _ControlOutput;
 prometheus_msgs::AttitudeReference _AttitudeReference;           //位置控制器输出，即姿态环参考量
 prometheus_msgs::GroundStation _GroundStation;                   //用于发送至地面站及log的消息
+prometheus_msgs::Message message;
 
 ros::Publisher GS_pub;
 ros::Publisher ref_pose_pub;
+ros::Publisher message_pub;
 
 Eigen::Vector3d throttle_sp;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -106,6 +109,13 @@ void timerCallback(const ros::TimerEvent& e)
 {
     cout << "[px4_pos_controller]: " << "Program is running. "<<endl;
 }
+void timerCallback2(const ros::TimerEvent& e)
+{
+    message.header.stamp = ros::Time::now();
+    message.message_type = prometheus_msgs::Message::NORMAL;
+    message.content = "[px4_pos_controller]:Program is running. ";
+    message_pub.publish(message);
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -126,8 +136,13 @@ int main(int argc, char **argv)
     //【发布】参考位姿 RVIZ用，速度控制下无用
     ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/reference_pose", 10);
 
+    // 【发布】提示消息
+    message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message", 10);
+
     // 10秒定时打印，以确保程序在正确运行
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
+
+    ros::Timer timer2 = nh.createTimer(ros::Duration(5.0), timerCallback2);
 
     // 参数读取
     nh.param<int>("controller_number", controller_number, 0);
