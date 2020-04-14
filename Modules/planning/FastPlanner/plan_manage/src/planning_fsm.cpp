@@ -99,7 +99,11 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
   cout << "[waypointCallback]: Triggered!" << endl;
 
   if (msg->pose.position.z < 0.1)  // the minimal goal height 
+  { 
+    printf("the goal's height is to low (<0.1m)");
     return;
+  }
+    
   trigger_ = true;
   double goal_x, goal_y, goal_z;
 
@@ -113,7 +117,7 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
     // end_pt_ << msg->pose.position.x, msg->pose.position.y, 1.0;
     // if (msg->pose.position.z < 0.3) goal_z = 0.3;
     // if (msg->pose.position.z > 3.5) goal_z = 3.5;
-    goal_z = conf(msg->pose.position.z, 0.3, 3.5);
+    goal_z = conf(msg->pose.position.z, 1.0, 3.0);
     end_pt_ << msg->pose.position.x, msg->pose.position.y, goal_z;
   }
   else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)

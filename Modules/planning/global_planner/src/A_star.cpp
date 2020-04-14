@@ -56,7 +56,7 @@ std::vector<Eigen::Vector3d> Astar::getPath()
 int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 {
   /* ---------- initialize ---------- */
-  printf("[A starr search]-------- \n");
+  // printf("[A starr search]-------- \n");
   NodePtr cur_node = path_node_pool_[0];
   cur_node->parent = NULL;
   cur_node->position = start_pt;
@@ -69,7 +69,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
   Eigen::Vector3i end_index;
   double time_to_goal;
   if(Occupy_map_ptr->getOccupancy(end_pt)){
-      printf("Astar search:  end point is occupied, pls reset the goal~\n");
+      // printf("Astar search:  end point is occupied, pls reset the goal~\n");
       return NO_PATH;
   }
   goal_pos = end_pt;
@@ -100,7 +100,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 
     if (reach_end)
     {
-      std::cout << "[Astar]:---------------------- " << use_node_num_ << std::endl;
+      // std::cout << "[Astar]:---------------------- " << use_node_num_ << std::endl;
       // cout << "use node num: " << use_node_num_ << endl;
       // cout << "iter num: " << iter_num_ << endl;
 
@@ -109,7 +109,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
       retrievePath(terminate_node);
       has_path_ = true;
       
-      printf("a star take time  %f \n", (ros::Time::now()-time_astar_start).toSec());
+      // printf("a star take time  %f \n", (ros::Time::now()-time_astar_start).toSec());
       return REACH_END;
     }
 
@@ -357,8 +357,8 @@ void Astar::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point
     Occupy_map_ptr->inflate_point_cloud();
     origin_ =  Occupy_map_ptr->origin_;
     map_size_3d_ = Occupy_map_ptr->map_size_3d_;
-    printf("map origin: [%f, %f, %f], map size: [%f, %f, %f]\n", origin_(0), origin_(1),origin_(2), 
-                                                                                map_size_3d_(0), map_size_3d_(1), map_size_3d_(2));
+    // printf("map origin: [%f, %f, %f], map size: [%f, %f, %f]\n", origin_(0), origin_(1),origin_(2), 
+    //                                                                             map_size_3d_(0), map_size_3d_(1), map_size_3d_(2));
 
 }
 

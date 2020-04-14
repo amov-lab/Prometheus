@@ -61,7 +61,7 @@ void Occupy_map::inflate_point_cloud(void){
     pcl::PointCloud<pcl::PointXYZ> cloud_inflate_vis_;
     cloud_inflate_vis_.clear();
 
-     printf("point size: %d, ifn_num: %d\n", latest_global_cloud_.points.size(), ifn);
+    //  printf("point size: %d, ifn_num: %d\n", latest_global_cloud_.points.size(), ifn);
 
     for (size_t i = 0; i < latest_global_cloud_.points.size(); ++i) {
         pt = latest_global_cloud_.points[i];
@@ -110,7 +110,7 @@ void Occupy_map::inflate_point_cloud(void){
             }
     }
 
-    printf("inflate global point take %f.\n",   (ros::Time::now()-time_start).toSec());
+    // printf("inflate global point take %f.\n",   (ros::Time::now()-time_start).toSec());
 }
 
 

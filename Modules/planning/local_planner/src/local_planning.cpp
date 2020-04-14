@@ -52,29 +52,44 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
 
 void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
+    static int exect_num=0;
+    exect_num++;
 
-    // if(!trigger_)
-    // {
-    //     printf("don't trigger!\n");
-    //     return;
-    // }
+    if(exect_num==19){
+        if(!have_odom_){
+            printf("don't have odometry!\n");
+            // return;
+        }
+            
+        if(!has_point_map_)
+        {
+            printf("don't have point cloud! \n");
+            // return;
+        }
+        if(!have_goal_){
+            printf("*** wait goal!*** \n");
+            // return;
+        }
+        exect_num=0;
+    }
 
     if(!have_odom_){
-        printf("don't have odometry!\n");
+        // printf("don't have odometry!\n");
         return;
     }
         
     if(!has_point_map_)
     {
-        printf("don't have point cloud! \n");
-        return;
-    }
-    if(!have_goal_){
-        printf("*** wait goal!*** \n");
+        // printf("don't have point cloud! \n");
         return;
     }
 
-    printf("begin  apf \n");
+    if(!have_goal_){
+        // printf("*** wait goal!*** \n");
+        return;
+    }
+    
+    // printf("begin  apf \n");
     apf_planner_ptr->set_local_map(local_map_ptr_);
     
     apf_planner_ptr->set_odom(odom_);
@@ -100,13 +115,17 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     {
         desired_vel = desired_vel / desired_vel.norm() * max_planning_vel;  // the max velocity is max_planning_vel
     }
-    printf("desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+    if(exect_num==10){
+        printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+        exect_num=0;
+    }
+    
     // 发布控制指令
     generate_cmd(desired_vel);
     control_time = ros::Time::now();
     // pos_cmd_pub.publish(cmd);
     if((end_pt_-start_pt_).norm() < 0.05){
-        printf("reach the goal!\n");
+        // printf("reach the goal!\n");
     }
 
     // visualization_->drawPath(kino_path, 0.1, Eigen::Vector4d(1, 0, 0, 1));  // red
@@ -128,7 +147,7 @@ void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel)
 
 //  the goal is in the world frame. 
 void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg){
-    cout << "[waypointCallback]: Triggered!" << endl;
+    // cout << "[waypointCallback]: Triggered!" << endl;
 
     if (msg->pose.position.z < 0.1)  // the minimal goal height 
         return;
@@ -174,7 +193,7 @@ void PotentialFiledPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
 void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg){
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
-        ROS_INFO("local point cloud: --- no odom!---");
+        // ROS_INFO("local point cloud: --- no odom!---");
         return;
     }
     // printf("receive the local point cloud\n");

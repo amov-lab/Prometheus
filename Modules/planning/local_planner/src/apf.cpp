@@ -118,14 +118,14 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     push_force = rotation_mat_local_to_global * push_force; 
 
     if(uav_height<ground_safe_height){
-            printf("[compute_force]: near the ground, the height%f \n", uav_height);
+            // printf("[compute_force]: near the ground, the height%f \n", uav_height);
             push_force = push_force + Eigen::Matrix<double, 3, 1>(0, 0, (ground_safe_height-uav_height)*3.0);
     }
 
     push_force = push_force;
 
-    ROS_INFO("push force: [%f, %f, %f], attractive force: [%f, %f, %f], obs size: %d, obs_dis: %f, k_push: %f", push_force(0), push_force(1), 
-    push_force(2), attractive_force(0), attractive_force(1), attractive_force(2), obstacles.size(), obs_distance, k_push);
+    // ROS_INFO("push force: [%f, %f, %f], attractive force: [%f, %f, %f], obs size: %d, obs_dis: %f, k_push: %f", push_force(0), push_force(1), 
+    // push_force(2), attractive_force(0), attractive_force(1), attractive_force(2), obstacles.size(), obs_distance, k_push);
     
     // 合力
     desired_vel = push_force + attractive_force;

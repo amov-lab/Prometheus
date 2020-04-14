@@ -97,8 +97,7 @@ namespace dyn_planner {
         double dist = location_sdf_query.first;
 
         if(dist < 0)
-          cout << "pos:" << pos << "dist:" << dist  << endl;
-
+        //   cout << "pos:" << pos << "dist:" << dist  << endl;
         return dist;
     }
 
