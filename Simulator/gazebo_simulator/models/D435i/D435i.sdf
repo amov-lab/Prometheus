@@ -123,6 +123,22 @@
         <update_rate>60</update_rate>
         <visualize>0</visualize>
         <!-- 这个插件用于深度转局部点云，实际运行中，D435i可直出局部点云 -->
+        <!-- <plugin name="camera_plugin" filename="libgazebo_ros_depth_camera.so">
+            <alwaysOn>true</alwaysOn>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+	          <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
+            <updateRate>20.0</updateRate>
+            <cameraName>realsense_d435i</cameraName>
+            <frameName>/realsense_camera_link</frameName>
+            <hackBaseline>0</hackBaseline>
+            <focalLength>639.997649</focalLength>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+        </plugin> -->
         <!-- <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
           <baseline>0.2</baseline>
           <alwaysOn>true</alwaysOn>
@@ -135,7 +151,7 @@
           <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
           <frameName>/realsense_camera_link</frameName>
           <pointCloudCutoff>0.1</pointCloudCutoff>
-          <pointCloudCutoffMax>5.0</pointCloudCutoffMax>
+          <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
           <distortionK1>0</distortionK1>
           <distortionK2>0</distortionK2>
           <distortionK3>0</distortionK3>
