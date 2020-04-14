@@ -1,4 +1,5 @@
 <launch>
+	<!-- 该demo有bug,暂未修复,请勿使用 -->
     <!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
     <arg name="y" default="-10.0"/>
@@ -29,7 +30,7 @@
 		<!-- 最大速度，设的越小越安全 -->
 		<param name="planning/max_planning_vel" value="0.3" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
-		<param name="apf/inflate_distance" value="0.4" type="double"/>
+		<param name="apf/inflate_distance" value="0.5" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
 		<param name="apf/obs_distance" value="5.0" type="double"/>  
 		<!-- 增益 -->
