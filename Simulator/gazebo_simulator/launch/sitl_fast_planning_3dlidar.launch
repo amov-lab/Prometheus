@@ -1,4 +1,7 @@
 <launch>
+    <!-- 读取控制器参数,fastplanner为轨迹追踪控制 -->
+	<rosparam command="load" file="$(find prometheus_control)/config/control_parameter.yaml"/>
+
     <!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
     <arg name="y" default="-10.0"/>
@@ -26,9 +29,10 @@
     </node>
     
     <!-- 启动Fast Planner -->
+    <!-- 参数较多，请耐心阅读文档，并进行调试设置 -->
     <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
-    <arg name="max_vel" value="0.5" />
-    <arg name="max_acc" value="0.2" />
+    <arg name="max_vel" value="1.0" />
+    <arg name="max_acc" value="0.5" />
     <arg name="dynamic" value="0" />
     <arg name="pcd_file" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
     <node pkg="prometheus_plan_manage" name="dyn_planner_node" type="dyn_planner_node" output="screen">
@@ -38,8 +42,8 @@
         <param name="sdf_map/origin_x" value="-11.0" type="double"/>
         <param name="sdf_map/origin_y" value="-11.0" type="double"/>
         <param name="sdf_map/origin_z" value="0.0" type="double"/>
-        <param name="sdf_map/map_size_x" value="22.0" type="double"/>
-        <param name="sdf_map/map_size_y" value="22.0" type="double"/>
+        <param name="sdf_map/map_size_x" value="25.0" type="double"/>
+        <param name="sdf_map/map_size_y" value="25.0" type="double"/>
         <param name="sdf_map/map_size_z" value="5.0" type="double"/>
         <param name="sdf_map/resolution_sdf" value="0.2" type="double"/>
         <param name="sdf_map/ceil_height" value="3.5" type="double"/>

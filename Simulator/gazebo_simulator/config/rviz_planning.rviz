@@ -25,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -96,7 +96,7 @@ Visualization Manager:
           Axes Radius: 0.15000000596046448
           Class: rviz/Pose
           Color: 255; 25; 0
-          Enabled: false
+          Enabled: true
           Head Length: 0.30000001192092896
           Head Radius: 0.10000000149011612
           Name: Reference_Pose
@@ -105,7 +105,7 @@ Visualization Manager:
           Shape: Axes
           Topic: /prometheus/reference_pose
           Unreliable: false
-          Value: false
+          Value: true
       Enabled: true
       Name: 无人机状态
     - Class: rviz/Group
@@ -448,5 +448,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1440
-  X: 2155
-  Y: 69
+  X: 2145
+  Y: 24
