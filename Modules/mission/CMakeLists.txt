@@ -91,6 +91,10 @@ add_executable(object_tracking object_tracking/object_tracking.cpp)
 add_dependencies(object_tracking prometheus_mission_gencpp)
 target_link_libraries(object_tracking ${catkin_LIBRARIES})
 
+add_executable(indoor_competition indoor_competition/indoor_competition.cpp)
+add_dependencies(indoor_competition prometheus_mission_gencpp)
+target_link_libraries(indoor_competition ${catkin_LIBRARIES})
+
 add_executable(fake_detectioninfo test/fake_detectioninfo.cpp)
 add_dependencies(fake_detectioninfo prometheus_mission_gencpp)
 target_link_libraries(fake_detectioninfo ${catkin_LIBRARIES})

@@ -1,14 +1,12 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <world name="indoor_competition">
-    <!-- A global light source -->
-    <include>
-      <uri>model://sun</uri>
-    </include>
-    <!-- A ground plane -->
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
+    <!-- 全向无影子光源 -->
+    <light type="directional" name="point_light">
+      <pose>0 0 10 0 0 0</pose>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
     <!-- 初始视角 -->
     <gui fullscreen='0'>
       <camera name='user_camera'>
@@ -19,14 +17,14 @@
 
     <!-- 地面 -->
     <model name="logo_ground">
-      <pose>12 0 0.005 0 0 1.57</pose>
+      <pose>8 0 0.005 0 0 1.57</pose>
       <static>true</static>
       <link name="link">
         <visual name="visual">
           <cast_shadows>false</cast_shadows>
           <geometry>
             <box>
-              <size>6 30 0.01</size>
+              <size>6 40 0.01</size>
             </box>
           </geometry>
           <material>
@@ -40,11 +38,12 @@
       </link>
     </model>
 
+
     <!-- 地面标志 -->
     <model name="ground_marker">
       <static>true</static>
       <link name="takeoff_zone">
-        <pose>-2 0 0.01 0 0 0</pose>
+        <pose>-7 0 0.01 0 0 0</pose>
         <visual name="visual">
           <cast_shadows>false</cast_shadows>
           <geometry>
@@ -60,8 +59,25 @@
           </material>
         </visual>
       </link>
+      <link name="crossing_zone">
+        <pose>-2.5 0 0.01 0 0 0</pose>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>1 2 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://texture_amov/texture.material</uri>
+              <name>crossing_zone</name>
+            </script>
+          </material>
+        </visual>
+      </link>
       <link name="pillar_zone">
-        <pose>2 0 0.01 0 0 0</pose>
+        <pose>1.5 0 0.01 0 0 0</pose>
         <visual name="visual">
           <cast_shadows>false</cast_shadows>
           <geometry>
@@ -129,7 +145,7 @@
         </visual>
       </link>
       <link name="landing_zone">
-        <pose>24.5 0 0.01 0 0 0</pose>
+        <pose>23 0 0.01 0 0 0</pose>
         <visual name="visual">
           <cast_shadows>false</cast_shadows>
           <geometry>
@@ -145,6 +161,14 @@
           </material>
         </visual>
       </link>
+    </model>
+
+    <!-- 形状穿越区域 -->
+    <model name='gate'>
+      <include>
+        <uri>model://circle_gate</uri>
+	      <pose> -1 0 0.01 0 0 1.57</pose>
+      </include>
     </model>
 
     <!-- 柱子避障区域 -->
@@ -496,7 +520,7 @@
       <static>true</static>
       <include>
         <uri>model://landing_pad</uri>
-	      <pose> 23 0 0.01 0 0 0</pose>
+	      <pose> 25 0 0.01 0 0 0</pose>
       </include>
     </model>
 
@@ -505,7 +529,7 @@
       <!-- <pose frame=''>1 1.5 0 0 -0 0</pose> -->
       <static>true</static>
       <link name="wall_front_right">
-          <pose frame=''>1 -2 1 0 -0 1.57</pose>
+          <pose frame=''>-5 -2 1 0 -0 1.57</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
@@ -532,7 +556,7 @@
           </visual>
       </link>
       <link name="wall_front_left">
-          <pose frame=''>1 2 1 0 -0 1.57</pose>
+          <pose frame=''>-5 2 1 0 -0 1.57</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
@@ -559,7 +583,7 @@
           </visual>
       </link>
       <link name="wall_front_up">
-          <pose frame=''>1 0 2.5 0 -0 1.57</pose>
+          <pose frame=''>-5 0 2.5 0 -0 1.57</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
@@ -586,7 +610,7 @@
           </visual>
       </link>
       <link name="logo_left">
-        <pose>0.95 2 1.5 0 1.57 0</pose>
+        <pose>-5.05 2 1.5 0 1.57 0</pose>
         <visual name="visual">
           <cast_shadows>false</cast_shadows>
           <geometry>
@@ -603,7 +627,7 @@
         </visual>
       </link>
       <link name="logo_right">
-        <pose>0.95 -2 1.5 0 1.57 0</pose>
+        <pose>-5.05 -2 1.5 0 1.57 0</pose>
         <visual name="visual">
           <cast_shadows>false</cast_shadows>
           <geometry>
@@ -625,21 +649,21 @@
     <model name='wall_side'>
       <static>true</static>
       <link name="wall_side_left">
-          <pose frame=''>13 3 1.5 0 -0 0</pose>
+          <pose frame=''>11 3 1.5 0 -0 0</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
           <collision name="collision">
             <geometry>
               <box>
-                <size>24 0.1 3</size>
+                <size>32 0.1 3</size>
               </box>
             </geometry>
           </collision>
           <visual name="visual">
             <geometry>
               <box>
-                <size>24 0.1 3</size>
+                <size>32 0.1 3</size>
               </box>
             </geometry>
             <material>
@@ -652,21 +676,21 @@
           </visual>
       </link>
       <link name="wall_side_right">
-          <pose frame=''>13 -3 1.5 0 -0 0</pose>
+          <pose frame=''>11 -3 1.5 0 -0 0</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
           <collision name="collision">
             <geometry>
               <box>
-                <size>24 0.1 3</size>
+                <size>32 0.1 3</size>
               </box>
             </geometry>
           </collision>
           <visual name="visual">
             <geometry>
               <box>
-                <size>24 0.1 3</size>
+                <size>32 0.1 3</size>
               </box>
             </geometry>
             <material>
@@ -679,7 +703,7 @@
           </visual>
       </link>
       <link name="wall_side_back">
-          <pose frame=''>25 -0 1.5 0 -0 1.57</pose>
+          <pose frame=''>27 -0 1.5 0 -0 1.57</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
