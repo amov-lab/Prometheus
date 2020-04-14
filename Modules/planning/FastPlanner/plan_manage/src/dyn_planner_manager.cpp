@@ -132,7 +132,7 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
   Eigen::MatrixXd vel_acc;
 
   Eigen::MatrixXd samples = path_finder_->getSamples(ts, K);
-  cout << "[planner]: ts: " <<  ts << endl << " sample:\n" << samples.transpose() << endl;
+  // cout << "[planner]: ts: " <<  ts << endl << " sample:\n" << samples.transpose() << endl;
 
   t2 = ros::Time::now();
   t_sample = (t2 - t1).toSec();
@@ -196,7 +196,7 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
   // cout << "[Main]: iter num: " << iter_num << endl;
   pos.getTimeSpan(tm, tmp);
   tn = tmp - tm;
-  cout << "[planner]: Reallocate ratio: " << tn / to << endl;
+  // cout << "[planner]: Reallocate ratio: " << tn / to << endl;
 
   t2 = ros::Time::now();
   t_adjust = (t2 - t1).toSec();
@@ -209,8 +209,8 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
 
   double t_total = t_search + t_sample + t_axb + t_opt + t_adjust;
 
-  cout << "[planner]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_sample + t_axb + t_opt
-       << ", adjust time:" << t_adjust << endl;
+  // cout << "[planner]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_sample + t_axb + t_opt
+      //  << ", adjust time:" << t_adjust << endl;
 
   time_search_ = t_search;
   time_optimize_ = t_sample + t_axb + t_opt;

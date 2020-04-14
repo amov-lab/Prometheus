@@ -82,28 +82,42 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
 
 void GlobalPlanner::execCallback(const ros::TimerEvent& e){
         // execute A star
-    // if(!trigger_)
-    // {
-    //     printf("don't trigger!\n");
-    //     return;
-    // }
+    static int exec_num=0;
+    exec_num++;
+    if(exec_num==2){
+        if(!have_odom_){
+            printf("don't have odometry!\n");
+            // return;
+        }
+            
+        if(!has_point_map_)
+        {
+            printf("don't have point cloud! \n");
+            // return;
+        }
+        if(!have_goal_){
+            printf("*** wait goal!*** \n");
+            // return;
+        }
+        exec_num=0;
+    }
 
     if(!have_odom_){
-        printf("don't have odometry!\n");
+        // printf("don't have odometry!\n");
         return;
     }
         
     if(!has_point_map_)
     {
-        printf("don't have point cloud! \n");
+        // printf("don't have point cloud! \n");
         return;
     }
     if(!have_goal_){
-        printf("*** wait goal!*** \n");
+        // printf("*** wait goal!*** \n");
         return;
     }
 
-    printf("begin  astar !!\n");
+    // printf("begin  astar !!\n");
     Astar_ptr->reset();
     int astar_state = Astar_ptr->search(start_pt_, end_pt_);
     if(astar_state==Astar::NO_PATH){
@@ -142,7 +156,7 @@ geometry_msgs/PoseStamped[] poses
 */
     A_star_path_cmd.header.frame_id = "map";
     A_star_path_cmd.header.stamp = ros::Time::now();
-    printf("Path:  \n");
+    // printf("Path:  \n");
     A_star_path_cmd.poses.clear();
     for (int i=0; i<path.size(); ++i){
         geometry_msgs::PoseStamped path_i_pose;

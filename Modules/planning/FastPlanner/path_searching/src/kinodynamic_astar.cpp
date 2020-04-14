@@ -75,7 +75,7 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
 
     if (reach_horizon || near_end)
     {
-      cout << "[Kino Astar]: used node num: " << use_node_num_ << ", iter num: " << iter_num_ << endl;
+      // cout << "[Kino Astar]: used node num: " << use_node_num_ << ", iter num: " << iter_num_ << endl;
       terminate_node = cur_node;
       retrievePath(terminate_node);
       has_path_ = true;
@@ -303,8 +303,8 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
 
   /* ---------- open set empty, no path ---------- */
   cout << "open set empty, no path!" << endl;
-  cout << "use node num: " << use_node_num_ << endl;
-  cout << "iter num: " << iter_num_ << endl;
+  // cout << "use node num: " << use_node_num_ << endl;
+  // cout << "iter num: " << iter_num_ << endl;
   return NO_PATH;
 }
 
