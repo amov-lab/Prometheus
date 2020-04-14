@@ -14,23 +14,6 @@
           <izz>2.407e-6</izz>
           </inertia>
         </inertial>
-        <collision name='collision'>
-          <geometry>
-            <box>
-              <size>0.01 0.01 0.01</size>
-            </box>
-          </geometry>
-          <max_contacts>10</max_contacts>
-          <surface>
-            <contact>
-              <ode/>
-            </contact>
-            <bounce/>
-            <friction>
-              <ode/>
-            </friction>
-          </surface>
-        </collision>
         <visual name='visual'>
           <geometry>
             <box>
