@@ -3,14 +3,19 @@
   <world name="indoor_competition">
     <!-- 全向无影子光源 -->
     <light type="directional" name="point_light">
-      <pose>0 0 10 0 0 0</pose>
+      <pose>0.0 0 15 0 0 0</pose>
       <cast_shadows>false</cast_shadows>
     </light>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
 
     <!-- 初始视角 -->
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>11.0 0.0 52.0 0 1.57 0</pose>
+        <pose>-13.0 0.0 1.0 0 0.0 0.0</pose>
         <view_controller>orbit</view_controller>
       </camera>
     </gui>
