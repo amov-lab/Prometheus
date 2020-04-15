@@ -48,7 +48,7 @@ void tracking();
 void crossing();
 void return_start_point();
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr& msg)
+void ellipse_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr& msg)
 {
     Detection_info = *msg;
     pos_body_frame[0] = Detection_info.position[2] + camera_offset[0];
@@ -72,11 +72,16 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "indoor_competition");
     ros::NodeHandle nh("~");
     
-    //【订阅】图像识别结果，返回的结果为相机坐标系
-    //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
-    //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
+    //【订阅】椭圆识别结果,用于形状穿越
+    ros::Subscriber ellipse_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/ellipse_det", 10, ellipse_det_cb);
 
+    //ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10, landpad_det_cb);
+
+    //ros::Subscriber num_det_sub = nh.subscribe<prometheus_msgs::MultiDetectionInfo>("/prometheus/object_detection/num_det", 10, num_det_cb);
+
+    //ros::Subscriber color_line_sub = nh.subscribe<geometry_msgs::Pose>("/prometheus/object_detection/color_line_angle", 10, color_line_cb);
+
+    //ros::Subscriber local_planner_sub  =    nh.subscribe<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 50, local_planner_cmd_cb);
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
     
