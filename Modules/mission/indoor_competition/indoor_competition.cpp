@@ -25,6 +25,11 @@ using namespace std;
 
 #define TEST 6
 
+#define FRONT_CAMERA_OFFSET_X 0.2
+#define FRONT_CAMERA_OFFSET_Y 0.0
+#define FRONT_CAMERA_OFFSET_Z -0.05
+
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 Eigen::Vector3f start_point;
 

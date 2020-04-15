@@ -7,7 +7,7 @@
  *      1. 【订阅】图像话题 (默认来自web_cam)
  *         /prometheus/camera/rgb/image_raw
  *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
- *         /prometheus/target
+ *         /prometheus/object_detection/landpad_det
  *      3. 【发布】检测结果的可视化图像话题
  *         /prometheus/camera/rgb/image_landpad_det
 ***************************************************************************************************************************/
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
         camera_info = "camera_param.yaml";
     }
 
-    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 10);
+    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10);
 
     // 接收图像的话题
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);

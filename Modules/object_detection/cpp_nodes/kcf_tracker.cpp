@@ -7,7 +7,7 @@
  *      1. 【订阅】图像话题 (默认来自web_cam)
  *         /prometheus/camera/rgb/image_raw
  *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
- *         /prometheus/target
+ *         /prometheus/object_detection/kcf_tracker
 ***************************************************************************************************************************/
 #include <math.h>
 #include <string>
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     imageSubscriber_ = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
 
     // 跟踪结果，xyz
-    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/kcf_tracker", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
 
