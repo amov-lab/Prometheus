@@ -57,7 +57,7 @@ prometheus_msgs::DroneState _DroneState;                                   //无
 Eigen::Matrix3f R_Body_to_ENU;
 
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
-ros::Publisher command_pub,goal_pub;
+ros::Publisher command_pub,goal_pub,local_planner_switch_pub;
 // 状态机
 int State_Machine = 0;
 float kpx_circle_track,kpy_circle_track,kpz_circle_track;                   //控制参数 - 比例参数
@@ -162,6 +162,8 @@ int main(int argc, char **argv)
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 10);
+
+    local_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/local_planner/switch", 10);
 
 
     nh.param<float>("kpx_circle_track", kpx_circle_track, 0.1);

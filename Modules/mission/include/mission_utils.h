@@ -29,6 +29,7 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <sensor_msgs/Imu.h>
+#include <std_msgs/Bool.h>
 
 using namespace std;
 
