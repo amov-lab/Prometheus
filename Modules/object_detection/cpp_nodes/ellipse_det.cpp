@@ -399,8 +399,8 @@ int main(int argc, char **argv)
                     last_y = real_y;
                     last_z = depth;
 
-                    cout << "flag_detected: " << int(pose_now.detected) <<endl;
-                    cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+                    //cout << "flag_detected: " << int(pose_now.detected) <<endl;
+                    //cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
                     ells_copy.push_back(e);
                 }
@@ -437,8 +437,8 @@ int main(int argc, char **argv)
             last_y = real_y;
             last_z = depth;
 
-            cout << "flag_detected: " << int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+            //cout << "flag_detected: " << int(pose_now.detected) <<endl;
+            //cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
             ells_copy.push_back(e);
         }
@@ -459,8 +459,8 @@ int main(int argc, char **argv)
             pose_now.position[2] = last_z;
             pose_pub.publish(pose_now);
 
-            cout << "flag_detected: " << int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+            //cout << "flag_detected: " << int(pose_now.detected) <<endl;
+            //cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
         }
 #ifdef ELLIPSE_PUB
