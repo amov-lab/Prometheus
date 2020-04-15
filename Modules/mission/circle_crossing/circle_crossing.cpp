@@ -22,6 +22,10 @@
 #include <math.h>
 using namespace std;
 
+#define FRONT_CAMERA_OFFSET_X 0.2
+#define FRONT_CAMERA_OFFSET_Y 0.0
+#define FRONT_CAMERA_OFFSET_Z -0.05
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::DetectionInfo Detection_info;
 Eigen::Vector3f pos_body_frame;        //机体系
@@ -31,7 +35,6 @@ prometheus_msgs::DroneState _DroneState;                                   //无
 ros::Publisher command_pub;
 int State_Machine = 0;
 float kpx_track,kpy_track,kpz_track;                                                 //控制参数 - 比例参数
-Eigen::Vector3f camera_offset;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void tracking();
 void crossing();
@@ -40,9 +43,9 @@ void return_start_point();
 void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr& msg)
 {
     Detection_info = *msg;
-    pos_body_frame[0] = Detection_info.position[2] + camera_offset[0];
-    pos_body_frame[1] = - Detection_info.position[0] + camera_offset[1];
-    pos_body_frame[2] = - Detection_info.position[1] + camera_offset[2];
+    pos_body_frame[0] =   Detection_info.position[2] + FRONT_CAMERA_OFFSET_X;
+    pos_body_frame[1] = - Detection_info.position[0] + FRONT_CAMERA_OFFSET_Y;
+    pos_body_frame[2] = - Detection_info.position[1] + FRONT_CAMERA_OFFSET_Z;
 
     Eigen::Matrix3f R_Body_to_ENU;
 
@@ -64,7 +67,7 @@ int main(int argc, char **argv)
     //【订阅】图像识别结果，返回的结果为相机坐标系
     //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
+    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/ellipse_det", 10, vision_cb);
 
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
@@ -75,10 +78,6 @@ int main(int argc, char **argv)
     nh.param<float>("kpx_track", kpx_track, 0.1);
     nh.param<float>("kpy_track", kpy_track, 0.1);
     nh.param<float>("kpz_track", kpz_track, 0.1);
-
-    nh.param<float>("camera_offset_x", camera_offset[0], 0.0);
-    nh.param<float>("camera_offset_y", camera_offset[1], 0.0);
-    nh.param<float>("camera_offset_z", camera_offset[2], 0.0);
 
     //固定的浮点显示
     cout.setf(ios::fixed);

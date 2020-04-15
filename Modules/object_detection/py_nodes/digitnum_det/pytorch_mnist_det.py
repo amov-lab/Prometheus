@@ -24,7 +24,7 @@ distortion_coefficients = np.zeros((5,), np.float32)
 digitnum_det_len = 1.0
 
 rospy.init_node('num_det', anonymous=True)
-pub = rospy.Publisher('/prometheus/target', MultiDetectionInfo, queue_size=10)
+pub = rospy.Publisher('/prometheus/object_detection/num_det', MultiDetectionInfo, queue_size=10)
 
 
 # load LeNet model trained on mnist dataset
