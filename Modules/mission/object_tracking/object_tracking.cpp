@@ -103,9 +103,9 @@ int main(int argc, char **argv)
     // 【订阅】视觉消息 来自视觉节点
     //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    // 注意这里为了复用程序使用了/prometheus/target作为话题名字，适用于椭圆、二维码、yolo等视觉算法
+    // 注意这里为了复用程序使用了/prometheus/object_detection/kcf_tracker作为话题名字，适用于椭圆、二维码、yolo等视觉算法
     // 故同时只能运行一种视觉识别程序，如果想同时追踪多个目标，这里请修改接口话题的名字
-    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
+    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/kcf_tracker", 10, vision_cb);
 
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 

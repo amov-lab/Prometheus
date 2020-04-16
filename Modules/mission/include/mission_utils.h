@@ -15,7 +15,81 @@
 #include <Eigen/Eigen>
 #include <math.h>
 
+//topic 头文件
+#include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/DetectionInfo.h>
+#include <prometheus_msgs/MultiDetectionInfo.h>
+#include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_msgs/Message.h>
+#include <mavros_msgs/ActuatorControl.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
+#include <sensor_msgs/Imu.h>
+#include <std_msgs/Bool.h>
+
 using namespace std;
+
+#define DIS_THRES 0.1
+#define VISION_THRES 10
+
+//相机安装OFFSET
+#define FRONT_CAMERA_OFFSET_X 0.2
+#define FRONT_CAMERA_OFFSET_Y 0.0
+#define FRONT_CAMERA_OFFSET_Z -0.05
+
+#define DOWN_CAMERA_OFFSET_X 0.0
+#define DOWN_CAMERA_OFFSET_Y 0.0
+#define DOWN_CAMERA_OFFSET_Z -0.1
+
+
+// 定义视觉检测结构体
+struct Detection_result
+{
+    string object_name;
+    // 视觉检测原始信息，返回的结果为相机坐标系
+    // 方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
+    // 标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
+    prometheus_msgs::DetectionInfo Detection_info;      
+    // 目标在机体系位置
+    Eigen::Vector3f pos_body_frame;   
+    // 目标在机体-惯性系位置 (原点位于质心，x轴指向前方，y轴指向左，z轴指向上的坐标系)
+    Eigen::Vector3f pos_body_enu_frame;  
+    // 目标在惯性系位置 (原点位于起飞点，x轴指向前方，y轴指向左，z轴指向上的坐标系)
+    Eigen::Vector3f pos_enu_frame; 
+    // 目标在机体系姿态
+    Eigen::Vector3f att_body_frame;
+    // 目标在惯性系姿态
+    Eigen::Vector3f att_enu_frame;
+    // 目标识别标志位,阈值:VISION_THRES
+    bool is_detected = false; 
+    int num_lost = 0;          //视觉丢失计数器
+    int num_regain = 0;     
+};
+
+
+//打印视觉检测消息
+void printf_detection_result(const struct Detection_result& det_info)
+{
+    cout << "Object_name    : " << det_info.object_name <<  endl;
+    if(det_info.is_detected)
+    {
+    cout << "is_detected    : " << "True" <<  endl;
+    }else
+    {
+    cout << "is_detected    : " << "False" <<  endl;
+    }
+    cout << "Camera_frame   : " << det_info.Detection_info.position[0] << " [m] "<< det_info.Detection_info.position[1] << " [m] "<< det_info.Detection_info.position[2] << " [m] "<<endl;
+    cout << "Body_frame     : " << det_info.pos_body_frame[0] << " [m] "<< det_info.pos_body_frame[1] << " [m] "<< det_info.pos_body_frame[2] << " [m] "<<endl;
+    cout << "BodyENU_frame  : " << det_info.pos_body_enu_frame[0] << " [m] "<< det_info.pos_body_enu_frame[1] << " [m] "<< det_info.pos_body_enu_frame[2] << " [m] "<<endl;
+    cout << "ENU_frame      : " << det_info.pos_enu_frame[0] << " [m] "<< det_info.pos_enu_frame[1] << " [m] "<< det_info.pos_enu_frame[2] << " [m] "<<endl;
+
+}
+    
+
 
 float cal_distance(const Eigen::Vector3f& pos_drone,const Eigen::Vector3f& pos_target)
 {

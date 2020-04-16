@@ -37,7 +37,7 @@ prometheus_msgs::ControlCommand Command_Now;                               //发
 void printf_param();                                                                 //打印各项参数以供检查
 void printf_result();
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void vision_cb(const geometry_msgs::Pose::ConstPtr &msg)
+void color_line_cb(const geometry_msgs::Pose::ConstPtr &msg)
 {
     error_body_y = - tan(msg->position.x) * start_point_z;
     flag_detection = msg->position.y;
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     ros::Rate rate(20.0);
 
     //【订阅】所识别线与相机中心轴的偏移角度
-    ros::Subscriber vision_sub = nh.subscribe<geometry_msgs::Pose>("/prometheus/vision/color_line_angle", 10, vision_cb);
+    ros::Subscriber color_line_sub = nh.subscribe<geometry_msgs::Pose>("/prometheus/object_detection/color_line_angle", 10, color_line_cb);
 
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 

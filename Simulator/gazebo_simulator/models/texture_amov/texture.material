@@ -46,6 +46,22 @@ material landing_zone
    }
  }
 }
+material crossing_zone
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture crossing_zone.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
 
 material color_zone
 {

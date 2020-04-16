@@ -4,7 +4,7 @@
     <pose>0.0 0.0 -0.05 0 0 0</pose>
       <link name='link'>
         <inertial>
-          <mass>0.015</mass>
+          <mass>0.001</mass>
           <inertia>
             <ixx>4.15e-6</ixx>
           <ixy>0</ixy>
@@ -60,7 +60,7 @@
               <cameraInfoTopicName>camera_info</cameraInfoTopicName>
               <updateRate>30.0</updateRate>
               <cameraName>Monocular</cameraName>
-              <frameName>/robot_camera_link</frameName>
+              <frameName>/monocular_link</frameName>
               <CxPrime>640</CxPrime>
               <Cx>640</Cx>
               <Cy>360</Cy>
