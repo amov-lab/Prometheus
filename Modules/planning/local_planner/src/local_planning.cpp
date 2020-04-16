@@ -33,9 +33,11 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
     local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1, &PotentialFiledPlanner::localcloudCallback,
     this);
+    swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/local_planner", 10, &PotentialFiledPlanner::switchCallback, this);  
 
     px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
+    message_pub = node_.advertise<prometheus::Message>("prometheus/message/local_planner", 10);
     exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
 
     nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
@@ -56,6 +58,11 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     exect_num++;
 
     if(exect_num==19){
+        if (!trigger_)
+        {   
+            printf("don't triggle!\n");
+        }
+
         if(!have_odom_){
             printf("don't have odometry!\n");
             // return;
@@ -73,6 +80,10 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
         exect_num=0;
     }
 
+    if (!trigger_)
+    {   
+        return;
+    }
     if(!have_odom_){
         // printf("don't have odometry!\n");
         return;
@@ -252,6 +263,10 @@ void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, in
         m.points.push_back(p);
 
     }
+}
+
+void switchCallback(const std_msgs::BoolConstPtr &msg){
+    trigger_= msg->data;
 }
 
 
