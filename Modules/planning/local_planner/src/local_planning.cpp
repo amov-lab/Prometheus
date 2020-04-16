@@ -58,30 +58,30 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     exect_num++;
     prometheus_msgs::Message exect_msg;
     exect_msg.header.stamp = ros::Time::now();
-    exect_msg.header.message_type=prometheus_msgs::Message::NORMAL;
+    exect_msg.message_type=prometheus_msgs::Message::NORMAL;
     string print_info;
     if(exect_num==19){
         if (!trigger_)
         {   
             print_info = "don't triggle!\n";
-            // printf("don't triggle!\n");
+            printf("don't triggle!\n");
         }
 
         if(!have_odom_){
             print_info = "don't have odometry!\n";
-            // printf("don't have odometry!\n");
+            printf("don't have odometry!\n");
             // return;
         }
             
         if(!has_point_map_)
         {
             print_info = "don't have point cloud! \n";
-            // printf("don't have point cloud! \n");
+            printf("don't have point cloud! \n");
             // return;
         }
         if(!have_goal_){
             print_info = "*** wait goal!*** \n";
-            // printf("*** wait goal!*** \n");
+            printf("*** wait goal!*** \n");
             // return;
         }
         exect_num=0;
@@ -275,7 +275,7 @@ void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, in
     }
 }
 
-void switchCallback(const std_msgs::BoolConstPtr &msg){
+void PotentialFiledPlanner::switchCallback(const std_msgs::Bool::ConstPtr &msg){
     trigger_= msg->data;
 }
 

@@ -18,12 +18,13 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-// #include <pcl/kdtree/kdtree_flann.h>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "prometheus_msgs/PositionReference.h"
+#include "prometheus_msgs/Message.h"
+#include <std_msgs/Bool.h>
 
-// #include "apf.h"
 
 #include "planning_visualization.h"
 
@@ -78,16 +79,16 @@ private:
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
     void safetyCallback(const ros::TimerEvent& e);
     void execCallback(const ros::TimerEvent& e);
-    
+    void switchCallback(const std_msgs::Bool::ConstPtr &msg);
 
     ros::NodeHandle node_;
-    ros::Subscriber waypoint_sub_, odom_sub_, global_point_clound_sub_, local_point_clound_sub_;
+    ros::Subscriber waypoint_sub_, odom_sub_, global_point_clound_sub_, local_point_clound_sub_, swith_sub;
     ros::Timer exec_timer_, safety_timer_;
     ros::Time control_time;
 
     ros::Publisher pos_cmd_pub, global_map_marker_Pub, px4_pos_cmd_pub;
     ros::Publisher path_cmd_Pub;
-    ros::Publisher replan_cmd_Pub;
+    ros::Publisher replan_cmd_Pub, message_pub;
 
     // visual 
     PlanningVisualization::Ptr visualization_;

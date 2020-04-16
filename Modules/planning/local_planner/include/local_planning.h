@@ -14,6 +14,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Int8.h>
+
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Odometry.h>
 
@@ -24,6 +25,7 @@
 
 #include "prometheus_msgs/PositionReference.h"
 #include "prometheus_msgs/Message.h"
+#include <std_msgs/Bool.h>
 
 #include "apf.h"
 
@@ -80,7 +82,7 @@ private:
     void localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
     void execFSMCallback(const ros::TimerEvent& e);
-    void switchCallback(const std_msgs::BoolConstPtr &msg);
+    void switchCallback(const std_msgs::Bool::ConstPtr &msg);
     // 控制接口
     geometry_msgs::Point px4_cmd;
 
