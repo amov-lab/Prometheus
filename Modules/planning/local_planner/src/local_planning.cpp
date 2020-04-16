@@ -37,7 +37,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
     px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
-    message_pub = node_.advertise<prometheus::Message>("prometheus/message/local_planner", 10);
+    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/local_planner", 10);
     exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
 
     nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
@@ -56,29 +56,39 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     static int exect_num=0;
     exect_num++;
-
+    prometheus_msgs::Message exect_msg;
+    exect_msg.header.stamp = ros::Time::now();
+    exect_msg.header.message_type=prometheus_msgs::Message::NORMAL;
+    string print_info;
     if(exect_num==19){
         if (!trigger_)
         {   
-            printf("don't triggle!\n");
+            print_info = "don't triggle!\n";
+            // printf("don't triggle!\n");
         }
 
         if(!have_odom_){
-            printf("don't have odometry!\n");
+            print_info = "don't have odometry!\n";
+            // printf("don't have odometry!\n");
             // return;
         }
             
         if(!has_point_map_)
         {
-            printf("don't have point cloud! \n");
+            print_info = "don't have point cloud! \n";
+            // printf("don't have point cloud! \n");
             // return;
         }
         if(!have_goal_){
-            printf("*** wait goal!*** \n");
+            print_info = "*** wait goal!*** \n";
+            // printf("*** wait goal!*** \n");
             // return;
         }
         exect_num=0;
     }
+    exect_msg.content = "[local planner]: " + print_info;
+    message_pub.publish(exect_msg);
+
 
     if (!trigger_)
     {   

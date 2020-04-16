@@ -23,6 +23,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "prometheus_msgs/PositionReference.h"
+#include "prometheus_msgs/Message.h"
 
 #include "apf.h"
 
