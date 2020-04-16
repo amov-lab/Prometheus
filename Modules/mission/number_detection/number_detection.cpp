@@ -33,7 +33,7 @@ ros::Publisher command_pub;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void vision_cb(const prometheus_msgs::MultiDetectionInfo::ConstPtr& msg)
+void num_det_cb(const prometheus_msgs::MultiDetectionInfo::ConstPtr& msg)
 {
     Detection_info = *msg;
     size_Detection_info = Detection_info.num_objs;
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "number_detection");
     ros::NodeHandle nh("~");
     
-    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::MultiDetectionInfo>("/prometheus/target", 10, vision_cb);
+    ros::Subscriber num_det_sub = nh.subscribe<prometheus_msgs::MultiDetectionInfo>("/prometheus/object_detection/num_det", 10, num_det_cb);
 
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);

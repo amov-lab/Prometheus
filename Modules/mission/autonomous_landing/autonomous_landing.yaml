@@ -1,11 +1,6 @@
 # Parameter for autonomous_landing.cpp
-##视觉丢失次数阈值
-Thres_vision_lost : 10
-
 ##追踪距离阈值
 distance_thres: 0.55
-
-landing_pad_height: 0.99
 
 ## ukf仍有bug 建议不使用
 use_ukf: false
@@ -17,10 +12,6 @@ moving_target: false
 kpx_land: 0.35
 kpy_land: 0.35
 kpz_land: 0.1
-
-camera_offset_x: 0.0
-camera_offset_y: 0.0
-camera_offset_z: 0.0
 
 ##降落起始点 静止目标建议起飞点：[1,2,6] 移动目标建议起飞点[-5,0,5]
 start_point_x: 1

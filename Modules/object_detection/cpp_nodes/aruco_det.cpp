@@ -9,7 +9,7 @@
  *      1. 【订阅】图像话题 (默认来自web_cam)
  *         /prometheus/camera/rgb/image_raw
  *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
- *         /prometheus/target
+ *         /prometheus/object_detection/aruco_det
  *      3. 【发布】检测结果的可视化图像话题
  *         /prometheus/camera/rgb/image_aruco_det
 ***************************************************************************************************************************/
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     // 更新频率为30HZ
     ros::Rate loop_rate(30);
     //【发布】识别
-    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/aruco_det", 1);
 
     // 接收图像的话题
     image_subscriber = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);

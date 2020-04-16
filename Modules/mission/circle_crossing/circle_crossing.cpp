@@ -1,59 +1,60 @@
 //ros头文件
 #include <ros/ros.h>
-#include <Eigen/Eigen>
 #include <iostream>
 #include <mission_utils.h>
 
-//topic 头文件
-#include <geometry_msgs/Point.h>
-#include <prometheus_msgs/ControlCommand.h>
-#include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/DetectionInfo.h>
-#include <prometheus_msgs/MultiDetectionInfo.h>
-#include <nav_msgs/Odometry.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <mavros_msgs/ActuatorControl.h>
-#include <sensor_msgs/Imu.h>
-#include <prometheus_msgs/DroneState.h>
-#include <prometheus_msgs/AttitudeReference.h>
-#include <prometheus_msgs/DroneState.h>
-#include <nav_msgs/Path.h>
-#include <math.h>
 using namespace std;
-
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-prometheus_msgs::DetectionInfo Detection_info;
-Eigen::Vector3f pos_body_frame;        //机体系
-Eigen::Vector3f pos_body_enu_frame;     //原点位于质心，x轴指向前方，y轴指向左，z轴指向上的坐标系
-prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
+Detection_result ellipse_det;
 prometheus_msgs::DroneState _DroneState;                                   //无人机状态量
-ros::Publisher command_pub;
+prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
+Eigen::Matrix3f R_Body_to_ENU;
+ros::Publisher command_pub,message_pub;
 int State_Machine = 0;
-float kpx_track,kpy_track,kpz_track;                                                 //控制参数 - 比例参数
-Eigen::Vector3f camera_offset;
+float kpx_circle_track,kpy_circle_track,kpz_circle_track;                                                 //控制参数 - 比例参数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void tracking();
 void crossing();
 void return_start_point();
+void detection_result_printf(const struct Detection_result& test);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void vision_cb(const prometheus_msgs::DetectionInfo::ConstPtr& msg)
+void ellipse_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr& msg)
 {
-    Detection_info = *msg;
-    pos_body_frame[0] = Detection_info.position[2] + camera_offset[0];
-    pos_body_frame[1] = - Detection_info.position[0] + camera_offset[1];
-    pos_body_frame[2] = - Detection_info.position[1] + camera_offset[2];
+    ellipse_det.object_name = "circle";
+    ellipse_det.Detection_info = *msg;
+    ellipse_det.pos_body_frame[0] =   ellipse_det.Detection_info.position[2] + FRONT_CAMERA_OFFSET_X;
+    ellipse_det.pos_body_frame[1] = - ellipse_det.Detection_info.position[0] + FRONT_CAMERA_OFFSET_Y;
+    ellipse_det.pos_body_frame[2] = - ellipse_det.Detection_info.position[1] + FRONT_CAMERA_OFFSET_Z;
 
-    Eigen::Matrix3f R_Body_to_ENU;
+    ellipse_det.pos_body_enu_frame = R_Body_to_ENU * ellipse_det.pos_body_frame;
 
-    R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
+    if(ellipse_det.Detection_info.detected)
+    {
+        ellipse_det.num_regain++;
+        ellipse_det.num_lost = 0;
+    }else
+    {
+        ellipse_det.num_regain = 0;
+        ellipse_det.num_lost++;
+    }
 
-    pos_body_enu_frame = R_Body_to_ENU * pos_body_frame;
+    // 当连续一段时间无法检测到目标时，认定目标丢失
+    if(ellipse_det.num_lost > VISION_THRES)
+    {
+        ellipse_det.is_detected = false;
+    }
+
+    // 当连续一段时间检测到目标时，认定目标得到
+    if(ellipse_det.num_regain > VISION_THRES)
+    {
+        ellipse_det.is_detected = true;
+    }
 
 }
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
+    R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
     //【订阅】图像识别结果，返回的结果为相机坐标系
     //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/target", 10, vision_cb);
+    ros::Subscriber ellipse_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/ellipse_det", 10, ellipse_det_cb);
 
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
@@ -72,13 +73,11 @@ int main(int argc, char **argv)
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
-    nh.param<float>("kpx_track", kpx_track, 0.1);
-    nh.param<float>("kpy_track", kpy_track, 0.1);
-    nh.param<float>("kpz_track", kpz_track, 0.1);
+    message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message", 10);
 
-    nh.param<float>("camera_offset_x", camera_offset[0], 0.0);
-    nh.param<float>("camera_offset_y", camera_offset[1], 0.0);
-    nh.param<float>("camera_offset_z", camera_offset[2], 0.0);
+    nh.param<float>("kpx_circle_track", kpx_circle_track, 0.1);
+    nh.param<float>("kpy_circle_track", kpy_circle_track, 0.1);
+    nh.param<float>("kpz_circle_track", kpz_circle_track, 0.1);
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -146,12 +145,8 @@ int main(int argc, char **argv)
             }
         }else if(State_Machine == 1)
         {
-            tracking();
-            cout << "Tracking the circle..." <<  endl;
-            cout << "Camera_frame : " << Detection_info.position[0] << " [m] "<< Detection_info.position[1] << " [m] "<< Detection_info.position[2] << " [m] "<<endl;
-            cout << "Body_frame   : " << pos_body_frame[0] << " [m] "<< pos_body_frame[1] << " [m] "<< pos_body_frame[2] << " [m] "<<endl;
-            cout << "BodyENU_frame: " << pos_body_enu_frame[0] << " [m] "<< pos_body_enu_frame[1] << " [m] "<< pos_body_enu_frame[2] << " [m] "<<endl;
-            
+            tracking(); 
+            printf_detection_result(ellipse_det);
         }else if(State_Machine == 2)
         {
             crossing();
@@ -180,14 +175,14 @@ void tracking()
     Command_Now.Reference_State.position_ref[0]     = 0;
     Command_Now.Reference_State.position_ref[1]     = 0;
     Command_Now.Reference_State.position_ref[2]     = 0;
-    Command_Now.Reference_State.velocity_ref[0]     = kpx_track * pos_body_enu_frame[0];
-    Command_Now.Reference_State.velocity_ref[1]     = kpy_track * pos_body_enu_frame[1];
-    Command_Now.Reference_State.velocity_ref[2]     = kpz_track * pos_body_enu_frame[2];
+    Command_Now.Reference_State.velocity_ref[0]     = kpx_circle_track * ellipse_det.pos_body_enu_frame[0];
+    Command_Now.Reference_State.velocity_ref[1]     = kpy_circle_track * ellipse_det.pos_body_enu_frame[1];
+    Command_Now.Reference_State.velocity_ref[2]     = kpz_circle_track * ellipse_det.pos_body_enu_frame[2];
     Command_Now.Reference_State.yaw_ref             = 0;
 
     command_pub.publish(Command_Now);   
 
-    if(abs(pos_body_enu_frame[0]) < 1)
+    if(abs(ellipse_det.pos_body_enu_frame[0]) < 1)
     {
         State_Machine = 2;
     }
@@ -241,3 +236,4 @@ void return_start_point()
 
     State_Machine = 0;
 }
+

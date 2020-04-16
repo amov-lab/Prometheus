@@ -25,11 +25,8 @@
 
 	<!-- run the circle_crossing.cpp -->
 	<node pkg="prometheus_mission" type="circle_crossing" name="circle_crossing" output="screen" launch-prefix="gnome-terminal --">
-        <param name="kpx_track" value="0.5" />
-        <param name="kpy_track" value="0.5" />
-		<param name="kpz_track" value="0.5" />
-        <param name="camera_offset_x" value="0.2" />
-        <param name="camera_offset_y" value="0.0" />
-		<param name="camera_offset_z" value="-0.05" />
+        <param name="kpx_circle_track" value="0.5" />
+        <param name="kpy_circle_track" value="0.5" />
+		<param name="kpz_circle_track" value="0.5" />
 	</node>	
 </launch>

@@ -7,7 +7,7 @@
  *      1. 【订阅】图像话题 (默认来自web_cam)
  *         /prometheus/camera/rgb/image_raw
  *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
- *         /prometheus/target
+ *         /prometheus/object_detection/ellipse_det
  *      3. 【发布】检测结果的可视化图像话题
  *         /prometheus/camera/rgb/image_ellipse_det
 ***************************************************************************************************************************/
@@ -310,7 +310,7 @@ int main(int argc, char **argv)
     ellipse_pub = it.advertise("/prometheus/camera/rgb/image_ellipse_det", 1);
 #endif
     // 椭圆检测结果，xyz
-    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/target", 1);
+    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/ellipse_det", 1);
     
     sensor_msgs::ImagePtr msg_ellipse;
 
@@ -399,8 +399,8 @@ int main(int argc, char **argv)
                     last_y = real_y;
                     last_z = depth;
 
-                    cout << "flag_detected: " << int(pose_now.detected) <<endl;
-                    cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+                    //cout << "flag_detected: " << int(pose_now.detected) <<endl;
+                    //cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
                     ells_copy.push_back(e);
                 }
@@ -437,8 +437,8 @@ int main(int argc, char **argv)
             last_y = real_y;
             last_z = depth;
 
-            cout << "flag_detected: " << int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+            //cout << "flag_detected: " << int(pose_now.detected) <<endl;
+            //cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
             ells_copy.push_back(e);
         }
@@ -459,8 +459,8 @@ int main(int argc, char **argv)
             pose_now.position[2] = last_z;
             pose_pub.publish(pose_now);
 
-            cout << "flag_detected: " << int(pose_now.detected) <<endl;
-            cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+            //cout << "flag_detected: " << int(pose_now.detected) <<endl;
+            //cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
 
         }
 #ifdef ELLIPSE_PUB

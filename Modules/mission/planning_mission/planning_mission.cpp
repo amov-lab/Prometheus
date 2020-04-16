@@ -23,7 +23,7 @@
 using namespace std;
 
 #define MIN_DIS 0.1
-#define FLY_HEIGHT 1.0
+#define FLY_HEIGHT 1.5
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 prometheus_msgs::DroneState _DroneState;                                   //无人机状态量
