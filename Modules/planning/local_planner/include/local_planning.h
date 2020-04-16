@@ -79,18 +79,18 @@ private:
     void localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
     void execFSMCallback(const ros::TimerEvent& e);
-
+    void switchCallback(const std_msgs::BoolConstPtr &msg);
     // 控制接口
     geometry_msgs::Point px4_cmd;
 
     /* ---------- sub and pub ---------- */
     ros::NodeHandle node_;
-    ros::Subscriber waypoint_sub_, odom_sub_, global_point_clound_sub_, local_point_clound_sub_;
+    ros::Subscriber waypoint_sub_, odom_sub_, global_point_clound_sub_, local_point_clound_sub_, swith_sub;
     ros::Timer exec_timer_;
     ros::Time control_time;
 
     ros::Publisher local_map_marker_Pub, px4_pos_cmd_pub;
-    ros::Publisher replan_cmd_Pub;
+    ros::Publisher replan_cmd_Pub, message_pub;
 
     // APF 算法 算子
     APF::Ptr apf_planner_ptr;
