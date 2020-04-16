@@ -3,6 +3,14 @@
 namespace global_planner
 {
 
+void pub_msg(ros::Publisher & puber, string mmm, int type){
+    prometheus_msgs::Message exect_msg;
+    exect_msg.header.stamp = ros::Time::now();
+    exect_msg.message_type=type;
+    exect_msg.content = mmm;
+    puber.publish(exect_msg);
+}
+
 void GlobalPlanner::init(ros::NodeHandle& nh){
     // set mode
     // safe_distance
@@ -31,6 +39,9 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
 
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/planning/path_cmd",  10);  
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
+
+    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/global_planner", 10);
+    swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/global_planner", 10, &GlobalPlanner::switchCallback, this);  
     
     // a* algorithm
     Astar_ptr.reset(new Astar);
@@ -49,7 +60,7 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
     if (msg->pose.position.z < 0.1)  // the minimal goal height 
         return;
 
-    trigger_ = true;
+    // trigger_ = true;
     double /*goal_x, goal_y,*/ goal_z;
 
         // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
@@ -84,22 +95,38 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
         // execute A star
     static int exec_num=0;
     exec_num++;
+    string exect_msg;
     if(exec_num==2){
+        if(!trigger_){
+            exect_msg = "don't triggle!\n";
+            // pub_msg(message_pub, "don't triggle!\n", prometheus_msgs::Message::NORMAL);
+            printf("don't triggle!\n");
+        }
+
         if(!have_odom_){
+            exect_msg = "don't have odometry!\n";
             printf("don't have odometry!\n");
             // return;
         }
             
         if(!has_point_map_)
         {
+            exect_msg = "don't have point cloud!\n";
             printf("don't have point cloud! \n");
             // return;
         }
         if(!have_goal_){
+            exect_msg = "*** wait goal!*** \n";
             printf("*** wait goal!*** \n");
             // return;
         }
         exec_num=0;
+    }
+
+    pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
+
+    if(!trigger_){
+        return;
     }
 
     if(!have_odom_){
@@ -276,5 +303,10 @@ void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
     }
     replan_cmd_Pub.publish(replan);
 }
+
+void GlobalPlanner::switchCallback(const std_msgs::Bool::ConstPtr &msg){
+    trigger_= msg->data;
+}
+
 
 }
