@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from geometry_msgs.msg import Pose, Point, Quaternion
 from cv_bridge import CvBridge
 from std_msgs.msg import String
+from std_msgs.msg import Bool
 import numpy as np
 import cv2
 import os
@@ -18,6 +19,7 @@ import math
 # 可选：black，red，yellow，green，blue
 global line_location, line_location_a1, line_location_a2, line_color
 global cy_a1, cy_a2, half_h, half_w
+global suspand
 
 camera_matrix = np.zeros((3, 3), np.float32)
 distortion_coefficients = np.zeros((5,), np.float32)
@@ -143,39 +145,43 @@ def seg(line_area, line_area_a1, line_area_a2, _line_color='black'):
 def image_callback(imgmsg):
     global line_location, line_location_a1, line_location_a2, line_color
 
-    bridge = CvBridge()
-    frame = bridge.imgmsg_to_cv2(imgmsg, "bgr8")
-    # processing
-    area_base, area_base_a1, area_base_a2 = get_line_area(frame)
-    area, cxcy, a, center_a1, center_a2 = seg(area_base, area_base_a1, area_base_a2, _line_color=line_color)
-
-    pose = Pose(Point(0, -1, 0), Quaternion(center_a1[0], center_a1[1], center_a2[0], center_a2[1]))
-    if a > 0:
-        cv2.circle(area, (cxcy[0], cxcy[1]), 4, (0, 0, 255), -1)
-        angle = (cxcy[0] - camera_matrix[0,2]) / camera_matrix[0,2] * math.atan((area.shape[1] / 2) / camera_matrix[0,0])
-        pose = Pose(Point(angle, 1, 0), Quaternion(center_a1[0], center_a1[1], center_a2[0], center_a2[1]))
+    rate = rospy.Rate(10) # 10hz
+    if suspand:
+        rate.sleep()
     else:
-        area, cxcy, a, center_a1, center_a2 = seg(area_base, area_base_a1, area_base_a2,)
+        bridge = CvBridge()
+        frame = bridge.imgmsg_to_cv2(imgmsg, "bgr8")
+        # processing
+        area_base, area_base_a1, area_base_a2 = get_line_area(frame)
+        area, cxcy, a, center_a1, center_a2 = seg(area_base, area_base_a1, area_base_a2, _line_color=line_color)
+
+        pose = Pose(Point(0, -1, 0), Quaternion(center_a1[0], center_a1[1], center_a2[0], center_a2[1]))
         if a > 0:
             cv2.circle(area, (cxcy[0], cxcy[1]), 4, (0, 0, 255), -1)
             angle = (cxcy[0] - camera_matrix[0,2]) / camera_matrix[0,2] * math.atan((area.shape[1] / 2) / camera_matrix[0,0])
             pose = Pose(Point(angle, 1, 0), Quaternion(center_a1[0], center_a1[1], center_a2[0], center_a2[1]))
+        else:
+            area, cxcy, a, center_a1, center_a2 = seg(area_base, area_base_a1, area_base_a2,)
+            if a > 0:
+                cv2.circle(area, (cxcy[0], cxcy[1]), 4, (0, 0, 255), -1)
+                angle = (cxcy[0] - camera_matrix[0,2]) / camera_matrix[0,2] * math.atan((area.shape[1] / 2) / camera_matrix[0,0])
+                pose = Pose(Point(angle, 1, 0), Quaternion(center_a1[0], center_a1[1], center_a2[0], center_a2[1]))
 
-    pub.publish(pose)
-    # end
+        pub.publish(pose)
+        # end
 
-    h, w = frame.shape[:2]
-    img_resize = 360
-    if h > w:
-        h = int(float(h) / w * img_resize)
-        w = img_resize
-    else:
-        w = int(float(w) / h * img_resize)
-        h = img_resize
-    frame = cv2.resize(frame, (w, h))
-    cv2.imshow("cap", frame)
-    # cv2.imshow("area", area)
-    cv2.waitKey(10)
+        h, w = frame.shape[:2]
+        img_resize = 360
+        if h > w:
+            h = int(float(h) / w * img_resize)
+            w = img_resize
+        else:
+            w = int(float(w) / h * img_resize)
+            h = img_resize
+        frame = cv2.resize(frame, (w, h))
+        cv2.imshow("cap", frame)
+        # cv2.imshow("area", area)
+        cv2.waitKey(10)
 
 
 def color_det(topic_name):
@@ -183,11 +189,21 @@ def color_det(topic_name):
     rospy.spin()
 
 
+def switch_callback(boolmsg):
+    global suspand
+    suspand = not boolmsg.data
+
+
 if __name__ == '__main__':
     global line_location, line_color
 
     subscriber = rospy.get_param('~subscriber', '/prometheus/camera/rgb/image_raw')
     config = rospy.get_param('~config', 'camera_param.yaml')
+
+    # 接收开关消息，判断程序挂起还是执行
+    rospy.Subscriber('/prometheus/switch/num_det', Bool, switch_callback)
+    global suspand
+    suspand = False
 
     # global line_location, line_color
     line_location = rospy.get_param('~line_location', 0.5)

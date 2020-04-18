@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+#--*coding=utf-8*--
 
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_msgs.msg import String
+from std_msgs.msg import Bool
 from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
 import torch
 from pytorch_mnist import LeNet
@@ -26,6 +28,7 @@ digitnum_det_len = 1.0
 rospy.init_node('num_det', anonymous=True)
 pub = rospy.Publisher('/prometheus/object_detection/num_det', MultiDetectionInfo, queue_size=10)
 
+global suspand
 
 # load LeNet model trained on mnist dataset
 def load_mnist_model():
@@ -150,25 +153,30 @@ def box_extractor(img, net):
 
 
 def image_callback(imgmsg):
-    bridge = CvBridge()
-    frame = bridge.imgmsg_to_cv2(imgmsg, "bgr8")
-    # processing
-    frame, m_info = box_extractor(frame, net)
-    # print(m_info)
-    pub.publish(m_info)
-    # end
-
-    h, w = frame.shape[:2]
-    img_resize = 360
-    if h > w:
-        h = int(float(h) / w * img_resize)
-        w = img_resize
+    global suspand
+    rate = rospy.Rate(10) # 10hz
+    if suspand:
+        rate.sleep()
     else:
-        w = int(float(w) / h * img_resize)
-        h = img_resize
-    frame = cv2.resize(frame, (w, h))
-    cv2.imshow("color", frame)
-    cv2.waitKey(10)
+        bridge = CvBridge()
+        frame = bridge.imgmsg_to_cv2(imgmsg, "bgr8")
+        # processing
+        frame, m_info = box_extractor(frame, net)
+        # print(m_info)
+        pub.publish(m_info)
+        # end
+
+        h, w = frame.shape[:2]
+        img_resize = 360
+        if h > w:
+            h = int(float(h) / w * img_resize)
+            w = img_resize
+        else:
+            w = int(float(w) / h * img_resize)
+            h = img_resize
+        frame = cv2.resize(frame, (w, h))
+        cv2.imshow("color", frame)
+        cv2.waitKey(10)
 
 
 def num_det(topic_name):
@@ -176,9 +184,19 @@ def num_det(topic_name):
     rospy.spin()
 
 
+def switch_callback(boolmsg):
+    global suspand
+    suspand = not boolmsg.data
+
+
 if __name__ == '__main__':
     subscriber = rospy.get_param('~subscriber', '/prometheus/camera/rgb/image_raw')
     config = rospy.get_param('~config', 'camera_param.yaml')
+
+    # 接收开关消息，判断程序挂起还是执行
+    rospy.Subscriber('/prometheus/switch/num_det', Bool, switch_callback)
+    global suspand
+    suspand = False
 
     yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + config
     print('Input config file: {}'.format(config))
