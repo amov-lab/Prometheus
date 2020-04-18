@@ -86,7 +86,10 @@ def sort4points(points):
 
 def box_extractor(img, net):
     edges = cv2.Canny(img, 100, 200)
-    _, cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if cv2.__version__.startswith('4'):
+        cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    else:
+        _, cnts, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     num = -1
     det_nums = []
     m_info = MultiDetectionInfo()
