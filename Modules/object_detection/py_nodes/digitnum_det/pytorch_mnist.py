@@ -53,65 +53,17 @@ class LeNet(nn.Module):
         return x
 
 
-'''
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument('--outf', default='model/',
-                    help='folder to output images and model checkpoints')
-
-parser.add_argument('--net', default='model/net.pth',
-                    help="path to netG (to continue training)")
-opt = parser.parse_args()
-
-
 EPOCH = 12         #
 BATCH_SIZE = 64    #
 LR = 0.01          #
 
 
-transform = transforms.ToTensor()
+def train_lenet(trainloader, testloader, opt):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=LR, momentum=0.9)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=4, gamma=0.1)
 
-
-trainset = tv.datasets.MNIST(
-    root='data/',
-    train=True,
-    download=True,
-    transform=transform)
-
-
-trainloader = torch.utils.data.DataLoader(
-    trainset,
-    batch_size=BATCH_SIZE,
-    shuffle=True)
-
-
-testset = tv.datasets.MNIST(
-    root='data/',
-    train=False,
-    download=True,
-    transform=transform)
-
-
-testloader = torch.utils.data.DataLoader(
-    testset,
-    batch_size=BATCH_SIZE,
-    shuffle=False)
-
-
-net = LeNet().to(device)
-
-criterion = nn.CrossEntropyLoss()
-
-optimizer = optim.SGD(net.parameters(),
-                      lr=LR, momentum=0.9)
-scheduler = optim.lr_scheduler.StepLR(
-    optimizer, step_size=4, gamma=0.1)
-
-
-def train_lenet():
     for epoch in range(EPOCH):
-        scheduler.step()
         sum_loss = 0.0
         
         for i, data in enumerate(trainloader):
@@ -131,9 +83,10 @@ def train_lenet():
             sum_loss += loss.item()
             if i % 100 == 99:
                 print('[epoch %d, iter %d] loss: %.03f'
-                      % (epoch + 1, i + 1, sum_loss / 100))
+                    % (epoch + 1, i + 1, sum_loss / 100))
                 sum_loss = 0.0
 
+        scheduler.step()
         
         with torch.no_grad():
             correct = 0
@@ -151,5 +104,49 @@ def train_lenet():
 
 
 if __name__ == "__main__":
-    train_lenet()
-'''
+    from thop import profile
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--outf', default='model/',
+                        help='folder to output images and model checkpoints')
+    opt = parser.parse_args()
+
+    transform = transforms.ToTensor()
+
+
+    trainset = tv.datasets.MNIST(
+        root='data/',
+        train=True,
+        download=True,
+        transform=transform)
+
+
+    trainloader = torch.utils.data.DataLoader(
+        trainset,
+        batch_size=BATCH_SIZE,
+        shuffle=True)
+
+
+    testset = tv.datasets.MNIST(
+        root='data/',
+        train=False,
+        download=True,
+        transform=transform)
+
+
+    testloader = torch.utils.data.DataLoader(
+        testset,
+        batch_size=BATCH_SIZE,
+        shuffle=False)
+
+
+    net = LeNet()
+
+    input = torch.randn(1, 1, 28, 28)
+    macs, params = profile(net, inputs=(input, ))
+    print('macs: {}, params: {}'.format(macs, params))
+
+    net = net.to(device)
+
+    train_lenet(trainloader, testloader, opt)
