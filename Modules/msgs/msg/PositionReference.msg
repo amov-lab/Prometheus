@@ -2,7 +2,7 @@ std_msgs/Header header
 
 ## 默认为 XYZ位置追踪模式 （sub_mode = 0）； 速度追踪启用时，控制器不考虑位置参考量及位置状态反馈
 uint8 Move_mode
-# enum Move_mode
+
 uint8 XYZ_POS      = 0  ##0b00
 uint8 XY_POS_Z_VEL = 1  ##0b01
 uint8 XY_VEL_Z_POS = 2  ##0b10
@@ -10,7 +10,7 @@ uint8 XYZ_VEL = 3       ##0b11
 uint8 TRAJECTORY   = 4  
 
 uint8 Move_frame
-# enum Move_frame, 默认情况下均为ENU_FRAME,注意轨迹追踪一定是ENU_FRAME
+# 默认情况下均为ENU_FRAME,注意轨迹追踪一定是ENU_FRAME
 uint8 ENU_FRAME  = 0
 uint8 BODY_FRAME = 1
 uint8 MIX_FRAME = 2 ##2020.4.6 临时增加的模式，后期需要统一整合，该模式下，xy采用机体系控制，z采用enu系控制
