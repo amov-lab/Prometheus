@@ -201,7 +201,7 @@ if __name__ == '__main__':
     config = rospy.get_param('~config', 'camera_param.yaml')
 
     # 接收开关消息，判断程序挂起还是执行
-    rospy.Subscriber('/prometheus/switch/num_det', Bool, switch_callback)
+    rospy.Subscriber('/prometheus/switch/color_line_det', Bool, switch_callback)
     global suspand
     suspand = False
 

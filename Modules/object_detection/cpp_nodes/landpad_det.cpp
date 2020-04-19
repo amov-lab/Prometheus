@@ -44,6 +44,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
+#include <std_msgs/Bool.h>
 #include <prometheus_msgs/DetectionInfo.h>
 
 using namespace std;
@@ -60,6 +61,8 @@ ros::Subscriber drone_pose_sub;
 ros::Subscriber vehicle_pose_sub;
 //【订阅】输入图像
 image_transport::Subscriber image_subscriber;
+//【订阅】输入开关量
+ros::Subscriber switch_subscriber;
 //【发布】无人机和小车相对位置
 ros::Publisher position_pub;
 //【发布】识别后的图像
@@ -93,7 +96,11 @@ Eigen::Quaterniond q_vehicle;
 
 // 保存的上次观测的位置 用于cluster算法使用
 Eigen::Vector3d last_position;
-bool bool_last_position=false;
+bool bool_last_position = false;
+// 接收消息，允许暂停检测
+bool is_suspanded = false;
+
+void printf_result();
 
 //-----------------利用Euler角进行三次旋转得到无人机相对目标的位置------------------
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -181,7 +188,14 @@ bool getImageStatus(void)
     return image_status;
 }
 
-void printf_result();
+
+void switchCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+    is_suspanded = !(bool)msg->data;
+    // cout << is_suspanded << endl;
+}
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "landpad_det");
@@ -204,6 +218,10 @@ int main(int argc, char **argv)
     }
 
     position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10);
+
+
+    // 接收开关话题
+    switch_subscriber = nh.subscribe("/prometheus/switch/landpad_det", 10, switchCallback);
 
     // 接收图像的话题
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
@@ -252,11 +270,11 @@ int main(int argc, char **argv)
 
     // ArUco Marker字典选择以及旋转向量和评议向量初始化
     Ptr<cv::aruco::Dictionary> dictionary=cv::aruco::getPredefinedDictionary(10);
-    vector<double> rv(3),tv(3);
-    cv::Mat rvec(rv),tvec(tv);
+    vector<double> rv(3), tv(3);
+    cv::Mat rvec(rv), tvec(tv);
     // cv::VideoCapture capture(0);
     float last_x(0), last_y(0), last_z(0), last_yaw(0);
-
+    bool switch_state = is_suspanded;
 
     // 节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate loopRate(20);
@@ -273,6 +291,17 @@ int main(int argc, char **argv)
             loopRate_1Hz.sleep();
         }
 
+        if (switch_state != is_suspanded)
+        {
+            switch_state = is_suspanded;
+            if (!is_suspanded)
+                cout << "Start Detection." << endl;
+            else
+                cout << "Stop Detection." << endl;
+        }
+
+        if (!is_suspanded)
+        {
         {
             boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
             img = cam_image_copy.clone();
@@ -280,7 +309,7 @@ int main(int argc, char **argv)
 
         clock_t start=clock();
         // capture>>img;
-        ros::spinOnce();
+        
 
 
         //------------------调用ArUco Marker库对图像进行识别--------------
@@ -291,13 +320,13 @@ int main(int argc, char **argv)
         cv::aruco::detectMarkers(img,dictionary,markerCorners,markerids,parameters,rejectedCandidate);
 
         //-------------------多于一个目标被识别到，进入算法-----------------
-        if (markerids.size()>0)
+        if (markerids.size() > 0)
         {
             // 未处理后的位置
             vector<cv::Point3f> vec_Position_OcInW;
             vector<double> vec_yaw;
             cv::Point3f A1_Sum_Position_OcInW(0,0,0);
-            double A1_Sum_yaw=0.0;
+            double A1_Sum_yaw = 0.0;
             double tx, ty, tz;
             int marker_count = 0;
 
@@ -496,18 +525,23 @@ int main(int argc, char **argv)
         calculation_time=(finish-start)/1000;
         
         // 打印
-        printf_result();
+        // printf_result();
 
         // 画出识别到的二维码
         cv::aruco::drawDetectedMarkers(img, markerCorners, markerids);
         
         msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
         landpad_pub.publish(msg_ellipse);
+        }
+
         // cv::imshow("test",img);
+        ros::spinOnce();
         cv::waitKey(1);
         loopRate.sleep();
     }
 }
+
+
 void printf_result()
 {
     // 固定的浮点显示
