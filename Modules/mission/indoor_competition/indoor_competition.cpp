@@ -57,7 +57,12 @@ prometheus_msgs::DroneState _DroneState;                                   //无
 Eigen::Matrix3f R_Body_to_ENU;
 
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
-ros::Publisher command_pub,goal_pub,local_planner_switch_pub;
+ros::Publisher command_pub,goal_pub;
+ros::Publisher local_planner_switch_pub,global_planner_switch_pub,circle_switch_pub, num_det_switch_pub, color_det_switch_pub, pad_det_switch_pub;
+
+std_msgs::Bool switch_on;
+std_msgs::Bool switch_off;
+
 // 状态机
 int State_Machine = 0;
 float kpx_circle_track,kpy_circle_track,kpz_circle_track;                   //控制参数 - 比例参数
@@ -163,7 +168,15 @@ int main(int argc, char **argv)
 
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 10);
 
-    local_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/local_planner/switch", 10);
+    local_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/local_planner", 10);
+    global_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/global_planner", 10);
+    circle_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/circle_crossing", 10);
+    num_det_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/num_det", 10);
+    color_det_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/color_det", 10);
+    pad_det_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/pad_det", 10);
+
+    switch_on.data = true;
+    switch_off.data = false;
 
 
     nh.param<float>("kpx_circle_track", kpx_circle_track, 0.1);
@@ -255,6 +268,8 @@ int main(int argc, char **argv)
     }
 
     //阶段3: 传圆
+    circle_switch_pub.publish(switch_on);
+    
     while(State_Machine == 2)
     {
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
@@ -304,6 +319,7 @@ int main(int argc, char **argv)
             cout << "Moving to PILLAR_POINT ..."<<endl;
         }
     }
+    circle_switch_pub.publish(switch_off);
 
     //发布目标
     geometry_msgs::PoseStamped goal;
@@ -318,6 +334,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
     }
 
+    local_planner_switch_pub.publish(switch_on);
     while(State_Machine == 3)
     {
         // 高度改为定高飞行
@@ -358,7 +375,9 @@ int main(int argc, char **argv)
             ros::Duration(2.0).sleep();
         }
     }
-    
+
+    local_planner_switch_pub.publish(switch_off);
+    global_planner_switch_pub.publish(switch_on);
     //发布目标
     goal.pose.position.x = NUM_POINT_X;
     goal.pose.position.y = NUM_POINT_Y;
@@ -395,6 +414,18 @@ int main(int argc, char **argv)
             ros::Duration(2.0).sleep();
         }
     }
+    global_planner_switch_pub.publish(switch_off);
+
+
+
+    num_det_switch_pub.publish(switch_on);
+    num_det_switch_pub.publish(switch_off);
+    color_det_switch_pub.publish(switch_on);
+    color_det_switch_pub.publish(switch_off);
+    pad_det_switch_pub.publish(switch_on);
+    pad_det_switch_pub.publish(switch_off);
+
+
     return 0;
 
 }
