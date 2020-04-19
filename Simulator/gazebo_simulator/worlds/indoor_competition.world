@@ -150,7 +150,7 @@
         </visual>
       </link>
       <link name="landing_zone">
-        <pose>23 0 0.01 0 0 0</pose>
+        <pose>25 1.5 0.01 0 0 0</pose>
         <visual name="visual">
           <cast_shadows>false</cast_shadows>
           <geometry>
@@ -445,37 +445,12 @@
     <!-- 数字识别＋颜色跟随区域 -->
     <model name='color_zone'>
       <static>true</static>
-      <link name="num_0">
-        <pose frame=''>17 0.0 0.01 0.0 0.0 0.0</pose>
-        <collision name="collision">
-            <geometry>
-              <box>
-                <size>0.5 0.5 0.01</size>
-              </box>
-            </geometry>
-        </collision>
-        <visual name="visual">
-            <cast_shadows>false</cast_shadows>
-            <geometry>
-              <box>
-                <size>0.5 0.5 0.01</size>
-              </box>
-            </geometry>
-            <material>
-              <script>
-                  <uri>model://wall_with_num/materials/scripts/numbers.material</uri>
-                  <uri>model://wall_with_num/materials/textures/</uri>
-                  <name>Numbers/0</name>
-              </script>
-            </material>
-        </visual>
-      </link>
       <link name="black_line">
-        <pose frame=''>19 0 0.01 0 -0 0</pose>
+        <pose frame=''>20 0 0.01 0 -0 0</pose>
         <visual name="visual">
           <geometry>
             <box>
-              <size>3.4641 0.1 0.01</size>
+              <size>6 0.1 0.01</size>
             </box>
           </geometry>
           <material>
@@ -486,7 +461,7 @@
           </material>
         </visual>
       </link>
-      <link name="blue_line">
+      <!-- <link name="blue_line">
         <pose frame=''>19 1.0 0.01 0 -0 0.52358</pose>
         <visual name="visual">
           <geometry>
@@ -517,7 +492,7 @@
             </script>
           </material>
         </visual>
-      </link>
+      </link> -->
     </model>
 
     <!-- 降落区域 -->

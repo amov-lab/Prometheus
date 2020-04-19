@@ -29,12 +29,14 @@ using namespace std;
 #define NUM_POINT_Y 0.0
 #define NUM_POINT_Z 1.8
 #define NUM_POINT_YAW 0.0
+#define FOLLOWING_VEL 0.5
+#define FOLLOWING_KP 2.0
 
 #define LAND_POINT_X 23
 #define LAND_POINT_Y 0.0
 #define LAND_POINT_Z 1.8
 #define LAND_POINT_YAW 0.0
-
+#define LANDPAD_HEIGHT 0.0
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 Eigen::Vector3f start_point;
@@ -52,6 +54,17 @@ struct global_planner
     int wp_id;  
     int start_id;
 }A_star;
+
+//数字识别+颜色巡线
+int flag_detection;
+float error_body_y;
+float yaw_sp;
+//自主降落
+Detection_result landpad_det;
+Eigen::Vector3f pos_des_prev;
+
+float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
+
 //无人机状态
 prometheus_msgs::DroneState _DroneState;                                   //无人机状态量
 Eigen::Matrix3f R_Body_to_ENU;
@@ -134,6 +147,63 @@ void global_planner_cmd_cb(const nav_msgs::Path::ConstPtr& msg)
         A_star.wp_id = A_star.start_id + 7;
     }
 }
+void color_line_cb(const geometry_msgs::Pose::ConstPtr &msg)
+{
+    error_body_y = - tan(msg->position.x) * NUM_POINT_Z;
+    flag_detection = msg->position.y;
+
+    float x1 = msg->orientation.w;
+    float y1 = msg->orientation.x;
+    float x2 = msg->orientation.y;
+    float y2 = msg->orientation.z;
+
+    float next_desired_yaw = - atan2(y2 - y1, x2 - x1);
+
+    yaw_sp = (0.7*yaw_sp + 0.3*next_desired_yaw);
+}
+void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
+{
+    landpad_det.object_name = "landpad";
+    landpad_det.Detection_info = *msg;
+    landpad_det.pos_body_frame[0] = - landpad_det.Detection_info.position[1] + DOWN_CAMERA_OFFSET_X;
+    landpad_det.pos_body_frame[1] = - landpad_det.Detection_info.position[0] + DOWN_CAMERA_OFFSET_Y;
+    landpad_det.pos_body_frame[2] = - landpad_det.Detection_info.position[2] + DOWN_CAMERA_OFFSET_Z;
+
+    landpad_det.pos_body_enu_frame = R_Body_to_ENU * landpad_det.pos_body_frame;
+
+    //若已知降落板高度，则无需使用深度信息。
+    landpad_det.pos_body_enu_frame[2] = LANDPAD_HEIGHT - _DroneState.position[2];
+
+    landpad_det.pos_enu_frame[0] = _DroneState.position[0] + landpad_det.pos_body_enu_frame[0];
+    landpad_det.pos_enu_frame[1] = _DroneState.position[1] + landpad_det.pos_body_enu_frame[1];
+    landpad_det.pos_enu_frame[2] = _DroneState.position[2] + landpad_det.pos_body_enu_frame[2];
+    // landpad_det.att_enu_frame[2] = _DroneState.attitude[2] + Detection_raw.attitude[2];
+    landpad_det.att_enu_frame[2] = 0.0;
+
+    if(landpad_det.Detection_info.detected)
+    {
+        landpad_det.num_regain++;
+        landpad_det.num_lost = 0;
+    }else
+    {
+        landpad_det.num_regain = 0;
+        landpad_det.num_lost++;
+    }
+
+    // 当连续一段时间无法检测到目标时，认定目标丢失
+    if(landpad_det.num_lost > VISION_THRES)
+    {
+        landpad_det.is_detected = false;
+    }
+
+    // 当连续一段时间检测到目标时，认定目标得到
+    if(landpad_det.num_regain > VISION_THRES)
+    {
+        landpad_det.is_detected = true;
+    }
+
+}
+
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
@@ -148,11 +218,11 @@ int main(int argc, char **argv)
     //【订阅】椭圆识别结果,用于形状穿越
     ros::Subscriber ellipse_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/ellipse_det", 10, ellipse_det_cb);
 
-    //ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10, landpad_det_cb);
+    ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10, landpad_det_cb);
 
     //ros::Subscriber num_det_sub = nh.subscribe<prometheus_msgs::MultiDetectionInfo>("/prometheus/object_detection/num_det", 10, num_det_cb);
 
-    //ros::Subscriber color_line_sub = nh.subscribe<geometry_msgs::Pose>("/prometheus/object_detection/color_line_angle", 10, color_line_cb);
+    ros::Subscriber color_line_sub = nh.subscribe<geometry_msgs::Pose>("/prometheus/object_detection/color_line_angle", 10, color_line_cb);
 
     //【订阅】局部路径规划结果,用于避开障碍物 柱子
     ros::Subscriber local_planner_sub  =  nh.subscribe<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 50, local_planner_cmd_cb);
@@ -178,10 +248,13 @@ int main(int argc, char **argv)
     switch_on.data = true;
     switch_off.data = false;
 
-
     nh.param<float>("kpx_circle_track", kpx_circle_track, 0.1);
     nh.param<float>("kpy_circle_track", kpy_circle_track, 0.1);
     nh.param<float>("kpz_circle_track", kpz_circle_track, 0.1);
+
+    nh.param<float>("kpx_land", kpx_land, 0.1);
+    nh.param<float>("kpy_land", kpy_land, 0.1);
+    nh.param<float>("kpz_land", kpz_land, 0.1);
 
 
     //固定的浮点显示
@@ -221,9 +294,12 @@ int main(int argc, char **argv)
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.position_ref[0]     = START_POINT_X;
-        Command_Now.Reference_State.position_ref[1]     = START_POINT_Y;
-        Command_Now.Reference_State.position_ref[2]     = START_POINT_Z;
+        // Command_Now.Reference_State.position_ref[0]     = START_POINT_X;
+        // Command_Now.Reference_State.position_ref[1]     = START_POINT_Y;
+        // Command_Now.Reference_State.position_ref[2]     = START_POINT_Z;
+        Command_Now.Reference_State.position_ref[0]     = NUM_POINT_X;
+        Command_Now.Reference_State.position_ref[1]     = NUM_POINT_Y;
+        Command_Now.Reference_State.position_ref[2]     = NUM_POINT_Z;
         Command_Now.Reference_State.yaw_ref             = START_POINT_YAW;
         command_pub.publish(Command_Now);
         cout << "Takeoff ..."<<endl;
@@ -232,11 +308,13 @@ int main(int argc, char **argv)
 
         float dis = cal_distance(Eigen::Vector3f(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]),
                      Eigen::Vector3f(START_POINT_X, START_POINT_Y, START_POINT_Z));
-
+        dis = cal_distance(Eigen::Vector3f(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]),
+                     Eigen::Vector3f(NUM_POINT_X, NUM_POINT_Y, NUM_POINT_Z));
         ros::spinOnce();
         if(dis < DIS_THRES)
         {
-            State_Machine = 1;
+            //State_Machine = 1;
+            State_Machine = 5;
         }
     }
 
@@ -327,12 +405,12 @@ int main(int argc, char **argv)
     goal.pose.position.y = CORRIDOR_POINT_Y + 1;
     goal.pose.position.z = CORRIDOR_POINT_Z;
 
-    while(flag_get_cmd == 0)
-    {
-        goal_pub.publish(goal);
-        cout << "Goal Pub ..."<<endl;
-        ros::spinOnce();
-    }
+    // while(flag_get_cmd == 0)
+    // {
+    //     goal_pub.publish(goal);
+    //     cout << "Goal Pub ..."<<endl;
+    //     ros::spinOnce();
+    // }
 
     local_planner_switch_pub.publish(switch_on);
     while(State_Machine == 3)
@@ -383,12 +461,12 @@ int main(int argc, char **argv)
     goal.pose.position.y = NUM_POINT_Y;
     goal.pose.position.z = NUM_POINT_Z;
 
-    while(flag_get_cmd < 4)
-    {
-        goal_pub.publish(goal);
-        cout << "Goal Pub 2 ..."<<endl;
-        ros::spinOnce();
-    }
+    // while(flag_get_cmd < 4)
+    // {
+    //     goal_pub.publish(goal);
+    //     cout << "Goal Pub 2 ..."<<endl;
+    //     ros::spinOnce();
+    // }
 
     while(State_Machine == 4)
     {   
@@ -416,16 +494,99 @@ int main(int argc, char **argv)
     }
     global_planner_switch_pub.publish(switch_off);
 
-
-
-    num_det_switch_pub.publish(switch_on);
-    num_det_switch_pub.publish(switch_off);
     color_det_switch_pub.publish(switch_on);
+
+
+    //巡线
+    while(State_Machine == 5)
+    {   
+        Command_Now.header.stamp                    = ros::Time::now();
+        Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+
+        Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::MIX_FRAME;
+        Command_Now.Reference_State.velocity_ref[0]     = FOLLOWING_VEL;
+        Command_Now.Reference_State.velocity_ref[1]     = FOLLOWING_KP * error_body_y;
+        Command_Now.Reference_State.position_ref[2]     = NUM_POINT_Z;
+        Command_Now.Reference_State.yaw_ref             = yaw_sp;
+
+        //Publish
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+        command_pub.publish(Command_Now);
+        cout << "Color Line Following... "<< endl;
+        cout << "error_body_y: " << error_body_y << " [m] "<<endl;
+        cout << "yaw_sp: " << yaw_sp/3.1415926 *180 << " [deg] "<<endl;
+        ros::spinOnce();
+        ros::Duration(0.05).sleep();
+
+        if(_DroneState.position[0] > LAND_POINT_X - 1.0)
+        {
+            State_Machine = 6;
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+            Command_Now.Reference_State.position_ref[0]     = LAND_POINT_X;
+            Command_Now.Reference_State.position_ref[1]     = LAND_POINT_Y;
+            Command_Now.Reference_State.position_ref[2]     = LAND_POINT_Z;
+            Command_Now.Reference_State.yaw_ref             = LAND_POINT_YAW;
+            command_pub.publish(Command_Now);
+            cout << "Moving to LAND_POINT ..."<<endl;
+            ros::Duration(2.0).sleep();
+        }
+    }
+
+    pos_des_prev[0] = _DroneState.position[0];
+    pos_des_prev[1] = _DroneState.position[1];
+    pos_des_prev[2] = _DroneState.position[2];
+
     color_det_switch_pub.publish(switch_off);
     pad_det_switch_pub.publish(switch_on);
+    
+    while(State_Machine == 6)
+    {   
+        float distance_to_setpoint = landpad_det.pos_body_enu_frame.norm();
+        cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
+        
+        Command_Now.header.stamp                    = ros::Time::now();
+        Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+        Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
+        Command_Now.Reference_State.yaw_ref = 0.0;
+        Eigen::Vector3f vel_command;
+        vel_command[0] = kpx_land * landpad_det.pos_body_enu_frame[0];
+        vel_command[1] = kpy_land * landpad_det.pos_body_enu_frame[1];
+        vel_command[2] = kpz_land * landpad_det.pos_body_enu_frame[2];
+        for (int i=0; i<3; i++)
+        {
+            Command_Now.Reference_State.position_ref[i] = pos_des_prev[i] + vel_command[i]* 0.05;
+            pos_des_prev[i] = Command_Now.Reference_State.position_ref[i];
+        }
+
+        command_pub.publish(Command_Now);
+        cout << "Autonomous Landing... "<< endl;
+
+        ros::spinOnce();
+        ros::Duration(0.05).sleep();
+
+        while(_DroneState.position[2] < 0.3)
+        {
+            State_Machine = 7;
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Disarm;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            command_pub.publish(Command_Now);
+            cout << "Landing and disarm ..."<<endl;
+            cout << "The end of the indoor competition ..."<<endl;
+            ros::Duration(2.0).sleep();
+            ros::spinOnce();
+        }
+    }
     pad_det_switch_pub.publish(switch_off);
-
-
     return 0;
 
 }
