@@ -20,13 +20,13 @@
 
 using namespace std;
 using namespace Eigen;
+#define FOLLOWING_VEL 0.5
+#define FOLLOWING_KP 2.0
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //---------------------------------------Drone---------------------------------------------  
 float drone_height;   
 float drone_yaw;
 float start_point_x,start_point_y,start_point_z;
-float velocity;
-float k_p;
 //---------------------------------------Vision---------------------------------------------
 int flag_detection;
 float error_body_y;
@@ -73,12 +73,9 @@ int main(int argc, char **argv)
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
-    nh.param<float>("velocity", velocity, 0.1);
     nh.param<float>("start_point_x", start_point_x, 0.0);
     nh.param<float>("start_point_y", start_point_y, 0.0);
     nh.param<float>("start_point_z", start_point_z, 2.0);
-
-    nh.param<float>("k_p", k_p, 0.1);
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -150,8 +147,8 @@ int main(int argc, char **argv)
         Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::MIX_FRAME;
-        Command_Now.Reference_State.velocity_ref[0]     = velocity;
-        Command_Now.Reference_State.velocity_ref[1]     = k_p * error_body_y;
+        Command_Now.Reference_State.velocity_ref[0]     = FOLLOWING_VEL;
+        Command_Now.Reference_State.velocity_ref[1]     = FOLLOWING_KP * error_body_y;
         Command_Now.Reference_State.position_ref[2]     = start_point_z;
         Command_Now.Reference_State.yaw_ref             = yaw_sp;
 
@@ -178,11 +175,10 @@ void printf_result()
 void printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "velocity      : "<< velocity << endl;
     cout << "start_point_x : "<< start_point_x << endl;
     cout << "start_point_y : "<< start_point_y << endl;
     cout << "start_point_z : "<< start_point_z << endl;
-    cout << "k_p           : "<< k_p << endl;
+    cout << "FOLLOWING_KP           : "<< FOLLOWING_KP << endl;
     
 }
 
