@@ -3,6 +3,8 @@ std_msgs/Header header
 ## 控制命令的编号 防止接收到错误命令， 编号应该逐次递加
 uint32 Command_ID
 
+## 消息来源
+string source
 ## 控制命令的模式 
 uint8 Mode
 # enum Mode 控制模式枚举
