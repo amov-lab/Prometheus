@@ -29,6 +29,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <geometry_msgs/Pose.h>
+#include <std_msgs/Bool.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/ml.hpp>
@@ -49,6 +50,11 @@ using namespace spire;
 std::string imlist_dir = "/home/nvidia/vision_ws/src/ellipse_det_ros/labeled_img_class.txt";  // 进行一个字符串赋值，方便下面调用
 // images, include above information
 std::string base_path = "/home/nvidia/vision_ws/src/ellipse_det_ros/images_from_camera/";  // 同上
+
+//【订阅】输入开关量
+ros::Subscriber switch_subscriber;
+// 接收消息，允许暂停检测
+bool is_suspanded = false;
 
 // 相机话题中的图像同步相关变量
 int frame_width, frame_height;
@@ -240,7 +246,11 @@ Ptr<SVM> train_svm_classifier()
     return svm;
 }
 
-
+void switchCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+    is_suspanded = !(bool)msg->data;
+    // cout << is_suspanded << endl;
+}
 
 //! ROS subscriber and publisher.
 image_transport::Subscriber imageSubscriber_;
@@ -271,6 +281,10 @@ int main(int argc, char **argv)
         ROS_WARN("didn't find parameter camera_info");
         camera_info = "camera_param.yaml";
     }
+
+    bool switch_state = is_suspanded;
+    // 接收开关话题
+    switch_subscriber = nh.subscribe("/prometheus/switch/ellipse_det", 10, switchCallback);
 
     // With Training
     bool wt = false;
@@ -323,6 +337,18 @@ int main(int argc, char **argv)
             std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
         }
+
+        if (switch_state != is_suspanded)
+        {
+            switch_state = is_suspanded;
+            if (!is_suspanded)
+                cout << "Start Detection." << endl;
+            else
+                cout << "Stop Detection." << endl;
+        }
+
+        if (!is_suspanded)
+        {
 
 #ifdef ELLIPSE_DET
         Mat ellipse_show, frame;
@@ -472,7 +498,7 @@ int main(int argc, char **argv)
         ellipse_pub.publish(msg_ellipse); 
 #endif
 #endif
-
+        }
 
         ros::spinOnce();
         loop_rate.sleep();

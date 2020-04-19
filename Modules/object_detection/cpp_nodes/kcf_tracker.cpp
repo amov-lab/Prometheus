@@ -27,6 +27,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <geometry_msgs/Pose.h>
+#include <std_msgs/Bool.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/ml.hpp>
@@ -46,6 +47,11 @@ cv::Mat cam_image_copy;
 boost::shared_mutex mutex_image_callback;
 bool image_status = false;
 boost::shared_mutex mutex_image_status;
+
+//【订阅】输入开关量
+ros::Subscriber switch_subscriber;
+// 接收消息，允许暂停检测
+bool is_suspanded = false;
 
 
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
@@ -132,6 +138,13 @@ void onMouse(int event, int x, int y, int, void*)
 }
 
 
+void switchCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+    is_suspanded = !(bool)msg->data;
+    // cout << is_suspanded << endl;
+}
+
+
 bool HOG = true;
 bool FIXEDWINDOW = false;
 bool MULTISCALE = true;
@@ -163,6 +176,10 @@ int main(int argc, char **argv)
         ROS_WARN("didn't find parameter camera_info");
         camera_info = "camera_param.yaml";
     }
+
+    bool switch_state = is_suspanded;
+    // 接收开关话题
+    switch_subscriber = nh.subscribe("/prometheus/switch/kcf_tracker", 10, switchCallback);
     
     // 接收图像的话题
     imageSubscriber_ = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
@@ -205,6 +222,17 @@ int main(int argc, char **argv)
             ros::spinOnce();
         }
 
+        if (switch_state != is_suspanded)
+        {
+            switch_state = is_suspanded;
+            if (!is_suspanded)
+                cout << "Start Detection." << endl;
+            else
+                cout << "Stop Detection." << endl;
+        }
+
+        if (!is_suspanded)
+        {
         Mat frame;
         {
             boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
@@ -255,9 +283,9 @@ int main(int argc, char **argv)
         pose_pub.publish(pose_now);
 
         imshow(RGB_WINDOW, frame);
-        waitKey(5);
-        
+        }
 
+        waitKey(5);
         ros::spinOnce();
         loop_rate.sleep();
     }

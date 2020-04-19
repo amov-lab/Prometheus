@@ -8,7 +8,7 @@ from std_msgs.msg import Bool
 
 
 rospy.init_node('switch_msg_test', anonymous=True)
-pub = rospy.Publisher('/prometheus/switch/num_det', Bool, queue_size=10)
+pub = rospy.Publisher('/prometheus/switch/ellipse_det', Bool, queue_size=10)
 rate = rospy.Rate(10) # 10hz
 
 while True:
