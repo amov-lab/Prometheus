@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 
     bool switch_state = is_suspanded;
     // 接收开关话题
-    switch_subscriber = nh.subscribe("/prometheus/switch/kcf_tracker", 10, switchCallback);
+    switch_subscriber = nh.subscribe("/prometheus/switch/aruco_det", 10, switchCallback);
 
     sensor_msgs::ImagePtr msg_ellipse;
     // 开启编号为0的摄像头
