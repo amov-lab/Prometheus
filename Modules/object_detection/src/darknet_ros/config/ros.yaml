@@ -1,0 +1,33 @@
+subscribers:
+
+  camera_reading:
+    topic: /camera/rgb/image_raw
+    queue_size: 1
+
+actions:
+
+  camera_reading:
+    name: /darknet_ros/check_for_objects
+
+publishers:
+
+  object_detector:
+    topic: /darknet_ros/found_object
+    queue_size: 1
+    latch: false
+
+  bounding_boxes:
+    topic: /darknet_ros/bounding_boxes
+    queue_size: 1
+    latch: false
+
+  detection_image:
+    topic: /darknet_ros/detection_image
+    queue_size: 1
+    latch: true
+
+image_view:
+
+  enable_opencv: true
+  wait_key_delay: 1
+  enable_console_output: true
