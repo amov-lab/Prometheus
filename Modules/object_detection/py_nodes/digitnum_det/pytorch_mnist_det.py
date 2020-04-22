@@ -175,8 +175,8 @@ def image_callback(imgmsg):
             w = int(float(w) / h * img_resize)
             h = img_resize
         frame = cv2.resize(frame, (w, h))
-        cv2.imshow("color", frame)
-        cv2.waitKey(10)
+        # cv2.imshow("color", frame)
+        # cv2.waitKey(10)
 
 
 def num_det(topic_name):
