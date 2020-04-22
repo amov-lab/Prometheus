@@ -154,6 +154,7 @@ int main(int argc, char **argv)
     local_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/local_planner", 10);
     global_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/global_planner", 10);
     fast_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/fast_planner", 10);
+    switch_on.data = true;
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
