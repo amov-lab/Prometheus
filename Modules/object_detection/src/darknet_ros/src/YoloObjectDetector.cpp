@@ -652,8 +652,8 @@ void *YoloObjectDetector::publishInThread()
             pose_pub.publish(pose_now);
 
 
-            std::cout << "flag_detected: " <<  pose_now.orientation.w <<std::endl;
-            std::cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<std::endl;
+            // std::cout << "flag_detected: " <<  pose_now.orientation.w <<std::endl;
+            // std::cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< // /// pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<std::endl;
 
             last_x = depth;
             last_y = real_x;
