@@ -1,28 +1,28 @@
 subscribers:
 
   camera_reading:
-    topic: /camera/rgb/image_raw
+    topic: /prometheus/camera/rgb/image_raw
     queue_size: 1
 
 actions:
 
   camera_reading:
-    name: /darknet_ros/check_for_objects
+    name: /prometheus/darknet_ros/check_for_objects
 
 publishers:
 
   object_detector:
-    topic: /darknet_ros/found_object
+    topic: /prometheus/darknet_ros/found_object
     queue_size: 1
     latch: false
 
   bounding_boxes:
-    topic: /darknet_ros/bounding_boxes
+    topic: /prometheus/darknet_ros/bounding_boxes
     queue_size: 1
     latch: false
 
   detection_image:
-    topic: /darknet_ros/detection_image
+    topic: /prometheus/darknet_ros/detection_image
     queue_size: 1
     latch: true
 

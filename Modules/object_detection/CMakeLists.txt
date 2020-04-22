@@ -6,7 +6,7 @@ add_compile_options(-std=c++11)
 
 # Define path of darknet folder here.
 find_path(DARKNET_PATH
-  NAMES "README.md"
+  NAMES "Makefile"
   HINTS "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_lib/")
 message("Darknet path dir = ${DARKNET_PATH}")
 add_definitions(-DDARKNET_FILE_PATH="${DARKNET_PATH}")
@@ -351,6 +351,18 @@ add_executable(landpad_det
     cpp_nodes/landpad_det.cpp
 )
 target_link_libraries(landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+
+
+if(CATKIN_ENABLE_TESTING)
+  # Download yolov2.weights
+  set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_ros/yolo_network_config/weights")
+  set(FILE "${PATH}/yolov3-tiny.weights")
+  message(STATUS "Checking and downloading yolov3-tiny.weights if needed ...")
+  if (NOT EXISTS "${FILE}")
+    message(STATUS "... file does not exist. Downloading now ...")
+    execute_process(COMMAND wget http://121.36.68.10/upload/yolov3-tiny.weights -P ${PATH})
+  endif()
+endif()
 
 #############
 ## Install ##
