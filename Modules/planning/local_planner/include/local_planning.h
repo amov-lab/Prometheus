@@ -31,9 +31,12 @@
 
 #include "planning_visualization.h"
 
+#include "tools.h"
 using namespace std;
 
 namespace local_planner{
+
+extern ros::Publisher message_pub;
 
 class PotentialFiledPlanner{
 
@@ -93,7 +96,7 @@ private:
     ros::Time control_time;
 
     ros::Publisher local_map_marker_Pub, px4_pos_cmd_pub;
-    ros::Publisher replan_cmd_Pub, message_pub;
+    ros::Publisher replan_cmd_Pub;
 
     // APF 算法 算子
     APF::Ptr apf_planner_ptr;

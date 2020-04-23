@@ -48,6 +48,7 @@ add_executable(local_planner_main
 	src/local_planning.cpp
 	src/apf.cpp
 	src/planning_visualization.cpp
+       src/tools.cpp
 	)
 
 target_link_libraries(local_planner_main

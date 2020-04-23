@@ -19,10 +19,13 @@
 // #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include "tools.h"
 
 using namespace std;
 
 namespace local_planner{
+
+extern ros::Publisher message_pub;
 
 class APF{
 private:

@@ -18,6 +18,7 @@
 #include <sensor_msgs/PointCloud2.h>
 
 #include "occupy_map.h"
+#include "tools.h"
 
 namespace global_planner
 {
@@ -25,6 +26,8 @@ namespace global_planner
 #define IN_OPEN_SET 'b'
 #define NOT_EXPAND 'c'
 #define inf 1 >> 30
+
+extern ros::Publisher message_pub;
 
 class Node
 {

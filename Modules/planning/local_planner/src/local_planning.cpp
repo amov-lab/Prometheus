@@ -8,6 +8,10 @@ namespace local_planner
 {
 
 void PotentialFiledPlanner::init(ros::NodeHandle& nh){
+
+    // global variable
+    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/local_planner", 10);
+
     // set mode
     flight_type_ = FLIGHT_TYPE::MANUAL_GOAL;
     // set algorithm
@@ -37,7 +41,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
     px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
-    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/local_planner", 10);
+
     exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
 
     nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
@@ -56,9 +60,8 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     static int exect_num=0;
     exect_num++;
-    prometheus_msgs::Message exect_msg;
-    exect_msg.header.stamp = ros::Time::now();
-    exect_msg.message_type=prometheus_msgs::Message::NORMAL;
+
+    std::string exect_msg;
     string print_info;
     if(exect_num==19){
         if (!trigger_)
@@ -69,48 +72,41 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
         if(!have_odom_){
             print_info = "don't have odometry!\n";
-            printf("don't have odometry!\n");
-            // return;
+            // printf("don't have odometry!\n");
         }
             
         if(!has_point_map_)
         {
             print_info = "don't have point cloud! \n";
-            printf("don't have point cloud! \n");
-            // return;
+            // printf("don't have point cloud! \n");
         }
         if(!have_goal_){
             print_info = "*** wait goal!*** \n";
-            printf("*** wait goal!*** \n");
-            // return;
+            // printf("*** wait goal!*** \n");
         }
         exect_num=0;
     }
-    exect_msg.content = "[local planner]: " + print_info;
-    message_pub.publish(exect_msg);
+    exect_msg = "[local planner]: " + print_info;
 
+    pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
 
     if (!trigger_)
     {   
         return;
     }
     if(!have_odom_){
-        // printf("don't have odometry!\n");
         return;
     }
         
     if(!has_point_map_)
     {
-        // printf("don't have point cloud! \n");
         return;
     }
 
     if(!have_goal_){
-        // printf("*** wait goal!*** \n");
         return;
     }
     
-    // printf("begin  apf \n");
     apf_planner_ptr->set_local_map(local_map_ptr_);
     
     apf_planner_ptr->set_odom(odom_);
@@ -137,7 +133,11 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
         desired_vel = desired_vel / desired_vel.norm() * max_planning_vel;  // the max velocity is max_planning_vel
     }
     if(exect_num==10){
-        printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+        // printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+        char* sp;
+        sprintf(sp, "local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+        pub_msg(message_pub, sp, prometheus_msgs::Message::NORMAL);
+
         exect_num=0;
     }
     
@@ -190,9 +190,15 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
     else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)
     {}
     
-    ROS_INFO("---planning_fsm: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
+    // ROS_INFO("---planning_fsm: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
+    //                                                         end_pt_(1), 
+    //                                                         end_pt_(2));
+    char* sp;
+    sprintf(sp, "---planning_fsm: get waypoint: [ %f, %f, %f]!---\n", end_pt_(0),
                                                             end_pt_(1), 
                                                             end_pt_(2));
+    pub_msg(message_pub, sp, prometheus_msgs::Message::NORMAL);
+
 
     visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));
 
