@@ -103,7 +103,7 @@ Visualization Manager:
           Shaft Length: 1
           Shaft Radius: 0.05000000074505806
           Shape: Axes
-          Topic: /prometheus/reference_pose
+          Topic: /prometheus/control/ref_pose_rviz
           Unreliable: false
           Value: true
       Enabled: true
@@ -448,5 +448,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1440
-  X: 2145
-  Y: 24
+  X: 2302
+  Y: 270

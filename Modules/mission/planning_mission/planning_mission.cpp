@@ -54,6 +54,11 @@ struct fast_planner
 
 }fast_planner;
 
+ros::Publisher local_planner_switch_pub,global_planner_switch_pub,fast_planner_switch_pub;
+
+std_msgs::Bool switch_on;
+std_msgs::Bool switch_off;
+
 bool control_yaw_flag;
 int flag_get_cmd = 0;
 int flag_get_goal = 0;
@@ -146,7 +151,10 @@ int main(int argc, char **argv)
     
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
-
+    local_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/local_planner", 10);
+    global_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/global_planner", 10);
+    fast_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/fast_planner", 10);
+    switch_on.data = true;
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
@@ -165,6 +173,17 @@ int main(int argc, char **argv)
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Local Planning Mission<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
         cout << "Please choose the planning method: 1 for APF, 2 for A*, 3 for Fast planner"<<endl;
         cin >> start_flag;
+
+        if (start_flag == 1)
+        {
+            local_planner_switch_pub.publish(switch_on);
+        }else if (start_flag == 2)
+        {
+            global_planner_switch_pub.publish(switch_on);
+        }else if (start_flag == 3)
+        {
+            fast_planner_switch_pub.publish(switch_on);
+        }
     }
 
     // 起飞

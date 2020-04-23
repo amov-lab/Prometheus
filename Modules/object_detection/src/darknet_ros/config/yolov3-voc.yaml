@@ -1,0 +1,30 @@
+yolo_model:
+
+  config_file:
+    name: yolov3-voc.cfg
+  weight_file:
+    name: yolov3-voc.weights
+  threshold:
+    value: 0.3
+  detection_classes:
+    names:
+      - aeroplane
+      - bicycle
+      - bird
+      - boat
+      - bottle
+      - bus
+      - car
+      - cat
+      - chair
+      - cow
+      - diningtable
+      - dog
+      - horse
+      - motorbike
+      - person
+      - pottedplant
+      - sheep
+      - sofa
+      - train
+      - tvmonitor

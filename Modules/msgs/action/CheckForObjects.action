@@ -1,0 +1,13 @@
+# Check if objects in image
+
+# Goal definition
+int16 id
+sensor_msgs/Image image
+
+---
+# Result definition
+int16 id
+prometheus_msgs/BoundingBoxes bounding_boxes
+
+---
+# Feedback definition

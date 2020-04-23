@@ -44,7 +44,9 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
+#include <std_msgs/Bool.h>
 #include <prometheus_msgs/DetectionInfo.h>
+#include <prometheus_msgs/Message.h>
 
 using namespace std;
 using namespace cv;
@@ -60,10 +62,14 @@ ros::Subscriber drone_pose_sub;
 ros::Subscriber vehicle_pose_sub;
 //【订阅】输入图像
 image_transport::Subscriber image_subscriber;
+//【订阅】输入开关量
+ros::Subscriber switch_subscriber;
 //【发布】无人机和小车相对位置
 ros::Publisher position_pub;
 //【发布】识别后的图像
 image_transport::Publisher landpad_pub;
+//【发布】调试消息
+ros::Publisher message_pub;
 
 //-------------VISION-----------
 Mat img;
@@ -93,7 +99,21 @@ Eigen::Quaterniond q_vehicle;
 
 // 保存的上次观测的位置 用于cluster算法使用
 Eigen::Vector3d last_position;
-bool bool_last_position=false;
+bool bool_last_position = false;
+// 接收消息，允许暂停检测
+bool is_suspanded = false;
+bool local_print = false;
+bool message_print = true;
+
+void printf_result();
+
+void pub_msg(ros::Publisher& puber, string mmm, int type){
+    prometheus_msgs::Message exect_msg;
+    exect_msg.header.stamp = ros::Time::now();
+    exect_msg.message_type = type;
+    exect_msg.content = mmm;
+    puber.publish(exect_msg);
+}
 
 //-----------------利用Euler角进行三次旋转得到无人机相对目标的位置------------------
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -181,39 +201,72 @@ bool getImageStatus(void)
     return image_status;
 }
 
-void printf_result();
+
+void switchCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+    is_suspanded = !(bool)msg->data;
+    // cout << is_suspanded << endl;
+}
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "landpad_det");
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
+    // 发布调试消息
+    message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/landpad_det", 10);
+
     std::string camera_topic, camera_info;
     if (nh.getParam("camera_topic", camera_topic)) {
-        ROS_INFO("camera_topic is %s", camera_topic.c_str());
+        if (local_print)
+            ROS_INFO("camera_topic is %s", camera_topic.c_str());
+        if (message_print)
+            pub_msg(message_pub, "camera_topic is" + camera_topic, prometheus_msgs::Message::NORMAL);
     } else {
-        ROS_WARN("didn't find parameter camera_topic");
+        if (local_print)
+            ROS_WARN("didn't find parameter camera_topic");
+        if (message_print)
+            pub_msg(message_pub, "didn't find parameter camera_topic", prometheus_msgs::Message::WARN);
         camera_topic = "/prometheus/camera/rgb/image_raw";
     }
 
     if (nh.getParam("camera_info", camera_info)) {
-        ROS_INFO("camera_info is %s", camera_info.c_str());
+        if (local_print)
+            ROS_INFO("camera_info is %s", camera_info.c_str());
+        if (message_print)
+            pub_msg(message_pub, "camera_info is" + camera_info, prometheus_msgs::Message::NORMAL);
     } else {
-        ROS_WARN("didn't find parameter camera_info");
+        if (local_print)
+            ROS_WARN("didn't find parameter camera_info");
+        if (message_print)
+            pub_msg(message_pub, "didn't find parameter camera_info", prometheus_msgs::Message::WARN);
         camera_info = "camera_param.yaml";
     }
 
     position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10);
 
+
+    // 接收开关话题
+    switch_subscriber = nh.subscribe("/prometheus/switch/landpad_det", 10, switchCallback);
+
     // 接收图像的话题
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
     // 发布ArUco检测结果的话题
     landpad_pub = it.advertise("/prometheus/camera/rgb/image_landpad_det", 1);
+    
 
     sensor_msgs::ImagePtr msg_ellipse;
 
     std::string ros_path = ros::package::getPath("prometheus_detection");
-    cout << "DETECTION_PATH: " << ros_path << endl;
+    
+    if (local_print)
+        cout << "DETECTION_PATH: " << ros_path << endl;
+    if (message_print)
+        pub_msg(message_pub, "DETECTION_PATH: " + ros_path, prometheus_msgs::Message::NORMAL);
+    
+
     // 读取参数文档camera_param.yaml中的参数值；
     YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/" + camera_info);
     // 相机内部参数
@@ -252,11 +305,11 @@ int main(int argc, char **argv)
 
     // ArUco Marker字典选择以及旋转向量和评议向量初始化
     Ptr<cv::aruco::Dictionary> dictionary=cv::aruco::getPredefinedDictionary(10);
-    vector<double> rv(3),tv(3);
-    cv::Mat rvec(rv),tvec(tv);
+    vector<double> rv(3), tv(3);
+    cv::Mat rvec(rv), tvec(tv);
     // cv::VideoCapture capture(0);
     float last_x(0), last_y(0), last_z(0), last_yaw(0);
-
+    bool switch_state = is_suspanded;
 
     // 节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate loopRate(20);
@@ -267,12 +320,37 @@ int main(int argc, char **argv)
     {
         while (!getImageStatus() && ros::ok()) 
         {
-            printf("Waiting for image.\n");
+            if (local_print)
+                cout << "Waiting for image." << endl;
+            if (message_print)
+                pub_msg(message_pub, "Waiting for image.", prometheus_msgs::Message::NORMAL);
+            
             // std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
             loopRate_1Hz.sleep();
         }
 
+        if (switch_state != is_suspanded)
+        {
+            switch_state = is_suspanded;
+            if (!is_suspanded)
+            {
+                if (local_print)
+                    cout << "Start Detection." << endl;
+                if (message_print)
+                    pub_msg(message_pub, "Start Detection.", prometheus_msgs::Message::NORMAL);
+            }
+            else
+            {
+                if (local_print)
+                    cout << "Stop Detection." << endl;
+                if (message_print)
+                    pub_msg(message_pub, "Stop Detection.", prometheus_msgs::Message::NORMAL);
+            }
+        }
+
+        if (!is_suspanded)
+        {
         {
             boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
             img = cam_image_copy.clone();
@@ -280,7 +358,7 @@ int main(int argc, char **argv)
 
         clock_t start=clock();
         // capture>>img;
-        ros::spinOnce();
+        
 
 
         //------------------调用ArUco Marker库对图像进行识别--------------
@@ -291,13 +369,13 @@ int main(int argc, char **argv)
         cv::aruco::detectMarkers(img,dictionary,markerCorners,markerids,parameters,rejectedCandidate);
 
         //-------------------多于一个目标被识别到，进入算法-----------------
-        if (markerids.size()>0)
+        if (markerids.size() > 0)
         {
             // 未处理后的位置
             vector<cv::Point3f> vec_Position_OcInW;
             vector<double> vec_yaw;
             cv::Point3f A1_Sum_Position_OcInW(0,0,0);
-            double A1_Sum_yaw=0.0;
+            double A1_Sum_yaw = 0.0;
             double tx, ty, tz;
             int marker_count = 0;
 
@@ -496,18 +574,23 @@ int main(int argc, char **argv)
         calculation_time=(finish-start)/1000;
         
         // 打印
-        printf_result();
+        // printf_result();
 
         // 画出识别到的二维码
         cv::aruco::drawDetectedMarkers(img, markerCorners, markerids);
         
         msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
         landpad_pub.publish(msg_ellipse);
+        }
+
         // cv::imshow("test",img);
+        ros::spinOnce();
         cv::waitKey(1);
         loopRate.sleep();
     }
 }
+
+
 void printf_result()
 {
     // 固定的浮点显示

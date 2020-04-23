@@ -29,7 +29,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     // publish 
     global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/prometheus/planning/global_map_marker",  10);  
     safety_timer_ = node_.createTimer(ros::Duration(2.0), &GlobalPlanner::safetyCallback, this);
-    exec_timer_ = node_.createTimer(ros::Duration(3.0), &GlobalPlanner::execCallback, this);        // 每3秒执行一次A*
+    exec_timer_ = node_.createTimer(ros::Duration(2.0), &GlobalPlanner::execCallback, this);        // 每3秒执行一次A*
 
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/planning/path_cmd",  10);  
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  

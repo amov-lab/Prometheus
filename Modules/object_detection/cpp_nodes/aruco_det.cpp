@@ -26,6 +26,7 @@
 #include <cv_bridge/cv_bridge.h>  
 #include <sensor_msgs/image_encodings.h>  
 #include <geometry_msgs/Pose.h>
+#include <std_msgs/Bool.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
@@ -44,6 +45,11 @@ image_transport::Subscriber image_subscriber;
 ros::Publisher pose_pub;
 //【发布】输入检测结果图像
 image_transport::Publisher aruco_pub;
+
+//【订阅】输入开关量
+ros::Subscriber switch_subscriber;
+// 接收消息，允许暂停检测
+bool is_suspanded = false;
 
 
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -121,6 +127,12 @@ bool getImageStatus(void)
     return image_status;
 }
 
+void switchCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+    is_suspanded = !(bool)msg->data;
+    // cout << is_suspanded << endl;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -137,10 +149,14 @@ int main(int argc, char **argv)
     // 发布ArUco检测结果的话题
     aruco_pub = it.advertise("/prometheus/camera/rgb/image_aruco_det", 1);
 
+    bool switch_state = is_suspanded;
+    // 接收开关话题
+    switch_subscriber = nh.subscribe("/prometheus/switch/aruco_det", 10, switchCallback);
+
     sensor_msgs::ImagePtr msg_ellipse;
     // 开启编号为0的摄像头
-	  // cv::VideoCapture cap(0);
-	  cv::Mat frame;
+    // cv::VideoCapture cap(0);
+	cv::Mat frame;
 
     cv::Mat camera_matrix;
     cv::Mat distortion_coefficients;
@@ -212,6 +228,18 @@ int main(int argc, char **argv)
             ros::spinOnce();
         }
 
+        if (switch_state != is_suspanded)
+        {
+            switch_state = is_suspanded;
+            if (!is_suspanded)
+                cout << "Start Detection." << endl;
+            else
+                cout << "Stop Detection." << endl;
+        }
+
+        if (!is_suspanded)
+        {
+
         {
             boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
             frame = cam_image_copy.clone();
@@ -234,47 +262,6 @@ int main(int argc, char **argv)
 
                 cv::aruco::estimatePoseSingleMarkers(markerCorners,aruco_det_len,camera_matrix,distortion_coefficients,rvec,tvec);
 
-                /**********************************************************************
-                double rm[9];
-                RoteM = cv::Mat(3, 3, CV_64FC1, rm);
-                Rodrigues(rvec, RoteM);
-                double r11 = RoteM.ptr<double>(0)[0];
-                double r12 = RoteM.ptr<double>(0)[1];
-                double r13 = RoteM.ptr<double>(0)[2];
-                double r21 = RoteM.ptr<double>(1)[0];
-                double r22 = RoteM.ptr<double>(1)[1];
-                double r23 = RoteM.ptr<double>(1)[2];
-                double r31 = RoteM.ptr<double>(2)[0];
-                double r32 = RoteM.ptr<double>(2)[1];
-                double r33 = RoteM.ptr<double>(2)[2];
-                TransM = tvec;
-
-                double thetaz = atan2(r21, r11) / CV_PI * 180;
-                double thetay = atan2(-1 * r31, sqrt(r32*r32 + r33*r33)) / CV_PI * 180;
-                double thetax = atan2(r32, r33) / CV_PI * 180;
-
-                Theta_C2W.z = thetaz;
-                Theta_C2W.y = thetay;
-                Theta_C2W.x = thetax;
-
-                Theta_W2C.x = -1 * thetax;
-                Theta_W2C.y = -1 * thetay;
-                Theta_W2C.z = -1 * thetaz;
-
-                double tx = tvec.ptr<double>(0)[0];
-                double ty = tvec.ptr<double>(0)[1];
-                double tz = tvec.ptr<double>(0)[2];
-                double x = tx, y = ty, z = tz;
-                //ZYX axis rotate
-                CodeRotateByZ(x, y, -1 * thetaz, x, y);
-                CodeRotateByY(x, z, -1 * thetay, x, z);
-                CodeRotateByX(y, z, -1 * thetax, y, z);
-
-                Position_OcInW.x = x*-1;
-                Position_OcInW.y = y*-1;
-                Position_OcInW.z = z*-1;
-                **********************************************************************/
-
                 prometheus_msgs::DetectionInfo pose_now;
                 pose_now.header.stamp = ros::Time::now();
                 pose_now.detected = true;
@@ -282,12 +269,6 @@ int main(int argc, char **argv)
                 pose_now.position[0] = tvec.ptr<double>(0)[0];
                 pose_now.position[1] = tvec.ptr<double>(0)[1];
                 pose_now.position[2] = tvec.ptr<double>(0)[2];
-
-                // geometry_msgs::Pose pose_now;                
-                // pose_now.position.x = Position_OcInW.z;
-                // pose_now.position.y = -Position_OcInW.x;
-                // pose_now.position.z = Position_OcInW.y;
-                // pose_now.orientation.w = 1;
 
                 static_real_x = tvec.ptr<double>(0)[0];
                 static_real_y = tvec.ptr<double>(0)[1];
@@ -308,11 +289,6 @@ int main(int argc, char **argv)
                 pose_now.position[0] = static_real_x;
                 pose_now.position[1] = static_real_y;
                 pose_now.position[2] = static_depth;
-                // geometry_msgs::Pose pose_now;
-                // pose_now.position.x = static_depth;
-                // pose_now.position.y = static_real_x;
-                // pose_now.position.z = static_real_y;
-                // pose_now.orientation.w = 0;
 
                 pose_pub.publish(pose_now);
 
@@ -329,6 +305,8 @@ int main(int argc, char **argv)
             cv::waitKey(1);
 
 		}
+        }
+
         ros::spinOnce();
         loop_rate.sleep();
     }
