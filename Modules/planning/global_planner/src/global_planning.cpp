@@ -3,16 +3,10 @@
 namespace global_planner
 {
 
-void pub_msg(ros::Publisher & puber, string mmm, int type){
-    prometheus_msgs::Message exect_msg;
-    exect_msg.header.stamp = ros::Time::now();
-    exect_msg.message_type=type;
-    exect_msg.content = mmm;
-    puber.publish(exect_msg);
-}
 
 void GlobalPlanner::init(ros::NodeHandle& nh){
-    // set mode
+    // global variable
+    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/global_planner", 10);
     // safe_distance
     nh.param("planning/safe_distance", safe_distance, 0.25);
     // set algorithm
@@ -40,7 +34,6 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/planning/path_cmd",  10);  
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
 
-    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/global_planner", 10);
     swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/global_planner", 10, &GlobalPlanner::switchCallback, this);  
     
     // a* algorithm
@@ -99,59 +92,55 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
     if(exec_num==2){
         if(!trigger_){
             exect_msg = "don't triggle!\n";
-            // pub_msg(message_pub, "don't triggle!\n", prometheus_msgs::Message::NORMAL);
-            printf("don't triggle!\n");
+            // printf("don't triggle!\n");
         }
 
         if(!have_odom_){
             exect_msg = "don't have odometry!\n";
-            printf("don't have odometry!\n");
+            // printf("don't have odometry!\n");
             // return;
         }
             
         if(!has_point_map_)
         {
             exect_msg = "don't have point cloud!\n";
-            printf("don't have point cloud! \n");
+            // printf("don't have point cloud! \n");
             // return;
         }
         if(!have_goal_){
             exect_msg = "*** wait goal!*** \n";
-            printf("*** wait goal!*** \n");
+            // printf("*** wait goal!*** \n");
             // return;
         }
+        pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
         exec_num=0;
     }
-
-    pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
 
     if(!trigger_){
         return;
     }
 
     if(!have_odom_){
-        // printf("don't have odometry!\n");
         return;
     }
         
     if(!has_point_map_)
     {
-        // printf("don't have point cloud! \n");
         return;
     }
     if(!have_goal_){
-        // printf("*** wait goal!*** \n");
         return;
     }
 
-    // printf("begin  astar !!\n");
     Astar_ptr->reset();
     int astar_state = Astar_ptr->search(start_pt_, end_pt_);
     if(astar_state==Astar::NO_PATH){
-        printf("a star find no path, please reset the goal!\n");
+        pub_msg(message_pub, "a star find no path, please reset the goal!\n", prometheus_msgs::Message::WARN);
+        // printf("a star find no path, please reset the goal!\n");
     }
     else{
-        printf("astart find path success!\n");
+        // printf("astart find path success!\n");
+        pub_msg(message_pub, "astart find path success!\n", prometheus_msgs::Message::NORMAL);
         std::vector<Eigen::Vector3d> A_star_path = Astar_ptr->getPath();
         visualization_->drawPath(A_star_path, 0.1,Eigen::Matrix<double, 4, 1>(1.0, 0, 0, 1), 1);
         generate_CMD(A_star_path);
@@ -211,7 +200,7 @@ void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
 void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg){
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
-        ROS_INFO("global point cloud: --- no odom!---");
+        // ROS_INFO("global point cloud: --- no odom!---");
         return;
     }
     global_map_ptr_ = msg;

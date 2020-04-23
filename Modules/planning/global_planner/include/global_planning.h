@@ -29,10 +29,13 @@
 #include "planning_visualization.h"
 
 #include "A_star.h"
+#include "tools.h"
 
 using namespace std;
 
 namespace global_planner{
+
+extern ros::Publisher message_pub;
 
 class GlobalPlanner{
 
@@ -88,7 +91,7 @@ private:
 
     ros::Publisher pos_cmd_pub, global_map_marker_Pub, px4_pos_cmd_pub;
     ros::Publisher path_cmd_Pub;
-    ros::Publisher replan_cmd_Pub, message_pub;
+    ros::Publisher replan_cmd_Pub;
 
     // visual 
     PlanningVisualization::Ptr visualization_;

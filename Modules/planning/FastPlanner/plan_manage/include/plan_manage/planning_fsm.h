@@ -10,6 +10,7 @@
 #include <nav_msgs/Path.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Int8.h>
+#include <std_msgs/Bool.h>
 
 #include <traj_utils/planning_visualization.h>
 #include <plan_env/sdf_map.h>
@@ -21,10 +22,15 @@
 #include <plan_manage/dyn_planner_manager.h>
 #include "prometheus_plan_manage/Bspline.h"
 
+#include "plan_manage/tools.h"
+
 using std::vector;
 
 namespace dyn_planner
 {
+
+extern ros::Publisher message_pub;
+
 class PlanningFSM
 {
 private:
@@ -86,13 +92,13 @@ private:
   ros::Timer exec_timer_, safety_timer_;
   ros::Timer vis_timer_, query_timer_;
 
-  ros::Subscriber waypoint_sub_;
+  ros::Subscriber waypoint_sub_, swith_sub;
 
   ros::Publisher replan_pub_, bspline_pub_, safety_pub_;
 
   void execFSMCallback(const ros::TimerEvent& e);
   void safetyCallback(const ros::TimerEvent& e);
-
+  void switchCallback(const std_msgs::Bool::ConstPtr &msg);
   // void waypointCallback(const nav_msgs::PathConstPtr& msg);
   void waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg);
 

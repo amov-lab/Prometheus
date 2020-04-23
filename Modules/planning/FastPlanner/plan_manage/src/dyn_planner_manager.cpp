@@ -76,7 +76,7 @@ void DynPlannerManager::getSolvingTime(double& ts, double& to, double& ta)
 bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vector3d start_vel,
                                            Eigen::Vector3d start_acc, Eigen::Vector3d end_pt, Eigen::Vector3d end_vel)
 {
-  std::cout << "[planner]: -----------------------" << std::endl;
+  // std::cout << "[planner]: -----------------------" << std::endl;
   cout << "start: (pt; vel; acc) " << start_pt.transpose() << ", " << start_vel.transpose() << ", " << start_acc.transpose()
        << "\ngoal:" << end_pt.transpose() << ", " << end_vel.transpose() << endl;
 
@@ -142,7 +142,7 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
   Eigen::MatrixXd control_pts;
   NonUniformBspline::getControlPointEqu3(samples, ts, control_pts);
 
-  cout << "ctrl pts:" << control_pts << endl;
+  // cout << "ctrl pts:" << control_pts << endl;
 
   NonUniformBspline init = NonUniformBspline(control_pts, 3, ts);
 
@@ -157,11 +157,11 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
   bspline_optimizer_->setBSplineInterval(ts);
 
   if (status != KinodynamicAstar::REACH_END){
-    cout << "Kinodynamic Astar not reach end!" <<endl;
+    // cout << "Kinodynamic Astar not reach end!" <<endl;
     bspline_optimizer_->optimize(BsplineOptimizer::SOFT_CONSTRAINT, dynamic_, time_start_);
   }
   else{
-    cout << "Kinodynamic Astar reach end!" <<endl;
+    // cout << "Kinodynamic Astar reach end!" <<endl;
     bspline_optimizer_->optimize(BsplineOptimizer::HARD_CONSTRAINT, dynamic_, time_start_);
   }
   control_pts = bspline_optimizer_->getControlPoints();

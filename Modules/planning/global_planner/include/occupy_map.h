@@ -15,8 +15,13 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 
+#include "tools.h"
+
 namespace global_planner
 {
+
+extern ros::Publisher message_pub;
+
 class Occupy_map{
 public:
     sensor_msgs::PointCloud2ConstPtr global_env_;
