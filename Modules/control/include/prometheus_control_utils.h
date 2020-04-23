@@ -12,11 +12,14 @@
 #include <math.h>
 #include <math_utils.h>
 #include <command_to_mavros.h>
-
+#include <prometheus_msgs/Message.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
+#include <prometheus_msgs/ControlOutput.h>
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 
 using namespace std;
 
@@ -35,7 +38,25 @@ using namespace std;
 namespace prometheus_control_utils 
 {
 
+
+
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 打 印 函 数 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  
+void printf_message(const prometheus_msgs::Message& message)
+{
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Message <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    if(message.message_type == prometheus_msgs::Message::NORMAL)
+    {
+        cout << "[NORMAL]:" << message.content <<endl;
+    }else if(message.message_type == prometheus_msgs::Message::WARN)
+    {
+        cout << "[WARN]:" << message.content <<endl;
+    }else if(message.message_type == prometheus_msgs::Message::ERROR)
+    {
+        cout << "[ERROR]:" << message.content <<endl;
+    }
+    
+}
 // 打印上层控制指令  
 void printf_command_control(const prometheus_msgs::ControlCommand& _ControlCommand)
 {
@@ -52,28 +73,32 @@ void printf_command_control(const prometheus_msgs::ControlCommand& _ControlComma
     // 强制显示符号
     cout.setf(ios::showpos);
 
+    cout << "Source: "<< _ControlCommand.source << "Command_ID: "<< _ControlCommand.Command_ID <<endl;
+
     switch(_ControlCommand.Mode)
     {
         case prometheus_msgs::ControlCommand::Idle:
-            cout << "Command: [ Idle ] " <<endl;
+            
+            if(_ControlCommand.Reference_State.yaw_ref == 999)
+            {
+                cout << "Command: [ Idle + Arming + Switching to OFFBOARD mode ] " <<endl;
+            }else
+            {
+                cout << "Command: [ Idle ] " <<endl;
+            }
+            
             break;
 
         case prometheus_msgs::ControlCommand::Takeoff:
             cout << "Command: [ Takeoff ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
             break;
 
         case prometheus_msgs::ControlCommand::Hold:
             cout << "Command: [ Hold ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
             break;
 
         case prometheus_msgs::ControlCommand::Land:
             cout << "Command: [ Land ] " <<endl;
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
             break;
 
         case prometheus_msgs::ControlCommand::Move:
@@ -102,8 +127,11 @@ void printf_command_control(const prometheus_msgs::ControlCommand& _ControlComma
                 cout << "Move_frame: [ BODY_FRAME ] " <<endl;
             }
 
-            cout << "Position_Ref [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw_Ref : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
+            cout << "Position [X Y Z] : " << _ControlCommand.Reference_State.position_ref[0] << " [ m ] "<< _ControlCommand.Reference_State.position_ref[1]<<" [ m ] "<< _ControlCommand.Reference_State.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Velocity [X Y Z] : " << _ControlCommand.Reference_State.velocity_ref[0] << " [m/s] "<< _ControlCommand.Reference_State.velocity_ref[1]<<" [m/s] "<< _ControlCommand.Reference_State.velocity_ref[2]<<" [m/s] "<<endl;
+            cout << "Acceleration [X Y Z] : " << _ControlCommand.Reference_State.acceleration_ref[0] << " [m/s^2] "<< _ControlCommand.Reference_State.acceleration_ref[1]<<" [m/s^2] "<< _ControlCommand.Reference_State.acceleration_ref[2]<<" [m/s^2] "<<endl;
+
+            cout << "Yaw : "  << _ControlCommand.Reference_State.yaw_ref* 180/M_PI << " [deg] " <<endl;
 
             break;
 
@@ -144,26 +172,34 @@ void prinft_drone_state(const prometheus_msgs::DroneState& _Drone_state)
     //是否和飞控建立起连接
     if (_Drone_state.connected == true)
     {
-        cout << " [ Connected ]  ";
+        cout << " [ Connected ]";
     }
     else
     {
-        cout << " [ Unconnected ]  ";
+        cout << " [ Unconnected ]";
     }
 
     //是否上锁
     if (_Drone_state.armed == true)
     {
-        cout << "  [ Armed ]   ";
+        cout << "  [ Armed ] ";
     }
     else
     {
-        cout << "  [ DisArmed ]   ";
+        cout << "  [ DisArmed ] ";
     }
 
-    cout << " [ " << _Drone_state.mode<<" ]   " <<endl;
+    //是否在地面
+    if (_Drone_state.landed == true)
+    {
+        cout << "  [ Ground ] ";
+    }
+    else
+    {
+        cout << "  [ Air ] ";
+    }
 
-    cout<<setprecision(2);
+    cout << "[ " << _Drone_state.mode<<" ] " <<endl;
 
     cout << "Position [X Y Z] : " << _Drone_state.position[0] << " [ m ] "<< _Drone_state.position[1]<<" [ m ] "<<_Drone_state.position[2]<<" [ m ] "<<endl;
     cout << "Velocity [X Y Z] : " << _Drone_state.velocity[0] << " [m/s] "<< _Drone_state.velocity[1]<<" [m/s] "<<_Drone_state.velocity[2]<<" [m/s] "<<endl;
@@ -174,8 +210,6 @@ void prinft_drone_state(const prometheus_msgs::DroneState& _Drone_state)
 // 打印位置控制器输出结果
 void prinft_attitude_reference(const prometheus_msgs::AttitudeReference& _AttitudeReference)
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>> Attitude Reference <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
@@ -187,8 +221,26 @@ void prinft_attitude_reference(const prometheus_msgs::AttitudeReference& _Attitu
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    cout << "Attitude_sp[R P Y] : " << _AttitudeReference.desired_attitude[0] * 180/M_PI <<" [deg]  "<<_AttitudeReference.desired_attitude[1] * 180/M_PI << " [deg]  "<< _AttitudeReference.desired_attitude[2] * 180/M_PI<<" [deg] "<<endl;
-    cout << "Throttle_sp[ 0-1 ] : " << _AttitudeReference.desired_throttle <<endl;
+    cout << "Attitude_sp[R P Y]  : " << _AttitudeReference.desired_attitude[0] * 180/M_PI <<" [deg]  "<<_AttitudeReference.desired_attitude[1] * 180/M_PI << " [deg]  "<< _AttitudeReference.desired_attitude[2] * 180/M_PI<<" [deg] "<<endl;
+    cout << "Throttle_sp[ 0-1 ]  : " << _AttitudeReference.desired_throttle <<endl;
+}
+
+void prinft_ref_pose(const geometry_msgs::PoseStamped& ref_pose)
+{
+    cout <<">>>>>>>>>>>>>>>>>>>>>>> Ref Pose <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(NUM_POINT);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+      
+    cout << "Ref_position[X Y Z] : " << ref_pose.pose.position.x <<" [m] "<< ref_pose.pose.position.y <<" [m] " << ref_pose.pose.position.z <<" [m] "<<endl;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 其 他 函 数 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 

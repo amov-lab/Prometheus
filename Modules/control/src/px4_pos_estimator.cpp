@@ -67,6 +67,8 @@ Eigen::Vector3d Euler_gazebo;                                         //无人�
 //---------------------------------------发布相关变量--------------------------------------------
 ros::Publisher vision_pub;
 ros::Publisher drone_state_pub;
+ros::Publisher message_pub;
+prometheus_msgs::Message message;
 ros::Publisher odom_pub;
 ros::Publisher trajectory_pub;
 prometheus_msgs::DroneState Drone_State;  
@@ -153,7 +155,10 @@ void gazebo_cb(const nav_msgs::Odometry::ConstPtr& msg)
 
 void timerCallback(const ros::TimerEvent& e)
 {
-    cout << "[px4_pos_estimator]: " << "Program is running. "<<endl;
+    message.header.stamp = ros::Time::now();
+    message.message_type = prometheus_msgs::Message::NORMAL;
+    message.content = "[px4_pos_estimator]:Program is running. ";
+    message_pub.publish(message);
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -169,7 +174,6 @@ int main(int argc, char **argv)
     nh.param<float>("offset_y", pos_offset[1], 0);
     nh.param<float>("offset_z", pos_offset[2], 0);
     nh.param<float>("offset_yaw", yaw_offset, 0);
-    //nh.param<string>("pos_estimator/rigid_body_name", rigid_body_name, '/vrpn_client_node/UAV/pose');
 
     // 【订阅】cartographer估计位置
     ros::Subscriber laser_sub = nh.subscribe<tf2_msgs::TFMessage>("/tf", 1000, laser_cb);
@@ -190,6 +194,8 @@ int main(int argc, char **argv)
     odom_pub = nh.advertise<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10);
     
     trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/drone_trajectory", 10);
+    // 【发布】提示消息
+    message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
 
     // 10秒定时打印，以确保程序在正确运行
@@ -296,13 +302,12 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     // 发布无人机运动轨迹，用于rviz显示
     geometry_msgs::PoseStamped drone_pos;
     drone_pos.header.stamp = ros::Time::now();
-    drone_pos.header.frame_id = "map";
+    drone_pos.header.frame_id = "world";
     drone_pos.pose.position.x = Drone_State.position[0];
     drone_pos.pose.position.y = Drone_State.position[1];
     drone_pos.pose.position.z = Drone_State.position[2];
 
     drone_pos.pose.orientation = Drone_State.attitude_q;
-    //drone_pub.publish(drone_pos);
 
     //发布无人机的位姿 和 轨迹 用作rviz中显示
     posehistory_vector_.insert(posehistory_vector_.begin(), drone_pos);
@@ -313,7 +318,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     
     nav_msgs::Path drone_trajectory;
     drone_trajectory.header.stamp = ros::Time::now();
-    drone_trajectory.header.frame_id = "map";
+    drone_trajectory.header.frame_id = "world";
     drone_trajectory.poses = posehistory_vector_;
     trajectory_pub.publish(drone_trajectory);
 }

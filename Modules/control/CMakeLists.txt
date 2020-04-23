@@ -87,7 +87,11 @@ target_link_libraries(formation_control ${catkin_LIBRARIES})
 add_executable(ground_station src/ground_station.cpp)
 add_dependencies(ground_station prometheus_control_gencpp)
 target_link_libraries(ground_station ${catkin_LIBRARIES})
-target_link_libraries(ground_station OptiTrackFeedbackRigidBody)
+
+##ground_station_msg.cpp
+add_executable(ground_station_msg src/ground_station_msg.cpp)
+add_dependencies(ground_station_msg prometheus_control_gencpp)
+target_link_libraries(ground_station_msg ${catkin_LIBRARIES})
 
 ###### Test File ##########
 #add_executable(px4_fw_controller src/Test/px4_fw_controller.cpp)
