@@ -135,8 +135,6 @@ void omdpubCallback(const ros::TimerEvent& e) {
         odom_pub.publish(odom_now);
     }
     
-
-
 }
 
 
