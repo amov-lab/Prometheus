@@ -96,6 +96,8 @@ void PlanningFSM::init(ros::NodeHandle& nh)
   safety_pub_ = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 10);
   bspline_pub_ = node_.advertise<prometheus_plan_manage::Bspline>("/prometheus/planning/bspline", 10);
   // ROS_INFO("---planning_fsm: init finished!---");
+  trigger_ = true;
+
 }
 
 

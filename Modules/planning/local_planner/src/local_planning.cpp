@@ -46,7 +46,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
     nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
     /*   bool  state    */
-    trigger_=false;
+    trigger_=true;
     have_goal_=false;
     has_point_map_=false;
     have_odom_=false;
@@ -66,8 +66,8 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     if(exect_num==19){
         if (!trigger_)
         {   
-            print_info = "don't triggle!\n";
-            printf("don't triggle!\n");
+            print_info = "don't trigger!\n";
+            printf("don't trigger!\n");
         }
 
         if(!have_odom_){
@@ -173,7 +173,6 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
     if (msg->pose.position.z < 0.1)  // the minimal goal height 
         return;
 
-    trigger_ = true;
     double /*goal_x, goal_y,*/ goal_z;
 
         // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.

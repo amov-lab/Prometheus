@@ -90,7 +90,7 @@ int main(int argc,char** argv)
 
     is_run_odom = false;
 
-    // 3. set the triggle frequece for different events. 
+    // 3. set the trigger frequece for different events. 
 
     ros::Subscriber traj_sub = node_.subscribe("/prometheus/planning/position_cmd", 50, trajCallbck);
     // ros::Timer pub_odom_timer_ = node_.createTimer(ros::Duration(0.02), omdpubCallback);
