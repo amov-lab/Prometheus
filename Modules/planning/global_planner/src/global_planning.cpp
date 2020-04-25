@@ -42,6 +42,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     Astar_ptr->init(nh);
 
     flight_type_  = FLIGHT_TYPE::MANUAL_GOAL;
+    trigger_ = true;
 
     ros::spin(); 
 }
@@ -53,7 +54,6 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
     if (msg->pose.position.z < 0.1)  // the minimal goal height 
         return;
 
-    // trigger_ = true;
     double /*goal_x, goal_y,*/ goal_z;
 
         // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
@@ -91,8 +91,8 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
     string exect_msg;
     if(exec_num==2){
         if(!trigger_){
-            exect_msg = "don't triggle!\n";
-            // printf("don't triggle!\n");
+            exect_msg = "don't trigger!\n";
+            // printf("don't trigger!\n");
         }
 
         if(!have_odom_){

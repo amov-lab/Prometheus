@@ -182,7 +182,7 @@ int main(int argc,char** argv)
     // waypoint_pub = node_.advertise<geometry_msgs::PoseStamped>("/planning/waypoint", 50);
     // ros::Subscriber waypoint_sub_ = node_.subscribe("/planning/goal", 1, &waypointCallback);
 
-    // 3. set the triggle frequece for different events. 
+    // 3. set the trigger frequece for different events. 
     
     ros::Timer pub_odom_timer_;
     ros::Subscriber traj_sub;
