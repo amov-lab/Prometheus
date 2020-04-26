@@ -38,7 +38,15 @@ using namespace std;
 namespace prometheus_control_utils 
 {
 
-
+void pub_message(ros::Publisher& puber, int msg_type, string source_node, string msg_content)
+{
+    prometheus_msgs::Message exect_msg;
+    exect_msg.header.stamp = ros::Time::now();
+    exect_msg.message_type = msg_type;
+    exect_msg.source_node = source_node;
+    exect_msg.content = msg_content;
+    puber.publish(exect_msg);
+}
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 打 印 函 数 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  
@@ -47,13 +55,13 @@ void printf_message(const prometheus_msgs::Message& message)
     cout <<">>>>>>>>>>>>>>>>>>>>>>>> Message <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     if(message.message_type == prometheus_msgs::Message::NORMAL)
     {
-        cout << "[NORMAL]:" << message.content <<endl;
+        cout << "[NORMAL]" << "["<< message.source_node << "]:" << message.content <<endl;
     }else if(message.message_type == prometheus_msgs::Message::WARN)
     {
-        cout << "[WARN]:" << message.content <<endl;
+        cout << "[WARN]" << "["<< message.source_node << "]:" <<message.content <<endl;
     }else if(message.message_type == prometheus_msgs::Message::ERROR)
     {
-        cout << "[ERROR]:" << message.content <<endl;
+        cout << "[ERROR]" << "["<< message.source_node << "]:" << message.content <<endl;
     }
     
 }
