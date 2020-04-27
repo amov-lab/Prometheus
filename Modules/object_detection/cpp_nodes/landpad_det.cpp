@@ -48,8 +48,11 @@
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/Message.h>
 
+#include "prometheus_control_utils.h"
+
 using namespace std;
 using namespace cv;
+using namespace prometheus_control_utils;
 
 double threshold_error=0.4;
 
@@ -107,13 +110,6 @@ bool message_print = true;
 
 void printf_result();
 
-void pub_msg(ros::Publisher& puber, string mmm, int type){
-    prometheus_msgs::Message exect_msg;
-    exect_msg.header.stamp = ros::Time::now();
-    exect_msg.message_type = type;
-    exect_msg.content = mmm;
-    puber.publish(exect_msg);
-}
 
 //-----------------利用Euler角进行三次旋转得到无人机相对目标的位置------------------
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -216,19 +212,20 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(nh);
 
     // 发布调试消息
-    message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/landpad_det", 10);
+    string msg_node_name = "/prometheus/message/landpad_det";
+    message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
 
     std::string camera_topic, camera_info;
     if (nh.getParam("camera_topic", camera_topic)) {
         if (local_print)
             ROS_INFO("camera_topic is %s", camera_topic.c_str());
         if (message_print)
-            pub_msg(message_pub, "camera_topic is" + camera_topic, prometheus_msgs::Message::NORMAL);
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_topic is" + camera_topic);
     } else {
         if (local_print)
             ROS_WARN("didn't find parameter camera_topic");
         if (message_print)
-            pub_msg(message_pub, "didn't find parameter camera_topic", prometheus_msgs::Message::WARN);
+            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_topic");
         camera_topic = "/prometheus/camera/rgb/image_raw";
     }
 
@@ -236,12 +233,12 @@ int main(int argc, char **argv)
         if (local_print)
             ROS_INFO("camera_info is %s", camera_info.c_str());
         if (message_print)
-            pub_msg(message_pub, "camera_info is" + camera_info, prometheus_msgs::Message::NORMAL);
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_info is" + camera_info);
     } else {
         if (local_print)
             ROS_WARN("didn't find parameter camera_info");
         if (message_print)
-            pub_msg(message_pub, "didn't find parameter camera_info", prometheus_msgs::Message::WARN);
+            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_info");
         camera_info = "camera_param.yaml";
     }
 
@@ -264,7 +261,7 @@ int main(int argc, char **argv)
     if (local_print)
         cout << "DETECTION_PATH: " << ros_path << endl;
     if (message_print)
-        pub_msg(message_pub, "DETECTION_PATH: " + ros_path, prometheus_msgs::Message::NORMAL);
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "DETECTION_PATH: " + ros_path);
     
 
     // 读取参数文档camera_param.yaml中的参数值；
@@ -323,7 +320,7 @@ int main(int argc, char **argv)
             if (local_print)
                 cout << "Waiting for image." << endl;
             if (message_print)
-                pub_msg(message_pub, "Waiting for image.", prometheus_msgs::Message::NORMAL);
+                pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Waiting for image.");
             
             // std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
@@ -338,14 +335,14 @@ int main(int argc, char **argv)
                 if (local_print)
                     cout << "Start Detection." << endl;
                 if (message_print)
-                    pub_msg(message_pub, "Start Detection.", prometheus_msgs::Message::NORMAL);
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Start Detection.");
             }
             else
             {
                 if (local_print)
                     cout << "Stop Detection." << endl;
                 if (message_print)
-                    pub_msg(message_pub, "Stop Detection.", prometheus_msgs::Message::NORMAL);
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Stop Detection.");
             }
         }
 
