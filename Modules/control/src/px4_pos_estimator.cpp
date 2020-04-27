@@ -44,7 +44,7 @@
 
 using namespace std;
 #define TRA_WINDOW 1000
-
+#define NODE_NAME "pos_estimator"
 //---------------------------------------相关参数-----------------------------------------------
 int input_source;                               //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
 Eigen::Vector3f pos_offset;
@@ -149,16 +149,13 @@ void gazebo_cb(const nav_msgs::Odometry::ConstPtr& msg)
         // Euler_gazebo[2] = Euler_gazebo[2] + yaw_offset;
         // q_gazebo = quaternion_from_rpy(Euler_gazebo);
     }else{
-        cout << "[px4_pos_estimator]: " << "wrong gazebo ground truth frame id. "<<endl;
+        prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "wrong gazebo ground truth frame id.");
     }
 }
 
 void timerCallback(const ros::TimerEvent& e)
 {
-    message.header.stamp = ros::Time::now();
-    message.message_type = prometheus_msgs::Message::NORMAL;
-    message.content = "[px4_pos_estimator]:Program is running. ";
-    message_pub.publish(message);
+    prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)

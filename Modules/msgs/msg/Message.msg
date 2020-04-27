@@ -6,4 +6,6 @@ uint8 NORMAL = 0
 uint8 WARN   = 1  
 uint8 ERROR  = 2  
  
+string source_node
+
 string content

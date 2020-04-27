@@ -27,6 +27,7 @@
 #include <Position_Controller/pos_controller_NE.h>
 #include <Filter/LowPassFilter.h>
 
+#define NODE_NAME "pos_controller"
 
 using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -71,10 +72,7 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         Command_Now = *msg;
     }else
     {
-        message.header.stamp = ros::Time::now();
-        message.message_type = prometheus_msgs::Message::WARN;
-        message.content = "[px4_pos_controller]:Wrong Command ID. ";
-        message_pub.publish(message);
+        prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Wrong Command ID.");
     }
     
     // 无人机一旦接受到Disarm指令，则会屏蔽其他指令
@@ -98,11 +96,10 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 }
 void timerCallback(const ros::TimerEvent& e)
 {
-    message.header.stamp = ros::Time::now();
-    message.message_type = prometheus_msgs::Message::NORMAL;
-    message.content = "[px4_pos_controller]:Program is running. ";
-    message_pub.publish(message);
+    prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
 }
+
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -226,30 +223,20 @@ int main(int argc, char **argv)
                 {
                     _command_to_mavros.mode_cmd.request.custom_mode = "OFFBOARD";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-                    cout << "[px4_pos_controller]: Setting to OFFBOARD Mode..." <<endl;
+                    prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Setting to OFFBOARD Mode...");
                     //执行回调函数
                     ros::spinOnce();
                     ros::Duration(0.5).sleep();
-
-                    if (_command_to_mavros.mode_cmd.response.mode_sent)
-                    {
-                        cout <<"[px4_pos_controller]: Set to OFFBOARD Mode Susscess! "<< endl;
-                    }
                 }
 
                 while(!_DroneState.armed)
                 {
                     _command_to_mavros.arm_cmd.request.value = true;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
-                    cout << "[px4_pos_controller]: Arming..." <<endl;
+                    prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Arming...");
                     //执行回调函数
                     ros::spinOnce();
                     ros::Duration(0.5).sleep();
-
-                    if (_command_to_mavros.arm_cmd.response.success)
-                    {
-                        cout <<"[px4_pos_controller]: Arm Susscess! "<< endl;
-                    }
                 }
             }
         
@@ -312,11 +299,6 @@ int main(int argc, char **argv)
                     _command_to_mavros.arm_cmd.request.value = false;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
                 }
-
-                if (_command_to_mavros.arm_cmd.response.success)
-                {
-                    cout <<"[px4_pos_controller]: Disarm successfully! "<< endl;
-                }
             }
 
             if(_DroneState.landed)
@@ -351,11 +333,6 @@ int main(int argc, char **argv)
             {
                 _command_to_mavros.arm_cmd.request.value = false;
                 _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
-            }
-
-            if (_command_to_mavros.arm_cmd.response.success)
-            {
-                cout <<"[px4_pos_controller]: Disarm successfully! "<< endl;
             }
             
             break;
