@@ -88,7 +88,7 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     }
     exect_msg = "[local planner]: " + print_info;
 
-    pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
+    // pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
 
     if (!trigger_)
     {   
@@ -133,8 +133,8 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
         desired_vel = desired_vel / desired_vel.norm() * max_planning_vel;  // the max velocity is max_planning_vel
     }
     if(exect_num==10){
-        // printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
-        char* sp;
+        printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+        char sp[100];
         sprintf(sp, "local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
         pub_msg(message_pub, sp, prometheus_msgs::Message::NORMAL);
 
@@ -189,10 +189,10 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
     else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)
     {}
     
-    // ROS_INFO("---planning_fsm: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
-    //                                                         end_pt_(1), 
-    //                                                         end_pt_(2));
-    char* sp;
+    ROS_INFO("---planning_fsm: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
+                                                            end_pt_(1), 
+                                                            end_pt_(2));
+    char sp[100];
     sprintf(sp, "---planning_fsm: get waypoint: [ %f, %f, %f]!---\n", end_pt_(0),
                                                             end_pt_(1), 
                                                             end_pt_(2));
