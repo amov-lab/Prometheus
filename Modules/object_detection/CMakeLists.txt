@@ -58,6 +58,7 @@ find_package(catkin REQUIRED COMPONENTS
     cv_bridge
     actionlib
     prometheus_msgs
+    tf2_eigen
 )
 
 ## System dependencies are found with CMake's conventions
@@ -170,6 +171,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INUCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ../control/include
 )
 
 
