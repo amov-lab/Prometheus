@@ -8,13 +8,6 @@
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
 	</node>
-	
-	<!-- TF transform -->
-	<include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
-		<arg name="x" value="$(arg x)"/>
-    	<arg name="y" value="$(arg y)"/>
-    	<arg name="z" value="$(arg z)"/>
-    </include>
 
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
