@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 	   nav_msgs
        visualization_msgs
 	   prometheus_msgs
+          mavros_msgs
 	)
 
 
@@ -33,10 +34,11 @@ MESSAGE( STATUS "this lcal planner path:  ******** = ${PROJECT_SOURCE_DIR}.")
 include_directories(
        SYSTEM
        include
-	   ${PROJECT_SOURCE_DIR}/include
+       ${PROJECT_SOURCE_DIR}/include
        ${catkin_INCLUDE_DIRS}
        ${Eigen3_INCLUDE_DIRS}
        ${PCL_INCLUDE_DIRS}
+       ${PROJECT_SOURCE_DIR}/../../control/include
      )
 link_directories(${PCL_LIBRARY_DIRS})
 

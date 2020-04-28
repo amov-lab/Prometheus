@@ -8,6 +8,3 @@ add_subdirectory(Utils/pose_utils)
 
 add_subdirectory(Utils/rviz_plugins)
 
-add_subdirectory(Utils/uav_utils)
-
-add_subdirectory(Utils/waypoint_generator)

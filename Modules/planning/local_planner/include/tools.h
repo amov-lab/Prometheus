@@ -11,8 +11,8 @@
 
 namespace local_planner
 {
-extern ros::Publisher message_pub;
-
 void pub_msg(ros::Publisher & puber, std::string mmm, int type);
+
+extern ros::Publisher message_pub;
 }
 #endif
