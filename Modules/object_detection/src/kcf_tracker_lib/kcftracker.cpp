@@ -242,7 +242,7 @@ cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value)
     double pv_min;
     cv::minMaxLoc(res, &pv_min, &pv, &pi_min, &pi);
     peak_value = (float) pv;
-    std::cout << "min reponse : " << pv_min << " max response :" << pv << std::endl;
+    // std::cout << "min reponse : " << pv_min << " max response :" << pv << std::endl;
 
     //subpixel peak estimation, coordinates will be non-integer
     cv::Point2f p((float)pi.x, (float)pi.y);

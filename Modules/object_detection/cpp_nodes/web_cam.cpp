@@ -15,11 +15,20 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/aruco.hpp>
+#include "prometheus_control_utils.h"
 
 
+using namespace prometheus_control_utils;
 using namespace std;
 using namespace cv;
 
+// 使用cout打印消息
+bool local_print = false;
+// 使用prometheus_msgs::Message打印消息
+bool message_print = true;
+//【发布】调试消息
+ros::Publisher message_pub;
+std::string msg_node_name;
 
 image_transport::Publisher image_pub;
 //设置图像大小
@@ -31,6 +40,11 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     image_transport::ImageTransport it(nh);
     ros::Rate loop_rate(60);
+
+    // 发布调试消息
+    msg_node_name = "/prometheus/message/web_cam";
+    message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
+
     // 在这里修改发布话题名称
     image_pub = it.advertise("/prometheus/camera/rgb/image_raw", 1);
 
@@ -61,7 +75,8 @@ int main(int argc, char **argv)
             if (0 == frame_cnt)
             {
                 int fps = cap.get(CAP_PROP_FPS);
-                ROS_INFO("Camera %d opened, resolution: %d x %d, fps: %d", camera_id, frame.cols, frame.rows, fps);
+                if (local_print)
+                    ROS_INFO("Camera %d opened, resolution: %d x %d, fps: %d", camera_id, frame.cols, frame.rows, fps);
             }
             // 设置图像帧格式->bgr8
             msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
@@ -74,7 +89,10 @@ int main(int argc, char **argv)
             if (!cant_open)
             {
                 cant_open = true;
-                ROS_WARN("Can not open camera %d.", camera_id);
+                if (local_print)
+                    ROS_WARN("Can not open camera %d.", camera_id);
+                if (message_print)
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "Can not open camera");
             }
         }
         ros::spinOnce();

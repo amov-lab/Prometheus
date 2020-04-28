@@ -35,7 +35,10 @@
 #include "opencv2/aruco/dictionary.hpp"
 #include "opencv2/aruco/charuco.hpp"
 #include "opencv2/calib3d.hpp"
+#include "prometheus_control_utils.h"
 
+
+using namespace prometheus_control_utils;
 using namespace std;
 using namespace cv;
 
@@ -50,6 +53,13 @@ image_transport::Publisher aruco_pub;
 ros::Subscriber switch_subscriber;
 // 接收消息，允许暂停检测
 bool is_suspanded = false;
+// 使用cout打印消息
+bool local_print = false;
+// 使用prometheus_msgs::Message打印消息
+bool message_print = true;
+//【发布】调试消息
+ros::Publisher message_pub;
+std::string msg_node_name;
 
 
 void CodeRotateByZ(double x, double y, double thetaz, double& outx, double& outy)
@@ -93,7 +103,8 @@ boost::shared_mutex mutex_image_status;
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-    ROS_DEBUG("[ArucoDetector] USB image received.");
+    if (local_print)
+        ROS_DEBUG("[ArucoDetector] USB image received.");
 
     cv_bridge::CvImagePtr cam_image;
 
@@ -101,7 +112,10 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         image_header = msg->header;
     } catch (cv_bridge::Exception& e) {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
+        if (local_print)
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::ERROR, msg_node_name, "cv_bridge exception");
         return;
     }
 
@@ -144,8 +158,40 @@ int main(int argc, char **argv)
     //【发布】识别
     pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/aruco_det", 1);
 
+
+    // 发布调试消息
+    msg_node_name = "/prometheus/message/aruco_det";
+    message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
+
+    std::string camera_topic, camera_info;
+    if (nh.getParam("camera_topic", camera_topic)) {
+        if (local_print)
+            ROS_INFO("camera_topic is %s", camera_topic.c_str());
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_topic is" + camera_topic);
+    } else {
+        if (local_print)
+            ROS_WARN("didn't find parameter camera_topic");
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_topic");
+        camera_topic = "/prometheus/camera/rgb/image_raw";
+    }
+
+    if (nh.getParam("camera_info", camera_info)) {
+        if (local_print)
+            ROS_INFO("camera_info is %s", camera_info.c_str());
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_info is" + camera_info);
+    } else {
+        if (local_print)
+            ROS_WARN("didn't find parameter camera_info");
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_info");
+        camera_info = "camera_param.yaml";
+    }
+
     // 接收图像的话题
-    image_subscriber = it.subscribe("/prometheus/camera/rgb/image_raw", 1, cameraCallback);
+    image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
     // 发布ArUco检测结果的话题
     aruco_pub = it.advertise("/prometheus/camera/rgb/image_aruco_det", 1);
 
@@ -162,9 +208,12 @@ int main(int argc, char **argv)
     cv::Mat distortion_coefficients;
 
     std::string ros_path = ros::package::getPath("prometheus_detection");
-    cout << "DETECTION_PATH: " << ros_path << endl;
+    if (local_print)
+        cout << "DETECTION_PATH: " << ros_path << endl;
+    if (message_print)
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "DETECTION_PATH: " + ros_path);
     //读取参数文档camera_param.yaml中的参数值；
-    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/camera_param.yaml");
+    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/" + camera_info);
     //相机内部参数
     double fx = camera_config["fx"].as<double>();
     double fy = camera_config["fy"].as<double>();
@@ -221,9 +270,12 @@ int main(int argc, char **argv)
 
     while (ros::ok())
 	{
-        while (!getImageStatus()) 
+        while (!getImageStatus() && ros::ok()) 
         {
-            printf("Waiting for image.\n");
+            if (local_print)
+                cout << "Waiting for image." << endl;
+            if (message_print)
+                pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Waiting for image.");
             std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
         }
@@ -232,9 +284,19 @@ int main(int argc, char **argv)
         {
             switch_state = is_suspanded;
             if (!is_suspanded)
-                cout << "Start Detection." << endl;
+            {
+                if (local_print)
+                    cout << "Start Detection." << endl;
+                if (message_print)
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Start Detection.");
+            }
             else
-                cout << "Stop Detection." << endl;
+            {
+                if (local_print)
+                    cout << "Stop Detection." << endl;
+                if (message_print)
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Stop Detection.");
+            }
         }
 
         if (!is_suspanded)
@@ -274,9 +336,10 @@ int main(int argc, char **argv)
                 static_real_y = tvec.ptr<double>(0)[1];
                 static_depth  = tvec.ptr<double>(0)[2];
 
-                cout << "flag_detected: " << int(pose_now.detected) <<endl;
-                cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
-
+                if (local_print) {
+                    cout << "flag_detected: " << int(pose_now.detected) <<endl;
+                    cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+                }
                 pose_pub.publish(pose_now);
                 deted=true;
             }
@@ -292,9 +355,10 @@ int main(int argc, char **argv)
 
                 pose_pub.publish(pose_now);
 
-                cout << "flag_detected: " << int(pose_now.detected) <<endl;
-                cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
-
+                if (local_print) {
+                    cout << "flag_detected: " << int(pose_now.detected) <<endl;
+                    cout << "pos_target: [X Y Z] : " << " " << pose_now.position[0] << " [m] "<< pose_now.position[1] <<" [m] "<< pose_now.position[2] <<" [m] "<<endl;
+                }
             }
 
             Mat img_copy;
