@@ -88,7 +88,8 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     }
     exect_msg = "[local planner]: " + print_info;
 
-    // pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
+    pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
+    // pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/local_planner", exect_msg);
 
     if (!trigger_)
     {   
@@ -137,6 +138,7 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
         char sp[100];
         sprintf(sp, "local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
         pub_msg(message_pub, sp, prometheus_msgs::Message::NORMAL);
+        // pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/local_planner",sp);
 
         exect_num=0;
     }
@@ -197,6 +199,7 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
                                                             end_pt_(1), 
                                                             end_pt_(2));
     pub_msg(message_pub, sp, prometheus_msgs::Message::NORMAL);
+    // pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/local_planner",sp);
 
 
     visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));
