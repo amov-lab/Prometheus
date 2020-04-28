@@ -73,6 +73,7 @@ ros::Publisher position_pub;
 image_transport::Publisher landpad_pub;
 //【发布】调试消息
 ros::Publisher message_pub;
+std::string msg_node_name;
 
 //-------------VISION-----------
 Mat img;
@@ -163,7 +164,8 @@ float get_dt(ros::Time last)
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-    ROS_DEBUG("[LandpadDetector] USB image received.");
+    if (local_print)
+        ROS_DEBUG("[LandpadDetector] USB image received.");
 
     cv_bridge::CvImagePtr cam_image;
 
@@ -171,7 +173,10 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         image_header = msg->header;
     } catch (cv_bridge::Exception& e) {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
+        if (local_print)
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::ERROR, msg_node_name, "cv_bridge exception");
         return;
     }
 
@@ -212,7 +217,7 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(nh);
 
     // 发布调试消息
-    string msg_node_name = "/prometheus/message/landpad_det";
+    msg_node_name = "/prometheus/message/landpad_det";
     message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
 
     std::string camera_topic, camera_info;
