@@ -171,7 +171,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INUCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-  ../control/include
+  ../common/include
 )
 
 
