@@ -48,11 +48,10 @@
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/Message.h>
 
-#include "prometheus_control_utils.h"
+#include "message_utils.h"
 
 using namespace std;
 using namespace cv;
-using namespace prometheus_control_utils;
 
 double threshold_error=0.4;
 
