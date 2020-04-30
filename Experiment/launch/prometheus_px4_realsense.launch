@@ -29,5 +29,10 @@
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
+
+    <include file="$(find prometheus_experiment)/launch/d435_t265_rtab.launch">
+    </include>
+
+
 </launch>
 
