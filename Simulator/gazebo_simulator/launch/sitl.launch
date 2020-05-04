@@ -60,14 +60,19 @@
 
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
+	<arg name="input_source" default="2"/>
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
-		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
-		<param name="input_source" value="2" />
+		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
+		<param name="input_source" value="$(arg input_source)" />
+		<param name="offset_x" value="$(arg x)" />
+		<param name="offset_y" value="$(arg y)" />
+		<param name="offset_z" value="$(arg z)" />
 	</node>
 	
 	<!-- run the px4_pos_controller.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
 		<rosparam command="load" file="$(find prometheus_control)/config/px4_pos_controller.yaml"/>
+		<rosparam command="load" file="$(find prometheus_control)/config/control_parameter.yaml"/>
 	</node>
 	
 	<!-- run the ground_station.cpp -->

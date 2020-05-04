@@ -5,7 +5,7 @@
       <!-- 物理参数设置 -->
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <mass>0.20</mass>
+        <mass>0.1</mass>
         <inertia>
           <ixx>4.15e-6</ixx>
           <ixy>0</ixy>
@@ -45,7 +45,7 @@
             <stddev>0.001</stddev>
           </noise>
         </ray>
-        <plugin name="laser" filename="libRayPlugin.so" />
+        <!-- <plugin name="laser" filename="libRayPlugin.so" /> -->
         <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
           <topicName>/prometheus/sensors/2Dlidar_scan</topicName>
           <frameName>2Dlidar_link</frameName>
