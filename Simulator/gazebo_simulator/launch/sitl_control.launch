@@ -1,7 +1,4 @@
 <launch>
-    <!-- 读取控制器参数 -->
-	<rosparam command="load" file="$(find prometheus_control)/config/control_parameter.yaml"/>
-	
 	<!-- Launch Gazebo Simulation -->
     <arg name="x" default="0"/>
     <arg name="y" default="0"/>

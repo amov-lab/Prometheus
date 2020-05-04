@@ -86,7 +86,7 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr& msg)
 {
     //确定是cartographer发出来的/tf信息
     //有的时候/tf这个消息的发布者不止一个
-    if (msg->transforms[0].header.frame_id == "map")
+    if (msg->transforms[0].header.frame_id == "odom_cartographer")
     {
         laser = msg->transforms[0];
 
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     //读取参数表中的参数
-    // 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
+    // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
     nh.param<int>("input_source", input_source, 0);
     // 
     nh.param<float>("offset_x", pos_offset[0], 0);
@@ -312,7 +312,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     // 发布无人机当前odometry,用于导航及rviz显示
     nav_msgs::Odometry Drone_odom;
     Drone_odom.header.stamp = ros::Time::now();
-    Drone_odom.header.frame_id = "map";
+    Drone_odom.header.frame_id = "world";
     Drone_odom.child_frame_id = "base_link";
 
     Drone_odom.pose.pose.position.x = Drone_State.position[0];
