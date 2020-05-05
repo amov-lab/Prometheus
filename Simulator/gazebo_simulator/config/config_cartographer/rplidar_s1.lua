@@ -21,9 +21,9 @@ options = {
 -- map_frame发布submaps的坐标系,也是位姿的父坐标系
   map_frame = "map",
 -- tracking_frame是SLAM算法的坐标系,如果使用IMU,则一般设为imu_link
-  tracking_frame = "2Dlidar_link",
+  tracking_frame = "imu_link",
 -- published_frame是位姿的子坐标系
-  published_frame = "2Dlidar_link",
+  published_frame = "base_link",
 -- The frame between published_frame and map_frame to be used for publishing the (non-loop-closed) local SLAM result.
   odom_frame = "odom_cartographer",
   provide_odom_frame = true,
@@ -37,9 +37,9 @@ options = {
   num_point_clouds = 0,
   lookup_transform_timeout_sec = 0.2,
 -- 发布submap的频率
-  submap_publish_period_sec = 0.1,
+  submap_publish_period_sec = 0.3,
 -- 位姿发布频率
-  pose_publish_period_sec = 0.02,
+  pose_publish_period_sec = 0.01,
 -- 轨迹发布频率
   trajectory_publish_period_sec = 0.2,
   rangefinder_sampling_ratio = 1.,
@@ -52,10 +52,10 @@ options = {
 MAP_BUILDER.use_trajectory_builder_2d = true
 
 TRAJECTORY_BUILDER_2D.submaps.num_range_data = 35
-TRAJECTORY_BUILDER_2D.min_range = 0.3
-TRAJECTORY_BUILDER_2D.max_range = 10.
+TRAJECTORY_BUILDER_2D.min_range = 0.1
+TRAJECTORY_BUILDER_2D.max_range = 15.
 TRAJECTORY_BUILDER_2D.missing_data_ray_length = 1.
-TRAJECTORY_BUILDER_2D.use_imu_data = false
+TRAJECTORY_BUILDER_2D.use_imu_data = true
 TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
 TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.linear_search_window = 0.1
 TRAJECTORY_BUILDER_2D.real_time_correlative_scan_matcher.translation_delta_cost_weight = 10.

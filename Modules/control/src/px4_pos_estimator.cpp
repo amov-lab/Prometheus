@@ -98,8 +98,9 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr& msg)
         if (dt_laser != 0)
         {
             //位置 xy  [将解算的位置从laser坐标系转换至ENU坐标系]???
-            pos_drone_laser[0]  = laser.transform.translation.x;
-            pos_drone_laser[1]  = laser.transform.translation.y;
+            pos_drone_laser[0]  = laser.transform.translation.x + pos_offset[0];
+            pos_drone_laser[1]  = laser.transform.translation.y + pos_offset[1];
+            pos_drone_laser[2]  = pos_drone_gazebo[2];
 
             // Read the Quaternion from the Carto Package [Frame: Laser[ENU]]
             Eigen::Quaterniond q_laser_enu(laser.transform.rotation.w, laser.transform.rotation.x, laser.transform.rotation.y, laser.transform.rotation.z);
