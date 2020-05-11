@@ -9,6 +9,7 @@
 // yolo object detector
 #include "darknet_ros/YoloObjectDetector.hpp"
 #include <geometry_msgs/Pose.h>
+#include <prometheus_msgs/MultiDetectionInfo.h>
 // Check for xServer
 #include <X11/Xlib.h>
 #include <iostream>
