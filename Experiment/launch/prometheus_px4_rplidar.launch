@@ -2,7 +2,7 @@
 	<!-- 启动MAVROS -->
 	<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
-		<param name="fcu_url" value="/dev/ttyTHS2:921600" />
+		<param name="fcu_url" value="/dev/ttyUSB0:921600" />
 		<param name="gcs_url" value="" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
@@ -14,7 +14,7 @@
 	<!-- run the px4_pos_estimator.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
-		<param name="input_source" value="2" />
+		<param name="input_source" value="3" />
 	</node>
 	
 	<!-- run the px4_pos_controller.cpp -->
@@ -29,5 +29,10 @@
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
+
+    <include file="$(find prometheus_experiment)/launch/rplidar_s1.launch">
+    </include>
+
+
 </launch>
 
