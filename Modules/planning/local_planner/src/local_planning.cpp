@@ -17,11 +17,21 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     // set algorithm
     // apf_planner_ptr.reset(new APF);
     // apf_planner_ptr->init(nh);
-    local_alg_ptr.reset(new APF);
-    local_alg_ptr->init(nh);
-
+    nh.param("planning/algorithm_mode", algorithm_mode, 0);
+    if(algorithm_mode==0){
+        local_alg_ptr.reset(new APF);
+        local_alg_ptr->init(nh);
+    }
+    else if(algorithm_mode==1)
+    {
+        local_alg_ptr.reset(new VFH);
+        local_alg_ptr->init(nh);
+    }
+    else{}
+    
     sensor_msgs::PointCloud2ConstPtr init_local_map(new sensor_msgs::PointCloud2());
     local_map_ptr_ = init_local_map;
+    
     
     // ros param
     nh.param("local_planning/is_simulation", is_simulation, 0);

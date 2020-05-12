@@ -29,6 +29,7 @@
 
 #include "apf.h"
 #include "local_planning.h"
+#include "vfh.h"
 
 #include "planning_visualization.h"
 
@@ -109,6 +110,7 @@ private:
 
     PlanningVisualization::Ptr visualization_;
     int is_simulation;
+    int algorithm_mode; // 0  is apf; 1 is vfh (default is 0)
 
 public:
 

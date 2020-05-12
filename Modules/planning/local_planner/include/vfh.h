@@ -20,6 +20,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "tools.h"
+#include "local_planning_alg.h"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ namespace local_planner{
 
 extern ros::Publisher message_pub;
 
-class VFH{
+class VFH: public local_planning_alg{
 private:
     bool has_local_map_;
     bool is_prev;
@@ -66,20 +67,20 @@ private:
     int find_Hcnt(double angle);
     double find_angle(int cnt);
     double angle_error(double angle1, double angle2);
-public:
-    int replan{0};
-    
-    void set_odom(nav_msgs::Odometry cur_odom);
-    
-    void set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr);
-    
-    int compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel);
 
     void generate_voxel_data(double angle_cen, double angle_range, double val);
 
     int find_optimization_path(void);
+public:
+    int replan{0};
+    
+    virtual void set_odom(nav_msgs::Odometry cur_odom);
+    
+    virtual void set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr);
+    
+    virtual int compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel);
 
-    void init(ros::NodeHandle& nh);
+    virtual void init(ros::NodeHandle& nh);
 
     VFH(){}
     ~VFH(){
