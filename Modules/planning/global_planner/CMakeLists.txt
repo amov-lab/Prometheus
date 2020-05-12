@@ -36,11 +36,11 @@ MESSAGE( STATUS "this gloabl planner path  is*********** = ${PROJECT_SOURCE_DIR}
 include_directories(
        SYSTEM
        include
-	   /home/taojiang/Project/Amov/Prometheus/Modules/planning/global_planner/include
 	   ${PROJECT_SOURCE_DIR}/include
        ${catkin_INCLUDE_DIRS}
        ${Eigen3_INCLUDE_DIRS}
        ${PCL_INCLUDE_DIRS}
+	   ${PROJECT_SOURCE_DIR}/../../common/include
      )
 link_directories(${PCL_LIBRARY_DIRS})
 

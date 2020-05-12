@@ -13,7 +13,7 @@
 #include <prometheus_msgs/Message.h>
 
 
-void pub_message(ros::Publisher& puber, int msg_type, std::string source_node, std::string msg_content)
+inline void pub_message(ros::Publisher& puber, int msg_type, std::string source_node, std::string msg_content)
 {
     prometheus_msgs::Message exect_msg;
     exect_msg.header.stamp = ros::Time::now();

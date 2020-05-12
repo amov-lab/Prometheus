@@ -30,7 +30,7 @@
 
 #include "A_star.h"
 #include "tools.h"
-
+#include "message_utils.h"
 using namespace std;
 
 namespace global_planner{

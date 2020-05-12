@@ -5,7 +5,6 @@
 #include "local_planning.h"
 
 
-
 using namespace local_planner;
 
 int main(int argc, char** argv)

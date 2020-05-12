@@ -112,7 +112,8 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
             // printf("*** wait goal!*** \n");
             // return;
         }
-        pub_msg(message_pub, exect_msg, prometheus_msgs::Message::NORMAL);
+
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/global_planner",exect_msg);
         exec_num=0;
     }
 
@@ -135,12 +136,12 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
     Astar_ptr->reset();
     int astar_state = Astar_ptr->search(start_pt_, end_pt_);
     if(astar_state==Astar::NO_PATH){
-        pub_msg(message_pub, "a star find no path, please reset the goal!\n", prometheus_msgs::Message::WARN);
+          pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "a star find no path, please reset the goal!\n");
         // printf("a star find no path, please reset the goal!\n");
     }
     else{
         // printf("astart find path success!\n");
-        pub_msg(message_pub, "astart find path success!\n", prometheus_msgs::Message::NORMAL);
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/global_planner", "astart find path success!\n");
         std::vector<Eigen::Vector3d> A_star_path = Astar_ptr->getPath();
         visualization_->drawPath(A_star_path, 0.1,Eigen::Matrix<double, 4, 1>(1.0, 0, 0, 1), 1);
         generate_CMD(A_star_path);

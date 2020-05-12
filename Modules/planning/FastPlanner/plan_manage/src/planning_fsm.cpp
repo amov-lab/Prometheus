@@ -104,12 +104,11 @@ void PlanningFSM::init(ros::NodeHandle& nh)
 void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg)
 {
   // cout << "[waypointCallback]: Triggered!" << endl;
-  pub_msg(message_pub, "[waypointCallback]: Triggered!\n", prometheus_msgs::Message::NORMAL);
-
+  pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/fast_planner", "[waypointCallback]: Triggered!\n");
   if (msg->pose.position.z < 0.1)  // the minimal goal height 
   { 
     printf("the goal's height is to low (<0.1m)");
-    pub_msg(message_pub, "the goal's height is to low (<0.1m)\n", prometheus_msgs::Message::NORMAL);
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/fast_planner", "the goal's height is to low (<0.1m)\n");
     return;
   }
     
@@ -142,7 +141,7 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
   sprintf(sp, "---planning_fsm: get waypoint: [ %f, %f, %f]!---\n", end_pt_(0),
                                                       end_pt_(1), 
                                                       end_pt_(2));
-  pub_msg(message_pub, sp, prometheus_msgs::Message::NORMAL);
+  pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/fast_planner", sp);
 
   visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));
   end_vel_.setZero();
@@ -177,15 +176,15 @@ void PlanningFSM::execFSMCallback(const ros::TimerEvent& e)
   {
     printExecState();
     if (!trigger_)
-      pub_msg(message_pub, "don't trigger!.\n", prometheus_msgs::Message::NORMAL);
+      pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/fast_planner", "don't trigger!.\n");
       // cout << "don't trigger!." << endl;
 
     if (!edt_env_->odomValid())
-      pub_msg(message_pub, "no odom.\n", prometheus_msgs::Message::NORMAL);
+      pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/fast_planner", "no odom.\n");
       // cout << "no odom." << endl;
    
     if (!edt_env_->mapValid())
-      pub_msg(message_pub, "no map\n.", prometheus_msgs::Message::NORMAL);
+      pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/fast_planner", "no map\n.");
       // cout << "no map." << endl;
 
     fsm_num = 0;
@@ -357,7 +356,7 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
     if (dist <= planner_manager_->margin_)
     {
       // ROS_INFO("[safetyCallback]: goal dangerous");
-      pub_msg(message_pub, "[safetyCallback]: goal dangerous\n", prometheus_msgs::Message::NORMAL);
+      pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/fast_planner", "[safetyCallback]: goal dangerous\n");
       // ROS_INFO("goal pos: [%f, %f, %f], goal sdf: %f", end_pt_(0), end_pt_(1), end_pt_(2), dist);
       /* try to find a max distance goal around */
       bool new_goal = false;
@@ -391,8 +390,7 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
               // ROS_INFO("goal pos: [%f, %f, %f], goal sdf: %f", goal(0), goal(1), goal(2), dist);
               char* sp;
               sprintf(sp, "[safetyCallback]: change goal; **goal pos: [%f, %f, %f], goal sdf: %f\n", goal(0), goal(1), goal(2), dist);
-
-              pub_msg(message_pub, sp, prometheus_msgs::Message::NORMAL);
+              pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/fast_planner", sp);
               break;
             }
           }
@@ -404,7 +402,7 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
       if (max_dist > planner_manager_->margin_)
       {
         // cout << "change goal, replan." << endl;
-        pub_msg(message_pub, "change goal, replan.\n" , prometheus_msgs::Message::WARN);
+        pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/fast_planner", "change goal, replan.\n");
         end_pt_ = goal;
         have_goal_ = true;
         end_vel_.setZero();
@@ -439,7 +437,7 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
     {
       // cout << "current traj in collision." << endl;
       // ROS_WARN("current traj in collision.");
-      pub_msg(message_pub, "current traj in collision.\n", prometheus_msgs::Message::WARN);
+      pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/fast_planner",  "current traj in collision.\n");
       changeExecState(REPLAN_TRAJ, "SAFETY");
     }
   }
@@ -486,7 +484,7 @@ bool PlanningFSM::planSearchOpt()
   }
   else
   {
-    pub_msg(message_pub, "generate new traj fail.\n", prometheus_msgs::Message::WARN);
+    pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/fast_planner", "generate new traj fail.\n");
     // cout << "generate new traj fail." << endl;
     return false;
   }

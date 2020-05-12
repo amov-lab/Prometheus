@@ -44,7 +44,8 @@ void Occupy_map::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_
 
 void Occupy_map::inflate_point_cloud(void){
     if(!has_global_point){
-        pub_msg(message_pub, "Occupy_map [inflate point cloud]: don't have global point, can't inflate!\n", prometheus_msgs::Message::WARN);
+     
+        pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "Occupy_map [inflate point cloud]: don't have global point, can't inflate!\n");
         // printf("Occupy_map [inflate point cloud]: don't have global point, can't inflate!\n");
         return;
     }
@@ -118,7 +119,7 @@ void Occupy_map::inflate_point_cloud(void){
 void Occupy_map::setOccupancy(Eigen::Vector3d pos, int occ) {
     if (occ != 1 && occ != 0) {
         // std::cout << "occ value error!" << std::endl;
-        pub_msg(message_pub, "occ value error!\n", prometheus_msgs::Message::WARN);
+        pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "occ value error!\n");
         return;
     }
 
@@ -155,7 +156,8 @@ bool Occupy_map::isInMap(Eigen::Vector3d pos) {
 bool Occupy_map::check_safety(Eigen::Vector3d& pos, double check_distance/*, Eigen::Vector3d& map_point*/){
     if(!isInMap(pos)){
         // printf("[check_safety]: the odom point is not in map\n");
-        pub_msg(message_pub, "[check_safety]: the odom point is not in map\n", prometheus_msgs::Message::WARN);
+
+        pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "[check_safety]: the odom point is not in map\n");
         return 0;
     }
     Eigen::Vector3i id;
@@ -175,7 +177,7 @@ bool Occupy_map::check_safety(Eigen::Vector3d& pos, double check_distance/*, Eig
                 indexToPos(id_occ, pos_occ);
                 if(!isInMap(pos_occ)){
                     // printf("[check_safety]: current odom is near the boundary of the map\n");
-                    pub_msg(message_pub, "[check_safety]: current odom is near the boundary of the map\n", prometheus_msgs::Message::WARN);
+                    pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "[check_safety]: current odom is near the boundary of the map\n");
                     return 0;
                 }
                 if(getOccupancy(id_occ)){

@@ -23,7 +23,7 @@
 #include "prometheus_plan_manage/Bspline.h"
 
 #include "plan_manage/tools.h"
-
+#include "message_utils.h"
 using std::vector;
 
 namespace dyn_planner
