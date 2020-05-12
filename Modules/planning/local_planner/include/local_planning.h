@@ -28,13 +28,14 @@
 #include <std_msgs/Bool.h>
 
 #include "apf.h"
+#include "local_planning.h"
 
 #include "planning_visualization.h"
 
 #include "tools.h"
 
-// #include "prometheus_control_utils.h"
-// using namespace prometheus_control_utils;
+#include "message_utils.h"
+
 using namespace std;
 
 
@@ -104,6 +105,7 @@ private:
 
     // APF 算法 算子
     APF::Ptr apf_planner_ptr;
+    local_planning_alg::Ptr local_alg_ptr;
 
     PlanningVisualization::Ptr visualization_;
     int is_simulation;
@@ -118,10 +120,10 @@ public:
     Eigen::Matrix<double, 3, 1> total_force;
 
     PotentialFiledPlanner(/* args */):node_("~") {
-        
     }
 
-    ~PotentialFiledPlanner(){}
+    ~PotentialFiledPlanner(){
+    }
     void init(ros::NodeHandle& nh);
 
     /* get */

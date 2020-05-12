@@ -13,6 +13,5 @@ namespace global_planner
 {
 extern ros::Publisher message_pub;
 
-void pub_msg(ros::Publisher & puber, std::string mmm, int type);
 }
 #endif

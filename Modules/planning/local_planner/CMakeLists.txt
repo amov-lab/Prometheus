@@ -38,7 +38,7 @@ include_directories(
        ${catkin_INCLUDE_DIRS}
        ${Eigen3_INCLUDE_DIRS}
        ${PCL_INCLUDE_DIRS}
-       ${PROJECT_SOURCE_DIR}/../../control/include
+       ${PROJECT_SOURCE_DIR}/../../common/include
      )
 link_directories(${PCL_LIBRARY_DIRS})
 
@@ -51,6 +51,7 @@ add_executable(local_planner_main
 	src/apf.cpp
 	src/planning_visualization.cpp
        src/tools.cpp
+       src/vfh.cpp
 	)
 
 target_link_libraries(local_planner_main

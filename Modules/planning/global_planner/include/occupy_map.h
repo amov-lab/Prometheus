@@ -16,6 +16,7 @@
 
 
 #include "tools.h"
+#include "message_utils.h"
 
 namespace global_planner
 {

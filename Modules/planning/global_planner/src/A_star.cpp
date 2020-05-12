@@ -210,7 +210,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
                 use_node_num_ += 1;
                 if (use_node_num_ == allocate_num_)
                 {
-                    pub_msg(message_pub, "a star run out of memory.\n", prometheus_msgs::Message::WARN);
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/global_planner", "a star run out of memory.\n");
                     // std::cout << "a star run out of memory." << std::endl;
                     return NO_PATH;
                 }
@@ -229,7 +229,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
                 else
                 {
                     // cout << "error type in searching: " << pro_node->node_state << endl;
-                    pub_msg(message_pub, "a star run out of memory.\n", prometheus_msgs::Message::WARN);
+                    pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "a star run out of memory.\n");
                 }
                 }
 

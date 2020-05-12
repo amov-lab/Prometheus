@@ -13,6 +13,6 @@ namespace dyn_planner
 {
 extern ros::Publisher message_pub;
 
-void pub_msg(ros::Publisher & puber, std::string mmm, int type);
+// void pub_msg(ros::Publisher & puber, std::string mmm, int type);
 }
 #endif
