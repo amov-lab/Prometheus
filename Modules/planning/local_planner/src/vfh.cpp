@@ -22,6 +22,10 @@ void VFH::set_odom(nav_msgs::Odometry cur_odom){
 int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel){
     int local_planner_state=0;  // 0 for not init; 1 for safe; 2 for dangerous
     int safe_cnt=0;
+    // clear the Hdata
+    for(int i =0; i<Hcnt; i++){
+        Hdata[i]=0;
+    }
 
     if(!has_local_map_)
         return 0;
@@ -47,7 +51,7 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     // 不考虑高度影响
     odom2goal(2) = 0.0;
     double dist_att = odom2goal.norm();
-    double goal_heading = atan2(odom2goal(0), odom2goal(1));
+    double goal_heading = atan2(odom2goal(1), odom2goal(0));
     
     if(dist_att > max_att_dist){
         dist_att = max_att_dist;
@@ -87,6 +91,10 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
         pt = latest_local_pcl_.points[i];
         p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
+        // 3D lidar
+         if(isnan(p3d(2)) || p3d(2)<-0.1){
+             continue;
+         }
         // 不考虑高度的影响
         p3d(2) = 0.0;
         // rotation the local point (heading)
@@ -103,7 +111,7 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
         // if(fabs(point_height_global)<ground_height)
         //     continue;
 
-        double obs_angle = atan2(p3d_gloabl_rot(0), p3d_gloabl_rot(1));
+        double obs_angle = atan2(p3d_gloabl_rot(1), p3d_gloabl_rot(0));
         double angle_range;
         if(obs_dist>inflate_and_safe_distance){
             angle_range = asin(inflate_and_safe_distance/obs_dist);
@@ -114,6 +122,7 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
         }
 
         double obstacle_cost = obstacle_weight * (1/obs_dist - 1/obs_distance)* 1.0/(obs_dist * obs_dist) /* * (1/obs_dist)*/;
+        // printf("vfh: obs_dist: %f, obs_distance: %f, obstacle_cost: %f, angle_range: %f, obs_angle: %f\n", obs_dist, obs_distance, obstacle_cost, angle_range, obs_angle);
         generate_voxel_data(obs_angle, angle_range, obstacle_cost);
 
         // dist_push = dist_push - inflate_distance;
@@ -159,8 +168,9 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
         Hdata[i] += (prev_cost + goal_cost);
     }
 
-    int best_ind = find_optimization_path();
+    int best_ind = find_optimization_path();   // direction 
     double best_heading  = find_angle(best_ind);
+
     double vel_norm = dist_att/2; //与距离终点距离有关, 0.2m， 32到达
     if(vel_norm>limit_v_norm){
         vel_norm = limit_v_norm;
@@ -169,6 +179,7 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     desired_vel(1) = sin(best_heading)*vel_norm;
     // 处理高度
     desired_vel(2) = 0.0;
+    // printf("vfh: angle: %f,  vnorm: %f , obstacle_weight: %f\n", best_heading, vel_norm, obstacle_weight);
 
     // 如果不安全的点超出，
     if(safe_cnt>5){
@@ -207,9 +218,9 @@ void VFH::init(ros::NodeHandle& nh){
 
     nh.param("vfh/goalWeight", goalWeight, 0.2); // 目标权重
     nh.param("vfh/prevWeight", prevWeight, 0.0); // 光滑权重
-    nh.param("vfh/obstacle_weight", obstacle_weight, 0.01); // 障碍物权重
+    nh.param("vfh/obstacle_weight", obstacle_weight, 0.0); // 障碍物权重
     
-    nh.param("vfh/limit_v_norm", limit_v_norm, 0.2); // 极限速度
+    nh.param("vfh/limit_v_norm", limit_v_norm, 0.4); // 极限速度
 
     inflate_and_safe_distance = safe_distance + inflate_distance;
     is_prev = false;
@@ -240,9 +251,19 @@ void VFH::generate_voxel_data(double angle_cen, double angle_range, double val) 
     double angle_min = angle_cen - angle_range;
     int cnt_min = find_Hcnt(angle_min);
     int cnt_max = find_Hcnt(angle_max);
+    if(cnt_min>cnt_max){
+        for(int i=cnt_min; i<Hcnt; i++){
+            Hdata[i] = val;
+        }
+        for(int i=0;i<cnt_max; i++){
+            Hdata[i]=val;
+        }
+    }else if(cnt_max>=cnt_min){
     for(int i=cnt_min; i<=cnt_max; i++){
         Hdata[i] = val;
-    } 
+    }
+    }
+     
 }
 
 // angle: deg
