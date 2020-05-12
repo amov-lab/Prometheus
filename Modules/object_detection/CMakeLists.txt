@@ -356,13 +356,21 @@ target_link_libraries(landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenC
 
 
 if(CATKIN_ENABLE_TESTING)
-  # Download yolov2.weights
+  # Download yolov3-tiny.weights
   set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_ros/yolo_network_config/weights")
   set(FILE "${PATH}/yolov3-tiny.weights")
   message(STATUS "Checking and downloading yolov3-tiny.weights if needed ...")
   if (NOT EXISTS "${FILE}")
     message(STATUS "... file does not exist. Downloading now ...")
     execute_process(COMMAND wget http://121.36.68.10/upload/yolov3-tiny.weights -P ${PATH})
+  endif()
+  # Download yolov3-tiny-BDT-best.weights
+  set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_ros/yolo_network_config/weights")
+  set(FILE "${PATH}/yolov3-tiny-BDT-best.weights")
+  message(STATUS "Checking and downloading yolov3-tiny-BDT-best.weights if needed ...")
+  if (NOT EXISTS "${FILE}")
+    message(STATUS "... file does not exist. Downloading now ...")
+    execute_process(COMMAND wget http://121.36.68.10/upload/yolov3-tiny-BDT-best.weights -P ${PATH})
   endif()
 endif()
 

@@ -1,7 +1,4 @@
 <launch>
-    <!-- 读取控制器参数,fastplanner为轨迹追踪控制 -->
-	<rosparam command="load" file="$(find prometheus_control)/config/control_parameter.yaml"/>
-    
     <!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
     <arg name="y" default="-10.0"/>

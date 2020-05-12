@@ -1,7 +1,7 @@
 
 ## 控制器编号: 0 for 串级PID, 1 for PID, 2 for UDE, 3 for passivity, 4 for NE
 px4_pos_controller:
-  controller_number: 1
+  controller_number: 0
 
 ## 位置环参数 - cascade pid
 ## 目前参数为PX4默认参数
@@ -20,7 +20,7 @@ Pos_cascade_pid:
 
 ## 限制参数 
 Limit:
-  tilt_max: 20.0
+  tilt_max: 4.0
   XY_VEL_MAX : 1.0
   Z_VEL_MAX : 1.0
   THR_MIN: 0.1

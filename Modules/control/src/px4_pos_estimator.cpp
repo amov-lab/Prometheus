@@ -60,10 +60,14 @@ Eigen::Vector3d Euler_laser;                                         //无人机
 
 geometry_msgs::TransformStamped laser;                          //当前时刻cartorgrapher发布的数据
 geometry_msgs::TransformStamped laser_last;
+//---------------------------------------T265------------------------------------------
+Eigen::Vector3d pos_drone_t265;
+Eigen::Quaterniond q_t265;
+Eigen::Vector3d Euler_t265;   
 //---------------------------------------gazebo真值相关------------------------------------------
-Eigen::Vector3d pos_drone_gazebo;                          //无人机当前位置 (laser)
+Eigen::Vector3d pos_drone_gazebo;
 Eigen::Quaterniond q_gazebo;
-Eigen::Vector3d Euler_gazebo;                                         //无人机当前姿态(laser)
+Eigen::Vector3d Euler_gazebo;                               
 //---------------------------------------发布相关变量--------------------------------------------
 ros::Publisher vision_pub;
 ros::Publisher drone_state_pub;
@@ -82,7 +86,7 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr& msg)
 {
     //确定是cartographer发出来的/tf信息
     //有的时候/tf这个消息的发布者不止一个
-    if (msg->transforms[0].header.frame_id == "map")
+    if (msg->transforms[0].header.frame_id == "odom_cartographer")
     {
         laser = msg->transforms[0];
 
@@ -94,8 +98,9 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr& msg)
         if (dt_laser != 0)
         {
             //位置 xy  [将解算的位置从laser坐标系转换至ENU坐标系]???
-            pos_drone_laser[0]  = laser.transform.translation.x;
-            pos_drone_laser[1]  = laser.transform.translation.y;
+            pos_drone_laser[0]  = laser.transform.translation.x + pos_offset[0];
+            pos_drone_laser[1]  = laser.transform.translation.y + pos_offset[1];
+            pos_drone_laser[2]  = pos_drone_gazebo[2];
 
             // Read the Quaternion from the Carto Package [Frame: Laser[ENU]]
             Eigen::Quaterniond q_laser_enu(laser.transform.rotation.w, laser.transform.rotation.x, laser.transform.rotation.y, laser.transform.rotation.z);
@@ -153,6 +158,24 @@ void gazebo_cb(const nav_msgs::Odometry::ConstPtr& msg)
     }
 }
 
+void t265_cb(const nav_msgs::Odometry::ConstPtr& msg)
+{
+    if(msg->header.frame_id == "t265_odom_frame")
+    {
+        pos_drone_t265 = Eigen::Vector3d(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
+        // pos_drone_t265[0] = msg->pose.pose.position.x + pos_offset[0];
+        // pos_drone_t265[1] = msg->pose.pose.position.y + pos_offset[1];
+        // pos_drone_t265[2] = msg->pose.pose.position.z + pos_offset[2];
+        
+        q_t265 = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+        Euler_t265 = quaternion_to_euler(q_gazebo);
+        // Euler_t265[2] = Euler_t265[2] + yaw_offset;
+        // q_t265 = quaternion_from_rpy(Euler_t265);
+    }else{
+        prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "wrong t265 frame id.");
+    }
+}
+
 void timerCallback(const ros::TimerEvent& e)
 {
     prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
@@ -164,7 +187,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     //读取参数表中的参数
-    // 使用激光SLAM数据orVicon数据 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth
+    // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
     nh.param<int>("input_source", input_source, 0);
     // 
     nh.param<float>("offset_x", pos_offset[0], 0);
@@ -174,6 +197,9 @@ int main(int argc, char **argv)
 
     // 【订阅】cartographer估计位置
     ros::Subscriber laser_sub = nh.subscribe<tf2_msgs::TFMessage>("/tf", 1000, laser_cb);
+
+    //  【订阅】t265估计位置
+    ros::Subscriber t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 100, t265_cb);
 
     // 【订阅】optitrack估计位置
     ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/UAV/pose", 1000, optitrack_cb);
@@ -260,6 +286,16 @@ void send_to_fcu()
         vision.pose.orientation.y = q_gazebo.y();
         vision.pose.orientation.z = q_gazebo.z();
         vision.pose.orientation.w = q_gazebo.w();
+    }else if(input_source == 3)
+    {
+        vision.pose.position.x = pos_drone_t265[0];
+        vision.pose.position.y = pos_drone_t265[1];
+        vision.pose.position.z = pos_drone_t265[2];
+
+        vision.pose.orientation.x = q_t265.x();
+        vision.pose.orientation.y = q_t265.y();
+        vision.pose.orientation.z = q_t265.z();
+        vision.pose.orientation.w = q_t265.w();
     }
 
     vision.header.stamp = ros::Time::now();
@@ -277,7 +313,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     // 发布无人机当前odometry,用于导航及rviz显示
     nav_msgs::Odometry Drone_odom;
     Drone_odom.header.stamp = ros::Time::now();
-    Drone_odom.header.frame_id = "map";
+    Drone_odom.header.frame_id = "world";
     Drone_odom.child_frame_id = "base_link";
 
     Drone_odom.pose.pose.position.x = Drone_State.position[0];

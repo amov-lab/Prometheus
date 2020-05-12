@@ -1,0 +1,11 @@
+<launch>
+    <node name="cartographer_node" pkg="cartographer_ros"
+        type="cartographer_node" args="
+            -configuration_directory $(find prometheus_gazebo)/config/config_cartographer
+            -configuration_basename rplidar_s1.lua"
+        output="screen">
+        <remap from="scan" to="/prometheus/sensors/2Dlidar_scan" />
+    </node>
+
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros" type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+</launch>

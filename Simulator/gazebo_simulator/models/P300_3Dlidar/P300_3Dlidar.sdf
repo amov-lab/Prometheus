@@ -7,7 +7,7 @@
     <include>
       <uri>model://3Dlidar</uri>
       <!-- 此处定义的位置为3Dlidar 与 P300_basic的相对位置 -->
-      <pose>0 0 0.1 0 0 0</pose>
+      <pose>0 0 0.15 0 0 0</pose>
     </include>
     <joint name="3Dlidar_joint" type="fixed">
       <child>3Dlidar::link</child>
