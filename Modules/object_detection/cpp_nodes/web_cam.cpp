@@ -22,9 +22,9 @@ using namespace std;
 using namespace cv;
 
 // 使用cout打印消息
-bool local_print = false;
+bool local_print = true;
 // 使用prometheus_msgs::Message打印消息
-bool message_print = true;
+bool message_print = false;
 //【发布】调试消息
 ros::Publisher message_pub;
 std::string msg_node_name;
@@ -36,7 +36,7 @@ image_transport::Publisher image_pub;
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "web_cam");
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
     ros::Rate loop_rate(60);
 
@@ -44,15 +44,52 @@ int main(int argc, char **argv)
     msg_node_name = "/prometheus/message/web_cam";
     message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
 
+    int camera_id = 0;
+    if (nh.getParam("cam_id", camera_id)) {
+        char camera_id_msg[256];
+        sprintf(camera_id_msg, "camera id is %d", camera_id);
+        if (local_print)
+            cout << camera_id_msg << endl;
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
+            camera_id_msg);
+    }
+    int camera_height(480), camera_width(640);
+    int cam_h, cam_w;
+    if (nh.getParam("cam_h", cam_h)) {
+        if (cam_h > 0) camera_height = cam_h;
+        char camera_id_msg[256];
+        sprintf(camera_id_msg, "set capture height %d", camera_height);
+        if (local_print)
+            cout << camera_id_msg << endl;
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
+            camera_id_msg);
+    }
+    if (nh.getParam("cam_w", cam_w)) {
+        if (cam_w > 0) camera_width = cam_w;
+        char camera_id_msg[256];
+        sprintf(camera_id_msg, "set capture width %d", camera_width);
+        if (local_print)
+            cout << camera_id_msg << endl;
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
+            camera_id_msg);
+    }
+
+    int resize_h(0), resize_w(0);
+    nh.getParam("resize_h", resize_h);
+    nh.getParam("resize_w", resize_w);
+
     // 在这里修改发布话题名称
     image_pub = it.advertise("/prometheus/camera/rgb/image_raw", 1);
 
     // 用系统默认驱动读取摄像头0，使用其他摄像头ID，请在这里修改
-    int camera_id = 0;
+    
     cv::VideoCapture cap(camera_id);
     // 设置摄像头分辨率
-    // cap.set(CAP_PROP_FRAME_WIDTH, image_size.height);
-    // cap.set(CAP_PROP_FRAME_HEIGHT, image_size.width);
+    cap.set(CAP_PROP_FRAME_WIDTH, camera_width);
+    cap.set(CAP_PROP_FRAME_HEIGHT, camera_height);
     cv::Mat frame;
     // 设置全屏
     // namedWindow("web_cam frame", CV_WINDOW_NORMAL);
@@ -65,6 +102,9 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         cap >> frame;
+        if (resize_w > 0 && resize_h > 0) {
+            cv::resize(frame, frame, cv::Size(resize_w, resize_h));
+        }
         if (!frame.empty())
         {
             // 改变图像大小并显示图片

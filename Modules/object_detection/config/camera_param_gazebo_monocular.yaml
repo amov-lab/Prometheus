@@ -25,3 +25,9 @@ landpad_det_len: 0.8
 
 ## digitnum_det 数字周围的方框边长(默认1m)
 digitnum_det_len: 0.5
+
+## YOLO检测中的行人高度(m)
+yolo_det_person_height: 1.7
+
+## YOLO检测中的无人机宽度(m)
+yolo_det_uav_width: 0.5
