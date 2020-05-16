@@ -527,7 +527,7 @@ int main(int argc, char **argv)
             if (-1 != t)
             {
                 // 解算位置的平均值
-                cout << marker_count << endl;
+                // cout << marker_count << endl;
                 cv::Point3f A1_Position_OcInW(0,0,0);
                 double A1_yaw = 0.0;
                 A1_Position_OcInW = A1_Sum_Position_OcInW / marker_count;
@@ -540,6 +540,8 @@ int main(int argc, char **argv)
                 pose_now.position[0] = tx;
                 pose_now.position[1] = ty;
                 pose_now.position[2] = tz;
+                pose_now.sight_angle[0] = atan(tx / tz);
+                pose_now.sight_angle[1] = atan(ty / tz);
                 pose_now.yaw_error = A1_yaw;
 
                 last_x = pose_now.position[0];
@@ -555,6 +557,8 @@ int main(int argc, char **argv)
                 pose_now.position[0] = last_x;
                 pose_now.position[1] = last_y;
                 pose_now.position[2] = last_z;
+                pose_now.sight_angle[0] = atan(last_x / last_z);
+                pose_now.sight_angle[1] = atan(last_y / last_z);
                 pose_now.yaw_error = last_yaw;
             }
         }
@@ -566,6 +570,8 @@ int main(int argc, char **argv)
             pose_now.position[0] = last_x;
             pose_now.position[1] = last_y;
             pose_now.position[2] = last_z;
+            pose_now.sight_angle[0] = atan(last_x / last_z);
+            pose_now.sight_angle[1] = atan(last_y / last_z);
             pose_now.yaw_error = last_yaw;
         }
         position_pub.publish(pose_now);

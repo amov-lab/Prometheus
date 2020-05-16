@@ -12,6 +12,9 @@ float32[3] position
 ## 目标姿态
 float32[3] attitude
 
+## 视线角度[相机系下：右方x角度为正，下方y角度为正]
+float32[2] sight_angle
+
 ## 偏航角误差
 float32 yaw_error
 
