@@ -20,7 +20,7 @@ git clone https://github.com/amov-lab/Prometheus.git
 ```
 # 首先启动相机节点，如需修改相机ID，请参考代码
 rosrun prometheus_detection web_cam
-rosrun camera_calibration cameracalibrator.py --size 8x6 --sqre 0.0245 image:=/prometheus/camera/rgb/image_raw
+rosrun camera_calibration cameracalibrator.py --size 8x6 --square 0.0245 image:=/prometheus/camera/rgb/image_raw
 ```
 size为标点板尺寸，square为每个方格宽度(m)，image:=相机话题
 
