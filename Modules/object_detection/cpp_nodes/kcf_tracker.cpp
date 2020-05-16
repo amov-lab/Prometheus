@@ -243,7 +243,7 @@ int main(int argc, char **argv)
 
     cv::namedWindow(RGB_WINDOW);
     cv::setMouseCallback(RGB_WINDOW, onMouse, 0);
-    float last_x(0), last_y(0), last_z(0);
+    float last_x(0), last_y(0), last_z(0), last_ax(0), last_ay(0);
 
     while (ros::ok())
     {
@@ -310,9 +310,14 @@ int main(int argc, char **argv)
             pose_now.position[1] = depth * cy / fy;
             pose_now.position[2] = depth;
 
+            pose_now.sight_angle[0] = cx / (frame.cols / 2) * atan((frame.cols / 2) / fx);
+            pose_now.sight_angle[1] = cy / (frame.rows / 2) * atan((frame.rows / 2) / fy);
+
             last_x = pose_now.position[0];
             last_y = pose_now.position[1];
             last_z = pose_now.position[2];
+            last_ax = pose_now.sight_angle[0];
+            last_ay = pose_now.sight_angle[1];
         }
 
         if (!detected)
@@ -323,6 +328,8 @@ int main(int argc, char **argv)
             pose_now.position[0] = last_x;
             pose_now.position[1] = last_y;
             pose_now.position[2] = last_z;
+            pose_now.sight_angle[0] = last_ax;
+            pose_now.sight_angle[1] = last_ay;
         }
 
         pose_pub.publish(pose_now);
