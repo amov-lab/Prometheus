@@ -54,6 +54,11 @@ YoloObjectDetector::YoloObjectDetector(ros::NodeHandle nh)
   nh.param<float>("p2", p2, -0.003032);
   nh.param<float>("k3", k3, 0.0);
 
+  nh.param<float>("yolo_det_person_height", person_height, 1.7);
+  nh.param<float>("yolo_det_uav_width", uav_width, 1.7);
+
+  ROS_INFO("[YoloObjectDetector] fx: %f", fx);
+
   init();
 }
 
@@ -176,7 +181,7 @@ void YoloObjectDetector::init()
                                                            objectDetectorQueueSize,
                                                            objectDetectorLatch);
 
-pose_pub = nodeHandle_.advertise<geometry_msgs::Pose>("/vision/target", 1);
+  pose_pub = nodeHandle_.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/yolo_det", 10);
 
 
   boundingBoxesPublisher_ = nodeHandle_.advertise<prometheus_msgs::BoundingBoxes>(
@@ -634,22 +639,47 @@ void *YoloObjectDetector::publishInThread()
           // !!! put your code here
           if (boundingBox.Class == "person")
           {
-            // std::cout<<"person"<<std::endl;
-            geometry_msgs::Pose pose_now;
-            float theta_x = atan(((float)(xmin+xmax)/2  - x_0) / fx);
-            float theta_y = atan(((float)(ymin+ymax)/2 - y_0) / fy);
+            prometheus_msgs::DetectionInfo pose_now;
+            float theta_x = atan(((float)(xmin+xmax)/2-x_0) / fx);
+            float theta_y = atan(((float)(ymin+ymax)/2-y_0) / fy);
 
-            static float marker_size = 1.6;
-
-            float depth = marker_size*fy/(ymax-ymin); // shendu
+            float depth = person_height*fy / (ymax-ymin); // depth
 
             float real_x = depth*tan(theta_x);
             float real_y = depth*tan(theta_y);
 
-            pose_now.orientation.w = 1;
-            pose_now.position.x = depth;
-            pose_now.position.y = real_x;
-            pose_now.position.z = real_y;
+            pose_now.header.stamp = ros::Time::now();
+            pose_now.detected = true;
+            pose_now.position[0] = real_x;
+            pose_now.position[1] = real_y;
+            pose_now.position[2] = depth;
+            pose_pub.publish(pose_now);
+
+
+            // std::cout << "flag_detected: " <<  pose_now.orientation.w <<std::endl;
+            // std::cout << "pos_target: [X Y Z] : " << " " << pose_now.position.x  << " [m] "<< // /// pose_now.position.y   <<" [m] "<< pose_now.position.z <<" [m] "<<std::endl;
+
+            last_x = depth;
+            last_y = real_x;
+            last_z = real_y;
+            is_detected = true;
+          }
+          if (boundingBox.Class == "drone" || boundingBox.Class == "uav")
+          {
+            prometheus_msgs::DetectionInfo pose_now;
+            float theta_x = atan(((float)(xmin+xmax)/2-x_0) / fx);
+            float theta_y = atan(((float)(ymin+ymax)/2-y_0) / fy);
+
+            float depth = uav_width*fx / (xmax-xmin); // depth
+
+            float real_x = depth*tan(theta_x);
+            float real_y = depth*tan(theta_y);
+
+            pose_now.header.stamp = ros::Time::now();
+            pose_now.detected = true;
+            pose_now.position[0] = real_x;
+            pose_now.position[1] = real_y;
+            pose_now.position[2] = depth;
             pose_pub.publish(pose_now);
 
 
@@ -680,11 +710,12 @@ void *YoloObjectDetector::publishInThread()
 
   if (!is_detected)
   {
-    geometry_msgs::Pose pose_now;
-    pose_now.orientation.w = 0;
-    pose_now.position.x = last_x;
-    pose_now.position.y = last_y;
-    pose_now.position.z = last_z;
+    prometheus_msgs::DetectionInfo pose_now;
+    pose_now.header.stamp = ros::Time::now();
+    pose_now.detected = false;
+    pose_now.position[0] = last_x;
+    pose_now.position[1] = last_y;
+    pose_now.position[2] = last_z;
     pose_pub.publish(pose_now);
   }
   

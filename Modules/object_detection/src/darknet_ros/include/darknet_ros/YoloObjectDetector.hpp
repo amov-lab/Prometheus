@@ -94,6 +94,7 @@ class YoloObjectDetector
   float fx,fy,x_0,y_0;
   //相机畸变系数
   float k1,k2,p1,p2,k3;
+  float person_height, uav_width;
 
   /*!
    * Initialize the ROS connections.
