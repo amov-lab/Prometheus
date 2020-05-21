@@ -372,6 +372,14 @@ if(CATKIN_ENABLE_TESTING)
     message(STATUS "... file does not exist. Downloading now ...")
     execute_process(COMMAND wget http://121.36.68.10/upload/yolov3-tiny-BDT-best.weights -P ${PATH})
   endif()
+  # Download SiamRPNVOT.model
+  set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/siam_rpn_lib")
+  set(FILE "${PATH}/SiamRPNVOT.model")
+  message(STATUS "Checking and downloading SiamRPNVOT.model if needed ...")
+  if (NOT EXISTS "${FILE}")
+    message(STATUS "... file does not exist. Downloading now ...")
+    execute_process(COMMAND wget http://121.36.68.10/upload/SiamRPNVOT.model -P ${PATH})
+  endif()
 endif()
 
 #############
