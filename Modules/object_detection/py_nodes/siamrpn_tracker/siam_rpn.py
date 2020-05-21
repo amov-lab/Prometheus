@@ -132,6 +132,7 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h):
     rate = rospy.Rate(50)
     while not rospy.is_shutdown():
         if getim:
+            getim = False
             ## ! 
             d_info = DetectionInfo()
             d_info.frame = 0
