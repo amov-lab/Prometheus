@@ -27,6 +27,7 @@ digitnum_det_len = 1.0
 
 rospy.init_node('num_det', anonymous=True)
 pub = rospy.Publisher('/prometheus/object_detection/num_det', MultiDetectionInfo, queue_size=10)
+img_pub = rospy.Publisher('/prometheus/imshow/num_det', Image, queue_size = 10)
 
 global suspand
 
@@ -177,6 +178,7 @@ def image_callback(imgmsg):
         frame = cv2.resize(frame, (w, h))
         # cv2.imshow("color", frame)
         # cv2.waitKey(10)
+        img_pub.publish(bridge.cv2_to_imgmsg(frame, "bgr8"))
 
 
 def num_det(topic_name):
