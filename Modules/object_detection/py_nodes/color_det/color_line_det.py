@@ -27,7 +27,7 @@ distortion_coefficients = np.zeros((5,), np.float32)
 rospy.init_node('color_det', anonymous=True)
 # Pose.x 为检测到的误差角度，Pose.y 为检测标志位（1代表正常检测，-1代表未检测到）
 pub = rospy.Publisher('/prometheus/object_detection/color_line_angle', Pose, queue_size=10)
-
+img_pub = rospy.Publisher('/prometheus/imshow/color_line_angle', Image, queue_size = 10)
 
 
 def get_line_area(frame):
@@ -182,6 +182,7 @@ def image_callback(imgmsg):
         # cv2.imshow("cap", frame)
         # cv2.imshow("area", area)
         # cv2.waitKey(10)
+        img_pub.publish(bridge.cv2_to_imgmsg(frame, "bgr8"))
 
 
 def color_det(topic_name):
