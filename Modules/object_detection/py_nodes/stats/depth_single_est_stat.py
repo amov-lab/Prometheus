@@ -16,7 +16,7 @@ from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
 import time
 
 
-rospy.init_node('depth_est_stat', anonymous=True)
+rospy.init_node('depth_single_est_stat', anonymous=True)
 global depths_list, time_s
 depths_list = []
 time_s = time.time()
@@ -24,8 +24,8 @@ time_s = time.time()
 
 def depth_callback(detmsg):
     global depths_list, time_s
-    if len(detmsg.detection_infos) > 0:
-        depth = detmsg.detection_infos[0].position[2]
+    if detmsg.detected > 0:
+        depth = detmsg.position[2]
         depths_list.append(depth)
         d_s = time.time() - time_s
         if d_s > 3.:
@@ -39,5 +39,5 @@ def depth_callback(detmsg):
 
 
 if __name__ == '__main__':
-    rospy.Subscriber('/prometheus/object_detection/num_det', MultiDetectionInfo, depth_callback)
+    rospy.Subscriber('/prometheus/object_detection/landpad_det', DetectionInfo, depth_callback)
     rospy.spin()

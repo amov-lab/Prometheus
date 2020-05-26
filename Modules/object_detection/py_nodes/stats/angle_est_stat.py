@@ -12,32 +12,32 @@ import cv2
 import os
 import yaml
 import math
-from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
+from geometry_msgs.msg import Pose, Point, Quaternion
 import time
 
 
-rospy.init_node('depth_est_stat', anonymous=True)
-global depths_list, time_s
-depths_list = []
+rospy.init_node('angle_est_stat', anonymous=True)
+global angle_list, time_s
+angle_list = []
 time_s = time.time()
 
 
-def depth_callback(detmsg):
-    global depths_list, time_s
-    if len(detmsg.detection_infos) > 0:
-        depth = detmsg.detection_infos[0].position[2]
-        depths_list.append(depth)
+def angle_callback(detmsg):
+    global angle_list, time_s
+    if detmsg.position.y > 0:
+        angle = detmsg.position.x
+        angle_list.append(angle)
         d_s = time.time() - time_s
         if d_s > 3.:
             time_s = time.time()
-            n_dat = len(depths_list)
-            dat = np.array(depths_list)
+            n_dat = len(angle_list)
+            dat = np.array(angle_list)
             dat_mean = np.mean(dat)
             dat_std = np.std(dat)
             print("mean: {:.3f}, std: {:.3f}, n_points: {}".format(dat_mean, dat_std, n_dat))
-            depths_list = []
+            angle_list = []
 
 
 if __name__ == '__main__':
-    rospy.Subscriber('/prometheus/object_detection/num_det', MultiDetectionInfo, depth_callback)
+    rospy.Subscriber('/prometheus/object_detection/color_line_angle', Pose, angle_callback)
     rospy.spin()
