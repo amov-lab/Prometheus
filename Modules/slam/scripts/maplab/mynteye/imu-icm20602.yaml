@@ -1,0 +1,11 @@
+id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
+hardware_id: /mynteye/imu/data_raw
+sensor_type: IMU
+sigmas:
+  gyro_noise_density: 7.8137503850222426e-04
+  gyro_bias_random_walk_noise_density: 1.7540348426708666e-05
+  acc_noise_density: 1.0612587961445754e-02
+  acc_bias_random_walk_noise_density: 2.0355980997145562e-04
+saturation_accel_max_mps2: 150.0
+saturation_gyro_max_radps: 7.5
+gravity_magnitude_mps2: 9.79948859
