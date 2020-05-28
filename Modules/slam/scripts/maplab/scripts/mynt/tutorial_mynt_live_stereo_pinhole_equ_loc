@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Script to run ROVIOLI from a Euroc live data source (e.g., Euroc bag file with rosbag play).
+# Usage: tutorial_euroc <output save folder> [<additional rovioli flags>]
+#NCAMERA_CALIBRATION="$ROVIO_CONFIG_DIR../mynteye/ncamera-homezhangsslightechbag03dyna.yaml"
+LOCALIZATION_MAP_INPUT=$1
+LOCALIZATION_MAP_OUTPUT=$2
+NCAMERA_CALIBRATION="$ROVIO_CONFIG_DIR../mynteye/ncameras_pin_equ.yaml"
+IMU_PARAMETERS_MAPLAB="$ROVIO_CONFIG_DIR../mynteye/imu-icm20602.yaml"
+IMU_PARAMETERS_ROVIO="$ROVIO_CONFIG_DIR../mynteye/imu-sigmas-rovio.yaml"
+REST=$@
+
+
+rosrun rovioli rovioli \
+  --alsologtostderr=1 \
+  --v=2 \
+  --ncamera_calibration=$NCAMERA_CALIBRATION  \
+  --imu_parameters_maplab=$IMU_PARAMETERS_MAPLAB \
+  --imu_parameters_rovio=$IMU_PARAMETERS_ROVIO \
+  --publish_debug_markers  \
+  --datasource_type="rostopic" \
+  --optimize_map_to_localization_map=false \
+  --vio_localization_map_folder=$LOCALIZATION_MAP_INPUT \
+  --save_map_folder=$LOCALIZATION_MAP_OUTPUT \
+  --map_builder_save_image_as_resources=false \
+  --datasource_rosbag=$ROSBAG $REST
+  --rovio_enable_frame_visualization \
