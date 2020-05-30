@@ -14,6 +14,22 @@ material Floor
    }
  }
 }
+material Floor_Wood
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture floor.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.05 0.05
+     }
+   }
+ }
+}
 material Wallpaper1
 {
  technique
@@ -126,3 +142,20 @@ material Poster4
    }
  }
 }
+material gate_texture
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture com.png
+       // Repeat the texture over the surface (4 per face)
+       scale 0.1 0.1
+     }
+   }
+ }
+}
+
