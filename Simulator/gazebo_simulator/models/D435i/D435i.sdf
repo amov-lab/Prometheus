@@ -32,10 +32,10 @@
         <pose frame="">0 -0.0 0.004 0 0 0</pose>
         <camera name="realsense_camera">
           <!-- 水平视场角，90度 -->
-          <horizontal_fov>1.5708</horizontal_fov>
+          <horizontal_fov>1.047</horizontal_fov>
           <image>
-            <width>1280</width>
-            <height>720</height>
+            <width>640</width>
+            <height>480</height>
             <format>RGB_INT8</format>
           </image>
           <clip>
@@ -45,7 +45,7 @@
           <noise>
             <type>gaussian</type>
             <mean>0.0</mean>
-            <stddev>0.001</stddev>
+            <stddev>0.007</stddev>
           </noise>
         </camera>
         <always_on>1</always_on>
@@ -56,10 +56,10 @@
       <sensor name="ired1" type="camera">
         <pose frame="">0 -0.025 0.004 0 0 0</pose>
         <camera name="ired1">
-          <horizontal_fov>1.5708</horizontal_fov>
+          <horizontal_fov>1.047</horizontal_fov>
           <image>
-            <width>1280</width>
-            <height>720</height>
+            <width>640</width>
+            <height>480</height>
             <format>L_INT8</format>
           </image>
           <clip>
@@ -69,7 +69,7 @@
           <noise>
             <type>gaussian</type>
             <mean>0.0</mean>
-            <stddev>0.001</stddev>
+            <stddev>0.007</stddev>
           </noise>
         </camera>
         <always_on>1</always_on>
@@ -80,10 +80,10 @@
       <sensor name="ired2" type="camera">
         <pose frame="">0 0.025 0.004 0 0 0</pose>
         <camera name="ired2">
-          <horizontal_fov>1.5708</horizontal_fov>
+          <horizontal_fov>1.047</horizontal_fov>
           <image>
-            <width>1280</width>
-            <height>720</height>
+            <width>640</width>
+            <height>480</height>
             <format>L_INT8</format>
           </image>
           <clip>
@@ -104,10 +104,10 @@
       <sensor name="depth" type="depth">
         <pose frame="">0 -0.0 0.004 0 0 0</pose>
         <camera name="depth_camera">
-          <horizontal_fov>1.5708</horizontal_fov>
+          <horizontal_fov>1.047</horizontal_fov>
           <image>
-            <width>1280</width>
-            <height>720</height>
+            <width>640</width>
+            <height>480</height>
           </image>
           <clip>
             <near>0.1</near>
@@ -116,7 +116,7 @@
           <noise>
             <type>gaussian</type>
             <mean>0.0</mean>
-            <stddev>0.001</stddev>
+            <stddev>0.007</stddev>
           </noise>
         </camera>
         <always_on>1</always_on>
