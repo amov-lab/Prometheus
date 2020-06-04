@@ -1,10 +1,10 @@
 <launch>
 	<!-- Launch Gazebo Simulation -->
 	<arg name="x" default="0"/>
-    <arg name="y" default="7.0"/>
+    <arg name="y" default="0.0"/>
     <arg name="z" default="0.25"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/indoor_race_track.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_front/P300_Monocular_front.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
 	<arg name="model" default="P300_basic"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
