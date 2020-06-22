@@ -173,7 +173,7 @@ void slam_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
         // pos_drone_gazebo[2] = msg->pose.pose.position.z + pos_offset[2];
 
         q_slam = Eigen::Quaterniond(msg->pose.orientation.w, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z);
-        Euler_slam = quaternion_to_euler(q_gazebo);
+        Euler_slam = quaternion_to_euler(q_slam);
         // Euler_gazebo[2] = Euler_gazebo[2] + yaw_offset;
         // q_gazebo = quaternion_from_rpy(Euler_gazebo);
     }
