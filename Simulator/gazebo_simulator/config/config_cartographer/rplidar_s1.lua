@@ -19,11 +19,11 @@ options = {
   map_builder = MAP_BUILDER,
   trajectory_builder = TRAJECTORY_BUILDER,
 -- map_frame发布submaps的坐标系,也是位姿的父坐标系
-  map_frame = "map",
+  map_frame = "map_cartographer",
 -- tracking_frame是SLAM算法的坐标系,如果使用IMU,则一般设为imu_link
   tracking_frame = "imu_link",
 -- published_frame是位姿的子坐标系
-  published_frame = "base_link",
+  published_frame = "imu_link",
 -- The frame between published_frame and map_frame to be used for publishing the (non-loop-closed) local SLAM result.
   odom_frame = "odom_cartographer",
   provide_odom_frame = true,

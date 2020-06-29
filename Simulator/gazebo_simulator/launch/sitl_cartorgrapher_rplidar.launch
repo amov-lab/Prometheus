@@ -1,10 +1,10 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
-    <arg name="y" default="-10.0"/>
+    <arg name="y" default="0.0"/>
     <arg name="z" default="0.1"/>
-    <arg name="input_source" default="1"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
+    <arg name="input_source" default="2"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/wall_num.world"/>
     <arg name="lidar" default="true"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_2Dlidar/P300_2Dlidar.sdf"/>
 	<arg name="model" default="P300_2Dlidar"/>
