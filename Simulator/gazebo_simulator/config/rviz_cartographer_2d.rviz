@@ -62,6 +62,8 @@ Visualization Manager:
           Value: true
         base_link_frd:
           Value: true
+        imu_link:
+          Value: true
         map:
           Value: true
         map_ned:
@@ -84,21 +86,22 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          map_ned:
-            {}
-          odom_cartographer:
-            base_link:
-              3Dlidar_link:
-                {}
-              base_link_frd:
-                {}
-              realsense_camera_link:
-                {}
-              rplidar_link:
-                {}
         world:
-          {}
+          map:
+            map_ned:
+              {}
+            odom_cartographer:
+              base_link:
+                3Dlidar_link:
+                  {}
+                base_link_frd:
+                  {}
+                imu_link:
+                  {}
+                realsense_camera_link:
+                  {}
+                rplidar_link:
+                  {}
       Update Interval: 0
       Value: true
     - Class: Submaps
@@ -111,8 +114,7 @@ Visualization Manager:
       Submaps:
         All: true
         Trajectory 0:
-          0.43: true
-          1.8: true
+          0.32: true
           Value: true
       Topic: /submap_list
       Tracking frame: base_link
@@ -185,7 +187,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -202,7 +204,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -244,7 +246,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 1
       Name: Drone_Pose
       Position Tolerance: 0.10000000149011612
       Shape:
@@ -287,7 +289,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0.09499994665384293
+      Angle: 0.1050000786781311
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -297,11 +299,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 61.319271087646484
+      Scale: 58.7082405090332
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 0.09784851968288422
-      Y: -5.838298320770264
+      X: 2.898294687271118
+      Y: 2.7669591903686523
     Saved: ~
 Window Geometry:
   Displays:
