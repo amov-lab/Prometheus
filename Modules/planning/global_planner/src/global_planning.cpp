@@ -29,7 +29,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     // publish 
     global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/prometheus/planning/global_map_marker",  10);  
     safety_timer_ = node_.createTimer(ros::Duration(2.0), &GlobalPlanner::safetyCallback, this);
-    exec_timer_ = node_.createTimer(ros::Duration(2.0), &GlobalPlanner::execCallback, this);        // 每3秒执行一次A*
+    exec_timer_ = node_.createTimer(ros::Duration(1.5), &GlobalPlanner::execCallback, this);        // 每3秒执行一次A*
 
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/planning/path_cmd",  10);  
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
@@ -171,13 +171,13 @@ geometry_msgs/PoseStamped[] poses
       float64 z
       float64 w
 */
-    A_star_path_cmd.header.frame_id = "map";
+    A_star_path_cmd.header.frame_id = "world";
     A_star_path_cmd.header.stamp = ros::Time::now();
     // printf("Path:  \n");
     A_star_path_cmd.poses.clear();
     for (int i=0; i<path.size(); ++i){
         geometry_msgs::PoseStamped path_i_pose;
-        path_i_pose .header.frame_id = "map";
+        path_i_pose .header.frame_id = "world";
         path_i_pose.pose.position.x = path[i](0);
         path_i_pose.pose.position.y = path[i](1);
         path_i_pose.pose.position.z = path[i](2);
@@ -193,7 +193,7 @@ geometry_msgs/PoseStamped[] poses
 
 void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     odom_ = *msg;
-    odom_.header.frame_id = "map";
+    odom_.header.frame_id = msg->header.frame_id;
     have_odom_ = true;
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
 }
@@ -204,12 +204,13 @@ void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &
         // ROS_INFO("global point cloud: --- no odom!---");
         return;
     }
-    global_map_ptr_ = msg;
-
     // ros::Time begin_load_point_cloud = ros::Time::now();
     pcl::fromROSMsg(*msg, latest_global_pcl_);
     has_point_map_ = true;
 
+    global_map_ptr_ = msg;
+
+    printf("send world map\n");
     Astar_ptr->setEnvironment(global_map_ptr_);
 
     // localframe2global();
@@ -241,7 +242,6 @@ void GlobalPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Ei
         p.y = pt.y;
         p.z = pt.z;
         m.points.push_back(p);
-
     }
 }
 
