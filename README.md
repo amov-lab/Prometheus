@@ -8,10 +8,16 @@
 
 Prometheus是一套开源的**自主无人机软件平台**，为无人机的智能与自主飞行提供**全套解决方案**。本项目基于**PX4**开源飞控固件，旨在为PX4开发者配套成熟可用的**机载电脑端**程序，提供更加简洁快速的开发体验。目前已集成**建图**、**定位**、**规划**、**控制**及**目标检测**等模块，并配套有Gazebo仿真测试代码。
 
- - **安装及使用：** Prometheus开发者手册
- - **配套硬件购买：** 阿木淘宝店 或 联系微信：****
+ - **安装及使用：** [Prometheus开发者手册](https://github.com/amov-lab/Prometheus_User_Guide)
 
-配图:roadmap 及 项目总览图(说明结构和功能)
+   - [Prometheus项目安装及编译](https://github.com/amov-lab/Prometheus_User_Guide/blob/master/开发者手册 - 安装及编译.md)
+
+   - [Prometheus项目仿真模块环境搭建(Gazebo)](https://github.com/amov-lab/Prometheus_User_Guide/blob/master/开发者手册 - Gazebo仿真环境安装及测试.md)
+   - 先看上面安装和环境搭建,再看具体的demo教程
+
+ - **配套硬件购买：**    联系微信：qyp0210
+
+
 
 ## 功能展示
  - **RGBD相机建图**
@@ -34,7 +40,7 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GOADfS.gif"/>
     
 - **多机编队飞行**
-    
+  
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GOAqmR.gif"/>
     
 - **圆形穿越**
