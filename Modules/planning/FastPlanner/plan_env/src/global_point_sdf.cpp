@@ -80,8 +80,10 @@ namespace dyn_planner {
     // 从sdf地图，感知最近距离
     double SDFMap_Global::getDistance(Eigen::Vector3d pos) {
 
-        if (!isInMap(pos))
+        if (!isInMap(pos)){
             return 0.0;
+        }
+
 
         // get sdf directly from sdf_tools
 //        Eigen::Vector3d ori_pos = pos;
@@ -96,15 +98,21 @@ namespace dyn_planner {
         std::pair<float, bool> location_sdf_query = sdf_map->GetSafe(pos(0), pos(1), pos(2));
         double dist = location_sdf_query.first;
 
-        if(dist < 0)
-        //   cout << "pos:" << pos << "dist:" << dist  << endl;
+        if(dist < 1e-5){
+#ifdef DEBUG
+              cout << "sdf  get dist   for  pos:" << pos << "with its dist:" << dist  << endl;
+#endif    
+        }       
         return dist;
     }
 
     void SDFMap_Global::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg) {
         /* need odom_ for center radius sensing */
         if (!have_odom_) {
+
+#ifdef DEBUG
             ROS_INFO("global_point_sdf: --- no odom!---");
+#endif  
             return;
         }
         
@@ -131,16 +139,50 @@ namespace dyn_planner {
         sdf_tools::COLLISION_CELL obstacle_cell(1.0);
         vector<Eigen::Vector3d> obstacles;
         ros::Time begin_collision = ros::Time::now();
-        // ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f", begin_collision.toSec()-begin_load_pcl.toSec());
-        // ROS_INFO("point size: %d, ifn_num: %d", latest_global_cloud_.points.size(), ifn);
+
+#ifdef DEBUG
+        ROS_INFO("--- SDFMAP_GLABAL: begin collision_map, time: %f", begin_collision.toSec()-begin_load_pcl.toSec());
+        ROS_INFO("point size: %d, resolution_sdf_: %f   ifn_num: %d", latest_global_cloud_.points.size(), resolution_sdf_, ifn);
+#endif  
         int map_num{0};
+        // 创建tf的监听器
+        tf::TransformListener listener;
+        geometry_msgs::PointStamped world_map_point;
+        try{
+            // 等待获取监听信息base_link和base_laser
+            listener.waitForTransform("world", "map", ros::Time(0), ros::Duration(3.0));
+            // ROS_INFO("base_laser: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
+            //     laser_point.point.x, laser_point.point.y, laser_point.point.z,
+            //     base_point.point.x, base_point.point.y, base_point.point.z, base_point.header.stamp.toSec());
+        }
+        catch(tf::TransformException& ex){
+            ROS_ERROR("Received an exception trying to transform a point from \"base_laser\" to \"base_link\": %s", ex.what());
+        }
+
         for (size_t i = 0; i < latest_global_cloud_.points.size(); ++i) {
             pt = latest_global_cloud_.points[i];
             p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
-            
+                   
+            geometry_msgs::PointStamped map_point;
+            map_point.header.frame_id = "map";
+            map_point.point.x = pt.x; 
+            map_point.point.y = pt.y; 
+            map_point.point.z = pt.z; 
+
+            listener.transformPoint("world", map_point, world_map_point);
+            // printf("** map_point 3d: [%f,  %f,  %f],   world_map_point: [%f, %f, %f]\n", map_point.point.x, map_point.point.y, map_point.point.z, 
+            //  world_map_point.point.x, world_map_point.point.y, world_map_point.point.z);
+
+            pt.x = p3d(0) = world_map_point.point.x;
+            pt.y = p3d(1) = world_map_point.point.y;
+            pt.z = p3d(2) = world_map_point.point.z;
             /* point inside update range */
-            if ((center - p3d).norm() < update_range_ && pt.z < ceil_height_ && pt.z > 0) {
+            if ((center - p3d).norm() < update_range_ && pt.z < ceil_height_ && pt.z > 0) 
+            {
                 /* inflate the point */
+                // printf("** point 3d: [%f,  %f,  %f] \n", p3d(0), p3d(1), p3d(2));
+                // printf("in update range\n");
+
                 for (int x = -ifn; x <= ifn; ++x)
                     for (int y = -ifn; y <= ifn; ++y)
                         for (int z = -ifn; z <= ifn; ++z) {
@@ -148,7 +190,11 @@ namespace dyn_planner {
                             p3d_inf(1) = pt_inf.y = pt.y + y * resolution_sdf_;
                             p3d_inf(2) = pt_inf.z = pt.z + 0.5 * z * resolution_sdf_;
 
-                            if(p3d_inf(2)>ceil_height_ || p3d_inf(2)<0) break;
+                            if(p3d_inf(2)>ceil_height_ || p3d_inf(2)<0) 
+                            {
+                                // printf("** sdf map: height is out of map \n");
+                                break;
+                            }
 
                             obstacles.push_back(p3d_inf);
                             collision_map->Set(p3d_inf(0), p3d_inf(1), p3d_inf(2), obstacle_cell);
@@ -158,17 +204,7 @@ namespace dyn_planner {
             }
         }
         int num_obstacle_1 = obstacles.size();
-        /* ---------- pub inflate cloud point---------- */
-        // cloud_inflate_vis_.width = cloud_inflate_vis_.points.size();
-        // cloud_inflate_vis_.height = 1;
-        // cloud_inflate_vis_.is_dense = true;
-        cloud_inflate_vis_.header.frame_id = "map";
-        // cloud_inflate_vis_.header.seq = latest_global_cloud_.header.seq;
-        // cloud_inflate_vis_.header.stamp = latest_global_cloud_.header.stamp;
-        sensor_msgs::PointCloud2 map_inflate_vis;
-        pcl::toROSMsg(cloud_inflate_vis_, map_inflate_vis);
 
-        inflate_cloud_pub_.publish(map_inflate_vis);
 
         /* ---------- add ceil and floor---------- */
         if (ceil_height_ > 0.0) {
@@ -178,32 +214,55 @@ namespace dyn_planner {
                     obstacles.push_back(Eigen::Vector3d(cx, cy, 0.0));
                     collision_map->Set(cx, cy, ceil_height_, obstacle_cell);
                     collision_map->Set(cx, cy, 0.0, obstacle_cell);
+                    cloud_inflate_vis_.push_back(pcl::PointXYZ(cx, cy, ceil_height_));
+                    cloud_inflate_vis_.push_back(pcl::PointXYZ(cx, cy, 0.0));
                 }
         }
+
+        /* ---------- pub inflate cloud point---------- */
+
+        sensor_msgs::PointCloud2 map_inflate_vis;
+        pcl::toROSMsg(cloud_inflate_vis_, map_inflate_vis);
+        // map_inflate_vis.header.frame_id = msg->header.frame_id;
+        map_inflate_vis.header.frame_id = "world";
+        // map_inflate_vis.width = cloud_inflate_vis_.points.size();
+        // map_inflate_vis.height = 1;
+        // map_inflate_vis.is_dense = true;
+        
+        map_inflate_vis.header.seq = msg->header.seq;
+        map_inflate_vis.header.stamp = msg->header.stamp;
+
+        inflate_cloud_pub_.publish(map_inflate_vis);
+#ifdef DEBUG
         int num_obstacle_2 = obstacles.size();
-        // ROS_INFO("obstacle point number 1:  %d,  2: %d", num_obstacle_1, num_obstacle_2);
+        ROS_INFO("obstacle point number 1:  %d,  2: %d", num_obstacle_1, num_obstacle_2);
 
         ros::Time endcollisiion_map = ros::Time::now();
-        // ROS_INFO("--- SDFMAP_GLABAL: begin sdf, time: %f", endcollisiion_map.toSec()-begin_collision.toSec());
+        ROS_INFO("--- SDFMAP_GLABAL: begin sdf, time: %f", endcollisiion_map.toSec()-begin_collision.toSec());
+#endif  
         // Build the signed distance field
         float oob_value = INFINITY;
         std::pair<sdf_tools::SignedDistanceField, std::pair<double, double>> sdf_with_extrema =
                 collision_map->ExtractSignedDistanceField(oob_value);
 
         ros::Time end_sdf_time = ros::Time::now();
-        // ROS_INFO("--- SDFMAP_GLABAL: end sdf, time: %f", end_sdf_time.toSec()-endcollisiion_map.toSec());
+#ifdef DEBUG
+        ROS_INFO("--- SDFMAP_GLABAL: end sdf, time: %f", end_sdf_time.toSec()-endcollisiion_map.toSec());
+#endif  
+
         sdf_map.reset(new sdf_tools::SignedDistanceField(sdf_with_extrema.first));
-        // ROS_INFO("successfully build esdf");
+
+#ifdef DEBUG
+        ROS_INFO("successfully build esdf");
+#endif  
 
         map_valid_ = true;
     }
 
 
     void SDFMap_Global::odomCallback(const nav_msgs::OdometryConstPtr &msg) {
-        // if (msg->child_frame_id == "X" || msg->child_frame_id == "O")
-        //     return;
         odom_ = *msg;
-        odom_.header.frame_id = "map";
+        odom_.header.frame_id = msg->header.frame_id;  // "world"
         have_odom_ = true;
     }
 
@@ -260,7 +319,7 @@ namespace dyn_planner {
 
         Eigen::Quaterniond origin_rotation(1.0, 0.0, 0.0, 0.0);
         const Eigen::Isometry3d origin_transform = origin_translation * origin_rotation;
-        const std::string frame = "map";
+        const std::string frame = "world";  //  frame
         // create map
         // ROS_INFO("global_point_sdf: creat std_tools!");
         sdf_tools::COLLISION_CELL oob_cell;

@@ -4,6 +4,8 @@
 using namespace std;
 using namespace Eigen;
 
+#define DEBUG 1
+
 namespace dyn_planner
 {
 KinodynamicAstar::~KinodynamicAstar()
@@ -62,10 +64,11 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
   {
     /* ---------- get lowest f_score node ---------- */
     cur_node = open_set_.top();
-    // cout << "pos: " << cur_node->state.head(3).transpose() << endl;
-    // cout << "time: " << cur_node->time << endl;
-    // cout << "dist: " << edt_env_->evaluateCoarseEDT(cur_node->state.head(3), cur_node->time) << endl;
-
+#ifdef DEBUG
+    cout << "cur pos: " << cur_node->state.head(3).transpose() << endl;
+    cout << "time: " << cur_node->time << endl;
+    cout << "dist: " << edt_env_->evaluateCoarseEDT(cur_node->state.head(3), cur_node->time) << endl;
+#endif     
     /* ---------- determine termination ---------- */
 
     bool near_end = abs(cur_node->index(0) - end_index(0)) <= tolerance &&
@@ -82,8 +85,10 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
 
       if (near_end)
       {
-        cout << "[Kino Astar]: near end." << endl;
 
+#ifdef DEBUG
+        cout << "[Kino Astar]: near end." << endl;
+#endif  
         /* one shot trajectory */
         estimateHeuristic(cur_node->state, end_state, time_to_goal);
         computeShotTraj(cur_node->state, end_state, time_to_goal);
@@ -95,7 +100,10 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
       }
       else if (reach_horizon)
       {
-        cout << "[Kino Astar]: Reach horizon_" << endl;
+        
+#ifdef DEBUG
+cout << "[Kino Astar]: Reach horizon_" << endl;
+#endif  
         return REACH_HORIZON;
       }
     }
@@ -153,7 +161,9 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
         if (pro_state(0) <= origin_(0) || pro_state(0) >= map_size_3d_(0) || pro_state(1) <= origin_(1) ||
             pro_state(1) >= map_size_3d_(1) || pro_state(2) <= origin_(2) || pro_state(2) >= map_size_3d_(2))
         {
-          // cout << "outside map" << endl;
+#ifdef DEBUG
+              cout << "outside map" << endl;
+#endif   
           continue;
         }
 
@@ -208,7 +218,10 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
 
         if (is_occ)
         {
-          // cout << "collision" << endl;
+#ifdef DEBUG
+          printf("A star pos: [%f,  %f,  %f]\n", pos(0), pos(1), pos(2));
+          cout << "collision" << endl;
+#endif      
           continue;
         }
 
