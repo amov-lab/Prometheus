@@ -52,6 +52,7 @@
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>tf</build_depend>
   <build_depend>octomap_msgs</build_depend>
   <build_depend>arc_utilities</build_depend>
   <build_depend>sdf_tools</build_depend>
@@ -59,6 +60,7 @@
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>tf</build_export_depend>
   <build_export_depend>octomap_msgs</build_export_depend>
   <build_export_depend>arc_utilities</build_export_depend>
   <build_export_depend>sdf_tools</build_export_depend>
@@ -66,6 +68,7 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
   <exec_depend>octomap_msgs</exec_depend>
   <exec_depend>arc_utilities</exec_depend>
   <exec_depend>sdf_tools</exec_depend>

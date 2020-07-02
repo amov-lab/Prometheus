@@ -1,6 +1,6 @@
 #include <plan_manage/dyn_planner_manager.h>
 #include <fstream>
-
+#define DEBUG 1
 namespace dyn_planner
 {
 DynPlannerManager::~DynPlannerManager()
@@ -76,13 +76,17 @@ void DynPlannerManager::getSolvingTime(double& ts, double& to, double& ta)
 bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vector3d start_vel,
                                            Eigen::Vector3d start_acc, Eigen::Vector3d end_pt, Eigen::Vector3d end_vel)
 {
-  // std::cout << "[planner]: -----------------------" << std::endl;
-  cout << "start: (pt; vel; acc) " << start_pt.transpose() << ", " << start_vel.transpose() << ", " << start_acc.transpose()
+#ifdef DEBUG
+  std::cout << "[planner]: -----------------------" << std::endl;
+    cout << "start: (pt; vel; acc) " << start_pt.transpose() << ", " << start_vel.transpose() << ", " << start_acc.transpose()
        << "\ngoal:" << end_pt.transpose() << ", " << end_vel.transpose() << endl;
+#endif
 
   if ((start_pt - end_pt).norm() < 0.2)
   {
-    cout << "Close goal" << endl;
+#ifdef DEBUG
+cout << "Close goal" << endl;
+#endif
     return false;
   }
 
@@ -103,22 +107,32 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
   int status = path_finder_->search(start_pt, start_vel, start_acc, end_pt, end_vel, true, dynamic_, time_start_);
   if (status == KinodynamicAstar::NO_PATH)
   {
+#ifdef DEBUG
     cout << "[planner]: init search fail!" << endl;
+#endif
+
     path_finder_->reset();
     status = path_finder_->search(start_pt, start_vel, start_acc, end_pt, end_vel, false, dynamic_, time_start_);
     if (status == KinodynamicAstar::NO_PATH)
     {
+#ifdef DEBUG
       cout << "[planner]: Can't find path." << endl;
+#endif
       return false;
     }
     else
     {
+#ifdef DEBUG
       cout << "[planner]: retry search success." << endl;
+#endif     
+      
     }
   }
   else
   {
+#ifdef DEBUG
     cout << "[planner]: init search success." << endl;
+#endif     
   }
 
   t2 = ros::Time::now();

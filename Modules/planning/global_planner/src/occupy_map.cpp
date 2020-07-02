@@ -65,12 +65,59 @@ void Occupy_map::inflate_point_cloud(void){
 
     //  printf("point size: %d, ifn_num: %d\n", latest_global_cloud_.points.size(), ifn);
 
+    // 创建tf的监听器
+    tf::TransformListener listener;
+    try{
+        // 等待获取监听信息base_link和base_laser
+        listener.waitForTransform("world", "map", ros::Time(0), ros::Duration(3.0));
+        // ROS_INFO("base_laser: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
+        //     laser_point.point.x, laser_point.point.y, laser_point.point.z,
+        //     base_point.point.x, base_point.point.y, base_point.point.z, base_point.header.stamp.toSec());
+    }
+    catch(tf::TransformException& ex){
+        ROS_ERROR("Received an exception trying to transform a point from \"base_laser\" to \"base_link\": %s", ex.what());
+    }
+
+    // iterate the map
+    pcl::PointCloud<pcl::PointXYZ> world_pcl;
+    // geometry_msgs::PointStamped world_map_point;
+    // pcl::PointXYZ pt;
+    // for (size_t i = 0; i < latest_global_pcl_.points.size(); ++i) {
+    //     pt = latest_global_pcl_.points[i];
+    //     geometry_msgs::Point p;
+    //     p.header.frame_id = "map";
+    //     p.x = pt.x;
+    //     p.y = pt.y;
+    //     p.z = pt.z;
+    //     listener.transformPoint("world", p, world_map_point);
+    //     world_pcl.push_back(pcl::PointXYZ(world_map_point.point.x, world_map_point.point.y, world_map_point.point.z));
+    // }
+
+    // pcl_ros::transformPointCloud("world", latest_global_pcl_, world_pcl, listener);
+    // sensor_msgs::PointCloud2 map_p;
+    // pcl::toROSMsg(world_pcl,  map_p);
+
+
+    geometry_msgs::PointStamped world_map_point;
     for (size_t i = 0; i < latest_global_cloud_.points.size(); ++i) {
         pt = latest_global_cloud_.points[i];
         p3d(0) = pt.x;
         p3d(1) = pt.y;
         p3d(2) = pt.z;
-        
+        if(global_env_->header.frame_id  != "world"){
+            geometry_msgs::PointStamped map_point;
+            map_point.header.frame_id = "map";
+            map_point.point.x = pt.x; 
+            map_point.point.y = pt.y; 
+            map_point.point.z = pt.z; 
+
+            listener.transformPoint("world", map_point, world_map_point);
+            printf("** map_point 3d: [%f,  %f,  %f],   world_map_point: [%f, %f, %f]\n", map_point.point.x, map_point.point.y, map_point.point.z, 
+            world_map_point.point.x, world_map_point.point.y, world_map_point.point.z);
+
+            pt = pcl::PointXYZ(world_map_point.point.x, world_map_point.point.y, world_map_point.point.z);
+        }
+
         /* inflate the point */
         for (int x = -ifn; x <= ifn; ++x)
             for (int y = -ifn; y <= ifn; ++y)
@@ -87,21 +134,17 @@ void Occupy_map::inflate_point_cloud(void){
                 }
     }
 
-    cloud_inflate_vis_.width = cloud_inflate_vis_.points.size();
-    cloud_inflate_vis_.height = 1;
-    cloud_inflate_vis_.is_dense = true;
-    cloud_inflate_vis_.header.frame_id = "map";
-
-    sensor_msgs::PointCloud2 map_inflate_vis;
-    pcl::toROSMsg(cloud_inflate_vis_, map_inflate_vis);
-
-    inflate_cloud_pub_.publish(map_inflate_vis);
+    // cloud_inflate_vis_.width = cloud_inflate_vis_.points.size();
+    // cloud_inflate_vis_.height = 1;
+    // cloud_inflate_vis_.is_dense = true;
+    cloud_inflate_vis_.header.frame_id = "world";
 
     /* ---------- add ceil  and floor---------- */
     if (ceil_height_ > 0.0) {
         for (double cx = min_range_(0); cx <= max_range_(1); cx += resolution_)
             for (double cy =min_range_(0); cy <= max_range_(1); cy += resolution_) {
                 this->setOccupancy(Eigen::Vector3d(cx, cy, ceil_height_), 1);
+                cloud_inflate_vis_.push_back(pcl::PointXYZ(cx, cy, ceil_height_));
             }
     }
 
@@ -109,9 +152,13 @@ void Occupy_map::inflate_point_cloud(void){
         for (double cx = min_range_(0); cx <= max_range_(1); cx += resolution_)
             for (double cy =min_range_(0); cy <= max_range_(1); cy += resolution_) {
                 this->setOccupancy(Eigen::Vector3d(cx, cy, floor_height_), 1);
+                cloud_inflate_vis_.push_back(pcl::PointXYZ(cx, cy, floor_height_));
             }
     }
+    sensor_msgs::PointCloud2 map_inflate_vis;
+    pcl::toROSMsg(cloud_inflate_vis_, map_inflate_vis);
 
+    inflate_cloud_pub_.publish(map_inflate_vis);
     // printf("inflate global point take %f.\n",   (ros::Time::now()-time_start).toSec());
 }
 

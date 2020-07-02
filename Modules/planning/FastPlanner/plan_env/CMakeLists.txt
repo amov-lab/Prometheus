@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  tf
   octomap_msgs
   visualization_msgs
         sdf_tools
@@ -25,7 +26,7 @@ include_directories(${PROJECT_SOURCE_DIR}/ThirdParty/arc_utilities/include)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES plan_env
- CATKIN_DEPENDS roscpp std_msgs
+ CATKIN_DEPENDS roscpp std_msgs tf
 #  DEPENDS system_lib
 )
 
