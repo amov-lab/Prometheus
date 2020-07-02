@@ -15,11 +15,9 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
    - [Prometheus项目仿真模块环境搭建(Gazebo)](https://github.com/amov-lab/Prometheus_User_Guide/blob/master/%E5%BC%80%E5%8F%91%E8%80%85%E6%89%8B%E5%86%8C%20-%20Gazebo%E4%BB%BF%E7%9C%9F%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85%E5%8F%8A%E6%B5%8B%E8%AF%95.md)
    - 先看上面安装和环境搭建,再看具体的demo教程
 
-欢迎加入内测群交流讨论：
+请添加微信qyp0210进入内测交流群。
 
-[![NLVp5Q.th.jpg](https://s1.ax1x.com/2020/07/02/NLVp5Q.th.jpg)](https://imgchr.com/i/NLVp5Q)
-
- - **配套硬件购买：**    联系微信：qyp0210
+ - **配套硬件购买：**    即将推出，敬请期待！ 淘宝关注搜索 阿木实验室
 
 
 **开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
