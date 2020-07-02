@@ -17,7 +17,7 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 
 欢迎加入内测群交流讨论：
 
-[![NLVp5Q.md.jpg](https://s1.ax1x.com/2020/07/02/NLVp5Q.md.jpg)](https://imgchr.com/i/NLVp5Q)
+[![NLVp5Q.th.jpg](https://s1.ax1x.com/2020/07/02/NLVp5Q.th.jpg)](https://imgchr.com/i/NLVp5Q)
 
  - **配套硬件购买：**    联系微信：qyp0210
 
