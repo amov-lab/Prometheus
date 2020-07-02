@@ -10,9 +10,9 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 
  - **安装及使用：** [Prometheus开发者手册](https://github.com/amov-lab/Prometheus_User_Guide)
 
-   - [Prometheus项目安装及编译](https://github.com/amov-lab/Prometheus_User_Guide/blob/master/开发者手册 - 安装及编译.md)
+   - [Prometheus项目安装及编译](https://github.com/amov-lab/Prometheus_User_Guide/blob/master/%E5%BC%80%E5%8F%91%E8%80%85%E6%89%8B%E5%86%8C%20-%20%E5%AE%89%E8%A3%85%E5%8F%8A%E7%BC%96%E8%AF%91.md)
 
-   - [Prometheus项目仿真模块环境搭建(Gazebo)](https://github.com/amov-lab/Prometheus_User_Guide/blob/master/开发者手册 - Gazebo仿真环境安装及测试.md)
+   - [Prometheus项目仿真模块环境搭建(Gazebo)](https://github.com/amov-lab/Prometheus_User_Guide/blob/master/%E5%BC%80%E5%8F%91%E8%80%85%E6%89%8B%E5%86%8C%20-%20Gazebo%E4%BB%BF%E7%9C%9F%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85%E5%8F%8A%E6%B5%8B%E8%AF%95.md)
    - 先看上面安装和环境搭建,再看具体的demo教程
 
  - **配套硬件购买：**    联系微信：qyp0210
