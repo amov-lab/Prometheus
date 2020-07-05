@@ -4,7 +4,7 @@
   <version>1.6.3</version>
   <description>The stereo matching package</description>
 
-  <maintainer email="zhumingming@sineva.com.cn">ming</maintainer>
+  <maintainer email="lcyfly1@163.com">lee</maintainer>
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>
