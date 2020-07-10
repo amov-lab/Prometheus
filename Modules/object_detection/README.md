@@ -13,7 +13,7 @@ Vision code for P300 quadrotor platform
 ```
 cd ~
 git clone https://github.com/amov-lab/Prometheus.git
-./complie_detection.sh
+./compile_detection.sh
 ```
 
 ## 相机标定
