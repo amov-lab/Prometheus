@@ -92,24 +92,24 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
     if(exec_num==2){
         if(!trigger_){
             exect_msg = "don't trigger!\n";
-            // printf("don't trigger!\n");
+            printf("don't trigger!\n");
         }
 
         if(!have_odom_){
             exect_msg = "don't have odometry!\n";
-            // printf("don't have odometry!\n");
+            printf("don't have odometry!\n");
             // return;
         }
             
         if(!has_point_map_)
         {
             exect_msg = "don't have point cloud!\n";
-            // printf("don't have point cloud! \n");
+            printf("don't have point cloud! \n");
             // return;
         }
         if(!have_goal_){
             exect_msg = "*** wait goal!*** \n";
-            // printf("*** wait goal!*** \n");
+            printf("*** wait goal!*** \n");
             // return;
         }
 
@@ -137,7 +137,7 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
     int astar_state = Astar_ptr->search(start_pt_, end_pt_);
     if(astar_state==Astar::NO_PATH){
           pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "a star find no path, please reset the goal!\n");
-        // printf("a star find no path, please reset the goal!\n");
+        printf("a star find no path, please reset the goal!\n");
     }
     else{
         // printf("astart find path success!\n");
@@ -210,7 +210,7 @@ void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &
 
     global_map_ptr_ = msg;
 
-    printf("send world map\n");
+    // printf("send world map\n");
     Astar_ptr->setEnvironment(global_map_ptr_);
 
     // localframe2global();
