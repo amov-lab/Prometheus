@@ -224,7 +224,7 @@ bool Occupy_map::check_safety(Eigen::Vector3d& pos, double check_distance/*, Eig
                 indexToPos(id_occ, pos_occ);
                 if(!isInMap(pos_occ)){
                     // printf("[check_safety]: current odom is near the boundary of the map\n");
-                    pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "[check_safety]: current odom is near the boundary of the map\n");
+                    // pub_message(message_pub, prometheus_msgs::Message::WARN,  "prometheus/message/global_planner", "[check_safety]: current odom is near the boundary of the map\n");
                     return 0;
                 }
                 if(getOccupancy(id_occ)){
