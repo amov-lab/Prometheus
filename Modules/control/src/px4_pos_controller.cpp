@@ -420,12 +420,11 @@ int check_failsafe()
         _DroneState.position[1] < geo_fence_y[0] || _DroneState.position[1] > geo_fence_y[1] ||
         _DroneState.position[2] < geo_fence_z[0] || _DroneState.position[2] > geo_fence_z[1])
     {
-        return 1;
-
         message.header.stamp = ros::Time::now();
         message.message_type = prometheus_msgs::Message::ERROR;
         message.content = "[px4_pos_controller]:Out of the geo fence, the drone is landing... ";
         message_pub.publish(message);
+        return 1;
     }
     else{
         return 0;
