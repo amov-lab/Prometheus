@@ -29,7 +29,7 @@ void generate_com(int Move_mode, float state_desired[4]);
 void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_trajectory);
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "move");
+    ros::init(argc, argv, "terminal_control");
     ros::NodeHandle nh;
 
     move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);

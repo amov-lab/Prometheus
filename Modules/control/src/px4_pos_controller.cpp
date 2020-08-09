@@ -13,7 +13,6 @@
 *         5. PX4 firmware will recieve the Mavlink msg by mavlink_receiver.cpp in mavlink module.
 *         6. 发送相关信息至地面站节点(/prometheus/attitude_reference)，供监控使用。
 *         7、发布参考位姿，话题为/prometheus/reference_pose
-*         8、发布参考轨迹，话题为/prometheus/reference_trajectory，可通过参数pos_estimator/state_fromposehistory_window来设置轨迹的长短
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
