@@ -60,7 +60,7 @@
 
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
-	<arg name="input_source" default="2"/>
+	<arg name="input_source" default="4"/>
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
 		<param name="input_source" value="$(arg input_source)" />
