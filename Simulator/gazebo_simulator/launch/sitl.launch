@@ -3,7 +3,17 @@
 	<!-- 这里的环境变量将传递到rcS启动脚本中-->
 	<!-- 模型选择 -->
 	<env name="PX4_SIM_MODEL" value="solo" />
-	<!-- 估计器参数选择 -->
+	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
+
+	<!--  "$PX4_ESTIMATOR" = "ekf2_gps" 
+			param set SYS_MC_EST_GROUP 2
+			param set EKF2_AID_MASK 1
+			param set EKF2_HGT_MODE 0
+		  "$PX4_ESTIMATOR" = "ekf2_vision" 
+			param set SYS_MC_EST_GROUP 2
+			param set EKF2_AID_MASK 24
+			param set EKF2_EV_DELAY 5
+			param set EKF2_HGT_MODE 3 -->
     <env name="PX4_ESTIMATOR" value="ekf2_vision" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
 	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
@@ -60,7 +70,7 @@
 
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
-	<arg name="input_source" default="4"/>
+	<arg name="input_source" default="2"/>
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
 		<param name="input_source" value="$(arg input_source)" />
@@ -72,7 +82,6 @@
 	<!-- run the px4_pos_controller.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
 		<rosparam command="load" file="$(find prometheus_control)/config/px4_pos_controller.yaml"/>
-		<rosparam command="load" file="$(find prometheus_control)/config/control_parameter.yaml"/>
 	</node>
 	
 	<!-- run the ground_station.cpp -->
