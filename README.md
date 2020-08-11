@@ -62,8 +62,9 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 - **YOLO通用目标检测(暂缺演示图)**
 
 - **移动平台自主降落**
-	<img width="400" src="https://s1.ax1x.com/2020/08/11/aLUDAK.gif"/>
-
+	
+	<img width="400" src="https://s1.ax1x.com/2020/08/11/aLawvj.gif"/>
+	
 ## 开发团队
 
  - 项目负责人
