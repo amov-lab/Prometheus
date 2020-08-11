@@ -239,6 +239,7 @@ int main(int argc, char **argv)
 
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 10);
 
+    // 为了避免同时运行过多程序导致电脑奔溃，设置程序运行/休眠 开关，但这个功能尚未完全启用
     local_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/local_planner", 10);
     global_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/global_planner", 10);
     circle_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/circle_crossing", 10);

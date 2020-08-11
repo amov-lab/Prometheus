@@ -20,10 +20,13 @@
 #include <prometheus_msgs/DroneState.h>
 #include <nav_msgs/Path.h>
 #include <math.h>
+#include "message_utils.h"
+
 using namespace std;
 
 #define MIN_DIS 0.1
 #define FLY_HEIGHT 1.0
+# define NODE_NAME "number_detection"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::MultiDetectionInfo Detection_info;
 float size_Detection_info;
@@ -55,6 +58,9 @@ int main(int argc, char **argv)
     
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
     //固定的浮点显示
     cout.setf(ios::fixed);

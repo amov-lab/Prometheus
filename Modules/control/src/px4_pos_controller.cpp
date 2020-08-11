@@ -3,28 +3,27 @@
 *
 * Author: Qyp
 *
-* Update Time: 2020.01.08
+* Update Time: 2020.08.10
 *
 * Introduction:  PX4 Position Controller 
 *         1. 从应用层节点订阅/prometheus/control_command话题（ControlCommand.msg），接收来自上层的控制指令。
-*         2. 从command_from_mavros.h读取无人机的状态信息（DroneState.msg）。
-*         3. 调用位置环控制算法，计算加速度控制量。可选择cascade_PID, PID, UDE, passivity-UDE, NE+UDE位置控制算法。
-*         4. 通过command_to_mavros.h将计算出来的控制指令发送至飞控（通过mavros包）(mavros package will send the message to PX4 as Mavlink msg)
-*         5. PX4 firmware will recieve the Mavlink msg by mavlink_receiver.cpp in mavlink module.
-*         6. 发送相关信息至地面站节点(/prometheus/attitude_reference)，供监控使用。
-*         7、发布参考位姿，话题为/prometheus/reference_pose
+*         2. 从px4_pos_estimator.cpp节点订阅无人机的状态信息（DroneState.msg）。
+*         3. 调用位置环控制算法，计算加速度控制量，并转换为期望角度。（可选择cascade_PID, PID, UDE, passivity-UDE, NE+UDE位置控制算法）
+*         4. 通过command_to_mavros.h将计算出来的控制指令发送至飞控（通过mavros包发送mavlink消息）
+*         5. PX4固件通过mavlink_receiver.cpp接收该mavlink消息。
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
-#include <state_from_mavros.h>
-#include <command_to_mavros.h>
-#include <prometheus_control_utils.h>
-#include <Position_Controller/pos_controller_cascade_PID.h>
-#include <Position_Controller/pos_controller_PID.h>
-#include <Position_Controller/pos_controller_UDE.h>
-#include <Position_Controller/pos_controller_Passivity.h>
-#include <Position_Controller/pos_controller_NE.h>
-#include <Filter/LowPassFilter.h>
+#include "state_from_mavros.h"
+#include "command_to_mavros.h"
+#include "prometheus_control_utils.h"
+#include "message_utils.h"
+#include "Position_Controller/pos_controller_cascade_PID.h"
+#include "Position_Controller/pos_controller_PID.h"
+#include "Position_Controller/pos_controller_UDE.h"
+#include "Position_Controller/pos_controller_Passivity.h"
+#include "Position_Controller/pos_controller_NE.h"
+#include "Filter/LowPassFilter.h"
 
 #define NODE_NAME "pos_controller"
 
@@ -73,7 +72,7 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         Command_Now = *msg;
     }else
     {
-        prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Wrong Command ID.");
+        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Wrong Command ID.");
     }
     
     // 无人机一旦接受到Disarm指令，则会屏蔽其他指令
@@ -97,7 +96,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 }
 void timerCallback(const ros::TimerEvent& e)
 {
-    prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -120,7 +119,7 @@ int main(int argc, char **argv)
     //【发布】参考位姿 RVIZ显示用
     ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/control/ref_pose_rviz", 10);
 
-    // 【发布】提示消息
+    // 【发布】用于地面站显示的提示消息
     message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
     // 【发布】用于log的消息
@@ -244,7 +243,7 @@ int main(int argc, char **argv)
                 {
                     _command_to_mavros.mode_cmd.request.custom_mode = "OFFBOARD";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-                    prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Setting to OFFBOARD Mode...");
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Setting to OFFBOARD Mode...");
                     //执行回调函数
                     ros::spinOnce();
                     ros::Duration(0.5).sleep();
@@ -254,7 +253,7 @@ int main(int argc, char **argv)
                 {
                     _command_to_mavros.arm_cmd.request.value = true;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
-                    prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Arming...");
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Arming...");
                     //执行回调函数
                     ros::spinOnce();
                     ros::Duration(0.5).sleep();
@@ -313,6 +312,7 @@ int main(int argc, char **argv)
                     //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁
                     _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Land: switch to MANUAL flight mode");
                 }
 
                 if(_DroneState.armed)
@@ -344,6 +344,7 @@ int main(int argc, char **argv)
         // 【Disarm】 上锁
         case prometheus_msgs::ControlCommand::Disarm:
 
+            pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Disarm: switch to MANUAL flight mode");
             if(_DroneState.mode == "OFFBOARD")
             {
                 _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
@@ -382,6 +383,7 @@ int main(int argc, char **argv)
                 }else
                 {
                     _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "CPID NOT SUPPOORT TRAJECTORY TRACKING.");
                 }
                 
             }else if(controller_number == 1)
@@ -450,10 +452,7 @@ int check_failsafe()
         _DroneState.position[1] < geo_fence_y[0] || _DroneState.position[1] > geo_fence_y[1] ||
         _DroneState.position[2] < geo_fence_z[0] || _DroneState.position[2] > geo_fence_z[1])
     {
-        message.header.stamp = ros::Time::now();
-        message.message_type = prometheus_msgs::Message::ERROR;
-        message.content = "[px4_pos_controller]:Out of the geo fence, the drone is landing... ";
-        message_pub.publish(message);
+        pub_message(message_pub, prometheus_msgs::Message::ERROR, NODE_NAME, "Out of the geo fence, the drone is landing...");
         return 1;
     }
     else{

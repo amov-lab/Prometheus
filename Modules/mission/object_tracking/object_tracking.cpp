@@ -20,9 +20,11 @@
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/DetectionInfo.h>
+#include "message_utils.h"
 
 using namespace std;
 using namespace Eigen;
+# define NODE_NAME "object_tracking"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::DroneState _DroneState;   
 Eigen::Vector3f drone_pos;
@@ -112,6 +114,8 @@ int main(int argc, char **argv)
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //视觉丢失次数阈值
     nh.param<int>("Thres_vision", Thres_vision, 10);
@@ -217,6 +221,7 @@ int main(int argc, char **argv)
             pos_des_prev[1] = drone_pos[1];
             pos_des_prev[2] = drone_pos[2];
             cout <<"[object_tracking]: Lost the Target "<< endl;
+            pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Lost the Target.");
         }else 
         {
             cout <<"[object_tracking]: Tracking the Target, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;

@@ -16,11 +16,13 @@
 #include <mission_utils.h>
 #include <tf/transform_datatypes.h>
 #include <ukf_car.h>
+#include "message_utils.h"
 
 using namespace std;
 using namespace Eigen;
 
 #define LANDPAD_HEIGHT 0.99
+# define NODE_NAME "autonomous_landing"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //---------------------------------------Drone---------------------------------------------
 prometheus_msgs::DroneState _DroneState;   
@@ -122,6 +124,8 @@ int main(int argc, char **argv)
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     //追踪距离阈值
@@ -171,6 +175,7 @@ int main(int argc, char **argv)
 
     // 起飞
     cout<<"[autonomous_landing]: "<<"Takeoff to predefined position."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Takeoff to predefined position.");
     Command_Now.Command_ID = 1;
     while( _DroneState.position[2] < 0.3)
     {
@@ -247,6 +252,7 @@ int main(int argc, char **argv)
         {
             Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
             cout <<"[autonomous_landing]: Catched the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Catched the Landing Pad.");
         }else if(!landpad_det.is_detected)
         {
             Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
@@ -254,13 +260,16 @@ int main(int argc, char **argv)
             pos_des_prev[1] = _DroneState.position[1];
             pos_des_prev[2] = _DroneState.position[2];
             cout <<"[autonomous_landing]: Lost the Landing Pad. "<< endl;
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Lost the Landing Pad.");
         }else if(abs(landpad_det.pos_body_enu_frame[2]) < 0.3)
         {
             cout <<"[autonomous_landing]: Reach the lowest height. "<< endl;
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Reach the lowest height.");
             Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
         }else
         {
             cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Tracking the Landing Pad.");
             Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
             Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME;
             Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
