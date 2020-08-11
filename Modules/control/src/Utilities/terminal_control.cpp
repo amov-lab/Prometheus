@@ -177,6 +177,7 @@ int main(int argc, char **argv)
                     Command_Now.Command_ID = Command_Now.Command_ID + 1;
                     Command_Now.Reference_State.Move_mode  = Move_mode;
                     Command_Now.Reference_State.Move_frame = Move_frame;
+                    Command_Now.Reference_State.time_from_start = -1;
                     generate_com(Move_mode, state_desired);
         
                     move_pub.publish(Command_Now);
