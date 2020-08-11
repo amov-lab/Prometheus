@@ -37,19 +37,11 @@ void att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr& msg)
     Thrust_target = msg->thrust;
 }
 
-void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
+void log_cb(const prometheus_msgs::LogMessage::ConstPtr& msg)
 {
-    _DroneState = *msg;
-}
-
-void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
-{
-    Command_Now = *msg;
-}
-
-void att_cb(const prometheus_msgs::AttitudeReference::ConstPtr& msg)
-{
-    _AttitudeReference = *msg;
+    _DroneState = msg->Drone_State;
+    Command_Now = msg->Control_Command;
+    _AttitudeReference = msg->Attitude_Reference;
 }
 
 void ref_pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
@@ -62,13 +54,9 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ground_station");
     ros::NodeHandle nh("~");
+
+    ros::Subscriber log_message_sub = nh.subscribe<prometheus_msgs::LogMessage>("/prometheus/topic_for_log", 10, log_cb);
     
-    // 【订阅】无人机状态
-    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
-    // 【订阅】执行指令
-    ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
-    // 【订阅】控制器输出
-    ros::Subscriber Control_sub = nh.subscribe<prometheus_msgs::AttitudeReference>("/prometheus/control/attitude_reference", 10, att_cb);
     ros::Subscriber ref_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/control/ref_pose_rviz", 10, ref_pose_cb);
     // 【订阅】飞控回传
     ros::Subscriber attitude_target_sub = nh.subscribe<mavros_msgs::AttitudeTarget>("/mavros/setpoint_raw/target_attitude", 10,att_target_cb);

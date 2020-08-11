@@ -38,28 +38,28 @@ class pos_controller_passivity
             pos_passivity_nh.param<float>("Quad/mass", Quad_MASS, 1.0);
 
 
-            pos_passivity_nh.param<float>("/Pos_passivity/Kp_xy", Kp[0], 1.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/Kp_xy", Kp[1], 1.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/Kp_z",  Kp[2], 1.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/Kd_xy", Kd[0], 2.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/Kd_xy", Kd[1], 2.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/Kd_z",  Kd[2], 2.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/T_ude_xy", T_ude[0], 1.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/T_ude_xy", T_ude[1], 1.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/T_ude_z",  T_ude[2], 1.0);
-            pos_passivity_nh.param<float>("/Pos_passivity/T_ps", T_ps, 1.0);
+            pos_passivity_nh.param<float>("Pos_passivity/Kp_xy", Kp[0], 1.0);
+            pos_passivity_nh.param<float>("Pos_passivity/Kp_xy", Kp[1], 1.0);
+            pos_passivity_nh.param<float>("Pos_passivity/Kp_z",  Kp[2], 1.0);
+            pos_passivity_nh.param<float>("Pos_passivity/Kd_xy", Kd[0], 2.0);
+            pos_passivity_nh.param<float>("Pos_passivity/Kd_xy", Kd[1], 2.0);
+            pos_passivity_nh.param<float>("Pos_passivity/Kd_z",  Kd[2], 2.0);
+            pos_passivity_nh.param<float>("Pos_passivity/T_ude_xy", T_ude[0], 1.0);
+            pos_passivity_nh.param<float>("Pos_passivity/T_ude_xy", T_ude[1], 1.0);
+            pos_passivity_nh.param<float>("Pos_passivity/T_ude_z",  T_ude[2], 1.0);
+            pos_passivity_nh.param<float>("Pos_passivity/T_ps", T_ps, 1.0);
 
-            pos_passivity_nh.param<float>("/Limit/pxy_error_max", pos_error_max[0], 0.6);
-            pos_passivity_nh.param<float>("/Limit/pxy_error_max", pos_error_max[1], 0.6);
-            pos_passivity_nh.param<float>("/Limit/pz_error_max" , pos_error_max[2], 1.0);
-            pos_passivity_nh.param<float>("/Limit/vxy_error_max", vel_error_max[0], 0.3);
-            pos_passivity_nh.param<float>("/Limit/vxy_error_max", vel_error_max[1], 0.3);
-            pos_passivity_nh.param<float>("/Limit/vz_error_max" , vel_error_max[2], 1.0);
-            pos_passivity_nh.param<float>("/Limit/pxy_int_max"  , int_max[0], 0.5);
-            pos_passivity_nh.param<float>("/Limit/pxy_int_max"  , int_max[1], 0.5);
-            pos_passivity_nh.param<float>("/Limit/pz_int_max"   , int_max[2], 0.5);  
-            pos_passivity_nh.param<float>("/Limit/tilt_max", tilt_max, 20.0);
-            pos_passivity_nh.param<float>("/Limit/int_start_error"  , int_start_error, 0.3);
+            pos_passivity_nh.param<float>("Limit/pxy_error_max", pos_error_max[0], 0.6);
+            pos_passivity_nh.param<float>("Limit/pxy_error_max", pos_error_max[1], 0.6);
+            pos_passivity_nh.param<float>("Limit/pz_error_max" , pos_error_max[2], 1.0);
+            pos_passivity_nh.param<float>("Limit/vxy_error_max", vel_error_max[0], 0.3);
+            pos_passivity_nh.param<float>("Limit/vxy_error_max", vel_error_max[1], 0.3);
+            pos_passivity_nh.param<float>("Limit/vz_error_max" , vel_error_max[2], 1.0);
+            pos_passivity_nh.param<float>("Limit/pxy_int_max"  , int_max[0], 0.5);
+            pos_passivity_nh.param<float>("Limit/pxy_int_max"  , int_max[1], 0.5);
+            pos_passivity_nh.param<float>("Limit/pz_int_max"   , int_max[2], 0.5);  
+            pos_passivity_nh.param<float>("Limit/tilt_max", tilt_max, 20.0);
+            pos_passivity_nh.param<float>("Limit/int_start_error"  , int_start_error, 0.3);
 
             u_l        = Eigen::Vector3f(0.0,0.0,0.0);
             u_d        = Eigen::Vector3f(0.0,0.0,0.0);
