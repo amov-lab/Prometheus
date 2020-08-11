@@ -28,7 +28,6 @@ add_message_files(
   PositionReference.msg
   AttitudeReference.msg
   DroneState.msg
-  GroundStation.msg
   ControlOutput.msg
   Message.msg
   LogMessage.msg

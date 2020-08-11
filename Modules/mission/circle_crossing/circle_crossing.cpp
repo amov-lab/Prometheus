@@ -2,8 +2,10 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <mission_utils.h>
+#include "message_utils.h"
 
 using namespace std;
+# define NODE_NAME "circle_crossing"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 Detection_result ellipse_det;
 prometheus_msgs::DroneState _DroneState;                                   //无人机状态量
@@ -69,6 +71,9 @@ int main(int argc, char **argv)
 
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
+
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
     
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
@@ -108,6 +113,7 @@ int main(int argc, char **argv)
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Switch to OFFBOARD and arm ....");
         cout << "Switch to OFFBOARD and arm ..."<<endl;
         ros::Duration(3.0).sleep();
         
@@ -151,10 +157,13 @@ int main(int argc, char **argv)
         {
             crossing();
             cout << "Crossing the circle..." <<  endl;
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Crossing the circle...");
+
         }else if(State_Machine == 3)
         {
             return_start_point();
             cout << "Returning the start point..." <<  endl;
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Returning the start point...");
         }
 
         //回调
