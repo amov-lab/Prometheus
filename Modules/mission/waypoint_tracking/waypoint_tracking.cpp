@@ -10,8 +10,8 @@
 
 #include <ros/ros.h>
 #include <iostream>
-#include <mission_utils.h>
-
+#include "mission_utils.h"
+#include "message_utils.h"
 #include <std_msgs/Bool.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <prometheus_msgs/DroneState.h>
@@ -20,6 +20,7 @@ using namespace std;
  
 # define TIME_OUT 20.0
 # define THRES_DISTANCE 0.15
+# define NODE_NAME "waypoint_tracking"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::ControlCommand Command_Now;
 prometheus_msgs::DroneState _DroneState;                          //无人机状态量
@@ -47,6 +48,9 @@ int main(int argc, char **argv)
 
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher move_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
     ros::Time time_begin;
     float time_sec;
@@ -95,6 +99,7 @@ int main(int argc, char **argv)
     while(_DroneState.armed != true || _DroneState.mode != "OFFBOARD")
     {
         cout<<"[waypoint_tracking]: "<<"Please arm and switch to OFFBOARD mode."<<endl;
+        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Please arm and switch to OFFBOARD mode.");
         ros::spinOnce();
         rate.sleep();
     }
@@ -127,6 +132,7 @@ int main(int argc, char **argv)
     
     //第一个目标点，左下角
     cout<<"[waypoint_tracking]: "<<"Moving to Point 1."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Moving to Point 1.");
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -155,6 +161,7 @@ int main(int argc, char **argv)
         
     //第二个目标点，左上角
     cout<<"[waypoint_tracking]: "<<"Moving to Point 2."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Moving to Point 2.");
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -182,6 +189,7 @@ int main(int argc, char **argv)
 
     //第三个目标点，右上角
     cout<<"[waypoint_tracking]: "<<"Moving to Point 3."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Moving to Point 3.");
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -209,6 +217,7 @@ int main(int argc, char **argv)
 
     //第四个目标点，右下角
     cout<<"[waypoint_tracking]: "<<"Moving to Point 4."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Moving to Point 4.");
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -236,6 +245,7 @@ int main(int argc, char **argv)
 
     //第五个目标点，回到起点
     cout<<"[waypoint_tracking]: "<<"Moving to Point 5."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Moving to Point 5.");
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
@@ -263,6 +273,7 @@ int main(int argc, char **argv)
 
     //降落
     cout<<"[waypoint_tracking]: "<<"Landing."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Landing.");
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Land;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;

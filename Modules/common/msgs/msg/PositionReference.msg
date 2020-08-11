@@ -1,5 +1,7 @@
 std_msgs/Header header
 
+## 位置控制参考量
+
 ## 默认为 XYZ位置追踪模式 （sub_mode = 0）； 速度追踪启用时，控制器不考虑位置参考量及位置状态反馈
 uint8 Move_mode
 

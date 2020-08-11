@@ -17,11 +17,13 @@
 #include <geometry_msgs/Pose.h>
 #include <prometheus_msgs/ControlCommand.h>
 #include <nav_msgs/Odometry.h>
+#include "message_utils.h"
 
 using namespace std;
 using namespace Eigen;
 #define FOLLOWING_VEL 0.5
 #define FOLLOWING_KP 2.0
+# define NODE_NAME "color_line_following"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //---------------------------------------Drone---------------------------------------------  
 float drone_height;   
@@ -73,6 +75,9 @@ int main(int argc, char **argv)
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
 
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
+
     nh.param<float>("start_point_x", start_point_x, 0.0);
     nh.param<float>("start_point_y", start_point_y, 0.0);
     nh.param<float>("start_point_z", start_point_z, 2.0);
@@ -100,6 +105,7 @@ int main(int argc, char **argv)
 
     // 起飞
     cout<<"[color_line_following]: "<<"Takeoff to predefined position."<<endl;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to predefined position.");
     Command_Now.Command_ID = 1;
     while( drone_height < 0.3)
     {

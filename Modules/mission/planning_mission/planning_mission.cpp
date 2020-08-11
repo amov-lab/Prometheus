@@ -3,6 +3,7 @@
 #include <Eigen/Eigen>
 #include <iostream>
 #include <mission_utils.h>
+#include "message_utils.h"
 
 //topic 头文件
 #include <geometry_msgs/Point.h>
@@ -24,6 +25,7 @@ using namespace std;
 
 #define MIN_DIS 0.1
 #define FLY_HEIGHT 1.5
+# define NODE_NAME "planning_mission"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 prometheus_msgs::DroneState _DroneState;                                   //无人机状态量
@@ -151,6 +153,8 @@ int main(int argc, char **argv)
     
     // 【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
     local_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/local_planner", 10);
     global_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/global_planner", 10);
     fast_planner_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/fast_planner", 10);
@@ -253,6 +257,7 @@ int main(int argc, char **argv)
 
             command_pub.publish(Command_Now);
             cout << "Dangerous! Hold there." << endl; 
+            pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Dangerous! Hold there.");
 
             ros::Duration(0.1).sleep();
         }else

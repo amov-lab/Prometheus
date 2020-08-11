@@ -34,7 +34,7 @@ void att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr& msg)
     //Transform the Quaternion to euler Angles
     euler_fcu_target = quaternion_to_euler(q_fcu_target);
 
-    Thrust_target = msg->thrust;
+    Thrust_target = - msg->thrust;
 }
 
 void log_cb(const prometheus_msgs::LogMessage::ConstPtr& msg)

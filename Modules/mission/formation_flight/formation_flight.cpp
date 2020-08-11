@@ -20,12 +20,15 @@
 #include <prometheus_msgs/DroneState.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/Int8.h>
+#include "message_utils.h"
+
 using namespace std;
 
 
 #define FIVE_STAR_SIZE 2.0
 #define TRIANGLE_SIZE 2.0
 #define T_SIZE 2.0
+# define NODE_NAME "formation_flight"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 geometry_msgs::Point leader;
 geometry_msgs::Point relative_pos_to_leader1;
@@ -71,6 +74,9 @@ int main(int argc, char **argv)
     
     //【订阅】目标点
     ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/formation/goal", 10, goal_cb);
+
+    // 【发布】用于地面站显示的提示消息
+    ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
     //【发布】阵型
     leader_pub     = nh.advertise<geometry_msgs::Point>("/prometheus/formation/leader_pos", 10);
@@ -133,6 +139,7 @@ int main(int argc, char **argv)
         if (start_flag == 1)
         {
             five_star();
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Switch to five_star formation.");
         }else if (start_flag == 2)
         {
             triangle();

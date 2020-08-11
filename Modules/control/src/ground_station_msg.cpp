@@ -1,7 +1,5 @@
 //头文件
 #include <ros/ros.h>
-#include <prometheus_control_utils.h>
-
 
 //msg 头文件
 #include <mavros_msgs/CommandBool.h>
@@ -11,8 +9,8 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/ActuatorControl.h>
 #include <sensor_msgs/Imu.h>
-
 #include <geometry_msgs/PoseStamped.h>
+#include "message_utils.h"
 
 using namespace std;
 //---------------------------------------相关参数-----------------------------------------------
@@ -21,17 +19,17 @@ using namespace std;
 void msg_main_cb(const prometheus_msgs::Message::ConstPtr& msg)
 {
     prometheus_msgs::Message message = *msg;
-    prometheus_control_utils::printf_message(message);
+    printf_message(message);
 }
 void msg_planning_cb(const prometheus_msgs::Message::ConstPtr& msg)
 {
     prometheus_msgs::Message message = *msg;
-    prometheus_control_utils::printf_message(message);
+    printf_message(message);
 }
 void msg_det_cb(const prometheus_msgs::Message::ConstPtr& msg)
 {
     prometheus_msgs::Message message = *msg;
-    prometheus_control_utils::printf_message(message);
+    printf_message(message);
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
