@@ -48,13 +48,15 @@ prometheus_msgs::ControlCommand Command_Last;                     //无人机上
 prometheus_msgs::ControlOutput _ControlOutput;
 prometheus_msgs::AttitudeReference _AttitudeReference;           //位置控制器输出，即姿态环参考量
 prometheus_msgs::Message message;
+prometheus_msgs::LogMessage LogMessage;
 
 geometry_msgs::PoseStamped ref_pose_rviz;
 float dt = 0;
+
 ros::Publisher att_ref_pub;
 ros::Publisher ref_pose_pub;
 ros::Publisher message_pub;
-
+ros::Publisher log_message_pub;
 Eigen::Vector3d throttle_sp;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int check_failsafe();
@@ -98,7 +100,6 @@ void timerCallback(const ros::TimerEvent& e)
     prometheus_control_utils::pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
 }
 
-
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -122,6 +123,9 @@ int main(int argc, char **argv)
     // 【发布】提示消息
     message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
+    // 【发布】用于log的消息
+    log_message_pub = nh.advertise<prometheus_msgs::LogMessage>("/prometheus/topic_for_log", 10);
+
     // 10秒定时打印，以确保程序在正确运行
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
 
@@ -141,20 +145,38 @@ int main(int argc, char **argv)
     // 位置控制一般选取为50Hz，主要取决于位置状态的更新频率
     ros::Rate rate(50.0);
 
+    float time_trajectory = 0.0;
+
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
-    
+
     // 位置控制器声明
     pos_controller_cascade_PID pos_controller_cascade_pid;
-    pos_controller_PID pos_controller_pid;
     // 可以设置自定义位置环控制算法
+    pos_controller_PID pos_controller_pid;
     pos_controller_UDE pos_controller_ude;
     pos_controller_passivity pos_controller_ps;
     pos_controller_NE pos_controller_ne;
 
-    float time_trajectory = 0.0;
-
     printf_param();
+
+    if(controller_number == 0)
+    {
+        pos_controller_cascade_pid.printf_param();
+        
+    }else if(controller_number == 1)
+    {
+        pos_controller_pid.printf_param();
+    }else if(controller_number == 2)
+    {
+        pos_controller_ude.printf_param();
+    }else if(controller_number == 3)
+    {
+        pos_controller_ps.printf_param();
+    }else if(controller_number == 4)
+    {
+        pos_controller_ne.printf_param();
+    }
 
     // 先读取一些飞控的数据
     for(int i=0;i<100;i++)
@@ -394,6 +416,14 @@ int main(int argc, char **argv)
         ref_pose_rviz = get_ref_pose_rviz(Command_Now, _AttitudeReference);   
         ref_pose_pub.publish(ref_pose_rviz);
 
+        //发布log消息，可用rosbag记录
+        LogMessage.time = cur_time;
+        LogMessage.Drone_State = _DroneState;
+        LogMessage.Control_Command = Command_Now;
+        LogMessage.Control_Output = _ControlOutput;
+        LogMessage.Attitude_Reference = _AttitudeReference;
+        log_message_pub.publish(LogMessage);
+
         Command_Last = Command_Now;
         rate.sleep();
     }
@@ -411,6 +441,7 @@ void printf_param()
     cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
     cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
     cout << "geo_fence_z : "<< geo_fence_z[0] << " [m]  to  "<<geo_fence_z[1] << " [m]"<< endl;
+
 }
 
 int check_failsafe()
