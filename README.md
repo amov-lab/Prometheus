@@ -15,9 +15,10 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
  - **配套课程：**    即将推出，敬请期待！ 请关注 铂贝学院
   
  - **配套硬件：**    即将推出，敬请期待！ 请关注 阿木实验室
+ 
+ - **开发及维护团队：**　　[开发成员介绍](https://github.com/amov-lab/Prometheus/wiki/开发成员介绍) 
 
-
-**开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
+ - **开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
 
 ## 功能展示
  - **RGBD相机建图**
@@ -62,22 +63,6 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 	
 	<img width="400" src="https://s1.ax1x.com/2020/08/11/aLawvj.gif"/>
 	
-## 开发团队
-
- - 项目负责人
-	 - [戚煜华](https://github.com/potato77) 
-	 - [潇齐](https://github.com/orgs/amov-lab/people/amovlab-owl)
- - 建图模块
-	 - [李春雨](https://github.com/Lee0326)
- - 路径规划及轨迹优化
-	 - [江涛](https://github.com/orgs/amov-lab/people/panpanyunshi)
- - 目标识别及检测
-	- [金忍](https://github.com/jario-jin)
- - 无人机控制及任务模块
-	- [戚煜华](https://github.com/potato77) 
- - Gazebo仿真模块
-	- [李春雨](https://github.com/Lee0326)
-	- [戚煜华](https://github.com/potato77) 
 
 ## 版权申明
 
