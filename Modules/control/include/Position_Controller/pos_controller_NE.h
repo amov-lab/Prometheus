@@ -40,28 +40,28 @@ class pos_controller_NE
         {
             pos_NE_nh.param<float>("/Quad/mass", Quad_MASS, 1.0);
 
-            pos_NE_nh.param<float>("/Pos_ne/Kp_xy", Kp[0], 1.0);
-            pos_NE_nh.param<float>("/Pos_ne/Kp_xy", Kp[1], 1.0);
-            pos_NE_nh.param<float>("/Pos_ne/Kp_z",  Kp[2], 1.0);
-            pos_NE_nh.param<float>("/Pos_ne/Kd_xy", Kd[0], 2.0);
-            pos_NE_nh.param<float>("/Pos_ne/Kd_xy", Kd[1], 2.0);
-            pos_NE_nh.param<float>("/Pos_ne/Kd_z",  Kd[2], 2.0);
-            pos_NE_nh.param<float>("/Pos_ne/T_ude_xy", T_ude[0], 1.0);
-            pos_NE_nh.param<float>("/Pos_ne/T_ude_xy", T_ude[1], 1.0);
-            pos_NE_nh.param<float>("/Pos_ne/T_ude_z", T_ude[2], 1.0);
-            pos_NE_nh.param<float>("/Pos_ne/T_ne", T_ne, 1.0);
+            pos_NE_nh.param<float>("Pos_ne/Kp_xy", Kp[0], 1.0);
+            pos_NE_nh.param<float>("Pos_ne/Kp_xy", Kp[1], 1.0);
+            pos_NE_nh.param<float>("Pos_ne/Kp_z",  Kp[2], 1.0);
+            pos_NE_nh.param<float>("Pos_ne/Kd_xy", Kd[0], 2.0);
+            pos_NE_nh.param<float>("Pos_ne/Kd_xy", Kd[1], 2.0);
+            pos_NE_nh.param<float>("Pos_ne/Kd_z",  Kd[2], 2.0);
+            pos_NE_nh.param<float>("Pos_ne/T_ude_xy", T_ude[0], 1.0);
+            pos_NE_nh.param<float>("Pos_ne/T_ude_xy", T_ude[1], 1.0);
+            pos_NE_nh.param<float>("Pos_ne/T_ude_z", T_ude[2], 1.0);
+            pos_NE_nh.param<float>("Pos_ne/T_ne", T_ne, 1.0);
 
-            pos_NE_nh.param<float>("/Limit/pxy_error_max", pos_error_max[0], 0.6);
-            pos_NE_nh.param<float>("/Limit/pxy_error_max", pos_error_max[1], 0.6);
-            pos_NE_nh.param<float>("/Limit/pz_error_max" , pos_error_max[2], 1.0);
-            pos_NE_nh.param<float>("/Limit/vxy_error_max", vel_error_max[0], 0.3);
-            pos_NE_nh.param<float>("/Limit/vxy_error_max", vel_error_max[1], 0.3);
-            pos_NE_nh.param<float>("/Limit/vz_error_max" , vel_error_max[2], 1.0);
-            pos_NE_nh.param<float>("/Limit/pxy_int_max"  , int_max[0], 0.5);
-            pos_NE_nh.param<float>("/Limit/pxy_int_max"  , int_max[1], 0.5);
-            pos_NE_nh.param<float>("/Limit/pz_int_max"   , int_max[2], 0.5);  
-            pos_NE_nh.param<float>("/Limit/tilt_max", tilt_max, 20.0);
-            pos_NE_nh.param<float>("/Limit/int_start_error"  , int_start_error, 0.3);
+            pos_NE_nh.param<float>("Limit/pxy_error_max", pos_error_max[0], 0.6);
+            pos_NE_nh.param<float>("Limit/pxy_error_max", pos_error_max[1], 0.6);
+            pos_NE_nh.param<float>("Limit/pz_error_max" , pos_error_max[2], 1.0);
+            pos_NE_nh.param<float>("Limit/vxy_error_max", vel_error_max[0], 0.3);
+            pos_NE_nh.param<float>("Limit/vxy_error_max", vel_error_max[1], 0.3);
+            pos_NE_nh.param<float>("Limit/vz_error_max" , vel_error_max[2], 1.0);
+            pos_NE_nh.param<float>("Limit/pxy_int_max"  , int_max[0], 0.5);
+            pos_NE_nh.param<float>("Limit/pxy_int_max"  , int_max[1], 0.5);
+            pos_NE_nh.param<float>("Limit/pz_int_max"   , int_max[2], 0.5);  
+            pos_NE_nh.param<float>("Limit/tilt_max", tilt_max, 20.0);
+            pos_NE_nh.param<float>("Limit/int_start_error"  , int_start_error, 0.3);
 
             u_l             = Eigen::Vector3f(0.0,0.0,0.0);
             u_d             = Eigen::Vector3f(0.0,0.0,0.0);

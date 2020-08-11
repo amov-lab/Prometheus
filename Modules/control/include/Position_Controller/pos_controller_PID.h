@@ -31,29 +31,29 @@ class pos_controller_PID
         pos_controller_PID(void):
             pos_pid_nh("~")
         {
-            pos_pid_nh.param<float>("/Quad/mass", Quad_MASS, 1.5);
+            pos_pid_nh.param<float>("Quad/mass", Quad_MASS, 1.5);
 
-            pos_pid_nh.param<float>("/Pos_pid/Kp_xy", Kp[0], 2.5);
-            pos_pid_nh.param<float>("/Pos_pid/Kp_xy", Kp[1], 2.5);
-            pos_pid_nh.param<float>("/Pos_pid/Kp_z" , Kp[2], 2.5);
-            pos_pid_nh.param<float>("/Pos_pid/Kd_xy", Kd[0], 3.0);
-            pos_pid_nh.param<float>("/Pos_pid/Kd_xy", Kd[1], 3.0);
-            pos_pid_nh.param<float>("/Pos_pid/Kd_z" , Kd[2], 3.0);
-            pos_pid_nh.param<float>("/Pos_pid/Ki_xy", Ki[0], 0.5);
-            pos_pid_nh.param<float>("/Pos_pid/Ki_xy", Ki[1], 0.5);
-            pos_pid_nh.param<float>("/Pos_pid/Ki_z" , Ki[2], 0.5);
+            pos_pid_nh.param<float>("Pos_pid/Kp_xy", Kp[0], 2.5);
+            pos_pid_nh.param<float>("Pos_pid/Kp_xy", Kp[1], 2.5);
+            pos_pid_nh.param<float>("Pos_pid/Kp_z" , Kp[2], 2.5);
+            pos_pid_nh.param<float>("Pos_pid/Kd_xy", Kd[0], 3.0);
+            pos_pid_nh.param<float>("Pos_pid/Kd_xy", Kd[1], 3.0);
+            pos_pid_nh.param<float>("Pos_pid/Kd_z" , Kd[2], 3.0);
+            pos_pid_nh.param<float>("Pos_pid/Ki_xy", Ki[0], 0.5);
+            pos_pid_nh.param<float>("Pos_pid/Ki_xy", Ki[1], 0.5);
+            pos_pid_nh.param<float>("Pos_pid/Ki_z" , Ki[2], 0.5);
             
-            pos_pid_nh.param<float>("/Limit/pxy_error_max", pos_error_max[0], 10.0);
-            pos_pid_nh.param<float>("/Limit/pxy_error_max", pos_error_max[1], 10.0);
-            pos_pid_nh.param<float>("/Limit/pz_error_max" , pos_error_max[2], 10.0);
-            pos_pid_nh.param<float>("/Limit/vxy_error_max", vel_error_max[0], 10.0);
-            pos_pid_nh.param<float>("/Limit/vxy_error_max", vel_error_max[1], 10.0);
-            pos_pid_nh.param<float>("/Limit/vz_error_max" , vel_error_max[2], 10.0);
-            pos_pid_nh.param<float>("/Limit/pxy_int_max"  , int_max[0], 10.0);
-            pos_pid_nh.param<float>("/Limit/pxy_int_max"  , int_max[1], 10.0);
-            pos_pid_nh.param<float>("/Limit/pz_int_max"   , int_max[2], 10.0);
-            pos_pid_nh.param<float>("/Limit/tilt_max", tilt_max, 20.0);
-            pos_pid_nh.param<float>("/Limit/int_start_error"  , int_start_error, 10.0);
+            pos_pid_nh.param<float>("Limit/pxy_error_max", pos_error_max[0], 10.0);
+            pos_pid_nh.param<float>("Limit/pxy_error_max", pos_error_max[1], 10.0);
+            pos_pid_nh.param<float>("Limit/pz_error_max" , pos_error_max[2], 10.0);
+            pos_pid_nh.param<float>("Limit/vxy_error_max", vel_error_max[0], 10.0);
+            pos_pid_nh.param<float>("Limit/vxy_error_max", vel_error_max[1], 10.0);
+            pos_pid_nh.param<float>("Limit/vz_error_max" , vel_error_max[2], 10.0);
+            pos_pid_nh.param<float>("Limit/pxy_int_max"  , int_max[0], 10.0);
+            pos_pid_nh.param<float>("Limit/pxy_int_max"  , int_max[1], 10.0);
+            pos_pid_nh.param<float>("Limit/pz_int_max"   , int_max[2], 10.0);
+            pos_pid_nh.param<float>("Limit/tilt_max", tilt_max, 20.0);
+            pos_pid_nh.param<float>("Limit/int_start_error"  , int_start_error, 10.0);
 
             integral = Eigen::Vector3f(0.0,0.0,0.0);
         }

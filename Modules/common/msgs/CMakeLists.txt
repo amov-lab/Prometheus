@@ -31,6 +31,7 @@ add_message_files(
   GroundStation.msg
   ControlOutput.msg
   Message.msg
+  LogMessage.msg
 )
 
 add_action_files(
