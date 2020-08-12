@@ -38,7 +38,7 @@
 #include "message_utils.h"
 
 using namespace std;
-
+#define NODE_NAME "local_planner"
 
 namespace local_planner{
 

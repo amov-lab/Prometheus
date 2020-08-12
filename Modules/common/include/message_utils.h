@@ -27,7 +27,7 @@ inline void pub_message(ros::Publisher& puber, int msg_type, std::string source_
 // 消息打印函数
 inline void printf_message(const prometheus_msgs::Message& message)
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Message <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    //cout <<">>>>>>>>>>>>>>>>>>>>>>>> Message <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     if(message.message_type == prometheus_msgs::Message::NORMAL)
     {
         cout << "[NORMAL]" << "["<< message.source_node << "]:" << message.content <<endl;

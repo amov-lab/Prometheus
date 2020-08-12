@@ -7,7 +7,7 @@ namespace dyn_planner
 void PlanningFSM::init(ros::NodeHandle& nh)
 {
       // global variable
-    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/fast_planner", 10);
+    message_pub = node_.advertise<prometheus_msgs::Message>("/prometheus/message/fast_planner", 10);
   /* ---------- init global param---------- */
   nh.param("bspline/limit_vel", NonUniformBspline::limit_vel_, -1.0);
   nh.param("bspline/limit_acc", NonUniformBspline::limit_acc_, -1.0);

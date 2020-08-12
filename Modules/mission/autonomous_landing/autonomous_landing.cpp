@@ -28,6 +28,7 @@ using namespace Eigen;
 prometheus_msgs::DroneState _DroneState;   
 nav_msgs::Odometry GroundTruth;
 Eigen::Matrix3f R_Body_to_ENU;
+std_msgs::Bool flag_start;
 //---------------------------------------Vision---------------------------------------------
 Detection_result landpad_det;
 Eigen::Vector3f pos_des_prev;
@@ -103,6 +104,12 @@ void groundtruth_cb(const nav_msgs::Odometry::ConstPtr& msg)
 {
     GroundTruth = *msg;
 }
+
+void switch_cb(const std_msgs::Bool::ConstPtr& msg)
+{
+    flag_start = *msg;
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -120,6 +127,8 @@ int main(int argc, char **argv)
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
     ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/landing_pad", 10, groundtruth_cb);
+
+    ros::Subscriber switch_sub = nh.subscribe<std_msgs::Bool>("/prometheus/switch/landing", 10, switch_cb);
 
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);

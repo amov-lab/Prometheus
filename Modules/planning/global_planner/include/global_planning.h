@@ -34,6 +34,8 @@
 #include "message_utils.h"
 using namespace std;
 
+#define NODE_NAME "global_planner"
+
 namespace global_planner{
 
 extern ros::Publisher message_pub;
