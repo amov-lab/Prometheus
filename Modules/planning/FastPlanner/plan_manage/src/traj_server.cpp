@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
   state_pub = node.advertise<visualization_msgs::Marker>("/prometheus/planning/state", 10);
   
   pos_cmd_pub =
-    node.advertise<prometheus_msgs::PositionReference>("/prometheus/planning/position_cmd", 50);
+    node.advertise<prometheus_msgs::PositionReference>("/prometheus/fast_planner/position_cmd", 50);
   // 发布轨迹控制指令，无人机实际轨迹
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.2), visCallback);
   traj_pub = node.advertise<visualization_msgs::Marker>("/prometheus/planning/traj", 10);

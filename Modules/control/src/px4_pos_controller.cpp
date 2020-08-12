@@ -80,14 +80,18 @@ void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
     {
         Command_Now = Command_Last;
     }
-
-    // Check for geo fence: If drone is out of the geo fence, it will land now.
-    if(check_failsafe() == 1)
+}
+void station_command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
+{
+    Command_Now = *msg;
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Get a command from Prometheus Station.");
+    
+    // 无人机一旦接受到Disarm指令，则会屏蔽其他指令
+    if(Command_Last.Mode == prometheus_msgs::ControlCommand::Disarm)
     {
-        Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+        Command_Now = Command_Last;
     }
 }
-
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
@@ -106,9 +110,13 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     //【订阅】指令
-    // 本为任务模块生成的控制指令
+    // 本话题为任务模块生成的控制指令
     ros::Subscriber Command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10, Command_cb);
 
+    //【订阅】指令
+    // 本话题为Prometheus地面站发送的控制指令
+    ros::Subscriber station_command_sub = nh.subscribe<prometheus_msgs::ControlCommand>("/prometheus/control_command_station", 10, station_command_cb);
+    
     //【订阅】无人机状态
     // 本话题来自px4_pos_estimator.cpp
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
@@ -228,6 +236,12 @@ int main(int argc, char **argv)
 
         //执行回调函数
         ros::spinOnce();
+
+        // Check for geo fence: If drone is out of the geo fence, it will land now.
+        if(check_failsafe() == 1)
+        {
+            Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+        }
 
         switch (Command_Now.Mode)
         {

@@ -56,7 +56,7 @@ void printf_command_control(const prometheus_msgs::ControlCommand& _ControlComma
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    cout << "Source: "<< _ControlCommand.source << "Command_ID: "<< _ControlCommand.Command_ID <<endl;
+    cout << "Source: [ "<< _ControlCommand.source << " ]  Command_ID: "<< _ControlCommand.Command_ID <<endl;
 
     switch(_ControlCommand.Mode)
     {
@@ -204,8 +204,8 @@ void prinft_attitude_reference(const prometheus_msgs::AttitudeReference& _Attitu
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    cout << "Attitude_sp[R P Y]  : " << _AttitudeReference.desired_attitude[0] * 180/M_PI <<" [deg]  "<<_AttitudeReference.desired_attitude[1] * 180/M_PI << " [deg]  "<< _AttitudeReference.desired_attitude[2] * 180/M_PI<<" [deg] "<<endl;
-    cout << "Throttle_sp[ 0-1 ]  : " << _AttitudeReference.desired_throttle <<endl;
+    cout << "Attitude_sp [R P Y]  : " << _AttitudeReference.desired_attitude[0] * 180/M_PI <<" [deg]  "<<_AttitudeReference.desired_attitude[1] * 180/M_PI << " [deg]  "<< _AttitudeReference.desired_attitude[2] * 180/M_PI<<" [deg] "<<endl;
+    cout << "Throttle_sp [ 0-1 ]  : " << _AttitudeReference.desired_throttle <<endl;
 }
 
 void prinft_ref_pose(const geometry_msgs::PoseStamped& ref_pose)
@@ -223,7 +223,7 @@ void prinft_ref_pose(const geometry_msgs::PoseStamped& ref_pose)
     // 强制显示符号
     cout.setf(ios::showpos);
       
-    cout << "Ref_position[X Y Z] : " << ref_pose.pose.position.x <<" [m] "<< ref_pose.pose.position.y <<" [m] " << ref_pose.pose.position.z <<" [m] "<<endl;
+    cout << "Ref_position [X Y Z] : " << ref_pose.pose.position.x <<" [m] "<< ref_pose.pose.position.y <<" [m] " << ref_pose.pose.position.z <<" [m] "<<endl;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 其 他 函 数 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 

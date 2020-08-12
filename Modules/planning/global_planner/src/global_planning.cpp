@@ -31,7 +31,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     safety_timer_ = node_.createTimer(ros::Duration(2.0), &GlobalPlanner::safetyCallback, this);
     exec_timer_ = node_.createTimer(ros::Duration(1.5), &GlobalPlanner::execCallback, this);        // 每3秒执行一次A*
 
-    path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/planning/path_cmd",  10);  
+    path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/global_planner/path_cmd",  10);  
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
 
     swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/global_planner", 10, &GlobalPlanner::switchCallback, this);  
