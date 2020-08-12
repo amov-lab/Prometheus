@@ -162,13 +162,15 @@ int main(int argc, char **argv)
     }
 
     // 起飞
-    cout<<"[autonomous_landing]: "<<"Takeoff to predefined position."<<endl;
+    cout<<"[object tracking]: "<<"Takeoff to predefined position."<<endl;
     Command_Now.Command_ID = 1;
+    Command_Now.source = NODE_NAME;
     while( _DroneState.position[2] < 0.3)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
         cout << "Switch to OFFBOARD and arm ..."<<endl;
@@ -177,6 +179,7 @@ int main(int argc, char **argv)
         Command_Now.header.stamp                    = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
         Command_Now.Reference_State.position_ref[0]     = start_point_x;
@@ -249,6 +252,7 @@ int main(int argc, char **argv)
         //Publish
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         command_pub.publish(Command_Now);
 
         rate.sleep();

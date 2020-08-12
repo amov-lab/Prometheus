@@ -107,11 +107,13 @@ int main(int argc, char **argv)
     cout<<"[color_line_following]: "<<"Takeoff to predefined position."<<endl;
     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to predefined position.");
     Command_Now.Command_ID = 1;
+    Command_Now.source = NODE_NAME;
     while( drone_height < 0.3)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
         cout << "Switch to OFFBOARD and arm ..."<<endl;
@@ -120,6 +122,7 @@ int main(int argc, char **argv)
         Command_Now.header.stamp                    = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
         Command_Now.Reference_State.position_ref[0]     = start_point_x;
@@ -149,7 +152,7 @@ int main(int argc, char **argv)
 
         Command_Now.header.stamp                    = ros::Time::now();
         Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
-
+        Command_Now.source = NODE_NAME;
         Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::MIX_FRAME;
@@ -157,11 +160,6 @@ int main(int argc, char **argv)
         Command_Now.Reference_State.velocity_ref[1]     = FOLLOWING_KP * error_body_y;
         Command_Now.Reference_State.position_ref[2]     = start_point_z;
         Command_Now.Reference_State.yaw_ref             = yaw_sp;
-
-        
-        //Publish
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Command_ID   = Command_Now.Command_ID + 1;
         command_pub.publish(Command_Now);
         printf_result();
         rate.sleep();

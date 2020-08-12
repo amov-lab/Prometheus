@@ -229,7 +229,7 @@ int main(int argc, char **argv)
     ros::Subscriber local_planner_sub  =  nh.subscribe<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 50, local_planner_cmd_cb);
 
     //【订阅】全局路径规划结果,用于避开障碍物 走廊
-    ros::Subscriber global_planner_sub =   nh.subscribe<nav_msgs::Path>("/prometheus/planning/path_cmd", 50, global_planner_cmd_cb);
+    ros::Subscriber global_planner_sub =   nh.subscribe<nav_msgs::Path>("/prometheus/global_planner/path_cmd", 50, global_planner_cmd_cb);
 
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
