@@ -106,6 +106,7 @@ int main(int argc, char **argv)
 
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
     Command_Now.Command_ID                          = 0;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0]     = 0;
@@ -136,6 +137,7 @@ int main(int argc, char **argv)
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0] = point1[0];
@@ -165,6 +167,7 @@ int main(int argc, char **argv)
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0] = point2[0];
@@ -193,6 +196,7 @@ int main(int argc, char **argv)
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0] = point3[0];
@@ -221,6 +225,7 @@ int main(int argc, char **argv)
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0] = point4[0];
@@ -249,6 +254,7 @@ int main(int argc, char **argv)
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0] = point5[0];
@@ -277,6 +283,7 @@ int main(int argc, char **argv)
     Command_Now.header.stamp                    = ros::Time::now();
     Command_Now.Mode                            = prometheus_msgs::ControlCommand::Land;
     Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     move_pub.publish(Command_Now);
 
     sleep(1.0);

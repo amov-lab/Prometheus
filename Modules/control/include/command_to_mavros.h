@@ -3,7 +3,7 @@
 *
 * Author: Qyp
 *
-* Update Time: 2019.12.23
+* Update Time: 2020.08.12
 *
 * Introduction:  Drone control command send class using Mavros package
 *         1. Ref to the Mavros plugins (setpoint_raw, loca_position, imu and etc..)
@@ -17,6 +17,7 @@
 * 1、发布prometheus_control功能包生成的控制量至mavros功能包，可发送期望位置、速度、角度、角速度、底层控制等。
 * 2、订阅mavros功能包发布的飞控状态量（包括PX4中的期望位置、速度、角度、角速度、底层控制），用于检查飞控是否正确接收机载电脑的指令
 * 3、解锁上锁、修改模式两个服务。
+
 ***************************************************************************************************************************/
 #ifndef COMMAND_TO_MAVROS_H
 #define COMMAND_TO_MAVROS_H

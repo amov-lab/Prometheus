@@ -142,9 +142,9 @@ int main(int argc, char **argv)
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
     
     //【订阅】来自planning的指令
-    ros::Subscriber global_planner_sub =    nh.subscribe<nav_msgs::Path>("/prometheus/planning/path_cmd", 50, global_planner_cmd_cb);
+    ros::Subscriber global_planner_sub =    nh.subscribe<nav_msgs::Path>("/prometheus/global_planner/path_cmd", 50, global_planner_cmd_cb);
     ros::Subscriber local_planner_sub  =    nh.subscribe<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 50, local_planner_cmd_cb);
-    ros::Subscriber fast_planner_sub   =    nh.subscribe<prometheus_msgs::PositionReference>("/prometheus/planning/position_cmd", 50, fast_planner_cmd_cb);
+    ros::Subscriber fast_planner_sub   =    nh.subscribe<prometheus_msgs::PositionReference>("/prometheus/fast_planner/position_cmd", 50, fast_planner_cmd_cb);
     ros::Subscriber stop_cmd_sub = nh.subscribe<std_msgs::Int8>("/prometheus/planning/stop_cmd", 10, stop_cmd_cb);  
     stop_cmd.data = 0;
 
@@ -192,11 +192,13 @@ int main(int argc, char **argv)
 
     // 起飞
     Command_Now.Command_ID = 1;
+    Command_Now.source = NODE_NAME;
     while( _DroneState.position[2] < 0.3)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
         cout << "Switch to OFFBOARD and arm ..."<<endl;
@@ -205,6 +207,7 @@ int main(int argc, char **argv)
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         command_pub.publish(Command_Now);
         cout << "Takeoff ..."<<endl;
         ros::Duration(3.0).sleep();
@@ -227,6 +230,7 @@ int main(int argc, char **argv)
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
             Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
             Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
             Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
             Command_Now.Reference_State.position_ref[0]     = goal.pose.position.x;
@@ -254,6 +258,7 @@ int main(int argc, char **argv)
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode                                = prometheus_msgs::ControlCommand::Hold;
             Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
 
             command_pub.publish(Command_Now);
             cout << "Dangerous! Hold there." << endl; 
@@ -311,6 +316,7 @@ void APF_planner()
     Command_Now.header.stamp = ros::Time::now();
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.velocity_ref[0]     = APF.desired_vel.x;
@@ -352,6 +358,7 @@ void A_star_planner()
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
         Command_Now.Reference_State.position_ref[0]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.x;
@@ -408,6 +415,7 @@ void Fast_planner()
     Command_Now.header.stamp = ros::Time::now();
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State = fast_planner.fast_planner_cmd;
     Command_Now.Reference_State.yaw_ref = desired_yaw;
 

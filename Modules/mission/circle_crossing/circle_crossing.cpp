@@ -106,11 +106,13 @@ int main(int argc, char **argv)
 
     // 起飞
     Command_Now.Command_ID = 1;
+    Command_Now.source = NODE_NAME;
     while( _DroneState.position[2] < 0.3)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Switch to OFFBOARD and arm ....");
@@ -120,6 +122,7 @@ int main(int argc, char **argv)
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
         Command_Now.Reference_State.position_ref[0]     = 0.0;
@@ -179,6 +182,7 @@ void tracking()
 {
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_VEL;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0]     = 0;
@@ -201,6 +205,7 @@ void crossing()
 {
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::BODY_FRAME;
     Command_Now.Reference_State.position_ref[0]     = 2.0;
@@ -219,6 +224,7 @@ void return_start_point()
 {
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::BODY_FRAME;
     Command_Now.Reference_State.position_ref[0]     = 0.0;
@@ -232,6 +238,7 @@ void return_start_point()
 
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0]     = 0.0;

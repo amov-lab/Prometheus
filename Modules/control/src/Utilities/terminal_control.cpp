@@ -18,6 +18,7 @@
 #include <nav_msgs/Path.h>
 
 #define TRA_WINDOW 2000
+#define NODE_NAME "terminal_control"
 
 using namespace std;
 
@@ -52,6 +53,7 @@ int main(int argc, char **argv)
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
     Command_Now.Command_ID                          = 0;
+    Command_Now.source = NODE_NAME;
     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
     Command_Now.Reference_State.position_ref[0]     = 0;
@@ -104,6 +106,7 @@ int main(int argc, char **argv)
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode = prometheus_msgs::ControlCommand::Idle;
             Command_Now.Command_ID = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
             Command_Now.Reference_State.yaw_ref = 999;
             move_pub.publish(Command_Now);
         }
@@ -114,6 +117,7 @@ int main(int argc, char **argv)
                 Command_Now.header.stamp = ros::Time::now();
                 Command_Now.Mode = prometheus_msgs::ControlCommand::Idle;
                 Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
                 move_pub.publish(Command_Now);
                 break;
 
@@ -121,6 +125,7 @@ int main(int argc, char **argv)
                 Command_Now.header.stamp = ros::Time::now();
                 Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
                 Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
                 move_pub.publish(Command_Now);
                 break;
 
@@ -128,6 +133,7 @@ int main(int argc, char **argv)
                 Command_Now.header.stamp = ros::Time::now();
                 Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
                 Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
                 move_pub.publish(Command_Now);
                 break;
     
@@ -135,6 +141,7 @@ int main(int argc, char **argv)
                 Command_Now.header.stamp = ros::Time::now();
                 Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
                 Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
                 move_pub.publish(Command_Now);
                 break;
 
@@ -148,6 +155,7 @@ int main(int argc, char **argv)
                         Command_Now.header.stamp = ros::Time::now();
                         Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
                         Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                        Command_Now.source = NODE_NAME;
 
                         if(Trjectory_mode == 0)
                         {
@@ -175,6 +183,7 @@ int main(int argc, char **argv)
                     Command_Now.header.stamp = ros::Time::now();
                     Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
                     Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                    Command_Now.source = NODE_NAME;
                     Command_Now.Reference_State.Move_mode  = Move_mode;
                     Command_Now.Reference_State.Move_frame = Move_frame;
                     Command_Now.Reference_State.time_from_start = -1;
@@ -188,6 +197,7 @@ int main(int argc, char **argv)
                 Command_Now.header.stamp = ros::Time::now();
                 Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
                 Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
                 move_pub.publish(Command_Now);
                 break;
 
@@ -195,6 +205,7 @@ int main(int argc, char **argv)
                 Command_Now.header.stamp = ros::Time::now();
                 Command_Now.Mode = prometheus_msgs::ControlCommand::User_Mode1;
                 Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
                 move_pub.publish(Command_Now);
                 break;
             
@@ -202,6 +213,7 @@ int main(int argc, char **argv)
                 Command_Now.header.stamp = ros::Time::now();
                 Command_Now.Mode = prometheus_msgs::ControlCommand::User_Mode2;
                 Command_Now.Command_ID = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
                 move_pub.publish(Command_Now);
                 break;
         }

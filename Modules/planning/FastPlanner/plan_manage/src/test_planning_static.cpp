@@ -193,7 +193,7 @@ int main(int argc,char** argv)
        // 由px4发布odom信息 
     }else if(odom_mode==2){
         // 无人机随轨迹运动，订阅轨迹，更新odom
-        traj_sub = node_.subscribe("/prometheus/planning/position_cmd", 50, trajCallbck);
+        traj_sub = node_.subscribe("/prometheus/fast_planner/position_cmd", 50, trajCallbck);
         pub_odom_timer_ = node_.createTimer(ros::Duration(0.05), &omdpubCallback);
     }
     // 时间触发发布点云
