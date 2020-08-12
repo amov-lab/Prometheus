@@ -10,7 +10,7 @@ namespace local_planner
 void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 
     // global variable
-    message_pub = node_.advertise<prometheus_msgs::Message>("prometheus/message/local_planner", 10);
+    message_pub = node_.advertise<prometheus_msgs::Message>("/prometheus/message/local_planner", 10);
 
     // set mode
     flight_type_ = FLIGHT_TYPE::MANUAL_GOAL;
@@ -54,11 +54,11 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
 
-    exec_timer_ = node_.createTimer(ros::Duration(0.05), &PotentialFiledPlanner::execFSMCallback, this, false);
+    exec_timer_ = node_.createTimer(ros::Duration(1.0), &PotentialFiledPlanner::execFSMCallback, this, false);
 
     nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
     /*   bool  state    */
-    trigger_=true;
+    trigger_=false;
     have_goal_=false;
     has_point_map_=false;
     have_odom_=false;
@@ -73,35 +73,28 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     static int exect_num=0;
     exect_num++;
 
-    std::string exect_msg;
     string print_info;
-    if(exect_num==19){
+    if(exect_num==5){
         if (!trigger_)
         {   
-            print_info = "don't trigger!\n";
-            printf("don't trigger!\n");
+            print_info = "don't trigger!";
         }
 
         if(!have_odom_){
-            print_info = "don't have odometry!\n";
-            // printf("don't have odometry!\n");
+            print_info = "don't have odometry!";
         }
             
         if(!has_point_map_)
         {
-            print_info = "don't have point cloud! \n";
-            // printf("don't have point cloud! \n");
+            print_info = "don't have point cloud! ";
         }
         if(!have_goal_){
-            print_info = "*** wait goal!*** \n";
-            // printf("*** wait goal!*** \n");
+            print_info = " wait goal! ";
         }
         exect_num=0;
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, print_info);
     }
-    exect_msg = "[local planner]: " + print_info;
 
-
-    pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/local_planner", exect_msg);
 
     if (!trigger_)
     {   
@@ -151,11 +144,11 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
         desired_vel = desired_vel / desired_vel.norm() * max_planning_vel;  // the max velocity is max_planning_vel
     }
     if(exect_num==10){
-        printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+        //printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
         char sp[100];
-        sprintf(sp, "local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+        sprintf(sp, "local planning desired vel: [%f, %f, %f]", desired_vel(0), desired_vel(1), desired_vel(2));
 
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/local_planner",sp);
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,sp);
 
         exect_num=0;
     }
@@ -212,11 +205,11 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
                                                             end_pt_(1), 
                                                             end_pt_(2));
     char sp[100];
-    sprintf(sp, "---planning_fsm: get waypoint: [ %f, %f, %f]!---\n", end_pt_(0),
+    sprintf(sp, "---planning_fsm: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
                                                             end_pt_(1), 
                                                             end_pt_(2));
 
-    pub_message(message_pub, prometheus_msgs::Message::NORMAL,  "prometheus/message/local_planner",sp);
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,sp);
 
 
     visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));

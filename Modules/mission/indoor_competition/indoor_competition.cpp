@@ -7,7 +7,7 @@ using namespace std;
 
 #define START_POINT_X -6.5
 #define START_POINT_Y 0.0
-#define START_POINT_Z 1.8
+#define START_POINT_Z 1.7
 #define START_POINT_YAW 0.0
 
 #define CIRCLE_POINT_X -3.5
@@ -411,12 +411,12 @@ int main(int argc, char **argv)
     while(flag_get_cmd == 0)
     {
         goal_pub.publish(goal);
-        cout << "Goal Pub ..."<<endl;
+        local_planner_switch_pub.publish(switch_on);
+        cout << "Turn on the local planner and pub the goal point ..."<<endl;
         ros::spinOnce();
         ros::Duration(0.05).sleep();
     }
-
-    local_planner_switch_pub.publish(switch_on);
+    
     while(State_Machine == 3)
     {
         // 高度改为定高飞行
@@ -457,8 +457,6 @@ int main(int argc, char **argv)
         }
     }
 
-    local_planner_switch_pub.publish(switch_off);
-    global_planner_switch_pub.publish(switch_on);
     //发布目标
     goal.pose.position.x = NUM_POINT_X;
     goal.pose.position.y = NUM_POINT_Y;
@@ -468,7 +466,8 @@ int main(int argc, char **argv)
     {
         goal_pub.publish(goal);
         local_planner_switch_pub.publish(switch_off);
-        cout << "Goal Pub 2 ..."<<endl;
+        global_planner_switch_pub.publish(switch_on);
+        cout << "Turn on the global planner and pub the goal point ..."<<endl;
         ros::spinOnce();
         ros::Duration(0.05).sleep();
     }
@@ -539,7 +538,7 @@ int main(int argc, char **argv)
             Command_Now.Reference_State.yaw_ref             = LAND_POINT_YAW;
             command_pub.publish(Command_Now);
             cout << "Moving to LAND_POINT ..."<<endl;
-            ros::Duration(2.0).sleep();
+            ros::Duration(4.0).sleep();
         }
     }
 
