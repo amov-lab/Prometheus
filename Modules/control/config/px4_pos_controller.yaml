@@ -28,9 +28,9 @@ Pos_cascade_pid:
   Ki_vxvy : 0.02
   Ki_vz : 0.1
   Kd_vxvy : 0.016
-  Kd_vz : 0.01
+  Kd_vz : 0.0
   ##悬停油门，取决于飞机重量
-  Hover_throttle : 0.4
+  Hover_throttle : 0.45
   MPC_VELD_LP: 5.0
 
 ## 限制参数 

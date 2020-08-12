@@ -17,7 +17,7 @@
 
 #include "tools.h"
 #include "message_utils.h"
-
+#define NODE_NAME "global_planner"
 namespace global_planner
 {
 
