@@ -18,9 +18,9 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
  
  - **开发及维护团队：** [开发成员介绍](https://github.com/amov-lab/Prometheus/wiki/开发成员介绍) 
 
- - **开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
- 
     <img src="https://s1.ax1x.com/2020/08/13/dSEJhR.png" alt="amov qrcode" align="right" height="200" />
+
+ - **开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
  
  - 关于项目有任何问题，请在本项目issue提问，或者添加微信jiayue199506（备注消息：Prometheus）进入Prometheus自主无人机交流群
   
@@ -74,6 +74,6 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 
 ## 版权申明
 
- - 本项目受 BSD 3-Clause 协议保护。点击LICENSE 了解更多
+ - 本项目受 BSD 3-Clause 协议保护。点击 [LICENSE](https://github.com/amov-lab/Prometheus/blob/master/LICENSE)了解更多
  - 本项目仅限个人使用，请勿用于商业用途。
  - 如利用本项目进行营利活动，阿木实验室将追究侵权行为。
