@@ -19,29 +19,41 @@ options = {
   map_builder = MAP_BUILDER,
   trajectory_builder = TRAJECTORY_BUILDER,
 -- map_frame发布submaps的坐标系,也是位姿的父坐标系
-  map_frame = "map_cartographer",
+--和odom最开始的时候是一个原点，但时间累计对产生累积误差
+  map_frame = "map",
 -- tracking_frame是SLAM算法的坐标系,如果使用IMU,则一般设为imu_link
-  tracking_frame = "imu_link",
--- published_frame是位姿的子坐标系
-  published_frame = "imu_link",
+  tracking_frame = "base_link",
+-- published_frame是位姿的子坐标系，发布published_frame坐标系在map_frame坐标系的位姿
+  published_frame = "base_link",
 -- The frame between published_frame and map_frame to be used for publishing the (non-loop-closed) local SLAM result.
+-- 发布odom_frame坐标系在map坐标系的位姿，发布published_frame在odom_frame的位姿
   odom_frame = "odom_cartographer",
-  provide_odom_frame = true,
-  publish_frame_projected_to_2d = false,
+  --如果启用，则local-slam估计的连续的姿态（不包括回环）将作为map_frame中 odom_frame发布
+  provide_odom_frame = false,
+  --publish_frame是否投影到XY平面
+  publish_frame_projected_to_2d = true,
   use_odometry = false,
+  --是否使用GPS数据
   use_nav_sat = false,
+  --是否使用landmark
   use_landmarks = false,
+  --sensor_msgs/LaserScan类型激光雷达的数量
   num_laser_scans = 1,
+  --sensor_msgs/MultiEchoLaserScan类型激光雷达的数量
   num_multi_echo_laser_scans = 0,
+  --每帧激光分成几份
   num_subdivisions_per_laser_scan = 1,
+  --sensor_msgs/PointCloud2类型激光雷达的数量
   num_point_clouds = 0,
+  --检测tf变换超时时间
   lookup_transform_timeout_sec = 0.2,
 -- 发布submap的频率
   submap_publish_period_sec = 0.3,
--- 位姿发布频率
+-- 位姿发布频率,发布机器人位子及匹配点云频率
   pose_publish_period_sec = 0.01,
 -- 轨迹发布频率
   trajectory_publish_period_sec = 0.2,
+  --激光雷达采样因子
   rangefinder_sampling_ratio = 1.,
   odometry_sampling_ratio = 1.,
   fixed_frame_pose_sampling_ratio = 1.,

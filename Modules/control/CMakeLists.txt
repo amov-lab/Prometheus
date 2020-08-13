@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   mavros
   std_msgs
   std_srvs
+  tf
   tf2_ros
   tf2_eigen
   mavros_msgs

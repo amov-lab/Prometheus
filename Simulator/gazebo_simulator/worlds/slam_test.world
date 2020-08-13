@@ -1,0 +1,134 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="slam_test">
+
+    <!-- 全向无影子光源 -->
+    <light type="directional" name="point_light">
+      <pose>0.0 0 15 0 0 0</pose>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- 初始视角 -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>-13.0 0.0 1.0 0 0.0 0.0</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+    <!-- 地面 -->
+    <model name="logo_ground">
+      <pose>0 0 0.005 0 0 1.57</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>6 40 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://logo_ground/materials/scripts</uri>
+              <uri>model://logo_ground/materials/textures</uri>
+              <name>Cube/logo_ground</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
+    <model name='wall_side'>
+      <static>true</static>
+      <link name="wall_side_left">
+          <pose frame=''>10 5 1.5 0 -0 0</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>20 0.1 3</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>32 0.1 3</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+      <link name="wall_side_right">
+          <pose frame=''>10 -5 1.5 0 -0 0</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>32 0.1 3</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>20 0.1 3</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+      <link name="wall_side_back">
+          <pose frame=''>20 -0 1.5 0 -0 1.57</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>10 0.1 3</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>6 0.1 3</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+    </model>
+ 
+  </world>
+</sdf>
