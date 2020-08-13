@@ -10,17 +10,19 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 
  - **安装及使用：** [Prometheus WIKI](https://github.com/amov-lab/Prometheus/wiki)
 
- - 请添加微信qyp0210进入Prometheus自主无人机交流群
-
  - **配套课程：**    即将推出，敬请期待！ 请关注 [铂贝学院](https://bbs.amovlab.com/plugin.php?id=zhanmishu_video:video)
   
- - **配套硬件：**    即将推出，敬请期待！ 请搜索并关注微信公众号 **阿木实验室**
+ - **配套硬件：**    即将推出，敬请期待！ 请关注 [阿木实验室淘宝店](https://shop142114972.taobao.com/?spm=a230r.7195193.1997079397.2.67d03d8dJQgFRW)　或　[阿木实验室京东旗舰店](https://mall.jd.com/index-10260560.html?from=pc)
  
  - **配套地面站：**    即将推出，敬请期待！ 
  
- - **开发及维护团队：**　[开发成员介绍](https://github.com/amov-lab/Prometheus/wiki/开发成员介绍) 
+ - **开发及维护团队：** [开发成员介绍](https://github.com/amov-lab/Prometheus/wiki/开发成员介绍) 
 
  - **开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
+ 
+ - 关于项目有任何问题，请在本项目issue提问，或者添加微信qyp0210进入Prometheus自主无人机交流群
+  
+ - 想了解更多资讯信息或者寻求项目合作、无人机软硬件定制服务，请搜索并关注微信公众号 **阿木实验室**
 
 ## 功能展示
  - **RGBD相机建图**
