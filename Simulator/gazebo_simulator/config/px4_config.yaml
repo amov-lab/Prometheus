@@ -68,7 +68,7 @@ imu:
 local_position:
   frame_id: "world"
   tf:
-    send: false
+    send: true
     frame_id: "world"
     child_frame_id: "base_link"
     send_fcu: false
