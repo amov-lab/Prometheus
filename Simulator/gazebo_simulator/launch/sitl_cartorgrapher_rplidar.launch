@@ -28,6 +28,7 @@
     <param name="/use_sim_time" value="true" />
 
     <!-- 注意修改激光雷达配置文件 -->
+    <!-- 开启cartographer　slam 需设置　~/Prometheus/Simulator/gazebo_simulator/config/px4_config.yaml 中71行改为false -->
     <node name="cartographer_node" pkg="cartographer_ros"
         type="cartographer_node" args="
             -configuration_directory $(find prometheus_gazebo)/config/config_cartographer
