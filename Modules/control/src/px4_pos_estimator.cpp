@@ -23,6 +23,8 @@
 #include "math_utils.h"
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
+#include <tf/transform_listener.h>
+
 //msg 头文件
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -59,7 +61,6 @@ Eigen::Quaterniond q_laser;
 Eigen::Vector3d Euler_laser; //无人机当前姿态(laser)
 
 geometry_msgs::TransformStamped laser; //当前时刻cartorgrapher发布的数据
-geometry_msgs::TransformStamped laser_last;
 //---------------------------------------T265------------------------------------------
 Eigen::Vector3d pos_drone_t265;
 Eigen::Quaterniond q_t265;
@@ -90,32 +91,28 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr &msg)
 {
     //确定是cartographer发出来的/tf信息
     //有的时候/tf这个消息的发布者不止一个
-    if (msg->transforms[0].header.frame_id == "odom_cartographer")
+    //可改成ＴＦ监听
+    if (msg->transforms[0].header.frame_id == "map" && msg->transforms[0].child_frame_id == "base_link" && input_source == 1)  
     {
         laser = msg->transforms[0];
 
-        float dt_laser;
+        //位置 xy  [将解算的位置从map坐标系转换至world坐标系]
+        pos_drone_laser[0] = laser.transform.translation.x + pos_offset[0];
+        pos_drone_laser[1] = laser.transform.translation.y + pos_offset[1];
+        pos_drone_laser[2] = laser.transform.translation.z + pos_offset[2]; 
 
-        dt_laser = (laser.header.stamp.sec - laser_last.header.stamp.sec) + (laser.header.stamp.nsec - laser_last.header.stamp.nsec) / 10e9;
+         // Read the Quaternion from the Carto Package [Frame: Laser[ENU]]
+         Eigen::Quaterniond q_laser_enu(laser.transform.rotation.w, laser.transform.rotation.x, laser.transform.rotation.y, laser.transform.rotation.z);
 
-        //这里需要做这个判断是因为cartographer发布位置时有一个小bug，ENU到NED不展开讲。
-        if (dt_laser != 0)
-        {
-            //位置 xy  [将解算的位置从laser坐标系转换至ENU坐标系]???
-            pos_drone_laser[0] = laser.transform.translation.x + pos_offset[0];
-            pos_drone_laser[1] = laser.transform.translation.y + pos_offset[1];
-            pos_drone_laser[2] = pos_drone_gazebo[2];
+         q_laser = q_laser_enu;
 
-            // Read the Quaternion from the Carto Package [Frame: Laser[ENU]]
-            Eigen::Quaterniond q_laser_enu(laser.transform.rotation.w, laser.transform.rotation.x, laser.transform.rotation.y, laser.transform.rotation.z);
+         // Transform the Quaternion to Euler Angles
+         Euler_laser = quaternion_to_euler(q_laser);
 
-            q_laser = q_laser_enu;
+        // pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "test.");
 
-            // Transform the Quaternion to Euler Angles
-            Euler_laser = quaternion_to_euler(q_laser);
-        }
-
-        laser_last = laser;
+            //cout << "Position [X Y Z] : " << pos_drone_laser[0] << " [ m ] "<< pos_drone_laser[1]<<" [ m ] "<< pos_drone_laser[2]<<" [ m ] "<<endl;
+            //cout << "Euler [X Y Z] : " << Euler_laser[0] << " [m/s] "<< Euler_laser[1]<<" [m/s] "<< Euler_laser[2]<<" [m/s] "<<endl;
     }
 }
 
@@ -237,6 +234,8 @@ int main(int argc, char **argv)
     // 【订阅】SLAM估计位姿
     ros::Subscriber slam_sub = nh.subscribe<geometry_msgs::PoseStamped>("/slam/pose", 100, slam_cb);
 
+
+
     // 【发布】无人机位置和偏航角 坐标系 ENU系
     //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#??), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
     vision_pub = nh.advertise<geometry_msgs::PoseStamped>("/mavros/vision_pose/pose", 100);
@@ -299,6 +298,8 @@ void send_to_fcu()
         vision.pose.position.x = pos_drone_laser[0];
         vision.pose.position.y = pos_drone_laser[1];
         vision.pose.position.z = pos_drone_laser[2];
+        //目前为二维雷达仿真情况，故z轴使用其他来源
+        vision.pose.position.z = pos_drone_gazebo[2];
 
         vision.pose.orientation.x = q_laser.x();
         vision.pose.orientation.y = q_laser.y();
