@@ -163,7 +163,12 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
         double goal_cost = 0;
         {
             double angle_er = angle_error(angle_i, goal_heading);
-            goal_cost = goalWeight * angle_er * dist_att;
+            float goal_gain;
+            if(dist_att>3.0) {goal_gain = 3.0;}
+            else if(dist_att<0.5) {goal_gain = 0.5;} 
+            else{goal_gain = dist_att;}
+
+            goal_cost = goalWeight * angle_er * goal_gain;
         }
         Hdata[i] += (prev_cost + goal_cost);
     }
@@ -253,14 +258,14 @@ void VFH::generate_voxel_data(double angle_cen, double angle_range, double val) 
     int cnt_max = find_Hcnt(angle_max);
     if(cnt_min>cnt_max){
         for(int i=cnt_min; i<Hcnt; i++){
-            Hdata[i] = val;
+            Hdata[i] =+ val;
         }
         for(int i=0;i<cnt_max; i++){
-            Hdata[i]=val;
+            Hdata[i] +=val;
         }
     }else if(cnt_max>=cnt_min){
     for(int i=cnt_min; i<=cnt_max; i++){
-        Hdata[i] = val;
+        Hdata[i] += val;
     }
     }
      
