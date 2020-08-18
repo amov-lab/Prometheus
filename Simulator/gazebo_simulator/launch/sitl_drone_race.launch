@@ -13,6 +13,7 @@
       <arg name="x" value="$(arg x)"/>
       <arg name="y" value="$(arg y)"/>
       <arg name="z" value="$(arg z)"/>
+      <arg name="input_source" value="4"/>
     </include>
 
 	<arg name="visualization" default="true"/>
@@ -21,5 +22,6 @@
     </group>
     <node pkg="ORB_SLAM2" type="RGBD_Publish" name="RGBD_Publish" args="$(find prometheus_slam)/config/Vocabulary/ORBvoc.txt $(find prometheus_slam)/config/Examples/RGB-D/D435i_simu.yaml">
 	</node>	
+
 </launch>
 
