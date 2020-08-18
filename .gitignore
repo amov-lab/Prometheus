@@ -33,3 +33,5 @@ dist/
 /datasets
 /models
 
+ORBvoc.txt
+
