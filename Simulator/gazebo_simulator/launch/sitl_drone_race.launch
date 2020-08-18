@@ -15,5 +15,11 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+    </group>
+    <node pkg="ORB_SLAM2" type="RGBD_Publish" name="RGBD_Publish" args="$(find prometheus_slam)/config/Vocabulary/ORBvoc.txt $(find prometheus_slam)/config/Examples/RGB-D/D435i_simu.yaml">
+	</node>	
 </launch>
 
