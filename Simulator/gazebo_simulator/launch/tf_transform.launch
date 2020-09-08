@@ -33,7 +33,7 @@
         <!-- 2Dlidar_link是2D激光雷达坐标系 -->
         <!-- 机体系与2Dlidar_link的坐标转换关系见 P300_2Dlidar.sdf -->
   	<node pkg="tf" type="static_transform_publisher" name="tf_2Dlidar"
-          	args="0 0 0.2 0 0 0 base_link rplidar_link 100"/>
+          	args="0 0 0.2 0 0 0 base_link lidar_link 100"/>
 
         <!-- ORB_SLAM的地图坐标系与map坐标系之间的转换关系 -->
   	<node pkg="tf" type="static_transform_publisher" name="tf_slam2map"
