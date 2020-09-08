@@ -253,24 +253,24 @@ int main(int argc, char **argv)
             // 设定yaw_ref=999时，切换offboard模式，并解锁
             if(Command_Now.Reference_State.yaw_ref == 999)
             {
-                while(_DroneState.mode != "OFFBOARD")
+                if(_DroneState.mode != "OFFBOARD")
                 {
                     _command_to_mavros.mode_cmd.request.custom_mode = "OFFBOARD";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Setting to OFFBOARD Mode...");
-                    //执行回调函数
-                    ros::spinOnce();
-                    ros::Duration(0.5).sleep();
+                    // //执行回调函数
+                    // ros::spinOnce();
+                    // ros::Duration(0.5).sleep();
                 }
 
-                while(!_DroneState.armed)
+                if(!_DroneState.armed)
                 {
                     _command_to_mavros.arm_cmd.request.value = true;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Arming...");
-                    //执行回调函数
-                    ros::spinOnce();
-                    ros::Duration(0.5).sleep();
+                    // //执行回调函数
+                    // ros::spinOnce();
+                    // ros::Duration(0.5).sleep();
                 }
             }
         
@@ -318,21 +318,15 @@ int main(int argc, char **argv)
                 Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2]; //rad
             }
 
-            //如果距离起飞高度小于10厘米，则直接上锁并切换为手动模式；
+            //如果距离起飞高度小于10厘米，则直接切换为land模式；
             if(abs(_DroneState.position[2] - Takeoff_position[2]) < Disarm_height)
             {
                 if(_DroneState.mode == "OFFBOARD")
                 {
-                    //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁
-                    _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+                    //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
+                    _command_to_mavros.mode_cmd.request.custom_mode = "AUTO.LAND";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Land: switch to MANUAL flight mode");
-                }
-
-                if(_DroneState.armed)
-                {
-                    _command_to_mavros.arm_cmd.request.value = false;
-                    _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "LAND: inter AUTO LAND filght mode");
                 }
             }
 
