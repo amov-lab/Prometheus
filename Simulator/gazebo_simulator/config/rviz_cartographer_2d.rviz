@@ -75,7 +75,7 @@ Visualization Manager:
           Value: true
         realsense_camera_link:
           Value: true
-        rplidar_link:
+        lidar_link:
           Value: true
         world:
           Value: true
@@ -94,7 +94,7 @@ Visualization Manager:
                 {}
               realsense_camera_link:
                 {}
-              rplidar_link:
+              lidar_link:
                 {}
             map_ned:
               {}
