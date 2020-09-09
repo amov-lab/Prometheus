@@ -13,6 +13,7 @@ int main(int argc, char** argv)
   // ros::NodeHandle node;
   ros::NodeHandle nh("~");
 
+  // 命名不规范
   PotentialFiledPlanner apl;
   apl.init(nh);
 
