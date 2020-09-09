@@ -7,60 +7,59 @@
 namespace local_planner
 {
 
-void PotentialFiledPlanner::init(ros::NodeHandle& nh){
-
-
-
+// 局部规划算法 初始化函数
+void LocalPlanningClass::init(ros::NodeHandle& nh)
+{
     // set mode
     flight_type_ = FLIGHT_TYPE::MANUAL_GOAL;
 
-    // 参数读取
-    nh.param("local_planning/is_simulation", is_simulation, 0);
-    nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
-    nh.param("planning/lidar_model", lidar_model, 0);
 
+    // 发布本节点提示消息
+    message_pub = node_.advertise<prometheus_msgs::Message>("/prometheus/message/local_planner", 10);
+
+    // 参数读取
+    // 最大速度
+    nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
+    // 激光雷达模型,0代表3d雷达,1代表2d雷达
+    // 3d雷达输入类型为 <sensor_msgs::PointCloud2> 2d雷达输入类型为 <sensor_msgs::LaserScan>
+    nh.param("planning/lidar_model", lidar_model, 0);
     // 根据参数 planning/algorithm_mode 选择局部避障算法: 0为APF,1为VFH
     nh.param("planning/algorithm_mode", algorithm_mode, 0);
+
+    // 选择避障算法
     if(algorithm_mode==0){
         local_alg_ptr.reset(new APF);
         local_alg_ptr->init(nh);
-
-        ROS_INFO("---APF!---");
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "APF init.");
     }
     else if(algorithm_mode==1)
     {
         local_alg_ptr.reset(new VFH);
         local_alg_ptr->init(nh);
-
-        ROS_INFO("---VFH!---");
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "VFH init.");
     }
-    else{}
     
-    sensor_msgs::PointCloud2ConstPtr init_local_map(new sensor_msgs::PointCloud2());
-    local_map_ptr_ = init_local_map;
-    
-    // ROS_INFO("---init sub and pub!---");
-    
+        
     // 订阅目标点
-    waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &PotentialFiledPlanner::waypointCallback, this);
+    waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &LocalPlanningClass::waypointCallback, this);
 
     // 订阅无人机当前位置
-    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &PotentialFiledPlanner::odomCallback, this);
+    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &LocalPlanningClass::odomCallback, this);
 
     // 订阅传感器点云信息,该话题名字可在launch文件中任意指定
     if (lidar_model == 0)
     {
-        local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1, &PotentialFiledPlanner::localcloudCallback, this);
-        ROS_INFO("---3DLIDAR!---");
+        local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1, &LocalPlanningClass::localcloudCallback, this);
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Subscribe to <sensor_msgs::PointCloud2>.");
     }else if (lidar_model == 1)
     {
-        local_point_clound_sub_ = node_.subscribe<sensor_msgs::LaserScan>("/prometheus/planning/local_pcl", 1, &PotentialFiledPlanner::laserscanCallback, this);
-        ROS_INFO("---2DLIDAR!---");
+        local_point_clound_sub_ = node_.subscribe<sensor_msgs::LaserScan>("/prometheus/planning/local_pcl", 1, &LocalPlanningClass::laserscanCallback, this);
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Subscribe to <sensor_msgs::LaserScan>.");
     }
     
 
     // 订阅节点开始运行指令
-    swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/local_planner", 10, &PotentialFiledPlanner::switchCallback, this);  
+    swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/local_planner", 10, &LocalPlanningClass::switchCallback, this);  
 
     // 发布规划结果 : 期望速度
     px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
@@ -68,21 +67,19 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
     // 发布停止紧急指令(无人机离障碍物太近)
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
 
-    // 发布本节点提示消息
-    message_pub = node_.advertise<prometheus_msgs::Message>("/prometheus/message/local_planner", 10);
-
     // 定时函数,执行周期为1Hz
-    exec_timer_ = node_.createTimer(ros::Duration(1.0), &PotentialFiledPlanner::execFSMCallback, this, false);
+    exec_timer_ = node_.createTimer(ros::Duration(1.0), &LocalPlanningClass::execFSMCallback, this, false);
 
-    /*   bool  state    */
+    // 地图初始化
+    sensor_msgs::PointCloud2ConstPtr init_local_map(new sensor_msgs::PointCloud2());
+    local_map_ptr_ = init_local_map;
+    // 状态参数初始化
     trigger_=false;
     have_goal_=false;
     has_point_map_=false;
     have_odom_=false;
-    //ROS_INFO("---planning_fsm: init finished!---");
 
     // 规划结果可视化
-    // ROS_INFO("---init visualization!---");
     visualization_.reset(new PlanningVisualization(nh));
     local_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/local_map_marker",  10);  
 
@@ -91,7 +88,7 @@ void PotentialFiledPlanner::init(ros::NodeHandle& nh){
 }
 
 
-void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
+void LocalPlanningClass::execFSMCallback(const ros::TimerEvent& e){
     static int exect_num=0;
     exect_num++;
 
@@ -145,12 +142,15 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     }
 
     local_alg_ptr->set_odom(odom_);
+    // 返回值为2时,飞机不安全(距离障碍物太近)
     int planner_state = local_alg_ptr->compute_force(end_pt_, start_pt_, desired_vel);
 
+    // 
     static int fix_pub = 0;
-    if (fix_pub==int(2.0/0.05)){
+    if (fix_pub==int(2.0/0.05))
+    {
         if(planner_state==2){
-        // dangerous
+            // dangerous
             replan.data = 1;
             replan_cmd_Pub.publish(replan);
         } else if(planner_state==1){
@@ -167,13 +167,12 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
     {
         desired_vel = desired_vel / desired_vel.norm() * max_planning_vel;  // the max velocity is max_planning_vel
     }
-    if(exect_num==10){
-        //printf("local planning desired vel: [%f, %f, %f]\n", desired_vel(0), desired_vel(1), desired_vel(2));
+
+    if(exect_num==20)
+    {
         char sp[100];
         sprintf(sp, "local planning desired vel: [%f, %f, %f]", desired_vel(0), desired_vel(1), desired_vel(2));
-
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,sp);
-
         exect_num=0;
     }
     
@@ -189,7 +188,7 @@ void PotentialFiledPlanner::execFSMCallback(const ros::TimerEvent& e){
 
 }
 
-void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel)
+void LocalPlanningClass::generate_cmd(Eigen::Vector3d desired_vel)
 {
     // 发布控制指令
     px4_cmd.x = desired_vel(0);
@@ -203,8 +202,7 @@ void PotentialFiledPlanner::generate_cmd(Eigen::Vector3d desired_vel)
 }
 
 //  the goal is in the world frame. 
-void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg){
-    // cout << "[waypointCallback]: Triggered!" << endl;
+void LocalPlanningClass::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg){
 
     if (msg->pose.position.z < 0.1)  // the minimal goal height 
         return;
@@ -225,11 +223,9 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
     else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)
     {}
     
-    ROS_INFO("---planning_fsm: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
-                                                            end_pt_(1), 
-                                                            end_pt_(2));
+
     char sp[100];
-    sprintf(sp, "---planning_fsm: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
+    sprintf(sp, "get waypoint: [ %f, %f, %f]!---", end_pt_(0),
                                                             end_pt_(1), 
                                                             end_pt_(2));
 
@@ -245,14 +241,14 @@ void PotentialFiledPlanner::waypointCallback(const geometry_msgs::PoseStampedCon
 
 
 
-void PotentialFiledPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
+void LocalPlanningClass::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     odom_ = *msg;
     odom_.header.frame_id = "map";
     have_odom_ = true;
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
 }
 
-void PotentialFiledPlanner::laserscanCallback(const sensor_msgs::LaserScanConstPtr &msg)
+void LocalPlanningClass::laserscanCallback(const sensor_msgs::LaserScanConstPtr &msg)
 {
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
@@ -268,7 +264,6 @@ void PotentialFiledPlanner::laserscanCallback(const sensor_msgs::LaserScanConstP
 
     _pointcloud.clear();
     pcl::PointXYZ newPoint;
-    newPoint.z = 0.0;
     double newPointAngle;
 
     int beamNum = _laser_scan->ranges.size();
@@ -277,12 +272,13 @@ void PotentialFiledPlanner::laserscanCallback(const sensor_msgs::LaserScanConstP
         newPointAngle = _laser_scan->angle_min + _laser_scan->angle_increment * i;
         newPoint.x = _laser_scan->ranges[i] * cos(newPointAngle);
         newPoint.y = _laser_scan->ranges[i] * sin(newPointAngle);
+        newPoint.z = odom_.pose.pose.position.z;
         _pointcloud.push_back(newPoint);
     }
 
     pcl_ptr = _pointcloud.makeShared();
 
-    latest_local_pcl_ = _pointcloud;
+    latest_local_pcl_ = *pcl_ptr;
     has_point_map_ = true;
 
 
@@ -292,7 +288,7 @@ void PotentialFiledPlanner::laserscanCallback(const sensor_msgs::LaserScanConstP
 }
 
 //  the local cloud is in the local frame. 
-void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
+void LocalPlanningClass::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
 {
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
@@ -306,8 +302,6 @@ void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2Con
     pcl::fromROSMsg(*msg, latest_local_pcl_);
     has_point_map_ = true;
 
-    localframe2global();
-
     visualization_msgs::Marker m;
     getOccupancyMarker(m, 0, Eigen::Vector4d(0, 0.5, 0.5, 1.0));
     local_map_marker_Pub.publish(m);
@@ -316,10 +310,9 @@ void PotentialFiledPlanner::localcloudCallback(const sensor_msgs::PointCloud2Con
 
 
 
-
-
-void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
-    m.header.frame_id = "map";
+void LocalPlanningClass::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
+    // 坐标系可能有问题
+    m.header.frame_id = "world";
     m.id = id;
     m.type = visualization_msgs::Marker::CUBE_LIST;
     m.action = visualization_msgs::Marker::MODIFY;
@@ -361,8 +354,10 @@ void PotentialFiledPlanner::getOccupancyMarker(visualization_msgs::Marker &m, in
     }
 }
 
-void PotentialFiledPlanner::switchCallback(const std_msgs::Bool::ConstPtr &msg){
+void LocalPlanningClass::switchCallback(const std_msgs::Bool::ConstPtr &msg){
     trigger_= msg->data;
+
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "local planner trigger.");
 }
 
 

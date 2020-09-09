@@ -1,11 +1,8 @@
 #ifndef LOCAL_PLANNING_ALG
 #define LOCAL_PLANNING_ALG
 
-
 #include <Eigen/Eigen>
 #include <iostream>
-// #include <algorithm>
-// #include <iostream>
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
@@ -16,10 +13,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-// #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
-
-// #include "tools.h"
 
 using namespace std;
 
