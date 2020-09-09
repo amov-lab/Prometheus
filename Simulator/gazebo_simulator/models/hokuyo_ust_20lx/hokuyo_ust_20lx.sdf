@@ -28,9 +28,8 @@
         <ray>
           <scan>
             <horizontal>
-              <samples>1080</samples>
-              <!-- 角分辨率为0.25度 -->
-              <resolution>0.25</resolution>
+              <samples>1081</samples>
+              <resolution>1</resolution>
               <!-- UST-20LX 视场为270度 -->
               <min_angle>-2.3562</min_angle>
               <max_angle>2.3562</max_angle>
@@ -38,7 +37,7 @@
           </scan>
           <range>
             <min>0.06</min>
-            <max>10</max>
+            <max>20</max>
             <resolution>0.01</resolution>
           </range>
           <noise>
