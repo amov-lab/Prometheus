@@ -30,10 +30,10 @@
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
 		<param name="apf/inflate_distance" value="0.4" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="apf/obs_distance" value="2.0" type="double"/>  
+		<param name="apf/obs_distance" value="5.0" type="double"/>  
 		<!-- 增益 -->
 		<param name="apf/k_push" value="2.0" type="double"/>
-		<param name="apf/k_att" value="0.5" type="double"/>
+		<param name="apf/k_att" value="1.0" type="double"/>
 		<!-- 安全距离，距离障碍物在安全距离内，k_push自动增大 -->
 		<param name="apf/min_dist" value="0.3" type="double"/>
 		<!-- 最大吸引距离 -->
