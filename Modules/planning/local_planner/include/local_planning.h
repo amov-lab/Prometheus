@@ -17,15 +17,16 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Odometry.h>
+#include <sensor_msgs/LaserScan.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-// #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "prometheus_msgs/PositionReference.h"
 #include "prometheus_msgs/Message.h"
 #include <std_msgs/Bool.h>
+
 
 #include "apf.h"
 #include "local_planning.h"
@@ -69,6 +70,7 @@ private:
     bool trigger_, have_goal_, has_point_map_;
     bool have_odom_;
     int flight_type_;
+    int lidar_model;
     double max_planning_vel;
     Eigen::Vector3d start_pt_, start_vel_,  end_pt_, end_vel_;
     pcl::PointCloud<pcl::PointXYZ> latest_local_pcl_;
@@ -77,6 +79,7 @@ private:
     Eigen::Vector3d desired_vel;
 
     sensor_msgs::PointCloud2ConstPtr  local_map_ptr_, global_map_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_ptr;
 
     void generate_cmd(Eigen::Vector3d desired_vel);
 
@@ -89,6 +92,7 @@ private:
   
     void waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg);
     void localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
+    void laserscanCallback(const sensor_msgs::LaserScanConstPtr &msg);
     void odomCallback(const nav_msgs::OdometryConstPtr &msg);
     void execFSMCallback(const ros::TimerEvent& e);
     void switchCallback(const std_msgs::Bool::ConstPtr &msg);

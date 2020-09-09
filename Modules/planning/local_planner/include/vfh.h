@@ -77,6 +77,7 @@ public:
     virtual void set_odom(nav_msgs::Odometry cur_odom);
     
     virtual void set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr);
+    virtual void set_local_map_pcl(pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_ptr);
     
     virtual int compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel);
 

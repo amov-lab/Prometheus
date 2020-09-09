@@ -25,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: lidar scan result
+    SyncSource: PointCloud2
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -62,19 +62,19 @@ Visualization Manager:
           Value: false
         base_link_frd:
           Value: false
+        lidar_link:
+          Value: false
         map:
           Value: false
         map_ned:
           Value: false
+        map_slam:
+          Value: true
         odom:
-          Value: false
-        odom_cartographer:
           Value: false
         odom_ned:
           Value: false
         realsense_camera_link:
-          Value: false
-        lidar_link:
           Value: false
         world:
           Value: true
@@ -90,14 +90,14 @@ Visualization Manager:
               {}
             base_link_frd:
               {}
-            realsense_camera_link:
-              {}
             lidar_link:
+              {}
+            realsense_camera_link:
               {}
           map:
             map_ned:
               {}
-            odom_cartographer:
+            map_slam:
               {}
       Update Interval: 0
       Value: true
@@ -190,7 +190,7 @@ Visualization Manager:
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
-      Enabled: false
+      Enabled: true
       Name: Ground_Truth
     - Class: rviz/Group
       Displays:
@@ -338,6 +338,36 @@ Visualization Manager:
           Size (m): 0.009999999776482582
           Style: Flat Squares
           Topic: /realsense_plugin/camera/local_pointclouds
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/LaserScan
+          Color: 255; 255; 255
+          Color Transformer: Intensity
+          Decay Time: 0
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Max Intensity: 0
+          Min Color: 0; 0; 0
+          Min Intensity: 0
+          Name: LaserScan
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 5
+          Size (m): 0.009999999776482582
+          Style: Points
+          Topic: /prometheus/sensors/2Dlidar_scan
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -536,25 +566,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 14.03232192993164
+      Distance: 5.6063432693481445
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 8.051712036132812
-        Y: -1.0353809595108032
-        Z: 8.10816764831543
+        X: 8.069540977478027
+        Y: -3.490466594696045
+        Z: 8.11489486694336
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7897970676422119
+      Pitch: 0.5347973108291626
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.272035121917725
+      Yaw: 0.008849983103573322
     Saved: ~
 Window Geometry:
   Displays:
@@ -572,5 +602,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1440
-  X: 1210
-  Y: 181
+  X: 1120
+  Y: 100
