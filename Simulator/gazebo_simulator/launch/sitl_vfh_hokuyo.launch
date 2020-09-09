@@ -27,20 +27,15 @@
 		<!-- 最大速度，设的越小越安全 -->
 		<param name="planning/max_planning_vel" value="0.5" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
-		<param name="vfh/inflate_distance" value="0.3" type="double"/>
+		<param name="vfh/inflate_distance" value="0.5" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="vfh/obs_distance" value="4.0" type="double"/>  
+		<param name="vfh/obs_distance" value="2.0" type="double"/>  
 		<!-- weight -->
 		<param name="vfh/obstacle_weight" value="8.0" type="double"/>
 		<param name="vfh/goalWeight" value="0.2" type="double"/>
 		<param name="vfh/prevWeight" value="0.05" type="double"/>
 		<!-- 最大吸引距离 -->
 		<param name="vfh/max_att_dist" value="5" type="double"/>
-		<!-- 地面高度，不考虑低于地面高度的障碍物 -->
-		<!-- <param name="apf/ground_height" value="0.3" type="double"/> -->
-		<!-- 地面安全高度，小于该高度，会产生向上推力 -->
-		<!-- <param name="apf/ground_safe_height" value="0.3" type="double"/> -->
-		<!-- 停止距离，小于该距离，停止自动飞行 -->
 		<param name="vfh/safe_distance" value="0.2" type="double"/>
 	</node>	
 

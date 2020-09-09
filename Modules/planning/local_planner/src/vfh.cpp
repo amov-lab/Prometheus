@@ -49,7 +49,6 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     Eigen::Vector3d p3d;
     Eigen::Vector3d p3d_gloabl_rot;
     ros::Time begin_collision = ros::Time::now();
-    // ROS_INFO("point size: %d", latest_local_pcl_.points.size());
 
     // 吸引
     Eigen::Vector3d odom2goal = goal - current_odom;
@@ -203,7 +202,8 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     return local_planner_state;
 }
 // 寻找最小
-int VFH::find_optimization_path(void){
+int VFH::find_optimization_path(void)
+{
     int bset_ind = 10000;
     double best_cost = 100000;
     for(int i=0; i<Hcnt; i++){
@@ -220,10 +220,7 @@ void VFH::init(ros::NodeHandle& nh){
     nh.param("vfh/inflate_distance", inflate_distance, 0.20);  // 感知障碍物距离
     nh.param("vfh/obs_distance", obs_distance, 3.0);  // 感知障碍物距离
 
-    // nh.param("apf/min_dist", min_dist, 0.2);                            // 最小壁障距离
     nh.param("vfh/max_att_dist", max_att_dist, 5.0);             // 最大吸引距离
-    // nh.param("apf/ground_height", ground_height, 0.1);  // 地面高度
-    // nh.param("apf/ground_safe_height", ground_safe_height, 0.2);  // 地面安全距离
     nh.param("vfh/safe_distance", safe_distance, 0.2); // 安全停止距离
 
     nh.param("vfh/goalWeight", goalWeight, 0.2); // 目标权重

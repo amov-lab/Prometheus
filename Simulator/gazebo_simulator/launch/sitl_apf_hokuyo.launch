@@ -30,10 +30,10 @@
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
 		<param name="apf/inflate_distance" value="0.4" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="apf/obs_distance" value="5.0" type="double"/>  
+		<param name="apf/obs_distance" value="2.0" type="double"/>  
 		<!-- 增益 -->
 		<param name="apf/k_push" value="2.0" type="double"/>
-		<param name="apf/k_att" value="0.4" type="double"/>
+		<param name="apf/k_att" value="0.5" type="double"/>
 		<!-- 安全距离，距离障碍物在安全距离内，k_push自动增大 -->
 		<param name="apf/min_dist" value="0.3" type="double"/>
 		<!-- 最大吸引距离 -->
@@ -43,7 +43,7 @@
 		<!-- 地面安全高度，小于该高度，会产生向上推力 -->
 		<param name="apf/ground_safe_height" value="0.3" type="double"/>
 		<!-- 停止距离，小于该距离，停止自动飞行 -->
-		<param name="apf/safe_distance" value="0.01" type="double"/>
+		<param name="apf/safe_distance" value="0.1" type="double"/>
 	</node>	
 
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
