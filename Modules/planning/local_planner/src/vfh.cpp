@@ -13,6 +13,11 @@ void VFH::set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr){
     begin_update_map = ros::Time::now();
     has_local_map_=true;
 }
+void VFH::set_local_map_pcl(pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_ptr)
+{
+    latest_local_pcl_ = *pcl_ptr;
+    has_local_map_=true;
+}
 
 
 void VFH::set_odom(nav_msgs::Odometry cur_odom){

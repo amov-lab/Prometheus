@@ -1,0 +1,61 @@
+<launch>
+    <!-- Launch Gazebo Simulation -->
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="-10.0"/>
+    <arg name="z" default="0"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
+	<arg name="model" default="P300_hokuyo_2Dlidar"/>
+    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+	  <arg name="world" value="$(arg world)"/>
+	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
+    </include>
+
+	<!-- 设定局部点云话题-->
+	<arg name="topic_of_local_pcl" default="/prometheus/sensors/2Dlidar_scan"/>
+	<!-- 启动局部规划算法 -->
+	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
+		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
+		<!-- 选择算法 0代表APF,1代表VFH -->
+		<param name="planning/algorithm_mode" value="1" type="int"/>
+		<!-- 激光雷达类型 -->
+		<param name="planning/lidar_model" value="1" type="int"/>
+		<!-- 最大速度，设的越小越安全 -->
+		<param name="planning/max_planning_vel" value="0.5" type="double"/>
+		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
+		<param name="vfh/inflate_distance" value="0.3" type="double"/>
+		<!-- 感知距离，只考虑感知距离内的障碍物 -->
+		<param name="vfh/obs_distance" value="4.0" type="double"/>  
+		<!-- weight -->
+		<param name="vfh/obstacle_weight" value="8.0" type="double"/>
+		<param name="vfh/goalWeight" value="0.2" type="double"/>
+		<param name="vfh/prevWeight" value="0.05" type="double"/>
+		<!-- 最大吸引距离 -->
+		<param name="vfh/max_att_dist" value="5" type="double"/>
+		<!-- 地面高度，不考虑低于地面高度的障碍物 -->
+		<!-- <param name="apf/ground_height" value="0.3" type="double"/> -->
+		<!-- 地面安全高度，小于该高度，会产生向上推力 -->
+		<!-- <param name="apf/ground_safe_height" value="0.3" type="double"/> -->
+		<!-- 停止距离，小于该距离，停止自动飞行 -->
+		<param name="vfh/safe_distance" value="0.2" type="double"/>
+	</node>	
+
+	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
+	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
+	</node>
+
+	<!-- 启动rviz,设为false可关闭 -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <!-- obstacle.world 真实点云 -->
+        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
+	    </node>
+    </group>
+</launch>
