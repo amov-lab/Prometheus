@@ -1,9 +1,9 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
-    <arg name="x" default="0.0"/>
-    <arg name="y" default="-10.0"/>
+    <arg name="x" default="-3.0"/>
+    <arg name="y" default="-0.0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle_HTWY.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
 	<arg name="model" default="P300_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
