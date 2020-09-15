@@ -69,7 +69,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
   Eigen::Vector3i end_index;
   double time_to_goal;
   if(Occupy_map_ptr->getOccupancy(end_pt)){
-      // printf("Astar search:  end point is occupied, pls reset the goal~\n");
+      pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "end point is occupied, pls reset the goal");
       return NO_PATH;
   }
   goal_pos = end_pt;
@@ -211,7 +211,6 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
                 if (use_node_num_ == allocate_num_)
                 {
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "a star run out of memory.\n");
-                    std::cout << "a star run out of memory." << std::endl;
                     return NO_PATH;
                 }
             }
@@ -240,6 +239,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 // std::cout << "open set empty, no path!" << std::endl;
 //   cout << "use node num: " << use_node_num_ << endl;
 //   cout << "iter num: " << iter_num_ << endl;
+  pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "open set empty, no path!");
   return NO_PATH;
 
 }
