@@ -80,6 +80,10 @@ add_executable(planning_mission planning_mission/planning_mission.cpp)
 add_dependencies(planning_mission prometheus_mission_gencpp)
 target_link_libraries(planning_mission ${catkin_LIBRARIES})
 
+add_executable(pub_goal planning_mission/pub_goal.cpp)
+add_dependencies(pub_goal pub_goal_gencpp)
+target_link_libraries(pub_goal ${catkin_LIBRARIES})
+
 add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
 add_dependencies(waypoint_tracking prometheus_mission_gencpp)
 target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
