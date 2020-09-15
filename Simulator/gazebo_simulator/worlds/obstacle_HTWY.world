@@ -11,6 +11,13 @@
       <uri>model://ground_plane</uri>
     </include>
 
+    <!-- 初始视角 -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>-7.0 0.0 18.0 0 1.3 0.0</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
 
     <!-- 地面 -->
     <model name="logo_ground">
@@ -199,7 +206,7 @@
         </collision>
       </link>
       <link name='pillar_3'>
-        <pose frame=''>0.5 -0.2 0.75 0 -0 0</pose>
+        <pose frame=''>0.7 -0.4 0.75 0 -0 0</pose>
         <visual name='visual'>
           <geometry>
             <cylinder>

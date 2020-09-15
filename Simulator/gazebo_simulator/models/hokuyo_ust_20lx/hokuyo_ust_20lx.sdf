@@ -54,7 +54,7 @@
         <always_on>1</always_on>
         <!-- 更新频率 20HZ -->
         <update_rate>20</update_rate>
-        <visualize>true</visualize>
+        <visualize>false</visualize>
       </sensor>
     </link>
   </model>
