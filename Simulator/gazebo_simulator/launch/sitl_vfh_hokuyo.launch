@@ -3,7 +3,7 @@
     <arg name="x" default="-3.0"/>
     <arg name="y" default="-0.0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle_HTWY.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
 	<arg name="model" default="P300_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
@@ -15,7 +15,6 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-	<!-- 设定局部点云话题-->
 	<arg name="topic_of_local_pcl" default="/prometheus/sensors/2Dlidar_scan"/>
 	<!-- 启动局部规划算法 -->
 	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
@@ -25,18 +24,17 @@
 		<!-- 激光雷达类型 -->
 		<param name="planning/lidar_model" value="1" type="int"/>
 		<!-- 最大速度，设的越小越安全 -->
-		<param name="planning/max_planning_vel" value="0.5" type="double"/>
+		<param name="planning/max_planning_vel" value="0.3" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
-		<param name="vfh/inflate_distance" value="0.5" type="double"/>
+		<param name="vfh/inflate_distance" value="0.6" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="vfh/obs_distance" value="2.0" type="double"/>  
+		<param name="vfh/sensing_distance" value="5" type="double"/>  
 		<!-- weight -->
-		<param name="vfh/obstacle_weight" value="8.0" type="double"/>
-		<param name="vfh/goalWeight" value="0.2" type="double"/>
-		<param name="vfh/prevWeight" value="0.05" type="double"/>
-		<!-- 最大吸引距离 -->
-		<param name="vfh/max_att_dist" value="5" type="double"/>
-		<param name="vfh/safe_distance" value="0.2" type="double"/>
+		<param name="vfh/obstacle_weight" value="10.0" type="double"/>
+		<param name="vfh/goalWeight" value="0.1" type="double"/>
+		<param name="vfh/safe_distance" value="0.01" type="double"/>
+		<!-- 直方图个数 -->
+		<param name="vfh/h_res" value="360" type="int"/>
 	</node>	
 
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
