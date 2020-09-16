@@ -6,7 +6,7 @@
     </include>
     <include>
       <uri>model://hokuyo_ust_20lx</uri>
-      <pose>0 0 0.2 0 0 0</pose>
+      <pose>0 0 0.3 0 0 0</pose>
     </include>
     <joint name="2Dlidar_joint" type="fixed">
       <child>hokuyo_ust_20lx::link</child>

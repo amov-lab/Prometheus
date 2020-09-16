@@ -22,6 +22,9 @@ void Astar::setParam(ros::NodeHandle& nh)
   nh.param("astar/resolution_astar", resolution_, 0.2);  // 地图分辨率
   nh.param("astar/lambda_heu", lambda_heu_, 2.0);  // 加速引导
   nh.param("astar/allocate_num", allocate_num_, 100000); //最大节点数
+  nh.param("astar/is_2D", is_2D, 0);  // 1代表2D平面规划及搜索,0代表3D
+  nh.param("astar/2D_fly_height", fly_height, 1.5);  // 2D规划时,定高高度
+  
   tie_breaker_ = 1.0 + 1.0 / allocate_num_;
 
 }
@@ -100,11 +103,6 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 
     if (reach_end)
     {
-      // std::cout << "[Astar]:---------------------- " << use_node_num_ << std::endl;
-      // cout << "use node num: " << use_node_num_ << endl;
-      // cout << "iter num: " << iter_num_ << endl;
-
-    
       terminate_node = cur_node;
       retrievePath(terminate_node);
       has_path_ = true;
@@ -129,23 +127,31 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 
     /* ---------- expansion loop ---------- */
     for (double dx = -resolution_; dx <= resolution_ + 1e-3; dx += resolution_)
+    {
       for (double dy = -resolution_; dy <= resolution_ + 1e-3; dy += resolution_)
+      {
         for (double dz = -resolution_; dz <= resolution_ + 1e-3; dz += resolution_)
         {
             
-            d_pos << dx, dy, dz;
+          d_pos << dx, dy, dz;
 
-            if (d_pos.norm() < 1e-3)
-                continue;
+          if (is_2D == 1)
+          {
+            d_pos(2) = 0.0;
+          }
 
-            pro_pos = cur_pos + d_pos;
+          if (d_pos.norm() < 1e-3)
+          {
+            continue;
+          }
+              
+          pro_pos = cur_pos + d_pos;
 
           /* ---------- check if in feasible space ---------- */
-        //   /* inside map range */
           if (pro_pos(0) <= origin_(0) || pro_pos(0) >= map_size_3d_(0) || pro_pos(1) <= origin_(1) ||
               pro_pos(1) >= map_size_3d_(1) || pro_pos(2) <= origin_(2) || pro_pos(2) >= map_size_3d_(2))
           {
-            // cout << "outside map" << endl;
+            pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "outside map.");
             continue;
           }
 
@@ -154,26 +160,12 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
             Eigen::Vector3i pro_id = d_pos_id + cur_node->index;
 
             /* not in close set */
-            // Eigen::Vector3i pro_id = posToIndex(pro_pos);
-
             Eigen::Vector3i last_pro_id = posToIndex(cur_pos);
-            
-
-            // {
-                //  printf("id == 8,  pro_id [2] %d, dpos(2): %f\n", pro_id(2), dz);
-                // printf("cur_pos: [%f, %f, %f], pro_pos: [%f,  %f,  %f], cur_pos_id: [%d, %d, %d], pro_id: [%d, %d, %d]\n", 
-                // cur_pos(0), cur_pos(1), cur_pos(2), 
-                // pro_pos(0), pro_pos(1), pro_pos(2),
-                // last_pro_id(0), last_pro_id(1), last_pro_id(2),
-                // pro_id(0), pro_id(1), pro_id(2));
-            //  }
 
             NodePtr pro_node = expanded_nodes_.find(pro_id);
 
             if (pro_node != NULL && pro_node->node_state == IN_CLOSE_SET)
             {
-                // if(pro_id(2)==8)
-                //      cout << "in closeset" << endl;
                 continue;
             }
 
@@ -231,14 +223,15 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
                     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "error type in searching.\n");
                 }
               }
+          }
+      }
+    }       
+  
+  
+  
+  
+  }
 
-            }       
-    }
-
-//   /* ---------- open set empty, no path ---------- */
-// std::cout << "open set empty, no path!" << std::endl;
-//   cout << "use node num: " << use_node_num_ << endl;
-//   cout << "iter num: " << iter_num_ << endl;
   pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "open set empty, no path!");
   return NO_PATH;
 
@@ -356,6 +349,7 @@ void Astar::indexToPos(Eigen::Vector3i id, Eigen::Vector3d &pos) {
 
 void Astar::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point){
     Occupy_map_ptr->setEnvironment(global_point);
+    // 对地图进行膨胀
     Occupy_map_ptr->inflate_point_cloud();
     origin_ =  Occupy_map_ptr->origin_;
     map_size_3d_ = Occupy_map_ptr->map_size_3d_;
