@@ -3,6 +3,31 @@
 
 namespace local_planner
 {
+
+void VFH::init(ros::NodeHandle& nh)
+{
+    has_local_map_ = false;
+    nh.param("vfh/inflate_distance", inflate_distance, 0.20);  // 感知障碍物距离
+    nh.param("vfh/sensing_distance", sensing_distance, 3.0);  // 感知障碍物距离
+
+    nh.param("vfh/safe_distance", safe_distance, 0.2); // 安全停止距离
+
+    nh.param("vfh/goalWeight", goalWeight, 0.2); // 目标权重
+    nh.param("vfh/obstacle_weight", obstacle_weight, 0.0); // 障碍物权重
+    
+    nh.param("vfh/limit_v_norm", limit_v_norm, 0.4); // 极限速度
+
+    nh.param("vfh/h_res", Hcnt, 180); // 直方图 个数
+
+    inflate_and_safe_distance = safe_distance + inflate_distance;
+    
+    Hres = 2*M_PI/Hcnt;
+    Hdata = new double[Hcnt]();
+    for(int i(0); i<Hcnt; i++){
+        Hdata[i] =0.0;       
+    }
+}
+
 // get the map
 void VFH::set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr){
     local_map_ptr_ = local_map_ptr;
@@ -13,24 +38,21 @@ void VFH::set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr){
     begin_update_map = ros::Time::now();
     has_local_map_=true;
 }
+
 void VFH::set_local_map_pcl(pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_ptr)
 {
     latest_local_pcl_ = *pcl_ptr;
     has_local_map_=true;
 }
 
-
 void VFH::set_odom(nav_msgs::Odometry cur_odom){
     cur_odom_ = cur_odom;
 }
 
-int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel){
+int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel)
+{
     int local_planner_state=0;  // 0 for not init; 1 for safe; 2 for dangerous
     int safe_cnt=0;
-    // clear the Hdata
-    for(int i =0; i<Hcnt; i++){
-        Hdata[i]=0;
-    }
 
     if(!has_local_map_)
         return 0;
@@ -44,80 +66,46 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     if (isnan(goal(0)) || isnan(goal(1)) || isnan(goal(2)))
         return 0;
 
+    // clear the Hdata
+    for(int i =0; i<Hcnt; i++){
+        Hdata[i]=0;
+    }
+
+    // 计算障碍物相关cost
     vector<Eigen::Vector3d> obstacles;
     pcl::PointXYZ pt;
     Eigen::Vector3d p3d;
     Eigen::Vector3d p3d_gloabl_rot;
-    ros::Time begin_collision = ros::Time::now();
-
-    // 吸引
-    Eigen::Vector3d odom2goal = goal - current_odom;
-    // 不考虑高度影响
-    odom2goal(2) = 0.0;
-    double dist_att = odom2goal.norm();
-    double goal_heading = atan2(odom2goal(1), odom2goal(0));
-    
-    if(dist_att > max_att_dist){
-        dist_att = max_att_dist;
-        // odom2goal = odom2goal/dist_att * max_att_dist;
-    }else
-    {    }
-
 
     // 排斥力
-    Eigen::Quaterniond cur_rotation_local_to_global(cur_odom_.pose.pose.orientation.w, 
-                                                                                                            cur_odom_.pose.pose.orientation.x,  
-                                                                                                            cur_odom_.pose.pose.orientation.y,  
-                                                                                                            cur_odom_.pose.pose.orientation.z); 
-
-    // printf("odom q:[%f, %f, %f, %f]\n", cur_odom_.pose.pose.orientation.w, 
-    //                                                                                                         cur_odom_.pose.pose.orientation.x,  
-    //                                                                                                         cur_odom_.pose.pose.orientation.y,  
-    //                                                                                                         cur_odom_.pose.pose.orientation.z);
-    // Eigen::AngleAxisd rollAngle(AngleAxisd(eulerAngle(2),Vector3d::UnitX()));
-    // Eigen::AngleAxisd pitchAngle(AngleAxisd(eulerAngle(1),Vector3d::UnitY()));
-    // Eigen::AngleAxisd yawAngle(AngleAxisd(eulerAngle(0),Vector3d::UnitZ()));
- 
-    // Eigen::Matrix3d rotation_matrix;
-    // rotation_matrix=yawAngle*pitchAngle*rollAngle;
-
+    Eigen::Quaterniond cur_rotation_local_to_global(cur_odom_.pose.pose.orientation.w, cur_odom_.pose.pose.orientation.x, cur_odom_.pose.pose.orientation.y, cur_odom_.pose.pose.orientation.z); 
 
     Eigen::Matrix<double,3,3> rotation_mat_local_to_global = cur_rotation_local_to_global.toRotationMatrix();
     Eigen::Vector3d eulerAngle_yrp = rotation_mat_local_to_global.eulerAngles(2, 1, 0);
     rotation_mat_local_to_global = Eigen::AngleAxisd(eulerAngle_yrp(0), Eigen::Vector3d::UnitZ()).toRotationMatrix();
 
-    // double uav_height = cur_odom_.pose.pose.position.z;
-    // push_force = Eigen::Vector3d(0.0, 0, 0);
-
-    Eigen::Matrix<double, 3,1> current_odom_local(0.0, 0,0);  // in local frame
-    // Eigen::Matrix<double, 3,1> current_odom_local = current_odom;
-
-    for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
+    // 遍历点云中的所有点
+    for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) 
+    {
+        // 提取障碍物点
         pt = latest_local_pcl_.points[i];
         p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
-        // 3D lidar
-         if(isnan(p3d(2)) || p3d(2)<-0.1){
-             continue;
-         }
         // 不考虑高度的影响
         p3d(2) = 0.0;
-        // rotation the local point (heading)
+
+        // 将本地点云转化为全局点云点(主要是yaw角)
         p3d_gloabl_rot = rotation_mat_local_to_global * p3d; 
 
-        if(isIgnored(p3d_gloabl_rot(0), p3d_gloabl_rot(1), p3d_gloabl_rot(2),obs_distance)){
+        // sensing_distance为感知距离,只考虑感知距离内的障碍
+        if(isIgnored(p3d_gloabl_rot(0), p3d_gloabl_rot(1), p3d_gloabl_rot(2),sensing_distance)){
             continue;
         }
 
         double obs_dist = p3d_gloabl_rot.norm();
-
-        // // remove the ground point 
-        // double point_height_global = uav_height+p3d(2);
-        // if(fabs(point_height_global)<ground_height)
-        //     continue;
-
         double obs_angle = atan2(p3d_gloabl_rot(1), p3d_gloabl_rot(0));
         double angle_range;
-        if(obs_dist>inflate_and_safe_distance){
+        if(obs_dist>inflate_and_safe_distance)
+        {
             angle_range = asin(inflate_and_safe_distance/obs_dist);
         }else if (obs_dist<=inflate_and_safe_distance)
         {
@@ -125,82 +113,68 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
             continue;
         }
 
-        double obstacle_cost = obstacle_weight * (1/obs_dist - 1/obs_distance)* 1.0/(obs_dist * obs_dist) /* * (1/obs_dist)*/;
-        // printf("vfh: obs_dist: %f, obs_distance: %f, obstacle_cost: %f, angle_range: %f, obs_angle: %f\n", obs_dist, obs_distance, obstacle_cost, angle_range, obs_angle);
+        double obstacle_cost = obstacle_weight * (1/obs_dist - 1/sensing_distance)* 1.0/(obs_dist * obs_dist);
         generate_voxel_data(obs_angle, angle_range, obstacle_cost);
 
-        // dist_push = dist_push - inflate_distance;
-
         obstacles.push_back(p3d);
-        // double push_gain = k_push * (1/dist_push - 1/obs_distance)* 1.0/(dist_push * dist_push);
-
-        // std::cout<<"dist_push" << dist_push << std::endl;
-        // std::cout << "push_gain: " << push_gain << std::endl;
-        // std::cout << "p3d: " << p3d << std::endl;
-        // push_force += push_gain * (current_odom_local - p3d)/dist_push;
     }
 
-    if(obstacles.size() != 0){
-        // printf("obstacle size: %d\n", obstacles.size());
-        // push_force=push_force/obstacles.size();
-    }
+    // 与目标点相关cost计算
 
-    // if(uav_height<ground_safe_height){
-    //         // printf("[compute_force]: near the ground, the height%f \n", uav_height);
-    //         push_force = push_force + Eigen::Matrix<double, 3, 1>(0, 0, (ground_safe_height-uav_height)*3.0);
-    // }
-
-    // push_force = push_force;
-
-    // ROS_INFO("push force: [%f, %f, %f], attractive force: [%f, %f, %f], obs size: %d, obs_dis: %f, k_push: %f", push_force(0), push_force(1), 
-    // push_force(2), attractive_force(0), attractive_force(1), attractive_force(2), obstacles.size(), obs_distance, k_push);
+    Eigen::Vector3d odom2goal = goal - current_odom;
+    // 不考虑高度影响
+    odom2goal(2) = 0.0;
+    double dist_att = odom2goal.norm();
+    double goal_heading = atan2(odom2goal(1), odom2goal(0));
     
-    for(int i=0; i<Hcnt; i++){
+    for(int i=0; i<Hcnt; i++)
+    {
         // Hdata;
+        // angle_i 为当前角度
         double angle_i = find_angle(i);
-        double prev_cost = 0;
-        if(is_prev){
-            double angle_er  = angle_error(angle_i, prev_heading);
-            prev_cost = prevWeight * angle_er;
-        }
 
         double goal_cost = 0;
+        double angle_er = angle_error(angle_i, goal_heading);
+        float goal_gain;
+        if(dist_att>3.0) 
         {
-            double angle_er = angle_error(angle_i, goal_heading);
-            float goal_gain;
-            if(dist_att>3.0) {goal_gain = 3.0;}
-            else if(dist_att<0.5) {goal_gain = 0.5;} 
-            else{goal_gain = dist_att;}
-
-            goal_cost = goalWeight * angle_er * goal_gain;
+            goal_gain = 3.0;
         }
-        Hdata[i] += (prev_cost + goal_cost);
+        else if(dist_att<0.5) 
+        {
+            goal_gain = 0.5;
+        } 
+        else{
+            goal_gain = dist_att;
+        }
+        // 当前角度与目标角度差的越多,则该代价越大
+        goal_cost = goalWeight * angle_er * goal_gain;
+
+        Hdata[i] += goal_cost;
     }
 
+    // 寻找cost最小的路径
     int best_ind = find_optimization_path();   // direction 
+    // 提取最优路径的航向角
     double best_heading  = find_angle(best_ind);
 
-    double vel_norm = dist_att/2; //与距离终点距离有关, 0.2m， 32到达
-    if(vel_norm>limit_v_norm){
-        vel_norm = limit_v_norm;
-    }
-    desired_vel(0) = cos(best_heading)*vel_norm;
-    desired_vel(1) = sin(best_heading)*vel_norm;
-    // 处理高度
+    desired_vel(0) = cos(best_heading)*limit_v_norm;
+    desired_vel(1) = sin(best_heading)*limit_v_norm;
+    // 定高飞行
     desired_vel(2) = 0.0;
-    // printf("vfh: angle: %f,  vnorm: %f , obstacle_weight: %f\n", best_heading, vel_norm, obstacle_weight);
 
-    // 如果不安全的点超出，
-    if(safe_cnt>5){
+    // 如果不安全的点超出指定数量
+    if(safe_cnt>5)
+    {
         local_planner_state = 2;  //成功规划，但是飞机不安全
-    }else{
-        is_prev = true;
-        prev_heading = best_heading;
+    }else
+    {
         local_planner_state =1;  //成功规划， 安全
     }
 
     return local_planner_state;
 }
+
 // 寻找最小
 int VFH::find_optimization_path(void)
 {
@@ -215,33 +189,9 @@ int VFH::find_optimization_path(void)
     return bset_ind;
 }
 
-void VFH::init(ros::NodeHandle& nh){
-    has_local_map_ = false;
-    nh.param("vfh/inflate_distance", inflate_distance, 0.20);  // 感知障碍物距离
-    nh.param("vfh/obs_distance", obs_distance, 3.0);  // 感知障碍物距离
 
-    nh.param("vfh/max_att_dist", max_att_dist, 5.0);             // 最大吸引距离
-    nh.param("vfh/safe_distance", safe_distance, 0.2); // 安全停止距离
-
-    nh.param("vfh/goalWeight", goalWeight, 0.2); // 目标权重
-    nh.param("vfh/prevWeight", prevWeight, 0.0); // 光滑权重
-    nh.param("vfh/obstacle_weight", obstacle_weight, 0.0); // 障碍物权重
-    
-    nh.param("vfh/limit_v_norm", limit_v_norm, 0.4); // 极限速度
-
-    inflate_and_safe_distance = safe_distance + inflate_distance;
-    is_prev = false;
-
-    // Hres
-    nh.param("vfh/h_res", Hcnt, 150); // 直方图 个数
-    Hres = 2*M_PI/Hcnt;
-    Hdata = new double[Hcnt]();
-    for(int i(0); i<Hcnt; i++){
-        Hdata[i] =0.0;       
-    }
-}
-
-bool VFH::isIgnored(float x, float y, float z, float ws){
+bool VFH::isIgnored(float x, float y, float z, float ws)
+{
     z = 0;
     if(isnan(x)||isnan(y)||isnan(z))
         return true;
@@ -258,17 +208,22 @@ void VFH::generate_voxel_data(double angle_cen, double angle_range, double val) 
     double angle_min = angle_cen - angle_range;
     int cnt_min = find_Hcnt(angle_min);
     int cnt_max = find_Hcnt(angle_max);
-    if(cnt_min>cnt_max){
-        for(int i=cnt_min; i<Hcnt; i++){
+    if(cnt_min>cnt_max)
+    {
+        for(int i=cnt_min; i<Hcnt; i++)
+        {
             Hdata[i] =+ val;
         }
-        for(int i=0;i<cnt_max; i++){
+        for(int i=0;i<cnt_max; i++)
+        {
             Hdata[i] +=val;
         }
-    }else if(cnt_max>=cnt_min){
-    for(int i=cnt_min; i<=cnt_max; i++){
-        Hdata[i] += val;
-    }
+    }else if(cnt_max>=cnt_min)
+    {
+        for(int i=cnt_min; i<=cnt_max; i++)
+        {
+            Hdata[i] += val;
+        }
     }
      
 }
