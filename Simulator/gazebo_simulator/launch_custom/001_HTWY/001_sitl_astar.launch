@@ -3,7 +3,7 @@
     <arg name="x" default="-3.0"/>
     <arg name="y" default="-0.0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle_HTWY.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle_HTWY2.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
 	<arg name="model" default="P300_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch_custom/001_HTWY/001_sitl.launch">
@@ -38,26 +38,30 @@
         <!-- 停止距离 -->
         <param name="planning/safe_distance" value="0.01" type="double"/>
         <!-- 最大搜索步数 -->
-        <param name="astar/allocate_num" value="100000" type="int"/>
+        <param name="astar/allocate_num" value="10000" type="int"/>
         <!-- 启发式函数系数 -->
         <param name="astar/lambda_heu" value="2.0" type="double"/>
         <!-- 分辨率 -->
         <param name="astar/resolution_astar" value="0.1" type="double"/>
         <!-- 障碍物膨胀距离 -->
-        <param name="astar/inflate" value="0.5" type="double"/>
+        <param name="astar/inflate" value="0.45" type="double"/>
+        <!-- 二维平面规划 -->
+        <param name="astar/is_2D" value="1" type="int"/>
+        <!-- 飞行高度 -->
+        <param name="astar/2D_fly_height" value="0.8" type="double"/>
         <!-- 地图范围 -->
-        <param name="map/map_size_x" value="30.0" type="double"/>
-        <param name="map/map_size_y" value="30.0" type="double"/>
-        <param name="map/map_size_z" value="5.0" type="double"/>
-        <param name="map/origin_x" value="-15.0" type="double"/>
-        <param name="map/origin_y" value="-15.0" type="double"/>
+        <param name="map/map_size_x" value="8.0" type="double"/>
+        <param name="map/map_size_y" value="4.0" type="double"/>
+        <param name="map/map_size_z" value="2.0" type="double"/>
+        <param name="map/origin_x" value="-4.0" type="double"/>
+        <param name="map/origin_y" value="-2.0" type="double"/>
         <param name="map/origin_z" value="0.0" type="double"/>
-        <param name="map/ceil_height_" value="5.0" type="double"/>
-        <param name="map/floor_height_" value="0.01" type="double"/>
+        <param name="map/ceil_height_" value="2.0" type="double"/>
+        <param name="map/floor_height_" value="0.5" type="double"/>
     </node>
 
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
-	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+	<node pkg="prometheus_mission" type="planning_mission_astar" name="planning_mission_astar" output="screen" launch-prefix="gnome-terminal --">	
 		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
 	</node>
 
