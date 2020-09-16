@@ -176,7 +176,7 @@ int main(int argc, char **argv)
     while(start_flag == 0)
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Local Planning Mission<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please choose the planning method: 1 for APF, 2 for A*, 3 for Fast planner"<<endl;
+        cout << "Please choose the planning method: 1 for APF/VFH, 2 for A*, 3 for Fast planner"<<endl;
         cin >> start_flag;
 
         if (start_flag == 1)
