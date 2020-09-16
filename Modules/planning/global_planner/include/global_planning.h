@@ -61,7 +61,7 @@ private:
         INPUT_MANUAL
     };
 
-     int flight_type_;
+    int flight_type_;
 
     // state
     bool have_odom_;
@@ -70,6 +70,8 @@ private:
     bool have_goal_; 
     std_msgs::Int8 replan;
     double safe_distance;
+    int is_2D; // 1代表2D平面规划及搜索,0代表3D
+    double fly_height;
 
     nav_msgs::Odometry odom_, odom__last;
     nav_msgs::Path A_star_path_cmd;
