@@ -149,7 +149,7 @@ private:
   double getManhHeu(Eigen::Vector3d x1, Eigen::Vector3d x2);
   double getEuclHeu(Eigen::Vector3d x1, Eigen::Vector3d x2);
 
-Occupy_map::Ptr Occupy_map_ptr;
+  Occupy_map::Ptr Occupy_map_ptr;
 
 public:
   Astar() {}
