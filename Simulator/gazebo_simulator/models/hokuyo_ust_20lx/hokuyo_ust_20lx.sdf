@@ -28,9 +28,8 @@
         <ray>
           <scan>
             <horizontal>
-              <samples>1080</samples>
-              <!-- 角分辨率为0.25度 -->
-              <resolution>0.25</resolution>
+              <samples>1081</samples>
+              <resolution>1</resolution>
               <!-- UST-20LX 视场为270度 -->
               <min_angle>-2.3562</min_angle>
               <max_angle>2.3562</max_angle>
@@ -44,7 +43,7 @@
           <noise>
             <type>gaussian</type>
             <mean>0.0</mean>
-            <stddev>0.001</stddev>
+            <stddev>0.000</stddev>
           </noise>
         </ray>
         <plugin name="laser" filename="libRayPlugin.so" />
@@ -53,9 +52,9 @@
           <frameName>lidar_link</frameName>
         </plugin>
         <always_on>1</always_on>
-        <!-- 更新频率 40HZ -->
-        <update_rate>40</update_rate>
-        <visualize>true</visualize>
+        <!-- 更新频率 20HZ -->
+        <update_rate>20</update_rate>
+        <visualize>false</visualize>
       </sensor>
     </link>
   </model>

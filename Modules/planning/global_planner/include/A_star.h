@@ -118,12 +118,14 @@ private:
   std::priority_queue<NodePtr, std::vector<NodePtr>, NodeComparator0> open_set_;
   std::vector<NodePtr> path_nodes_;  // retrive the final path
 
-    /* ---------- parameter ---------- */
+  /* ---------- parameter ---------- */
   /* search */
   double lambda_heu_;
   double margin_;
   int allocate_num_;
   double tie_breaker_;
+  int is_2D;
+  double fly_height;
 
   /* ---------- record data ---------- */
   bool has_path_ = false;
