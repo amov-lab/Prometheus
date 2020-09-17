@@ -2,10 +2,11 @@
 
 namespace global_planner{
 
-void Occupy_map::setparam(ros::NodeHandle& nh){
+void Occupy_map::setparam(ros::NodeHandle& nh)
+{
     nh.param("astar/resolution_astar", resolution_,  0.2);
     nh.param("astar/inflate", inflate_,  0.3);
-//       /* ---------- map params ---------- */
+    
     this->inv_resolution_ = 1.0 / resolution_;
 //     // initialize size of buffer
     nh.param("map/map_size_x", map_size_3d_(0), 10.0);
@@ -21,10 +22,13 @@ void Occupy_map::setparam(ros::NodeHandle& nh){
     inflate_cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/planning/global_inflate_cloud", 1);
 }
 
-void Occupy_map::init(void){
+void Occupy_map::init(void)
+{
     for (int i = 0; i < 3; ++i)
+    {
         grid_size_(i) = ceil(map_size_3d_(i) / resolution_);
-
+    }
+        
     occupancy_buffer_.resize(grid_size_(0) * grid_size_(1) * grid_size_(2));
     fill(occupancy_buffer_.begin(), occupancy_buffer_.end(), 0.0);
 
@@ -32,23 +36,20 @@ void Occupy_map::init(void){
     max_range_ = origin_ + map_size_3d_;   
 }
 
-
-void Occupy_map::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point){
+void Occupy_map::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point)
+{
     global_env_ = global_point;
     has_global_point = true;
-    inflate_point_cloud();
 }
 
-
-
-
-void Occupy_map::inflate_point_cloud(void){
+void Occupy_map::inflate_point_cloud(void)
+{
     if(!has_global_point){
      
         pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Occupy_map [inflate point cloud]: don't have global point, can't inflate!\n");
-        // printf("Occupy_map [inflate point cloud]: don't have global point, can't inflate!\n");
         return;
     }
+
     ros::Time time_start = ros::Time::now();
     pcl::PointCloud<pcl::PointXYZ> latest_global_cloud_;
     pcl::fromROSMsg(*global_env_, latest_global_cloud_);
@@ -70,9 +71,6 @@ void Occupy_map::inflate_point_cloud(void){
     try{
         // 等待获取监听信息base_link和base_laser
         listener.waitForTransform("world", "map", ros::Time(0), ros::Duration(3.0));
-        // ROS_INFO("base_laser: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
-        //     laser_point.point.x, laser_point.point.y, laser_point.point.z,
-        //     base_point.point.x, base_point.point.y, base_point.point.z, base_point.header.stamp.toSec());
     }
     catch(tf::TransformException& ex){
         ROS_ERROR("Received an exception trying to transform a point from \"base_laser\" to \"base_link\": %s", ex.what());
@@ -80,26 +78,9 @@ void Occupy_map::inflate_point_cloud(void){
 
     // iterate the map
     pcl::PointCloud<pcl::PointXYZ> world_pcl;
-    // geometry_msgs::PointStamped world_map_point;
-    // pcl::PointXYZ pt;
-    // for (size_t i = 0; i < latest_global_pcl_.points.size(); ++i) {
-    //     pt = latest_global_pcl_.points[i];
-    //     geometry_msgs::Point p;
-    //     p.header.frame_id = "map";
-    //     p.x = pt.x;
-    //     p.y = pt.y;
-    //     p.z = pt.z;
-    //     listener.transformPoint("world", p, world_map_point);
-    //     world_pcl.push_back(pcl::PointXYZ(world_map_point.point.x, world_map_point.point.y, world_map_point.point.z));
-    // }
-
-    // pcl_ros::transformPointCloud("world", latest_global_pcl_, world_pcl, listener);
-    // sensor_msgs::PointCloud2 map_p;
-    // pcl::toROSMsg(world_pcl,  map_p);
-
-
     geometry_msgs::PointStamped world_map_point;
-    for (size_t i = 0; i < latest_global_cloud_.points.size(); ++i) {
+    for (size_t i = 0; i < latest_global_cloud_.points.size(); ++i) 
+    {
         pt = latest_global_cloud_.points[i];
         p3d(0) = pt.x;
         p3d(1) = pt.y;
@@ -140,7 +121,8 @@ void Occupy_map::inflate_point_cloud(void){
     cloud_inflate_vis_.header.frame_id = "world";
 
     /* ---------- add ceil  and floor---------- */
-    if (ceil_height_ > 0.0) {
+    if (ceil_height_ > 0.0) 
+    {
         for (double cx = min_range_(0); cx <= max_range_(1); cx += resolution_)
             for (double cy =min_range_(0); cy <= max_range_(1); cy += resolution_) {
                 this->setOccupancy(Eigen::Vector3d(cx, cy, ceil_height_), 1);
@@ -202,8 +184,6 @@ bool Occupy_map::isInMap(Eigen::Vector3d pos) {
 
 bool Occupy_map::check_safety(Eigen::Vector3d& pos, double check_distance/*, Eigen::Vector3d& map_point*/){
     if(!isInMap(pos)){
-        // printf("[check_safety]: the odom point is not in map\n");
-
         pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "[check_safety]: the odom point is not in map\n");
         return 0;
     }

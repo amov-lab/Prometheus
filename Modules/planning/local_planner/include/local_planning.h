@@ -23,7 +23,6 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include "prometheus_msgs/PositionReference.h"
 #include "prometheus_msgs/Message.h"
 #include <std_msgs/Bool.h>
 
@@ -45,7 +44,7 @@ namespace local_planner{
 
 extern ros::Publisher message_pub;
 
-class PotentialFiledPlanner{
+class LocalPlanningClass{
 
 private:
 
@@ -78,17 +77,12 @@ private:
 
     Eigen::Vector3d desired_vel;
 
-    sensor_msgs::PointCloud2ConstPtr  local_map_ptr_, global_map_ptr_;
+    sensor_msgs::PointCloud2ConstPtr  local_map_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_ptr;
 
     void generate_cmd(Eigen::Vector3d desired_vel);
 
     void getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color);
-
-    void localframe2global(void){
-        // 将局部坐标系点云，转化到全局坐标系,
-        // 因为一般给定了目标点是全局坐标系（地图系）下， 同一在地图系下进行计算
-    }
   
     void waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg);
     void localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
@@ -108,12 +102,10 @@ private:
     ros::Publisher local_map_marker_Pub, px4_pos_cmd_pub;
     ros::Publisher replan_cmd_Pub;
 
-    // APF 算法 算子
-    APF::Ptr apf_planner_ptr;
+    // 局部避障算法 算子
     local_planning_alg::Ptr local_alg_ptr;
 
     PlanningVisualization::Ptr visualization_;
-    int is_simulation;
     int algorithm_mode; // 0  is apf; 1 is vfh (default is 0)
 
 public:
@@ -125,10 +117,10 @@ public:
 
     Eigen::Matrix<double, 3, 1> total_force;
 
-    PotentialFiledPlanner(/* args */):node_("~") {
+    LocalPlanningClass(/* args */):node_("~") {
     }
 
-    ~PotentialFiledPlanner(){
+    ~LocalPlanningClass(){
     }
     void init(ros::NodeHandle& nh);
 
@@ -143,7 +135,7 @@ public:
     /* for evaluation */
 
 
-    // typedef std::shared_ptr<PotentialFiledPlanner> Ptr;
+    // typedef std::shared_ptr<LocalPlanningClass> Ptr;
 };
 
 

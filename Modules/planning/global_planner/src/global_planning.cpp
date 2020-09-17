@@ -9,6 +9,8 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     message_pub = node_.advertise<prometheus_msgs::Message>("/prometheus/message/global_planner", 10);
     // safe_distance
     nh.param("planning/safe_distance", safe_distance, 0.25);
+    nh.param("astar/is_2D", is_2D, 0);  // 1代表2D平面规划及搜索,0代表3D
+    nh.param("astar/2D_fly_height", fly_height, 1.5);  // 2D规划时,定高高度
     // set algorithm
     sensor_msgs::PointCloud2ConstPtr init_global_map(new sensor_msgs::PointCloud2());
     global_map_ptr_ = init_global_map;
@@ -48,31 +50,27 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
 }
 
 
-void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg){
-    cout << "[waypointCallback]: Triggered!" << endl;
-
-    if (msg->pose.position.z < 0.1)  // the minimal goal height 
-        return;
+void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg)
+{
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,"Get a new goal point");
 
     double /*goal_x, goal_y,*/ goal_z;
 
-        // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
-    auto conf=[](double v, double min_v, double max_v)->double{
-        return v<min_v? min_v:(v>max_v?max_v:v);
-    };
+    if (is_2D == 1)
+    {
+        goal_z = fly_height;
+    }
 
+    // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
     if (flight_type_ == FLIGHT_TYPE::MANUAL_GOAL)
     {
-        // indoor flight, to keep safe
-        goal_z = msg->pose.position.z;
-        goal_z = conf(msg->pose.position.z, 0.5, 4.9);
         end_pt_ << msg->pose.position.x, msg->pose.position.y, goal_z;
     }
     else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)
     {
-        // end_pt_ << 0.0, 0.0, 1.0;
+        end_pt_ << 0,0,1;
     }
-    
+
     ROS_INFO("---global planning_: get waypoint: [ %f, %f, %f]!---", end_pt_(0),
                                                             end_pt_(1), 
                                                             end_pt_(2));
@@ -137,10 +135,8 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
     int astar_state = Astar_ptr->search(start_pt_, end_pt_);
     if(astar_state==Astar::NO_PATH){
           pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "a star find no path, please reset the goal!");
-        //printf("a star find no path, please reset the goal!\n");
     }
     else{
-        // printf("astart find path success!\n");
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "astart find path success!");
         std::vector<Eigen::Vector3d> A_star_path = Astar_ptr->getPath();
         visualization_->drawPath(A_star_path, 0.1,Eigen::Matrix<double, 4, 1>(1.0, 0, 0, 1), 1);
@@ -196,24 +192,33 @@ void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     odom_.header.frame_id = msg->header.frame_id;
     have_odom_ = true;
     start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
+
+    if (is_2D == 1)
+    {
+        start_pt_(2) = fly_height;
+    }
 }
 
 void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg){
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
-        // ROS_INFO("global point cloud: --- no odom!---");
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "global point cloud: --- no odom!---");
         return;
     }
-    // ros::Time begin_load_point_cloud = ros::Time::now();
+
     pcl::fromROSMsg(*msg, latest_global_pcl_);
     has_point_map_ = true;
 
     global_map_ptr_ = msg;
 
-    // printf("send world map\n");
+    // 二维平面规划
+    if (is_2D == 1)
+    {
+        //global_map_ptr_
+    }
+
     Astar_ptr->setEnvironment(global_map_ptr_);
 
-    // localframe2global();
     visualization_msgs::Marker m;
     getOccupancyMarker(m, 0, Eigen::Vector4d(0, 0.5, 0.5, 1.0));
     global_map_marker_Pub.publish(m);

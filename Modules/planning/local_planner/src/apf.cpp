@@ -51,8 +51,10 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     // 不考虑高度影响
     odom2goal(2) = 0.0;
     double dist_att = odom2goal.norm();
-    if(dist_att > max_att_dist){
-        attractive_force = k_att * max_att_dist * odom2goal/dist_att;
+    if(dist_att > max_att_dist)
+    {
+        odom2goal = max_att_dist * odom2goal/dist_att ;
+        attractive_force = k_att * odom2goal;
     }else
     {
         attractive_force = k_att * odom2goal;
@@ -60,7 +62,7 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
 
     // 排斥力
     double uav_height = cur_odom_.pose.pose.position.z;
-    push_force = Eigen::Vector3d(0.0, 0, 0);
+    push_force = Eigen::Vector3d(0.0, 0.0, 0.0);
     for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
         pt = latest_local_pcl_.points[i];
         p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
@@ -97,14 +99,11 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
         if(dist_att<1.0){
             push_gain *= dist_att;  // to gaurantee to reach the goal.
         }
-        // std::cout<<"dist_push" << dist_push << std::endl;
-        // std::cout << "push_gain: " << push_gain << std::endl;
-        // std::cout << "p3d: " << p3d << std::endl;
+
         push_force += push_gain * (current_odom_local - p3d)/dist_push;
     }
 
     if(obstacles.size() != 0){
-        // printf("obstacle size: %d\n", obstacles.size());
         push_force=push_force/obstacles.size();
     }
 
@@ -128,7 +127,6 @@ int APF::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
             push_force = push_force + Eigen::Matrix<double, 3, 1>(0, 0, (ground_safe_height-uav_height)*3.0);
     }
 
-    push_force = push_force;
 
     // ROS_INFO("push force: [%f, %f, %f], attractive force: [%f, %f, %f], obs size: %d, obs_dis: %f, k_push: %f", push_force(0), push_force(1), 
     // push_force(2), attractive_force(0), attractive_force(1), attractive_force(2), obstacles.size(), obs_distance, k_push);
