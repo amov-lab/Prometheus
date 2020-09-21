@@ -104,19 +104,18 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e)
         {
             exect_msg = "wait goal!";
         }
-
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,exect_msg);
-        exec_num=0;
     }
 
     if(!trigger_ || !have_odom_ || !has_point_map_ || !have_goal_)
     {
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,exect_msg);
+        exec_num=0;
         return;
     }
 
     KinodynamicAstar_ptr->reset();
     int astar_state;
-    //　init 和　dynamic 怎么赋值　有什么意义
+
     bool init = false;
     bool dynamic = false;
     double time_start = 0;
@@ -131,9 +130,9 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e)
     {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "astart find path success!");
         //std::vector<Eigen::Vector3d> KinodynamicAstar::getKinoTraj(double delta_t)
-        std::vector<Eigen::Vector3d> KinoTraj = KinodynamicAstar_ptr->getKinoTraj(0.0);
-        //visualization_->drawPath(A_star_path, 0.1,Eigen::Matrix<double, 4, 1>(1.0, 0, 0, 1), 1);
-        //generate_CMD(A_star_path);
+        std::vector<Eigen::Vector3d> A_star_path = KinodynamicAstar_ptr->getKinoTraj(0.1);
+        visualization_->drawPath(A_star_path, 0.1,Eigen::Matrix<double, 4, 1>(1.0, 0, 0, 1), 1);
+        generate_CMD(A_star_path);
     }
 
 }
