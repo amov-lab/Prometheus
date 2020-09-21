@@ -51,14 +51,18 @@ void KinodynamicAstar::setParam(ros::NodeHandle& nh)
   nh.param("kinodynamic_astar/max_acc", max_acc_, -1.0);
   nh.param("kinodynamic_astar/w_time", w_time_, -1.0);
   nh.param("kinodynamic_astar/horizon", horizon_, -1.0);
-  nh.param("map/resolution_map", resolution_, -1.0);
+  
   nh.param("kinodynamic_astar/time_resolution", time_resolution_, -1.0);
   nh.param("kinodynamic_astar/lambda_heu", lambda_heu_, -1.0);
   nh.param("kinodynamic_astar/margin", margin_, -1.0);
   nh.param("kinodynamic_astar/allocate_num", allocate_num_, -1);
   nh.param("kinodynamic_astar/check_num", check_num_, -1);
+  
+  nh.param("map/resolution_astar", resolution_, -1.0);
 
-  cout << "margin:" << margin_ << endl;
+  cout << "margin:" << margin_  
+  <<"  resolution_:   " << resolution_ 
+  << "  time_resolution_:  " << time_resolution_ << endl;
 }
 
 void KinodynamicAstar::retrievePath(PathNodePtr end_node)
@@ -137,7 +141,7 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
     bool near_end = abs(cur_node->index(0) - end_index(0)) <= tolerance &&
                     abs(cur_node->index(1) - end_index(1)) <= tolerance &&
                     abs(cur_node->index(2) - end_index(2)) <= tolerance;
-    // ?　这个是什么
+ 
     bool reach_horizon = (cur_node->state.head(3) - start_pt).norm() >= horizon_;
 
     if (reach_horizon || near_end)
@@ -270,14 +274,8 @@ cout << "[Kino Astar]: Reach horizon_" << endl;
           stateTransit(cur_state, xt, um, dt);
           pos = xt.head(3);
 
-          //　这句怎么改
-          // double dist =
-          //     dynamic ? edt_env_->evaluateCoarseEDT(pos, cur_node->time + dt) : edt_env_->evaluateCoarseEDT(pos, -1.0);
-          double dist = 0;
-          if (dist <= margin_)
-          {
-            is_occ = true;
-
+          is_occ = Occupy_map_ptr->getOccupancy(pos);
+          if(is_occ){
             break;
           }
         }
@@ -481,11 +479,6 @@ bool KinodynamicAstar::computeShotTraj(Eigen::VectorXd state1, Eigen::VectorXd s
     {
       return false;
     }
-    //这句怎么改？
-    // if (edt_env_->evaluateCoarseEDT(coord, -1.0) <= margin_)
-    // {
-    //   return false;
-    // }
   }
   coef_shot_ = coef;
   t_shot_ = t_d;

@@ -110,24 +110,12 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
             //printf("*** wait goal!*** \n");
             // return;
         }
+    }
 
+    if(!trigger_ || !have_odom_ || !has_point_map_ || !have_goal_)
+    {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,exect_msg);
         exec_num=0;
-    }
-
-    if(!trigger_){
-        return;
-    }
-
-    if(!have_odom_){
-        return;
-    }
-        
-    if(!has_point_map_)
-    {
-        return;
-    }
-    if(!have_goal_){
         return;
     }
 

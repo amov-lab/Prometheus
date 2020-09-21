@@ -4,7 +4,7 @@ namespace global_planner{
 
 void Occupy_map::setparam(ros::NodeHandle& nh)
 {
-    nh.param("map/resolution_map", resolution_,  0.2);
+    nh.param("map/resolution_astar", resolution_,  0.2);
     nh.param("map/inflate", inflate_,  0.3);
     
     this->inv_resolution_ = 1.0 / resolution_;
@@ -20,6 +20,7 @@ void Occupy_map::setparam(ros::NodeHandle& nh)
     nh.param("map/ceil_height_", ceil_height_, 4.9);
     nh.param("map/floor_height_", floor_height_, 0.1);
     inflate_cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/planning/global_inflate_cloud", 1);
+    printf("map size: [%f,  %f,  %f]\n", map_size_3d_(0), map_size_3d_(1), map_size_3d_(2));
 }
 
 void Occupy_map::init(void)
