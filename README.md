@@ -10,7 +10,7 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 
  - **安装及使用：** [Prometheus WIKI](https://github.com/amov-lab/Prometheus/wiki)
 
- - **配套课程：**    Prometheus自主无人机二次开发课程， [课程报名](https://mp.weixin.qq.com/s/qyTjvdobojuvq8H4EciojQ)
+ - **配套课程：**    Prometheus自主无人机二次开发课程，本课程偏重本项目中的基础知识和操作实践，适合本项目入门者，购买课程后会定期安排线上答疑活动（语音交流、方便透彻！） [课程报名](https://bbs.amovlab.com/plugin.php?id=zhanmishu_video:video&mod=video&cid=43)
   
  - **配套硬件：**    即将推出，敬请期待！ 请关注 [阿木实验室淘宝店](https://shop142114972.taobao.com/?spm=a230r.7195193.1997079397.2.67d03d8dJQgFRW)　或　[阿木实验室京东旗舰店](https://mall.jd.com/index-10260560.html?from=pc)
  
