@@ -68,6 +68,10 @@ add_library(OptiTrackFeedbackRigidBody src/lib/OptiTrackFeedBackRigidBody.cpp)
 add_library(KeyboardEvent src/lib/KeyboardEvent.cpp)
 
 ###### Main File ##########
+##rover_pos_controller.cpp
+add_executable(rover_pos_controller src/rover_pos_controller.cpp)
+add_dependencies(rover_pos_controller prometheus_control_gencpp) 
+target_link_libraries(rover_pos_controller ${catkin_LIBRARIES})
 
 ##px4_pos_controller.cpp
 add_executable(px4_pos_controller src/px4_pos_controller.cpp)
@@ -120,6 +124,10 @@ target_link_libraries(fake_vicon ${catkin_LIBRARIES})
 add_executable(terminal_control src/Utilities/terminal_control.cpp)
 add_dependencies(terminal_control prometheus_control_gencpp)
 target_link_libraries(terminal_control ${catkin_LIBRARIES})
+
+add_executable(terminal_control_rover src/Utilities/terminal_control_rover.cpp)
+add_dependencies(terminal_control_rover prometheus_control_gencpp)
+target_link_libraries(terminal_control_rover ${catkin_LIBRARIES})
 
 add_executable(OptiTrackTest src/Utilities/OptiTrackTest.cpp)
 add_dependencies(OptiTrackTest prometheus_control_gencpp)
