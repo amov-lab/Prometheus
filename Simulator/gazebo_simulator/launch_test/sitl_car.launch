@@ -72,8 +72,8 @@
 	</node>
 	
 	<!-- run the px4_pos_controller.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-		<rosparam command="load" file="$(find prometheus_control)/config/px4_pos_controller.yaml"/>
+	<node pkg="prometheus_control" type="rover_pos_controller" name="rover_pos_controller" output="screen">
+		<!-- <rosparam command="load" file="$(find prometheus_control)/config/px4_pos_controller.yaml"/> -->
 	</node>
 	
 	<!-- run the ground_station.cpp -->
