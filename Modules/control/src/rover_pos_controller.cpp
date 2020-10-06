@@ -364,7 +364,10 @@ int main(int argc, char **argv)
                 _command_to_mavros.send_vel_setpoint(vel_sp, yaw_sp);
             }
 
-            if(Command_Now.Mode == prometheus_msgs::ControlCommand::Move && Command_Now.Reference_State.Move_mode == Command_Now.Reference_State.XYZ_VEL)
+            //　目前只有姿态控制还算比较好用
+            //　不清楚问题出在哪里：　可能是rover的控制，也可能是混控
+            //　注意选择ＦＩｒｍｗａｒｅ中的混控文件　３个可选
+            if(Command_Now.Mode == prometheus_msgs::ControlCommand::Move && Command_Now.Reference_State.Move_mode == Command_Now.Reference_State.TRAJECTORY)
             {
                 prometheus_msgs::AttitudeReference att_sp;
                 float yaw_sp;
@@ -380,7 +383,8 @@ int main(int argc, char **argv)
 
                 //期望油门
                 double thr_sp_length = thr_sp.norm();
-                att_sp.desired_throttle = thr_sp_length; 
+                //　直接赋值
+                att_sp.desired_throttle = Command_Now.Reference_State.acceleration_ref[0];
 
                 att_sp.desired_att_q.w = q_sp.w();
                 att_sp.desired_att_q.x = q_sp.x();

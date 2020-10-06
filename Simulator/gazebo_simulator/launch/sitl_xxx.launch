@@ -11,15 +11,6 @@
 	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
 	
 	
-	<!-- PX4 configs -->
-    <arg name="interactive" default="true"/>
-    <!-- PX4 SITL -->
-	<arg unless="$(arg interactive)" name="px4_command_arg1" value="-d"/>
-    <arg     if="$(arg interactive)" name="px4_command_arg1" value=""/>
-	<!-- 节点源文件路径: ~/Firmware_v110/platforms/posix/src/px4/common/main.cpp -->
-	<node name="sitl" pkg="px4" type="px4" output="screen" 
-		args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)"/>
-
 	<!-- 启动Gazebo -->
 	<!-- Gazebo configs -->
     <arg name="gui" default="true"/>

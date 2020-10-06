@@ -277,7 +277,7 @@
         </geometry>
         <material>
           <script>
-            <name>Gazebo/FlatBlack</name>
+            <name>Gazebo/Green</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
         </material>
@@ -447,7 +447,7 @@
         </geometry>
         <material>
           <script>
-            <name>Gazebo/FlatBlack</name>
+            <name>Gazebo/Green</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
         </material>
@@ -516,15 +516,11 @@
         <use_parent_model_frame>1</use_parent_model_frame>
       </axis>
     </joint>
-    <include>
-      <uri>model://gps</uri>
-      <pose>0 0 0.12 0 0 0</pose>
-      <name>gps</name>
-    </include>
-    <joint name='gps_joint' type='fixed'>
-      <child>gps::link</child>
-      <parent>base_link</parent>
-    </joint>
+    <!-- GPS插件 -->
+    <plugin name="gps_plugin" filename="libgazebo_gps_plugin.so">
+	    <robotNamespace></robotNamespace>
+	    <gpsNoise>false</gpsNoise>
+    </plugin>
     <plugin name='gazebo_imu_plugin' filename='libgazebo_imu_plugin.so'>
       <robotNamespace></robotNamespace>
       <linkName>rover/imu_link</linkName>
@@ -538,9 +534,7 @@
       <accelerometerBiasCorrelationTime>300.0</accelerometerBiasCorrelationTime>
       <accelerometerTurnOnBiasSigma>0.196</accelerometerTurnOnBiasSigma>
     </plugin>
-    <plugin name='groundtruth_plugin' filename='libgazebo_groundtruth_plugin.so'>
-      <robotNamespace/>
-    </plugin>
+
     <plugin name='magnetometer_plugin' filename='libgazebo_magnetometer_plugin.so'>
       <robotNamespace/>
       <pubRate>20</pubRate>
@@ -557,17 +551,17 @@
     <plugin name='mavlink_interface' filename='libgazebo_mavlink_interface.so'>
       <robotNamespace></robotNamespace>
       <imuSubTopic>/imu</imuSubTopic>
+      <gpsSubTopic>/gps</gpsSubTopic>
       <magSubTopic>/mag</magSubTopic>
       <baroSubTopic>/baro</baroSubTopic>
       <mavlink_addr>INADDR_ANY</mavlink_addr>
       <mavlink_udp_port>14560</mavlink_udp_port>
+      <mavlink_tcp_port>4560</mavlink_tcp_port>
       <serialEnabled>false</serialEnabled>
       <serialDevice>/dev/ttyACM0</serialDevice>
       <baudRate>921600</baudRate>
       <qgc_addr>INADDR_ANY</qgc_addr>
       <qgc_udp_port>14550</qgc_udp_port>
-      <sdk_addr>INADDR_ANY</sdk_addr>
-      <sdk_udp_port>14540</sdk_udp_port>
       <hil_mode>false</hil_mode>
       <hil_state_level>false</hil_state_level>
       <enable_lockstep>true</enable_lockstep>
@@ -647,6 +641,18 @@
           </joint_control_pid>
         </channel>
       </control_channels>
+    </plugin>
+    <!-- plugins: libgazebo_ros_p3d -->
+    <!-- 发布真值,模拟vicon系统 -->
+    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>50.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>/prometheus/ground_truth/p300_basic</topicName>
+      <gaussianNoise>0.00</gaussianNoise>
+      <frameName>world</frameName>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>
   </model>
 </sdf>
