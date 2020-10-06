@@ -1,18 +1,19 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
   <model name="amov_car">
+  <static>false</static>
     <link name="base_link">
       <pose>0 0 0.0 0 0 0</pose>
       <inertial>
-        <mass>30.0</mass>
-        <pose>-0.0856132 -0.000839955 0.238145 0 0 0</pose>
+        <mass>20.0</mass>
+        <pose>0 0 0.0 0 0 0</pose>
         <inertia>
-          <ixx>2.2343</ixx>
+          <ixx>0.37</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>40</iyy>
+          <iyy>0.37</iyy>
           <iyz>0</iyz>
-          <izz>40</izz>
+          <izz>0.57</izz>
         </inertia>
       </inertial>
       <collision name="collision">
@@ -120,8 +121,9 @@
         <surface>
           <friction>
             <ode>
-              <mu>100000.0</mu>
-              <mu2>100000.0</mu2>
+              <mu>1.0</mu>
+              <mu2>0.45</mu2>
+              <fdir1>1 0 0</fdir1>
               <slip1>0.0</slip1>
               <slip2>0.0</slip2>
             </ode>
@@ -265,7 +267,7 @@
         </geometry>
         <material>
           <script>
-            <name>Gazebo/Grey</name>
+            <name>Gazebo/Green</name>
           </script>
         </material>
       </visual>
@@ -329,7 +331,7 @@
         </geometry>
         <material>
           <script>
-            <name>Gazebo/Grey</name>
+            <name>Gazebo/Green</name>
           </script>
         </material>
       </visual>
@@ -514,6 +516,18 @@
           </joint_control_pid>
         </channel>
      </control_channels>
+    </plugin>
+    <!-- plugins: libgazebo_ros_p3d -->
+    <!-- 发布真值,模拟vicon系统 -->
+    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>50.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>/prometheus/ground_truth/p300_basic</topicName>
+      <gaussianNoise>0.00</gaussianNoise>
+      <frameName>world</frameName>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>
   </model>
 </sdf>
