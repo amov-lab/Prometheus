@@ -2,11 +2,11 @@
 	<!-- Launch Gazebo Simulation -->
     <arg name="x" default="1"/>
     <arg name="y" default="0"/>
-    <arg name="z" default="0"/>
+    <arg name="z" default="0.1"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/sysu_ugv/sysu_ugv.sdf"/>
-	<arg name="model" default="sysu_ugv"/>
-    <include file="$(find prometheus_gazebo)/launch_test/sitl_car.launch">
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/r1_rover/r1_rover.sdf"/>
+	<arg name="model" default="r1_rover"/>
+    <include file="$(find prometheus_gazebo)/launch_car/sitl_car.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
