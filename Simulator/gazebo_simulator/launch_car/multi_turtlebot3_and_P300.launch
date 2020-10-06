@@ -26,7 +26,8 @@
 		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_controller_test.rviz" />
     </group>
 
-    <include file="$(find prometheus_gazebo)/launch_car/multi_turtlebot3.launch">
-    </include>
+  <include file="$(find prometheus_gazebo)/launch_car/multi_turtlebot3.launch">
+  </include>
 </launch>
 
+    
