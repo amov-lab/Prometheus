@@ -256,7 +256,7 @@ int main(int argc, char **argv)
     state_from_mavros _state_from_mavros;
 
     // 频率
-    ros::Rate rate(100.0);
+    ros::Rate rate(20.0);
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Main Loop<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while (ros::ok())
