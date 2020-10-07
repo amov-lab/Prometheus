@@ -103,6 +103,11 @@ target_link_libraries(ground_station_msg ${catkin_LIBRARIES})
 #add_executable(px4_fw_controller src/Test/px4_fw_controller.cpp)
 #add_dependencies(px4_fw_controller prometheus_control_gencpp)
 #target_link_libraries(px4_fw_controller ${catkin_LIBRARIES})
+
+add_executable(px4_sender src/Test/px4_sender.cpp)
+add_dependencies(px4_sender prometheus_control_gencpp)
+target_link_libraries(px4_sender ${catkin_LIBRARIES})
+
 ###### Utilities File ##########
 add_executable(keyboard_control src/Utilities/keyboard_control.cpp)
 add_dependencies(keyboard_control prometheus_control_gencpp)
