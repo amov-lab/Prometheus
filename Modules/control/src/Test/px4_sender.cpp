@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 
     printf_param();
     // 频率 [50Hz]
-    ros::Rate rate(50.0);
+    ros::Rate rate(20.0);
 
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
