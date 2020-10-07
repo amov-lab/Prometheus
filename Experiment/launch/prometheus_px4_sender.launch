@@ -26,6 +26,11 @@
 	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
 
+  <!-- vrpn -->
+	<include file="$(find vrpn_client_ros)/launch/sample.launch" launch-prefix="gnome-terminal --tab --">
+		<arg name="server" value="192.168.1.2"/>
+	</include>
+
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
