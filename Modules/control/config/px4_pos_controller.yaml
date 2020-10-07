@@ -3,7 +3,7 @@
 ## 控制器编号: 0 for 串级PID, 1 for PID, 2 for UDE, 3 for passivity, 4 for NE
 controller_number: 0
 ## 起飞高度
-Takeoff_height : 1.0
+Takeoff_height : 0.8
 ## 降落速度
 Land_speed : 0.3
 ##　上锁高度
