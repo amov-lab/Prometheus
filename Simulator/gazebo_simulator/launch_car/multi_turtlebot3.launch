@@ -5,32 +5,32 @@
   <arg name="second_tb3" default="tb3_1"/>
   <arg name="third_tb3"  default="tb3_2"/>
 
-  <arg name="first_tb3_x_pos" default="1.0"/>
+  <arg name="first_tb3_x_pos" default="3.0"/>
   <arg name="first_tb3_y_pos" default="0.0"/>
   <arg name="first_tb3_z_pos" default=" 0.0"/>
-  <arg name="first_tb3_yaw"   default=" 1.57"/>
+  <arg name="first_tb3_yaw"   default=" 0.0"/>
 
-  <arg name="second_tb3_x_pos" default=" 2.0"/>
+  <arg name="second_tb3_x_pos" default=" -3.0"/>
   <arg name="second_tb3_y_pos" default=" 0.0"/>
   <arg name="second_tb3_z_pos" default=" 0.0"/>
-  <arg name="second_tb3_yaw"   default=" 1.57"/>
+  <arg name="second_tb3_yaw"   default=" 0.0"/>
 
-  <arg name="third_tb3_x_pos" default=" 3.0"/>
-  <arg name="third_tb3_y_pos" default=" 0.0"/>
+  <arg name="third_tb3_x_pos" default=" 0.0"/>
+  <arg name="third_tb3_y_pos" default=" 3.0"/>
   <arg name="third_tb3_z_pos" default=" 0.0"/>
   <arg name="third_tb3_yaw"   default=" 0.0"/>
 
 	<!-- 启动Gazebo -->
 	<!-- Gazebo configs -->
-  <arg name="gui" default="true"/>
-	<!-- <arg name="world" default="$(find turtlebot3_gazebo)/worlds/turtlebot3_world.world"/> -->
-  <!-- 这个地面有点打滑！！ -->
-  <!-- <arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/> -->
-  <!-- Gazebo sim -->
+  <!-- <arg name="gui" default="true"/>
+	<arg name="world" default="$(find turtlebot3_gazebo)/worlds/turtlebot3_world.world"/>
+  这个地面有点打滑！！
+  <arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
+  Gazebo sim
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
       <arg name="gui" value="$(arg gui)"/>
-      <!-- <arg name="world_name" value="$(arg world)"/> -->
-  </include>
+      <arg name="world_name" value="$(arg world)"/>
+  </include> -->
 
   <group ns = "$(arg first_tb3)">
     <param name="robot_description" command="$(find xacro)/xacro --inorder $(find prometheus_gazebo)/turtlebot3_model/urdf/turtlebot3_$(arg model).urdf.xacro" />
