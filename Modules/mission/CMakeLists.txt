@@ -60,6 +60,10 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
+add_executable(turtlebot_uav_formation turtlebot_uav_formation/turtlebot_uav_formation.cpp)
+add_dependencies(turtlebot_uav_formation prometheus_mission_gencpp)
+target_link_libraries(turtlebot_uav_formation ${catkin_LIBRARIES})
+
 add_executable(circle_crossing circle_crossing/circle_crossing.cpp)
 add_dependencies(circle_crossing prometheus_mission_gencpp)
 target_link_libraries(circle_crossing ${catkin_LIBRARIES})

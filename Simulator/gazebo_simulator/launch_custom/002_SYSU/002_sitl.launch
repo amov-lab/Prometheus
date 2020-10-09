@@ -22,7 +22,7 @@
 	<!-- 启动Gazebo -->
 	<!-- Gazebo configs -->
     <arg name="gui" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/SYSU_vicon_room.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -31,8 +31,8 @@
 
 	<!-- Spawn vehicle model -->
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
-    <arg name="x" default="1.0"/>
-    <arg name="y" default="1.0"/>
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
     <arg name="z" default="0.1"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
