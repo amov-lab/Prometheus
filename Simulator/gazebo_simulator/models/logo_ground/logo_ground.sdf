@@ -21,6 +21,16 @@
             <size>10 10 .01</size>
           </box>
         </geometry>
+        <max_contacts>10</max_contacts>
+        <surface>
+          <bounce/>
+          <friction>
+            <ode/>
+          </friction>
+          <contact>
+            <ode/>
+          </contact>
+        </surface>
       </collision>
       <visual name="visual">
         <cast_shadows>false</cast_shadows>
