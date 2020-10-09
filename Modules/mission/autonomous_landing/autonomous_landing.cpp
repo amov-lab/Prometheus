@@ -196,7 +196,7 @@ int main(int argc, char **argv)
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
         cout << "Switch to OFFBOARD and arm ..."<<endl;
-        ros::Duration(3.0).sleep();
+        ros::Duration(5.0).sleep();
         
         Command_Now.header.stamp                    = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
