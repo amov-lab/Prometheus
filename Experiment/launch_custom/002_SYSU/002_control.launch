@@ -19,15 +19,22 @@
 	
 	<!-- run the px4_pos_controller.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-		<rosparam command="load" file="$(find prometheus_control)/config/px4_pos_controller.yaml"/>
+		<rosparam command="load" file="$(find prometheus_experiment)/launch_custom/002_SYSU/px4_pos_controller.yaml"/>
 	</node>
 	
 	<!-- run the ground_station.cpp -->
 	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
-
+  <!-- vrpn -->
+	<include file="$(find vrpn_client_ros)/launch/sample.launch" launch-prefix="gnome-terminal --tab --">
+		<arg name="server" value="192.168.1.2"/>
+	</include>
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_experiment)/launch_custom/002_SYSU/terminal_control.yaml" />
+	</node>	
 </launch>
 
