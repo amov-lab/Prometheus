@@ -3,7 +3,7 @@
 	<arg name="x" default="0.0"/>
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.05"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/SYSU_vicon_room.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/002_SYSU/SYSU_vicon_room.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
 	<arg name="model" default="P300_Monocular_down"/>
     <include file="$(find prometheus_gazebo)/launch_custom/002_SYSU/002_sitl.launch">
