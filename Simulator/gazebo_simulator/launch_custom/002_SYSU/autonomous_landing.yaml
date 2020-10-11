@@ -1,6 +1,6 @@
 # Parameter for autonomous_landing.cpp
 ##追踪距离阈值
-distance_thres: 0.55
+distance_thres: 0.2
 
 ## ukf仍有bug 建议不使用
 use_ukf: false
