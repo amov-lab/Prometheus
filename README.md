@@ -70,7 +70,37 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 - **移动平台自主降落**
 	
 	<img width="400" src="https://s1.ax1x.com/2020/08/11/aLawvj.gif"/>
-	
+
+## 国内gitee地址
+
+[gitee.com/amovlab/Prometheus](https://gitee.com/amovlab/Prometheus.git)
+
+**如何同步贡献代码（同时更新gitee与github）**
+
+1. 从其中一个仓库检出代码
+```
+git clone https://gitee.com/amovlab/Prometheus.git
+```
+
+2. 删除仓库origin
+```
+cd Prometheus
+git remote rm origin
+```
+
+3. 关联2个远程仓库
+```
+git remote add gitee https://gitee.com/amovlab/Prometheus.git
+git remote add github https://github.com/amov-lab/Prometheus.git
+```
+
+4. 同步更新
+```
+git push gitee master
+git push github master
+```
+
+> 如果遇到同步问题，需要输入`git pull github master --allow-unrelated-histories`
 
 ## 版权申明
 
