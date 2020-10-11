@@ -5,7 +5,7 @@
 
 	<!-- 启动Gazebo，可选择仿真所用的world -->
   	<arg name="gui" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/SYSU_vicon_room.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/002_SYSU/SYSU_vicon_room.world"/>
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
         <arg name="world_name" value="$(arg world)"/>

@@ -22,7 +22,7 @@
 	<!-- 启动Gazebo -->
 	<!-- Gazebo configs -->
     <arg name="gui" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/SYSU_vicon_room.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/002_SYSU/SYSU_vicon_room.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
