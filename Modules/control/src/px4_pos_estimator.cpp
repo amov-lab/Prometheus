@@ -51,6 +51,7 @@ using namespace std;
 int input_source; //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
 Eigen::Vector3f pos_offset;
 float yaw_offset;
+string object_name;
 //---------------------------------------vicon定位相关------------------------------------------
 Eigen::Vector3d pos_drone_mocap; //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -212,6 +213,7 @@ int main(int argc, char **argv)
 
     //读取参数表中的参数
     // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
+    nh.param<string>("object_name", object_name, "UAV");
     nh.param<int>("input_source", input_source, 0);
     //
     nh.param<float>("offset_x", pos_offset[0], 0);
@@ -226,15 +228,13 @@ int main(int argc, char **argv)
     ros::Subscriber t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 100, t265_cb);
 
     // 【订阅】optitrack估计位置
-    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/UAV/pose", 1000, optitrack_cb);
+    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ object_name + "/pose", 1000, optitrack_cb);
 
     // 【订阅】gazebo仿真真值
     ros::Subscriber gazebo_sub = nh.subscribe<nav_msgs::Odometry>("/prometheus/ground_truth/p300_basic", 100, gazebo_cb);
 
     // 【订阅】SLAM估计位姿
     ros::Subscriber slam_sub = nh.subscribe<geometry_msgs::PoseStamped>("/slam/pose", 100, slam_cb);
-
-
 
     // 【发布】无人机位置和偏航角 坐标系 ENU系
     //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#??), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
