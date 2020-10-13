@@ -26,7 +26,9 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
   
  - 想了解更多资讯信息或者寻求项目合作、无人机软硬件定制服务，请扫描右方二维码并关注微信公众号 **阿木实验室**
  
+## Prometheus校园赞助计划
 
+只要使用Prometheus项目进行自主无人机开发，并发表论文，即可获得阿木奖学金，详情请戳：
 
 ## 功能展示
  - **RGBD相机建图**
@@ -71,36 +73,8 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 	
 	<img width="400" src="https://s1.ax1x.com/2020/08/11/aLawvj.gif"/>
 
-## 国内gitee地址
-
-[gitee.com/amovlab/Prometheus](https://gitee.com/amovlab/Prometheus.git)
-
-**如何同步贡献代码（同时更新gitee与github）**
-
-1. 从其中一个仓库检出代码
-```
-git clone https://gitee.com/amovlab/Prometheus.git
-```
-
-2. 删除仓库origin
-```
-cd Prometheus
-git remote rm origin
-```
-
-3. 关联2个远程仓库
-```
-git remote add gitee https://gitee.com/amovlab/Prometheus.git
-git remote add github https://github.com/amov-lab/Prometheus.git
-```
-
-4. 同步更新
-```
-git push gitee master
-git push github master
-```
-
-> 如果遇到同步问题，需要输入`git pull github master --allow-unrelated-histories`
+- **无人机＋无人车协同控制**
+<img width="400" src="https://s1.ax1x.com/2020/10/13/0fAJN6.gif"/>
 
 ## 版权申明
 
