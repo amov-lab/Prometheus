@@ -161,27 +161,26 @@ int main(int argc, char **argv)
     // 起飞
     Command_Now.Command_ID = 1;
     Command_Now.source = NODE_NAME;
-    while( _DroneState.position[2] < 0.3)
-    {
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
-        Command_Now.Command_ID = Command_Now.Command_ID + 1;
-        Command_Now.source = NODE_NAME;
-        Command_Now.Reference_State.yaw_ref = 999;
-        command_pub.publish(Command_Now);   
-        cout << "Switch to OFFBOARD and arm ..."<<endl;
-        ros::Duration(3.0).sleep();
-        
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
-        Command_Now.Command_ID = Command_Now.Command_ID + 1;
-        Command_Now.source = NODE_NAME;
-        command_pub.publish(Command_Now);
-        cout << "Takeoff ..."<<endl;
-        ros::Duration(3.0).sleep();
 
-        ros::spinOnce();
-    }
+    Command_Now.header.stamp = ros::Time::now();
+    Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+    Command_Now.Command_ID = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
+    Command_Now.Reference_State.yaw_ref = 999;
+    command_pub.publish(Command_Now);   
+    cout << "Switch to OFFBOARD and arm ..."<<endl;
+    ros::Duration(3.0).sleep();
+    
+    Command_Now.header.stamp = ros::Time::now();
+    Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+    Command_Now.Command_ID = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
+    command_pub.publish(Command_Now);
+    cout << "Takeoff ..."<<endl;
+    ros::Duration(3.0).sleep();
+
+    ros::spinOnce();
+    
 
     while (ros::ok())
     {
@@ -189,6 +188,22 @@ int main(int argc, char **argv)
         ros::spinOnce();
 
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>> Planning Mission <<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+
+        // 若goal为99，则降落并退出任务
+        if(goal.pose.position.x == 99)
+        {
+            // 抵达目标附近，则停止速度控制，改为位置控制
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Land;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
+
+            command_pub.publish(Command_Now);
+            cout << "Quit... " << endl;
+
+            return 0;
+        }
+
         if( flag_get_cmd == 0)
         {
             cout << "Waiting for trajectory" << endl;
@@ -213,6 +228,7 @@ int main(int argc, char **argv)
             flag_get_goal = 0;
             while (flag_get_goal == 0)
             {
+                cout << "Waiting for trajectory" << endl;
                 ros::spinOnce();
                 ros::Duration(0.05).sleep();
             }
