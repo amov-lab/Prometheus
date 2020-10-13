@@ -21,23 +21,23 @@ geo_fence:
 ## 位置环参数 - cascade pid
 ## 目前参数为PX4默认参数
 Pos_cascade_pid:
-  Kp_xy : 0.95
-  Kp_z : 1.5
+  Kp_xy : 0.9
+  Kp_z : 1.1
   Kp_vxvy : 0.09
   Kp_vz : 0.2
   Ki_vxvy : 0.02
-  Ki_vz : 0.1
+  Ki_vz : 0.05
   Kd_vxvy : 0.016
   Kd_vz : 0.0
   ##悬停油门，取决于飞机重量
-  Hover_throttle : 0.25
+  Hover_throttle : 0.20
   MPC_VELD_LP: 5.0
 
 ## 限制参数 
 Limit:
   tilt_max: 5.0
-  XY_VEL_MAX : 3.0
-  Z_VEL_MAX : 3.0
+  XY_VEL_MAX : 1.0
+  Z_VEL_MAX : 1.0
   THR_MIN: 0.1
   THR_MAX: 0.9
   pxy_error_max: 10.0
