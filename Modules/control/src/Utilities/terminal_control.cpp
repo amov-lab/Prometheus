@@ -273,13 +273,11 @@ void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_t
     geometry_msgs::PoseStamped reference_pose;
 
     reference_pose.header.stamp = ros::Time::now();
-    reference_pose.header.frame_id = "map";
+    reference_pose.header.frame_id = "world";
 
     reference_pose.pose.position.x = pos_ref.position_ref[0];
     reference_pose.pose.position.y = pos_ref.position_ref[1];
     reference_pose.pose.position.z = pos_ref.position_ref[2];
-
-    //ref_pose_pub.publish(reference_pose);
 
     if(draw_trajectory)
     {
@@ -290,7 +288,7 @@ void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_t
         
         nav_msgs::Path reference_trajectory;
         reference_trajectory.header.stamp = ros::Time::now();
-        reference_trajectory.header.frame_id = "map";
+        reference_trajectory.header.frame_id = "world";
         reference_trajectory.poses = posehistory_vector_;
         ref_trajectory_pub.publish(reference_trajectory);
     }else
@@ -299,7 +297,7 @@ void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_t
         
         nav_msgs::Path reference_trajectory;
         reference_trajectory.header.stamp = ros::Time::now();
-        reference_trajectory.header.frame_id = "map";
+        reference_trajectory.header.frame_id = "world";
         reference_trajectory.poses = posehistory_vector_;
         ref_trajectory_pub.publish(reference_trajectory);
     }
