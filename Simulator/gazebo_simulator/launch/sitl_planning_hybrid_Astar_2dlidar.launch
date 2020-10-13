@@ -6,8 +6,8 @@
     <arg name="max_vel" default="1.0"/>
     <arg name="max_acc" default="0.5"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
-	<arg name="model" default="P300_3Dlidar"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
+	<arg name="model" default="P300_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -17,6 +17,10 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
+	<!-- run the laser_to_pointcloud -->
+    <node pkg="prometheus_gazebo" type="laser_to_pointcloud.py" name="laser_to_pointcloud" >
+    </node>
+
     <!-- 启动octomap建图 -->
     <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
         <param name="resolution" value="0.1" />
@@ -25,7 +29,7 @@
         <!-- 传感器最大感知范围 (speedup!) -->
         <param name="sensor_model/max_range" value="5.0" />
         <!-- 局部点云输入,该话题定义在3Dlidar.sdf中 (PointCloud2) -->
-        <remap from="cloud_in" to="/prometheus/sensors/3Dlidar_scan" />
+        <remap from="cloud_in" to="/prometheus/sensors/pcl2" />
     </node>
 
     <!-- 启动全局规划算法 -->
