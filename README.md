@@ -28,7 +28,7 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
  
 ## Prometheus校园赞助计划
 
-只要使用Prometheus项目进行自主无人机开发，并发表论文，即可获得阿木奖学金，详情请戳：
+只要使用Prometheus项目进行自主无人机开发，并发表论文，即可获得阿木奖学金，详情请戳[这里](https://mp.weixin.qq.com/s/zU-iXMKh0An-v6vZXH_Rmg) ！
 
 ## 功能展示
  - **RGBD相机建图**
@@ -74,7 +74,8 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 	<img width="400" src="https://s1.ax1x.com/2020/08/11/aLawvj.gif"/>
 
 - **无人机＋无人车协同控制**
-<img width="400" src="https://s1.ax1x.com/2020/10/13/0fAJN6.gif"/>
+	
+	<img width="400" src="https://s1.ax1x.com/2020/10/13/0fAJN6.gif"/>
 
 ## 版权申明
 
