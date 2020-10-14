@@ -38,7 +38,8 @@ float Land_speed;                                           //降落速度
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
 Eigen::Vector2f geo_fence_z;
-
+//起飞位置
+Eigen::Vector3d Takeoff_position;
 prometheus_msgs::DroneState _DroneState;                          //无人机状态量
 
 prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
@@ -92,12 +93,14 @@ void station_command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
         Command_Now = Command_Last;
     }
 }
+
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
 
     _DroneState.time_from_start = cur_time;
 }
+
 void timerCallback(const ros::TimerEvent& e)
 {
     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
@@ -185,25 +188,6 @@ int main(int argc, char **argv)
         pos_controller_ne.printf_param();
     }
 
-    // 先读取一些飞控的数据
-    for(int i=0;i<100;i++)
-    {
-        ros::spinOnce();
-        rate.sleep();
-    }
-
-    // Set the takeoff position
-    Eigen::Vector3d Takeoff_position;
-    Takeoff_position[0] = _DroneState.position[0];
-    Takeoff_position[1] = _DroneState.position[1];
-    Takeoff_position[2] = _DroneState.position[2];
-    // NE控制律需要设置起飞初始值
-    if(controller_number == 4)
-    {
-       pos_controller_ne.set_initial_pos(Takeoff_position);
-    }
-
-
     // 初始化命令-
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
@@ -258,9 +242,6 @@ int main(int argc, char **argv)
                     _command_to_mavros.mode_cmd.request.custom_mode = "OFFBOARD";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Setting to OFFBOARD Mode...");
-                    // //执行回调函数
-                    // ros::spinOnce();
-                    // ros::Duration(0.5).sleep();
                 }
 
                 if(!_DroneState.armed)
@@ -268,9 +249,6 @@ int main(int argc, char **argv)
                     _command_to_mavros.arm_cmd.request.value = true;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Arming...");
-                    // //执行回调函数
-                    // ros::spinOnce();
-                    // ros::Duration(0.5).sleep();
                 }
             }
         
@@ -281,6 +259,16 @@ int main(int argc, char **argv)
 
             if (Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
             {
+                // 设定起飞位置
+                Takeoff_position[0] = _DroneState.position[0];
+                Takeoff_position[1] = _DroneState.position[1];
+                Takeoff_position[2] = _DroneState.position[2];
+                // NE控制律需要设置起飞初始值
+                if(controller_number == 4)
+                {
+                    pos_controller_ne.set_initial_pos(Takeoff_position);
+                }
+                //
                 Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
                 Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
                 Command_Now.Reference_State.position_ref[0] = Takeoff_position[0];
