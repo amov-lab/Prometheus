@@ -245,10 +245,6 @@ void command_to_mavros::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d& state_
     // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
 }
 
-
-
-
-
 //发送速度期望值至飞控（输入：期望vxvyvz,期望yaw）
 void command_to_mavros::send_vel_setpoint(const Eigen::Vector3d& vel_sp, float yaw_sp)
 {
