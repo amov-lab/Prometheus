@@ -35,6 +35,7 @@ float cur_time;                                             //程序运行时间
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
 Eigen::Vector2f geo_fence_z;
+float Land_speed;                                           //降落速度
 
 prometheus_msgs::DroneState _DroneState;                         //无人机状态量
 
@@ -126,6 +127,7 @@ int main(int argc, char **argv)
     // 参数读取
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
     nh.param<float>("Disarm_height", Disarm_height, 0.15);
+    nh.param<float>("Land_speed", Land_speed, 0.2);
 
     nh.param<float>("geo_fence/x_min", geo_fence_x[0], -100.0);
     nh.param<float>("geo_fence/x_max", geo_fence_x[1], 100.0);
@@ -242,11 +244,13 @@ int main(int argc, char **argv)
             
         case prometheus_msgs::ControlCommand::Takeoff:
 
-            pos_sp = Eigen::Vector3d(Takeoff_position[0],Takeoff_position[1],Takeoff_position[2]+Takeoff_height);
+            pos_sp = Eigen::Vector3d(Takeoff_position[0],Takeoff_position[1],Takeoff_position[2] + Takeoff_height);
             vel_sp = Eigen::Vector3d(0.0,0.0,0.0);
             yaw_sp = _DroneState.attitude[2]; //rad
 
             _command_to_mavros.send_pos_setpoint(pos_sp, yaw_sp);
+
+            //_command_to_mavros.takeoff();
 
             break;
 
@@ -265,9 +269,9 @@ int main(int argc, char **argv)
                 pos_sp = Eigen::Vector3d(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]);
                 vel_sp = Eigen::Vector3d(0.0,0.0,0.0);
                 yaw_sp = _DroneState.attitude[2]; //rad
-               
             }
             _command_to_mavros.send_pos_setpoint(pos_sp, yaw_sp);
+            //_command_to_mavros.loiter();
 
             break;
 
@@ -276,15 +280,18 @@ int main(int argc, char **argv)
 
             if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
             {
-                pos_sp = Eigen::Vector3d(_DroneState.position[0],_DroneState.position[1],Takeoff_position[2]);
+                state_sp = Eigen::Vector3d(_DroneState.position[0],_DroneState.position[1], Takeoff_position[2] );
                 yaw_sp = _DroneState.attitude[2];
-                _command_to_mavros.send_pos_setpoint(pos_sp, yaw_sp);
             }
+            
 
             //如果距离起飞高度小于10厘米，则直接切换为land模式；
-            if(abs(_DroneState.position[2] - Takeoff_position[2]) < Disarm_height)
+            if(abs(_DroneState.position[2] - Takeoff_position[2]) > Disarm_height)
             {
-                if(_DroneState.mode == "OFFBOARD")
+                _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+            }else
+            {
+                if(_DroneState.mode != "AUTO.LAND")
                 {
                     //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
                     _command_to_mavros.mode_cmd.request.custom_mode = "AUTO.LAND";
@@ -292,6 +299,7 @@ int main(int argc, char **argv)
                     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "LAND: inter AUTO LAND filght mode");
                 }
             }
+            // _command_to_mavros.land();
 
             if(_DroneState.landed)
             {
@@ -302,32 +310,26 @@ int main(int argc, char **argv)
 
         case prometheus_msgs::ControlCommand::Move:
 
-            // 怎么处理？
-            if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::TRAJECTORY )
-            {
-                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");
-            }
-
+            // PX4暂不支持轨迹模式
+            // PX4暂不支持位置－速度复合模式（详细见mavlink_receiver.cpp）
             if(Command_Now.Reference_State.Move_frame  == prometheus_msgs::PositionReference::ENU_FRAME)
             {
                 if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_POS )
                 {
                     state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
                     yaw_sp = Command_Now.Reference_State.yaw_ref;
-                    _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
                 }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
                 {
                     state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
                     yaw_sp = Command_Now.Reference_State.yaw_ref;
-                    _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
                 }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
                 {
                     state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.position_ref[2]);
                     yaw_sp = Command_Now.Reference_State.yaw_ref;
-                    _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
-                }else
+                }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
                 {
-                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");
+                    state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.velocity_ref[2]);
+                    yaw_sp = Command_Now.Reference_State.yaw_ref;
                 }
             }else
             {
@@ -346,7 +348,7 @@ int main(int argc, char **argv)
                         Command_Now.Reference_State.velocity_ref[1] = 0;
                         Command_Now.Reference_State.velocity_ref[2] = 0; 
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
-                        yaw_sp = Command_Now.Reference_State.yaw_ref;
+                        yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
                     {
                         //xy velocity mode
@@ -362,7 +364,7 @@ int main(int argc, char **argv)
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
                         Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
-                        yaw_sp = Command_Now.Reference_State.yaw_ref;
+                        yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
                     {
                         //xy velocity mode
@@ -378,23 +380,37 @@ int main(int argc, char **argv)
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
                         Command_Now.Reference_State.velocity_ref[2] = 0.0;
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.position_ref[2]);
-                        yaw_sp = Command_Now.Reference_State.yaw_ref;
-                    }else
+                        yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
+                    }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
                     {
-                        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");
+                        float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
+                        float d_pos_enu[2];                                                           //the desired xy position in enu Frame (The origin point is the drone)
+                        prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_pos_body, d_pos_enu);
+
+                        Command_Now.Reference_State.position_ref[0] = _DroneState.position[0] + d_pos_enu[0];
+                        Command_Now.Reference_State.position_ref[1] = _DroneState.position[1] + d_pos_enu[1];
+                        state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.velocity_ref[2]);
+                        yaw_sp = Command_Now.Reference_State.yaw_ref;
                     }
                 }
+            }
 
-                if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_POS )
-                {
-                    _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
-                }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
-                {
-                    _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
-                }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
-                {
-                    _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
-                }
+            if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_POS )
+            {
+                _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+            }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
+            {
+                _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
+            }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
+            {
+                _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
+            }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
+            {
+                _command_to_mavros.send_pos_xy_vel_z_setpoint(state_sp, yaw_sp);
+            }else
+            {
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");
+                _command_to_mavros.loiter();
             }
             break;
 
