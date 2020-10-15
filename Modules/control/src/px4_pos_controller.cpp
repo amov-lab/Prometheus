@@ -309,7 +309,7 @@ int main(int argc, char **argv)
             //如果距离起飞高度小于10厘米，则直接切换为land模式；
             if(abs(_DroneState.position[2] - Takeoff_position[2]) < Disarm_height)
             {
-                if(_DroneState.mode == "OFFBOARD")
+                if(_DroneState.mode != "AUTO.LAND")
                 {
                     //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
                     _command_to_mavros.mode_cmd.request.custom_mode = "AUTO.LAND";
