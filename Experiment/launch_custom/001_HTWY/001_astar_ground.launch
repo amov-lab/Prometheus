@@ -10,6 +10,7 @@
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
 	<node pkg="prometheus_mission" type="planning_mission_astar" name="planning_mission_astar" output="screen" launch-prefix="gnome-terminal --">	
 		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
+		<param name="planning_mission/FLY_HEIGHT" value="0.6" type="double"/>
 	</node>
 
 	<!-- 启动rviz,设为false可关闭 -->

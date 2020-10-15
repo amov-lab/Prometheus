@@ -15,6 +15,7 @@
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
 		<param name="input_source" value="0" />
+        <param name="object_name" value="UAV0" />
 	</node>
 	
 	<!-- run the px4_pos_controller.cpp -->
