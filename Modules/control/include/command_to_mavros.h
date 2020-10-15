@@ -121,6 +121,15 @@ class command_to_mavros
     //Idle. Do nothing.
     void idle();
 
+    //px4 takeoff
+    void takeoff();
+
+    //px4 loiter
+    void loiter();
+
+    // px4 land
+    void land();
+
     //发送位置期望值至飞控（输入：期望xyz,期望yaw）
     void send_pos_setpoint(const Eigen::Vector3d& pos_sp, float yaw_sp);
 
@@ -132,6 +141,8 @@ class command_to_mavros
 
     //发送速度期望值至飞控（机体系）（输入：期望vxvyvz,期望yaw）
     void send_vel_setpoint_body(const Eigen::Vector3d& vel_sp, float yaw_sp);
+
+    void send_pos_xy_vel_z_setpoint(const Eigen::Vector3d& state_sp, float yaw_sp);
 
     //发送加速度期望值至飞控（输入：期望axayaz,期望yaw）
     //这是px4_pos_controller.cpp中目前使用的控制方式
@@ -187,11 +198,47 @@ class command_to_mavros
 
 };
 
+void command_to_mavros::takeoff()
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    //飞控如何接收该信号请见mavlink_receiver.cpp
+    //飞控如何执行该指令请见FlightTaskOffboard.cpp
+    //需要在QGC设置起飞高度
+    pos_setpoint.type_mask = 0x1000;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+}
+
+void command_to_mavros::land()
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    //飞控如何接收该信号请见mavlink_receiver.cpp
+    //飞控如何执行该指令请见FlightTaskOffboard.cpp
+    //需要在QGC设置降落速度
+    pos_setpoint.type_mask = 0x2000;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+}
+
+void command_to_mavros::loiter()
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    //飞控如何接收该信号请见mavlink_receiver.cpp
+    //飞控如何执行该指令请见FlightTaskOffboard.cpp
+    pos_setpoint.type_mask = 0x3000;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+}
+
 void command_to_mavros::idle()
 {
     mavros_msgs::PositionTarget pos_setpoint;
 
-    //Here pls ref to mavlink_receiver.cpp
+    //飞控如何接收该信号请见mavlink_receiver.cpp
+    //飞控如何执行该指令请见FlightTaskOffboard.cpp
     pos_setpoint.type_mask = 0x4000;
 
     setpoint_raw_local_pub.publish(pos_setpoint);
@@ -219,29 +266,6 @@ void command_to_mavros::send_pos_setpoint(const Eigen::Vector3d& pos_sp, float y
     // 检查飞控是否收到控制量
     // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     // cout << "Pos_target [X Y Z] : " << pos_drone_fcu_target[0] << " [ m ] "<< pos_drone_fcu_target[1]<<" [ m ] "<<pos_drone_fcu_target[2]<<" [ m ] "<<endl;
-    // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
-}
-
-void command_to_mavros::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d& state_sp, float yaw_sp)
-{
-    mavros_msgs::PositionTarget pos_setpoint;
-
-     pos_setpoint.type_mask = 0b100111000011;
-
-    pos_setpoint.coordinate_frame = 1;
-
-    pos_setpoint.velocity.x = state_sp[0];
-    pos_setpoint.velocity.y = state_sp[1];
-    pos_setpoint.velocity.z = 0.0;
-    pos_setpoint.position.z = state_sp[2];
-
-    pos_setpoint.yaw = yaw_sp;
-
-    setpoint_raw_local_pub.publish(pos_setpoint);
-    
-    // 检查飞控是否收到控制量
-    // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    // cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
     // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
 }
 
@@ -288,6 +312,55 @@ void command_to_mavros::send_vel_setpoint_body(const Eigen::Vector3d& vel_sp, fl
     setpoint_raw_local_pub.publish(pos_setpoint);
 
     // // 检查飞控是否收到控制量
+    // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    // cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
+    // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
+}
+
+void command_to_mavros::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d& state_sp, float yaw_sp)
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+    pos_setpoint.type_mask = 0b10011100011;   // 100 111 000 011  vx vy vz z + yaw
+
+    pos_setpoint.coordinate_frame = 1;
+
+    pos_setpoint.velocity.x = state_sp[0];
+    pos_setpoint.velocity.y = state_sp[1];
+    pos_setpoint.velocity.z = 0.0;
+    pos_setpoint.position.z = state_sp[2];
+
+    pos_setpoint.yaw = yaw_sp;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+    
+    // 检查飞控是否收到控制量
+    // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    // cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
+    // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
+}
+
+void command_to_mavros::send_pos_xy_vel_z_setpoint(const Eigen::Vector3d& state_sp, float yaw_sp)
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+    pos_setpoint.type_mask = 0b100111000000;   // 100 111 000 100  vx vy　vz x y z+ yaw
+
+    pos_setpoint.coordinate_frame = 1;
+
+    pos_setpoint.position.x = state_sp[0];
+    pos_setpoint.position.y = state_sp[1];
+    pos_setpoint.velocity.x = 0.0;
+    pos_setpoint.velocity.y = 0.0;
+    pos_setpoint.velocity.z = state_sp[2];
+
+    pos_setpoint.yaw = yaw_sp;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+    
+    // 检查飞控是否收到控制量
     // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     // cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
     // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
