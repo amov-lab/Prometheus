@@ -218,7 +218,7 @@ int main(int argc, char **argv)
             Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
             Command_Now.Reference_State.position_ref[0]     = goal.pose.position.x;
             Command_Now.Reference_State.position_ref[1]     = goal.pose.position.y;
-            Command_Now.Reference_State.position_ref[2]     = goal.pose.position.z;
+            Command_Now.Reference_State.position_ref[2]     = FLY_HEIGHT;
 
             Command_Now.Reference_State.yaw_ref             = desired_yaw;
             command_pub.publish(Command_Now);
