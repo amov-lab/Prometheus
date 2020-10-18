@@ -379,7 +379,7 @@
       <bodyName>landing_pad_link</bodyName>
       <topicName>ground_truth/landing_pad</topicName>
       <gaussianNoise>0.00</gaussianNoise>
-      <frameName>map</frameName>
+      <frameName>world</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
       <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>

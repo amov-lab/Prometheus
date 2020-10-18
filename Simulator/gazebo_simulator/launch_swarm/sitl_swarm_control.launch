@@ -34,8 +34,8 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav1/P300_uav1.sdf"/>
 		<arg name="model" default="P300_uav1"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="1"/>
-		<arg name="y" default="0"/>
+		<arg name="x" default="0"/>
+		<arg name="y" default="2"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -117,8 +117,8 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav3/P300_uav3.sdf"/>
 		<arg name="model" default="P300_uav3"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="-1"/>
-		<arg name="y" default="0.5"/>
+		<arg name="x" default="0"/>
+		<arg name="y" default="0"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -158,8 +158,8 @@
 		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav4/P300_uav4.sdf"/>
 		<arg name="model" default="P300_uav4"/>
 		<!-- 初始位置，Yaw为偏航角 -->
-		<arg name="x" default="-1"/>
-		<arg name="y" default="-0.5"/>
+		<arg name="x" default="0"/>
+		<arg name="y" default="-1.0"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -200,7 +200,7 @@
 		<arg name="model" default="P300_uav5"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="0"/>
-		<arg name="y" default="-1"/>
+		<arg name="y" default="-2.0"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -229,6 +229,142 @@
 			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
 			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
 		</node>
+    </group>
+
+	<arg name="k_p" default="0.95"/>
+	<arg name="k_aij" default="0.1"/>
+	<arg name="Takeoff_height" default="1.0"/>
+	<arg name="Disarm_height" default="0.1"/>
+	<arg name="Land_speed" default="0.2"/>
+	<arg name="x_min" default="-100.0"/>
+	<arg name="x_max" default="100.0"/>
+	<arg name="y_min" default="-100.0"/>
+	<arg name="y_max" default="100"/>
+	<arg name="z_min" default="-1.0"/>
+	<arg name="z_max" default="100.0"/>
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav1" output="screen" launch-prefix="gnome-terminal --tab --">
+		<param name="uav_name" value="/uav1"/>
+		<param name="neighbour_name1" value="/uav2" />
+		<param name="neighbour_name2" value="/uav5"/>
+		<param name="k_p" value="$(arg k_p)"/>
+		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
+		<param name="Disarm_height" value="$(arg Disarm_height)"/>
+		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+		<param name="geo_fence/z_min" value="$(arg z_min)"/>
+		<param name="geo_fence/z_max" value="$(arg z_max)"/>
+	</node>
+
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav2" output="screen">
+		<param name="uav_name" value="/uav2"/>
+		<param name="neighbour_name1" value="/uav1" />
+		<param name="neighbour_name2" value="/uav3"/>
+		<param name="k_p" value="$(arg k_p)"/>
+		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
+		<param name="Disarm_height" value="$(arg Disarm_height)"/>
+		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+		<param name="geo_fence/z_min" value="$(arg z_min)"/>
+		<param name="geo_fence/z_max" value="$(arg z_max)"/>	
+	</node>
+
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav3" output="screen">
+		<param name="uav_name" value="/uav3"/>
+		<param name="neighbour_name1" value="/uav2" />
+		<param name="neighbour_name2" value="/uav4"/>
+		<param name="k_p" value="$(arg k_p)"/>
+		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
+		<param name="Disarm_height" value="$(arg Disarm_height)"/>
+		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+		<param name="geo_fence/z_min" value="$(arg z_min)"/>
+		<param name="geo_fence/z_max" value="$(arg z_max)"/>	
+	</node>
+
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav4" output="screen">
+		<param name="uav_name" value="/uav4"/>
+		<param name="neighbour_name1" value="/uav3" />
+		<param name="neighbour_name2" value="/uav5"/>
+		<param name="k_p" value="$(arg k_p)"/>
+		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
+		<param name="Disarm_height" value="$(arg Disarm_height)"/>
+		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+		<param name="geo_fence/z_min" value="$(arg z_min)"/>
+		<param name="geo_fence/z_max" value="$(arg z_max)"/>	
+	</node>
+
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav5" output="screen">
+		<param name="uav_name" value="/uav5"/>
+		<param name="neighbour_name1" value="/uav4" />
+		<param name="neighbour_name2" value="/uav1"/>
+		<param name="k_p" value="$(arg k_p)"/>
+		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
+		<param name="Disarm_height" value="$(arg Disarm_height)"/>
+		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+		<param name="geo_fence/z_min" value="$(arg z_min)"/>
+		<param name="geo_fence/z_max" value="$(arg z_max)"/>	
+	</node>
+
+	<arg name="input_source" default="2"/>
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav1" output="screen">
+		<param name="uav_name" value="/uav1"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav2" output="screen">
+		<param name="uav_name" value="/uav2"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav3" output="screen">
+		<param name="uav_name" value="/uav3"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav4" output="screen">
+		<param name="uav_name" value="/uav4"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav5" output="screen">
+		<param name="uav_name" value="/uav5"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+
+	<node pkg="prometheus_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">
+	</node>
+
+	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
+		<param name="uav_name" value="/uav5"/>
+		<param name="virtual_leader_pos_x" value="0.0" />
+		<param name="virtual_leader_pos_y" value="0.0" />
+		<param name="virtual_leader_pos_z" value="0.0" />
+		<param name="virtual_leader_yaw" value="0.0" />
+		<param name="formation_size" value="1.0" />
+	</node>
+
+	<!-- run the rviz -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/launch_swarm/swarm_rviz_config.rviz" />
     </group>
 </launch>
 

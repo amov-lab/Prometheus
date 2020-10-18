@@ -6,7 +6,7 @@
 
 //topic 头文件
 #include <geometry_msgs/Point.h>
-#include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/SwarmCommand.h>
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/PositionReference.h>
@@ -20,49 +20,41 @@
 #include <prometheus_msgs/DroneState.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/Int8.h>
+#include <math.h>
 #include "message_utils.h"
 
 using namespace std;
 
-
-#define FIVE_STAR_SIZE 2.0
-#define TRIANGLE_SIZE 2.0
-#define T_SIZE 2.0
 # define NODE_NAME "formation_flight"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-geometry_msgs::Point leader;
-geometry_msgs::Point relative_pos_to_leader1;
-geometry_msgs::Point relative_pos_to_leader2;
-geometry_msgs::Point relative_pos_to_leader3;
-geometry_msgs::Point relative_pos_to_leader4;
-geometry_msgs::Point relative_pos_to_leader5;
+int uav_number;
 
-geometry_msgs::PoseStamped goal;
-int flag_get_goal;
+prometheus_msgs::SwarmCommand Command_uav1;  
+prometheus_msgs::SwarmCommand Command_uav2;  
+prometheus_msgs::SwarmCommand Command_uav3;  
+prometheus_msgs::SwarmCommand Command_uav4;  
+prometheus_msgs::SwarmCommand Command_uav5;  
 
-ros::Publisher leader_pub;
-ros::Publisher formation_pub1;
-ros::Publisher formation_pub2;
-ros::Publisher formation_pub3;
-ros::Publisher formation_pub4;
-ros::Publisher formation_pub5;
+Eigen::Vector3f virtual_leader_pos;
+float virtual_leader_yaw;
+float formation_size;
 
-float uav_number;
+ros::Publisher uav1_command_pub;
+ros::Publisher uav2_command_pub;
+ros::Publisher uav3_command_pub;
+ros::Publisher uav4_command_pub;
+ros::Publisher uav5_command_pub;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void five_star();
 void triangle();
-void T_shape();
+void one_column();
+void triangle_to_one_column();
+void one_column_to_triangle();
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void goal_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
-    goal = *msg;
-    flag_get_goal = 1;
     cout << "Get a new goal from rviz!"<<endl;
-
-    //高度打死
-    leader.x = goal.pose.position.x;
-    leader.y = goal.pose.position.y;
-    leader.z = 1.0;
+    virtual_leader_pos[0] = msg->pose.position.x;
+    virtual_leader_pos[1] = msg->pose.position.y;
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -70,21 +62,25 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "formation_flight");
     ros::NodeHandle nh("~");
 
-    nh.param<float>("uav_number", uav_number, 5);
-    
+    nh.param<int>("uav_number", uav_number, 5);
+    nh.param<float>("virtual_leader_pos_x", virtual_leader_pos[0], 0.0);
+    nh.param<float>("virtual_leader_pos_y", virtual_leader_pos[1], 0.0);
+    nh.param<float>("virtual_leader_pos_z", virtual_leader_pos[2], 1.0);
+    nh.param<float>("virtual_leader_yaw", virtual_leader_yaw, 0.0);
+    nh.param<float>("formation_size", formation_size, 1.0);
+
     //【订阅】目标点
-    ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/formation/goal", 10, goal_cb);
+    ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/formation/virtual_leader", 10, goal_cb);
 
     // 【发布】用于地面站显示的提示消息
     ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
     //【发布】阵型
-    leader_pub     = nh.advertise<geometry_msgs::Point>("/prometheus/formation/leader_pos", 10);
-    formation_pub1 = nh.advertise<geometry_msgs::Point>("/prometheus/formation/uav1", 10);
-    formation_pub2 = nh.advertise<geometry_msgs::Point>("/prometheus/formation/uav2", 10);
-    formation_pub3 = nh.advertise<geometry_msgs::Point>("/prometheus/formation/uav3", 10);
-    formation_pub4 = nh.advertise<geometry_msgs::Point>("/prometheus/formation/uav4", 10);
-    formation_pub5 = nh.advertise<geometry_msgs::Point>("/prometheus/formation/uav5", 10);
+    uav1_command_pub = nh.advertise<prometheus_msgs::SwarmCommand>("/uav1/prometheus/swarm_command", 10);
+    uav2_command_pub = nh.advertise<prometheus_msgs::SwarmCommand>("/uav2/prometheus/swarm_command", 10);
+    uav3_command_pub = nh.advertise<prometheus_msgs::SwarmCommand>("/uav3/prometheus/swarm_command", 10);
+    uav4_command_pub = nh.advertise<prometheus_msgs::SwarmCommand>("/uav4/prometheus/swarm_command", 10);
+    uav5_command_pub = nh.advertise<prometheus_msgs::SwarmCommand>("/uav5/prometheus/swarm_command", 10);
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -104,52 +100,116 @@ int main(int argc, char **argv)
 
     while(start_flag == 0)
     {
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please enter 1 to takeoff all the UAVs."<<endl;
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << "Please enter 1 to disarm and takeoff all the UAVs."<<endl;
         cin >> start_flag;
-        leader_pub.publish(leader);
+
+        Command_uav1.Mode = prometheus_msgs::SwarmCommand::Idle;
+        Command_uav1.yaw_ref = 999;
+
+        uav1_command_pub.publish(Command_uav1);
+        uav2_command_pub.publish(Command_uav1);
+        uav3_command_pub.publish(Command_uav1);
+        uav4_command_pub.publish(Command_uav1);
+        uav5_command_pub.publish(Command_uav1);
+    }
+
+    start_flag = 0;
+
+    while(start_flag == 0)
+    {
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << "Please enter 1 to disarm and takeoff all the UAVs."<<endl;
+        cin >> start_flag;
+
+        Command_uav1.Mode = prometheus_msgs::SwarmCommand::Takeoff;
+        Command_uav1.yaw_ref = 0.0;
+
+        uav1_command_pub.publish(Command_uav1);
+        uav2_command_pub.publish(Command_uav1);
+        uav3_command_pub.publish(Command_uav1);
+        uav4_command_pub.publish(Command_uav1);
+        uav5_command_pub.publish(Command_uav1);
     }
 
     float x_sp,y_sp;
+    int formation_num = 1;
+    float trajectory_total_time;
     while (ros::ok())
     {
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please choose the formation: 1 for five star, 2 for triangle, 3 for T shape..."<<endl;
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << "Please choose the mission: 1 for formation change, 2 for Point Tracking, 3 for Circle Trajectory Tracking..."<<endl;
         cin >> start_flag;
-        cout << "Please enter the desired position (if x_sp = 999, use the position choosen in rviz):"<<endl;
-        cout << "x_sp:"<<endl;
-        cin >> x_sp;
-        cout << "y_sp:"<<endl;
-        cin >> y_sp;
 
-        if(x_sp == 999)
-        {
-            ros::spinOnce();
-        }else{
-            //高度打死
-            leader.x = x_sp;
-            leader.y = y_sp;
-            leader.z = 1.0;
-        }
-
-        //发布
-        leader_pub.publish(leader);
-        
-        //选择阵型
         if (start_flag == 1)
         {
-            five_star();
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Switch to five_star formation.");
+            if(formation_num == 1)
+            {
+                cout << "Changing formation to Triangle..."<<endl;
+                triangle();
+                formation_num = 2;
+            }else
+            {
+                cout << "Changing formation to One Column..."<<endl;
+                one_column();
+                formation_num = 1;
+            }
         }else if (start_flag == 2)
         {
-            triangle();
+            cout << "Please enter the desired position:"<<endl;
+            cout << "virtual_leader_pos: --- x [m] "<<endl;
+            cin >> virtual_leader_pos[0];
+            cout << "virtual_leader_pos: --- y [m]"<<endl;
+            cin >> virtual_leader_pos[1];
+            cout << "virtual_leader_yaw [deg]:"<<endl;
+            cin >> virtual_leader_yaw;
+            virtual_leader_yaw = virtual_leader_yaw/180.0*M_PI;
+
+            if(formation_num == 2)
+            {
+                triangle();
+            }else if(formation_num == 1)
+            {
+                one_column();
+            }
+            
         }else if (start_flag == 3)
         {
-            T_shape();
+            cout << "Input the trajectory_total_time:"<<endl;
+            cin >> trajectory_total_time;
+
+            float time_trajectory = 0.0;
+
+            while(time_trajectory < trajectory_total_time)
+            {
+
+                const float omega = 1.0;
+                const float circle_radius = 1.0;
+
+                virtual_leader_pos[0] = virtual_leader_pos[0] + circle_radius * cos(time_trajectory * omega);
+                virtual_leader_pos[1] = virtual_leader_pos[1] + circle_radius * sin(time_trajectory * omega);
+
+                time_trajectory = time_trajectory + 0.01;
+
+                cout << "Trajectory tracking: "<< time_trajectory << " / " << trajectory_total_time  << " [ s ]" <<endl;
+
+                if(formation_num == 2)
+                {
+                    triangle();
+                }else if(formation_num == 1)
+                {
+                    one_column();
+                }
+
+                ros::Duration(0.01).sleep();
+            }
+        }else
+        {
+            cout << "Wrong input."<<endl;
         }
         
-
-        cout << "Leader [X Y Z] : " << leader.x << " [ m ] "<< leader.y <<" [ m ] "<< leader.z <<" [ m ] "<<endl;
+        cout << "virtual_leader_pos [X Y] : " << virtual_leader_pos[0] << " [ m ] "<< virtual_leader_pos[1] <<" [ m ] "<< endl;
+        cout << "virtual_leader_yaw: " << virtual_leader_yaw/M_PI*180.0 <<" [ deg ] "<< endl;
      
         ros::Duration(2.0).sleep();
     }
@@ -158,86 +218,79 @@ int main(int argc, char **argv)
 
 }
 
-void five_star()
+void one_column()
 {   
-    relative_pos_to_leader1.x = FIVE_STAR_SIZE;
-    relative_pos_to_leader1.y = 0.0;
-    relative_pos_to_leader1.z = 0.0;
-    formation_pub1.publish(relative_pos_to_leader1);
+    Command_uav1.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav1.position_ref[0] = virtual_leader_pos[0] ; 
+    Command_uav1.position_ref[1] = virtual_leader_pos[1] + 2 * formation_size;
+    Command_uav1.position_ref[2] = virtual_leader_pos[2] ;  
+    Command_uav1.yaw_ref = virtual_leader_yaw;
+    uav1_command_pub.publish(Command_uav1);
 
-    relative_pos_to_leader2.x = 0.0;
-    relative_pos_to_leader2.y = FIVE_STAR_SIZE;
-    relative_pos_to_leader2.z = 0.0;
-    formation_pub2.publish(relative_pos_to_leader2);
+    Command_uav2.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav2.position_ref[0] = virtual_leader_pos[0] ; 
+    Command_uav2.position_ref[1] = virtual_leader_pos[1] + 1 * formation_size; 
+    Command_uav2.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav2.yaw_ref = virtual_leader_yaw;
+    uav2_command_pub.publish(Command_uav2);
 
-    relative_pos_to_leader3.x = -FIVE_STAR_SIZE;
-    relative_pos_to_leader3.y = 0.5*FIVE_STAR_SIZE;
-    relative_pos_to_leader3.z = 0.0;
-    formation_pub3.publish(relative_pos_to_leader3);
+    Command_uav3.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav3.position_ref[0] = virtual_leader_pos[0] ; 
+    Command_uav3.position_ref[1] = virtual_leader_pos[1] ; 
+    Command_uav3.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav3.yaw_ref = virtual_leader_yaw;
+    uav3_command_pub.publish(Command_uav3);
 
-    relative_pos_to_leader4.x = -FIVE_STAR_SIZE;
-    relative_pos_to_leader4.y = -0.5*FIVE_STAR_SIZE;
-    relative_pos_to_leader4.z = 0.0;
-    formation_pub4.publish(relative_pos_to_leader4);
+    Command_uav4.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav4.position_ref[0] = virtual_leader_pos[0] ; 
+    Command_uav4.position_ref[1] = virtual_leader_pos[1] - 1 * formation_size; 
+    Command_uav4.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav4.yaw_ref = virtual_leader_yaw;
+    uav4_command_pub.publish(Command_uav4);
 
-    relative_pos_to_leader5.x = 0.0;
-    relative_pos_to_leader5.y = -FIVE_STAR_SIZE;
-    relative_pos_to_leader5.z = 0.0;
-    formation_pub5.publish(relative_pos_to_leader5);
+    Command_uav5.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav5.position_ref[0] = virtual_leader_pos[0] ; 
+    Command_uav5.position_ref[1] = virtual_leader_pos[1] - 2 * formation_size; 
+    Command_uav5.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav5.yaw_ref = virtual_leader_yaw;
+    uav5_command_pub.publish(Command_uav5);
 }
 
 void triangle()
 {   
-    relative_pos_to_leader1.x = TRIANGLE_SIZE;
-    relative_pos_to_leader1.y = TRIANGLE_SIZE;
-    relative_pos_to_leader1.z = 0.0;
-    formation_pub1.publish(relative_pos_to_leader1);
+    //Velocity_Control
+    Command_uav1.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav1.position_ref[0] = virtual_leader_pos[0] - formation_size; 
+    Command_uav1.position_ref[1] = virtual_leader_pos[1] + formation_size; 
+    Command_uav1.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav1.yaw_ref = virtual_leader_yaw;
+    uav1_command_pub.publish(Command_uav1);
 
-    relative_pos_to_leader2.x = 0.0;
-    relative_pos_to_leader2.y = 2 * TRIANGLE_SIZE;
-    relative_pos_to_leader2.z = 0.0;
-    formation_pub2.publish(relative_pos_to_leader2);
+    Command_uav2.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav2.position_ref[0] = virtual_leader_pos[0] ; 
+    Command_uav2.position_ref[1] = virtual_leader_pos[1] + 0.5 * formation_size; 
+    Command_uav2.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav2.yaw_ref = virtual_leader_yaw;
+    uav2_command_pub.publish(Command_uav2);
 
-    relative_pos_to_leader3.x = 0.0;
-    relative_pos_to_leader3.y = - 2 * TRIANGLE_SIZE;
-    relative_pos_to_leader3.z = 0.0;
-    formation_pub3.publish(relative_pos_to_leader3);
+    Command_uav3.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav3.position_ref[0] = virtual_leader_pos[0] + formation_size; 
+    Command_uav3.position_ref[1] = virtual_leader_pos[1] ; 
+    Command_uav3.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav3.yaw_ref = virtual_leader_yaw;
+    uav3_command_pub.publish(Command_uav3);
 
-    relative_pos_to_leader4.x = TRIANGLE_SIZE;
-    relative_pos_to_leader4.y = -TRIANGLE_SIZE;
-    relative_pos_to_leader4.z = 0.0;
-    formation_pub4.publish(relative_pos_to_leader4);
+    Command_uav4.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav4.position_ref[0] = virtual_leader_pos[0] ; 
+    Command_uav4.position_ref[1] = virtual_leader_pos[1] - 0.5 * formation_size; 
+    Command_uav4.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav4.yaw_ref = virtual_leader_yaw;
+    uav4_command_pub.publish(Command_uav4);
 
-    relative_pos_to_leader5.x = 2 * TRIANGLE_SIZE;
-    relative_pos_to_leader5.y = 0.0;
-    relative_pos_to_leader5.z = 0.0;
-    formation_pub5.publish(relative_pos_to_leader5);
-}
-
-void T_shape()
-{
-    relative_pos_to_leader1.x = 2 * T_SIZE;
-    relative_pos_to_leader1.y = - T_SIZE;
-    relative_pos_to_leader1.z = 0.0;
-    formation_pub1.publish(relative_pos_to_leader1);
-
-    relative_pos_to_leader2.x = 2 * T_SIZE;
-    relative_pos_to_leader2.y = 0.0;
-    relative_pos_to_leader2.z = 0.0;
-    formation_pub2.publish(relative_pos_to_leader2);
-
-    relative_pos_to_leader3.x = 2 * T_SIZE;
-    relative_pos_to_leader3.y = T_SIZE;
-    relative_pos_to_leader3.z = 0.0;
-    formation_pub3.publish(relative_pos_to_leader3);
-
-    relative_pos_to_leader4.x = T_SIZE;
-    relative_pos_to_leader4.y = 0.0;
-    relative_pos_to_leader4.z = 0.0;
-    formation_pub4.publish(relative_pos_to_leader4);
-
-    relative_pos_to_leader5.x = 0.0;
-    relative_pos_to_leader5.y = 0.0;
-    relative_pos_to_leader5.z = 0.0;
-    formation_pub5.publish(relative_pos_to_leader5);
+    Command_uav5.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    Command_uav5.position_ref[0] = virtual_leader_pos[0] - formation_size; 
+    Command_uav5.position_ref[1] = virtual_leader_pos[1] - formation_size; 
+    Command_uav5.position_ref[2] = virtual_leader_pos[2] ; 
+    Command_uav5.yaw_ref = virtual_leader_yaw;
+    uav5_command_pub.publish(Command_uav5);
 }

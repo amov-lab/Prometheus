@@ -69,7 +69,7 @@ add_library(KeyboardEvent src/lib/KeyboardEvent.cpp)
 
 ###### Main File ##########
 ##rover_pos_controller.cpp
-add_executable(rover_pos_controller src/rover_pos_controller.cpp)
+add_executable(rover_pos_controller src/rover_control/rover_pos_controller.cpp)
 add_dependencies(rover_pos_controller prometheus_control_gencpp) 
 target_link_libraries(rover_pos_controller ${catkin_LIBRARIES})
 
@@ -85,9 +85,17 @@ target_link_libraries(px4_pos_estimator ${catkin_LIBRARIES})
 target_link_libraries(px4_pos_estimator OptiTrackFeedbackRigidBody)
 
 ##
-add_executable(formation_control src/formation_control.cpp)
-add_dependencies(formation_control prometheus_control_gencpp)
-target_link_libraries(formation_control ${catkin_LIBRARIES})
+add_executable(swarm_estimator src/swarm_control/swarm_estimator.cpp)
+add_dependencies(swarm_estimator prometheus_control_gencpp)
+target_link_libraries(swarm_estimator ${catkin_LIBRARIES})
+
+add_executable(swarm_controller src/swarm_control/swarm_controller.cpp)
+add_dependencies(swarm_controller prometheus_control_gencpp)
+target_link_libraries(swarm_controller ${catkin_LIBRARIES})
+
+add_executable(swarm_ground_station src/swarm_control/swarm_ground_station.cpp)
+add_dependencies(swarm_ground_station prometheus_control_gencpp)
+target_link_libraries(swarm_ground_station ${catkin_LIBRARIES})
 
 ##ground_station.cpp
 add_executable(ground_station src/ground_station.cpp)
