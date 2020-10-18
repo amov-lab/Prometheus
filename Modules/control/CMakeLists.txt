@@ -104,7 +104,7 @@ target_link_libraries(ground_station_msg ${catkin_LIBRARIES})
 #add_dependencies(px4_fw_controller prometheus_control_gencpp)
 #target_link_libraries(px4_fw_controller ${catkin_LIBRARIES})
 
-add_executable(px4_sender src/Test/px4_sender.cpp)
+add_executable(px4_sender src/px4_sender.cpp)
 add_dependencies(px4_sender prometheus_control_gencpp)
 target_link_libraries(px4_sender ${catkin_LIBRARIES})
 

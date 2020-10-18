@@ -38,8 +38,8 @@ float Land_speed;                                           //降落速度
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
 Eigen::Vector2f geo_fence_z;
-//起飞位置
-Eigen::Vector3d Takeoff_position;
+
+Eigen::Vector3d Takeoff_position;                              // 起飞位置
 prometheus_msgs::DroneState _DroneState;                          //无人机状态量
 
 prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
@@ -50,11 +50,12 @@ prometheus_msgs::AttitudeReference _AttitudeReference;           //位置控制�
 prometheus_msgs::Message message;
 prometheus_msgs::LogMessage LogMessage;
 
+//RVIZ显示：期望位置
 geometry_msgs::PoseStamped ref_pose_rviz;
 float dt = 0;
 
 ros::Publisher att_ref_pub;
-ros::Publisher ref_pose_pub;
+ros::Publisher rivz_ref_pose_pub;
 ros::Publisher message_pub;
 ros::Publisher log_message_pub;
 Eigen::Vector3d throttle_sp;
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
     att_ref_pub = nh.advertise<prometheus_msgs::AttitudeReference>("/prometheus/control/attitude_reference", 10);      
         
     //【发布】参考位姿 RVIZ显示用
-    ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/control/ref_pose_rviz", 10);
+    rivz_ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/control/ref_pose_rviz", 10);
 
     // 【发布】用于地面站显示的提示消息
     message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
@@ -412,7 +413,7 @@ int main(int argc, char **argv)
 
         //发布用于RVIZ显示的位姿
         ref_pose_rviz = get_ref_pose_rviz(Command_Now, _AttitudeReference);   
-        ref_pose_pub.publish(ref_pose_rviz);
+        rivz_ref_pose_pub.publish(ref_pose_rviz);
 
         //发布log消息，可用rosbag记录
         LogMessage.time = cur_time;
@@ -529,6 +530,7 @@ geometry_msgs::PoseStamped get_ref_pose_rviz(const prometheus_msgs::ControlComma
     geometry_msgs::PoseStamped ref_pose;
 
     ref_pose.header.stamp = ros::Time::now();
+    // world: 世界系,即gazebo坐标系,参见tf_transform.launch
     ref_pose.header.frame_id = "world";
 
     if(cmd.Mode == prometheus_msgs::ControlCommand::Idle)
