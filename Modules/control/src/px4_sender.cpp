@@ -3,17 +3,22 @@
 *
 * Author: Qyp
 *
-* Update Time: 2019.3.16
+* Update Time: 2020.10.18
 *
 * Introduction:  PX4 command sender using px4 default command
 *         1. Subscribe command.msg from upper nodes
+*         2. Subscribe drone_state msg from px4_pos_estimator.cpp
 *         2. Send command using command_to_mavros.h
-*         3. Command includes:  (1)xyz+yaw
+*         3. Command includes:  (1)idle
 *                               (2)takeoff
 *                               (3)land
-*                               (4)idle
-*                               (5)loiter
-*                               (6)xyz+yaw(body frame)
+*                               (4)hold
+*                               (5)disarm
+*                               (6)move:
+*                                      1. xyz_pos + yaw in ENU/Body frame
+*                                      2. xyz_vel + yaw in ENU/Body frame
+*                                      3. xy_vel_z_pos + yaw in ENU/Body frame
+*                                      4. xyz_acc + yaw in ENU/Body frame
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
@@ -23,43 +28,43 @@
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
 
-
 #define NODE_NAME "px4_sender"
 
 using namespace std;
- 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+ //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 float cur_time;                                             //程序运行时间
-
+float Takeoff_height;                                       //默认起飞高度
+float Disarm_height;                                        //自动上锁高度
+float Land_speed;                                           //降落速度
 //Geigraphical fence 地理围栏
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
 Eigen::Vector2f geo_fence_z;
-float Land_speed;                                           //降落速度
 
+Eigen::Vector3d Takeoff_position;                              // 起飞位置
 prometheus_msgs::DroneState _DroneState;                         //无人机状态量
 
 prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
 prometheus_msgs::ControlCommand Command_Last;                     //无人机上一条执行命令
 
-
-Eigen::Vector3d pos_sp(0,0,0);
-Eigen::Vector3d vel_sp(0,0,0);
 Eigen::Vector3d state_sp(0,0,0);
+Eigen::Vector3d state_sp_extra(0,0,0);
 double yaw_sp;
-
-float Takeoff_height;
-float Disarm_height;
-float Use_mocap_raw;
-
 prometheus_msgs::Message message;
 prometheus_msgs::LogMessage LogMessage;
+
+//RVIZ显示：期望位置
+geometry_msgs::PoseStamped ref_pose_rviz;
+float dt = 0;
+
+ros::Publisher rivz_ref_pose_pub;
 ros::Publisher message_pub;
 ros::Publisher log_message_pub;
-//变量声明 - 其他变量
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_param();
 int check_failsafe();
+geometry_msgs::PoseStamped get_rviz_ref_posistion(const prometheus_msgs::ControlCommand& cmd);
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void Command_cb(const prometheus_msgs::ControlCommand::ConstPtr& msg)
 {
     // CommandID必须递增才会被记录
@@ -116,6 +121,9 @@ int main(int argc, char **argv)
     // 本话题来自px4_pos_estimator.cpp
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
+    //【发布】参考位姿 RVIZ显示用
+    rivz_ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/control/ref_pose_rviz", 10);
+
     // 【发布】用于地面站显示的提示消息
     message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
@@ -136,39 +144,14 @@ int main(int argc, char **argv)
     nh.param<float>("geo_fence/z_min", geo_fence_z[0], -100.0);
     nh.param<float>("geo_fence/z_max", geo_fence_z[1], 100.0);
 
-    printf_param();
-    // 频率 [50Hz]
+    // 建议控制频率 ： 10 - 50Hz, 控制频率取决于控制形式，若控制方式为速度或加速度应适当提高频率
     ros::Rate rate(20.0);
 
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
 
-    // int check_flag;
-    // // 这一步是为了程序运行前检查一下参数是否正确
-    // // 输入1,继续，其他，退出程序
-    // cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
-    // cin >> check_flag;
-
-    // if(check_flag != 1)
-    // {
-    //     return -1;
-    // }
-
-    // 先读取一些飞控的数据
-    for(int i=0;i<50;i++)
-    {
-        ros::spinOnce();
-        rate.sleep();
-
-    }
-
+    printf_param();
     
-    Eigen::Vector3d Takeoff_position;
-    Takeoff_position[0] = _DroneState.position[0];
-    Takeoff_position[1] = _DroneState.position[1];
-    Takeoff_position[2] = _DroneState.position[2];
-
-
     // 初始化命令-
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
@@ -190,14 +173,17 @@ int main(int argc, char **argv)
     // 记录启控时间
     ros::Time begin_time = ros::Time::now();
     float last_time = prometheus_control_utils::get_time_in_sec(begin_time);
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主  循  环<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
     {
         // 当前时间
         cur_time = prometheus_control_utils::get_time_in_sec(begin_time);
-
+        dt = cur_time  - last_time;
+        dt = constrain_function2(dt, 0.02, 0.1);
         last_time = cur_time;
 
+        // 执行回调函数
         ros::spinOnce();
 
         // Check for geo fence: If drone is out of the geo fence, it will land now.
@@ -206,15 +192,11 @@ int main(int argc, char **argv)
             Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
         }
 
-        // 无人机一旦接受到Land指令，则会屏蔽其他指令
-        if(Command_Last.Mode == prometheus_msgs::ControlCommand::Land)
-        {
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
-        }
-
         switch (Command_Now.Mode)
         {
+        // 【Idle】 怠速旋转，此时可以切入offboard模式，但不会起飞。
         case prometheus_msgs::ControlCommand::Idle:
+            
             _command_to_mavros.idle();
 
             // 设定yaw_ref=999时，切换offboard模式，并解锁
@@ -225,9 +207,6 @@ int main(int argc, char **argv)
                     _command_to_mavros.mode_cmd.request.custom_mode = "OFFBOARD";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Setting to OFFBOARD Mode...");
-                    // //执行回调函数
-                    // ros::spinOnce();
-                    // ros::Duration(0.5).sleep();
                 }
 
                 if(!_DroneState.armed)
@@ -235,22 +214,36 @@ int main(int argc, char **argv)
                     _command_to_mavros.arm_cmd.request.value = true;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Arming...");
-                    // //执行回调函数
-                    // ros::spinOnce();
-                    // ros::Duration(0.5).sleep();
                 }
             }
             break;
-            
+
+        // 【Takeoff】 从摆放初始位置原地起飞至指定高度，偏航角也保持当前角度    
         case prometheus_msgs::ControlCommand::Takeoff:
+            
+            // 设定起飞点
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
+            {
+                // 设定起飞位置
+                Takeoff_position[0] = _DroneState.position[0];
+                Takeoff_position[1] = _DroneState.position[1];
+                Takeoff_position[2] = _DroneState.position[2];
 
-            pos_sp = Eigen::Vector3d(Takeoff_position[0],Takeoff_position[1],Takeoff_position[2] + Takeoff_height);
-            vel_sp = Eigen::Vector3d(0.0,0.0,0.0);
-            yaw_sp = _DroneState.attitude[2]; //rad
+                //
+                Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+                Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
+                Command_Now.Reference_State.position_ref[0] = Takeoff_position[0];
+                Command_Now.Reference_State.position_ref[1] = Takeoff_position[1];
+                Command_Now.Reference_State.position_ref[2] = Takeoff_position[2] + Takeoff_height;
+                Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2];
+            
+                state_sp = Eigen::Vector3d(Takeoff_position[0],Takeoff_position[1],Takeoff_position[2] + Takeoff_height);
+                yaw_sp = _DroneState.attitude[2]; //rad
+            }
 
-            _command_to_mavros.send_pos_setpoint(pos_sp, yaw_sp);
+            _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
 
-            //_command_to_mavros.takeoff();
+            //_command_to_mavros.takeoff(); 无用，未知原因
 
             break;
 
@@ -266,29 +259,32 @@ int main(int argc, char **argv)
                 Command_Now.Reference_State.position_ref[2] = _DroneState.position[2];
                 Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2]; //rad
 
-                pos_sp = Eigen::Vector3d(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]);
-                vel_sp = Eigen::Vector3d(0.0,0.0,0.0);
+                state_sp = Eigen::Vector3d(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]);
                 yaw_sp = _DroneState.attitude[2]; //rad
             }
-            _command_to_mavros.send_pos_setpoint(pos_sp, yaw_sp);
-            //_command_to_mavros.loiter();
+            _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+            //_command_to_mavros.loiter(); 可用，但不启用
 
             break;
 
         // 【Land】 降落。当前位置原地降落，降落后会自动上锁，且切换为mannual模式
         case prometheus_msgs::ControlCommand::Land:
-
             if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
             {
-                state_sp = Eigen::Vector3d(_DroneState.position[0],_DroneState.position[1], Takeoff_position[2] );
-                yaw_sp = _DroneState.attitude[2];
+                Command_Now.Reference_State.position_ref[0] = _DroneState.position[0];
+                Command_Now.Reference_State.position_ref[1] = _DroneState.position[1];
+                Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
+                Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2]; //rad
             }
-            
 
             //如果距离起飞高度小于10厘米，则直接切换为land模式；
             if(abs(_DroneState.position[2] - Takeoff_position[2]) > Disarm_height)
             {
-                _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+                Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] - Land_speed * dt ;
+                state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1], Command_Now.Reference_State.position_ref[2] );
+                state_sp_extra = Eigen::Vector3d(0.0, 0.0 , Command_Now.Reference_State.velocity_ref[2]);
+                yaw_sp = Command_Now.Reference_State.yaw_ref;
+                _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra, yaw_sp);
             }else
             {
                 if(_DroneState.mode != "AUTO.LAND")
@@ -328,7 +324,13 @@ int main(int argc, char **argv)
                     yaw_sp = Command_Now.Reference_State.yaw_ref;
                 }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
                 {
-                    state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.velocity_ref[2]);
+                    Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.velocity_ref[2] * dt;
+                    state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
+                    state_sp_extra = Eigen::Vector3d(0.0, 0.0 ,Command_Now.Reference_State.velocity_ref[2]);
+                    yaw_sp = Command_Now.Reference_State.yaw_ref;
+                }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_ACC )
+                {
+                    state_sp = Eigen::Vector3d(Command_Now.Reference_State.acceleration_ref[0],Command_Now.Reference_State.acceleration_ref[1],Command_Now.Reference_State.acceleration_ref[2]);
                     yaw_sp = Command_Now.Reference_State.yaw_ref;
                 }
             }else
@@ -338,28 +340,22 @@ int main(int argc, char **argv)
                     if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_POS )
                     {
                         float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
-                        float d_pos_enu[2];                                                           //the desired xy position in enu Frame (The origin point is the drone)
+                        float d_pos_enu[2];                       //the desired xy position in enu Frame (The origin point is the drone)
                         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_pos_body, d_pos_enu);
 
                         Command_Now.Reference_State.position_ref[0] = _DroneState.position[0] + d_pos_enu[0];
                         Command_Now.Reference_State.position_ref[1] = _DroneState.position[1] + d_pos_enu[1];
                         Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.position_ref[2];
-                        Command_Now.Reference_State.velocity_ref[0] = 0;
-                        Command_Now.Reference_State.velocity_ref[1] = 0;
-                        Command_Now.Reference_State.velocity_ref[2] = 0; 
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
                         yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
                     {
                         //xy velocity mode
                         float d_vel_body[2] = {Command_Now.Reference_State.velocity_ref[0], Command_Now.Reference_State.velocity_ref[1]};         //the desired xy velocity in Body Frame
-                        float d_vel_enu[2];                                                           //the desired xy velocity in NED Frame
+                        float d_vel_enu[2];                 //the desired xy velocity in NED Frame
 
                         //根据无人机当前偏航角进行坐标系转换
                         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_vel_body, d_vel_enu);
-                        Command_Now.Reference_State.position_ref[0] = 0;
-                        Command_Now.Reference_State.position_ref[1] = 0;
-                        Command_Now.Reference_State.position_ref[2] = 0;
                         Command_Now.Reference_State.velocity_ref[0] = d_vel_enu[0];
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
                         Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
@@ -369,7 +365,7 @@ int main(int argc, char **argv)
                     {
                         //xy velocity mode
                         float d_vel_body[2] = {Command_Now.Reference_State.velocity_ref[0], Command_Now.Reference_State.velocity_ref[1]};         //the desired xy velocity in Body Frame
-                        float d_vel_enu[2];                                                           //the desired xy velocity in NED Frame
+                        float d_vel_enu[2];                   //the desired xy velocity in NED Frame
 
                         //根据无人机当前偏航角进行坐标系转换
                         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_vel_body, d_vel_enu);
@@ -384,13 +380,18 @@ int main(int argc, char **argv)
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
                     {
                         float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
-                        float d_pos_enu[2];                                                           //the desired xy position in enu Frame (The origin point is the drone)
+                        float d_pos_enu[2];                     //the desired xy position in enu Frame (The origin point is the drone)
                         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_pos_body, d_pos_enu);
 
                         Command_Now.Reference_State.position_ref[0] = _DroneState.position[0] + d_pos_enu[0];
                         Command_Now.Reference_State.position_ref[1] = _DroneState.position[1] + d_pos_enu[1];
-                        state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.velocity_ref[2]);
+                        Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.velocity_ref[2] * dt;
+                        state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
+                        state_sp_extra = Eigen::Vector3d(0.0, 0.0 ,Command_Now.Reference_State.velocity_ref[2]);
                         yaw_sp = Command_Now.Reference_State.yaw_ref;
+                    }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_ACC )
+                    {
+                        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Change to ENU frame");
                     }
                 }
             }
@@ -406,7 +407,11 @@ int main(int argc, char **argv)
                 _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
             }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
             {
-                _command_to_mavros.send_pos_xy_vel_z_setpoint(state_sp, yaw_sp);
+                // 特殊情况，一般也用不到
+                _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra, yaw_sp);
+            }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_ACC )
+            {
+                _command_to_mavros.send_acc_xyz_setpoint(state_sp, yaw_sp);
             }else
             {
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");
@@ -444,7 +449,9 @@ int main(int argc, char **argv)
             break;
         }
 
-
+        //发布用于RVIZ显示的位姿
+        ref_pose_rviz = get_rviz_ref_posistion(Command_Now);   
+        rivz_ref_pose_pub.publish(ref_pose_rviz);
 
         //发布log消息，可用rosbag记录
         LogMessage.time = cur_time;
@@ -464,13 +471,13 @@ int main(int argc, char **argv)
 
 void printf_param()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> px4_pos_controller Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> px4_sender Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
     cout << "Takeoff_height   : "<< Takeoff_height<<" [m] "<<endl;
     cout << "Disarm_height    : "<< Disarm_height <<" [m] "<<endl;
+    cout << "Land_speed       : "<< Land_speed <<" [m/s] "<<endl;
     cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
     cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
     cout << "geo_fence_z : "<< geo_fence_z[0] << " [m]  to  "<<geo_fence_z[1] << " [m]"<< endl;
-
 }
 
 int check_failsafe()
@@ -487,10 +494,70 @@ int check_failsafe()
     }
 }
 
-// 【坐标系旋转函数】- 机体系到enu系
-// input是机体系,output是惯性系，yaw_angle是当前偏航角
-void rotation_yaw(float yaw_angle, float input[2], float output[2])
+geometry_msgs::PoseStamped get_rviz_ref_posistion(const prometheus_msgs::ControlCommand& cmd)
 {
-    output[0] = input[0] * cos(yaw_angle) - input[1] * sin(yaw_angle);
-    output[1] = input[0] * sin(yaw_angle) + input[1] * cos(yaw_angle);
+    geometry_msgs::PoseStamped ref_pose;
+
+    ref_pose.header.stamp = ros::Time::now();
+    // world: 世界系,即gazebo坐标系,参见tf_transform.launch
+    ref_pose.header.frame_id = "world";
+
+    if(cmd.Mode == prometheus_msgs::ControlCommand::Idle)
+    {
+        ref_pose.pose.position.x = _DroneState.position[0];
+        ref_pose.pose.position.y = _DroneState.position[1];
+        ref_pose.pose.position.z = _DroneState.position[2];
+        ref_pose.pose.orientation = _DroneState.attitude_q;
+    }else if(cmd.Mode == prometheus_msgs::ControlCommand::Takeoff || cmd.Mode == prometheus_msgs::ControlCommand::Hold)
+    {
+        ref_pose.pose.position.x = cmd.Reference_State.position_ref[0];
+        ref_pose.pose.position.y = cmd.Reference_State.position_ref[1];
+        ref_pose.pose.position.z = cmd.Reference_State.position_ref[2];
+        ref_pose.pose.orientation = _DroneState.attitude_q;
+    }else if(cmd.Mode == prometheus_msgs::ControlCommand::Disarm  || cmd.Mode == prometheus_msgs::ControlCommand::Land )
+    {
+        ref_pose.pose.position.x = cmd.Reference_State.position_ref[0];
+        ref_pose.pose.position.y = cmd.Reference_State.position_ref[1];
+        ref_pose.pose.position.z = 0.0;
+        ref_pose.pose.orientation = _DroneState.attitude_q;
+    }
+    else if(cmd.Mode == prometheus_msgs::ControlCommand::Move)
+    {
+        if( cmd.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_POS )
+        {
+            ref_pose.pose.position.x = cmd.Reference_State.position_ref[0];
+            ref_pose.pose.position.y = cmd.Reference_State.position_ref[1];
+            ref_pose.pose.position.z = cmd.Reference_State.position_ref[2];
+        }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
+        {
+            ref_pose.pose.position.x = _DroneState.position[0] + cmd.Reference_State.velocity_ref[0] * dt;
+            ref_pose.pose.position.y = _DroneState.position[1] + cmd.Reference_State.velocity_ref[1] * dt;
+            ref_pose.pose.position.z = _DroneState.position[2] + cmd.Reference_State.velocity_ref[2] * dt;
+        }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
+        {
+            ref_pose.pose.position.x = _DroneState.position[0] + cmd.Reference_State.velocity_ref[0] * dt;
+            ref_pose.pose.position.y = _DroneState.position[1] + cmd.Reference_State.velocity_ref[1] * dt;
+            ref_pose.pose.position.z = cmd.Reference_State.position_ref[2];
+        }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
+        {
+            ref_pose.pose.position.x = cmd.Reference_State.position_ref[0];
+            ref_pose.pose.position.y = cmd.Reference_State.position_ref[1];
+            ref_pose.pose.position.z = _DroneState.position[2] + cmd.Reference_State.velocity_ref[2] * dt;
+        }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_ACC )
+        {
+            ref_pose.pose.position.x = _DroneState.position[0] + 0.5 * cmd.Reference_State.acceleration_ref[0] * dt * dt;
+            ref_pose.pose.position.y = _DroneState.position[1] + 0.5 * cmd.Reference_State.acceleration_ref[1] * dt * dt;
+            ref_pose.pose.position.z = _DroneState.position[2] + 0.5 * cmd.Reference_State.acceleration_ref[2] * dt * dt;
+        }
+
+        ref_pose.pose.orientation = _DroneState.attitude_q;
+    }else
+    {
+        ref_pose.pose.position.x = 0.0;
+        ref_pose.pose.position.y = 0.0;
+        ref_pose.pose.position.z = 0.0;
+        ref_pose.pose.orientation = _DroneState.attitude_q;
+    }
+
+    return ref_pose;
 }
