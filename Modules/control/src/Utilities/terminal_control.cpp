@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 
         if(Control_Mode == prometheus_msgs::ControlCommand::Move)
         {
-            cout << "Input the Move_mode: 0 for xy/z position control, 3 for xy/z velocity control, 4 for trajectory tracking"<<endl;
+            cout << "Input the Move_mode: 0 for xy/z position control, 1 for xy_pos_z_vel control, 2 for xy_vel_z_pos control, 3 for xy/z velocity control, 4 for trajectory tracking"<<endl;
             cin >> Move_mode;
 
             if(Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
