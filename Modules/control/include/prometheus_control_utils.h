@@ -14,6 +14,7 @@
 #include <command_to_mavros.h>
 #include <prometheus_msgs/Message.h>
 #include <prometheus_msgs/ControlCommand.h>
+#include <prometheus_msgs/SwarmCommand.h>
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/PositionReference.h>
 #include <prometheus_msgs/AttitudeReference.h>
@@ -129,6 +130,190 @@ void printf_command_control(const prometheus_msgs::ControlCommand& _ControlComma
         case prometheus_msgs::ControlCommand::User_Mode2:
             cout << "Command: [ User_Mode2 ] " <<endl;
             break;
+    }
+
+}
+
+void printf_swarm_control(const prometheus_msgs::SwarmCommand& SwarmCommand)
+{
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Swarm Command <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(NUM_POINT);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+
+    switch(SwarmCommand.Mode)
+    {
+        case prometheus_msgs::SwarmCommand::Idle:
+            
+            if(SwarmCommand.yaw_ref == 999)
+            {
+                cout << "Command: [ Idle + Arming + Switching to OFFBOARD mode ] " <<endl;
+            }else
+            {
+                cout << "Command: [ Idle ] " <<endl;
+            }
+            
+            break;
+
+        case prometheus_msgs::SwarmCommand::Takeoff:
+            cout << "Command: [ Takeoff ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Hold:
+            cout << "Command: [ Hold ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Land:
+            cout << "Command: [ Land ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Disarm:
+            cout << "Command: [ Disarm ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Position_Control:
+            cout << "Command: [ Position_Control ] " <<endl;
+            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+
+            break;
+
+        case prometheus_msgs::SwarmCommand::Velocity_Control:
+            cout << "Command: [ Velocity_Control ] " <<endl;
+            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+
+            break;
+
+        case prometheus_msgs::SwarmCommand::Accel_Control:
+            cout << "Command: [ Accel_Control ] " <<endl;
+            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+
+            break;
+
+        case prometheus_msgs::SwarmCommand::User_Mode1:
+            cout << "Command: [ User_Mode1 ] " <<endl;
+            break;
+
+    }
+
+}
+
+void printf_swarm_state(string uav_name, const prometheus_msgs::DroneState& _Drone_state, const prometheus_msgs::SwarmCommand& SwarmCommand)
+{
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> " << uav_name << " State <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(NUM_POINT);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+
+   //是否和飞控建立起连接
+    if (_Drone_state.connected == true)
+    {
+        cout << " [ Connected ]";
+    }
+    else
+    {
+        cout << " [ Unconnected ]";
+    }
+
+    //是否上锁
+    if (_Drone_state.armed == true)
+    {
+        cout << "  [ Armed ] ";
+    }
+    else
+    {
+        cout << "  [ DisArmed ] ";
+    }
+
+    //是否在地面
+    if (_Drone_state.landed == true)
+    {
+        cout << "  [ Ground ] ";
+    }
+    else
+    {
+        cout << "  [ Air ] ";
+    }
+
+    cout << "[ " << _Drone_state.mode<<" ] " <<endl;
+
+    cout << "Position [X Y Z] : " << _Drone_state.position[0] << " [ m ] "<< _Drone_state.position[1]<<" [ m ] "<<_Drone_state.position[2]<<" [ m ] "<<endl;
+    cout << "Velocity [X Y Z] : " << _Drone_state.velocity[0] << " [m/s] "<< _Drone_state.velocity[1]<<" [m/s] "<<_Drone_state.velocity[2]<<" [m/s] "<<endl;
+    cout << "Attitude [R P Y] : " << _Drone_state.attitude[0] * 180/M_PI <<" [deg] "<<_Drone_state.attitude[1] * 180/M_PI << " [deg] "<< _Drone_state.attitude[2] * 180/M_PI<<" [deg] "<<endl;
+
+    switch(SwarmCommand.Mode)
+    {
+        case prometheus_msgs::SwarmCommand::Idle:
+            
+            if(SwarmCommand.yaw_ref == 999)
+            {
+                cout << "Command: [ Idle + Arming + Switching to OFFBOARD mode ] " <<endl;
+            }else
+            {
+                cout << "Command: [ Idle ] " <<endl;
+            }
+            
+            break;
+
+        case prometheus_msgs::SwarmCommand::Takeoff:
+            cout << "Command: [ Takeoff ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Hold:
+            cout << "Command: [ Hold ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Land:
+            cout << "Command: [ Land ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Disarm:
+            cout << "Command: [ Disarm ] " <<endl;
+            break;
+
+        case prometheus_msgs::SwarmCommand::Position_Control:
+            cout << "Command: [ Position_Control ] " <<endl;
+            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+
+            break;
+
+        case prometheus_msgs::SwarmCommand::Velocity_Control:
+            cout << "Command: [ Velocity_Control ] " <<endl;
+            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+
+            break;
+
+        case prometheus_msgs::SwarmCommand::Accel_Control:
+            cout << "Command: [ Accel_Control ] " <<endl;
+            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
+            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+
+            break;
+
+        case prometheus_msgs::SwarmCommand::User_Mode1:
+            cout << "Command: [ User_Mode1 ] " <<endl;
+            break;
+
     }
 
 }
