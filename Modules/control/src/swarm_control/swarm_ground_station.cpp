@@ -1,7 +1,7 @@
 //头文件
 #include <ros/ros.h>
 
-#include "prometheus_control_utils.h"
+#include "swarm_control_utils.h"
 #include "message_utils.h"
 
 using namespace std;
@@ -119,11 +119,11 @@ int main(int argc, char **argv)
         ros::spinOnce();
 
         //打印
-        prometheus_control_utils::printf_swarm_state(uav1_name, State_uav1, Command_uav1);
-        prometheus_control_utils::printf_swarm_state(uav2_name, State_uav2, Command_uav2);
-        prometheus_control_utils::printf_swarm_state(uav3_name, State_uav3, Command_uav3);
-        prometheus_control_utils::printf_swarm_state(uav4_name, State_uav4, Command_uav4);
-        prometheus_control_utils::printf_swarm_state(uav5_name, State_uav5, Command_uav5);
+        swarm_control_utils::printf_swarm_state(uav1_name, State_uav1, Command_uav1);
+        swarm_control_utils::printf_swarm_state(uav2_name, State_uav2, Command_uav2);
+        swarm_control_utils::printf_swarm_state(uav3_name, State_uav3, Command_uav3);
+        swarm_control_utils::printf_swarm_state(uav4_name, State_uav4, Command_uav4);
+        swarm_control_utils::printf_swarm_state(uav5_name, State_uav5, Command_uav5);
 
         rate.sleep();
     }

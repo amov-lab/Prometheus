@@ -10,23 +10,28 @@
 
 #include "command_to_mavros.h"
 #include "prometheus_control_utils.h"
+#include "swarm_control_utils.h"
 #include "message_utils.h"
 
 #define NODE_NAME "swarm_controller"
 
 using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+int swarm_num;
 string uav_name;
+int uav_num,neighbour_num1,neighbour_num2;
 string neighbour_name1,neighbour_name2;
 int num_neighbour = 2;
 float cur_time;                                             //程序运行时间
 float Takeoff_height;                                       //默认起飞高度
 float Disarm_height;                                        //自动上锁高度
 float Land_speed;                                           //降落速度
+Eigen::MatrixXf formation_separation;
 
 // 速度控制参数
 float k_p;
 float k_aij;
+float k_gamma;
 
 //Geigraphical fence 地理围栏
 Eigen::Vector2f geo_fence_x;
@@ -48,6 +53,7 @@ prometheus_msgs::SwarmCommand Command_Last;                     //无人机上�
 
 Eigen::Vector3d state_sp(0,0,0);
 Eigen::Vector3d state_sp_extra(0,0,0);
+float yaw_sp;
 
 prometheus_msgs::Message message;
 prometheus_msgs::LogMessage LogMessage;
@@ -73,6 +79,7 @@ void swarm_command_cb(const prometheus_msgs::SwarmCommand::ConstPtr& msg)
     {
         Command_Now = Command_Last;
     }
+    formation_separation = swarm_control_utils::get_formation_separation(Command_Now.swarm_shape, Command_Now.swarm_size, swarm_num);
 }
 
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
@@ -102,10 +109,15 @@ int main(int argc, char **argv)
     ros::Rate rate(20.0);
 
     //无人机编号 1号无人机则为1
+    nh.param<int>("swarm_num", swarm_num, 1);
+    nh.param<int>("uav_num", uav_num, 0);
     nh.param<string>("uav_name", uav_name, "/uav0");
     nh.param<float>("k_p", k_p, 0.95);
     nh.param<float>("k_aij", k_aij, 0.1);
+    nh.param<float>("k_gamma", k_gamma, 0.1);
     //可监听到的无人机编号，目前设定为可监听到两台无人机，后期考虑可通过数组传递参数，监听任意ID的无人机
+    nh.param<int>("neighbour_num1", neighbour_num1, 0);
+    nh.param<int>("neighbour_num2", neighbour_num2, 0);
     nh.param<string>("neighbour_name1", neighbour_name1, "/uav0");
     nh.param<string>("neighbour_name2", neighbour_name2, "/uav0");
 
@@ -120,8 +132,11 @@ int main(int argc, char **argv)
     nh.param<float>("geo_fence/z_min", geo_fence_z[0], -100.0);
     nh.param<float>("geo_fence/z_max", geo_fence_z[1], 100.0);
 
+    formation_separation = Eigen::MatrixXf::Zero(swarm_num,4); 
+
     //【订阅】集群控制指令
     ros::Subscriber command_sub = nh.subscribe<prometheus_msgs::SwarmCommand>(uav_name + "/prometheus/swarm_command", 10, swarm_command_cb);
+
 
     //【订阅】本机状态信息
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>(uav_name + "/prometheus/drone_state", 10, drone_state_cb);
@@ -168,6 +183,7 @@ int main(int argc, char **argv)
     // 记录启控时间
     ros::Time begin_time = ros::Time::now();
     float last_time = prometheus_control_utils::get_time_in_sec(begin_time);
+    float yita;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主  循  环<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
@@ -289,23 +305,34 @@ int main(int argc, char **argv)
 
         case prometheus_msgs::SwarmCommand::Position_Control:
 
-            state_sp[0] = Command_Now.position_ref[0];
-            state_sp[1] = Command_Now.position_ref[1];
-            state_sp[2] = Command_Now.position_ref[2];
-
-            _command_to_mavros.send_pos_setpoint(state_sp, Command_Now.yaw_ref);
+            //　此控制方式即为　集中式控制，　直接由地面站指定期望位置点
+            state_sp[0] = Command_Now.position_ref[0] + formation_separation(uav_num-1,0);
+            state_sp[1] = Command_Now.position_ref[1] + formation_separation(uav_num-1,1);
+            state_sp[2] = Command_Now.position_ref[2] + formation_separation(uav_num-1,2);
+            yaw_sp = Command_Now.yaw_ref + formation_separation(uav_num-1,3);
+            _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
 
             break;
 
         case prometheus_msgs::SwarmCommand::Velocity_Control:
 
-            //formation control， 平面阵型，xy控制速度，z轴高度定高
-            state_sp[0] = k_p * (Command_Now.position_ref[0] - pos_drone[0]) + k_aij*(pos_nei[0][0] - pos_drone[0]) + k_aij*(pos_nei[1][0] - pos_drone[0]);
-            state_sp[1] = k_p * (Command_Now.position_ref[1] - pos_drone[1]) + k_aij*(pos_nei[0][1] - pos_drone[1]) + k_aij*(pos_nei[1][1] - pos_drone[1]);
-            state_sp[2] = Command_Now.position_ref[2];
-            Command_Now.yaw_ref = 0.0;
+            //　平面阵型，xy控制速度，z轴高度定高
+            //　一阶积分器分布式编队控制算法，可追踪时变轨迹，此处采用双向环的拓扑结构，且仅部分无人机可收到地面站发来的虚拟领队消息
+            //　参考文献：Multi-Vehicle consensus with a time-varying reference state 公式(11) - (12)
+            //　目前该算法有一定控制偏差，可能是由于参数选取不是最佳导致的
+           
+            yita = 1/ ((float)swarm_num * k_aij + k_p);
 
-            _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, Command_Now.yaw_ref);
+            state_sp[0] = - yita * k_aij * ( vel_nei[0][0] - k_gamma *((pos_drone[0] - pos_nei[0][0]) - ( formation_separation(uav_num-1,0) -  formation_separation(neighbour_num1-1,0)))) 
+                            - yita * k_aij * ( vel_nei[1][0] - k_gamma *((pos_drone[0] - pos_nei[1][0]) - ( formation_separation(uav_num-1,0) -  formation_separation(neighbour_num2-1,0))))
+                            + yita * k_p * ( Command_Now.velocity_ref[0] - k_gamma * (pos_drone[0] - Command_Now.position_ref[0] - formation_separation(uav_num-1,0)));
+            state_sp[1] = - yita * k_aij * ( vel_nei[0][1] - k_gamma *((pos_drone[1] - pos_nei[0][1]) - ( formation_separation(uav_num-1,1) -  formation_separation(neighbour_num1-1,1)))) 
+                            - yita * k_aij * ( vel_nei[1][1] - k_gamma *((pos_drone[1] - pos_nei[1][1]) - ( formation_separation(uav_num-1,1) -  formation_separation(neighbour_num2-1,1))))
+                            + yita * k_p * ( Command_Now.velocity_ref[1] - k_gamma * (pos_drone[1] - Command_Now.position_ref[1] - formation_separation(uav_num-1,1)));
+            state_sp[2] = Command_Now.position_ref[2] + formation_separation(uav_num-1,2);
+            yaw_sp = Command_Now.yaw_ref + formation_separation(uav_num-1,3);
+
+            _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
 
             break;
 
@@ -349,6 +376,8 @@ void printf_param()
     cout << "neighbour_name2   : "<< neighbour_name2 <<endl;
     cout << "k_p    : "<< k_p <<"  "<<endl;
     cout << "k_aij       : "<< k_aij <<"  "<<endl;
+    cout << "k_gamma       : "<< k_gamma <<"  "<<endl;
+    
 
     cout << "Takeoff_height   : "<< Takeoff_height<<" [m] "<<endl;
     cout << "Disarm_height    : "<< Disarm_height <<" [m] "<<endl;
@@ -401,19 +430,20 @@ geometry_msgs::PoseStamped get_rviz_ref_posistion(const prometheus_msgs::SwarmCo
     }
     else if(cmd.Mode == prometheus_msgs::SwarmCommand::Position_Control)
     {
-        ref_pose.pose.position.x = cmd.position_ref[0];
-        ref_pose.pose.position.y = cmd.position_ref[1];
-        ref_pose.pose.position.z = cmd.position_ref[2];
-        ref_pose.pose.orientation = _DroneState.attitude_q;
+        ref_pose.pose.position.x = cmd.position_ref[0] + formation_separation(uav_num-1,0);
+        ref_pose.pose.position.y = cmd.position_ref[1] + formation_separation(uav_num-1,1);
+        ref_pose.pose.position.z = cmd.position_ref[2] + formation_separation(uav_num-1,2);
     }else if(cmd.Mode == prometheus_msgs::SwarmCommand::Velocity_Control)
     {
-        ref_pose.pose.position.x = cmd.position_ref[0];
-        ref_pose.pose.position.y = cmd.position_ref[1];
-        ref_pose.pose.position.z = cmd.position_ref[2];
+        ref_pose.pose.position.x = cmd.position_ref[0] + formation_separation(uav_num-1,0);
+        ref_pose.pose.position.y = cmd.position_ref[1] + formation_separation(uav_num-1,1);
+        ref_pose.pose.position.z = cmd.position_ref[2] + formation_separation(uav_num-1,2);
         ref_pose.pose.orientation = _DroneState.attitude_q;
     }else if(cmd.Mode == prometheus_msgs::SwarmCommand::Accel_Control)
     {       
-        // To be continued
+        ref_pose.pose.position.x = cmd.position_ref[0] + formation_separation(uav_num-1,0);
+        ref_pose.pose.position.y = cmd.position_ref[1] + formation_separation(uav_num-1,1);
+        ref_pose.pose.position.z = cmd.position_ref[2] + formation_separation(uav_num-1,2);
     }else
     {
         ref_pose.pose.position.x = 0.0;
