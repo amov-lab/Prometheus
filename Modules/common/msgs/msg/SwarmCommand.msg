@@ -20,5 +20,14 @@ uint8 Accel_Control=7
 uint8 User_Mode1=8
 
 ## 控制参考量 
+uint8 swarm_shape
+
+uint8 One_column=0
+uint8 Triangle=1
+
+float32 swarm_size
+
 float32[3] position_ref          ## [m]
+float32[3] velocity_ref          ## [m]
 float32 yaw_ref                  ## [rad]
+
