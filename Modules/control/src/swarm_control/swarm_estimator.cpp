@@ -44,7 +44,7 @@ using namespace std;
 int input_source; //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
 Eigen::Vector3f pos_offset;
 float yaw_offset;
-string uav_name;
+string uav_name,object_name;
 //---------------------------------------vicon定位相关------------------------------------------
 Eigen::Vector3d pos_drone_mocap; //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -123,6 +123,7 @@ int main(int argc, char **argv)
 
     //读取参数表中的参数
     nh.param<string>("uav_name", uav_name, "/uav0");
+    nh.param<string>("object_name", object_name, "UAV");
 
     // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
     nh.param<int>("input_source", input_source, 0);
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
     nh.param<float>("offset_yaw", yaw_offset, 0);
 
     // 【订阅】optitrack估计位置
-    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ uav_name + "/pose", 1000, optitrack_cb);
+    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ object_name + "/pose", 1000, optitrack_cb);
 
     // 【订阅】gazebo仿真真值
     ros::Subscriber gazebo_sub = nh.subscribe<nav_msgs::Odometry>(uav_name + "/prometheus/ground_truth/p300_basic", 100, gazebo_cb);
