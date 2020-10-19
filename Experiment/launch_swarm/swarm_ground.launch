@@ -1,0 +1,18 @@
+<launch>
+	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
+		<param name="controller_num" value="0"/>
+		<param name="uav_num" value="5"/>
+		<param name="virtual_leader_pos_x" value="0.0" />
+		<param name="virtual_leader_pos_y" value="0.0" />
+		<param name="virtual_leader_pos_z" value="1.0" />
+		<param name="virtual_leader_yaw" value="0.0" />
+		<param name="formation_size" value="1.5" />
+	</node>
+
+	<!-- run the rviz -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_experiment)/config/rviz_config/swarm_rviz_config.rviz" />
+    </group>
+</launch>
+
