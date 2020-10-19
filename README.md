@@ -50,9 +50,11 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 	
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GOADfS.gif"/>
     
-- **多机编队飞行**
+- **多机编队飞行(集中式或分布式控制)**
   
     <img width="400" src="https://s1.ax1x.com/2020/04/12/GOAqmR.gif"/>
+
+	<img width="400" src="https://s1.ax1x.com/2020/10/19/0x9aMd.gif"/>
     
 - **圆形穿越**
 

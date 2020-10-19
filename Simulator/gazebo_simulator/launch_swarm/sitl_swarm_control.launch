@@ -35,7 +35,7 @@
 		<arg name="model" default="P300_uav1"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="0"/>
-		<arg name="y" default="2"/>
+		<arg name="y" default="0"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -118,7 +118,7 @@
 		<arg name="model" default="P300_uav3"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="0"/>
-		<arg name="y" default="0"/>
+		<arg name="y" default="-1"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -159,7 +159,7 @@
 		<arg name="model" default="P300_uav4"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="0"/>
-		<arg name="y" default="-1.0"/>
+		<arg name="y" default="2.0"/>
 		<arg name="z" default="0.164"/>
 		<arg name="Yaw" default="0"/>
 		<!-- Mavros参数 -->
@@ -231,8 +231,10 @@
 		</node>
     </group>
 
-	<arg name="k_p" default="0.95"/>
-	<arg name="k_aij" default="0.1"/>
+	<arg name="swarm_num" default="5"/>
+	<arg name="k_p" default="1.0"/>
+	<arg name="k_aij" default="0.05"/>
+	<arg name="k_gamma" default="1.2"/>
 	<arg name="Takeoff_height" default="1.0"/>
 	<arg name="Disarm_height" default="0.1"/>
 	<arg name="Land_speed" default="0.2"/>
@@ -243,11 +245,16 @@
 	<arg name="z_min" default="-1.0"/>
 	<arg name="z_max" default="100.0"/>
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav1" output="screen" launch-prefix="gnome-terminal --tab --">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_num" value="1"/>
+		<param name="neighbour_num1" value="2" />
+		<param name="neighbour_num2" value="3"/>
 		<param name="uav_name" value="/uav1"/>
 		<param name="neighbour_name1" value="/uav2" />
-		<param name="neighbour_name2" value="/uav5"/>
+		<param name="neighbour_name2" value="/uav3"/>
 		<param name="k_p" value="$(arg k_p)"/>
 		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="k_gamma" value="$(arg k_gamma)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -260,11 +267,16 @@
 	</node>
 
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav2" output="screen">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_num" value="2"/>
+		<param name="neighbour_num1" value="1" />
+		<param name="neighbour_num2" value="4"/>
 		<param name="uav_name" value="/uav2"/>
 		<param name="neighbour_name1" value="/uav1" />
-		<param name="neighbour_name2" value="/uav3"/>
+		<param name="neighbour_name2" value="/uav4"/>
 		<param name="k_p" value="$(arg k_p)"/>
 		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="k_gamma" value="$(arg k_gamma)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -277,11 +289,16 @@
 	</node>
 
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav3" output="screen">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_num" value="3"/>
+		<param name="neighbour_num1" value="1" />
+		<param name="neighbour_num2" value="5"/>
 		<param name="uav_name" value="/uav3"/>
-		<param name="neighbour_name1" value="/uav2" />
-		<param name="neighbour_name2" value="/uav4"/>
+		<param name="neighbour_name1" value="/uav1" />
+		<param name="neighbour_name2" value="/uav5"/>
 		<param name="k_p" value="$(arg k_p)"/>
 		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="k_gamma" value="$(arg k_gamma)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -294,11 +311,16 @@
 	</node>
 
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav4" output="screen">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_num" value="4"/>
+		<param name="neighbour_num1" value="2" />
+		<param name="neighbour_num2" value="5"/>
 		<param name="uav_name" value="/uav4"/>
-		<param name="neighbour_name1" value="/uav3" />
+		<param name="neighbour_name1" value="/uav2" />
 		<param name="neighbour_name2" value="/uav5"/>
 		<param name="k_p" value="$(arg k_p)"/>
 		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="k_gamma" value="$(arg k_gamma)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -311,11 +333,16 @@
 	</node>
 
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav5" output="screen">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_num" value="5"/>
+		<param name="neighbour_num1" value="3" />
+		<param name="neighbour_num2" value="4"/>
 		<param name="uav_name" value="/uav5"/>
-		<param name="neighbour_name1" value="/uav4" />
-		<param name="neighbour_name2" value="/uav1"/>
+		<param name="neighbour_name1" value="/uav3" />
+		<param name="neighbour_name2" value="/uav4"/>
 		<param name="k_p" value="$(arg k_p)"/>
 		<param name="k_aij" value="$(arg k_aij)"/>
+		<param name="k_gamma" value="$(arg k_gamma)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -353,10 +380,11 @@
 	</node>
 
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
-		<param name="uav_name" value="/uav5"/>
+		<param name="controller_num" value="1"/>
+		<param name="uav_num" value="5"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
 		<param name="virtual_leader_pos_y" value="0.0" />
-		<param name="virtual_leader_pos_z" value="0.0" />
+		<param name="virtual_leader_pos_z" value="1.0" />
 		<param name="virtual_leader_yaw" value="0.0" />
 		<param name="formation_size" value="1.0" />
 	</node>

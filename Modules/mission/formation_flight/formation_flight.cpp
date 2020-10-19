@@ -27,15 +27,12 @@ using namespace std;
 
 # define NODE_NAME "formation_flight"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-int uav_number;
+int uav_number,controller_num;
 
-prometheus_msgs::SwarmCommand Command_uav1;  
-prometheus_msgs::SwarmCommand Command_uav2;  
-prometheus_msgs::SwarmCommand Command_uav3;  
-prometheus_msgs::SwarmCommand Command_uav4;  
-prometheus_msgs::SwarmCommand Command_uav5;  
+prometheus_msgs::SwarmCommand swarm_command;  
 
 Eigen::Vector3f virtual_leader_pos;
+Eigen::Vector3f virtual_leader_vel;
 float virtual_leader_yaw;
 float formation_size;
 
@@ -45,10 +42,9 @@ ros::Publisher uav3_command_pub;
 ros::Publisher uav4_command_pub;
 ros::Publisher uav5_command_pub;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+void printf_param();
 void triangle();
 void one_column();
-void triangle_to_one_column();
-void one_column_to_triangle();
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void goal_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
@@ -63,6 +59,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     nh.param<int>("uav_number", uav_number, 5);
+    nh.param<int>("controller_num", controller_num, 0);
     nh.param<float>("virtual_leader_pos_x", virtual_leader_pos[0], 0.0);
     nh.param<float>("virtual_leader_pos_y", virtual_leader_pos[1], 0.0);
     nh.param<float>("virtual_leader_pos_z", virtual_leader_pos[2], 1.0);
@@ -96,7 +93,7 @@ int main(int argc, char **argv)
     // Waiting for input
     int start_flag = 0;
 
-    ros::Duration(1.0).sleep();
+    printf_param();
 
     while(start_flag == 0)
     {
@@ -104,14 +101,14 @@ int main(int argc, char **argv)
         cout << "Please enter 1 to disarm and takeoff all the UAVs."<<endl;
         cin >> start_flag;
 
-        Command_uav1.Mode = prometheus_msgs::SwarmCommand::Idle;
-        Command_uav1.yaw_ref = 999;
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Idle;
+        swarm_command.yaw_ref = 999;
 
-        uav1_command_pub.publish(Command_uav1);
-        uav2_command_pub.publish(Command_uav1);
-        uav3_command_pub.publish(Command_uav1);
-        uav4_command_pub.publish(Command_uav1);
-        uav5_command_pub.publish(Command_uav1);
+        uav1_command_pub.publish(swarm_command);
+        uav2_command_pub.publish(swarm_command);
+        uav3_command_pub.publish(swarm_command);
+        uav4_command_pub.publish(swarm_command);
+        uav5_command_pub.publish(swarm_command);
     }
 
     start_flag = 0;
@@ -122,14 +119,14 @@ int main(int argc, char **argv)
         cout << "Please enter 1 to disarm and takeoff all the UAVs."<<endl;
         cin >> start_flag;
 
-        Command_uav1.Mode = prometheus_msgs::SwarmCommand::Takeoff;
-        Command_uav1.yaw_ref = 0.0;
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Takeoff;
+        swarm_command.yaw_ref = 0.0;
 
-        uav1_command_pub.publish(Command_uav1);
-        uav2_command_pub.publish(Command_uav1);
-        uav3_command_pub.publish(Command_uav1);
-        uav4_command_pub.publish(Command_uav1);
-        uav5_command_pub.publish(Command_uav1);
+        uav1_command_pub.publish(swarm_command);
+        uav2_command_pub.publish(swarm_command);
+        uav3_command_pub.publish(swarm_command);
+        uav4_command_pub.publish(swarm_command);
+        uav5_command_pub.publish(swarm_command);
     }
 
     float x_sp,y_sp;
@@ -186,8 +183,12 @@ int main(int argc, char **argv)
                 const float omega = 1.0;
                 const float circle_radius = 1.0;
 
-                virtual_leader_pos[0] = virtual_leader_pos[0] + circle_radius * cos(time_trajectory * omega);
-                virtual_leader_pos[1] = virtual_leader_pos[1] + circle_radius * sin(time_trajectory * omega);
+                virtual_leader_pos[0] = circle_radius * cos(time_trajectory * omega);
+                virtual_leader_pos[1] = circle_radius * sin(time_trajectory * omega);
+                virtual_leader_pos[2] = 1.0;
+                virtual_leader_vel[0] = - omega * circle_radius * sin(time_trajectory * omega);
+                virtual_leader_vel[1] = omega * circle_radius * cos(time_trajectory * omega);
+                virtual_leader_vel[2] = 0.0;
 
                 time_trajectory = time_trajectory + 0.01;
 
@@ -220,77 +221,72 @@ int main(int argc, char **argv)
 
 void one_column()
 {   
-    Command_uav1.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav1.position_ref[0] = virtual_leader_pos[0] ; 
-    Command_uav1.position_ref[1] = virtual_leader_pos[1] + 2 * formation_size;
-    Command_uav1.position_ref[2] = virtual_leader_pos[2] ;  
-    Command_uav1.yaw_ref = virtual_leader_yaw;
-    uav1_command_pub.publish(Command_uav1);
-
-    Command_uav2.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav2.position_ref[0] = virtual_leader_pos[0] ; 
-    Command_uav2.position_ref[1] = virtual_leader_pos[1] + 1 * formation_size; 
-    Command_uav2.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav2.yaw_ref = virtual_leader_yaw;
-    uav2_command_pub.publish(Command_uav2);
-
-    Command_uav3.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav3.position_ref[0] = virtual_leader_pos[0] ; 
-    Command_uav3.position_ref[1] = virtual_leader_pos[1] ; 
-    Command_uav3.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav3.yaw_ref = virtual_leader_yaw;
-    uav3_command_pub.publish(Command_uav3);
-
-    Command_uav4.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav4.position_ref[0] = virtual_leader_pos[0] ; 
-    Command_uav4.position_ref[1] = virtual_leader_pos[1] - 1 * formation_size; 
-    Command_uav4.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav4.yaw_ref = virtual_leader_yaw;
-    uav4_command_pub.publish(Command_uav4);
-
-    Command_uav5.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav5.position_ref[0] = virtual_leader_pos[0] ; 
-    Command_uav5.position_ref[1] = virtual_leader_pos[1] - 2 * formation_size; 
-    Command_uav5.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav5.yaw_ref = virtual_leader_yaw;
-    uav5_command_pub.publish(Command_uav5);
+    if (controller_num == 0)
+    {
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Position_Control;
+    }else if(controller_num == 1)
+    {
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    }else if(controller_num == 2)
+    {
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Accel_Control;
+    }
+    
+    swarm_command.swarm_shape = prometheus_msgs::SwarmCommand::One_column;
+    swarm_command.swarm_size = formation_size;
+    swarm_command.position_ref[0] = virtual_leader_pos[0] ; 
+    swarm_command.position_ref[1] = virtual_leader_pos[1] ;
+    swarm_command.position_ref[2] = virtual_leader_pos[2] ;  
+    swarm_command.velocity_ref[0] = virtual_leader_vel[0] ; 
+    swarm_command.velocity_ref[1] = virtual_leader_vel[1] ; 
+    swarm_command.velocity_ref[2] = virtual_leader_vel[2] ; 
+    swarm_command.yaw_ref = virtual_leader_yaw;
+    uav1_command_pub.publish(swarm_command);
+    uav2_command_pub.publish(swarm_command);
+    uav3_command_pub.publish(swarm_command);
+    uav4_command_pub.publish(swarm_command);
+    uav5_command_pub.publish(swarm_command);
 }
 
 void triangle()
 {   
-    //Velocity_Control
-    Command_uav1.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav1.position_ref[0] = virtual_leader_pos[0] - formation_size; 
-    Command_uav1.position_ref[1] = virtual_leader_pos[1] + formation_size; 
-    Command_uav1.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav1.yaw_ref = virtual_leader_yaw;
-    uav1_command_pub.publish(Command_uav1);
+    if (controller_num == 0)
+    {
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Position_Control;
+    }else if(controller_num == 1)
+    {
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
+    }else if(controller_num == 2)
+    {
+        swarm_command.Mode = prometheus_msgs::SwarmCommand::Accel_Control;
+    }
+    swarm_command.swarm_shape = prometheus_msgs::SwarmCommand::Triangle;
+    swarm_command.swarm_size = formation_size;
+    swarm_command.position_ref[0] = virtual_leader_pos[0] ; 
+    swarm_command.position_ref[1] = virtual_leader_pos[1] ;
+    swarm_command.position_ref[2] = virtual_leader_pos[2] ;  
+    swarm_command.velocity_ref[0] = virtual_leader_vel[0] ; 
+    swarm_command.velocity_ref[1] = virtual_leader_vel[1] ; 
+    swarm_command.velocity_ref[2] = virtual_leader_vel[2] ; 
+    swarm_command.yaw_ref = virtual_leader_yaw;
+    uav1_command_pub.publish(swarm_command);
+    uav2_command_pub.publish(swarm_command);
+    uav3_command_pub.publish(swarm_command);
+    uav4_command_pub.publish(swarm_command);
+    uav5_command_pub.publish(swarm_command);
+}
 
-    Command_uav2.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav2.position_ref[0] = virtual_leader_pos[0] ; 
-    Command_uav2.position_ref[1] = virtual_leader_pos[1] + 0.5 * formation_size; 
-    Command_uav2.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav2.yaw_ref = virtual_leader_yaw;
-    uav2_command_pub.publish(Command_uav2);
+void printf_param()
+{
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Formation Flight Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
-    Command_uav3.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav3.position_ref[0] = virtual_leader_pos[0] + formation_size; 
-    Command_uav3.position_ref[1] = virtual_leader_pos[1] ; 
-    Command_uav3.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav3.yaw_ref = virtual_leader_yaw;
-    uav3_command_pub.publish(Command_uav3);
 
-    Command_uav4.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav4.position_ref[0] = virtual_leader_pos[0] ; 
-    Command_uav4.position_ref[1] = virtual_leader_pos[1] - 0.5 * formation_size; 
-    Command_uav4.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav4.yaw_ref = virtual_leader_yaw;
-    uav4_command_pub.publish(Command_uav4);
-
-    Command_uav5.Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
-    Command_uav5.position_ref[0] = virtual_leader_pos[0] - formation_size; 
-    Command_uav5.position_ref[1] = virtual_leader_pos[1] - formation_size; 
-    Command_uav5.position_ref[2] = virtual_leader_pos[2] ; 
-    Command_uav5.yaw_ref = virtual_leader_yaw;
-    uav5_command_pub.publish(Command_uav5);
+    cout << "uav_number   : "<< uav_number <<endl;
+    cout << "controller_num   : "<< controller_num <<endl;
+    
+    cout << "virtual_leader_pos_x   : "<< virtual_leader_pos[0]<<" [m] "<<endl;
+    cout << "virtual_leader_pos_y   : "<< virtual_leader_pos[1]<<" [m] "<<endl;
+    cout << "virtual_leader_pos_z   : "<< virtual_leader_pos[2]<<" [m] "<<endl;
+    cout << "virtual_leader_yaw : "<< virtual_leader_yaw << " [rad]  "<< endl;
+    cout << "formation_size : "<< formation_size << " [m] "<< endl;
 }
