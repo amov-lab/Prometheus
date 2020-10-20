@@ -10,6 +10,11 @@
 		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
 	</node> 
 
+	<!-- vrpn -->
+	<include file="$(find vrpn_client_ros)/launch/sample.launch">
+		<arg name="server" value="192.168.1.2"/>
+	</include>
+
 	<!-- run the px4_pos_estimator.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
@@ -18,19 +23,14 @@
 		<param name="object_name" value="UAV"/>
 	</node>
 	
-	<!-- run the px4_pos_controller.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/px4_pos_controller.yaml"/>
+	<!-- run the px4_sender.cpp -->
+	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/px4_sender.yaml"/>
 	</node>
 
 	<!-- run the ground_station.cpp -->
 	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
-
- 	 <!-- vrpn -->
-	<include file="$(find vrpn_client_ros)/launch/sample.launch" launch-prefix="gnome-terminal --tab --">
-		<arg name="server" value="192.168.1.2"/>
-	</include>
 
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
