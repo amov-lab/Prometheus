@@ -146,10 +146,10 @@ class command_to_mavros
     void send_pos_vel_xyz_setpoint(const Eigen::Vector3d& pos_sp, const Eigen::Vector3d& vel_sp, float yaw_sp);
 
     //发送加速度期望值至飞控（输入：期望axayaz,期望yaw）
-    //这是px4_pos_controller.cpp中目前使用的控制方式
     void send_acc_xyz_setpoint(const Eigen::Vector3d& accel_sp, float yaw_sp);
 
     //发送角度期望值至飞控（输入：期望角度-四元数,期望推力）
+    //这是px4_pos_controller.cpp中目前使用的控制方式
     void send_attitude_setpoint(const prometheus_msgs::AttitudeReference& _AttitudeReference);
 
     //发送角度期望值至飞控（输入：期望角速度,期望推力）

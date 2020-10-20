@@ -184,7 +184,8 @@ int main(int argc, char **argv)
     ros::Time begin_time = ros::Time::now();
     float last_time = prometheus_control_utils::get_time_in_sec(begin_time);
     float yita;
-
+    Eigen::Vector3d accel_sp;
+     Eigen::Vector3d throttle_sp;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主  循  环<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
     {
@@ -338,7 +339,25 @@ int main(int argc, char **argv)
 
         case prometheus_msgs::SwarmCommand::Accel_Control:
 
-            //To be continued;
+            //To be continued; 此处加速度控制实则控制的是３轴油门，限制幅度为[-1, 1] , [-1, 1], [0,1]
+
+            //　此控制方式即为　集中式控制，　直接由地面站指定期望位置点,并计算期望加速度（期望油门）
+            //　此处也可以根据自己的算法改为　分布式控制
+            //　需要增加积分项　否则会有静差
+
+            accel_sp[0] =  2.5 * (Command_Now.position_ref[0] + formation_separation(uav_num-1,0) - pos_drone[0]) + 3.0 * (Command_Now.velocity_ref[0] - vel_drone[0]);
+            accel_sp[1] =  2.5 * (Command_Now.position_ref[1] + formation_separation(uav_num-1,1) - pos_drone[1]) + 3.0 * (Command_Now.velocity_ref[1] - vel_drone[1]);
+            accel_sp[2] =  2.0 * (Command_Now.position_ref[2] + formation_separation(uav_num-1,2) - pos_drone[2]) + 3.0 * (Command_Now.velocity_ref[2] - vel_drone[2]) + 9.8;
+            
+            //　从加速度归一化到油门
+            throttle_sp =  swarm_control_utils::accelToThrottle(accel_sp, 1.0, 20.0);
+
+            state_sp[0] = throttle_sp[0] ;
+            state_sp[1] = throttle_sp[1] ;
+            state_sp[2] = throttle_sp[2] ;
+
+            yaw_sp = Command_Now.yaw_ref + formation_separation(uav_num-1,3);
+            _command_to_mavros.send_acc_xyz_setpoint(state_sp, yaw_sp);
 
             break;
 
