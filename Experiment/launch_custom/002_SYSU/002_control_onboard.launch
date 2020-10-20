@@ -1,13 +1,13 @@
 <launch>
 	<!-- 启动MAVROS -->
-	<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
-		<param name="fcu_url" value="192.168.1.104" />
+		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+		<param name="fcu_url" value="/dev/ttyUSB0:921600" />
 		<param name="gcs_url" value="" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
 	</node>
 
 	<!-- vrpn -->

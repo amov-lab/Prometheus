@@ -1,9 +1,9 @@
 ## parameter for px4_sender.cpp
 
 ## 起飞高度
-Takeoff_height : 0.6
+Takeoff_height : 1.0
 ## 降落速度
-Land_speed : 0.2
+Land_speed : 0.25
 ##　上锁高度
 Disarm_height : 0.1
 

@@ -1,5 +1,6 @@
 <launch>
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
+		<!-- 0代表位置控制，１代表速度控制，２代表加速度控制 -->
 		<param name="controller_num" value="0"/>
 		<param name="uav_num" value="5"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
