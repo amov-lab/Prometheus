@@ -2,6 +2,7 @@
 	<!-- 启动MAVROS -->
 	<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+		<!-- 与飞控连接方式，需要配置 -->
 		<param name="fcu_url" value="tcp://192.168.1.104:6000" />
 		<param name="gcs_url" value="" />
 		<param name="target_system_id" value="1" />
@@ -9,6 +10,11 @@
 		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
 		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
 	</node> 
+
+	<!-- vrpn -->
+	<include file="$(find vrpn_client_ros)/launch/sample.launch">
+		<arg name="server" value="192.168.1.2"/>
+	</include>
 
 	<!-- run the px4_pos_estimator.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
@@ -18,19 +24,14 @@
 		<param name="object_name" value="UAV"/>
 	</node>
 	
-	<!-- run the px4_pos_controller.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/px4_pos_controller.yaml"/>
+	<!-- run the px4_sender.cpp -->
+	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/px4_sender.yaml"/>
 	</node>
 
 	<!-- run the ground_station.cpp -->
 	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
-
- 	 <!-- vrpn -->
-	<include file="$(find vrpn_client_ros)/launch/sample.launch" launch-prefix="gnome-terminal --tab --">
-		<arg name="server" value="192.168.1.2"/>
-	</include>
 
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
@@ -38,8 +39,13 @@
 
 	<!-- run the terminal_control.cpp -->
 	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_experiment)/launch_custom/002_SYSU/terminal_control.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/terminal_control.yaml" />
 	</node>	
 
+	<!-- run the rviz -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_experiment)/config/rviz_config/rviz_controller_test.rviz" />
+    </group>
 </launch>
 

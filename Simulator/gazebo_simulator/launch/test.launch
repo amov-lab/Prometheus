@@ -38,59 +38,5 @@
         <arg name="world_name" value="$(arg world)"/>
     </include>
 
-	<!-- Spawn vehicle model -->
-	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
-    <arg name="x" default="1.0"/>
-    <arg name="y" default="1.0"/>
-    <arg name="z" default="0.2"/>
-	<arg name="R" default="0"/>
-    <arg name="P" default="0"/>
-    <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
-	<arg name="model" default="P300_basic"/>
-	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
-		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
-	</node>
-
-	<!-- 启动MAVROS -->
-	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
-		<param name="fcu_url" value="udp://:14540@localhost:14557" />
-		<param name="gcs_url" value="" />
-		<param name="target_system_id" value="1" />
-		<param name="target_component_id" value="1" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
-	</node>
-	
-	<!-- TF transform -->
-	<include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
-		<arg name="x" value="$(arg x)"/>
-    	<arg name="y" value="$(arg y)"/>
-    	<arg name="z" value="$(arg z)"/>
-    </include>
-
-	<!-- 启动Prometheus代码 -->
-	<!-- run the px4_pos_estimator.cpp -->
-	<arg name="input_source" default="2"/>
-	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
-		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
-		<param name="input_source" value="$(arg input_source)" />
-		<param name="offset_x" value="$(arg x)" />
-		<param name="offset_y" value="$(arg y)" />
-		<param name="offset_z" value="$(arg z)" />
-	</node>
-	
-	<!-- run the px4_pos_controller.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-		<rosparam command="load" file="$(find prometheus_control)/config/px4_pos_controller.yaml"/>
-	</node>
-	
-	<!-- run the ground_station.cpp -->
-	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
-	</node>
-
-	<!-- run the ground_station_msg.cpp -->
-	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
-	</node>
 </launch>
 

@@ -29,7 +29,7 @@ Pos_cascade_pid:
   Ki_vz : 0.05
   Kd_vxvy : 0.016
   Kd_vz : 0.0
-  ##悬停油门，取决于飞机重量
+  ##悬停油门，取决于飞机重量, 这个参数起飞前一定要调试！！！
   Hover_throttle : 0.1
   MPC_VELD_LP: 5.0
 
