@@ -1,3 +1,4 @@
+<!-- 本launch为使用px4_pos_controller进行机载控制时的机载端启动脚本 -->
 <launch>
 	<!-- 启动MAVROS -->
 	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
