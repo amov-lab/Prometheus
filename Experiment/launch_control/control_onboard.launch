@@ -1,7 +1,7 @@
 <launch>
 	<!-- 启动MAVROS -->
-	<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 		<param name="fcu_url" value="/dev/ttyUSB0:921600" />
 		<param name="gcs_url" value="" />
 		<param name="target_system_id" value="1" />

@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
     //【订阅】邻居飞机的状态信息
     ros::Subscriber nei1_state_sub = nh.subscribe<prometheus_msgs::DroneState>(neighbour_name1 + "/prometheus/drone_state", 10, boost::bind(&nei_state_cb,_1, 0));
-    ros::Subscriber nei2_state_sub = nh.subscribe<prometheus_msgs::DroneState>(neighbour_name2 + "/prometheus/drone_state", 10, boost::bind(&nei_state_cb,_1, 0));
+    ros::Subscriber nei2_state_sub = nh.subscribe<prometheus_msgs::DroneState>(neighbour_name2 + "/prometheus/drone_state", 10, boost::bind(&nei_state_cb,_1, 1));
 
     //【发布】参考位姿 RVIZ显示用
     rivz_ref_pose_pub = nh.advertise<geometry_msgs::PoseStamped>(uav_name + "/prometheus/control/ref_pose_rviz", 10);

@@ -38,7 +38,7 @@
 
 	<!-- run the terminal_control.cpp -->
 	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_experiment)/launch_custom/002_SYSU/terminal_control.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/terminal_control.yaml" />
 	</node>	
 
 </launch>
