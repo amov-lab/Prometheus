@@ -34,7 +34,7 @@ using namespace std;
 #define MOTOR_P4 0.3052
 #define MOTOR_P5 0.008775
 
-
+#define thrust_max_single_motor 6.0
 
 namespace swarm_control_utils 
 {
@@ -297,6 +297,38 @@ void printf_swarm_state(string uav_name, const prometheus_msgs::DroneState& _Dro
 
     }
 
+}
+
+Eigen::Vector3d accelToThrottle(const Eigen::Vector3d& accel_sp, float mass, float tilt_max)
+{
+    Eigen::Vector3d thrust_sp;
+
+    //除以电机个数得到单个电机的期望推力
+    thrust_sp = mass * accel_sp / NUM_MOTOR;
+
+    // 推力限幅，根据最大倾斜角及最大油门
+    float thrust_max_XY_tilt = fabs(thrust_sp[2]) * tanf(tilt_max/180.0*M_PI);
+    float thrust_max_XY = sqrtf(thrust_max_single_motor * thrust_max_single_motor - pow(thrust_sp[2],2));
+    thrust_max_XY = min(thrust_max_XY_tilt, thrust_max_XY);
+
+    if ((pow(thrust_sp[0],2) + pow(thrust_sp[1],2)) > pow(thrust_max_XY,2)) 
+    {
+        float mag = sqrtf((pow(thrust_sp[0],2) + pow(thrust_sp[1],2)));
+        thrust_sp[0] = thrust_sp[0] / mag * thrust_max_XY;
+        thrust_sp[1] = thrust_sp[1] / mag * thrust_max_XY;
+    }
+
+    Eigen::Vector3d throttle_sp;
+
+    //电机模型，可通过辨识得到，推力-油门曲线
+    for (int i=0; i<3; i++)
+    {
+        throttle_sp[i] = MOTOR_P1 * pow(thrust_sp[i],4) + MOTOR_P2 * pow(thrust_sp[i],3) + MOTOR_P3 * pow(thrust_sp[i],2) + MOTOR_P4 * thrust_sp[i] + MOTOR_P5;
+        // PX4内部默认假设 0.5油门为悬停推力 ， 在无人机重量为1kg时，直接除20得到0.5
+        // throttle_sp[i] = thrust_sp[i]/20；
+    }
+
+    return throttle_sp;   
 }
 
 

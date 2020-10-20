@@ -380,7 +380,7 @@
 	</node>
 
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
-		<param name="controller_num" value="1"/>
+		<param name="controller_num" value="2"/>
 		<param name="uav_num" value="5"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
 		<param name="virtual_leader_pos_y" value="0.0" />
