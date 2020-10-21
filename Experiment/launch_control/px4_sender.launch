@@ -31,8 +31,8 @@
 		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/px4_sender.yaml"/>
 	</node>
 
-	<!-- run the ground_station.cpp -->
-	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+	<!-- run the sender_ground_station.cpp -->
+	<node pkg="prometheus_control" type="sender_ground_station" name="sender_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
 
 	<!-- run the ground_station_msg.cpp -->
