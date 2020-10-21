@@ -29,7 +29,7 @@
 		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
 			<!-- 与飞控连接方式，需要配置 -->
-			<param name="fcu_url" value="tcp://192.168.1.101:6000" />
+			<param name="fcu_url" value="tcp://192.168.1.102:6000" />
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="1" />
 			<param name="target_component_id" value="1" />
@@ -44,7 +44,7 @@
 		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
 			<!-- 与飞控连接方式，需要配置 -->
-			<param name="fcu_url" value="tcp://192.168.1.102:6000" />
+			<param name="fcu_url" value="tcp://192.168.1.103:6000" />
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="1" />
 			<param name="target_component_id" value="1" />
@@ -173,7 +173,7 @@
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
 		<!-- 0代表位置控制，１代表速度控制，２代表加速度控制 -->
 		<param name="controller_num" value="0"/>
-		<param name="uav_num" value="5"/>
+		<param name="uav_num" value="3"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
 		<param name="virtual_leader_pos_y" value="0.0" />
 		<param name="virtual_leader_pos_z" value="0.6" />
