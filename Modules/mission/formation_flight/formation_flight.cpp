@@ -162,6 +162,8 @@ int main(int argc, char **argv)
             cin >> virtual_leader_yaw;
             virtual_leader_yaw = virtual_leader_yaw/180.0*M_PI;
 
+            virtual_leader_pos[2]  = 0.8;
+
             if(formation_num == 2)
             {
                 triangle();
