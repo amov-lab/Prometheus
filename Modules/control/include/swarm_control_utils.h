@@ -48,6 +48,25 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
     // 一字型，虚拟领机位置为中心位置，其余飞机根据数量向左右增加
     if(swarm_shape == prometheus_msgs::SwarmCommand::One_column)
     {
+        if(swarm_num == 3)
+        {
+            //　数量为3时，１号机即虚拟领机位置
+            seperation(0,0) = 0.0;
+            seperation(0,1) = 0.0;  
+            seperation(0,2) = 0.0;
+            seperation(0,3) = 0.0;
+
+            seperation(1,0) = 0.0;
+            seperation(1,1) = swarm_size;  
+            seperation(1,2) = 0.0;
+            seperation(1,3) = 0.0;
+
+            seperation(2,0) = 0.0;
+            seperation(2,1) = - 1 * swarm_size;  
+            seperation(2,2) = 0.0;
+            seperation(2,3) = 0.0;
+        }
+
         if(swarm_num == 5)
         {
             //　数量为５时，１号机即虚拟领机位置
@@ -82,6 +101,25 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
     // 三角型，虚拟领机位置为中心位置
     if(swarm_shape == prometheus_msgs::SwarmCommand::Triangle)
     {
+        if(swarm_num == 3)
+        {
+            //　数量为５时，
+            seperation(0,0) = swarm_size;
+            seperation(0,1) = 0.0;  
+            seperation(0,2) = 0.0;
+            seperation(0,3) = 0.0;
+
+            seperation(1,0) = 0.0;
+            seperation(1,1) = 0.5 * swarm_size;  
+            seperation(1,2) = 0.0;
+            seperation(1,3) = 0.0;
+
+            seperation(2,0) = 0.0;
+            seperation(2,1) = - 0.5 * swarm_size;  
+            seperation(2,2) = 0.0;
+            seperation(2,3) = 0.0;
+        }
+
         if(swarm_num == 5)
         {
             //　数量为５时，

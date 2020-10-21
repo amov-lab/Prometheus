@@ -27,7 +27,7 @@ using namespace std;
 
 # define NODE_NAME "formation_flight"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-int uav_number,controller_num;
+int controller_num;
 
 prometheus_msgs::SwarmCommand swarm_command;  
 
@@ -58,7 +58,6 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "formation_flight");
     ros::NodeHandle nh("~");
 
-    nh.param<int>("uav_number", uav_number, 5);
     nh.param<int>("controller_num", controller_num, 0);
     nh.param<float>("virtual_leader_pos_x", virtual_leader_pos[0], 0.0);
     nh.param<float>("virtual_leader_pos_y", virtual_leader_pos[1], 0.0);
@@ -162,7 +161,7 @@ int main(int argc, char **argv)
             cin >> virtual_leader_yaw;
             virtual_leader_yaw = virtual_leader_yaw/180.0*M_PI;
 
-            virtual_leader_pos[2]  = 0.8;
+            virtual_leader_pos[2]  = 1.0;
 
             if(formation_num == 2)
             {
@@ -282,8 +281,6 @@ void printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>> Formation Flight Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
-
-    cout << "uav_number   : "<< uav_number <<endl;
     cout << "controller_num   : "<< controller_num <<endl;
     
     cout << "virtual_leader_pos_x   : "<< virtual_leader_pos[0]<<" [m] "<<endl;
