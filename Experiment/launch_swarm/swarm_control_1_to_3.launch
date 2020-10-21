@@ -18,6 +18,11 @@
 	<arg name="z_min" default="-1.0"/>
 	<arg name="z_max" default="1.5"/>
 
+	<!-- vrpn -->
+	<include file="$(find vrpn_client_ros)/launch/sample.launch">
+		<arg name="server" value="192.168.1.2"/>
+	</include>
+
 	<!-- 1号飞机 -->
     <group ns="uav1">
 		<!-- 启动MAVROS -->
@@ -33,8 +38,38 @@
 		</node>
     </group>
 
+	<!-- 2号飞机 -->
+    <group ns="uav2">
+		<!-- 启动MAVROS -->
+		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
+			<!-- 与飞控连接方式，需要配置 -->
+			<param name="fcu_url" value="tcp://192.168.1.102:6000" />
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="1" />
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
+		</node>
+    </group>
+
+	<!-- 3号飞机 -->
+    <group ns="uav3">
+		<!-- 启动MAVROS -->
+		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
+			<!-- 与飞控连接方式，需要配置 -->
+			<param name="fcu_url" value="tcp://192.168.1.103:6000" />
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="1" />
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
+		</node>
+    </group>
+
 	<!-- run the swarm_estimator.cpp -->
-	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav1" output="screen" launch-prefix="gnome-terminal --tab --">	
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav1" output="screen">	
 		<!-- 0 for vicon, 2 for gazebo ground truth(仿真用) -->
 		<param name="input_source" value="0" />
 		<!-- 如果使用动作捕捉系统，则指定刚体名称，用于订阅vrpn节点发布的话题 -->
@@ -44,7 +79,7 @@
 	</node>
 
 	<!-- run the swarm_controller.cpp -->
-	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav1" output="screen">
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav1" output="screen" launch-prefix="gnome-terminal --tab --">
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="uav_num" value="1"/>
 		<param name="neighbour_num1" value="2" />
@@ -66,23 +101,8 @@
 		<param name="geo_fence/z_max" value="$(arg z_max)"/>
 	</node>
 
-	<!-- 2号飞机 -->
-    <group ns="uav2">
-		<!-- 启动MAVROS -->
-		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
-		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
-			<!-- 与飞控连接方式，需要配置 -->
-			<param name="fcu_url" value="tcp://192.168.1.102:6000" />
-			<param name="gcs_url" value="" />
-			<param name="target_system_id" value="1" />
-			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
-			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
-		</node>
-    </group>
-
 	<!-- run the swarm_estimator.cpp -->
-	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav2" output="screen" launch-prefix="gnome-terminal --tab --">	
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav2" output="screen">	
 		<!-- 0 for vicon, 2 for gazebo ground truth(仿真用) -->
 		<param name="input_source" value="0" />
 		<!-- 如果使用动作捕捉系统，则指定刚体名称，用于订阅vrpn节点发布的话题 -->
@@ -92,7 +112,7 @@
 	</node>
 
 	<!-- run the swarm_controller.cpp -->
-	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav1" output="screen">
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav2" output="screen" launch-prefix="gnome-terminal --tab --">
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="uav_num" value="2"/>
 		<param name="neighbour_num1" value="1" />
@@ -114,23 +134,8 @@
 		<param name="geo_fence/z_max" value="$(arg z_max)"/>
 	</node>
 
-	<!-- 3号飞机 -->
-    <group ns="uav3">
-		<!-- 启动MAVROS -->
-		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
-		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
-			<!-- 与飞控连接方式，需要配置 -->
-			<param name="fcu_url" value="tcp://192.168.1.103:6000" />
-			<param name="gcs_url" value="" />
-			<param name="target_system_id" value="1" />
-			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
-			<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
-		</node>
-    </group>
-
 	<!-- run the swarm_estimator.cpp -->
-	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav3" output="screen" launch-prefix="gnome-terminal --tab --">	
+	<node pkg="prometheus_control" type="swarm_estimator" name="swarm_estimator_uav3" output="screen">	
 		<!-- 0 for vicon, 2 for gazebo ground truth(仿真用) -->
 		<param name="input_source" value="0" />
 		<!-- 如果使用动作捕捉系统，则指定刚体名称，用于订阅vrpn节点发布的话题 -->
@@ -140,7 +145,7 @@
 	</node>
 
 	<!-- run the swarm_controller.cpp -->
-	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav3" output="screen">
+	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav3" output="screen" launch-prefix="gnome-terminal --tab --">
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="uav_num" value="3"/>
 		<param name="neighbour_num1" value="1" />
@@ -162,10 +167,8 @@
 		<param name="geo_fence/z_max" value="$(arg z_max)"/>
 	</node>
 
-	<!-- vrpn -->
-	<include file="$(find vrpn_client_ros)/launch/sample.launch">
-		<arg name="server" value="192.168.1.2"/>
-	</include>
+	<node pkg="prometheus_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --">
+	</node>
 
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
 		<!-- 0代表位置控制，１代表速度控制，２代表加速度控制 -->

@@ -86,7 +86,7 @@
 	</node>
 	
 	<!-- run the ground_station.cpp -->
-	<node pkg="prometheus_control" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+	<node pkg="prometheus_control" type="sender_ground_station" name="sender_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
 
 	<!-- run the ground_station_msg.cpp -->
