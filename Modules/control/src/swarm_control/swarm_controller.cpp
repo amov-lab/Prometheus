@@ -67,6 +67,7 @@ ros::Publisher message_pub;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_param();
 int check_failsafe();
+void printf_state();
 geometry_msgs::PoseStamped get_rviz_ref_posistion(const prometheus_msgs::SwarmCommand& cmd);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void swarm_command_cb(const prometheus_msgs::SwarmCommand::ConstPtr& msg)
@@ -154,18 +155,6 @@ int main(int argc, char **argv)
     // 10秒定时打印，以确保程序在正确运行
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
 
-    // 参数读取
-    nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
-    nh.param<float>("Disarm_height", Disarm_height, 0.15);
-    nh.param<float>("Land_speed", Land_speed, 0.2);
-
-    nh.param<float>("geo_fence/x_min", geo_fence_x[0], -100.0);
-    nh.param<float>("geo_fence/x_max", geo_fence_x[1], 100.0);
-    nh.param<float>("geo_fence/y_min", geo_fence_y[0], -100.0);
-    nh.param<float>("geo_fence/y_max", geo_fence_y[1], 100.0);
-    nh.param<float>("geo_fence/z_min", geo_fence_z[0], -100.0);
-    nh.param<float>("geo_fence/z_max", geo_fence_z[1], 100.0);
-
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
 
@@ -197,6 +186,8 @@ int main(int argc, char **argv)
 
         // 执行回调函数
         ros::spinOnce();
+
+        printf_state();
 
         // Check for geo fence: If drone is out of the geo fence, it will land now.
         if(check_failsafe() == 1)
@@ -405,6 +396,33 @@ void printf_param()
     cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
     cout << "geo_fence_z : "<< geo_fence_z[0] << " [m]  to  "<<geo_fence_z[1] << " [m]"<< endl;
 }
+
+
+void printf_state()
+{
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Swarm Controller  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(NUM_POINT);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+
+    cout << "UAV_num : " <<  uav_num << "   UAV_name : " <<  uav_name << endl;
+    cout << "neighbour_num1 : " <<  neighbour_num1 << "   neighbour_name1 : " <<  neighbour_name1 << endl;
+    cout << "neighbour_num2 : " <<  neighbour_num2 << "   neighbour_name2 : " <<  neighbour_name2 << endl;
+    cout << "UAV_pos [X Y Z] : " << pos_drone[0] << " [ m ] "<< pos_drone[1]<<" [ m ] "<<pos_drone[2]<<" [ m ] "<<endl;
+    cout << "UAV_vel [X Y Z] : " << vel_drone[0] << " [ m/s ] "<< vel_drone[1]<<" [ m/s ] "<<vel_drone[2]<<" [ m/s ] "<<endl;
+    cout << "neighbour_pos [X Y Z] : " << pos_nei[0][0] << " [ m ] "<< pos_nei[0][1]<<" [ m ] "<<pos_nei[0][2]<<" [ m ] "<<endl;
+    cout << "neighbour_vel [X Y Z] : " << vel_nei[0][0] << " [ m/s ] "<< vel_nei[0][1]<<" [ m/s ] "<<vel_nei[0][2]<<" [ m/s ] "<<endl;
+    cout << "neighbour_pos [X Y Z] : " << pos_nei[1][0] << " [ m ] "<< pos_nei[1][1]<<" [ m ] "<<pos_nei[1][2]<<" [ m ] "<<endl;
+    cout << "neighbour_vel [X Y Z] : " << vel_nei[1][0] << " [ m/s ] "<< vel_nei[1][1]<<" [ m/s ] "<<vel_nei[1][2]<<" [ m/s ] "<<endl;
+}
+
 
 int check_failsafe()
 {
