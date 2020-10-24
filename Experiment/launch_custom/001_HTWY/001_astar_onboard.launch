@@ -15,6 +15,7 @@
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
 		<param name="input_source" value="0" />
+        <!-- 注意根据VICON中的设定修改该参数 -->
         <param name="object_name" value="UAV0" />
 	</node>
 	
@@ -41,6 +42,7 @@
 
     <!-- vrpn -->
 	<include file="$(find vrpn_client_ros)/launch/sample.launch">
+        <!-- 根据VICON主机修改IP -->
 		<arg name="server" value="192.168.1.2"/>
 	</include>
 
@@ -70,9 +72,9 @@
         <param name="astar/allocate_num" value="10000" type="int"/>
         <!-- 启发式函数系数 -->
         <param name="astar/lambda_heu" value="2.0" type="double"/>
-        <!-- 分辨率 -->
+        <!-- 地图分辨率 -->
         <param name="astar/resolution_astar" value="0.1" type="double"/>
-        <!-- 障碍物膨胀距离 -->
+        <!-- 障碍物膨胀距离，越大越安全，但太大可能会造成路径堵塞 -->
         <param name="astar/inflate" value="0.45" type="double"/>
         <!-- 二维平面规划 -->
         <param name="astar/is_2D" value="1" type="int"/>
@@ -88,5 +90,11 @@
         <param name="map/ceil_height_" value="2.0" type="double"/>
         <param name="map/floor_height_" value="0.5" type="double"/>
     </node>
+
+    <!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
+	<node pkg="prometheus_mission" type="planning_mission_astar" name="planning_mission_astar" output="screen" launch-prefix="gnome-terminal --">	
+		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
+		<param name="planning_mission/FLY_HEIGHT" value="0.6" type="double"/>
+	</node>
 </launch>
 

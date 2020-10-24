@@ -65,6 +65,10 @@
 		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
 	</node>
 
+	<!-- run the pub_goal.cpp -->
+	<node pkg="prometheus_mission" type="pub_goal" name="pub_goal" output="screen" launch-prefix="gnome-terminal --">	
+	</node>
+    
 	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
