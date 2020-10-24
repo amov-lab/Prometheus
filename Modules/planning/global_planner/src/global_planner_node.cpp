@@ -1,10 +1,7 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 
-
 #include "global_planning.h"
-
-
 
 using namespace global_planner;
 

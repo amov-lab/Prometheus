@@ -31,7 +31,8 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     // publish 
     global_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/prometheus/planning/global_map_marker",  10);  
     safety_timer_ = node_.createTimer(ros::Duration(2.0), &GlobalPlanner::safetyCallback, this);
-    exec_timer_ = node_.createTimer(ros::Duration(1.5), &GlobalPlanner::execCallback, this);        // 每3秒执行一次A*
+    // A_star算法执行周期，快速移动场景应当适当提高执行频率
+    exec_timer_ = node_.createTimer(ros::Duration(1.5), &GlobalPlanner::execCallback, this);        
 
     path_cmd_Pub   = node_.advertise<nav_msgs::Path>("/prometheus/global_planner/path_cmd",  10);  
     replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
@@ -82,12 +83,13 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
 
 }
 
-void GlobalPlanner::execCallback(const ros::TimerEvent& e){
-        // execute A star
+void GlobalPlanner::execCallback(const ros::TimerEvent& e)
+{
     static int exec_num=0;
     exec_num++;
     string exect_msg;
-    if(exec_num==2){
+    if(exec_num == 2)
+    {
         if(!trigger_){
             exect_msg = "don't trigger!";
             //printf("don't trigger!\n");
@@ -110,21 +112,23 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
             //printf("*** wait goal!*** \n");
             // return;
         }
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,exect_msg);
+        exec_num=0;
     }
 
     if(!trigger_ || !have_odom_ || !has_point_map_ || !have_goal_)
     {
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,exect_msg);
-        exec_num=0;
         return;
     }
 
     Astar_ptr->reset();
     int astar_state = Astar_ptr->search(start_pt_, end_pt_);
-    if(astar_state==Astar::NO_PATH){
+    if(astar_state==Astar::NO_PATH)
+    {
           pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "a star find no path, please reset the goal!");
     }
-    else{
+    else
+    {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "astart find path success!");
         std::vector<Eigen::Vector3d> A_star_path = Astar_ptr->getPath();
         visualization_->drawPath(A_star_path, 0.1,Eigen::Matrix<double, 4, 1>(1.0, 0, 0, 1), 1);
@@ -132,32 +136,10 @@ void GlobalPlanner::execCallback(const ros::TimerEvent& e){
     }
 }
 
-void GlobalPlanner::generate_CMD(std::vector<Eigen::Vector3d> path){
-/*
-nav_msgs/Path
-std_msgs/Header header
-  uint32 seq
-  time stamp
-  string frame_id
-geometry_msgs/PoseStamped[] poses
-  std_msgs/Header header
-    uint32 seq
-    time stamp
-    string frame_id
-  geometry_msgs/Pose pose
-    geometry_msgs/Point position
-      float64 x
-      float64 y
-      float64 z
-    geometry_msgs/Quaternion orientation
-      float64 x
-      float64 y
-      float64 z
-      float64 w
-*/
+void GlobalPlanner::generate_CMD(std::vector<Eigen::Vector3d> path)
+{
     A_star_path_cmd.header.frame_id = "world";
     A_star_path_cmd.header.stamp = ros::Time::now();
-    // printf("Path:  \n");
     A_star_path_cmd.poses.clear();
     for (int i=0; i<path.size(); ++i){
         geometry_msgs::PoseStamped path_i_pose;
@@ -165,17 +147,16 @@ geometry_msgs/PoseStamped[] poses
         path_i_pose.pose.position.x = path[i](0);
         path_i_pose.pose.position.y = path[i](1);
         path_i_pose.pose.position.z = path[i](2);
-        // printf("%d: >>> %f,   %f,   %f >>>>\n", i, path[i](0), path[i](1), path[i](2));
         A_star_path_cmd.poses.push_back(path_i_pose);
     }
-    // printf("goal position: %f, %f, %f\n", end_pt_(0), end_pt_(1), end_pt_(2));
     control_time = ros::Time::now();
     replan.data = 0;
     path_cmd_Pub.publish(A_star_path_cmd);
     
 }
 
-void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
+void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg)
+{
     odom_ = *msg;
     odom_.header.frame_id = msg->header.frame_id;
     have_odom_ = true;
@@ -187,7 +168,8 @@ void GlobalPlanner::odomCallback(const nav_msgs::OdometryConstPtr &msg){
     }
 }
 
-void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg){
+void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
+{
     /* need odom_ for center radius sensing */
     if (!have_odom_) {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "global point cloud: --- no odom!---");
@@ -199,12 +181,6 @@ void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &
 
     global_map_ptr_ = msg;
 
-    // 二维平面规划
-    if (is_2D == 1)
-    {
-        //global_map_ptr_
-    }
-
     Astar_ptr->setEnvironment(global_map_ptr_);
 
     visualization_msgs::Marker m;
@@ -212,7 +188,8 @@ void GlobalPlanner::globalcloudCallback(const sensor_msgs::PointCloud2ConstPtr &
     global_map_marker_Pub.publish(m);
 }
 
-void GlobalPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
+void GlobalPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) 
+{
     m.header.frame_id = "map";
     m.id = id;
     m.type = visualization_msgs::Marker::CUBE_LIST;
@@ -238,47 +215,15 @@ void GlobalPlanner::getOccupancyMarker(visualization_msgs::Marker &m, int id, Ei
     }
 }
 
-void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
-//     rosmsg show nav_msgs/Odometry 
-// std_msgs/Header header
-//   uint32 seq
-//   time stamp
-//   string frame_id
-// string child_frame_id
-// geometry_msgs/PoseWithCovariance pose
-//   geometry_msgs/Pose pose
-//     geometry_msgs/Point position
-//       float64 x
-//       float64 y
-//       float64 z
-//     geometry_msgs/Quaternion orientation
-//       float64 x
-//       float64 y
-//       float64 z
-//       float64 w
-//   float64[36] covariance
-// geometry_msgs/TwistWithCovariance twist
-//   geometry_msgs/Twist twist
-//     geometry_msgs/Vector3 linear
-//       float64 x
-//       float64 y
-//       float64 z
-//     geometry_msgs/Vector3 angular
-//       float64 x
-//       float64 y
-//       float64 z
-//   float64[36] covariance
-
-    Eigen::Vector3d cur_pos(odom_.pose.pose.position.x, 
-                                                        odom_.pose.pose.position.y, 
-                                                        odom_.pose.pose.position.z);
+void GlobalPlanner::safetyCallback(const ros::TimerEvent& e)
+{
+    Eigen::Vector3d cur_pos(odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z);
+    
     bool is_safety = Astar_ptr->check_safety(cur_pos, safe_distance);
 
-    // give some for replan.
-    if(!is_safety /*&& (ros::Time::now()-control_time).toSec()>3.0*/){
-        // printf("[safetyCallback]: not safety, pls re select the goal point.\n");
+    if(!is_safety)
+    {
         replan.data = 1;
-        // replan_cmd_Pub.publish(replan);
     }
     else{
         replan.data = 0;
@@ -287,7 +232,8 @@ void GlobalPlanner::safetyCallback(const ros::TimerEvent& e){
     replan_cmd_Pub.publish(replan);
 }
 
-void GlobalPlanner::switchCallback(const std_msgs::Bool::ConstPtr &msg){
+void GlobalPlanner::switchCallback(const std_msgs::Bool::ConstPtr &msg)
+{
     trigger_= msg->data;
 }
 

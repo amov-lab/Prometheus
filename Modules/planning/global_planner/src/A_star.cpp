@@ -54,12 +54,9 @@ std::vector<Eigen::Vector3d> Astar::getPath()
   return path;
 }
 
-
-
 int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 {
   /* ---------- initialize ---------- */
-  // printf("[A starr search]-------- \n");
   NodePtr cur_node = path_node_pool_[0];
   cur_node->parent = NULL;
   cur_node->position = start_pt;
@@ -71,7 +68,8 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 
   Eigen::Vector3i end_index;
   double time_to_goal;
-  if(Occupy_map_ptr->getOccupancy(end_pt)){
+  if(Occupy_map_ptr->getOccupancy(end_pt))
+  {
       pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "end point is occupied, pls reset the goal");
       return NO_PATH;
   }
@@ -82,7 +80,6 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
    
   open_set_.push(cur_node);
   use_node_num_ += 1;
-
 
   expanded_nodes_.insert(cur_node->index, cur_node);
 
@@ -227,19 +224,12 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
       }
     }       
   
-  
-  
-  
   }
 
   pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "open set empty, no path!");
   return NO_PATH;
 
 }
-
-
-
-
 
 double Astar::getDiagHeu(Eigen::Vector3d x1, Eigen::Vector3d x2)
 {
@@ -288,7 +278,6 @@ void Astar::init(ros::NodeHandle& nh)
   /* ---------- map params ---------- */
   this->inv_resolution_ = 1.0 / resolution_;
   has_global_point = false;
-//   /* ---------- pre-allocated node ---------- */
   path_node_pool_.resize(allocate_num_);
   for (int i = 0; i < allocate_num_; i++)
   {
@@ -301,7 +290,6 @@ void Astar::init(ros::NodeHandle& nh)
   Occupy_map_ptr.reset(new Occupy_map);
   Occupy_map_ptr->setparam(nh);
   Occupy_map_ptr->init();
-
 }
 
 void Astar::reset()
