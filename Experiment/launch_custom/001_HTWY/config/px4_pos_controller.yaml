@@ -36,8 +36,8 @@ Pos_cascade_pid:
 ## 限制参数 
 Limit:
   tilt_max: 5.0
-  XY_VEL_MAX : 1.0
-  Z_VEL_MAX : 1.0
+  XY_VEL_MAX : 0.5
+  Z_VEL_MAX : 0.5
   THR_MIN: 0.0
   THR_MAX: 0.9
   pxy_error_max: 10.0

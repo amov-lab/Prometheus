@@ -243,14 +243,22 @@ int main(int argc, char **argv)
                     _command_to_mavros.mode_cmd.request.custom_mode = "OFFBOARD";
                     _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Setting to OFFBOARD Mode...");
+                }else
+                {
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "The Drone is in OFFBOARD Mode already...");
                 }
+                
 
                 if(!_DroneState.armed)
                 {
                     _command_to_mavros.arm_cmd.request.value = true;
                     _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
                     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Arming...");
+                }else
+                {
+                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "The Drone is armd already...");
                 }
+                
             }
         
             break;

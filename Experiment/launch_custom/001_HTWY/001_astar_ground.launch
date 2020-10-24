@@ -7,10 +7,8 @@
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
 
-	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
-	<node pkg="prometheus_mission" type="planning_mission_astar" name="planning_mission_astar" output="screen" launch-prefix="gnome-terminal --">	
-		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
-		<param name="planning_mission/FLY_HEIGHT" value="0.6" type="double"/>
+	<!-- run the pub_goal.cpp -->
+	<node pkg="prometheus_mission" type="pub_goal" name="pub_goal" output="screen" launch-prefix="gnome-terminal --">	
 	</node>
 
 	<!-- 启动rviz,设为false可关闭 -->
