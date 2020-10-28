@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<sdf version='1.6'>
+  <model name='P300_Stereo'>
+    <include>
+      <uri>model://P300_basic</uri>
+    </include>
+    <include>
+      <uri>model://Stereo_camera</uri>
+      <pose>0.2 0 -0.1 0 0 0</pose>
+    </include>
+    <joint name="stereo_joint" type="fixed">
+      <child>stereo_camera::link</child>
+      <parent>P300_basic::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+  </model>
+</sdf>
