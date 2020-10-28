@@ -5,7 +5,7 @@
       <uri>model://P300_basic</uri>
     </include>
     <include>
-      <uri>model://stereo_camera</uri>
+      <uri>model://Stereo_camera</uri>
       <pose>0.2 0 -0.1 0 0 0</pose>
     </include>
     <joint name="stereo_joint" type="fixed">
