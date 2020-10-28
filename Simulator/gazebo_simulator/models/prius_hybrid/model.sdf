@@ -1,0 +1,531 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="prius_hybrid">
+    <pose>0 0 0.03 0 0 0</pose>
+    <link name="chassis">
+      <inertial>
+        <mass>1326.0</mass>
+        <pose>0 -0.266 0.48 0 0 0</pose>
+        <inertia>
+          <ixx>2581.13354740</ixx>
+          <ixy>0.0</ixy>
+          <iyy>591.30846112</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>2681.95008628</izz>
+        </inertia>
+      </inertial>
+
+      <visual name="chassis_visual">
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Hybrid</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <visual name="interior_visual">
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Hybrid_Interior</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <visual name="windows_visual">
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Hybrid_Windows</name>
+              <center>false</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name="chassis">
+        <pose>0.0 0.05 0.625 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.7526 2.1 0.95</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="front_bumper">
+        <pose>0.0 -2.0 0.458488 0.0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.337282 0.48 0.566691</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="hood">
+        <pose>0.0 -1.900842 0.676305 0.341247 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.597968 0.493107 0.265468</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="windshield">
+        <pose>0.0 -0.875105 1.032268 0.335476 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.168381 1.654253 0.272347</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="top_front">
+        <pose>0.0 0.161236 1.386042 0.135030 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.279154 0.625988 0.171868</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="top_rear">
+        <pose>0.0 0.817696 1.360069 -0.068997 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.285130 0.771189 0.226557</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="rear_window">
+        <pose>0.0 1.640531 1.175126 -0.262017 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.267845 1.116344 0.244286</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="trunk">
+        <pose>0.0 1.637059 0.888180 0.0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.788064 1.138988 0.482746</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <collision name="back_bumper">
+        <pose>0.0 2.054454 0.577870 0.0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.781650 0.512093 0.581427</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="steering_wheel">
+      <pose>0.357734 -0.627868 0.988243 -1.302101 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <inertia>
+          <ixx>0.14583300</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.14583300</iyy>
+          <iyz>0</iyz>
+          <izz>0.12500000</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.178172</radius>
+            <length>0.041845</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <min_depth>0.003</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0 1.302101 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Steering_Wheel</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <link name="front_left_wheel">
+      <pose>0.76 -1.41 0.3 0 0 0</pose>
+      <inertial>
+        <mass>11</mass>
+        <inertia>
+          <ixx>0.58631238</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.33552910</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>0.33552910</izz>
+        </inertia>
+      </inertial>
+
+      <visual name="visual">
+        <pose>0.04 0.0 0.0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Wheel_Front_Left_</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name="collision">
+        <pose>0.0 0.0 0.0 0 1.5707963267948966 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.31265</radius>
+          </sphere>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.9</mu>
+              <mu2>0.9</mu2>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.001</min_depth>
+              <kp>1e9</kp>
+            </ode>
+          </contact>
+        </surface>
+
+      </collision>
+    </link>
+
+    <link name="front_right_wheel">
+      <pose>-0.76 -1.41 0.3 0 0 0</pose>
+      <inertial>
+        <mass>11</mass>
+        <inertia>
+          <ixx>0.58631238</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.33552910</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>0.33552910</izz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <pose>-0.04 0.0 0.0 0 0 0</pose>
+        <pose>0 0 0.0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Wheel_Front_Right</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name="collision">
+        <pose>0.0 0.0 0.0 0 1.5707963267948966 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.31265</radius>
+          </sphere>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.9</mu>
+              <mu2>0.9</mu2>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.001</min_depth>
+              <kp>1e9</kp>
+            </ode>
+          </contact>
+        </surface>
+
+      </collision>
+    </link>
+
+
+    <link name="rear_left_wheel">
+      <pose>0.786 1.45 0.3 0 0 0</pose>
+      <inertial>
+        <mass>11</mass>
+        <inertia>
+          <ixx>0.58631238</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.33552910</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>0.33552910</izz>
+        </inertia>
+      </inertial>
+
+      <visual name="visual">
+        <pose>0.04 0.0 0.0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Wheel_Front_Left_</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name="collision">
+        <pose>0.0 0.0 0.0 0 1.5707963267948966 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.31265</radius>
+          </sphere>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.1</mu>
+              <mu2>1.1</mu2>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.001</min_depth>
+              <kp>1e9</kp>
+            </ode>
+          </contact>
+        </surface>
+
+      </collision>
+    </link>
+
+    <link name="rear_right_wheel">
+      <pose>-0.786 1.45 0.3 0 0 0</pose>
+      <inertial>
+        <mass>11</mass>
+        <inertia>
+          <ixx>0.58631238</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.33552910</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>0.33552910</izz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <pose>-0.04 0.0 0.0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://prius_hybrid/meshes/Hybrid.obj</uri>
+            <scale>0.01 0.01 0.01</scale>
+            <submesh>
+              <name>Wheel_Front_Right</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name="collision">
+        <pose>0.0 0.0 0.0 0 1.5707963267948966 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.31265</radius>
+          </sphere>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.1</mu>
+              <mu2>1.1</mu2>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.001</min_depth>
+              <kp>1e9</kp>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+    </link>
+
+    <joint type="universal" name="front_left_combined_joint">
+      <pose>0 0 0 -0.08726646259971647 0 0</pose>
+      <child>front_left_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <!-- +- 50 degrees -->
+          <lower>-0.8727</lower>
+          <upper>0.8727</upper>
+        </limit>
+      </axis>
+      <axis2>
+        <xyz>1 0 0</xyz>
+        <dynamics>
+          <friction>18.0474092253</friction>
+        </dynamics>
+      </axis2>
+    </joint>
+
+    <joint type="universal" name="front_right_combined_joint">
+      <pose>0 0 0 -0.08726646259971647 0 0</pose>
+      <child>front_right_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <!-- +- 50 degrees -->
+          <lower>-0.8727</lower>
+          <upper>0.8727</upper>
+        </limit>
+      </axis>
+      <axis2>
+        <xyz>1 0 0</xyz>
+        <dynamics>
+          <friction>18.0474092253</friction>
+        </dynamics>
+      </axis2>
+    </joint>
+
+    <link name="rear_axle">
+      <pose>0 1.45 0.3 0 0 0</pose>
+      <inertial>
+        <mass>30.0</mass>
+        <inertia>
+          <ixx>0.08437499999999999</ixx>
+          <ixy>0.0</ixy>
+          <iyy>4.64581</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>4.64581</izz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <pose>0.0 0.0 0.0 0 1.5707963267948966 0</pose>
+        <geometry>
+          <cylinder>
+            <length>1.357</length>
+            <radius>0.075</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Grey</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <joint type="revolute" name="rear_axle_joint">
+      <child>rear_axle</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-0.05089058524173028</lower>
+          <upper>0.05089058524173028</upper>
+        </limit>
+        <dynamics>
+          <spring_stiffness>20000.0</spring_stiffness>
+          <damping>2000.0</damping>
+        </dynamics>
+      </axis>
+    </joint>
+    <joint type="revolute" name="rear_left_wheel_joint">
+      <child>rear_left_wheel</child>
+      <parent>rear_axle</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <dynamics>
+          <friction>12.031606150200002</friction>
+        </dynamics>
+      </axis>
+    </joint>
+    <joint type="revolute" name="rear_right_wheel_joint">
+      <child>rear_right_wheel</child>
+      <parent>rear_axle</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <dynamics>
+          <friction>12.031606150200002</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <joint name="steering_joint" type="revolute">
+      <pose>-0.002 0 0 0 0 0</pose>
+      <parent>chassis</parent>
+      <child>steering_wheel</child>
+      <axis>
+        <xyz>0 0.964095 0.265556</xyz>
+        <limit>
+          <lower>-7.85</lower>
+          <upper>7.85</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+        </ode>
+      </physics>
+    </joint>
+  </model>
+
+</sdf>
