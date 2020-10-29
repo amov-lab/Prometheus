@@ -57,7 +57,8 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "formation_flight");
     ros::NodeHandle nh("~");
-
+    
+    // 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式 
     nh.param<int>("controller_num", controller_num, 0);
     nh.param<float>("virtual_leader_pos_x", virtual_leader_pos[0], 0.0);
     nh.param<float>("virtual_leader_pos_y", virtual_leader_pos[1], 0.0);

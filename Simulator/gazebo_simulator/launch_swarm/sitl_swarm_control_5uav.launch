@@ -377,10 +377,18 @@
 	</node>
 
 	<node pkg="prometheus_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">
+		<!-- 设置无人机名字才会在地面站显示 -->
+		<param name="uav_num" value="3" />
+		<param name="uav1_name" value="/none" />
+		<param name="uav2_name" value="/uav2" />
+		<param name="uav3_name" value="/uav3" />
+		<param name="uav4_name" value="/uav4" />
+		<param name="uav5_name" value="/uav5" />
 	</node>
 
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
-		<param name="controller_num" value="1"/>
+		<!-- 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式  -->
+		<param name="controller_num" value="0"/>
 		<param name="uav_num" value="5"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
 		<param name="virtual_leader_pos_y" value="0.0" />
@@ -392,7 +400,7 @@
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/launch_swarm/swarm_rviz_config.rviz" />
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/swarm_rviz_config.rviz" />
     </group>
 </launch>
 
