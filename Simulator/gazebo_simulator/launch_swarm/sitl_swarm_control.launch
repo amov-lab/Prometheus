@@ -61,8 +61,8 @@
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
 			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
 		</node>
     </group>
 
@@ -103,8 +103,8 @@
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
 			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
 		</node>
     </group>
 
@@ -144,8 +144,8 @@
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
 			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
 		</node>
     </group>
 
@@ -185,8 +185,8 @@
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
 			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
 		</node>
     </group>
 
@@ -226,8 +226,8 @@
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
 			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
 		</node>
     </group>
 
