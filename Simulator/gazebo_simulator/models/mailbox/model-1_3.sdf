@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<sdf version="1.3">
+  <model name="Mailbox">
+    <link name="link">
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://mailbox/meshes/mailbox.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://mailbox/meshes/mailbox.dae</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://mailbox/materials/scripts</uri>
+            <uri>model://mailbox/materials/textures</uri>
+            <name>Mailbox/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
