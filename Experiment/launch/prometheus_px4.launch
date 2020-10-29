@@ -6,8 +6,8 @@
 		<param name="gcs_url" value="" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_pluginlists.yaml" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/px4_config.yaml" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
 	</node>
 
 	<!-- 启动Prometheus代码 -->
@@ -19,7 +19,7 @@
 	
 	<!-- run the px4_pos_controller.cpp -->
 	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-		<rosparam command="load" file="$(find prometheus_control)/config/px4_pos_controller.yaml"/>
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_pos_controller.yaml"/>
 	</node>
 	
 	<!-- run the ground_station.cpp -->

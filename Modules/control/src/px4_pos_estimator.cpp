@@ -34,7 +34,7 @@ float rate_hz;
 Eigen::Vector3f pos_offset;
 float yaw_offset;
 string object_name;
-float last_timestamp;
+ros::Time last_timestamp;
 //---------------------------------------vicon定位相关------------------------------------------
 Eigen::Vector3d pos_drone_mocap; //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -124,11 +124,11 @@ void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     Euler_mocap = quaternion_to_euler(q_mocap);
     
     // 此处时间主要用于监测动捕，T265设备是否正常工作
-    if(prometheus_control_utils::get_time_in_sec(last_timestamp) > TIMEOUT_MAX)
+    if( prometheus_control_utils::get_time_in_sec(last_timestamp) > TIMEOUT_MAX)
     {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Mocap Timeout.");
     }
-    ros::Time last_timestamp = ros::Time::now(); 
+    last_timestamp = ros::Time::now(); 
 }
 
 void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)

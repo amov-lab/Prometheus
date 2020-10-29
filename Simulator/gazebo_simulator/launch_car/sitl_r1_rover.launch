@@ -22,7 +22,7 @@
 	<!-- run the rviz -->
 	<arg name="visualization" default="false"/>
 	<group if="$(arg visualization)">
-		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_controller_test.rviz" />
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_controller_test.rviz" />
     </group>
 </launch>
 
