@@ -44,7 +44,7 @@ void LocalPlanningClass::init(ros::NodeHandle& nh)
     waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &LocalPlanningClass::waypointCallback, this);
 
     // 订阅无人机当前位置
-    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &LocalPlanningClass::odomCallback, this);
+    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/drone_odom", 10, &LocalPlanningClass::odomCallback, this);
 
     // 订阅传感器点云信息,该话题名字可在launch文件中任意指定
     if (lidar_model == 0)

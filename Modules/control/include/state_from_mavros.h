@@ -31,7 +31,11 @@
 #include <sensor_msgs/Imu.h>
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/AttitudeReference.h>
-#include <prometheus_msgs/DroneState.h>
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
+#include <tf2_msgs/TFMessage.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf/transform_listener.h>
 
 using namespace std;
 

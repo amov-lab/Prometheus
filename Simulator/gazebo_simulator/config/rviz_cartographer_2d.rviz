@@ -241,7 +241,7 @@ Visualization Manager:
         Shaft Length: 1
         Shaft Radius: 0.05000000074505806
         Value: Axes
-      Topic: /prometheus/planning/odom_world
+      Topic: /prometheus/drone_odom
       Unreliable: false
       Value: true
   Enabled: true

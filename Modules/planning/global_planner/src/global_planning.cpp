@@ -24,7 +24,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh){
     ROS_INFO("---init sub and pub!---");
     waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &GlobalPlanner::waypointCallback, this);
 
-    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &GlobalPlanner::odomCallback, this);
+    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/drone_odom", 10, &GlobalPlanner::odomCallback, this);
 
     global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/global_pcl", 1, &GlobalPlanner::globalcloudCallback, this);
 
