@@ -10,6 +10,14 @@
 		<param name="formation_size" value="1.5" />
 	</node>
 
+	<node pkg="prometheus_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">
+		<!-- 设置无人机名字才会在地面站显示 -->
+		<param name="uav_num" value="3" />
+		<param name="uav1_name" value="/none" />
+		<param name="uav2_name" value="/uav2" />
+		<param name="uav3_name" value="/uav3" />
+	</node>
+
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
