@@ -17,7 +17,7 @@
 
 	<!-- run the terminal_control.cpp -->
 	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_control)/config/terminal_control.yaml" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
 	</node>	
 	
 	<!-- run the waypoint_tracking.cpp -->
