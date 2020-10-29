@@ -21,7 +21,7 @@
 		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
 		<!-- 选择算法 0代表APF,1代表VFH -->
 		<param name="planning/algorithm_mode" value="1" type="int"/>
-		<!-- 激光雷达类型 -->
+		<!-- 激光雷达模型,0代表3d雷达,1代表2d雷达 -->
 		<param name="planning/lidar_model" value="1" type="int"/>
 		<!-- 最大速度，设的越小越安全 -->
 		<param name="planning/max_planning_vel" value="0.3" type="double"/>

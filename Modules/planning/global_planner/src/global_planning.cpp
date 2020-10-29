@@ -60,7 +60,11 @@ void GlobalPlanner::waypointCallback(const geometry_msgs::PoseStampedConstPtr& m
     if (is_2D == 1)
     {
         goal_z = fly_height;
+    }else
+    {
+        goal_z = msg->pose.position.z;
     }
+    
 
     // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
     if (flight_type_ == FLIGHT_TYPE::MANUAL_GOAL)

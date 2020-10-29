@@ -1,12 +1,11 @@
 <launch>
-	<!-- 该demo有bug,暂未修复,请勿使用 -->
     <!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
     <arg name="y" default="-10.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
-	<arg name="model" default="P300_D435i"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
+	<arg name="model" default="P300_3Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -16,21 +15,20 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-	<!-- RGBD相机局部点云 -->
-	<!-- 实际运行中，D435i可直出局部点云;但此处仿真需要生成局部点云 -->
-	<!-- 可以通过下面这个launch文件生成局部点云(比较吃CPU),也可以通过在D435i.sdf中启动libgazebo_ros_openni_kinect插件来生成局部点云 -->
-	<!-- <include file="$(find prometheus_gazebo)/launch/depth_proc.launch"></include> -->
-
 	<!-- 设定局部点云话题-->
-	<arg name="topic_of_local_pcl" default="/realsense_plugin/camera/local_pointclouds"/>
+	<arg name="topic_of_local_pcl" default="/prometheus/sensors/3Dlidar_scan"/>
 	<!-- 启动局部规划算法 -->
 	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
 		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
 		<!-- 参数 -->
+		<!-- 选择算法 0代表APF,1代表VFH -->
+		<param name="planning/algorithm_mode" value="0" type="int"/>
+		<!-- 激光雷达模型,0代表3d雷达,1代表2d雷达 -->
+		<param name="planning/lidar_model" value="0" type="int"/>
 		<!-- 最大速度，设的越小越安全 -->
 		<param name="planning/max_planning_vel" value="0.3" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
-		<param name="apf/inflate_distance" value="0.5" type="double"/>
+		<param name="apf/inflate_distance" value="0.4" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
 		<param name="apf/obs_distance" value="5.0" type="double"/>  
 		<!-- 增益 -->
@@ -50,7 +48,7 @@
 
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
-		<param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
+		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
 	</node>
 
 	<!-- 启动rviz,设为false可关闭 -->
