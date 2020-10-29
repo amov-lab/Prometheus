@@ -80,7 +80,7 @@ int main(int argc,char** argv)
     ros::init(argc,argv,"uav_sim");
     ros::NodeHandle node_("~");
     // 2. 发布odom和点云地图
-    odom_pub = node_.advertise<nav_msgs::Odometry>("/prometheus/planning/odom_world", 50);
+    odom_pub = node_.advertise<nav_msgs::Odometry>("/prometheus/drone_odom", 50);
 
 
 

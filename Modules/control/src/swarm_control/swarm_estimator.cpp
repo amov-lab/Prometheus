@@ -16,32 +16,13 @@
 #include "math_utils.h"
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
-#include <tf/transform_listener.h>
-
-//msg 头文件
-#include <geometry_msgs/Vector3.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <nav_msgs/Odometry.h>
-#include <sensor_msgs/Imu.h>
-#include <std_msgs/Bool.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/Vector3Stamped.h>
-#include <geometry_msgs/Point.h>
-#include <std_msgs/UInt16.h>
-#include <std_msgs/Float64.h>
-#include <tf2_msgs/TFMessage.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <sensor_msgs/Range.h>
-#include <prometheus_msgs/DroneState.h>
-#include <nav_msgs/Odometry.h>
-#include <nav_msgs/Path.h>
 
 using namespace std;
 #define TRA_WINDOW 1000
 #define NODE_NAME "swarm_estimator"
 //---------------------------------------相关参数-----------------------------------------------
 int input_source; //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
+float rate_hz;
 Eigen::Vector3f pos_offset;
 float yaw_offset;
 string uav_name,object_name;
@@ -67,7 +48,7 @@ std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
 void send_to_fcu();
 void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void optitrack_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     //位置 -- optitrack系 到 ENU系
     //Frame convention 0: Z-up -- 1: Y-up (See the configuration in the motive software)
@@ -123,30 +104,32 @@ int main(int argc, char **argv)
 
     //读取参数表中的参数
     nh.param<string>("uav_name", uav_name, "/uav0");
+    // 动作捕捉设备中设定的刚体名字
     nh.param<string>("object_name", object_name, "UAV");
-
+    //　程序执行频率
+    nh.param<float>("rate_hz", rate_hz, 20);
     // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
     nh.param<int>("input_source", input_source, 0);
-    //
+    //　定位设备偏移量
     nh.param<float>("offset_x", pos_offset[0], 0);
     nh.param<float>("offset_y", pos_offset[1], 0);
     nh.param<float>("offset_z", pos_offset[2], 0);
     nh.param<float>("offset_yaw", yaw_offset, 0);
 
     // 【订阅】optitrack估计位置
-    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ object_name + "/pose", 1000, optitrack_cb);
+    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ object_name + "/pose", 1000, mocap_cb);
 
     // 【订阅】gazebo仿真真值
     ros::Subscriber gazebo_sub = nh.subscribe<nav_msgs::Odometry>(uav_name + "/prometheus/ground_truth/p300_basic", 100, gazebo_cb);
 
     // 【发布】无人机位置和偏航角 坐标系 ENU系
-    //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#??), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
+    //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#102), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
     vision_pub = nh.advertise<geometry_msgs::PoseStamped>(uav_name + "/mavros/vision_pose/pose", 100);
 
     drone_state_pub = nh.advertise<prometheus_msgs::DroneState>(uav_name + "/prometheus/drone_state", 10);
 
     //【发布】无人机odometry
-    odom_pub = nh.advertise<nav_msgs::Odometry>(uav_name + "/prometheus/planning/odom_world", 10);
+    odom_pub = nh.advertise<nav_msgs::Odometry>(uav_name + "/prometheus/drone_odom", 10);
 
     trajectory_pub = nh.advertise<nav_msgs::Path>(uav_name + "/prometheus/drone_trajectory", 10);
     
@@ -160,7 +143,7 @@ int main(int argc, char **argv)
     state_from_mavros _state_from_mavros;
 
     // 频率
-    ros::Rate rate(20.0);
+    ros::Rate rate(rate_hz);
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Main Loop<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while (ros::ok())
@@ -220,9 +203,8 @@ void send_to_fcu()
 void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
 {
     // 发布无人机状态，具体内容参见 prometheus_msgs::DroneState
-    Drone_State.header.stamp = ros::Time::now();
     Drone_State = State_from_fcu;
-
+    Drone_State.header.stamp = ros::Time::now();
     drone_state_pub.publish(Drone_State);
 
     // 发布无人机当前odometry,用于导航及rviz显示

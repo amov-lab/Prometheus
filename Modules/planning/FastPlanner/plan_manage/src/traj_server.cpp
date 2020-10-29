@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
   ros::Subscriber replan_sub =
       node.subscribe("/prometheus/fast_planning/replan", 10, replanCallback);
 
-  ros::Subscriber odom_sub = node.subscribe("/prometheus/planning/odom_world", 50, odomCallbck);
+  ros::Subscriber odom_sub = node.subscribe("/prometheus/drone_odom", 50, odomCallbck);
 
   // 发布当前机器人指令状态
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);

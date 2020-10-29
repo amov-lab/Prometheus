@@ -175,7 +175,7 @@ int main(int argc,char** argv)
     ros::NodeHandle node_("~");
 
     // 2. 发布odom和点云地图
-    odom_pub = node_.advertise<nav_msgs::Odometry>("/prometheus/planning/odom_world", 50);
+    odom_pub = node_.advertise<nav_msgs::Odometry>("/prometheus/drone_odom", 50);
     map_pub =node_.advertise<sensor_msgs::PointCloud2>("/prometheus/planning/global_pcl",1);
     // waypoint_pub = node_.advertise<geometry_msgs::PoseStamped>("/planning/waypoint", 50);
     // ros::Subscriber waypoint_sub_ = node_.subscribe("/planning/goal", 1, &waypointCallback);
