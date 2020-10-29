@@ -1,0 +1,1061 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="polaris_ranger_xp900">
+    <static>false</static>
+    <link name="chassis">
+      <inertial>
+        <mass>720.0</mass>
+        <inertia>
+          <ixx>140</ixx>
+          <ixy>0.0</ixy>
+          <iyy>550</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>550</izz>
+        </inertia>
+        <pose>0.1 0 0.4 0 0 0</pose>
+      </inertial>
+      <visual name="visual">
+        <pose>0 0 0 0 0 -1.570796</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900_no_roll_cage/meshes/chasis.dae</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="chassis_bottom">
+        <pose>0.2 0.0 0.335 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.34 1.65746 0.06</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cargo_bottom">
+        <pose>-1.0 0.0 0.921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.04609 1.6998 0.01</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cargo_front">
+        <pose>-0.495 0.0 1.06 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.05 1.69982 0.27</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cargo_back">
+        <pose>-1.465 0.0 1.06 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.05 1.69982 0.27</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cargo_left">
+        <pose>-0.97 0.82491 1.06 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.04609 0.05 0.27</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cargo_right">
+        <pose>-0.97 -0.82491 1.06 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.04609 0.05 0.27</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="seat">
+        <pose>0.0 0.0 0.62 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.52167 1.37206 0.53369</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <min_depth>0.01</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <collision name="mud_seat">
+        <pose>0.0 0.0 0.86 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.52167 1.30 0.1</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <collide_without_contact>true</collide_without_contact>
+          </contact>
+        </surface>
+      </collision>
+      <sensor name="seat_contact" type="contact">
+        <always_on>true</always_on>
+        <update_rate>1000</update_rate>
+        <contact>
+          <collision>mud_seat</collision>
+        </contact>
+      </sensor>
+      <collision name="seat_back">
+        <pose>-0.26 0.0 1.125 0.0 -0.2 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.06 1.37206 0.6</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="engine">
+        <pose>1.12 0.0 0.7 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.58 1.3 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="central_hump1_collision">
+        <pose>0.55 -0.1 0.4 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.6 0.15 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="central_hump2_collision">
+        <pose>0.7 -0.05 0.45 0 -0.5 0</pose>
+        <geometry>
+          <box>
+            <size>0.20 0.05 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="central_hump3_collision">
+        <pose>0.798 -0.125 0.478 0 -0.8 0</pose>
+        <geometry>
+          <box>
+            <size>0.129 0.1 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="central_hump4_collision">
+        <pose>0.8135 -0.05 0.45 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.10 0.05 0.1835</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="central_hump5_collision">
+        <pose>0.84 -0.125 0.45 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.03 0.1 0.1835</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="central_hump6_collision">
+        <pose>0.82 -0.125 0.475 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.03 0.1 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="cargo_visual">
+        <pose>-1.0 0 1.03230 0 0 -1.5707</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Bed</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="tailgate_visual">
+        <pose>-1.492 0 1.03 0 0 -1.5707</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Tail_Gate</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="front_left_brake_visual">
+        <pose>1.12 -0.57488 0.35516 3.1415 0 1.5707</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Brake_Front_Left</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="front_right_brake_visual">
+        <pose>1.12 0.57488 0.35516 3.1415 0 1.5707</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Brake_Front_Right</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="central_hump1">
+        <pose>0.55 -0.1 0.4 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.6 0.15 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="central_hump2">
+        <pose>0.7 -0.05 0.45 0 -0.5 0</pose>
+        <geometry>
+          <box>
+            <size>0.20 0.05 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="central_hump3">
+        <pose>0.798 -0.125 0.478 0 -0.8 0</pose>
+        <geometry>
+          <box>
+            <size>0.129 0.1 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="central_hump4">
+        <pose>0.8135 -0.05 0.45 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.10 0.05 0.1835</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="central_hump5">
+        <pose>0.84 -0.125 0.45 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.03 0.1 0.1835</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="central_hump6">
+        <pose>0.82 -0.125 0.475 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.03 0.1 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="front_left_wheel">
+      <pose>1.20223 0.71562 0.34697 -1.52 0.0 0.0</pose>
+      <inertial>
+        <mass>12</mass>
+        <inertia>
+          <ixx>0.5</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.5</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>1.0</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.3175</radius>
+            <length>0.2794</length>
+          </cylinder>
+        </geometry>
+        <max_contacts>1</max_contacts>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+              <fdir1>0 0 1</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.005</min_depth>
+              <kp>1e8</kp>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="tire_visual">
+        <pose>0 0 0 3.14159 1.570796 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <scale>1.003700111 0.886200464 0.886200464</scale>
+            <submesh>
+              <name>Wheel_Front_Left</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="front_right_wheel">
+      <pose>1.20223 -0.71562 0.34697 1.52 0.0 0.0</pose>
+      <inertial>
+        <mass>12</mass>
+        <inertia>
+          <ixx>0.5</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.5</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>1.0</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.3175</radius>
+            <length>0.2794</length>
+          </cylinder>
+        </geometry>
+        <max_contacts>1</max_contacts>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+              <fdir1>0 0 1</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.005</min_depth>
+              <kp>1e8</kp>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <scale>1.003700111 0.886200464 0.886200464</scale>
+            <submesh>
+              <name>Wheel_Front_Right</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="rear_left_wheel">
+      <pose>-0.99377 0.71562 0.34697 -1.52 0.0 0.0</pose>
+      <inertial>
+        <mass>12</mass>
+        <inertia>
+          <ixx>0.5</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.5</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>1.0</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.3175</radius>
+            <length>0.2794</length>
+          </cylinder>
+        </geometry>
+        <max_contacts>1</max_contacts>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+              <fdir1>0 0 1</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.005</min_depth>
+              <kp>1e8</kp>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <scale>1.003700111 0.886200464 0.886200464</scale>
+            <submesh>
+              <name>Wheels_Rear_Left</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="rear_right_wheel">
+      <pose>-0.99377 -0.71562 0.34697 1.52 0.0 0.0</pose>
+      <inertial>
+        <mass>12</mass>
+        <inertia>
+          <ixx>0.5</ixx>
+          <ixy>0.0</ixy>
+          <iyy>0.5</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>1.0</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.3175</radius>
+            <length>0.2794</length>
+          </cylinder>
+        </geometry>
+        <max_contacts>1</max_contacts>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+              <fdir1>0 0 1</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <min_depth>0.005</min_depth>
+              <kp>1e8</kp>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0 0 -1.570796 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <scale>1.003700111 0.886200464 0.886200464</scale>
+            <submesh>
+              <name>Wheels_Rear_Right</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="gas_pedal">
+      <pose>0.63 0.10 0.58 0 0 0</pose>
+      <gravity>false</gravity>
+      <inertial>
+        <mass>0.1</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.01</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.01</iyy>
+          <iyz>0</iyz>
+          <izz>0.01</izz>
+        </inertia>
+      </inertial>
+      <collision name="gas_pedal_collision">
+        <pose>-0.0385 0 -0.086 0 2.016 0</pose>
+        <geometry>
+          <box>
+            <size>0.1069000 0.0770000 0.010000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0 0 0 -1.5707</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Gas_Pedal</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="brake_pedal">
+      <gravity>false</gravity>
+      <pose>0.64 0.27 0.58 0 0 0</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.01</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.01</iyy>
+          <iyz>0</iyz>
+          <izz>0.01</izz>
+        </inertia>
+      </inertial>
+      <collision name="brake_pedal_collision">
+        <pose>-0.040 0 -0.086 0 1.999 0</pose>
+        <geometry>
+          <box>
+            <size>0.063 0.08 0.01</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0 0 0 -1.5707</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Brake_Pedal</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="front_right_wheel_steering_block">
+      <pose>1.20223 -0.5 0.35515 1.570796 0.0 0.0</pose>
+      <inertial>
+        <mass>1</mass>
+        <inertia>
+          <ixx>1.0</ixx>
+          <ixy>0.0</ixy>
+          <iyy>1.0</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>1.0</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>0.01</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+    <link name="front_left_wheel_steering_block">
+      <pose>1.20223 0.5 0.35515 1.570796 0.0 0.0</pose>
+      <inertial>
+        <mass>1</mass>
+        <inertia>
+          <ixx>1.0</ixx>
+          <ixy>0.0</ixy>
+          <iyy>1.0</iyy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+          <izz>1.0</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.05</radius>
+            <length>0.01</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+    <link name="steering_wheel">
+      <pose>0.42 0.46 1.20 0 -0.87 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <pose>-0.002 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.012</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.012</iyy>
+          <iyz>0</iyz>
+          <izz>0.024</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <pose>-0.03 0 -0.120825 -0.6108 0 -1.570796</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Steering_Wheel</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <min_depth>0.003</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <pose>-0.03 0 -0.120825 -0.6108 0 -1.570796</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Steering_Wheel</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="hand_brake">
+      <pose>0.53 0.205 1.05 0 0 0</pose>
+      <inertial>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.05</izz>
+        </inertia>
+      </inertial>
+      <collision name="hand_brake_collision">
+        <pose>0 0 0.05 -0.2 0 -1.570796</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Shifter</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="hand_brake_visual">
+        <pose>0 0 0.05 -0.2 0 -1.570796</pose>
+        <geometry>
+          <mesh>
+            <uri>model://polaris_ranger_xp900/meshes/polaris.dae</uri>
+            <submesh>
+              <name>Shifter</name>
+              <center>true</center>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_xp900/materials/scripts</uri>
+            <uri>model://polaris_ranger_xp900/materials/textures</uri>
+            <name>PolarisXP900/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <link name="FNR_switch">
+      <pose>0.54 0.1 1.15 0 0.25 0</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00006</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+      <collision name="FNR_switch">
+        <geometry>
+          <box>
+            <size>0.02 0.04 0.08</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="FNR_switch_F">
+        <transparency>0.0</transparency>
+        <geometry>
+          <box>
+            <size>0.02 0.04 0.08</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_ev/materials/scripts</uri>
+            <uri>model://polaris_ranger_ev/materials/textures</uri>
+            <name>FNR_switch_F</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="FNR_switch_R">
+        <transparency>1.0</transparency>
+        <geometry>
+          <box>
+            <size>0.0199 0.0399 0.0799</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://polaris_ranger_ev/materials/scripts</uri>
+            <uri>model://polaris_ranger_ev/materials/textures</uri>
+            <name>FNR_switch_R</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <joint type="revolute" name="front_left_steering_joint">
+      <child>front_left_wheel_steering_block</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-0.7727</lower>
+          <upper>0.7727</upper>
+        </limit>
+        <dynamics>
+          <damping>50.0</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+          <limit>
+            <cfm>0.000000</cfm>
+            <erp>0.900000</erp>
+          </limit>
+        </ode>
+      </physics>
+    </joint>
+    <joint type="revolute" name="front_left_wheel_joint">
+      <child>front_left_wheel</child>
+      <parent>front_left_wheel_steering_block</parent>
+      <axis>
+        <xyz>0 1 0.05</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint type="revolute" name="front_right_steering_joint">
+      <child>front_right_wheel_steering_block</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-0.7727</lower>
+          <upper>0.7727</upper>
+        </limit>
+        <dynamics>
+          <damping>50.0</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+          <limit>
+            <cfm>0.000000</cfm>
+            <erp>0.900000</erp>
+          </limit>
+        </ode>
+      </physics>
+    </joint>
+    <joint type="revolute" name="front_right_wheel_joint">
+      <child>front_right_wheel</child>
+      <parent>front_right_wheel_steering_block</parent>
+      <axis>
+        <xyz>0 1 -0.05</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint type="revolute" name="rear_left_wheel_joint">
+      <child>rear_left_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0.05</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint type="revolute" name="rear_right_wheel_joint">
+      <pose>0.0 0.0 -0.1 0 0 0</pose>
+      <child>rear_right_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 -0.05</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint type="revolute" name="rear_differential_joint">
+      <child>rear_right_wheel</child>
+      <parent>rear_left_wheel</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <dynamics>
+          <damping>70</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <erp>0</erp>
+          <cfm>1000</cfm>
+          <cfm_damping>1</cfm_damping>
+        </ode>
+      </physics>
+    </joint>
+    <joint name="gas_joint" type="prismatic">
+      <parent>chassis</parent>
+      <child>gas_pedal</child>
+      <axis>
+        <xyz>1.000000 0.000000 -1.000000</xyz>
+        <limit>
+          <lower>0.00</lower>
+          <upper>0.08</upper>
+        </limit>
+        <dynamics>
+          <damping>3.0</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+        </ode>
+      </physics>
+    </joint>
+    <joint name="brake_joint" type="prismatic">
+      <parent>chassis</parent>
+      <child>brake_pedal</child>
+      <axis>
+        <xyz>1.000000 0.000000 -0.600000</xyz>
+        <limit>
+          <lower>0.00</lower>
+          <upper>0.08</upper>
+        </limit>
+        <dynamics>
+          <damping>3.0</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+        </ode>
+      </physics>
+    </joint>
+    <joint name="steering_joint" type="revolute">
+      <pose>0 0 0 0 0 0</pose>
+      <parent>chassis</parent>
+      <child>steering_wheel</child>
+      <axis>
+        <xyz>-1 0 0.84365</xyz>
+        <limit>
+          <lower>-3.14</lower>
+          <upper>3.14</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+        </ode>
+      </physics>
+    </joint>
+    <joint name="hand_brake_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>hand_brake</child>
+      <axis>
+        <xyz>0.0 -1.0 0.0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0.6</upper>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+        </ode>
+      </physics>
+    </joint>
+    <joint name="FNR_switch_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>FNR_switch</child>
+      <axis>
+        <xyz>0.0 -1.0 0.0</xyz>
+        <limit>
+          <lower>-0.3</lower>
+          <upper>0.3</upper>
+        </limit>
+        <dynamics>
+          <damping>0.01</damping>
+        </dynamics>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+      <physics>
+        <ode>
+          <cfm_damping>1</cfm_damping>
+        </ode>
+      </physics>
+    </joint>
+  </model>
+</sdf>
