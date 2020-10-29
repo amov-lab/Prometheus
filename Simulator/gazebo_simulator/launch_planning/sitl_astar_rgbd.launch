@@ -48,6 +48,8 @@
         <param name="astar/resolution_astar" value="0.1" type="double"/>
         <!-- 障碍物膨胀距离,rgbd视场小,可以适当增大膨胀距离,更加安全-->
         <param name="astar/inflate" value="0.55" type="double"/>
+        <!-- 二维平面规划 -->
+        <param name="astar/is_2D" value="0" type="int"/>
         <!-- 地图范围 -->
         <param name="map/map_size_x" value="30.0" type="double"/>
         <param name="map/map_size_y" value="30.0" type="double"/>
@@ -60,7 +62,7 @@
     </node>
 
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
-	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+	<node pkg="prometheus_mission" type="planning_mission_astar" name="planning_mission_astar" output="screen" launch-prefix="gnome-terminal --">	
 		<param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
 	</node>
 

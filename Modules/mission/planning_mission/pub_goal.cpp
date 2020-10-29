@@ -21,23 +21,34 @@ int main(int argc, char **argv)
     float x,y,z;
 
     geometry_msgs::PoseStamped goal;
+    int flag;
+    cout << "Please choose 2D or 3D (0 for 2D, 1 for 3D):"<<endl;
+    cin >> flag;  
   
     while(ros::ok())
     {
+
         // Waiting for input
         cout << "Please input the goal position:"<<endl;
         cout << "goal - x [m] : "<< endl;
         cin >> x;
         cout << "goal -  y [m] : "<< endl;
         cin >> y;
-        // cout << "goal -  z [m] : "<< endl;
-        // cin >> z;
+        if(flag == 1)
+        {
+            cout << "goal -  z [m] : "<< endl;
+            cin >> z;
+        }else if(flag == 0)
+        {
+            z = 1.0;
+        }
+
 
         goal.header.stamp =ros::Time::now();
         goal.header.frame_id = "map";
         goal.pose.position.x = x;
         goal.pose.position.y = y;
-        goal.pose.position.z = 1.0;
+        goal.pose.position.z = z;
         goal.pose.orientation.x = 0.0;
         goal.pose.orientation.y = 0.0;
         goal.pose.orientation.z = 0.0;
