@@ -3,7 +3,7 @@
  *
  * Author: Qyp
  *
- * Update Time: 2019.12.23
+ * Update Time: 2020.10.29
  *
  * 说明: mavros位置估计程序
  *      1. 订阅激光SLAM (cartorgrapher_ros节点) 发布的位置信息,从laser坐标系转换至NED坐标系
@@ -23,35 +23,18 @@
 #include "math_utils.h"
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
-#include <tf/transform_listener.h>
-
-//msg 头文件
-#include <geometry_msgs/Vector3.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <nav_msgs/Odometry.h>
-#include <sensor_msgs/Imu.h>
-#include <std_msgs/Bool.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/Vector3Stamped.h>
-#include <geometry_msgs/Point.h>
-#include <std_msgs/UInt16.h>
-#include <std_msgs/Float64.h>
-#include <tf2_msgs/TFMessage.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <sensor_msgs/Range.h>
-#include <prometheus_msgs/DroneState.h>
-#include <nav_msgs/Odometry.h>
-#include <nav_msgs/Path.h>
 
 using namespace std;
 #define TRA_WINDOW 1000
+#define TIMEOUT_MAX 0.2
 #define NODE_NAME "pos_estimator"
 //---------------------------------------相关参数-----------------------------------------------
-int input_source; //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
+int input_source;
+float rate_hz;
 Eigen::Vector3f pos_offset;
 float yaw_offset;
 string object_name;
+float last_timestamp;
 //---------------------------------------vicon定位相关------------------------------------------
 Eigen::Vector3d pos_drone_mocap; //无人机当前位置 (vicon)
 Eigen::Quaterniond q_mocap;
@@ -117,7 +100,7 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr &msg)
     }
 }
 
-void optitrack_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     //位置 -- optitrack系 到 ENU系
     //Frame convention 0: Z-up -- 1: Y-up (See the configuration in the motive software)
@@ -139,6 +122,13 @@ void optitrack_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
     // Transform the Quaternion to Euler Angles
     Euler_mocap = quaternion_to_euler(q_mocap);
+    
+    // 此处时间主要用于监测动捕，T265设备是否正常工作
+    if(prometheus_control_utils::get_time_in_sec(last_timestamp) > TIMEOUT_MAX)
+    {
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Mocap Timeout.");
+    }
+    ros::Time last_timestamp = ros::Time::now(); 
 }
 
 void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
@@ -213,22 +203,25 @@ int main(int argc, char **argv)
 
     //读取参数表中的参数
     // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
-    nh.param<string>("object_name", object_name, "UAV");
     nh.param<int>("input_source", input_source, 0);
-    //
+    // 动作捕捉设备中设定的刚体名字
+    nh.param<string>("object_name", object_name, "UAV");
+    //　程序执行频率
+    nh.param<float>("rate_hz", rate_hz, 20);
+    //　定位设备偏移量
     nh.param<float>("offset_x", pos_offset[0], 0);
     nh.param<float>("offset_y", pos_offset[1], 0);
     nh.param<float>("offset_z", pos_offset[2], 0);
     nh.param<float>("offset_yaw", yaw_offset, 0);
 
     // 【订阅】cartographer估计位置
-    ros::Subscriber laser_sub = nh.subscribe<tf2_msgs::TFMessage>("/tf", 1000, laser_cb);
+    ros::Subscriber laser_sub = nh.subscribe<tf2_msgs::TFMessage>("/tf", 100, laser_cb);
 
     //  【订阅】t265估计位置
     ros::Subscriber t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 100, t265_cb);
 
     // 【订阅】optitrack估计位置
-    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ object_name + "/pose", 1000, optitrack_cb);
+    ros::Subscriber optitrack_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/"+ object_name + "/pose", 100, mocap_cb);
 
     // 【订阅】gazebo仿真真值
     ros::Subscriber gazebo_sub = nh.subscribe<nav_msgs::Odometry>("/prometheus/ground_truth/p300_basic", 100, gazebo_cb);
@@ -237,15 +230,18 @@ int main(int argc, char **argv)
     ros::Subscriber slam_sub = nh.subscribe<geometry_msgs::PoseStamped>("/slam/pose", 100, slam_cb);
 
     // 【发布】无人机位置和偏航角 坐标系 ENU系
-    //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#??), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
-    vision_pub = nh.advertise<geometry_msgs::PoseStamped>("/mavros/vision_pose/pose", 100);
+    //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#102), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg
+    vision_pub = nh.advertise<geometry_msgs::PoseStamped>("/mavros/vision_pose/pose", 10);
 
+    // 【发布】无人机状态量
     drone_state_pub = nh.advertise<prometheus_msgs::DroneState>("/prometheus/drone_state", 10);
 
-    //【发布】无人机odometry
-    odom_pub = nh.advertise<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10);
+    //　【发布】无人机odometry，用于RVIZ显示
+    odom_pub = nh.advertise<nav_msgs::Odometry>("/prometheus/drone_odom", 10);
 
+    // 【发布】无人机移动轨迹，用于RVIZ显示
     trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/drone_trajectory", 10);
+    
     // 【发布】提示消息
     message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
@@ -256,7 +252,7 @@ int main(int argc, char **argv)
     state_from_mavros _state_from_mavros;
 
     // 频率
-    ros::Rate rate(20.0);
+    ros::Rate rate(rate_hz);
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Main Loop<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while (ros::ok())
@@ -347,9 +343,8 @@ void send_to_fcu()
 void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
 {
     // 发布无人机状态，具体内容参见 prometheus_msgs::DroneState
-    Drone_State.header.stamp = ros::Time::now();
     Drone_State = State_from_fcu;
-
+    Drone_State.header.stamp = ros::Time::now();
     drone_state_pub.publish(Drone_State);
 
     // 发布无人机当前odometry,用于导航及rviz显示

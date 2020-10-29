@@ -25,7 +25,7 @@
         <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
         <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
         <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="odom_topic"         value="/prometheus/planning/odom_world"/> 
+        <arg name="odom_topic"         value="/prometheus/drone_odom"/> 
         <!-- 发布地图的坐标系 -->
         <arg name="map_frame_id"       value="world"/>   
         <!--visualization-->

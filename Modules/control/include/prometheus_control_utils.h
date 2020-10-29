@@ -234,7 +234,7 @@ void prinft_ref_pose(const geometry_msgs::PoseStamped& ref_pose)
 float get_time_in_sec(const ros::Time& begin_time)
 {
     ros::Time time_now = ros::Time::now();
-    float currTimeSec = time_now.sec-begin_time.sec;
+    float currTimeSec = time_now.sec　-　begin_time.sec;
     float currTimenSec = time_now.nsec / 1e9 - begin_time.nsec / 1e9;
     return (currTimeSec + currTimenSec);
 }

@@ -291,7 +291,7 @@ namespace dyn_planner {
         cout << "resolution: " << resolution_sdf_ << endl;
 
         /* ---------- sub and pub ---------- */
-        odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &SDFMap_Global::odomCallback, this);
+        odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/drone_odom", 10, &SDFMap_Global::odomCallback, this);
 
         global_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/global_pcl", 1, &SDFMap_Global::globalcloudCallback, this);
         

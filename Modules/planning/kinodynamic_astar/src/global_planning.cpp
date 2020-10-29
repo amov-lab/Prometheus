@@ -15,7 +15,7 @@ void GlobalPlanner::init(ros::NodeHandle& nh)
     // 订阅目标点
     waypoint_sub_               = node_.subscribe("/prometheus/planning/goal", 1, &GlobalPlanner::waypointCallback, this);
     //　订阅无人机当前位置
-    odom_sub_                   = node_.subscribe<nav_msgs::Odometry>("/prometheus/planning/odom_world", 10, &GlobalPlanner::odomCallback, this);
+    odom_sub_                   = node_.subscribe<nav_msgs::Odometry>("/prometheus/drone_odom", 10, &GlobalPlanner::odomCallback, this);
     //　订阅全局点云
     global_point_clound_sub_    = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/global_pcl", 1, &GlobalPlanner::globalcloudCallback, this);
     //　发布规划路径
