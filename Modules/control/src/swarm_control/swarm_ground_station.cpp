@@ -80,37 +80,55 @@ void msg_cb(const prometheus_msgs::Message::ConstPtr& msg)
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
+    //　目前最多支持５架飞机，可根据实际情况增加
     ros::init(argc, argv, "swarm_ground_station");
     ros::NodeHandle nh("~");
     ros::Rate rate(1.0);
 
     nh.param<int>("uav_num", uav_num, 1);
-    nh.param<string>("uav1_name", uav1_name, "/uav1");
-    nh.param<string>("uav2_name", uav2_name, "/uav2");
-    nh.param<string>("uav3_name", uav3_name, "/uav3");
-    nh.param<string>("uav4_name", uav4_name, "/uav4");
-    nh.param<string>("uav5_name", uav5_name, "/uav5");
+    //　设置无人机名字，none代表无
+    nh.param<string>("uav1_name", uav1_name, "/none");
+    nh.param<string>("uav2_name", uav2_name, "/none");
+    nh.param<string>("uav3_name", uav3_name, "/none");
+    nh.param<string>("uav4_name", uav4_name, "/none");
+    nh.param<string>("uav5_name", uav5_name, "/none");
 
-    //【订阅】集群控制指令
-    ros::Subscriber command_sub1 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav1_name + "/prometheus/swarm_command", 10, swarm_command_cb_1);
-    ros::Subscriber command_sub2 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav2_name + "/prometheus/swarm_command", 10, swarm_command_cb_2);
-    ros::Subscriber command_sub3 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav3_name + "/prometheus/swarm_command", 10, swarm_command_cb_3);
-    ros::Subscriber command_sub4 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav4_name + "/prometheus/swarm_command", 10, swarm_command_cb_4);
-    ros::Subscriber command_sub5 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav5_name + "/prometheus/swarm_command", 10, swarm_command_cb_5);
 
-    //【订阅】状态信息
-    ros::Subscriber drone_state_sub1 = nh.subscribe<prometheus_msgs::DroneState>(uav1_name + "/prometheus/drone_state", 10, drone_state_cb1);
-    ros::Subscriber drone_state_sub2 = nh.subscribe<prometheus_msgs::DroneState>(uav2_name + "/prometheus/drone_state", 10, drone_state_cb2);
-    ros::Subscriber drone_state_sub3 = nh.subscribe<prometheus_msgs::DroneState>(uav3_name + "/prometheus/drone_state", 10, drone_state_cb3);
-    ros::Subscriber drone_state_sub4 = nh.subscribe<prometheus_msgs::DroneState>(uav4_name + "/prometheus/drone_state", 10, drone_state_cb4);
-    ros::Subscriber drone_state_sub5 = nh.subscribe<prometheus_msgs::DroneState>(uav5_name + "/prometheus/drone_state", 10, drone_state_cb5);
+    if(uav1_name != "/none" )
+    {
+        ros::Subscriber command_sub1 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav1_name + "/prometheus/swarm_command", 10, swarm_command_cb_1);
+        ros::Subscriber drone_state_sub1 = nh.subscribe<prometheus_msgs::DroneState>(uav1_name + "/prometheus/drone_state", 10, drone_state_cb1);
+        ros::Subscriber message_sub1 = nh.subscribe<prometheus_msgs::Message>(uav1_name + "/prometheus/message/main", 10, msg_cb);
+    }
 
-    //【订阅】提示消息
-    ros::Subscriber message_sub1 = nh.subscribe<prometheus_msgs::Message>(uav1_name + "/prometheus/message/main", 10, msg_cb);
-    ros::Subscriber message_sub2 = nh.subscribe<prometheus_msgs::Message>(uav2_name + "/prometheus/message/main", 10, msg_cb);
-    ros::Subscriber message_sub3 = nh.subscribe<prometheus_msgs::Message>(uav3_name + "/prometheus/message/main", 10, msg_cb);
-    ros::Subscriber message_sub4 = nh.subscribe<prometheus_msgs::Message>(uav4_name + "/prometheus/message/main", 10, msg_cb);
-    ros::Subscriber message_sub5 = nh.subscribe<prometheus_msgs::Message>(uav5_name + "/prometheus/message/main", 10, msg_cb);
+    if(uav2_name != "/none" )
+    {
+        ros::Subscriber command_sub2 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav2_name + "/prometheus/swarm_command", 10, swarm_command_cb_2);
+        ros::Subscriber drone_state_sub2 = nh.subscribe<prometheus_msgs::DroneState>(uav2_name + "/prometheus/drone_state", 10, drone_state_cb2);
+        ros::Subscriber message_sub2 = nh.subscribe<prometheus_msgs::Message>(uav2_name + "/prometheus/message/main", 10, msg_cb);
+    }
+
+    if(uav3_name != "/none" )
+    {
+        ros::Subscriber command_sub3 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav3_name + "/prometheus/swarm_command", 10, swarm_command_cb_3);
+        ros::Subscriber drone_state_sub3 = nh.subscribe<prometheus_msgs::DroneState>(uav3_name + "/prometheus/drone_state", 10, drone_state_cb3);
+        ros::Subscriber message_sub3 = nh.subscribe<prometheus_msgs::Message>(uav3_name + "/prometheus/message/main", 10, msg_cb);
+    }
+
+    if(uav4_name != "/none" )
+    {
+        ros::Subscriber command_sub4 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav4_name + "/prometheus/swarm_command", 10, swarm_command_cb_4);
+        ros::Subscriber drone_state_sub4 = nh.subscribe<prometheus_msgs::DroneState>(uav4_name + "/prometheus/drone_state", 10, drone_state_cb4);
+        ros::Subscriber message_sub4 = nh.subscribe<prometheus_msgs::Message>(uav4_name + "/prometheus/message/main", 10, msg_cb);
+    }
+
+    if(uav5_name != "/none" )
+    {
+        ros::Subscriber command_sub5 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav5_name + "/prometheus/swarm_command", 10, swarm_command_cb_5);
+        ros::Subscriber drone_state_sub5 = nh.subscribe<prometheus_msgs::DroneState>(uav5_name + "/prometheus/drone_state", 10, drone_state_cb5);
+        ros::Subscriber message_sub5 = nh.subscribe<prometheus_msgs::Message>(uav5_name + "/prometheus/message/main", 10, msg_cb);
+    }
+
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Main Loop<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
@@ -119,11 +137,27 @@ int main(int argc, char **argv)
         ros::spinOnce();
 
         //打印
-        swarm_control_utils::printf_swarm_state(uav1_name, State_uav1, Command_uav1);
-        swarm_control_utils::printf_swarm_state(uav2_name, State_uav2, Command_uav2);
-        swarm_control_utils::printf_swarm_state(uav3_name, State_uav3, Command_uav3);
-        swarm_control_utils::printf_swarm_state(uav4_name, State_uav4, Command_uav4);
-        swarm_control_utils::printf_swarm_state(uav5_name, State_uav5, Command_uav5);
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Station<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+        if(uav1_name != "/none" )
+        {
+            swarm_control_utils::printf_swarm_state(uav1_name, State_uav1, Command_uav1);
+        }
+        if(uav2_name != "/none" )
+        {
+            swarm_control_utils::printf_swarm_state(uav2_name, State_uav2, Command_uav2);
+        }
+        if(uav3_name != "/none" )
+        {
+            swarm_control_utils::printf_swarm_state(uav3_name, State_uav3, Command_uav3);
+        }
+        if(uav4_name != "/none" )
+        {
+            swarm_control_utils::printf_swarm_state(uav4_name, State_uav4, Command_uav4);
+        }
+        if(uav5_name != "/none" )
+        {
+            swarm_control_utils::printf_swarm_state(uav5_name, State_uav5, Command_uav5);
+        }
 
         rate.sleep();
     }
