@@ -27,7 +27,7 @@
             <param name="frame_id" type="string" value="world" />
             <!-- 传感器最大感知范围 (speedup!) -->
             <param name="sensor_model/max_range" value="8.0" />
-
+            <!-- 限制地图范围 -->
             <param name="pointcloud_min_z" value="0.1" />
             <param name="pointcloud_min_x" value="-4" />
             <!-- 局部点云输入,该话题定义在3Dlidar.sdf中 (PointCloud2) -->
@@ -35,6 +35,7 @@
 
         </node>
     </group> 
+    
     <!-- build octomap via rgbd data -->
     <group if="$(arg rgbd)">
         <include file="$(find prometheus_gazebo)/launch/depth_proc.launch"></include>
@@ -48,11 +49,15 @@
             <remap from="cloud_in" to="/realsense_plugin/camera/local_pointclouds" />
         </node>
     </group> 
-        <node pkg="prometheus_slam" type="pc2_saver_node" name="pc2_saver_node" output="screen"/>     
+
+    <node pkg="prometheus_slam" type="pc2_saver_node" name="pc2_saver_node" output="screen" launch-prefix="gnome-terminal --tab --">
+        <param name="path" value="/home/sysu/test.pcd" />
+    </node>         
+
 	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_planning.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_planning.rviz" />
     </group>
 </launch>
 
