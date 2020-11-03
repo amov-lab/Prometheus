@@ -51,7 +51,7 @@
     </group> 
 
     <node pkg="prometheus_slam" type="pc2_saver_node" name="pc2_saver_node" output="screen" launch-prefix="gnome-terminal --tab --">
-        <param name="path" value="/home/sysu/test.pcd" />
+        <param name="pcd_savepath" value="/home/(your_pc_name)/my_map.pcd" />
     </node>         
 
 	<!-- 启动rviz,设为false可关闭 -->
