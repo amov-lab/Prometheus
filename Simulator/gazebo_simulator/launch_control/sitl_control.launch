@@ -15,11 +15,23 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
+	<!-- 可选择使用terminal控制无人机，也可以使用键盘，不可以同时使用 -->
 	<!-- run the terminal_control.cpp -->
-	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
-	</node>	
-	
+	<arg name="use_terminal" default="false"/>
+	<group if="$(arg use_terminal)">
+		<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
+		</node>	
+	</group>
+
+	<!-- run the keyboard_control.cpp -->
+	<arg name="use_keyboard" default="true"/>
+	<group if="$(arg use_keyboard)">
+		<node pkg="prometheus_control" type="keyboard_control" name="keyboard_control" output="screen" launch-prefix="gnome-terminal --">	
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
+		</node>	
+	</group>
+
 	<!-- run the rviz -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
