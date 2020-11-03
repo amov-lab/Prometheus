@@ -265,9 +265,17 @@ int main(int argc, char **argv)
 
         // 【Takeoff】 从摆放初始位置原地起飞至指定高度，偏航角也保持当前角度
         case prometheus_msgs::ControlCommand::Takeoff:
-
-            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
+            
+            //当无人机在空中时若受到起飞指令，则发出警告并悬停
+            if (_DroneState.landed == false)
             {
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "The drone is in the air!");
+            }
+
+            if (_DroneState.landed == true && Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
+            {
+                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to the desired point.");
                 // 设定起飞位置
                 Takeoff_position[0] = _DroneState.position[0];
                 Takeoff_position[1] = _DroneState.position[1];
