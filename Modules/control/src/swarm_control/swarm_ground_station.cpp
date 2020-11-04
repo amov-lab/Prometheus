@@ -94,26 +94,21 @@ int main(int argc, char **argv)
     nh.param<string>("uav5_name", uav5_name, "/none");
 
 
-    if(uav1_name != "/none" )
-    {
+
         ros::Subscriber command_sub1 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav1_name + "/prometheus/swarm_command", 10, swarm_command_cb_1);
         ros::Subscriber drone_state_sub1 = nh.subscribe<prometheus_msgs::DroneState>(uav1_name + "/prometheus/drone_state", 10, drone_state_cb1);
         ros::Subscriber message_sub1 = nh.subscribe<prometheus_msgs::Message>(uav1_name + "/prometheus/message/main", 10, msg_cb);
-    }
 
-    if(uav2_name != "/none" )
-    {
         ros::Subscriber command_sub2 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav2_name + "/prometheus/swarm_command", 10, swarm_command_cb_2);
         ros::Subscriber drone_state_sub2 = nh.subscribe<prometheus_msgs::DroneState>(uav2_name + "/prometheus/drone_state", 10, drone_state_cb2);
         ros::Subscriber message_sub2 = nh.subscribe<prometheus_msgs::Message>(uav2_name + "/prometheus/message/main", 10, msg_cb);
-    }
 
-    if(uav3_name != "/none" )
-    {
+
+
         ros::Subscriber command_sub3 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav3_name + "/prometheus/swarm_command", 10, swarm_command_cb_3);
         ros::Subscriber drone_state_sub3 = nh.subscribe<prometheus_msgs::DroneState>(uav3_name + "/prometheus/drone_state", 10, drone_state_cb3);
         ros::Subscriber message_sub3 = nh.subscribe<prometheus_msgs::Message>(uav3_name + "/prometheus/message/main", 10, msg_cb);
-    }
+    
 
     if(uav4_name != "/none" )
     {
@@ -140,23 +135,23 @@ int main(int argc, char **argv)
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Station<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
         if(uav1_name != "/none" )
         {
-            swarm_control_utils::printf_swarm_state(uav1_name, State_uav1, Command_uav1);
+            swarm_control_utils::printf_swarm_state(uav_num, 1, uav1_name, State_uav1, Command_uav1);
         }
         if(uav2_name != "/none" )
         {
-            swarm_control_utils::printf_swarm_state(uav2_name, State_uav2, Command_uav2);
+            swarm_control_utils::printf_swarm_state(uav_num, 2, uav2_name, State_uav2, Command_uav2);
         }
         if(uav3_name != "/none" )
         {
-            swarm_control_utils::printf_swarm_state(uav3_name, State_uav3, Command_uav3);
+            swarm_control_utils::printf_swarm_state(uav_num, 3, uav3_name, State_uav3, Command_uav3);
         }
         if(uav4_name != "/none" )
         {
-            swarm_control_utils::printf_swarm_state(uav4_name, State_uav4, Command_uav4);
+            swarm_control_utils::printf_swarm_state(uav_num, 4, uav4_name, State_uav4, Command_uav4);
         }
         if(uav5_name != "/none" )
         {
-            swarm_control_utils::printf_swarm_state(uav5_name, State_uav5, Command_uav5);
+            swarm_control_utils::printf_swarm_state(uav_num, 5, uav5_name, State_uav5, Command_uav5);
         }
 
         rate.sleep();

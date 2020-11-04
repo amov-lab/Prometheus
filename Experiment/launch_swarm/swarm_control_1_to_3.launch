@@ -8,8 +8,8 @@
 	<arg name="k_p" default="1.0"/>
 	<arg name="k_aij" default="0.05"/>
 	<arg name="k_gamma" default="1.2"/>
-	<arg name="Takeoff_height" default="0.6"/>
-	<arg name="Disarm_height" default="0.1"/>
+	<arg name="Takeoff_height" default="0.4"/>
+	<arg name="Disarm_height" default="0.15"/>
 	<arg name="Land_speed" default="0.25"/>
 	<arg name="x_min" default="-2.5"/>
 	<arg name="x_max" default="2.5"/>
@@ -76,6 +76,8 @@
 		<param name="object_name" value="uav1"/>
 		<!-- 无人机名字，同 ns-->
 		<param name="uav_name" value="/uav1"/>
+		<!-- 运行频率，建议不小于20HZ -->
+		<param name="rate_hz" value="50.0"/>
 	</node>
 
 	<!-- run the swarm_controller.cpp -->
@@ -109,6 +111,8 @@
 		<param name="object_name" value="uav2"/>
 		<!-- 无人机名字，同 ns-->
 		<param name="uav_name" value="/uav2"/>
+		<!-- 运行频率，建议不小于20HZ -->
+		<param name="rate_hz" value="50.0"/>
 	</node>
 
 	<!-- run the swarm_controller.cpp -->
@@ -142,6 +146,8 @@
 		<param name="object_name" value="uav3"/>
 		<!-- 无人机名字，同 ns-->
 		<param name="uav_name" value="/uav3"/>
+		<!-- 运行频率，建议不小于20HZ -->
+		<param name="rate_hz" value="50.0"/>
 	</node>
 
 	<!-- run the swarm_controller.cpp -->
@@ -183,7 +189,7 @@
 		<param name="virtual_leader_pos_y" value="0.0" />
 		<param name="virtual_leader_pos_z" value="0.6" />
 		<param name="virtual_leader_yaw" value="0.0" />
-		<param name="formation_size" value="1.0" />
+		<param name="formation_size" value="1.5" />
 	</node>
 
 	<!-- run the rviz -->

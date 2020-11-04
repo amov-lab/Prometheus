@@ -144,6 +144,11 @@ int main(int argc, char **argv)
     nh.param<float>("geo_fence/z_min", geo_fence_z[0], -100.0);
     nh.param<float>("geo_fence/z_max", geo_fence_z[1], 100.0);
 
+    // 设定起飞位置
+    Takeoff_position[0] = 0.0;
+    Takeoff_position[1] = 0.0;
+    Takeoff_position[2] = 0.15;
+
     // 建议控制频率 ： 10 - 50Hz, 控制频率取决于控制形式，若控制方式为速度或加速度应适当提高频率
     ros::Rate rate(20.0);
 
@@ -227,15 +232,11 @@ int main(int argc, char **argv)
         // 【Takeoff】 从摆放初始位置原地起飞至指定高度，偏航角也保持当前角度    
         case prometheus_msgs::ControlCommand::Takeoff:
             
-            //当无人机在空中时若受到起飞指令，则发出警告并悬停
-            if (_DroneState.landed == false)
-            {
-                Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
-                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "The drone is in the air!");
-            }
+            // 不能多次起飞！
+            // 此处起飞有一个bug，则是飞机起飞会有很严重的超调，没发现具体导致的因素
 
             // 设定起飞点
-            if (_DroneState.landed == true && Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
             {
                 pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to the desired point.");
                 // 设定起飞位置
@@ -283,37 +284,41 @@ int main(int argc, char **argv)
 
         // 【Land】 降落。当前位置原地降落，降落后会自动上锁，且切换为mannual模式
         case prometheus_msgs::ControlCommand::Land:
-            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
+           
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Hold)
             {
+                Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
+                Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
                 Command_Now.Reference_State.position_ref[0] = _DroneState.position[0];
                 Command_Now.Reference_State.position_ref[1] = _DroneState.position[1];
-                Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
                 Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2]; //rad
             }
 
-            //如果距离起飞高度小于10厘米，则直接切换为land模式；
-            if(abs(_DroneState.position[2] - Takeoff_position[2]) > Disarm_height)
+            if(_DroneState.position[2] > Disarm_height)
             {
                 Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] - Land_speed * dt ;
+                Command_Now.Reference_State.velocity_ref[0] = 0.0;
+                Command_Now.Reference_State.velocity_ref[1] =  0.0;
+                Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
+                // yaw_sp         = _DroneState.attitude[2]; //rad
+                //  state_sp = Eigen::Vector3d(0.0, 0.0 , - Land_speed);
+                // _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
+
                 state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1], Command_Now.Reference_State.position_ref[2] );
                 state_sp_extra = Eigen::Vector3d(0.0, 0.0 , Command_Now.Reference_State.velocity_ref[2]);
                 yaw_sp = Command_Now.Reference_State.yaw_ref;
-                _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra, yaw_sp);
+                 _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra, yaw_sp);
             }else
             {
-                if(_DroneState.mode != "AUTO.LAND")
-                {
-                    //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
-                    _command_to_mavros.mode_cmd.request.custom_mode = "AUTO.LAND";
-                    _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "LAND: inter AUTO LAND filght mode");
-                }
-            }
-            // _command_to_mavros.land();
+                //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
+                _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+                _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
 
-            if(_DroneState.landed)
-            {
-                Command_Now.Mode = prometheus_msgs::ControlCommand::Idle;
+                _command_to_mavros.arm_cmd.request.value = false;
+                _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
+                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Disarming...");
+
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "LAND: switch to MANUAL filght mode");
             }
 
             break;
