@@ -3,7 +3,7 @@
     <arg name="x" default="-3.0"/>
     <arg name="y" default="-0.0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle_HTWY2.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle_HTWY.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
 	<arg name="model" default="P300_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch_custom/001_HTWY/001_sitl.launch">
@@ -73,6 +73,10 @@
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/launch_custom/001_HTWY/config/rviz_config_astar.rviz" />
+        <!-- 真实点云 -->
+        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/HTWY.pcd" />
+	    </node>
     </group>
 </launch>
 
