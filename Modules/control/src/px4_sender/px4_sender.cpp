@@ -285,7 +285,7 @@ int main(int argc, char **argv)
         // 【Land】 降落。当前位置原地降落，降落后会自动上锁，且切换为mannual模式
         case prometheus_msgs::ControlCommand::Land:
            
-            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Hold)
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
             {
                 Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
                 Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
@@ -300,9 +300,6 @@ int main(int argc, char **argv)
                 Command_Now.Reference_State.velocity_ref[0] = 0.0;
                 Command_Now.Reference_State.velocity_ref[1] =  0.0;
                 Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
-                // yaw_sp         = _DroneState.attitude[2]; //rad
-                //  state_sp = Eigen::Vector3d(0.0, 0.0 , - Land_speed);
-                // _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
 
                 state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1], Command_Now.Reference_State.position_ref[2] );
                 state_sp_extra = Eigen::Vector3d(0.0, 0.0 , Command_Now.Reference_State.velocity_ref[2]);

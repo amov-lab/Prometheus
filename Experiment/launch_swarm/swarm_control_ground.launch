@@ -2,7 +2,7 @@
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
 		<!-- 0代表位置控制，１代表速度控制，２代表加速度控制 -->
 		<param name="controller_num" value="0"/>
-		<param name="uav_num" value="5"/>
+		<param name="uav_id" value="5"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
 		<param name="virtual_leader_pos_y" value="0.0" />
 		<param name="virtual_leader_pos_z" value="1.0" />
@@ -12,7 +12,7 @@
 
 	<node pkg="prometheus_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">
 		<!-- 设置无人机名字才会在地面站显示 -->
-		<param name="uav_num" value="3" />
+		<param name="uav_id" value="3" />
 		<param name="uav1_name" value="/none" />
 		<param name="uav2_name" value="/uav2" />
 		<param name="uav3_name" value="/uav3" />

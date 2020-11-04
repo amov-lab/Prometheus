@@ -167,21 +167,21 @@ void prinft_drone_state(const prometheus_msgs::DroneState& _Drone_state)
     //是否上锁
     if (_Drone_state.armed == true)
     {
-        cout << "  [ Armed ] ";
+        cout << " [ Armed ]";
     }
     else
     {
-        cout << "  [ DisArmed ] ";
+        cout << " [ DisArmed ]";
     }
 
     //是否在地面
     if (_Drone_state.landed == true)
     {
-        cout << "  [ Ground ] ";
+        cout << " [ Ground ] ";
     }
     else
     {
-        cout << "  [ Air ] ";
+        cout << " [ Air ] ";
     }
 
     cout << "[ " << _Drone_state.mode<<" ] " <<endl;
