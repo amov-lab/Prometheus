@@ -24,6 +24,8 @@
 		<param name="input_source" value="0" />
 		<!-- 如果使用动作捕捉系统，则指定刚体名称，用于订阅vrpn节点发布的话题 -->
 		<param name="object_name" value="uav3"/>
+		<!-- 运行频率，建议不小于20HZ -->
+		<param name="rate_hz" value="50.0"/>
 	</node>
 	
 	<!-- run the px4_sender.cpp -->
@@ -45,7 +47,7 @@
 	</node>	
 
 	<!-- run the rviz -->
-	<arg name="visualization" default="true"/>
+	<arg name="visualization" default="false"/>
 	<group if="$(arg visualization)">
 		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_experiment)/config/rviz_config/rviz_controller_test.rviz" />
     </group>

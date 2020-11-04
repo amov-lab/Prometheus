@@ -224,6 +224,7 @@ int main(int argc, char **argv)
         // 【Takeoff】 从摆放初始位置原地起飞至指定高度，偏航角也保持当前角度    
         case prometheus_msgs::SwarmCommand::Takeoff:
             
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to the desired point.");
             // 设定起飞点
             if (Command_Last.Mode != prometheus_msgs::SwarmCommand::Takeoff)
             {
@@ -241,7 +242,7 @@ int main(int argc, char **argv)
                 state_sp = Eigen::Vector3d(Takeoff_position[0],Takeoff_position[1],Takeoff_position[2] + Takeoff_height);
             }
             _command_to_mavros.send_pos_setpoint(state_sp, Command_Now.yaw_ref);
-
+                
             break;
 
         // 【Hold】 悬停。当前位置悬停
@@ -262,35 +263,39 @@ int main(int argc, char **argv)
 
         // 【Land】 降落。当前位置原地降落，降落后会自动上锁，且切换为mannual模式
         case prometheus_msgs::SwarmCommand::Land:
-            if (Command_Last.Mode != prometheus_msgs::SwarmCommand::Land)
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Hold)
             {
                 Command_Now.position_ref[0] = _DroneState.position[0];
                 Command_Now.position_ref[1] = _DroneState.position[1];
                 Command_Now.yaw_ref         = _DroneState.attitude[2]; //rad
             }
 
-            //如果距离起飞高度小于10厘米，则直接切换为land模式；
-            if(abs(_DroneState.position[2] - Takeoff_position[2]) > Disarm_height)
+            if(_DroneState.position[2] > Disarm_height)
             {
                 Command_Now.position_ref[2] = _DroneState.position[2] - Land_speed * dt ;
+                Command_Now.velocity_ref[0] = 0.0;
+                Command_Now.velocity_ref[1] =  0.0;
+                Command_Now.velocity_ref[2] = - Land_speed; //Land_speed
+                // yaw_sp         = _DroneState.attitude[2]; //rad
+                //  state_sp = Eigen::Vector3d(0.0, 0.0 , - Land_speed);
+                // _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
+
                 state_sp = Eigen::Vector3d(Command_Now.position_ref[0],Command_Now.position_ref[1], Command_Now.position_ref[2] );
-                state_sp_extra = Eigen::Vector3d(0.0, 0.0 , - Land_speed);
-                _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra, Command_Now.yaw_ref);
+                state_sp_extra = Eigen::Vector3d(0.0, 0.0 , Command_Now.velocity_ref[2]);
+                yaw_sp = Command_Now.yaw_ref;
+                 _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra, yaw_sp);
             }else
             {
-                if(_DroneState.mode != "AUTO.LAND")
-                {
-                    //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
-                    _command_to_mavros.mode_cmd.request.custom_mode = "AUTO.LAND";
-                    _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
-                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "LAND: inter AUTO LAND filght mode");
-                }
-            }
-            // _command_to_mavros.land();
 
-            if(_DroneState.landed)
-            {
-                Command_Now.Mode = prometheus_msgs::SwarmCommand::Idle;
+                //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
+                _command_to_mavros.mode_cmd.request.custom_mode = "MANUAL";
+                _command_to_mavros.set_mode_client.call(_command_to_mavros.mode_cmd);
+
+                _command_to_mavros.arm_cmd.request.value = false;
+                _command_to_mavros.arming_client.call(_command_to_mavros.arm_cmd);
+                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Disarming...");
+
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "LAND: switch to MANUAL filght mode");
             }
 
             break;
