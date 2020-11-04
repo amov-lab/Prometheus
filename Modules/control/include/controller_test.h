@@ -221,22 +221,17 @@ prometheus_msgs::PositionReference Controller_Test::Step_trajectory_generation(f
 // 【打印参数函数】
 void Controller_Test::printf_param()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Controller_Test Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>Controller_Test Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
     cout <<"Circle Shape:  " <<endl;
-    cout <<"circle_center :  "<<endl << circle_center <<endl;
-    cout <<"circle_radius :  "<< circle_radius << endl;
-    cout <<"linear_vel : "<< linear_vel << endl;
-    cout <<"direction : "<< direction << endl;
-
+    cout <<"circle_center :  " << circle_center[0] <<" [m] "<< circle_center[1] <<" [m] "<< circle_center[2] <<" [m] "<<endl;
+    cout <<"circle_radius :  "<< circle_radius <<" [m] " <<"linear_vel : "<< linear_vel <<" [m/s] "<<"direction : "<< direction << endl;
 
     cout <<"Eight Shape:  " <<endl;
-    cout <<"eight_origin_ :  "<<endl << eight_origin_ <<endl;
-    cout <<"eight_omega_ :  "<< eight_omega_ << endl;
-    cout <<"radial : "<< radial << endl;
+    cout <<"eight_origin_ :  "<< eight_origin_[0] <<" [m] "<< eight_origin_[1] <<" [m] "<< eight_origin_[2] <<" [m] "<<endl;
+    cout <<"eight_omega_ :  "<< eight_omega_  <<" [rad/s] " << "radial : "<< radial << endl;
 
     cout <<"Step:  " <<endl;
-    cout <<"step_length :  "<< step_length << endl;
-    cout <<"step_interval : "<< step_interval << endl;
+    cout <<"step_length :  "<< step_length << " [m] step_interval : "<< step_interval << " [s] "<<endl;
 }
 
 
