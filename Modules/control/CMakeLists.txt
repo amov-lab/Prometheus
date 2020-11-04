@@ -121,10 +121,10 @@ add_dependencies(sender_ground_station prometheus_control_gencpp)
 target_link_libraries(sender_ground_station ${catkin_LIBRARIES})
 
 ###### Utilities File ##########
-add_executable(keyboard_control src/Utilities/keyboard_control.cpp)
-add_dependencies(keyboard_control prometheus_control_gencpp)
-target_link_libraries(keyboard_control ${catkin_LIBRARIES})
-target_link_libraries(keyboard_control KeyboardEvent)
+#add_executable(keyboard_control src/Utilities/keyboard_control.cpp)
+#add_dependencies(keyboard_control prometheus_control_gencpp)
+#target_link_libraries(keyboard_control ${catkin_LIBRARIES})
+#target_link_libraries(keyboard_control KeyboardEvent)
 
 add_executable(filter_tester src/Utilities/filter_tester.cpp)
 add_dependencies(filter_tester prometheus_control_gencpp)
@@ -141,6 +141,7 @@ target_link_libraries(fake_vicon ${catkin_LIBRARIES})
 add_executable(terminal_control src/Utilities/terminal_control.cpp)
 add_dependencies(terminal_control prometheus_control_gencpp)
 target_link_libraries(terminal_control ${catkin_LIBRARIES})
+target_link_libraries(terminal_control KeyboardEvent)
 
 add_executable(terminal_control_rover src/Utilities/terminal_control_rover.cpp)
 add_dependencies(terminal_control_rover prometheus_control_gencpp)
