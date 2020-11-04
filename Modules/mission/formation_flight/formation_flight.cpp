@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     nh.param<int>("controller_num", controller_num, 0);
     nh.param<float>("virtual_leader_pos_x", virtual_leader_pos[0], 0.0);
     nh.param<float>("virtual_leader_pos_y", virtual_leader_pos[1], 0.0);
-    nh.param<float>("virtual_leader_pos_z", virtual_leader_pos[2], 1.0);
+    nh.param<float>("virtual_leader_pos_z", virtual_leader_pos[2], 0.6);
     nh.param<float>("virtual_leader_yaw", virtual_leader_yaw, 0.0);
     nh.param<float>("formation_size", formation_size, 1.0);
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
-    cout<<setprecision(4);
+    cout<<setprecision(2);
     //左对齐
     cout.setf(ios::left);
     // 强制显示小数点
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please choose the mission: 1 for formation change, 2 for Point Tracking, 3 for Circle Trajectory Tracking..."<<endl;
+        cout << "Please choose the mission: 1 for formation change, 2 for Point Tracking, 3 for Circle Trajectory Tracking, 4 for Land ..."<<endl;
         cin >> start_flag;
 
         if (start_flag == 1)
@@ -158,11 +158,11 @@ int main(int argc, char **argv)
             cin >> virtual_leader_pos[0];
             cout << "virtual_leader_pos: --- y [m]"<<endl;
             cin >> virtual_leader_pos[1];
+            cout << "virtual_leader_pos: --- z [m]"<<endl;
+            cin >> virtual_leader_pos[2];
             cout << "virtual_leader_yaw [deg]:"<<endl;
             cin >> virtual_leader_yaw;
             virtual_leader_yaw = virtual_leader_yaw/180.0*M_PI;
-
-            virtual_leader_pos[2]  = 1.0;
 
             if(formation_num == 2)
             {
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
 
                 virtual_leader_pos[0] = circle_radius * cos(time_trajectory * omega);
                 virtual_leader_pos[1] = circle_radius * sin(time_trajectory * omega);
-                virtual_leader_pos[2] = 1.0;
+                //virtual_leader_pos[2] = 1.0;
                 virtual_leader_vel[0] = - omega * circle_radius * sin(time_trajectory * omega);
                 virtual_leader_vel[1] = omega * circle_radius * cos(time_trajectory * omega);
                 virtual_leader_vel[2] = 0.0;
@@ -206,12 +206,22 @@ int main(int argc, char **argv)
 
                 ros::Duration(0.01).sleep();
             }
+        }else if (start_flag == 4)
+        {
+            swarm_command.Mode = prometheus_msgs::SwarmCommand::Land;
+            swarm_command.yaw_ref = 0.0;
+
+            uav1_command_pub.publish(swarm_command);
+            uav2_command_pub.publish(swarm_command);
+            uav3_command_pub.publish(swarm_command);
+            uav4_command_pub.publish(swarm_command);
+            uav5_command_pub.publish(swarm_command);
         }else
         {
             cout << "Wrong input."<<endl;
         }
         
-        cout << "virtual_leader_pos [X Y] : " << virtual_leader_pos[0] << " [ m ] "<< virtual_leader_pos[1] <<" [ m ] "<< endl;
+        cout << "virtual_leader_pos [X Y] : " << virtual_leader_pos[0] << " [ m ] "<< virtual_leader_pos[1] <<" [ m ] "<< virtual_leader_pos[2] <<" [ m ] "<< endl;
         cout << "virtual_leader_yaw: " << virtual_leader_yaw/M_PI*180.0 <<" [ deg ] "<< endl;
      
         ros::Duration(2.0).sleep();

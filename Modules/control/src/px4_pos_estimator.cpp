@@ -26,7 +26,7 @@
 
 using namespace std;
 #define TRA_WINDOW 1000
-#define TIMEOUT_MAX 0.2
+#define TIMEOUT_MAX 0.05
 #define NODE_NAME "pos_estimator"
 //---------------------------------------相关参数-----------------------------------------------
 int input_source;
@@ -123,12 +123,7 @@ void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     // Transform the Quaternion to Euler Angles
     Euler_mocap = quaternion_to_euler(q_mocap);
     
-    // 此处时间主要用于监测动捕，T265设备是否正常工作
-    if( prometheus_control_utils::get_time_in_sec(last_timestamp) > TIMEOUT_MAX)
-    {
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Mocap Timeout.");
-    }
-    last_timestamp = ros::Time::now(); 
+    last_timestamp = msg->header.stamp;
 }
 
 void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
@@ -287,8 +282,14 @@ void send_to_fcu()
         vision.pose.orientation.y = q_mocap.y();
         vision.pose.orientation.z = q_mocap.z();
         vision.pose.orientation.w = q_mocap.w();
-
-    } //laser
+      
+        // 此处时间主要用于监测动捕，T265设备是否正常工作
+        if( prometheus_control_utils::get_time_in_sec(last_timestamp) > TIMEOUT_MAX)
+        {
+            pub_message(message_pub, prometheus_msgs::Message::ERROR, NODE_NAME, "Mocap Timeout.");
+        }
+        
+        } //laser
     else if (input_source == 1)
     {
         vision.pose.position.x = pos_drone_laser[0];

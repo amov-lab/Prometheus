@@ -227,9 +227,9 @@ void printf_swarm_control(const prometheus_msgs::SwarmCommand& SwarmCommand)
 
 }
 
-void printf_swarm_state(string uav_name, const prometheus_msgs::DroneState& _Drone_state, const prometheus_msgs::SwarmCommand& SwarmCommand)
+void printf_swarm_state(int swarm_num, int uav_num, string uav_name, const prometheus_msgs::DroneState& _Drone_state, const prometheus_msgs::SwarmCommand& SwarmCommand)
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> " << uav_name << " State <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>> uav_num: ["<< uav_num <<"]  "<< uav_name << " State <<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -309,7 +309,22 @@ void printf_swarm_state(string uav_name, const prometheus_msgs::DroneState& _Dro
             break;
 
         case prometheus_msgs::SwarmCommand::Position_Control:
-            cout << "Command: [ Position_Control ] " <<endl;
+            if(SwarmCommand.swarm_shape == prometheus_msgs::SwarmCommand::One_column)
+            {
+                cout << "Command: [ Position_Control ]  Swarm_shape:  [One_column]" <<endl;
+            }else if(SwarmCommand.swarm_shape == prometheus_msgs::SwarmCommand::Triangle)
+            {
+                cout << "Command: [ Position_Control ]  Swarm_shape:  [Triangle]" <<endl;
+            }
+            
+            // Eigen::MatrixXf formation_separation;
+            // formation_separation = swarm_control_utils::get_formation_separation(SwarmCommand.swarm_shape, SwarmCommand.swarm_size, swarm_num);
+
+            // SwarmCommand.position_ref[0] = SwarmCommand.position_ref[0] + formation_separation(uav_num-1,0);
+            // SwarmCommand.position_ref[1] = SwarmCommand.position_ref[1] + formation_separation(uav_num-1,1);
+            // SwarmCommand.position_ref[2] = SwarmCommand.position_ref[2] + formation_separation(uav_num-1,2);
+            // SwarmCommand.yaw_ref = SwarmCommand.yaw_ref + formation_separation(uav_num-1,3);
+
             cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
             cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
 

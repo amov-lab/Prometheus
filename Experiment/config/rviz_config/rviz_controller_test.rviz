@@ -3,7 +3,8 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Global Options1
       Splitter Ratio: 0.5
     Tree Height: 455
   - Class: rviz/Selection
@@ -36,8 +37,6 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        3Dlidar_link:
-          Value: true
         All Enabled: true
         base_link:
           Value: true
@@ -47,15 +46,11 @@ Visualization Manager:
           Value: true
         map_ned:
           Value: true
-        map_slam:
-          Value: true
         odom:
           Value: true
         odom_ned:
           Value: true
-        realsense_camera_link:
-          Value: true
-        lidar_link:
+        uav3:
           Value: true
         world:
           Value: true
@@ -65,12 +60,15 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
+        map:
+          map_ned:
+            {}
         world:
-          map:
-            map_ned:
+          base_link:
+            base_link_frd:
               {}
-            map_slam:
-              {}
+          uav3:
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 0.5
@@ -171,7 +169,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: map
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -232,4 +230,4 @@ Window Geometry:
     collapsed: false
   Width: 1440
   X: 445
-  Y: 217
+  Y: 186
