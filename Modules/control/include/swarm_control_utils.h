@@ -36,6 +36,8 @@ using namespace std;
 
 #define thrust_max_single_motor 6.0
 
+Eigen::MatrixXf formation;
+
 namespace swarm_control_utils 
 {
 //输入参数：　阵型，阵型基本尺寸，集群数量
@@ -45,7 +47,7 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
     Eigen::MatrixXf seperation(swarm_num,4); 
 
     // one_column shape
-    // 一字型，虚拟领机位置为中心位置，其余飞机根据数量向左右增加
+    // 横向一字型，虚拟领机位置为中心位置，其余飞机根据数量向左右增加
     if(swarm_shape == prometheus_msgs::SwarmCommand::One_column)
     {
         if(swarm_num == 3)
@@ -92,6 +94,59 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
 
             seperation(4,0) = 0.0;
             seperation(4,1) = - 2 * swarm_size;  
+            seperation(4,2) = 0.0;
+            seperation(4,3) = 0.0;
+        }
+    }
+
+    // one_row shape
+    // 竖向一字型，虚拟领机位置为中心位置，其余飞机根据数量向左右增加
+    if(swarm_shape == prometheus_msgs::SwarmCommand::One_row)
+    {
+        if(swarm_num == 3)
+        {
+            //　数量为3时，１号机即虚拟领机位置
+            seperation(0,0) = 0.0;
+            seperation(0,1) = 0.0;  
+            seperation(0,2) = 0.0;
+            seperation(0,3) = 0.0;
+
+            seperation(1,0) = swarm_size;
+            seperation(1,1) = 0.0;  
+            seperation(1,2) = 0.0;
+            seperation(1,3) = 0.0;
+
+            seperation(2,0) = - 1 * swarm_size;
+            seperation(2,1) = 0.0;  
+            seperation(2,2) = 0.0;
+            seperation(2,3) = 0.0;
+        }
+
+        if(swarm_num == 5)
+        {
+            //　数量为５时，１号机即虚拟领机位置
+            seperation(0,0) = 0.0;
+            seperation(0,1) = 0.0;  
+            seperation(0,2) = 0.0;
+            seperation(0,3) = 0.0;
+
+            seperation(1,0) = swarm_size;
+            seperation(1,1) = 0.0;  
+            seperation(1,2) = 0.0;
+            seperation(1,3) = 0.0;
+
+            seperation(2,0) = - 1 * swarm_size;
+            seperation(2,1) = 0.0; 
+            seperation(2,2) = 0.0;
+            seperation(2,3) = 0.0;
+
+            seperation(3,0) = 2 * swarm_size;  
+            seperation(3,1) = 0.0;
+            seperation(3,2) = 0.0;
+            seperation(3,3) = 0.0;
+
+            seperation(4,0) = - 2 * swarm_size; 
+            seperation(4,1) = 0.0;
             seperation(4,2) = 0.0;
             seperation(4,3) = 0.0;
         }
@@ -153,9 +208,10 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
     return seperation;
 }
 
-void printf_swarm_control(const prometheus_msgs::SwarmCommand& SwarmCommand)
+void printf_swarm_state(int swarm_num, int uav_id, string uav_name, const prometheus_msgs::DroneState& _Drone_state, const prometheus_msgs::SwarmCommand& SwarmCommand)
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Swarm Command <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    float x,y,z,yaw;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> "<< uav_name << " State <<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -168,108 +224,37 @@ void printf_swarm_control(const prometheus_msgs::SwarmCommand& SwarmCommand)
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    switch(SwarmCommand.Mode)
-    {
-        case prometheus_msgs::SwarmCommand::Idle:
-            
-            if(SwarmCommand.yaw_ref == 999)
-            {
-                cout << "Command: [ Idle + Arming + Switching to OFFBOARD mode ] " <<endl;
-            }else
-            {
-                cout << "Command: [ Idle ] " <<endl;
-            }
-            
-            break;
 
-        case prometheus_msgs::SwarmCommand::Takeoff:
-            cout << "Command: [ Takeoff ] " <<endl;
-            break;
-
-        case prometheus_msgs::SwarmCommand::Hold:
-            cout << "Command: [ Hold ] " <<endl;
-            break;
-
-        case prometheus_msgs::SwarmCommand::Land:
-            cout << "Command: [ Land ] " <<endl;
-            break;
-
-        case prometheus_msgs::SwarmCommand::Disarm:
-            cout << "Command: [ Disarm ] " <<endl;
-            break;
-
-        case prometheus_msgs::SwarmCommand::Position_Control:
-            cout << "Command: [ Position_Control ] " <<endl;
-            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
-
-            break;
-
-        case prometheus_msgs::SwarmCommand::Velocity_Control:
-            cout << "Command: [ Velocity_Control ] " <<endl;
-            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
-
-            break;
-
-        case prometheus_msgs::SwarmCommand::Accel_Control:
-            cout << "Command: [ Accel_Control ] " <<endl;
-            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
-
-            break;
-
-        case prometheus_msgs::SwarmCommand::User_Mode1:
-            cout << "Command: [ User_Mode1 ] " <<endl;
-            break;
-
-    }
-
-}
-
-void printf_swarm_state(int swarm_num, int uav_num, string uav_name, const prometheus_msgs::DroneState& _Drone_state, const prometheus_msgs::SwarmCommand& SwarmCommand)
-{
-    cout <<">>>>>>>>>>>>>>>>> uav_num: ["<< uav_num <<"]  "<< uav_name << " State <<<<<<<<<<<<<<<<<<<<<<" <<endl;
-
-    //固定的浮点显示
-    cout.setf(ios::fixed);
-    //setprecision(n) 设显示小数精度为n位
-    cout<<setprecision(NUM_POINT);
-    //左对齐
-    cout.setf(ios::left);
-    // 强制显示小数点
-    cout.setf(ios::showpoint);
-    // 强制显示符号
-    cout.setf(ios::showpos);
+    cout << "uav_id: ["<< uav_id <<"] ";
 
    //是否和飞控建立起连接
     if (_Drone_state.connected == true)
     {
-        cout << " [ Connected ]";
+        cout << "[ Connected ] ";
     }
     else
     {
-        cout << " [ Unconnected ]";
+        cout << "[ Unconnected ] ";
     }
 
     //是否上锁
     if (_Drone_state.armed == true)
     {
-        cout << "  [ Armed ] ";
+        cout << "[ Armed ] ";
     }
     else
     {
-        cout << "  [ DisArmed ] ";
+        cout << "[ DisArmed ] ";
     }
 
     //是否在地面
     if (_Drone_state.landed == true)
     {
-        cout << "  [ Ground ] ";
+        cout << "[ Ground ] ";
     }
     else
     {
-        cout << "  [ Air ] ";
+        cout << "[ Air ] ";
     }
 
     cout << "[ " << _Drone_state.mode<<" ] " <<endl;
@@ -311,36 +296,52 @@ void printf_swarm_state(int swarm_num, int uav_num, string uav_name, const prome
         case prometheus_msgs::SwarmCommand::Position_Control:
             if(SwarmCommand.swarm_shape == prometheus_msgs::SwarmCommand::One_column)
             {
-                cout << "Command: [ Position_Control ]  Swarm_shape:  [One_column]" <<endl;
+                cout << "Command: [ Position_Control ] [One_column] size: " << SwarmCommand.swarm_size <<endl;
             }else if(SwarmCommand.swarm_shape == prometheus_msgs::SwarmCommand::Triangle)
             {
-                cout << "Command: [ Position_Control ]  Swarm_shape:  [Triangle]" <<endl;
+                cout << "Command: [ Position_Control ] [Triangle] size: " << SwarmCommand.swarm_size <<endl;
+            }else if(SwarmCommand.swarm_shape == prometheus_msgs::SwarmCommand::One_row)
+            {
+                cout << "Command: [ Position_Control ] [One_row] size: " << SwarmCommand.swarm_size <<endl;
             }
             
-            // Eigen::MatrixXf formation_separation;
-            // formation_separation = swarm_control_utils::get_formation_separation(SwarmCommand.swarm_shape, SwarmCommand.swarm_size, swarm_num);
+            formation = get_formation_separation(SwarmCommand.swarm_shape, SwarmCommand.swarm_size, swarm_num);
 
-            // SwarmCommand.position_ref[0] = SwarmCommand.position_ref[0] + formation_separation(uav_num-1,0);
-            // SwarmCommand.position_ref[1] = SwarmCommand.position_ref[1] + formation_separation(uav_num-1,1);
-            // SwarmCommand.position_ref[2] = SwarmCommand.position_ref[2] + formation_separation(uav_num-1,2);
-            // SwarmCommand.yaw_ref = SwarmCommand.yaw_ref + formation_separation(uav_num-1,3);
+            x = SwarmCommand.position_ref[0] + formation(uav_id-1,0);
+            y = SwarmCommand.position_ref[1] + formation(uav_id-1,1);
+            z = SwarmCommand.position_ref[2] + formation(uav_id-1,2);
+            yaw = SwarmCommand.yaw_ref + formation(uav_id-1,3);
 
-            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+            cout << "Position [X Y Z] : " << x  << " [ m ] "<< y <<" [ m ] "<< z <<" [ m ] "<<endl;
+            cout << "Yaw : "  << z * 180/M_PI << " [deg] " <<endl;
 
             break;
 
         case prometheus_msgs::SwarmCommand::Velocity_Control:
             cout << "Command: [ Velocity_Control ] " <<endl;
-            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+            formation = get_formation_separation(SwarmCommand.swarm_shape, SwarmCommand.swarm_size, swarm_num);
+
+            x = SwarmCommand.position_ref[0] + formation(uav_id-1,0);
+            y = SwarmCommand.position_ref[1] + formation(uav_id-1,1);
+            z = SwarmCommand.position_ref[2] + formation(uav_id-1,2);
+            yaw = SwarmCommand.yaw_ref + formation(uav_id-1,3);
+
+            cout << "Position [X Y Z] : " << x  << " [ m ] "<< y <<" [ m ] "<< z <<" [ m ] "<<endl;
+            cout << "Yaw : "  << z * 180/M_PI << " [deg] " <<endl;
 
             break;
 
         case prometheus_msgs::SwarmCommand::Accel_Control:
             cout << "Command: [ Accel_Control ] " <<endl;
-            cout << "Position [X Y Z] : " << SwarmCommand.position_ref[0] << " [ m ] "<< SwarmCommand.position_ref[1]<<" [ m ] "<< SwarmCommand.position_ref[2]<<" [ m ] "<<endl;
-            cout << "Yaw : "  << SwarmCommand.yaw_ref* 180/M_PI << " [deg] " <<endl;
+            formation = get_formation_separation(SwarmCommand.swarm_shape, SwarmCommand.swarm_size, swarm_num);
+            
+            x = SwarmCommand.position_ref[0] + formation(uav_id-1,0);
+            y = SwarmCommand.position_ref[1] + formation(uav_id-1,1);
+            z = SwarmCommand.position_ref[2] + formation(uav_id-1,2);
+            yaw = SwarmCommand.yaw_ref + formation(uav_id-1,3);
+
+            cout << "Position [X Y Z] : " << x  << " [ m ] "<< y <<" [ m ] "<< z <<" [ m ] "<<endl;
+            cout << "Yaw : "  << z * 180/M_PI << " [deg] " <<endl;
 
             break;
 
@@ -378,7 +379,7 @@ Eigen::Vector3d accelToThrottle(const Eigen::Vector3d& accel_sp, float mass, flo
     {
         throttle_sp[i] = MOTOR_P1 * pow(thrust_sp[i],4) + MOTOR_P2 * pow(thrust_sp[i],3) + MOTOR_P3 * pow(thrust_sp[i],2) + MOTOR_P4 * thrust_sp[i] + MOTOR_P5;
         // PX4内部默认假设 0.5油门为悬停推力 ， 在无人机重量为1kg时，直接除20得到0.5
-        // throttle_sp[i] = thrust_sp[i]/20；
+        // throttle_sp[i] = thrust_sp[i]/20;
     }
 
     return throttle_sp;   

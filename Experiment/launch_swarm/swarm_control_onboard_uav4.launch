@@ -45,9 +45,9 @@
 	<arg name="z_max" default="100.0"/>
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav4" output="screen">
 		<param name="swarm_num" value="$(arg swarm_num)"/>
-		<param name="uav_num" value="4"/>
-		<param name="neighbour_num1" value="2" />
-		<param name="neighbour_num2" value="5"/>
+		<param name="uav_id" value="4"/>
+		<param name="neighbour_id1" value="2" />
+		<param name="neighbour_id2" value="5"/>
 		<param name="uav_name" value="/uav4"/>
 		<param name="neighbour_name1" value="/uav2" />
 		<param name="neighbour_name2" value="/uav5"/>

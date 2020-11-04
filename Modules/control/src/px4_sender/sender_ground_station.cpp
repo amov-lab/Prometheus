@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 
 void printf_info()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Sender Ground Station  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>> PX4 Sender Ground Station  <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
@@ -104,7 +104,7 @@ void printf_info()
     //打印来自上层的控制指令
     prometheus_control_utils::printf_command_control(Command_Now);
 
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Target Info FCU <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>> Target Info from PX4 <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     cout << "Pos_target [X Y Z] : " << pos_drone_fcu_target[0] << " [ m ] "<< pos_drone_fcu_target[1]<<" [ m ] "<<pos_drone_fcu_target[2]<<" [ m ] "<<endl;
     cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
     // cout << "Acc_target [X Y Z] : " << accel_drone_fcu_target[0] << " [m/s^2] "<< accel_drone_fcu_target[1]<<" [m/s^2] "<<accel_drone_fcu_target[2]<<" [m/s^2] "<<endl;
