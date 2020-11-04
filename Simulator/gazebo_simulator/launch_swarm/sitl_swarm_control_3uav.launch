@@ -164,9 +164,9 @@
 	<arg name="z_max" default="100.0"/>
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav1" output="screen" launch-prefix="gnome-terminal --tab --">
 		<param name="swarm_num" value="$(arg swarm_num)"/>
-		<param name="uav_num" value="1"/>
-		<param name="neighbour_num1" value="2" />
-		<param name="neighbour_num2" value="3"/>
+		<param name="uav_id" value="1"/>
+		<param name="neighbour_id1" value="2" />
+		<param name="neighbour_id2" value="3"/>
 		<param name="uav_name" value="/uav1"/>
 		<param name="neighbour_name1" value="/uav2" />
 		<param name="neighbour_name2" value="/uav3"/>
@@ -186,9 +186,9 @@
 
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav2" output="screen" launch-prefix="gnome-terminal --tab --">	
 		<param name="swarm_num" value="$(arg swarm_num)"/>
-		<param name="uav_num" value="2"/>
-		<param name="neighbour_num1" value="1" />
-		<param name="neighbour_num2" value="3"/>
+		<param name="uav_id" value="2"/>
+		<param name="neighbour_id1" value="1" />
+		<param name="neighbour_id2" value="3"/>
 		<param name="uav_name" value="/uav2"/>
 		<param name="neighbour_name1" value="/uav1" />
 		<param name="neighbour_name2" value="/uav3"/>
@@ -208,9 +208,9 @@
 
 	<node pkg="prometheus_control" type="swarm_controller" name="swarm_controller_uav3" output="screen" launch-prefix="gnome-terminal --tab --">	
 		<param name="swarm_num" value="$(arg swarm_num)"/>
-		<param name="uav_num" value="3"/>
-		<param name="neighbour_num1" value="1" />
-		<param name="neighbour_num2" value="2"/>
+		<param name="uav_id" value="3"/>
+		<param name="neighbour_id1" value="1" />
+		<param name="neighbour_id2" value="2"/>
 		<param name="uav_name" value="/uav3"/>
 		<param name="neighbour_name1" value="/uav1" />
 		<param name="neighbour_name2" value="/uav2"/>
@@ -243,17 +243,19 @@
 	</node>
 
 	<node pkg="prometheus_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">
-		<!-- 设置无人机名字才会在地面站显示 -->
-		<param name="uav_num" value="3" />
+		<!-- 设置无人机ID才会在地面站显示 -->
+		<param name="swarm_num" value="3" />
 		<param name="uav1_name" value="/uav1" />
 		<param name="uav2_name" value="/uav2" />
 		<param name="uav3_name" value="/uav3" />
+		<param name="uav1_id" value="1" />
+		<param name="uav2_id" value="2" />
+		<param name="uav3_id" value="3" />
 	</node>
 
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
 		<!-- 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式  -->
 		<param name="controller_num" value="０"/>
-		<param name="uav_num" value="3"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
 		<param name="virtual_leader_pos_y" value="0.0" />
 		<param name="virtual_leader_pos_z" value="1.0" />
