@@ -19,6 +19,7 @@
 
 using namespace std;
 #define TRA_WINDOW 1000
+#define TIMEOUT_MAX 0.05
 #define NODE_NAME "swarm_estimator"
 //---------------------------------------相关参数-----------------------------------------------
 int input_source; //0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
@@ -44,6 +45,7 @@ ros::Publisher trajectory_pub;
 prometheus_msgs::DroneState Drone_State;
 nav_msgs::Odometry Drone_odom;
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
+ros::Time last_timestamp;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void send_to_fcu();
 void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu);
@@ -70,6 +72,7 @@ void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
     // Transform the Quaternion to Euler Angles
     Euler_mocap = quaternion_to_euler(q_mocap);
+    last_timestamp = msg->header.stamp;
 }
 
 void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
@@ -178,6 +181,11 @@ void send_to_fcu()
         vision.pose.orientation.y = q_mocap.y();
         vision.pose.orientation.z = q_mocap.z();
         vision.pose.orientation.w = q_mocap.w();
+        // 此处时间主要用于监测动捕，T265设备是否正常工作
+        if( prometheus_control_utils::get_time_in_sec(last_timestamp) > TIMEOUT_MAX)
+        {
+            pub_message(message_pub, prometheus_msgs::Message::ERROR, NODE_NAME, "Mocap Timeout.");
+        }
 
     }
     else if (input_source == 2)
