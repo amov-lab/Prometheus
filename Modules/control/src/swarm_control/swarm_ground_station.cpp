@@ -148,7 +148,7 @@ int main(int argc, char **argv)
         }
         if(uav5_id != 0 )
         {
-            swarm_control_utils::printf_swarm_state(swarm_num, uav4_id, uav5_name, State_uav5, Command_uav5);
+            swarm_control_utils::printf_swarm_state(swarm_num, uav5_id, uav5_name, State_uav5, Command_uav5);
         }
 
         sleep(2.0);

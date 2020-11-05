@@ -106,12 +106,12 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
         if(swarm_num == 3)
         {
             //　数量为3时，１号机即虚拟领机位置
-            seperation(0,0) = 0.0;
+            seperation(0,0) = swarm_size;
             seperation(0,1) = 0.0;  
             seperation(0,2) = 0.0;
             seperation(0,3) = 0.0;
 
-            seperation(1,0) = swarm_size;
+            seperation(1,0) = 0.0;
             seperation(1,1) = 0.0;  
             seperation(1,2) = 0.0;
             seperation(1,3) = 0.0;
@@ -125,7 +125,7 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
         if(swarm_num == 5)
         {
             //　数量为５时，１号机即虚拟领机位置
-            seperation(0,0) = 0.0;
+            seperation(0,0) = 2 * swarm_size;
             seperation(0,1) = 0.0;  
             seperation(0,2) = 0.0;
             seperation(0,3) = 0.0;
@@ -135,12 +135,12 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
             seperation(1,2) = 0.0;
             seperation(1,3) = 0.0;
 
-            seperation(2,0) = - 1 * swarm_size;
+            seperation(2,0) = 0.0;
             seperation(2,1) = 0.0; 
             seperation(2,2) = 0.0;
             seperation(2,3) = 0.0;
 
-            seperation(3,0) = 2 * swarm_size;  
+            seperation(3,0) = -1 * swarm_size;  
             seperation(3,1) = 0.0;
             seperation(3,2) = 0.0;
             seperation(3,3) = 0.0;
@@ -313,7 +313,7 @@ void printf_swarm_state(int swarm_num, int uav_id, string uav_name, const promet
             yaw = SwarmCommand.yaw_ref + formation(uav_id-1,3);
 
             cout << "Position [X Y Z] : " << x  << " [ m ] "<< y <<" [ m ] "<< z <<" [ m ] "<<endl;
-            cout << "Yaw : "  << z * 180/M_PI << " [deg] " <<endl;
+            cout << "Yaw : "  << yaw * 180/M_PI << " [deg] " <<endl;
 
             break;
 
@@ -327,7 +327,7 @@ void printf_swarm_state(int swarm_num, int uav_id, string uav_name, const promet
             yaw = SwarmCommand.yaw_ref + formation(uav_id-1,3);
 
             cout << "Position [X Y Z] : " << x  << " [ m ] "<< y <<" [ m ] "<< z <<" [ m ] "<<endl;
-            cout << "Yaw : "  << z * 180/M_PI << " [deg] " <<endl;
+            cout << "Yaw : "  << yaw * 180/M_PI << " [deg] " <<endl;
 
             break;
 
@@ -341,7 +341,7 @@ void printf_swarm_state(int swarm_num, int uav_id, string uav_name, const promet
             yaw = SwarmCommand.yaw_ref + formation(uav_id-1,3);
 
             cout << "Position [X Y Z] : " << x  << " [ m ] "<< y <<" [ m ] "<< z <<" [ m ] "<<endl;
-            cout << "Yaw : "  << z * 180/M_PI << " [deg] " <<endl;
+            cout << "Yaw : "  << yaw * 180/M_PI << " [deg] " <<endl;
 
             break;
 

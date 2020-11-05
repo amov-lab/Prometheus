@@ -4,6 +4,15 @@
 <!-- 每个无人机及地面电脑连接同一路由器 -->
 <!-- 地面站统一给各个无人机发送控制指令，考虑到延时，只能使用位置或速度控制 -->
 <launch>
+
+	<arg name="uav1_name" default="uav1"/>
+	<arg name="uav2_name" default="uav2"/>
+	<arg name="uav3_name" default="uav3"/>
+
+	<arg name="uav1_id" default="1"/>
+	<arg name="uav2_id" default="2"/>
+	<arg name="uav3_id" default="3"/>
+
 	<arg name="swarm_num" default="3"/>
 	<arg name="k_p" default="1.0"/>
 	<arg name="k_aij" default="0.05"/>
