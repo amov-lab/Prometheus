@@ -407,7 +407,7 @@ int main(int argc, char **argv)
                         yaw_sp = Command_Now.Reference_State.yaw_ref;
                     }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_ACC )
                     {
-                        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Change to ENU frame");
+                       pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Change to ENU frame");
                     }
                 }
             }
@@ -428,8 +428,15 @@ int main(int argc, char **argv)
             }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_ACC )
             {
                 _command_to_mavros.send_acc_xyz_setpoint(state_sp, yaw_sp);
+            }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::TRAJECTORY )
+            {
+                state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
+                yaw_sp = Command_Now.Reference_State.yaw_ref;
+                _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
             }else
             {
+
+
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");
                 _command_to_mavros.loiter();
             }
