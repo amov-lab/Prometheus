@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     while(start_flag == 0)
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please enter 1 to disarm and takeoff all the UAVs."<<endl;
+        cout << "Please enter 1 to disarm all the UAVs."<<endl;
         cin >> start_flag;
 
         swarm_command.Mode = prometheus_msgs::SwarmCommand::Idle;
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
     while(start_flag == 0)
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>Formation Flight Mission<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please enter 1 to disarm and takeoff all the UAVs."<<endl;
+        cout << "Please enter 1 to takeoff all the UAVs."<<endl;
         cin >> start_flag;
 
         swarm_command.Mode = prometheus_msgs::SwarmCommand::Takeoff;
