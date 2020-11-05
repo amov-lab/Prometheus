@@ -17,7 +17,7 @@
 	<arg name="k_p" default="1.0"/>
 	<arg name="k_aij" default="0.05"/>
 	<arg name="k_gamma" default="1.2"/>
-	<arg name="Takeoff_height" default="0.5"/>
+	<arg name="Takeoff_height" default="0.4"/>
 	<arg name="Disarm_height" default="0.15"/>
 	<arg name="Land_speed" default="0.25"/>
 	<arg name="x_min" default="-2.5"/>
@@ -38,7 +38,7 @@
 		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
 		<node pkg="mavros" type="mavros_node" name="mavros" output="screen" launch-prefix="gnome-terminal --tab --">
 			<!-- 与飞控连接方式，需要配置 -->
-			<param name="fcu_url" value="tcp://192.168.1.102:6000" />
+			<param name="fcu_url" value="tcp://192.168.1.100:6000" />
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="1" />
 			<param name="target_component_id" value="1" />
@@ -200,7 +200,7 @@
 		<param name="virtual_leader_pos_y" value="0.0" />
 		<param name="virtual_leader_pos_z" value="0.6" />
 		<param name="virtual_leader_yaw" value="0.0" />
-		<param name="formation_size" value="1.5" />
+		<param name="formation_size" value="1.2" />
 	</node>
 
 	<!-- run the rviz -->

@@ -187,8 +187,8 @@ int main(int argc, char **argv)
             while(time_trajectory < trajectory_total_time)
             {
 
-                const float omega = 1.0;
-                const float circle_radius = 1.0;
+                const float omega = 0.15;
+                const float circle_radius = 1.5;
 
                 virtual_leader_pos[0] = circle_radius * cos(time_trajectory * omega);
                 virtual_leader_pos[1] = circle_radius * sin(time_trajectory * omega);
