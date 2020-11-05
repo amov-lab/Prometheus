@@ -19,6 +19,7 @@
 *                                      2. xyz_vel + yaw in ENU/Body frame
 *                                      3. xy_vel_z_pos + yaw in ENU/Body frame
 *                                      4. xyz_acc + yaw in ENU/Body frame
+*                                      5. trajectory 使用的是位置点控制
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
@@ -435,8 +436,6 @@ int main(int argc, char **argv)
                 _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
             }else
             {
-
-
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");
                 _command_to_mavros.loiter();
             }
