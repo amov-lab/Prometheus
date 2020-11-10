@@ -63,33 +63,3 @@ Pos_pid:
   Ki_z : 0.5
   Kd_xy : 3.0
   Kd_z : 3.0
-
-# 位置环参数 for ude
-Pos_ude:
-  Kp_xy : 0.5
-  Kp_z : 0.5
-  Kd_xy : 2.0
-  Kd_z : 2.0
-  T_ude_xy : 1.0
-  T_ude_z : 1.0
-
-
-# 位置环参数 for passivity
-Pos_passivity:
-  Kp_xy : 0.5
-  Kp_z : 0.5
-  Kd_xy : 2.0
-  Kd_z : 2.0
-  T_ude_xy : 1.0
-  T_ude_z : 1.0
-  T_ps: 0.2
-
-# 位置环参数 for ne
-Pos_ne:
-  Kp_xy : 0.5
-  Kp_z : 0.5
-  Kd_xy : 2.0
-  Kd_z : 2.0
-  T_ude_xy : 1.0
-  T_ude_z : 1.0
-  T_ne : 0.1

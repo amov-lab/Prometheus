@@ -5,9 +5,6 @@
 #include "message_utils.h"
 #include "Position_Controller/pos_controller_cascade_PID.h"
 #include "Position_Controller/pos_controller_PID.h"
-#include "Position_Controller/pos_controller_UDE.h"
-#include "Position_Controller/pos_controller_Passivity.h"
-#include "Position_Controller/pos_controller_NE.h"
 #include "Filter/LowPassFilter.h"
 
 #define NODE_NAME "rover_pos_controller"

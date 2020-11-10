@@ -20,11 +20,7 @@
 #include "message_utils.h"
 #include "Position_Controller/pos_controller_cascade_PID.h"
 #include "Position_Controller/pos_controller_PID.h"
-#include "Position_Controller/pos_controller_UDE.h"
-#include "Position_Controller/pos_controller_Passivity.h"
-#include "Position_Controller/pos_controller_NE.h"
 #include "Filter/LowPassFilter.h"
-
 #define NODE_NAME "pos_controller"
 
 using namespace std;
@@ -165,9 +161,6 @@ int main(int argc, char **argv)
     pos_controller_cascade_PID pos_controller_cascade_pid;
     // 可以设置自定义位置环控制算法
     pos_controller_PID pos_controller_pid;
-    pos_controller_UDE pos_controller_ude;
-    pos_controller_passivity pos_controller_ps;
-    pos_controller_NE pos_controller_ne;
 
     printf_param();
 
@@ -178,15 +171,6 @@ int main(int argc, char **argv)
     }else if(controller_number == 1)
     {
         pos_controller_pid.printf_param();
-    }else if(controller_number == 2)
-    {
-        pos_controller_ude.printf_param();
-    }else if(controller_number == 3)
-    {
-        pos_controller_ps.printf_param();
-    }else if(controller_number == 4)
-    {
-        pos_controller_ne.printf_param();
     }
 
     // 初始化命令-
@@ -280,11 +264,7 @@ int main(int argc, char **argv)
                 Takeoff_position[0] = _DroneState.position[0];
                 Takeoff_position[1] = _DroneState.position[1];
                 Takeoff_position[2] = _DroneState.position[2];
-                // NE控制律需要设置起飞初始值
-                if(controller_number == 4)
-                {
-                    pos_controller_ne.set_initial_pos(Takeoff_position);
-                }
+
                 //
                 Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
                 Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
@@ -402,15 +382,6 @@ int main(int argc, char **argv)
             }else if(controller_number == 1)
             {
                 _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
-            }else if(controller_number == 2)
-            {
-                _ControlOutput = pos_controller_ude.pos_controller(_DroneState, Command_Now.Reference_State, dt);
-            }else if(controller_number == 3)
-            {
-                _ControlOutput = pos_controller_ps.pos_controller(_DroneState, Command_Now.Reference_State, dt);
-            }else if(controller_number == 4)
-            {
-                _ControlOutput = pos_controller_ne.pos_controller(_DroneState, Command_Now.Reference_State, dt);
             }
             
         }
