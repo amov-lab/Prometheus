@@ -60,6 +60,10 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
+add_executable(pad_tracking test/pad_tracking.cpp)
+add_dependencies(pad_tracking prometheus_mission_gencpp)
+target_link_libraries(pad_tracking ${catkin_LIBRARIES})
+
 add_executable(turtlebot_uav_formation turtlebot_uav_formation/turtlebot_uav_formation.cpp)
 add_dependencies(turtlebot_uav_formation prometheus_mission_gencpp)
 target_link_libraries(turtlebot_uav_formation ${catkin_LIBRARIES})
