@@ -1,4 +1,4 @@
-material Cube/landing_pad
+material Cube/landing_pad_H
 {
   receive_shadows off
   technique
@@ -7,7 +7,8 @@ material Cube/landing_pad
     {
       texture_unit
       {
-        texture landing_pad_H.PNG
+        texture landing_pad_H.jpg
+        scale 1.0 1.0
       }
     }
   }

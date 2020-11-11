@@ -22,7 +22,7 @@
     </node>
 	
 	<!-- run the autonomous_landing.cpp -->
-	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
+	<node pkg="prometheus_mission" type="pad_tracking" name="pad_tracking" output="screen" launch-prefix="gnome-terminal --">
 		<param name="arm_height_to_ground" value="0.2" />
 		<param name="arm_distance_to_pad" value="0.55" />
 		<param name="kpx_land" value="0.35" />
@@ -30,7 +30,7 @@
 		<param name="kpz_land" value="0.1" />
 		<param name="start_point_x" value="1.0" />
 		<param name="start_point_y" value="2.0" />
-		<param name="start_point_z" value="4.5" />
+		<param name="start_point_z" value="4.0" />
 	</node>
 
 </launch>
