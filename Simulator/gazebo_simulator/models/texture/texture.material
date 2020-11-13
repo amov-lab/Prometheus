@@ -89,7 +89,7 @@ material Poster1
        // Relative to the location of the material script
        texture poster1.jpeg
        // Repeat the texture over the surface (4 per face)
-       scale 0.5 0.5
+       scale 1 1
      }
    }
  }
