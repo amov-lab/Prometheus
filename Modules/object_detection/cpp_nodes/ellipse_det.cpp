@@ -222,7 +222,8 @@ Ptr<SVM> train_svm_classifier(std::string train_imlist, std::string train_imdir)
     while (ifs >> im_name >> label)
     {
         cout << im_name << " " << label << endl;
-        Mat im_one = imread(train_imdir + im_name, 1);
+        cout << train_imdir + im_name << endl;
+        Mat im_one = imread(train_imdir + "/" + im_name, 1);
         all_labels.push_back(label);
 
         cv::resize(im_one, resized_im, Size(28, 28));
