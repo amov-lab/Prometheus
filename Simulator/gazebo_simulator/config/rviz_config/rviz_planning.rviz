@@ -25,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -547,6 +547,33 @@ Visualization Manager:
           Value: true
       Enabled: false
       Name: 2D_cartographer
+    - Class: rviz/Group
+      Displays:
+        - Alpha: 1
+          Buffer Length: 1
+          Class: rviz/Path
+          Color: 252; 233; 79
+          Enabled: true
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.20000000298023224
+          Length: 0.30000001192092896
+          Line Style: Billboards
+          Line Width: 0.07999999821186066
+          Name: Reference_Path
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0
+          Pose Color: 255; 85; 255
+          Pose Style: None
+          Radius: 0.029999999329447746
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.10000000149011612
+          Topic: /prometheus/motion_planning/ref_trajectory
+          Unreliable: false
+          Value: true
+      Enabled: false
+      Name: Motion Planning
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -603,4 +630,4 @@ Window Geometry:
     collapsed: false
   Width: 1440
   X: 1120
-  Y: 100
+  Y: 63
