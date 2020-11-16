@@ -221,7 +221,7 @@ vector<float> hist_feature(cv::Mat& resized_im)  // 生成直方图，带入形�
             std::make_move_iterator(descriptors.end())
         );
         // cout << "descriptors size" << descriptors.size() << endl;
-        cout << "feats size" << feats.size() << endl;
+        // cout << "feats size" << feats.size() << endl;
     }
     return feats;  // 返回feats
 }
