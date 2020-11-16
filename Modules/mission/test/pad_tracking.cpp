@@ -18,16 +18,16 @@ prometheus_msgs::DroneState _DroneState;
 Eigen::Matrix3f R_Body_to_ENU;
 //---------------------------------------Vision---------------------------------------------
 Detection_result landpad_det;
-
+int debug_mode;
 float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
 float start_point_x,start_point_y,start_point_z;
 
-Eigen::VectorXd state_fusion;
 Eigen::Vector3f camera_offset;
 //---------------------------------------Track---------------------------------------------
 float distance_to_pad;
 float arm_height_to_ground;
 float arm_distance_to_pad;
+nav_msgs::Odometry GroundTruth;
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -77,7 +77,10 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     }
 
 }
-
+void groundtruth_cb(const nav_msgs::Odometry::ConstPtr& msg)
+{
+    GroundTruth = *msg;
+}
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
@@ -97,9 +100,12 @@ int main(int argc, char **argv)
     //【订阅】降落板与无人机的相对位置及相对偏航角  单位：米   单位：弧度
     //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10, landpad_det_cb);
+    ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/ellipse_det", 10, landpad_det_cb);
 
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
+
+    //　地面真值，此信息仅做比较使用
+    ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/landing_pad", 10, groundtruth_cb);
 
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
@@ -112,6 +118,8 @@ int main(int argc, char **argv)
     nh.param<float>("arm_height_to_ground", arm_height_to_ground, 0.2);
     //强制上锁距离
     nh.param<float>("arm_distance_to_pad", arm_distance_to_pad, 0.2);
+    // DEBUG 模式
+    nh.param<int>("debug_mode", debug_mode, 0);
 
     //追踪控制参数
     nh.param<float>("kpx_land", kpx_land, 0.1);
@@ -249,7 +257,12 @@ int main(int argc, char **argv)
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Command_ID   = Command_Now.Command_ID + 1;
         Command_Now.source = NODE_NAME;
-        command_pub.publish(Command_Now);
+
+        if (debug_mode == 0)
+        {
+            command_pub.publish(Command_Now);
+        }
+        
 
         rate.sleep();
 
@@ -277,9 +290,12 @@ void printf_result()
     cout << "Detection_raw(yaw): " << landpad_det.Detection_info.yaw_error/3.1415926 *180 << " [deg] "<<endl;
 
 
-
-    // cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
-    // cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
+    if (debug_mode == 1)
+    {
+        cout << "Ground_truth(pos):  " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
+        cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
+        cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
+    }
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>Land Control State<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     // cout << "pos_des: " << Command_Now.Reference_State.position_ref[0] << " [m] "<< Command_Now.Reference_State.position_ref[1] << " [m] "<< Command_Now.Reference_State.position_ref[2] << " [m] "<<endl;
