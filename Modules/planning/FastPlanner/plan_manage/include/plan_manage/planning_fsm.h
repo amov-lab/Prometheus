@@ -36,24 +36,27 @@ class PlanningFSM
 private:
   /* ---------- flag ---------- */
   bool trigger_, have_goal_;
+  // 执行状态
   enum EXEC_STATE
   {
-    INIT,
-    WAIT_GOAL,
-    GEN_NEW_TRAJ,
-    REPLAN_TRAJ,
-    EXEC_TRAJ
+    INIT,           // 初始化
+    WAIT_GOAL,      // 等待目标点
+    GEN_NEW_TRAJ,   // 生成新轨迹
+    REPLAN_TRAJ,    // 重规划轨迹
+    EXEC_TRAJ       // 执行轨迹
   };
   EXEC_STATE exec_state_;
 
   enum FLIGHT_TYPE
   {
-    MANUAL_GOAL = 1,
-    PRESET_GOAL = 2,
-    INPUT_MANUAL
+    MANUAL_GOAL = 1,    // 人工设定目标
+    PRESET_GOAL = 2,    // 预设目标
+    INPUT_MANUAL        // ？
   };
 
+  // 改变执行状态
   void changeExecState(EXEC_STATE new_state, string pos_call);
+  // 打印执行状态
   void printExecState();
 
   /* ---------- planning utils ---------- */
@@ -89,11 +92,15 @@ private:
   /* ---------- sub and pub ---------- */
   ros::NodeHandle node_;
 
+  // 执行定时器、安全检测定时器
   ros::Timer exec_timer_, safety_timer_;
+  // 显示定时器、？定时器
   ros::Timer vis_timer_, query_timer_;
 
+  // 目标和切换开关订阅
   ros::Subscriber waypoint_sub_, swith_sub;
 
+  // 重规划、B样条、安全状态发布
   ros::Publisher replan_pub_, bspline_pub_, safety_pub_;
 
   void execFSMCallback(const ros::TimerEvent& e);

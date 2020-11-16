@@ -56,6 +56,7 @@ bool DynPlannerManager::checkTrajCollision()
 
 void DynPlannerManager::retrieveTrajectory()
 {
+  // 轨迹的速度和加速度由微分得到？
   traj_vel_ = traj_pos_.getDerivative();
   traj_acc_ = traj_vel_.getDerivative();
 
@@ -90,6 +91,7 @@ cout << "Close goal" << endl;
     return false;
   }
 
+  //轨迹开始时间
   time_traj_start_ = ros::Time::now();
   time_start_ = -1.0;
 
@@ -102,8 +104,10 @@ cout << "Close goal" << endl;
   ros::Time t1, t2;
   t1 = ros::Time::now();
   /* ---------- search kino path ---------- */
+  // 全局规划算法清零
   path_finder_->reset();
 
+  // 全局规划算法搜索可行路径
   int status = path_finder_->search(start_pt, start_vel, start_acc, end_pt, end_vel, true, dynamic_, time_start_);
   if (status == KinodynamicAstar::NO_PATH)
   {
@@ -136,6 +140,7 @@ cout << "Close goal" << endl;
   }
 
   t2 = ros::Time::now();
+  // 搜索时间
   t_search = (t2 - t1).toSec();
 
   /* ---------- bspline parameterization ---------- */
@@ -145,15 +150,18 @@ cout << "Close goal" << endl;
   double ts = time_sample_ / max_vel_;
   Eigen::MatrixXd vel_acc;
 
+  // 选取样本点用于B样条？
   Eigen::MatrixXd samples = path_finder_->getSamples(ts, K);
   // cout << "[planner]: ts: " <<  ts << endl << " sample:\n" << samples.transpose() << endl;
 
   t2 = ros::Time::now();
+  // 采样时间？
   t_sample = (t2 - t1).toSec();
 
   t1 = ros::Time::now();
 
   Eigen::MatrixXd control_pts;
+  // 将样本点变为控制点
   NonUniformBspline::getControlPointEqu3(samples, ts, control_pts);
 
   // cout << "ctrl pts:" << control_pts << endl;
@@ -166,8 +174,9 @@ cout << "Close goal" << endl;
   /* ---------- optimize trajectory ---------- */
   t1 = ros::Time::now();
 
-  
+  // 设置控制点
   bspline_optimizer_->setControlPoints(control_pts);
+  // 设置时间间隔
   bspline_optimizer_->setBSplineInterval(ts);
 
   if (status != KinodynamicAstar::REACH_END){
@@ -223,12 +232,14 @@ cout << "Close goal" << endl;
 
   double t_total = t_search + t_sample + t_axb + t_opt + t_adjust;
 
-  // cout << "[planner]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_sample + t_axb + t_opt
-      //  << ", adjust time:" << t_adjust << endl;
+  cout << "[planner]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_sample + t_axb + t_opt
+       << ", adjust time:" << t_adjust << endl;
 
   time_search_ = t_search;
   time_optimize_ = t_sample + t_axb + t_opt;
   time_adjust_ = t_adjust;
+
+  
 
   time_traj_start_ = ros::Time::now();
   time_start_ = -1.0;
