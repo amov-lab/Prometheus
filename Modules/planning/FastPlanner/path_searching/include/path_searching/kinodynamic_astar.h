@@ -109,6 +109,7 @@ private:
   int use_node_num_, iter_num_;
   NodeHashTable expanded_nodes_;
   std::priority_queue<PathNodePtr, std::vector<PathNodePtr>, NodeComparator> open_set_;
+  // 路径点
   std::vector<PathNodePtr> path_nodes_;
 
   /* ---------- record data ---------- */

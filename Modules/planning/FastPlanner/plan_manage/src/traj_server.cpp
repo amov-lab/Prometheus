@@ -6,7 +6,7 @@
 * Update Time: 2020.01.20
 *
 * Introduction:  Planner  
-*         1. 与控制借口
+*         1. 发布控制指令
 *         2. 实现部分显示功能
 ***************************************************************************************************************************/
 #include <ros/ros.h>
@@ -228,7 +228,8 @@ void cmdCallback(const ros::TimerEvent& e) {
     traj_cmd.erase(traj_cmd.begin(), traj_cmd.begin() + 1000);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
   ros::init(argc, argv, "traj_server");
   ros::NodeHandle node;
 
