@@ -24,6 +24,7 @@
 	<!-- run the autonomous_landing.cpp -->
 	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
 		<rosparam command="load" file="$(find prometheus_mission)/autonomous_landing/autonomous_landing.yaml" />	
+		<param name="debug_mode" value="1.0" />
 	</node>
 
 </launch>

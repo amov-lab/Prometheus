@@ -35,7 +35,7 @@ Eigen::Vector3f pos_des_prev;
 
 float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
 float start_point_x,start_point_y,start_point_z;
-
+int debug_mode;
 bool use_ukf;
 bool moving_target;
 Eigen::VectorXd state_fusion;
@@ -145,6 +145,9 @@ int main(int argc, char **argv)
 
     //目标运动或静止
     nh.param<bool>("moving_target", moving_target, false);
+
+    // DEBUG 模式
+    nh.param<int>("debug_mode", debug_mode, 0);
 
     //追踪控制参数
     nh.param<float>("kpx_land", kpx_land, 0.1);
@@ -331,7 +334,11 @@ int main(int argc, char **argv)
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Command_ID   = Command_Now.Command_ID + 1;
         Command_Now.source = NODE_NAME;
-        command_pub.publish(Command_Now);
+        if (debug_mode == 0)
+        {
+            command_pub.publish(Command_Now);
+        }
+        
 
         rate.sleep();
 
@@ -373,8 +380,12 @@ void printf_result()
         cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
         cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
     }
+    if (debug_mode == 1)
+    {
         cout << "Ground_truth(pos):  " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
-    
+        cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
+        cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
+    }
 
     tf::Quaternion quat;
     tf::quaternionMsgToTF(GroundTruth.pose.pose.orientation, quat);
