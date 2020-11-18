@@ -74,6 +74,8 @@ bool image_status = false;
 boost::shared_mutex mutex_image_status;
 
 EllipseDetector ellipse_detector;
+HOGDescriptor hog(Size(28, 28), Size(4, 4), Size(4, 4), Size(4, 4), 9);
+bool use_hog = true;
 
 
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
@@ -204,6 +206,23 @@ vector<float> hist_feature(cv::Mat& resized_im)  // 生成直方图，带入形�
     {
         feats[i] /= total;
     }
+
+    if (use_hog)
+    {
+        cv::Mat resized_im_gray;
+        cvtColor(resized_im, resized_im_gray, CV_BGR2GRAY);
+
+        // cout << "w, h: " << resized_im_gray.cols << ", " << resized_im_gray.rows << endl;
+        vector<float> descriptors;  // HOG描述子向量
+        hog.compute(resized_im_gray, descriptors, Size(4, 4));
+        feats.insert(
+            feats.end(),
+            std::make_move_iterator(descriptors.begin()),
+            std::make_move_iterator(descriptors.end())
+        );
+        // cout << "descriptors size" << descriptors.size() << endl;
+        // cout << "feats size" << feats.size() << endl;
+    }
     return feats;  // 返回feats
 }
 
@@ -222,7 +241,7 @@ Ptr<SVM> train_svm_classifier(std::string train_imlist, std::string train_imdir)
     while (ifs >> im_name >> label)
     {
         cout << im_name << " " << label << endl;
-        cout << train_imdir + im_name << endl;
+        cout << train_imdir + "/" + im_name << endl;
         Mat im_one = imread(train_imdir + "/" + im_name, 1);
         all_labels.push_back(label);
 
@@ -234,10 +253,15 @@ Ptr<SVM> train_svm_classifier(std::string train_imlist, std::string train_imdir)
         all_feats.push_back(feats);
     }
 
-    Mat trainingDataMat(all_feats.size(), 30, CV_32FC1);
+    int feats_len = 30;
+    if (use_hog)
+    {
+        feats_len = 471;
+    }
+    Mat trainingDataMat(all_feats.size(), feats_len, CV_32FC1);
     Mat labelsMat(all_feats.size(), 1, CV_32S);
     for (int i = 0; i < all_feats.size(); i++) {
-        for (int t = 0; t < 30; t++) {
+        for (int t = 0; t < feats_len; t++) {
             float tmp = all_feats[i][t]; // !!!!!!!!!!!!!!!
             float* pf = trainingDataMat.ptr<float>(i, t);
             *pf = tmp;
@@ -526,8 +550,13 @@ int main(int argc, char **argv)
                 cv::cvtColor(center_det, center_det, COLOR_BGR2HSV);
                 std::vector<float> feat = hist_feature(center_det);
 
-                cv::Mat predictDataMat(1, 30, CV_32F);
-                for (int i=0;i<30;i++)
+                int feats_len = 30;
+                if (use_hog)
+                {
+                    feats_len = 471;
+                }
+                cv::Mat predictDataMat(1, feats_len, CV_32F);
+                for (int i=0; i<feats_len; i++)
                 {
                     predictDataMat.at<float>(i) = feat[i];
                 }
