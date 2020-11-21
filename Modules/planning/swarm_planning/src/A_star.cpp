@@ -15,26 +15,6 @@ Astar::~Astar()
   }
 }
 
-void Astar::reset()
-{
-  // 重置与搜索相关的变量
-  expanded_nodes_.clear();
-  path_nodes_.clear();
-
-  std::priority_queue<NodePtr, std::vector<NodePtr>, NodeComparator0> empty_queue;
-  open_set_.swap(empty_queue);
-
-  for (int i = 0; i < use_node_num_; i++)
-  {
-    NodePtr node = path_node_pool_[i];
-    node->parent = NULL;
-    node->node_state = NOT_EXPAND;
-  }
-
-  use_node_num_ = 0;
-  iter_num_ = 0;
-}
-
 void Astar::init(ros::NodeHandle& nh)
 {
   // 2d参数
@@ -63,23 +43,32 @@ void Astar::init(ros::NodeHandle& nh)
   iter_num_ = 0;
 
   // 初始化占据地图
-  // Occupy_map_ptr.reset(new Occupy_map);
+  Occupy_map_ptr.reset(new Occupy_map);
   Occupy_map_ptr->init(nh);
 
   // 读取地图参数
   origin_ =  Occupy_map_ptr->origin_;
   map_size_3d_ = Occupy_map_ptr->map_size_3d_;
-  // printf("map origin: [%f, %f, %f], map size: [%f, %f, %f]\n", origin_(0), origin_(1),origin_(2), 
-  //                              map_size_3d_(0), map_size_3d_(1), map_size_3d_(2));
 }
 
-// 根据全局点云对地图进行更新
-void Astar::map_update(const sensor_msgs::PointCloud2ConstPtr & global_point)
+void Astar::reset()
 {
-  // 地图更新
-  Occupy_map_ptr->map_update(global_point);
-  // 地图膨胀
-  Occupy_map_ptr->inflate_point_cloud();                                         
+  // 重置与搜索相关的变量
+  expanded_nodes_.clear();
+  path_nodes_.clear();
+
+  std::priority_queue<NodePtr, std::vector<NodePtr>, NodeComparator0> empty_queue;
+  open_set_.swap(empty_queue);
+
+  for (int i = 0; i < use_node_num_; i++)
+  {
+    NodePtr node = path_node_pool_[i];
+    node->parent = NULL;
+    node->node_state = NOT_EXPAND;
+  }
+
+  use_node_num_ = 0;
+  iter_num_ = 0;
 }
 
 // 搜索函数，输入为：起始点及终点
