@@ -31,10 +31,10 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
         Gpointcloud_sub = nh.subscribe<sensor_msgs::PointCloud2>("/prometheus/swarm_planning/global_pcl", 1, &Swarm_Planner::Gpointcloud_cb, this);
     }else if(map_input == 1)
     {
-        laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>("/prometheus/swarm_planning/laser_scan", 1, &Swarm_Planner::laser_cb, this);
+        Lpointcloud_sub = nh.subscribe<sensor_msgs::PointCloud2>("/prometheus/swarm_planning/local_pcl", 1, &Swarm_Planner::Lpointcloud_cb, this);
     }else if(map_input == 2)
     {
-        // 待补充
+        laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>("/prometheus/swarm_planning/laser_scan", 1, &Swarm_Planner::laser_cb, this);
     }    
 
     // 发布 路径指令
@@ -161,6 +161,28 @@ void Swarm_Planner::laser_cb(const sensor_msgs::LaserScanConstPtr &msg)
 }
 
 void Swarm_Planner::Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg)
+{
+    /* need odom_ for center radius sensing */
+    if (!odom_ready) 
+    {
+        return;
+    }
+
+    pcl::fromROSMsg(*msg, latest_global_pcl_);
+    
+    sensor_ready = true;
+
+    global_map_ptr_ = msg;
+
+    // 对Astar中的地图进行更新
+    Astar_ptr->map_update(global_map_ptr_);
+
+    visualization_msgs::Marker m;
+    getOccupancyMarker(m, 0, Eigen::Vector4d(0, 0.5, 0.5, 1.0));
+    global_map_marker_pub.publish(m);
+}
+
+void Swarm_Planner::Lpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg)
 {
     /* need odom_ for center radius sensing */
     if (!odom_ready) 
