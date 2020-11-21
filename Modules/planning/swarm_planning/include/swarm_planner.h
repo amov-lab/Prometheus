@@ -71,6 +71,7 @@ private:
     // 支持2维激光雷达、3维激光雷达、D435i等实体传感器
     // 支持直接输入全局已知点云
     ros::Subscriber Gpointcloud_sub;
+    ros::Subscriber Lpointcloud_sub;
     ros::Subscriber laserscan_sub;
     // ？
 
@@ -128,6 +129,7 @@ private:
     void goal_cb(const geometry_msgs::PoseStampedConstPtr& msg);
     void drone_state_cb(const prometheus_msgs::DroneStateConstPtr &msg);
     void Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
+    void Lpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
     void laser_cb(const sensor_msgs::LaserScanConstPtr &msg);
 
     void safety_cb(const ros::TimerEvent& e);
