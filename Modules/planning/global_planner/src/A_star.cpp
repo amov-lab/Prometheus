@@ -103,8 +103,10 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
       terminate_node = cur_node;
       retrievePath(terminate_node);
       has_path_ = true;
-      
-      // printf("a star take time  %f \n", (ros::Time::now()-time_astar_start).toSec());
+
+
+      // 时间一般很短，远远小于膨胀点云的时间
+      printf("a star take time  %f \n", (ros::Time::now()-time_astar_start).toSec());
       return REACH_END;
     }
 
