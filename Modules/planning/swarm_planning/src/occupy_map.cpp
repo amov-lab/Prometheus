@@ -23,6 +23,8 @@ void Occupy_map::init(ros::NodeHandle& nh)
 
     // 发布膨胀后的点云
     inflate_cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/planning/global_inflate_cloud", 1);
+    // 发布 地图rviz显示
+    global_map_marker_pub = nh.advertise<visualization_msgs::Marker>("/prometheus/swarm_planning/global_map_marker",  10);  
 
     // 发布二维占据图？
     // 发布膨胀后的二维占据图？
@@ -41,11 +43,26 @@ void Occupy_map::init(ros::NodeHandle& nh)
     min_range_ = origin_;
     max_range_ = origin_ + map_size_3d_;   
 }
-// 地图更新函数
-void Occupy_map::map_update(const sensor_msgs::PointCloud2ConstPtr & global_point)
+
+// 地图更新函数 - 输入：全局点云
+void Occupy_map::map_update_gpcl(const sensor_msgs::PointCloud2ConstPtr & global_point)
 {
     global_env_ = global_point;
     has_global_point = true;
+}
+
+// 地图更新函数 - 输入：局部点云
+void Occupy_map::map_update_lpcl(const sensor_msgs::PointCloud2ConstPtr & local_point, const nav_msgs::Odometry & odom)
+{
+// 待江涛更新
+// 将传递过来的局部点云转为全局点云
+}
+
+// 地图更新函数 - 输入：laser
+void Occupy_map::map_update_laser(const sensor_msgs::LaserScanConstPtr & local_point, const nav_msgs::Odometry & odom)
+{
+// 待更新
+// 将传递过来的数据转为全局点云
 }
 
 // 当global_planning节点接收到点云消息更新时，进行设置点云指针并膨胀
@@ -169,7 +186,7 @@ void Occupy_map::inflate_point_cloud(void)
 
     inflate_cloud_pub_.publish(map_inflate_vis);
 
-    // 一般需要0.3秒左右（有点久，Astar更新频率是多久呢？ 怎么才能提高膨胀效率呢？）
+    // 一般需要0.3 - 1秒左右（有点久，Astar更新频率是多久呢？ 怎么才能提高膨胀效率呢？）
     printf("inflate global point take %f.\n",   (ros::Time::now()-time_start).toSec());
 }
 
@@ -295,5 +312,42 @@ int Occupy_map::getOccupancy(Eigen::Vector3i id)
         
     return occupancy_buffer_[id(0) * grid_size_(1) * grid_size_(2) + id(1) * grid_size_(2) + id(2)];
 }
+
+// 显示点云marker
+// 待补充，似乎没有使用
+void Occupy_map::show_gpcl_marker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) 
+{
+    pcl::PointCloud<pcl::PointXYZ> latest_global_pcl_;
+    pcl::fromROSMsg(*global_env_, latest_global_pcl_);
+    //show_gpcl_marker(m, 0, Eigen::Vector4d(0, 0.5, 0.5, 1.0));
+
+    m.header.frame_id = "map";
+    m.id = id;
+    m.type = visualization_msgs::Marker::CUBE_LIST;
+    m.action = visualization_msgs::Marker::MODIFY;
+    m.scale.x = 0.1; // resolustion
+    m.scale.y = 0.1;
+    m.scale.z = 0.1;
+    m.color.a = color(3);
+    m.color.r = color(0);
+    m.color.g = color(1);
+    m.color.b = color(2);
+
+    // iterate the map
+    pcl::PointXYZ pt;
+    for (size_t i = 0; i < latest_global_pcl_.points.size(); ++i) 
+    {
+        pt = latest_global_pcl_.points[i];
+
+        geometry_msgs::Point p;
+        p.x = pt.x;
+        p.y = pt.y;
+        p.z = pt.z;
+        m.points.push_back(p);
+    }
+
+    global_map_marker_pub.publish(m);
+}
+
 
 }

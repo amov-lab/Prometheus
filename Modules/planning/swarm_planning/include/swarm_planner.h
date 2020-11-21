@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <iostream>
 
-#include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Bool.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -16,21 +15,14 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 
-
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl_ros/point_cloud.h>
-#include "pcl_ros/transforms.h"
-#include <pcl_conversions/pcl_conversions.h>
-
 #include "prometheus_msgs/PositionReference.h"
 #include "prometheus_msgs/Message.h"
 #include "prometheus_msgs/DroneState.h"
 #include "prometheus_msgs/ControlCommand.h"
 
-
 #include "planning_visualization.h"
 #include "A_star.h"
+#include "occupy_map.h"
 #include "tools.h"
 #include "message_utils.h"
 
@@ -55,8 +47,10 @@ private:
     bool is_2D;
     double fly_height_2D;
     double safe_distance;
+    double desired_vel;
     double time_per_path;
     int map_input;
+    double replan_time;
     bool consider_neighbour;
 
     // 本机位置
@@ -75,20 +69,18 @@ private:
     ros::Subscriber laserscan_sub;
     // ？
 
-    // 发布控制指令、用于rviz现实的marker
-    ros::Publisher command_pub;
-    ros::Publisher global_map_marker_pub;
-
-    ros::Timer mainloop_timer, safety_timer;
+    // 发布控制指令
+    ros::Publisher command_pub,path_cmd_pub;
+    ros::Timer mainloop_timer, track_path_timer, safety_timer;
 
     // A星规划器
     Astar::Ptr Astar_ptr;
 
     prometheus_msgs::DroneState _DroneState;
+    nav_msgs::Odometry Drone_odom;
 
-    pcl::PointCloud<pcl::PointXYZ> latest_global_pcl_;
-    sensor_msgs::PointCloud2ConstPtr global_map_ptr_;
     nav_msgs::Path path_cmd;
+    double distance_walked;
     prometheus_msgs::ControlCommand Command_Now;   
 
     double distance_to_goal;
@@ -100,6 +92,7 @@ private:
     bool goal_ready; 
     bool is_safety;
     bool is_new_path;
+    bool path_ok;
     int start_point_index;
     int Num_total_wp;
 
@@ -117,11 +110,9 @@ private:
     // 五种状态机
     enum EXEC_STATE
     {
-        INIT,
         WAIT_GOAL,
-        GEN_NEW_TRAJ,
-        REPLAN_TRAJ,
-        EXEC_TRAJ
+        PLANNING,
+        TRACKING,
     };
     EXEC_STATE exec_state;
 
@@ -134,7 +125,7 @@ private:
 
     void safety_cb(const ros::TimerEvent& e);
     void mainloop_cb(const ros::TimerEvent& e);
-    void switchCallback(const std_msgs::Bool::ConstPtr &msg);
+    void track_path_cb(const ros::TimerEvent& e);
 
     // visual 
     PlanningVisualization::Ptr visualization_;
@@ -142,11 +133,10 @@ private:
     Eigen::Vector4d vis_path_color;
     Eigen::Vector4d vis_goal_color;
 
-    //void generate_CMD(std::vector<Eigen::Vector3d> path);
-    void generate_CMD(nav_msgs::Path path);
-
     // 【获取当前时间函数】 单位：秒
     float get_time_in_sec(const ros::Time& begin_time);
+
+    int get_start_point_id(void);
     
 public:
     Swarm_Planner(void):
@@ -154,9 +144,6 @@ public:
     {}~Swarm_Planner(){}
 
     void init(ros::NodeHandle& nh);
-
-    void getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color);
-
 };
 
 }

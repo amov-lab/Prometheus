@@ -126,8 +126,6 @@ class Astar
         // 参数
         // 启发式参数
         double lambda_heu_;
-        // ？
-        double margin_;
         // 最大搜索次数
         int max_search_num;
         // tie breaker
@@ -140,14 +138,10 @@ class Astar
         Eigen::Vector3d goal_pos;
 
         // 地图相关
-        sensor_msgs::PointCloud2ConstPtr global_env_;
         std::vector<int> occupancy_buffer_;  
         double resolution_, inv_resolution_;
         Eigen::Vector3d origin_, map_size_3d_;
         bool has_global_point;
-        // 占据图类
-        Occupy_map::Ptr Occupy_map_ptr;
-
 
         // 辅助函数
         Eigen::Vector3i posToIndex(Eigen::Vector3d pt);
@@ -160,7 +154,7 @@ class Astar
         double getEuclHeu(Eigen::Vector3d x1, Eigen::Vector3d x2);
 
     public:
-        Astar() {}
+        Astar(){}
         ~Astar();
 
         enum
@@ -169,12 +163,13 @@ class Astar
           NO_PATH = 2
         };
 
+        // 占据图类
+        Occupy_map::Ptr Occupy_map_ptr;
+
         // 重置
         void reset();
         // 初始化
         void init(ros::NodeHandle& nh);
-        // 对地图进行更新
-        void map_update(const sensor_msgs::PointCloud2ConstPtr & global_point);
         // 检查安全性
         bool check_safety(Eigen::Vector3d &cur_pos, double safe_distance);
         // 搜索

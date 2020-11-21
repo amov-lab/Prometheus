@@ -7,13 +7,18 @@
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 
+#include <pcl_ros/point_cloud.h>
+#include "pcl_ros/transforms.h"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <tf/transform_listener.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <nav_msgs/Odometry.h>
+#include <visualization_msgs/Marker.h>
 
+#include <sensor_msgs/LaserScan.h>
 #include "tools.h"
 #include "message_utils.h"
 
@@ -44,15 +49,24 @@ class Occupy_map
     
         // 天花板高度,地板高度
         double ceil_height_, floor_height_;
+        
+        // 显示相关
+        void show_gpcl_marker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color);
 
         // 
         ros::Publisher inflate_cloud_pub_;
-        
+        ros::Publisher global_map_marker_pub;
+
         Occupy_map(){}
+
         //初始化
         void init(ros::NodeHandle& nh);
-        // 设置全局点云指针
-        void map_update(const sensor_msgs::PointCloud2ConstPtr & global_point);
+        // 地图更新函数 - 输入：全局点云
+        void map_update_gpcl(const sensor_msgs::PointCloud2ConstPtr & global_point);
+        // 地图更新函数 - 输入：局部点云
+        void map_update_lpcl(const sensor_msgs::PointCloud2ConstPtr & local_point, const nav_msgs::Odometry & odom);
+        // 地图更新函数 - 输入：二维激光雷达
+        void map_update_laser(const sensor_msgs::LaserScanConstPtr & local_point, const nav_msgs::Odometry & odom);
         // 地图膨胀
         void inflate_point_cloud(void);
         // 判断当前点是否在地图内
