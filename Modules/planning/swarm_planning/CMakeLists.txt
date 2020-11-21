@@ -38,7 +38,7 @@ include_directories(
 link_directories(${PCL_LIBRARY_DIRS})
 
 
-add_executable(swarm_planer_main
+add_executable(swarm_planner_main
 	src/swarm_planner_node.cpp
 	src/swarm_planner.cpp
 	src/A_star.cpp
@@ -47,7 +47,7 @@ add_executable(swarm_planer_main
 	src/tools.cpp
 	)
 
-target_link_libraries(swarm_planer_main
+target_link_libraries(swarm_planner_main
        ${catkin_LIBRARIES}
 	   ${PCL_LIBRARIES}
 	)
