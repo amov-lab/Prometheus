@@ -1,31 +1,33 @@
 #include <occupy_map.h>
 
-namespace global_planner{
-
-void Occupy_map::setparam(ros::NodeHandle& nh)
+namespace Swarm_Planning
 {
-    // 地图分辨率，单位：米
-    nh.param("astar/resolution_astar", resolution_,  0.2);
-    this->inv_resolution_ = 1.0 / resolution_;
-    // 地图膨胀距离，单位：米
-    nh.param("astar/inflate", inflate_,  0.3);
-    // 地图实际尺寸，单位：米
-    nh.param("map/map_size_x", map_size_3d_(0), 10.0);
-    nh.param("map/map_size_y", map_size_3d_(1), 10.0);
-    nh.param("map/map_size_z", map_size_3d_(2), 5.0);
+// 初始化函数
+void Occupy_map::init(ros::NodeHandle& nh)
+{
     // 地图原点
     nh.param("map/origin_x", origin_(0), -5.0);
     nh.param("map/origin_y", origin_(1), -5.0);
     nh.param("map/origin_z", origin_(2), 0.0);
+    // 地图实际尺寸，单位：米
+    nh.param("map/map_size_x", map_size_3d_(0), 10.0);
+    nh.param("map/map_size_y", map_size_3d_(1), 10.0);
+    nh.param("map/map_size_z", map_size_3d_(2), 5.0);
+    // 地图分辨率，单位：米
+    nh.param("map/resolution", resolution_,  0.2);
+    // 地图膨胀距离，单位：米
+    nh.param("map/inflate", inflate_,  0.3);
     // 天花板、地板高度
     nh.param("map/ceil_height_", ceil_height_, 4.9);
     nh.param("map/floor_height_", floor_height_, 0.1);
 
+    // 发布膨胀后的点云
     inflate_cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/planning/global_inflate_cloud", 1);
-}
 
-void Occupy_map::init(void)
-{
+    // 发布二维占据图？
+    // 发布膨胀后的二维占据图？
+
+    this->inv_resolution_ = 1.0 / resolution_;
     for (int i = 0; i < 3; ++i)
     {
         // 占据图尺寸 = 地图尺寸 / 分辨率
@@ -39,8 +41,8 @@ void Occupy_map::init(void)
     min_range_ = origin_;
     max_range_ = origin_ + map_size_3d_;   
 }
-
-void Occupy_map::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point)
+// 地图更新函数
+void Occupy_map::map_update(const sensor_msgs::PointCloud2ConstPtr & global_point)
 {
     global_env_ = global_point;
     has_global_point = true;
@@ -70,6 +72,7 @@ void Occupy_map::inflate_point_cloud(void)
     //  printf("point size: %d, ifn_num: %d\n", latest_global_cloud_.points.size(), ifn);
 
     // 创建tf的监听器
+    // 这个TF转换是否使用到？
     tf::TransformListener listener;
     try{
         // 等待获取监听信息base_link和base_laser
@@ -170,7 +173,6 @@ void Occupy_map::inflate_point_cloud(void)
     printf("inflate global point take %f.\n",   (ros::Time::now()-time_start).toSec());
 }
 
-
 void Occupy_map::setOccupancy(Eigen::Vector3d pos, int occ) 
 {
     if (occ != 1 && occ != 0) 
@@ -187,7 +189,7 @@ void Occupy_map::setOccupancy(Eigen::Vector3d pos, int occ)
     Eigen::Vector3i id;
     posToIndex(pos, id);
 
-    // 设置为占据/不占据 索引是如何索引的？
+    // 设置为占据/不占据 索引是如何索引的？ [三维地图 变 二维数组]
     // 假设10*10*10米，分辨率1米，buffer大小为 1000 （即每一个占格都对应一个buffer索引）
     // [0.1,0.1,0.1] 对应索引为[0,0,0]， buffer索引为 0  
     // [9.9,9.9,9.9] 对应索引为[9,9,9]， buffer索引为 900+90+9 = 999
