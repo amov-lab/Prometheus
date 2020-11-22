@@ -432,8 +432,9 @@ int main(int argc, char **argv)
             }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::TRAJECTORY )
             {
                 state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
+                state_sp_extra = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0], Command_Now.Reference_State.velocity_ref[1] ,Command_Now.Reference_State.velocity_ref[2]);
                 yaw_sp = Command_Now.Reference_State.yaw_ref;
-                _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+                _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra,yaw_sp);
             }else
             {
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Hold there");

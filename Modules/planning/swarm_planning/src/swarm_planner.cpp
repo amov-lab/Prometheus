@@ -13,9 +13,6 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     nh.param("swarm_planner/fly_height_2D", fly_height_2D, 1.0);  
     // 安全距离，若膨胀距离设置已考虑安全距离，建议此处设为0
     nh.param("swarm_planner/safe_distance", safe_distance, 0.05); 
-    // 执行路径的速度 
-    nh.param("swarm_planner/desired_vel", desired_vel, 0.2); 
-
     nh.param("swarm_planner/time_per_path", time_per_path, 1.0); 
     // 重规划频率 
     nh.param("swarm_planner/replan_time", replan_time, 2.0); 
@@ -51,8 +48,8 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     // 定时器 规划器算法执行周期
     mainloop_timer = nh.createTimer(ros::Duration(1.5), &Swarm_Planner::mainloop_cb, this);        
     // 路径追踪循环，快速移动场景应当适当提高执行频率
-    // 该时间应当小于time_per_path，保证在控制周期发送合适的路径点控制信息
-    track_path_timer = nh.createTimer(ros::Duration(0.2), &Swarm_Planner::track_path_cb, this);        
+    // time_per_path
+    track_path_timer = nh.createTimer(ros::Duration(time_per_path), &Swarm_Planner::track_path_cb, this);        
 
     // Astar algorithm
     Astar_ptr.reset(new Astar);
@@ -73,13 +70,6 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     Command_Now.Command_ID = 0;
     Command_Now.source = NODE_NAME;
     desired_yaw = 0.0;
-    
-    // init visualization
-    visualization_.reset(new PlanningVisualization(nh));
-    vis_resolution = 0.1;
-    vis_goal_color = Eigen::Vector4d(1.0, 0, 0, 1);
-    vis_path_color = Eigen::Vector4d(1.0, 0, 0, 1);
-
 
     // Waiting for input
     int start_flag = 0;
@@ -121,8 +111,6 @@ void Swarm_Planner::goal_cb(const geometry_msgs::PoseStampedConstPtr& msg)
     }
         
     goal_vel.setZero();
-
-    visualization_->drawGoal(goal_pos, 3*vis_resolution, vis_goal_color, 1);
 
     goal_ready = true;
 
@@ -253,17 +241,42 @@ void Swarm_Planner::track_path_cb(const ros::TimerEvent& e)
         
         return;
     }
+    is_new_path = false;
 
+    // 抵达终点
+    if(cur_id == Num_total_wp - 1)
+    {
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = goal_pos[0];
+        Command_Now.Reference_State.position_ref[1]     = goal_pos[1];
+        Command_Now.Reference_State.position_ref[2]     = goal_pos[2];
+
+        Command_Now.Reference_State.yaw_ref             = desired_yaw;
+        command_pub.publish(Command_Now);
+
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Reach the goal!");
+        
+        // 停止执行
+        path_ok = false;
+        // 转换状态为等待目标
+        exec_state = EXEC_STATE::WAIT_GOAL;
+        return;
+    }
+ 
     // 计算距离开始追踪轨迹时间
     tra_running_time = get_time_in_sec(tra_start_time);
 
-    int i = floor(tra_running_time / time_per_path * Num_total_wp) + start_point_index;
-    cout << "tra_running_time:" << tra_running_time << endl;
+    int i = cur_id;
 
-    cout << "start_point_index:" << start_point_index << endl;
-    cout << "i:" << i << endl;
-    cout << "Moving to the point:"<< path_cmd.poses[i].pose.position.x << " [m] "  << path_cmd.poses[i].pose.position.y << " [m] "  << path_cmd.poses[i].pose.position.z << " [m] "   <<endl;
-
+    cout << "Moving to Waypoint: [ " << cur_id << " / "<< Num_total_wp<< " ] "<<endl;
+    cout << "Moving to Waypoint:"   << path_cmd.poses[i].pose.position.x  << " [m] "
+                                    << path_cmd.poses[i].pose.position.y  << " [m] "
+                                    << path_cmd.poses[i].pose.position.z  << " [m] "<<endl; 
     // 控制方式如果是走航点，则需要对无人机进行限速，保证无人机的平滑移动
     // 采用轨迹控制的方式进行追踪，期望速度 = （期望位置 - 当前位置）/预计时间；
     
@@ -283,6 +296,7 @@ void Swarm_Planner::track_path_cb(const ros::TimerEvent& e)
     
     command_pub.publish(Command_Now);
 
+    cur_id = cur_id + 1;
 }
  
 // 主循环 
@@ -339,6 +353,7 @@ void Swarm_Planner::mainloop_cb(const ros::TimerEvent& e)
             {
                 // 获取到目标点后，生成新轨迹
                 exec_state = EXEC_STATE::PLANNING;
+                goal_ready = false;
             }
             
             break;
@@ -354,7 +369,6 @@ void Swarm_Planner::mainloop_cb(const ros::TimerEvent& e)
             // 未寻找到路径
             if(astar_state==Astar::NO_PATH)
             {
-                goal_ready = false;
                 path_ok = false;
                 exec_state = EXEC_STATE::WAIT_GOAL;
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Planner can't find path!");
@@ -366,48 +380,19 @@ void Swarm_Planner::mainloop_cb(const ros::TimerEvent& e)
                 path_cmd = Astar_ptr->get_ros_path();
                 Num_total_wp = path_cmd.poses.size();
                 start_point_index = get_start_point_id();
+                cur_id = start_point_index;
                 tra_start_time = ros::Time::now();
 
                 exec_state = EXEC_STATE::TRACKING;
+                // 发布该路径用于RVIZ显示
                 path_cmd_pub.publish(path_cmd);
                 pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Get a new path!");
-                
-                // 可视化路径
-                visualization_->drawrosPath(path_cmd, vis_resolution, vis_path_color, 1);              
+                        
             }
             break;
         }
         case TRACKING:
         {
-            distance_to_goal = sqrt(  pow(_DroneState.position[0] - goal_pos[0], 2) 
-                            + pow(_DroneState.position[1] - goal_pos[1], 2) 
-                            + pow(_DroneState.position[2] - goal_pos[2], 2));
-
-            // 抵达目标点附近后（MIN_DIS可在全局变量中修改），无人机将直接悬停于目标点
-            if(distance_to_goal < MIN_DIS)
-            {
-                Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-                Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-                Command_Now.source = NODE_NAME;
-                Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-                Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-                Command_Now.Reference_State.position_ref[0]     = goal_pos[0];
-                Command_Now.Reference_State.position_ref[1]     = goal_pos[1];
-                Command_Now.Reference_State.position_ref[2]     = goal_pos[2];
-
-                Command_Now.Reference_State.yaw_ref             = desired_yaw;
-                command_pub.publish(Command_Now);
-
-                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Reach the goal!");
-                
-                // 停止执行
-                path_ok = false;
-                // 转换状态为等待目标
-                exec_state = EXEC_STATE::WAIT_GOAL;
-                break;
-            }
-
             // 本循环是1Hz,此处不是很精准
             if(exec_num >= replan_time)
             {

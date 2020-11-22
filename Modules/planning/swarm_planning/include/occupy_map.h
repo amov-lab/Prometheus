@@ -32,6 +32,8 @@ extern ros::Publisher message_pub;
 class Occupy_map
 {
     public:
+        Occupy_map(){}
+
         // 全局点云指针
         sensor_msgs::PointCloud2ConstPtr global_env_;
         // 地图是否占据容器， 从编程角度来讲，这就是地图变为单一序列化后的索引
@@ -40,24 +42,21 @@ class Occupy_map
         double resolution_, inv_resolution_;
         // 膨胀参数
         double inflate_;
+        //是否2D规划
+        bool is_2D;
+        double fly_height_2D;
         // 地图原点,地图尺寸
         Eigen::Vector3d origin_, map_size_3d_, min_range_, max_range_;
         // 占据图尺寸 = 地图尺寸 / 分辨率
         Eigen::Vector3i grid_size_;
 
         bool has_global_point;
-    
-        // 天花板高度,地板高度
-        double ceil_height_, floor_height_;
-        
+           
         // 显示相关
         void show_gpcl_marker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color);
 
-        // 
-        ros::Publisher inflate_cloud_pub_;
-        ros::Publisher global_map_marker_pub;
-
-        Occupy_map(){}
+        // 发布点云用于rviz显示
+        ros::Publisher global_pcl_pub, inflate_pcl_pub;
 
         //初始化
         void init(ros::NodeHandle& nh);

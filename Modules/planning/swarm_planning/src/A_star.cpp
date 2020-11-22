@@ -47,8 +47,8 @@ void Astar::init(ros::NodeHandle& nh)
   Occupy_map_ptr->init(nh);
 
   // 读取地图参数
-  origin_ =  Occupy_map_ptr->origin_;
-  map_size_3d_ = Occupy_map_ptr->map_size_3d_;
+  origin_ =  Occupy_map_ptr->min_range_;
+  map_size_3d_ = Occupy_map_ptr->max_range_ - Occupy_map_ptr->min_range_;
 }
 
 void Astar::reset()
@@ -169,11 +169,8 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
           expand_node_pos = cur_pos + d_pos;
 
           // 确认该点在地图范围内
-          if (expand_node_pos(0) <= origin_(0) || expand_node_pos(0) >= map_size_3d_(0) || 
-              expand_node_pos(1) <= origin_(1) || expand_node_pos(1) >= map_size_3d_(1) || 
-              expand_node_pos(2) <= origin_(2) || expand_node_pos(2) >= map_size_3d_(2) )
+          if(!Occupy_map_ptr->isInMap(expand_node_pos))
           {
-            //pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "outside map.");
             continue;
           }
 
