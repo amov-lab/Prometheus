@@ -2,3 +2,6 @@
 	path = Modules/planning/RL_swarm_planning
 	url = https://github.com/potato77/RL_swarm_planning
 	branch = master
+[submodule "Modules/object_detection_landing"]
+	path = Modules/object_detection_landing
+	url = https://gitee.com/jario-jin/prometheus_landing_detection
