@@ -43,7 +43,6 @@ add_executable(swarm_planner_main
 	src/swarm_planner.cpp
 	src/A_star.cpp
 	src/occupy_map.cpp
-	src/planning_visualization.cpp
 	src/tools.cpp
 	)
 

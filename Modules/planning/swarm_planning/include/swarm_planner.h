@@ -20,7 +20,6 @@
 #include "prometheus_msgs/DroneState.h"
 #include "prometheus_msgs/ControlCommand.h"
 
-#include "planning_visualization.h"
 #include "A_star.h"
 #include "occupy_map.h"
 #include "tools.h"
@@ -47,7 +46,6 @@ private:
     bool is_2D;
     double fly_height_2D;
     double safe_distance;
-    double desired_vel;
     double time_per_path;
     int map_input;
     double replan_time;
@@ -95,6 +93,7 @@ private:
     bool path_ok;
     int start_point_index;
     int Num_total_wp;
+    int cur_id;
 
     // 规划初始状态及终端状态
     Eigen::Vector3d start_pos, start_vel, goal_pos, goal_vel;
@@ -126,12 +125,6 @@ private:
     void safety_cb(const ros::TimerEvent& e);
     void mainloop_cb(const ros::TimerEvent& e);
     void track_path_cb(const ros::TimerEvent& e);
-
-    // visual 
-    PlanningVisualization::Ptr visualization_;
-    double vis_resolution;
-    Eigen::Vector4d vis_path_color;
-    Eigen::Vector4d vis_goal_color;
 
     // 【获取当前时间函数】 单位：秒
     float get_time_in_sec(const ros::Time& begin_time);
