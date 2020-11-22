@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
     ros::Subscriber num_det_sub = nh.subscribe<prometheus_msgs::Message>("/prometheus/message/num_det", 10, msg_det_cb);
     ros::Subscriber circle_det_sub = nh.subscribe<prometheus_msgs::Message>("/prometheus/message/circle_det", 10, msg_det_cb);
-    ros::Subscriber pad_det_sub = nh.subscribe<prometheus_msgs::Message>("/prometheus/message/pad_det", 10, msg_det_cb);
+    ros::Subscriber pad_det_sub = nh.subscribe<prometheus_msgs::Message>("/prometheus/message/landpad_det", 10, msg_det_cb);
     ros::Subscriber kcf_det_sub = nh.subscribe<prometheus_msgs::Message>("/prometheus/message/kcf_det", 10, msg_det_cb);
 
     // 频率
