@@ -14,5 +14,5 @@ geo_fence:
   x_max: 2.5
   y_min: -2.5
   y_max: 2.5
-  z_min: -0.5
-  z_max: 1.8
+  z_min: -0.2
+  z_max: 1.5
