@@ -348,6 +348,16 @@ add_executable(aruco_det
 )
 target_link_libraries(aruco_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
+add_executable(create_board_charuco
+    cpp_nodes/create_board_charuco.cpp
+)
+target_link_libraries(create_board_charuco ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS})
+
+add_executable(calibrate_camera_charuco
+    cpp_nodes/calibrate_camera_charuco.cpp
+)
+target_link_libraries(calibrate_camera_charuco ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS})
+
 add_executable(landpad_det
     cpp_nodes/landpad_det.cpp
 )
