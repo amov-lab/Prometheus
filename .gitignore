@@ -10,6 +10,7 @@ build/
 devel/
 dist/
 .vscode/
+Modules/object_detection_landing/
 
 # pytorch/python/numpy formats
 # *.pth
