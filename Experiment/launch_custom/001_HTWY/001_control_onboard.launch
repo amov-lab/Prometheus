@@ -18,8 +18,8 @@
 		<param name="object_name" value="UAV0" />
 	</node>
 	
-	<!-- run the px4_pos_controller.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
+	<!-- run the px4_sender.cpp -->
+	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
 		<rosparam command="load" file="$(find prometheus_experiment)/launch_custom/001_HTWY/config/px4_pos_controller.yaml"/>
 	</node>
 
