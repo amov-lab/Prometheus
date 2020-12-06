@@ -63,7 +63,7 @@
 
     <!-- 启动全局规划算法 -->
     <arg name="topic_of_global_pcl" default="/prometheus/pcl_groundtruth"/>
-    <node pkg="prometheus_swarm_planning" name="swarm_planner_main" type="swarm_planner_main" output="screen" launch-prefix="gnome-terminal --tab --">
+    <node pkg="prometheus_swarm_planning" name="swarm_planner_main" type="swarm_planner_main" output="screen">
         <remap from="/prometheus/swarm_planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
         <!-- 二维平面规划 -->
