@@ -106,23 +106,23 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     }else
     {
         //　真实飞行情况：等待飞机状态变为offboard模式，然后发送起飞指令
-        while(_DroneState.mode != "OFFBOARD")
-        {
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
-            Command_Now.Command_ID = 1 ;
-            Command_Now.source = NODE_NAME;
-            command_pub.publish(Command_Now);   
-            cout << "Waiting for the offboard mode"<<endl;
-            ros::Duration(1.0).sleep();
-            ros::spinOnce();
-        }
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
-        Command_Now.Command_ID = Command_Now.Command_ID + 1;
-        Command_Now.source = NODE_NAME;
-        command_pub.publish(Command_Now);
-        cout << "Takeoff ..."<<endl;
+        // while(_DroneState.mode != "OFFBOARD")
+        // {
+        //     Command_Now.header.stamp = ros::Time::now();
+        //     Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+        //     Command_Now.Command_ID = 1 ;
+        //     Command_Now.source = NODE_NAME;
+        //     command_pub.publish(Command_Now);   
+        //     cout << "Waiting for the offboard mode"<<endl;
+        //     ros::Duration(1.0).sleep();
+        //     ros::spinOnce();
+        // }
+        // Command_Now.header.stamp = ros::Time::now();
+        // Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+        // Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        // Command_Now.source = NODE_NAME;
+        // command_pub.publish(Command_Now);
+        // cout << "Takeoff ..."<<endl;
     }
 
 }
@@ -268,24 +268,24 @@ void Swarm_Planner::track_path_cb(const ros::TimerEvent& e)
         return;
     }
 
-    if(!is_safety)
-    {
-        // 若无人机与障碍物之间的距离小于安全距离，则停止执行路径
-        // 但如何脱离该点呢？
-        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Drone Position Dangerous! STOP HERE and wait for new goal.");
+    // if(!is_safety)
+    // {
+    //     // 若无人机与障碍物之间的距离小于安全距离，则停止执行路径
+    //     // 但如何脱离该点呢？
+    //     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Drone Position Dangerous! STOP HERE and wait for new goal.");
         
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode         = prometheus_msgs::ControlCommand::Hold;
-        Command_Now.Command_ID   = Command_Now.Command_ID + 1;
-        Command_Now.source = NODE_NAME;
+    //     Command_Now.header.stamp = ros::Time::now();
+    //     Command_Now.Mode         = prometheus_msgs::ControlCommand::Hold;
+    //     Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+    //     Command_Now.source = NODE_NAME;
 
-        command_pub.publish(Command_Now);
+    //     command_pub.publish(Command_Now);
 
-        goal_ready = false;
-        exec_state = EXEC_STATE::WAIT_GOAL;
+    //     goal_ready = false;
+    //     exec_state = EXEC_STATE::WAIT_GOAL;
         
-        return;
-    }
+    //     return;
+    // }
     is_new_path = false;
 
     // 抵达终点
