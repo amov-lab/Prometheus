@@ -6,7 +6,7 @@
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle_HTWY.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
 	<arg name="model" default="P300_hokuyo_2Dlidar"/>
-    <include file="$(find prometheus_gazebo)/launch_custom/001_HTWY/001_sitl.launch">
+    <include file="$(find prometheus_gazebo)/launch_custom/001_HTWY/001_sitl_px4_sender.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>

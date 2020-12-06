@@ -147,8 +147,6 @@ void Occupy_map::inflate_point_cloud(void)
                 }
     }
 
-    //printf("time 2 take %f [s].\n",   (ros::Time::now()-time_start).toSec());
-
     cloud_inflate_vis_.header.frame_id = "world";
 
     // 转化为ros msg发布
@@ -157,8 +155,17 @@ void Occupy_map::inflate_point_cloud(void)
 
     inflate_pcl_pub.publish(map_inflate_vis);
 
-    // 膨胀地图效率与地图大小有关（有点久，Astar更新频率是多久呢？ 怎么才能提高膨胀效率呢？）
-    printf("inflate global point take %f [s].\n",   (ros::Time::now()-time_start).toSec());
+    static int exec_num=0;
+    exec_num++;
+
+    // 此处改为根据循环时间计算的数值
+    if(exec_num == 20)
+    {
+        // 膨胀地图效率与地图大小有关（有点久，Astar更新频率是多久呢？ 怎么才能提高膨胀效率呢？）
+        printf("inflate global point take %f [s].\n",   (ros::Time::now()-time_start).toSec());
+        exec_num=0;
+    }  
+
 }
 
 void Occupy_map::setOccupancy(Eigen::Vector3d pos, int occ) 
@@ -188,6 +195,7 @@ bool Occupy_map::isInMap(Eigen::Vector3d pos)
 {
     // min_range就是原点，max_range就是原点+地图尺寸
     // 比如设置0,0,0为原点，[0,0,0]点会被判断为不在地图里
+    //　同时　对于２Ｄ情况，超出飞行高度的数据也会认为不在地图内部
     if (pos(0) < min_range_(0) + 1e-4 || pos(1) < min_range_(1) + 1e-4 || pos(2) < min_range_(2) + 1e-4) 
     {
         return false;

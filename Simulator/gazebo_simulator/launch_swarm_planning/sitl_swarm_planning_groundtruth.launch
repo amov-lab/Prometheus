@@ -26,13 +26,15 @@
         <remap from="/prometheus/swarm_planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
         <!-- 二维平面规划 -->
-        <param name="swarm_planner/is_2D" value="false" type="bool"/>
+        <param name="swarm_planner/is_2D" value="true" type="bool"/>
+        <!-- ２维高度，建议与起飞高度一致 -->
         <param name="swarm_planner/fly_height_2D" value="1.0" type="double"/>
         <!-- 停止距离 -->
         <param name="swarm_planner/safe_distance" value="0.01" type="double"/>
-        <param name="swarm_planner/time_per_path" value="0.9" type="double"/>
-        <param name="swarm_planner/replan_time" value="3.0" type="double"/>
+        <param name="swarm_planner/time_per_path" value="1.0" type="double"/>
+        <param name="swarm_planner/replan_time" value="2.0" type="double"/>
         <param name="swarm_planner/map_input" value="0" type="int"/>
+        <param name="swarm_planner/sim_mode" value="true" type="bool"/>
         <!-- 最大搜索步数 -->
         <param name="astar/allocate_num" value="10000" type="int"/>
         <!-- 启发式函数系数 -->
