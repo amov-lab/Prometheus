@@ -45,6 +45,7 @@ class Occupy_map
         //是否2D规划
         bool is_2D;
         double fly_height_2D;
+        bool debug_mode;
         // 地图原点,地图尺寸
         Eigen::Vector3d origin_, map_size_3d_, min_range_, max_range_;
         // 占据图尺寸 = 地图尺寸 / 分辨率

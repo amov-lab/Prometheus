@@ -80,7 +80,7 @@
 		<param name="offset_z" value="$(arg z)" />
 	</node>
 	
-	<!-- run the px4_pos_controller.cpp -->
+	<!-- run the px4_sender.cpp -->
 	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_pos_controller.yaml"/>
 	</node>

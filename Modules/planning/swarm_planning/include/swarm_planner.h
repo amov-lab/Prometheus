@@ -50,6 +50,8 @@ private:
     int map_input;
     double replan_time;
     bool consider_neighbour;
+    bool sim_mode;
+    bool map_groundtruth;
 
     // 本机位置
     // 邻机位置
@@ -125,6 +127,7 @@ private:
     void safety_cb(const ros::TimerEvent& e);
     void mainloop_cb(const ros::TimerEvent& e);
     void track_path_cb(const ros::TimerEvent& e);
+   
 
     // 【获取当前时间函数】 单位：秒
     float get_time_in_sec(const ros::Time& begin_time);

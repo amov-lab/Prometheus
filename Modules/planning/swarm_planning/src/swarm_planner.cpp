@@ -16,8 +16,12 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     nh.param("swarm_planner/time_per_path", time_per_path, 1.0); 
     // 重规划频率 
     nh.param("swarm_planner/replan_time", replan_time, 2.0); 
-    // 选择地图更新方式
+    // 选择地图更新方式：　0代表全局点云，１代表局部点云，２代表激光雷达scan数据
     nh.param("swarm_planner/map_input", map_input, 0); 
+    // 是否为仿真模式
+    nh.param("swarm_planner/sim_mode", sim_mode, false); 
+
+    nh.param("swarm_planner/map_groundtruth", map_groundtruth, false); 
 
     // 订阅 目标点
     goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 1, &Swarm_Planner::goal_cb, this);
@@ -35,7 +39,7 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     }else if(map_input == 2)
     {
         laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>("/prometheus/swarm_planning/laser_scan", 1, &Swarm_Planner::laser_cb, this);
-    }    
+    }
 
     // 发布 路径指令
     command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
@@ -44,7 +48,7 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     // 发布路径用于显示
     path_cmd_pub   = nh.advertise<nav_msgs::Path>("/prometheus/swarm_planning/path_cmd",  10); 
     // 定时器 安全检测
-    safety_timer = nh.createTimer(ros::Duration(2.0), &Swarm_Planner::safety_cb, this); 
+    // safety_timer = nh.createTimer(ros::Duration(2.0), &Swarm_Planner::safety_cb, this); 
     // 定时器 规划器算法执行周期
     mainloop_timer = nh.createTimer(ros::Duration(1.5), &Swarm_Planner::mainloop_cb, this);        
     // 路径追踪循环，快速移动场景应当适当提高执行频率
@@ -61,7 +65,7 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     drone_ready = false;
     goal_ready = false;
     sensor_ready = false;
-    is_safety = false;
+    is_safety = true;
     is_new_path = false;
 
     // 初始化发布的指令
@@ -80,23 +84,47 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
         cin >> start_flag;
     }
 
-    // 起飞
-    Command_Now.header.stamp = ros::Time::now();
-    Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
-    Command_Now.Command_ID = Command_Now.Command_ID + 1;
-    Command_Now.source = NODE_NAME;
-    Command_Now.Reference_State.yaw_ref = 999;
-    command_pub.publish(Command_Now);   
-    cout << "Switch to OFFBOARD and arm ..."<<endl;
-    ros::Duration(3.0).sleep();
-    
-    Command_Now.header.stamp = ros::Time::now();
-    Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
-    Command_Now.Command_ID = Command_Now.Command_ID + 1;
-    Command_Now.source = NODE_NAME;
-    command_pub.publish(Command_Now);
-    cout << "Takeoff ..."<<endl;
-    ros::Duration(3.0).sleep();
+    //　仿真模式下直接发送切换模式与起飞指令
+    if(sim_mode == true)
+    {
+        // 起飞
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
+        Command_Now.Reference_State.yaw_ref = 999;
+        command_pub.publish(Command_Now);   
+        cout << "Switch to OFFBOARD and arm ..."<<endl;
+        ros::Duration(3.0).sleep();
+        
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
+        command_pub.publish(Command_Now);
+        cout << "Takeoff ..."<<endl;
+        ros::Duration(3.0).sleep();
+    }else
+    {
+        //　真实飞行情况：等待飞机状态变为offboard模式，然后发送起飞指令
+        while(_DroneState.mode != "OFFBOARD")
+        {
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+            Command_Now.Command_ID = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
+            command_pub.publish(Command_Now);   
+            cout << "Waiting for the offboard mode"<<endl;
+            ros::Duration(1.0).sleep();
+            ros::spinOnce();
+        }
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
+        command_pub.publish(Command_Now);
+        cout << "Takeoff ..."<<endl;
+    }
 
 }
 
@@ -174,10 +202,28 @@ void Swarm_Planner::Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg)
     
     sensor_ready = true;
 
-    // 对Astar中的地图进行更新
-    Astar_ptr->Occupy_map_ptr->map_update_gpcl(msg);
-    // 并对地图进行膨胀
-    Astar_ptr->Occupy_map_ptr->inflate_point_cloud(); 
+    if(!map_groundtruth)
+    {
+        // 对Astar中的地图进行更新
+        Astar_ptr->Occupy_map_ptr->map_update_gpcl(msg);
+        // 并对地图进行膨胀
+        Astar_ptr->Occupy_map_ptr->inflate_point_cloud(); 
+    }else
+    {
+        static int update_num=0;
+        update_num++;
+
+        // 此处改为根据循环时间计算的数值
+        if(update_num == 10)
+        {
+            // 对Astar中的地图进行更新
+            Astar_ptr->Occupy_map_ptr->map_update_gpcl(msg);
+            // 并对地图进行膨胀
+            Astar_ptr->Occupy_map_ptr->inflate_point_cloud(); 
+            update_num = 0;
+        } 
+    }
+    
 }
 
 // 根据局部点云更新地图
@@ -446,7 +492,11 @@ int Swarm_Planner::get_start_point_id(void)
         }
     }
 
-    id = id + 1;
+    //　为防止出现回头的情况，此处对航点进行前馈处理
+    if(id + 2 < Num_total_wp)
+    {
+        id = id + 2;
+    }
 
     return id;
 }
