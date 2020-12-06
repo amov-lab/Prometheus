@@ -145,6 +145,15 @@ void Swarm_Planner::goal_cb(const geometry_msgs::PoseStampedConstPtr& msg)
     pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,"Get a new goal point");
 
     cout << "Get a new goal point:"<< goal_pos(0) << " [m] "  << goal_pos(1) << " [m] "  << goal_pos(2)<< " [m] "   <<endl;
+
+    if(goal_pos(0) == 99 && goal_pos(1) == 99 )
+    {
+        path_ok = false;
+        goal_ready = false;
+        exec_state = EXEC_STATE::LANDING;
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,"Land");
+    }
+
 }
 
 void Swarm_Planner::drone_state_cb(const prometheus_msgs::DroneStateConstPtr& msg)
@@ -445,6 +454,16 @@ void Swarm_Planner::mainloop_cb(const ros::TimerEvent& e)
                 exec_num = 0;
             }
 
+            break;
+        }
+        case  LANDING:
+        {
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode         = prometheus_msgs::ControlCommand::Land;
+            Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
+
+            command_pub.publish(Command_Now);
             break;
         }
     }

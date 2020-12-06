@@ -114,6 +114,7 @@ private:
         WAIT_GOAL,
         PLANNING,
         TRACKING,
+        LANDING,
     };
     EXEC_STATE exec_state;
 
