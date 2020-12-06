@@ -31,6 +31,7 @@
 		<param name="start_point_x" value="1.0" />
 		<param name="start_point_y" value="2.0" />
 		<param name="start_point_z" value="4.5" />
+		<param name="debug_mode" value="0.0" />
 	</node>
 
 </launch>
