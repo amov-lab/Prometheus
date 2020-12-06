@@ -62,7 +62,7 @@
     </node>
 
     <!-- 启动全局规划算法 -->
-    <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
+    <arg name="topic_of_global_pcl" default="/prometheus/pcl_groundtruth"/>
     <node pkg="prometheus_swarm_planning" name="swarm_planner_main" type="swarm_planner_main" output="screen" launch-prefix="gnome-terminal --tab --">
         <remap from="/prometheus/swarm_planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
@@ -76,7 +76,7 @@
         <param name="swarm_planner/replan_time" value="2.0" type="double"/>
         <param name="swarm_planner/map_input" value="0" type="int"/>
         <param name="swarm_planner/sim_mode" value="false" type="bool"/>
-        <!-- <param name="swarm_planner/map_groundtruth" value="true" type="bool"/> -->
+        <param name="swarm_planner/map_groundtruth" value="true" type="bool"/>
         <!-- 最大搜索步数 -->
         <param name="astar/allocate_num" value="10000" type="int"/>
         <!-- 启发式函数系数 -->
@@ -92,6 +92,10 @@
         <param name="map/map_size_x" value="8.0" type="double"/>
         <param name="map/map_size_y" value="4.0" type="double"/>
         <param name="map/map_size_z" value="2.0" type="double"/>
+    </node>
+
+    <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+        <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/HTWY.pcd" />
     </node>
 </launch>
 

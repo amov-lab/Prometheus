@@ -75,18 +75,17 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     Command_Now.source = NODE_NAME;
     desired_yaw = 0.0;
 
-    // Waiting for input
-    int start_flag = 0;
-    while(start_flag == 0)
-    {
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Swarm Planner<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please input 1 for start:"<<endl;
-        cin >> start_flag;
-    }
-
     //　仿真模式下直接发送切换模式与起飞指令
     if(sim_mode == true)
     {
+        // Waiting for input
+        int start_flag = 0;
+        while(start_flag == 0)
+        {
+            cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Swarm Planner<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+            cout << "Please input 1 for start:"<<endl;
+            cin >> start_flag;
+        }
         // 起飞
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
@@ -111,7 +110,7 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
         {
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
-            Command_Now.Command_ID = Command_Now.Command_ID + 1;
+            Command_Now.Command_ID = 1 ;
             Command_Now.source = NODE_NAME;
             command_pub.publish(Command_Now);   
             cout << "Waiting for the offboard mode"<<endl;
