@@ -348,6 +348,7 @@ void command_to_mavros::send_pos_vel_xyz_setpoint(const Eigen::Vector3d& pos_sp,
 
     // 速度作为前馈项， 参见FlightTaskOffboard.cpp
     // 2. position setpoint + velocity setpoint (velocity used as feedforward)
+    // 控制方法请见 PositionControl.cpp
     pos_setpoint.type_mask = 0b100111000000;   // 100 111 000 000  vx vy　vz x y z+ yaw
 
     pos_setpoint.coordinate_frame = 1;
