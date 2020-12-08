@@ -4,12 +4,12 @@
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 #include <iostream>
-#include <map>
+#include <queue>
 #include <string>
 #include <unordered_map>
 #include <sstream>
-#include <boost/functional/hash.hpp>
-#include <queue>
+// #include <boost/functional/hash.hpp>
+// #include <map>
 
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Path.h>
