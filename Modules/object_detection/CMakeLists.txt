@@ -4,6 +4,8 @@ project(prometheus_detection)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+set(OpenCV_DIR /usr/local/share/OpenCV)
+
 # Define path of darknet folder here.
 find_path(DARKNET_PATH
   NAMES "Makefile"
@@ -65,7 +67,8 @@ find_package(Boost REQUIRED COMPONENTS
     thread
     date_time
 )
-find_package(OpenCV REQUIRED)
+
+find_package(OpenCV 3.3.1 REQUIRED)
 
 # Enable OPENCV in darknet
 add_definitions(-DOPENCV)
