@@ -2,9 +2,9 @@
 //ROS 头文件
 #include <ros/ros.h>
 #include <iostream>
+#include <sensor_msgs/Range.h>
 #include <mission_utils.h>
-#include <tf/transform_datatypes.h>
-#include <ukf_car.h>
+
 #include "message_utils.h"
 
 using namespace std;
@@ -23,6 +23,8 @@ float kpx_land,kpy_land,kpz_land;                                               
 float start_point_x,start_point_y,start_point_z;
 
 Eigen::Vector3f camera_offset;
+//-----　laser
+sensor_msgs::Range range;
 //---------------------------------------Track---------------------------------------------
 float distance_to_pad;
 float arm_height_to_ground;
@@ -87,7 +89,10 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 
     R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
 }
-
+void range_cb(const sensor_msgs::Range::ConstPtr& msg)
+{
+    range = *msg;
+}
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -106,6 +111,8 @@ int main(int argc, char **argv)
 
     //　地面真值，此信息仅做比较使用
     ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/landing_pad", 10, groundtruth_cb);
+
+    ros::Subscriber range_sub = nh.subscribe<sensor_msgs::Range>("/prometheus/tfmini_range", 10, range_cb);
 
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
