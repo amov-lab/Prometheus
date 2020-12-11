@@ -1,0 +1,34 @@
+<launch>
+
+    <include file="$(find prometheus_experiment)/launch_detection/rs_t265.launch">
+	  <arg name="enable_fisheye1" value="true"/>
+	  <arg name="enable_fisheye2" value="true"/>
+	  <arg name="fisheye_fps" value="30"/>
+	  <arg name="publish_odom_tf" value="false"/>
+	  <arg name="enable_gyro" value="false"/>
+	  <arg name="enable_accel" value="false"/>
+	  <arg name="enable_pose" value="false"/>
+    </include>
+
+    <node pkg="prometheus_detection_landing" type="fisheye_undistort.py" name="fisheye_undistort" output="screen">
+		<!-- 图像话题 待改 -->
+		<remap from="/camera/fisheye1/image_raw" to="/camera_t265/fisheye1/image_raw" />
+    </node>
+
+    <node pkg="prometheus_detection_landing" type="ellipse_det" name="ellipse_det" output="screen">
+        <param name="camera_topic" type="string" value="/camera/fisheye1/image_undistort" />
+        <param name="camera_info" type="string" value="camera_param_t265.yaml" />
+        <param name="with_training" type="bool" value="true" />
+        <param name="saving_center" type="bool" value="false" />
+        <param name="train_imlist" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/labeled_img_class.txt" />
+        <param name="train_imdir" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/images_from_camera" />
+        <param name="saving_path" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/images_from_camera" />
+    </node>
+
+	<!-- 启动rviz,设为false可关闭 -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_experiment)/config/rviz_config/rviz_pad_tracking.rviz" />
+    </group>
+</launch>
+
