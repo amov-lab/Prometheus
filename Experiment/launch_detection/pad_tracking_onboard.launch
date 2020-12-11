@@ -51,6 +51,7 @@
 		<param name="start_point_z" value="1.0" />
 		<param name="sim_mode" value="false" />
 		<param name="hold_mode" value="true" />
+		<param name="tfmini_flag" value="false" />
 	</node>
 
 

@@ -15,6 +15,7 @@ using namespace Eigen;
 bool hold_mode;
 string message;
 bool sim_mode;
+bool tfmini_flag;
 std_msgs::Bool vision_switch;
 //---------------------------------------Drone---------------------------------------------
 prometheus_msgs::DroneState _DroneState;   
@@ -25,7 +26,7 @@ float kp_land[3];         //控制参数 - 比例参数
 float start_point_x,start_point_y,start_point_z;
 
 //-----　laser
-sensor_msgs::Range tfmini;
+sensor_msgs::Range tfmini_data;
 //---------------------------------------Track---------------------------------------------
 // 五种状态机
 enum EXEC_STATE
@@ -60,14 +61,20 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     // 机体系 -> 机体惯性系 (原点在机体的惯性系) (对无人机姿态进行解耦)
     landpad_det.pos_body_enu_frame = R_Body_to_ENU * landpad_det.pos_body_frame;
 
-    // 若已知降落板高度，则无需使用深度信息。
-    // landpad_det.pos_body_enu_frame[2] = LANDPAD_HEIGHT - _DroneState.position[2];
-
+    if(tfmini_flag)
+    {
+        // 使用TFmini测得高度
+        landpad_det.pos_body_enu_frame[2] = - tfmini_data.range;
+    }else
+    {
+        // 若已知降落板高度，则无需使用深度信息。
+        landpad_det.pos_body_enu_frame[2] =  - _DroneState.position[2];
+    }
+    
     // 机体惯性系 -> 惯性系
     landpad_det.pos_enu_frame[0] = _DroneState.position[0] + landpad_det.pos_body_enu_frame[0];
     landpad_det.pos_enu_frame[1] = _DroneState.position[1] + landpad_det.pos_body_enu_frame[1];
-    // 使用TFmini测得高度
-    landpad_det.pos_enu_frame[2] = tfmini.range;
+    landpad_det.pos_enu_frame[2] = _DroneState.position[2] + landpad_det.pos_body_enu_frame[2];
 
     landpad_det.att_enu_frame[2] = 0.0;
 
@@ -106,7 +113,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 }
 void tfmini_cb(const sensor_msgs::Range::ConstPtr& msg)
 {
-    tfmini = *msg;
+    tfmini_data = *msg;
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -149,6 +156,8 @@ int main(int argc, char **argv)
     nh.param<bool>("hold_mode", hold_mode, false);
     // 仿真模式 - 区别在于是否自动切换offboard模式
     nh.param<bool>("sim_mode", sim_mode, false);
+    // 是否使用tfmini_data
+    nh.param<bool>("tfmini_flag", tfmini_flag, false);
 
     //追踪控制参数
     nh.param<float>("kpx_land", kp_land[0], 0.1);
@@ -320,7 +329,7 @@ int main(int argc, char **argv)
                 Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_VEL;   //xy velocity z position
                 for (int i=0; i<3; i++)
                 {
-                    Command_Now.Reference_State.velocity_ref[i] = kp_land[i] * landpad_det.pos_body_frame[i];
+                    Command_Now.Reference_State.velocity_ref[i] = kp_land[i] * landpad_det.pos_body_enu_frame[i];
                 }
 
                 Command_Now.Reference_State.yaw_ref             = 0.0;
