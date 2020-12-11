@@ -316,9 +316,7 @@ int main(int argc, char **argv)
                     break;
                 }
 
-                // 正常追踪
-                cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_pad : "<< distance_to_pad << " [m] " << endl;
-                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Tracking the Landing Pad.");
+
 
                 // 机体系速度控制
                 Command_Now.header.stamp = ros::Time::now();
@@ -419,6 +417,13 @@ void printf_result()
     
     cout << "Detection_raw(pos): " << landpad_det.pos_body_frame[0] << " [m] "<< landpad_det.pos_body_frame[1] << " [m] "<< landpad_det.pos_body_frame[2] << " [m] "<<endl;
     cout << "Detection_raw(yaw): " << landpad_det.Detection_info.yaw_error/3.1415926 *180 << " [deg] "<<endl;
+
+    if( exec_state == TRACKING)
+    {
+        // 正常追踪
+        cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_pad : "<< distance_to_pad << " [m] " << endl;
+    }
+
 
 
 #if DEBUG_MODE == 1
