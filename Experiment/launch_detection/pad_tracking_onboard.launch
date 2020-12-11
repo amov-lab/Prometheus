@@ -26,7 +26,7 @@
 
     <node pkg="prometheus_detection_landing" type="fisheye_undistort.py" name="fisheye_undistort" output="screen">
 		<!-- 图像话题 待改 -->
-		<remap from="/camera/fisheye1/image_raw" to="/P300_Monocular_down/Monocular/image_raw" />
+		<remap from="/camera/fisheye1/image_raw" to="/camera_t265/fisheye1/image_raw" />
     </node>
 
     <node pkg="prometheus_detection_landing" type="ellipse_det" name="ellipse_det" output="screen">
@@ -53,5 +53,10 @@
 		<param name="hold_mode" value="true" />
 	</node>
 
+
+    <include file="$(find prometheus_experiment)/launch_detection/rs_t265.launch">
+	  <arg name="enable_fisheye1" value="true"/>
+	  <arg name="enable_fisheye2" value="false"/>
+    </include>
 </launch>
 

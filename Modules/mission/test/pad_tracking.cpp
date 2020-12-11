@@ -190,7 +190,7 @@ int main(int argc, char **argv)
             cin >> start_flag;
         }
 
-        while(_DroneState.mode != "OFFBOARD")
+        while(ros::ok() && _DroneState.mode != "OFFBOARD")
         {
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
         }
     }else
     {
-        while(_DroneState.mode != "OFFBOARD")
+        while(ros::ok() && _DroneState.mode != "OFFBOARD")
         {
             cout << "Waiting for the offboard mode"<<endl;
             ros::Duration(1.0).sleep();
