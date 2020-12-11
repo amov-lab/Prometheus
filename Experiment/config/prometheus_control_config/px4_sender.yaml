@@ -4,9 +4,9 @@
 ## 2020.11.04测试发现飞机起飞有较大超调，未发现原因，但起飞后控制正常
 Takeoff_height : 0.5
 ## 降落速度
-Land_speed : 0.25
+Land_speed : 0.2
 ##　上锁高度
-Disarm_height : 0.23
+Disarm_height : 0.25
 
 ##　地理围栏，根据实际情况设置
 geo_fence:
