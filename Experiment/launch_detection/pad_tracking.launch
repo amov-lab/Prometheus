@@ -52,7 +52,7 @@
 		<param name="kpz_land" value="0.1" />
 		<param name="start_point_x" value="0.0" />
 		<param name="start_point_y" value="0.0" />
-		<param name="start_point_z" value="1.0" />
+		<param name="start_point_z" value="0.8" />
 		<param name="sim_mode" value="false" />
 		<param name="hold_mode" value="false" />
 		<param name="tfmini_flag" value="false" />
