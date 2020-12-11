@@ -56,7 +56,12 @@
 
     <include file="$(find prometheus_experiment)/launch_detection/rs_t265.launch">
 	  <arg name="enable_fisheye1" value="true"/>
-	  <arg name="enable_fisheye2" value="false"/>
+	  <arg name="enable_fisheye2" value="true"/>
+	  <arg name="fisheye_fps" value="30"/>
+	  <arg name="publish_odom_tf" value="false"/>
+	  <arg name="enable_gyro" value="false"/>
+	  <arg name="enable_accel" value="false"/>
+	  <arg name="enable_pose" value="false"/>
     </include>
 </launch>
 
