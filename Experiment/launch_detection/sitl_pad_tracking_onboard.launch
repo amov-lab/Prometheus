@@ -1,0 +1,57 @@
+<launch>
+	<!-- 启动MAVROS -->
+	<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+		<param name="fcu_url" value="/dev/ttyUSB0:921600" />
+		<param name="gcs_url" value="" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+		<rosparam command="load" file="$(find prometheus_experiment)/launch_custom/001_HTWY/config/px4_pluginlists.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/launch_custom/001_HTWY/config/px4_config.yaml" />
+	</node>
+
+	<!-- 启动Prometheus代码 -->
+	<!-- run the px4_pos_estimator.cpp -->
+	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
+		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
+		<param name="input_source" value="0" />
+        <!-- 注意根据VICON中的设定修改该参数 -->
+        <param name="object_name" value="UAV0" />
+	</node>
+	
+	<!-- run the px4_sender.cpp -->
+	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/px4_sender.yaml"/>
+	</node>
+
+    <node pkg="prometheus_detection_landing" type="fisheye_undistort.py" name="fisheye_undistort" output="screen">
+		<!-- 图像话题 待改 -->
+		<remap from="/camera/fisheye1/image_raw" to="/P300_Monocular_down/Monocular/image_raw" />
+    </node>
+
+    <node pkg="prometheus_detection_landing" type="ellipse_det" name="ellipse_det" output="screen">
+        <param name="camera_topic" type="string" value="/camera/fisheye1/image_undistort" />
+        <param name="camera_info" type="string" value="camera_param_t265.yaml" />
+        <param name="with_training" type="bool" value="true" />
+        <param name="saving_center" type="bool" value="false" />
+        <param name="train_imlist" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/labeled_img_class.txt" />
+        <param name="train_imdir" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/images_from_camera" />
+        <param name="saving_path" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/images_from_camera" />
+    </node>
+	
+	<!-- run the pad_tracking.cpp -->
+	<node pkg="prometheus_mission" type="pad_tracking" name="pad_tracking" output="screen">
+		<param name="arm_height_to_ground" value="0.2" />
+		<param name="arm_distance_to_pad" value="0.55" />
+		<param name="kpx_land" value="0.3" />
+		<param name="kpy_land" value="0.3" />
+		<param name="kpz_land" value="0.1" />
+		<param name="start_point_x" value="1.0" />
+		<param name="start_point_y" value="1.0" />
+		<param name="start_point_z" value="1.0" />
+		<param name="sim_mode" value="false" />
+		<param name="hold_mode" value="true" />
+	</node>
+
+</launch>
+
