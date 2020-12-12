@@ -7,6 +7,9 @@
 	<node pkg="prometheus_control" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
 
+	<node pkg="prometheus_mission" type="mission_cmd_pub" name="mission_cmd_pub" output="screen" launch-prefix="gnome-terminal --tab --">	
+	</node>
+
 	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
