@@ -25,7 +25,7 @@
 #include <image_transport/image_transport.h>  
 #include <cv_bridge/cv_bridge.h>  
 #include <sensor_msgs/image_encodings.h>  
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Bool.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <opencv2/imgproc/imgproc.hpp>  
@@ -35,6 +35,10 @@
 #include <opencv2/aruco/dictionary.hpp>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
+
+#include <Eigen/Dense>
+#include <opencv2/core/eigen.hpp>
+
 // #include "message_utils.h"
 
 
@@ -118,7 +122,7 @@ int main(int argc, char **argv)
     // 更新频率为60HZ
     ros::Rate loop_rate(60);
     //【发布】识别
-    pose_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/aruco_det_v2", 1);
+    pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/object_detection/aruco_det_v2", 1);
 
 
     std::string camera_topic = "/prometheus/camera/rgb/image_raw";
@@ -200,8 +204,26 @@ int main(int argc, char **argv)
             if(ids.size() > 0) {
                 aruco::drawDetectedMarkers(frameCopy, corners, ids);
 
-                for(unsigned int i = 0; i < ids.size(); i++)
+                for(unsigned int i = 0; i < ids.size(); i++) {
                     aruco::drawAxis(frameCopy, camMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 0.5f);
+                    cv::Mat rotation_matrix;
+                    cv::Rodrigues(rvecs[i], rotation_matrix);
+                    Eigen::Matrix3d rotation_matrix_eigen;
+                    cv::cv2eigen(rotation_matrix, rotation_matrix_eigen);
+                    Eigen::Quaterniond q = Eigen::Quaterniond(rotation_matrix_eigen);
+                    q.normalize();
+
+                    geometry_msgs::PoseStamped pose;
+                    pose.header.frame_id = "map";
+                    pose.pose.position.x = tvecs[i][0];
+                    pose.pose.position.y = tvecs[i][1];
+                    pose.pose.position.z = tvecs[i][2];
+                    pose.pose.orientation.x = q.x();
+                    pose.pose.orientation.y = q.y();
+                    pose.pose.orientation.z = q.z();
+                    pose.pose.orientation.w = q.w();
+                    pose_pub.publish(pose);
+                }
             }
 
 
