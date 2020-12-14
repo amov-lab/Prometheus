@@ -351,6 +351,11 @@ add_executable(aruco_det
 )
 target_link_libraries(aruco_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
+add_executable(aruco_det_v2
+    cpp_nodes/aruco_det_v2.cpp
+)
+target_link_libraries(aruco_det_v2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+
 add_executable(create_board_charuco
     cpp_nodes/create_board_charuco.cpp
 )
