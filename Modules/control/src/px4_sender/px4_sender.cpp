@@ -52,7 +52,7 @@ Eigen::Vector3d state_sp(0,0,0);
 Eigen::Vector3d state_sp_extra(0,0,0);
 double yaw_sp;
 prometheus_msgs::Message message;
-prometheus_msgs::LogMessage LogMessage;
+prometheus_msgs::LogMessageControl LogMessage;
 
 //RVIZ显示：期望位置
 geometry_msgs::PoseStamped ref_pose_rviz;
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
     message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 
     // 【发布】用于log的消息
-    log_message_pub = nh.advertise<prometheus_msgs::LogMessage>("/prometheus/topic_for_log", 10);
+    log_message_pub = nh.advertise<prometheus_msgs::LogMessageControl>("/prometheus/log/control", 10);
 
     // 10秒定时打印，以确保程序在正确运行
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
@@ -477,9 +477,11 @@ int main(int argc, char **argv)
         rivz_ref_pose_pub.publish(ref_pose_rviz);
 
         //发布log消息，可用rosbag记录
+        LogMessage.control_type = 0;
         LogMessage.time = cur_time;
         LogMessage.Drone_State = _DroneState;
         LogMessage.Control_Command = Command_Now;
+        LogMessage.ref_pose = ref_pose_rviz;
 
         log_message_pub.publish(LogMessage);
 
