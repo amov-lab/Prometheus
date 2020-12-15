@@ -69,6 +69,7 @@ find_package(Boost REQUIRED COMPONENTS
 )
 
 find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # Enable OPENCV in darknet
 add_definitions(-DOPENCV)
@@ -173,6 +174,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INUCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   ../common/include
 )
 
@@ -350,6 +352,11 @@ add_executable(aruco_det
     cpp_nodes/aruco_det.cpp
 )
 target_link_libraries(aruco_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+
+add_executable(aruco_det_v2
+    cpp_nodes/aruco_det_v2.cpp
+)
+target_link_libraries(aruco_det_v2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp Eigen3::Eigen)
 
 add_executable(create_board_charuco
     cpp_nodes/create_board_charuco.cpp
