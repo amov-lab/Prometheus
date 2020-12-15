@@ -33,6 +33,15 @@ image_transport::Publisher image_pub;
 //设置图像大小
 // cv::Size image_size = Size(1920.0, 1080.0);
 
+
+std::string gstreamer_pipeline (int capture_width, int capture_height, int display_width, int display_height, int framerate, int flip_method) {
+    return "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)" + std::to_string(capture_width) + ", height=(int)" +
+           std::to_string(capture_height) + ", format=(string)NV12, framerate=(fraction)" + std::to_string(framerate) +
+           "/1 ! nvvidconv flip-method=" + std::to_string(flip_method) + " ! video/x-raw, width=(int)" + std::to_string(display_width) + ", height=(int)" +
+           std::to_string(display_height) + ", format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+}
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "web_cam");
@@ -81,15 +90,35 @@ int main(int argc, char **argv)
     nh.getParam("resize_h", resize_h);
     nh.getParam("resize_w", resize_w);
 
+
+    int framerate = 30;
+    int flip_method = 0;
+    std::string pipeline = gstreamer_pipeline(
+        cam_w,
+        cam_h,
+        resize_w,
+        resize_h,
+        framerate,
+        flip_method
+    );
+
+
     // 在这里修改发布话题名称
     image_pub = it.advertise("/prometheus/camera/rgb/image_raw", 1);
 
     // 用系统默认驱动读取摄像头0，使用其他摄像头ID，请在这里修改
     
-    cv::VideoCapture cap(camera_id);
-    // 设置摄像头分辨率
-    cap.set(CAP_PROP_FRAME_WIDTH, camera_width);
-    cap.set(CAP_PROP_FRAME_HEIGHT, camera_height);
+    cv::VideoCapture cap;
+
+    if (camera_id == 99) {
+        cap.open(pipeline, cv::CAP_GSTREAMER);
+    } else {
+        cap.open(camera_id);
+        // 设置摄像头分辨率
+        cap.set(CAP_PROP_FRAME_WIDTH, camera_width);
+        cap.set(CAP_PROP_FRAME_HEIGHT, camera_height);
+    }
+
     cv::Mat frame;
     // 设置全屏
     // namedWindow("web_cam frame", CV_WINDOW_NORMAL);
