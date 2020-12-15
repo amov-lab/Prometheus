@@ -1,5 +1,7 @@
 std_msgs/Header header
 
+string object_name
+
 ## 是否检测到目标
 bool detected
 
