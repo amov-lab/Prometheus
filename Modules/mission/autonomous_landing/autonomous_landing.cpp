@@ -3,9 +3,9 @@
  *
  * Author: Qyp
  *
- * Update Time: 2020.1.12
+ * Update Time: 2020.12.16
  *
- * 说明: 目标追踪示例程序
+ * 说明: 自主降落程序（支持Gazebo仿真 + 静态/慢速靶标真实实验）
  *      1. 订阅目标位置(来自视觉的ros节点)
  *      2. 追踪算法及追踪策略
  *      3. 发布上层控制指令 (prometheus_msgs::ControlCommand)
@@ -13,9 +13,9 @@
 //ROS 头文件
 #include <ros/ros.h>
 #include <iostream>
-#include <mission_utils.h>
 #include <tf/transform_datatypes.h>
-#include <ukf_car.h>
+
+#include "mission_utils.h"
 #include "message_utils.h"
 
 using namespace std;
@@ -24,25 +24,38 @@ using namespace Eigen;
 #define LANDPAD_HEIGHT 0.99
 #define NODE_NAME "autonomous_landing"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-//---------------------------------------Drone---------------------------------------------
-prometheus_msgs::DroneState _DroneState;   
-nav_msgs::Odometry GroundTruth;
-Eigen::Matrix3f R_Body_to_ENU;
-std_msgs::Bool flag_start;
-//---------------------------------------Vision---------------------------------------------
-Detection_result landpad_det;
-Eigen::Vector3f pos_des_prev;
-
-float kpx_land,kpy_land,kpz_land;                                                 //控制参数 - 比例参数
-float start_point_x,start_point_y,start_point_z;
-int debug_mode;
-bool use_ukf;
+bool hold_mode; // 悬停模式，用于测试检测精度
+bool sim_mode;  // 选择Gazebo仿真模式 或 真实实验模式
+bool use_pad_height;  // 是否使用视觉深度
+string message;
+std_msgs::Bool vision_switch;
+geometry_msgs::PoseStamped mission_cmd;
+float start_point[3];    // 起始降落位置
 bool moving_target;
-Eigen::VectorXd state_fusion;
-Eigen::Vector3f camera_offset;
+float target_vel_xy[2];         // 目标移动速度 enu坐标系 单位：m/s
+std_msgs::Bool flag_start;
+//---------------------------------------Drone---------------------------------------------
+prometheus_msgs::DroneState _DroneState;    // 无人机状态
+Eigen::Matrix3f R_Body_to_ENU;              // 无人机机体系至惯性系转换矩阵
+//---------------------------------------Vision---------------------------------------------
+nav_msgs::Odometry GroundTruth;             // 降落板真实位置（仿真中由Gazebo插件提供）
+Detection_result landpad_det;               // 检测结果
 //---------------------------------------Track---------------------------------------------
-float distance_to_setpoint;
-float distance_thres;
+float kp_land[3];         //控制参数 - 比例参数
+
+// 五种状态机
+enum EXEC_STATE
+{
+    WAITING_RESULT,
+    TRACKING,
+    LOST,
+    LANDING,
+};
+EXEC_STATE exec_state;
+
+float distance_to_pad;
+float arm_height_to_ground;
+float arm_distance_to_pad;
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -53,19 +66,26 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
     landpad_det.object_name = "landpad";
     landpad_det.Detection_info = *msg;
+    // 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
+    // 相机安装误差 在mission_utils.h中设置
     landpad_det.pos_body_frame[0] = - landpad_det.Detection_info.position[1] + DOWN_CAMERA_OFFSET_X;
     landpad_det.pos_body_frame[1] = - landpad_det.Detection_info.position[0] + DOWN_CAMERA_OFFSET_Y;
     landpad_det.pos_body_frame[2] = - landpad_det.Detection_info.position[2] + DOWN_CAMERA_OFFSET_Z;
 
+    // 机体系 -> 机体惯性系 (原点在机体的惯性系) (对无人机姿态进行解耦)
     landpad_det.pos_body_enu_frame = R_Body_to_ENU * landpad_det.pos_body_frame;
 
-    //若已知降落板高度，则无需使用深度信息。
-    landpad_det.pos_body_enu_frame[2] = LANDPAD_HEIGHT - _DroneState.position[2];
+    if(use_pad_height)
+    {
+        //若已知降落板高度，则无需使用深度信息。
+        landpad_det.pos_body_enu_frame[2] = LANDPAD_HEIGHT - _DroneState.position[2];
+    }
 
+    // 机体惯性系 -> 惯性系
     landpad_det.pos_enu_frame[0] = _DroneState.position[0] + landpad_det.pos_body_enu_frame[0];
     landpad_det.pos_enu_frame[1] = _DroneState.position[1] + landpad_det.pos_body_enu_frame[1];
     landpad_det.pos_enu_frame[2] = _DroneState.position[2] + landpad_det.pos_body_enu_frame[2];
-    // landpad_det.att_enu_frame[2] = _DroneState.attitude[2] + Detection_raw.attitude[2];
+    // 此降落方案不考虑偏航角 （高级版可提供）
     landpad_det.att_enu_frame[2] = 0.0;
 
     if(landpad_det.Detection_info.detected)
@@ -92,7 +112,6 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 
 }
 
-
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
@@ -110,13 +129,18 @@ void switch_cb(const std_msgs::Bool::ConstPtr& msg)
     flag_start = *msg;
 }
 
+void mission_cb(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+    mission_cmd = *msg;
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "autonomous_landing");
     ros::NodeHandle nh("~");
 
-    //节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
+    // 节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate rate(20.0);
 
     //【订阅】降落板与无人机的相对位置及相对偏航角  单位：米   单位：弧度
@@ -124,11 +148,20 @@ int main(int argc, char **argv)
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
     ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10, landpad_det_cb);
 
+    //【订阅】无人机状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
 
+    //【订阅】地面真值，此信息仅做比较使用 不强制要求提供
     ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/landing_pad", 10, groundtruth_cb);
 
+    //【订阅】用于中断任务，直接降落
+    ros::Subscriber mission_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/mission/cmd", 10, mission_cb);
+
+    //【订阅】降落程序开关，默认情况下不启用，用于多任务情况
     ros::Subscriber switch_sub = nh.subscribe<std_msgs::Bool>("/prometheus/switch/landing", 10, switch_cb);
+
+    // 【发布】 视觉模块开关量
+    ros::Publisher vision_switch_pub = nh.advertise<std_msgs::Bool>("/prometheus/switch/ellipse_det", 10);
 
     //【发布】发送给控制模块 [px4_pos_controller.cpp]的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
@@ -136,31 +169,29 @@ int main(int argc, char **argv)
     // 【发布】用于地面站显示的提示消息
     ros::Publisher message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/main", 10);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    
+    //强制上锁高度
+    nh.param<float>("arm_height_to_ground", arm_height_to_ground, 0.2);
+    //强制上锁距离
+    nh.param<float>("arm_distance_to_pad", arm_distance_to_pad, 0.2);
+    // 悬停模式 - 仅用于观察检测结果
+    nh.param<bool>("hold_mode", hold_mode, false);
+    // 仿真模式 - 区别在于是否自动切换offboard模式
+    nh.param<bool>("sim_mode", sim_mode, true);
 
-    //追踪距离阈值
-    nh.param<float>("distance_thres", distance_thres, 0.2);
+    //追踪控制参数
+    nh.param<float>("kpx_land", kp_land[0], 0.1);
+    nh.param<float>("kpy_land", kp_land[1], 0.1);
+    nh.param<float>("kpz_land", kp_land[2], 0.1);
 
-    //是否使用UKF
-    nh.param<bool>("use_ukf", use_ukf, false);
+    nh.param<float>("start_point_x", start_point[0], 0.0);
+    nh.param<float>("start_point_y", start_point[1], 0.0);
+    nh.param<float>("start_point_z", start_point[2], 1.0);
 
     //目标运动或静止
     nh.param<bool>("moving_target", moving_target, false);
-
-    // DEBUG 模式
-    nh.param<int>("debug_mode", debug_mode, 0);
-
-    //追踪控制参数
-    nh.param<float>("kpx_land", kpx_land, 0.1);
-    nh.param<float>("kpy_land", kpy_land, 0.1);
-    nh.param<float>("kpz_land", kpz_land, 0.1);
-
-
-    nh.param<float>("start_point_x", start_point_x, 0.0);
-    nh.param<float>("start_point_y", start_point_y, 0.0);
-    nh.param<float>("start_point_z", start_point_z, 2.0);
-
-    //ukf用于估计目标运动状态，此处假设目标为恒定转弯速率和速度模型（CTRV）模型
-    UKF_CAR UKF_CAR;
+    nh.param<float>("target_vel_x", target_vel_xy[0], 0.0);
+    nh.param<float>("target_vel_y", target_vel_xy[1], 0.0);
 
     //打印现实检查参数
     printf_param();
@@ -176,40 +207,58 @@ int main(int argc, char **argv)
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    // Waiting for input
-    int start_flag = 0;
-    while(start_flag == 0)
+
+    Command_Now.Command_ID = 1;
+    Command_Now.source = NODE_NAME;
+
+    if(sim_mode)
     {
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
-        cin >> start_flag;
+        // Waiting for input
+        int start_flag = 0;
+        while(start_flag == 0)
+        {
+            cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+            cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
+            cin >> start_flag;
+        }
+
+        while(ros::ok() && _DroneState.mode != "OFFBOARD")
+        {
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+            Command_Now.Command_ID = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
+            Command_Now.Reference_State.yaw_ref = 999;
+            command_pub.publish(Command_Now);   
+            cout << "Switch to OFFBOARD and arm ..."<<endl;
+            ros::Duration(2.0).sleep();
+            ros::spinOnce();
+        }
+    }else
+    {
+        while(ros::ok() && _DroneState.mode != "OFFBOARD")
+        {
+            cout << "Waiting for the offboard mode"<<endl;
+            ros::Duration(1.0).sleep();
+            ros::spinOnce();
+        }
     }
 
     // 起飞
     cout<<"[autonomous_landing]: "<<"Takeoff to predefined position."<<endl;
     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Takeoff to predefined position.");
-    Command_Now.Command_ID = 1;
-    Command_Now.source = NODE_NAME;
-    while( _DroneState.position[2] < 0.3)
-    {
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
-        Command_Now.Command_ID = Command_Now.Command_ID + 1;
-        Command_Now.source = NODE_NAME;
-        Command_Now.Reference_State.yaw_ref = 999;
-        command_pub.publish(Command_Now);   
-        cout << "Switch to OFFBOARD and arm ..."<<endl;
-        ros::Duration(5.0).sleep();
-        
-        Command_Now.header.stamp                    = ros::Time::now();
+
+    while( _DroneState.position[2] < 0.5)
+    {      
+        Command_Now.header.stamp                        = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-        Command_Now.Command_ID = Command_Now.Command_ID + 1;
-        Command_Now.source = NODE_NAME;
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.source                              = NODE_NAME;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.position_ref[0]     = start_point_x;
-        Command_Now.Reference_State.position_ref[1]     = start_point_y;
-        Command_Now.Reference_State.position_ref[2]     = start_point_z;
+        Command_Now.Reference_State.position_ref[0]     = start_point[0];
+        Command_Now.Reference_State.position_ref[1]     = start_point[1];
+        Command_Now.Reference_State.position_ref[2]     = start_point[2];
         Command_Now.Reference_State.yaw_ref             = 0;
         command_pub.publish(Command_Now);
         cout << "Takeoff ..."<<endl;
@@ -218,128 +267,191 @@ int main(int argc, char **argv)
         ros::spinOnce();
     }
 
-
-    // 先读取一些飞控的数据
-    for(int i=0;i<10;i++)
-    {
-        ros::spinOnce();
-        rate.sleep();
-    }
-
-    pos_des_prev[0] = _DroneState.position[0];
-    pos_des_prev[1] = _DroneState.position[1];
-    pos_des_prev[2] = _DroneState.position[2];
-
+    // 等待
     ros::Duration(3.0).sleep();
+
+    exec_state = EXEC_STATE::WAITING_RESULT;
 
     while (ros::ok())
     {
         //回调
         ros::spinOnce();
 
-        if(use_ukf)
+        static int printf_num = 0;
+        printf_num++;
+        // 此处是为了控制打印频率
+        if(printf_num > 20)
         {
-            //UKF
-            prometheus_msgs::DetectionInfo Detection_ENU;
-            Detection_ENU.position[0] = landpad_det.pos_enu_frame[0];
-            Detection_ENU.position[1] = landpad_det.pos_enu_frame[1];
-            Detection_ENU.position[2] = landpad_det.pos_enu_frame[2];
-            Detection_ENU.attitude[2] = landpad_det.att_enu_frame[2];
-
-            state_fusion = UKF_CAR.Run(Detection_ENU,0.05);
-
-            Eigen::Vector3f target_pos_fusion;
-
-            landpad_det.pos_body_enu_frame[0] = state_fusion[0] - _DroneState.position[0];
-            landpad_det.pos_body_enu_frame[1] = state_fusion[1] - _DroneState.position[1];
-            landpad_det.pos_body_enu_frame[2] = state_fusion[2] - _DroneState.position[2];
-            //landpad_det.pos_body_enu_frame[2] = landing_pad_height - _DroneState.position[2];
-        }
-
-        Command_Now.header.stamp                    = ros::Time::now();
-        Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
-
-        printf_result();
-
-        //判断是否满足降落条件
-        distance_to_setpoint = landpad_det.pos_body_enu_frame.norm();
-        if(distance_to_setpoint < distance_thres)
-        {
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
-            cout <<"[autonomous_landing]: Catched the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Catched the Landing Pad.");
-        }else if(!landpad_det.is_detected)
-        {
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
-            pos_des_prev[0] = _DroneState.position[0];
-            pos_des_prev[1] = _DroneState.position[1];
-            pos_des_prev[2] = _DroneState.position[2];
-            cout <<"[autonomous_landing]: Lost the Landing Pad. "<< endl;
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Lost the Landing Pad.");
-        }else if(abs(landpad_det.pos_body_enu_frame[2]) < 0.3)
-        {
-            cout <<"[autonomous_landing]: Reach the lowest height. "<< endl;
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Reach the lowest height.");
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
-        }else
-        {
-            cout <<"[autonomous_landing]: Tracking the Landing Pad, distance_to_setpoint : "<< distance_to_setpoint << " [m] " << endl;
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Tracking the Landing Pad.");
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME;
-            Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
-
-            Eigen::Vector3f vel_command;
-            if(moving_target)
+            if(exec_state == TRACKING)
             {
-                vel_command[0] = 1.0 + kpx_land * (landpad_det.pos_body_enu_frame[0] + 0.1);
-            }else{
-                vel_command[0] = kpx_land * landpad_det.pos_body_enu_frame[0];
+                // 正常追踪
+                //sprintf( message.c_str(), "  Tracking the Landing Pad, distance_to_the_pad :   %f [m] .", distance_to_pad);
+                cout << message <<endl;
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+            }
+
+            if(sim_mode)
+            {
+                printf_result();
             }
             
-            vel_command[1] = kpy_land * landpad_det.pos_body_enu_frame[1];
-            vel_command[2] = kpz_land * landpad_det.pos_body_enu_frame[2];
-
-            for (int i=0; i<3; i++)
-            {
-                Command_Now.Reference_State.position_ref[i] = pos_des_prev[i] + vel_command[i]* 0.05;
-            }
-
-            // 机体系速度控制有些bug
-            // Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-            // Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
-            // Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_VEL;   //xy velocity z position
-
-            // Eigen::Vector3f vel_command;
-            // vel_command[0] = 1.0 + kpx_land * (pos_body_frame[0] + 0.1);
-            // vel_command[1] = kpy_land * pos_body_frame[1];
-            // vel_command[2] = kpz_land * pos_body_frame[2];
-
-            // for (int i=0; i<3; i++)
-            // {
-            //     Command_Now.Reference_State.velocity_ref[i] = vel_command[i];
-            // }
-
-
-            Command_Now.Reference_State.yaw_ref             = 0.0;
-            
-            for (int i=0; i<3; i++)
-            {
-                pos_des_prev[i] = Command_Now.Reference_State.position_ref[i];
-            }
-
+            printf_num = 0;
         }
 
-        //Publish
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Command_ID   = Command_Now.Command_ID + 1;
-        Command_Now.source = NODE_NAME;
-        if (debug_mode == 0)
+        // 接收到中断指令，直接降落
+        if(mission_cmd.pose.position.x == 99)
         {
-            command_pub.publish(Command_Now);
+            exec_state = LANDING;
         }
-        
 
+        switch (exec_state)
+        {
+            // 初始状态，等待视觉检测结果
+            case WAITING_RESULT:
+            {
+                if(landpad_det.is_detected)
+                {
+                    exec_state = TRACKING;
+                    message = "Get the detection result.";
+                    cout << message <<endl;
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+                    break;
+                }
+
+                // 发送视觉节点启动指令
+                vision_switch.data = true;
+                vision_switch_pub.publish(vision_switch);
+                
+                message = "Waiting for the detection result.";
+                cout << message <<endl;
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+                
+                ros::Duration(1.0).sleep();
+                break;
+            }
+            // 追踪状态
+            case TRACKING:
+            {
+                // 丢失,进入LOST状态
+                if(!landpad_det.is_detected)
+                {
+                    exec_state = LOST;
+                    message = "Lost the Landing Pad.";
+                    cout << message <<endl;
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+                    break;
+                }   
+
+                // 抵达上锁点,进入LANDING
+                distance_to_pad = landpad_det.pos_body_enu_frame.norm();
+                //　达到降落距离，上锁降落
+                if(distance_to_pad < arm_distance_to_pad)
+                {
+                    exec_state = LANDING;
+                    message = "Catched the Landing Pad.";
+                    cout << message <<endl;
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+                    break;
+                }
+                //　达到最低高度，上锁降落
+                else if(abs(landpad_det.pos_body_enu_frame[2]) < arm_height_to_ground)
+                {
+                    exec_state = LANDING;
+                    message = "Reach the lowest height.";
+                    cout << message <<endl;
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+                    break;
+                }
+
+                // 机体系速度控制
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+                Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
+                Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_VEL;   //xy velocity z position
+                
+                for (int i=0; i<3; i++)
+                {
+                    Command_Now.Reference_State.velocity_ref[i] = kp_land[i] * landpad_det.pos_body_enu_frame[i];
+                }
+
+                Command_Now.Reference_State.yaw_ref             = 0.0;
+                //Publish
+
+                if (!hold_mode)
+                {
+                    command_pub.publish(Command_Now);
+                }
+
+                break;
+            }
+            case LOST:
+            {
+                static int lost_time = 0;
+                lost_time ++ ;
+                
+                // 重新获得信息,进入TRACKING
+                if(landpad_det.is_detected)
+                {
+                    exec_state = TRACKING;
+                    lost_time = 0;
+                    message = "Regain the Landing Pad.";
+                    cout << message <<endl;
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+                    break;
+                }   
+                
+                // 首先是悬停等待 尝试得到图像, 如果仍然获得不到图像 则原地上升
+                if(lost_time < 10.0)
+                {
+                    Command_Now.header.stamp = ros::Time::now();
+                    Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+                    Command_Now.source = NODE_NAME;
+                    Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+
+                    ros::Duration(0.4).sleep();
+                }else
+                {
+                    Command_Now.header.stamp                        = ros::Time::now();
+                    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+                    Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+                    Command_Now.source                              = NODE_NAME;
+                    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_VEL;
+                    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::BODY_FRAME;
+                    Command_Now.Reference_State.velocity_ref[0]     = 0.0;
+                    Command_Now.Reference_State.velocity_ref[1]     = 0.0;
+                    Command_Now.Reference_State.velocity_ref[2]     = 0.1;
+                    Command_Now.Reference_State.yaw_ref             = 0;
+
+                    // 如果上升超过原始高度，则认为任务失败，则直接降落
+                    if(_DroneState.position[2] >= start_point[2])
+                    {
+                        exec_state = LANDING;
+                        lost_time = 0;
+                        message = "Mission failed, landing... ";
+                        cout << message <<endl;
+                        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+                        break;
+                    }
+                }
+                command_pub.publish(Command_Now);
+                break;
+            }
+            case LANDING:
+            {
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+                command_pub.publish(Command_Now);
+
+                ros::Duration(1.0).sleep();
+
+                break;
+            }
+        }
+      
         rate.sleep();
 
     }
@@ -348,9 +460,9 @@ int main(int argc, char **argv)
 
 }
 
-
 void printf_result()
 {
+
     cout << ">>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<"<< endl;
 
     cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
@@ -362,52 +474,37 @@ void printf_result()
         cout << "is_detected: false" <<endl;
     }
     
-    cout << "Detection_raw(pos): " << landpad_det.pos_body_frame[0] << " [m] "<< landpad_det.pos_body_frame[1] << " [m] "<< landpad_det.pos_body_frame[2] << " [m] "<<endl;
-    cout << "Detection_raw(yaw): " << landpad_det.Detection_info.yaw_error/3.1415926 *180 << " [deg] "<<endl;
+    cout << "Target_pos (body): " << landpad_det.pos_body_frame[0] << " [m] "<< landpad_det.pos_body_frame[1] << " [m] "<< landpad_det.pos_body_frame[2] << " [m] "<<endl;
 
+    cout << "Target_pos (body_enu): " << landpad_det.pos_body_enu_frame[0] << " [m] "<< landpad_det.pos_body_enu_frame[1] << " [m] "<< landpad_det.pos_body_enu_frame[2] << " [m] "<<endl;
 
-    if(use_ukf)
-    {
-        // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Before UKF<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        // cout << "Detection_ENU(pos): " << Detection_ENU.position[0] << " [m] "<< Detection_ENU.position[1] << " [m] "<< Detection_ENU.position[2] << " [m] "<<endl;
-        // cout << "Detection_ENU(yaw): " << Detection_ENU.attitude[2]/3.1415926 *180 << " [du] "<<endl;
-        // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>After UKF<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        // cout << "State_fusion(pos):  " << state_fusion[0] << " [m] "<< state_fusion[1] << " [m] "<< state_fusion[2] << " [m] "<<endl;
-        // cout << "State_fusion(vel):  " << state_fusion[2] << " [m/s] "<<endl;
-        // cout << "State_fusion(yaw):  " << state_fusion[3]/3.1415926 *180 << " [deg] "<< state_fusion[4]/3.1415926 *180 << " [deg/s] "<<endl;
-    }else
-    {
-        cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
-        cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
-    }
-    if (debug_mode == 1)
-    {
-        cout << "Ground_truth(pos):  " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
-        cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
-        cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
-    }
-
-    tf::Quaternion quat;
-    tf::quaternionMsgToTF(GroundTruth.pose.pose.orientation, quat);
- 
-    double roll, pitch, yaw;//定义存储r\p\y的容器
-    tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
-
-    cout << "Ground_truth(yaw):  " << yaw/3.1415926 *180 << " [deg] "<<endl;
+    cout << "Ground_truth(pos):  " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
+    cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
+    cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
 
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>Land Control State<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
-    cout << "pos_des: " << Command_Now.Reference_State.position_ref[0] << " [m] "<< Command_Now.Reference_State.position_ref[1] << " [m] "<< Command_Now.Reference_State.position_ref[2] << " [m] "<<endl;
+    cout << "vel_cmd: " << Command_Now.Reference_State.velocity_ref[0] << " [m/s] "<< Command_Now.Reference_State.velocity_ref[1] << " [m/s] "<< Command_Now.Reference_State.velocity_ref[2] << " [m/s] "<<endl;
 }
 void printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "distance_thres : "<< distance_thres << endl;
-    cout << "kpx_land : "<< kpx_land << endl;
-    cout << "kpy_land : "<< kpy_land << endl;
-    cout << "kpz_land : "<< kpz_land << endl;
-    cout << "start_point_x : "<< start_point_x << endl;
-    cout << "start_point_y : "<< start_point_y << endl;
-    cout << "start_point_z : "<< start_point_z << endl;
+    cout << "hold_mode : "<< hold_mode << endl;
+    cout << "sim_mode : "<< sim_mode << endl;
+    cout << "use_pad_height : "<< use_pad_height << endl;
+    
+
+    cout << "arm_distance_to_pad : "<< arm_distance_to_pad << endl;
+    cout << "arm_height_to_ground : "<< arm_height_to_ground << endl;
+    cout << "kpx_land : "<< kp_land[0] << endl;
+    cout << "kpy_land : "<< kp_land[1] << endl;
+    cout << "kpz_land : "<< kp_land[2] << endl;
+    cout << "start_point_x : "<< start_point[0] << endl;
+    cout << "start_point_y : "<< start_point[1] << endl;
+    cout << "start_point_z : "<< start_point[2] << endl;
+
+    cout << "moving_target : "<< moving_target << endl;
+    cout << "target_vel_x : "<< target_vel_xy[0] << endl;
+    cout << "target_vel_y : "<< target_vel_xy[1] << endl;
 }
 
