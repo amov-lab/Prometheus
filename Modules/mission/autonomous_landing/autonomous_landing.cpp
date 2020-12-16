@@ -21,12 +21,12 @@
 using namespace std;
 using namespace Eigen;
 
-#define LANDPAD_HEIGHT 0.99
 #define NODE_NAME "autonomous_landing"
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 bool hold_mode; // 悬停模式，用于测试检测精度
 bool sim_mode;  // 选择Gazebo仿真模式 或 真实实验模式
-bool use_pad_height;  // 是否使用视觉深度
+bool use_pad_height;  // 是否使用降落板绝对高度
+float pad_height;
 string message;
 std_msgs::Bool vision_switch;
 geometry_msgs::PoseStamped mission_cmd;
@@ -78,7 +78,7 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     if(use_pad_height)
     {
         //若已知降落板高度，则无需使用深度信息。
-        landpad_det.pos_body_enu_frame[2] = LANDPAD_HEIGHT - _DroneState.position[2];
+        landpad_det.pos_body_enu_frame[2] = pad_height - _DroneState.position[2];
     }
 
     // 机体惯性系 -> 惯性系
@@ -171,13 +171,16 @@ int main(int argc, char **argv)
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     
     //强制上锁高度
-    nh.param<float>("arm_height_to_ground", arm_height_to_ground, 0.2);
+    nh.param<float>("arm_height_to_ground", arm_height_to_ground, 0.4);
     //强制上锁距离
-    nh.param<float>("arm_distance_to_pad", arm_distance_to_pad, 0.2);
+    nh.param<float>("arm_distance_to_pad", arm_distance_to_pad, 0.3);
     // 悬停模式 - 仅用于观察检测结果
     nh.param<bool>("hold_mode", hold_mode, false);
     // 仿真模式 - 区别在于是否自动切换offboard模式
     nh.param<bool>("sim_mode", sim_mode, true);
+    // 是否使用降落板绝对高度
+    nh.param<bool>("use_pad_height", use_pad_height, false);
+    nh.param<float>("pad_height", pad_height, 0.01);
 
     //追踪控制参数
     nh.param<float>("kpx_land", kp_land[0], 0.1);
@@ -286,7 +289,7 @@ int main(int argc, char **argv)
             {
                 // 正常追踪
                 char message_chars[256];
-                sprintf(message_chars, "  Tracking the Landing Pad, distance_to_the_pad :   %f [m] .", distance_to_pad);
+                sprintf(message_chars, "Tracking the Landing Pad, distance_to_the_pad :   %f [m] .", distance_to_pad);
                 message = message_chars;
                 cout << message <<endl;
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
@@ -378,6 +381,13 @@ int main(int argc, char **argv)
                     Command_Now.Reference_State.velocity_ref[i] = kp_land[i] * landpad_det.pos_body_enu_frame[i];
                 }
 
+                //
+                if(moving_target)
+                {
+                    Command_Now.Reference_State.velocity_ref[0] += target_vel_xy[0];
+                    Command_Now.Reference_State.velocity_ref[1] += target_vel_xy[1];
+                }
+
                 Command_Now.Reference_State.yaw_ref             = 0.0;
                 //Publish
 
@@ -442,11 +452,22 @@ int main(int argc, char **argv)
             }
             case LANDING:
             {
-                Command_Now.header.stamp = ros::Time::now();
-                Command_Now.Command_ID   = Command_Now.Command_ID + 1;
-                Command_Now.source = NODE_NAME;
-                Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
-                command_pub.publish(Command_Now);
+                if(sim_mode)
+                {
+                    Command_Now.header.stamp = ros::Time::now();
+                    Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+                    Command_Now.source = NODE_NAME;
+                    Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
+                    command_pub.publish(Command_Now);
+                }else
+                {
+                    Command_Now.header.stamp = ros::Time::now();
+                    Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+                    Command_Now.source = NODE_NAME;
+                    Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+                    command_pub.publish(Command_Now);
+                }
+
 
                 ros::Duration(1.0).sleep();
 
@@ -466,6 +487,22 @@ void printf_result()
 {
 
     cout << ">>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<"<< endl;
+
+    switch (exec_state)
+    {
+        case WAITING_RESULT:
+            cout << "exec_state: WAITING_RESULT" <<endl;
+            break;
+        case TRACKING:
+            cout << "exec_state: TRACKING" <<endl;
+            break;
+        case LOST:
+            cout << "exec_state: LOST" <<endl;
+            break;
+        case LANDING:
+            cout << "exec_state: LANDING" <<endl;
+            break;
+    } 
 
     cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     if(landpad_det.is_detected)
