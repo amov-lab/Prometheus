@@ -285,7 +285,9 @@ int main(int argc, char **argv)
             if(exec_state == TRACKING)
             {
                 // 正常追踪
-                //sprintf( message.c_str(), "  Tracking the Landing Pad, distance_to_the_pad :   %f [m] .", distance_to_pad);
+                char message_chars[256];
+                sprintf(message_chars, "  Tracking the Landing Pad, distance_to_the_pad :   %f [m] .", distance_to_pad);
+                message = message_chars;
                 cout << message <<endl;
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
             }
