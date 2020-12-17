@@ -2,7 +2,7 @@
 	<!-- Launch Gazebo Simulation -->
     <arg name="x" default="0"/>
     <arg name="y" default="0"/>
-    <arg name="z" default="0.5"/>
+    <arg name="z" default="0.16"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/AmovUAV/P300_amov.sdf"/>
 	<arg name="model" default="P300_basic"/>
