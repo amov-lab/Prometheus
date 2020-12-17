@@ -21,7 +21,8 @@ ellipse_det_r: 0.45
 kcf_tracker_h: 1.7
 
 ## landpad_det 降落板边长(默认0.6m)，0.6m包括边缘白色部分，黑色部分边长为0.4m
-landpad_det_len: 0.8
+## 仿真中降落板白色边缘边长为0.5357m
+landpad_det_len: 0.5357
 
 ## digitnum_det 数字周围的方框边长(默认1m)
 digitnum_det_len: 0.5
