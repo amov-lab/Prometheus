@@ -1,10 +1,10 @@
 <launch>
 	<!-- Launch Gazebo Simulation -->
-    <arg name="x" default="1"/>
+    <arg name="x" default="0"/>
     <arg name="y" default="0"/>
-    <arg name="z" default="0"/>
+    <arg name="z" default="0.5"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/AmovUAV/P300_amov.sdf"/>
 	<arg name="model" default="P300_basic"/>
     <include file="$(find prometheus_gazebo)/launch/sitl_px4_sender.launch">
 	  <arg name="world" value="$(arg world)"/>
