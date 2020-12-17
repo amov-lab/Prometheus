@@ -42,11 +42,11 @@
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
     <arg name="x" default="1.0"/>
     <arg name="y" default="1.0"/>
-    <arg name="z" default="0.2"/>
+    <arg name="z" default="0.16"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/AmovUAV/P300_amov.sdf"/>
 	<arg name="model" default="P300_basic"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
@@ -82,7 +82,7 @@
 	
 	<!-- run the px4_sender.cpp -->
 	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_pos_controller.yaml"/>
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_sender.yaml"/>
 	</node>
 	
 	<!-- run the ground_station.cpp -->
