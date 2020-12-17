@@ -452,12 +452,13 @@ int main(int argc, char **argv)
             }
             case LANDING:
             {
-                if(sim_mode)
+                if(sim_mode)    //？？
                 {
                     Command_Now.header.stamp = ros::Time::now();
                     Command_Now.Command_ID   = Command_Now.Command_ID + 1;
                     Command_Now.source = NODE_NAME;
-                    Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
+                    //Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
+                    Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
                     command_pub.publish(Command_Now);
                 }else
                 {
