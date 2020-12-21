@@ -9,7 +9,7 @@
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
       <arg name="port" value="9098" doc="websocket server port number, and the number must be matched in the url. default value 9099"/>
       <arg name="address" default="127.0.0.1"/>
-      <!-- <arg name="address" default="192.168.31.122"/> -->
+      <!--arg name="address" default="192.168.31.225"/-->
     </include>
 	
     <arg name="frame_rate" default="1" doc="transmition rate. set it as low as possible, make sure the UI response in time." />
