@@ -1,6 +1,6 @@
 <launch>
     <node pkg="prometheus_detection" type="siam_rpn.py" name="siamrpn_tracker" output="screen">
         <param name="subscriber" value="/prometheus/camera/rgb/image_raw"/>
-        <param name="config" value="camera_param.yaml"/>
+        <param name="config" value="$(find prometheus_detection)/config/camera_param.yaml"/>
     </node>
 </launch>

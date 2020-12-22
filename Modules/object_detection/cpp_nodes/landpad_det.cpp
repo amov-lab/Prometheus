@@ -269,7 +269,7 @@ int main(int argc, char **argv)
     
 
     // 读取参数文档camera_param.yaml中的参数值；
-    YAML::Node camera_config = YAML::LoadFile(ros_path + "/config/" + camera_info);
+    YAML::Node camera_config = YAML::LoadFile(camera_info);
     // 相机内部参数
     double fx = camera_config["fx"].as<double>();
     double fy = camera_config["fy"].as<double>();
