@@ -1,5 +1,5 @@
 /*******************************************************************
- * 文件名:mocap_formation_move.cpp
+ * 文件名:formation_move.cpp
  * 
  * 作者: BOSHEN97
  * 
@@ -11,14 +11,14 @@
 #include "Formation.h"
 #include <unistd.h>
 
-void mocap_formation::init()
+void formation::init()
 {
     //动捕系统位置数据订阅者
-    uav1_mocap_pose_sub = n.subscribe("/mocap/uav1/pose", 10, &mocap_formation::Uav1MocapPoseCallBack, this);
-    uav2_mocap_pose_sub = n.subscribe("/mocap/uav2/pose", 10, &mocap_formation::Uav2MocapPoseCallBack, this);
-    uav3_mocap_pose_sub = n.subscribe("/mocap/uav3/pose", 10, &mocap_formation::Uav3MocapPoseCallBack, this);
-    uav4_mocap_pose_sub = n.subscribe("/mocap/uav4/pose", 10, &mocap_formation::Uav4MocapPoseCallBack, this);
-    uav5_mocap_pose_sub = n.subscribe("/mocap/uav5/pose", 10, &mocap_formation::Uav5MocapPoseCallBack, this);
+    uav1_mocap_pose_sub = n.subscribe("/mocap/uav1/pose", 10, &formation::Uav1MocapPoseCallBack, this);
+    uav2_mocap_pose_sub = n.subscribe("/mocap/uav2/pose", 10, &formation::Uav2MocapPoseCallBack, this);
+    uav3_mocap_pose_sub = n.subscribe("/mocap/uav3/pose", 10, &formation::Uav3MocapPoseCallBack, this);
+    uav4_mocap_pose_sub = n.subscribe("/mocap/uav4/pose", 10, &formation::Uav4MocapPoseCallBack, this);
+    uav5_mocap_pose_sub = n.subscribe("/mocap/uav5/pose", 10, &formation::Uav5MocapPoseCallBack, this);
     //动捕系统位置数据发布者
     uav1_mocap_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/uav1/mavros/vision_pose/pose", 10);
     uav2_mocap_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/uav2/mavros/vision_pose/pose", 10);
@@ -27,7 +27,7 @@ void mocap_formation::init()
     uav5_mocap_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/uav5/mavros/vision_pose/pose", 10);
 }
 
-void mocap_formation::getpose()
+void formation::getpose()
 {
     //初始化
     init();
@@ -53,31 +53,31 @@ void mocap_formation::getpose()
 //获取动捕系统下的五台无人机位置数据
 
 //1号机
-void mocap_formation::Uav1MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
+void formation::Uav1MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
 {
     uav1_current_pose.pose = pose_msgs->pose;
 }
 
 //2号机
-void mocap_formation::Uav2MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
+void formation::Uav2MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
 {
     uav2_current_pose.pose = pose_msgs->pose;
 }
 
 //3号机
-void mocap_formation::Uav3MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
+void formation::Uav3MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
 {
     uav3_current_pose.pose = pose_msgs->pose;
 }
 
 //4号机
-void mocap_formation::Uav4MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
+void formation::Uav4MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
 {
     uav4_current_pose.pose = pose_msgs->pose;
 }
 
 //5号机
-void mocap_formation::Uav5MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
+void formation::Uav5MocapPoseCallBack(const geometry_msgs::PoseStampedConstPtr &pose_msgs)
 {
     uav5_current_pose.pose = pose_msgs->pose;
 }
@@ -85,7 +85,7 @@ void mocap_formation::Uav5MocapPoseCallBack(const geometry_msgs::PoseStampedCons
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "formation/mocap/get_pose");
-    mocap_formation formation;
-    formation.getpose();
+    formation Formation;
+    Formation.getpose();
     return 0;
 }

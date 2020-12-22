@@ -54,6 +54,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ../common/include
+  ../control/include
 )
 
 
@@ -124,6 +125,21 @@ add_executable(formation_mocap_getpose formation/formation_mocap_getpose.cpp)
 add_dependencies(formation_mocap_getpose prometheus_mission_gencpp)
 target_link_libraries(formation_mocap_getpose ${catkin_LIBRARIES})
 
+add_executable(formation_state formation/formation_state.cpp)
+add_dependencies(formation_state prometheus_mission_gencpp)
+target_link_libraries(formation_state ${catkin_LIBRARIES})
+
+add_executable(formation_move formation/formation_move.cpp)
+add_dependencies(formation_move prometheus_mission_gencpp)
+target_link_libraries(formation_move ${catkin_LIBRARIES})
+
+add_executable(formation_change formation/formation_change.cpp)
+add_dependencies(formation_change prometheus_mission_gencpp)
+target_link_libraries(formation_change ${catkin_LIBRARIES})
+
+add_executable(formation_setmode formation/formation_setmode.cpp)
+add_dependencies(formation_setmode prometheus_mission_gencpp)
+target_link_libraries(formation_setmode ${catkin_LIBRARIES})
 
 #############
 ## Install ##
