@@ -1,5 +1,5 @@
 /*******************************************************************
- * 文件名:Mocap_Formation.h
+ * 文件名:Formation.h
  * 
  * 作者: BOSHEN97
  * 
@@ -10,12 +10,14 @@
  * 2. 队形变换
  * 3. 集群控制
  * ****************************************************************/
-#ifndef MOCAP_FORMATION_H
-#define MOCAP_FORMATION_H
+#ifndef FORMATION_H
+#define FORMATION_H
 
+#include "command_to_mavros.h"
 #include <ros/ros.h>
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/CommandBool.h>
+#include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 #include <prometheus_msgs/ControlCommand.h>
@@ -24,21 +26,26 @@
 #include <std_msgs/Int8.h>
 #include <Eigen/Eigen>
 
-class mocap_formation
+class formation
 {
     public:
 
         //初始化函数,创建发布者,订阅者,变量初始化等
         void init();
 
-        //无人机集群解锁以及切入offboard模式
-        void set_formation_offboard();
+        //无人机集群解锁以及切入offboard模式(px4)
+        void set_formation_px4_offboard();
 
+        //无人机集群解锁以及切入guided模式并起飞(apm)
+        void set_formation_apm_guided();
+
+        //无人机集群切入LAND模式(px4)
+        void set_formation_px4_land();
+
+        //无人机集群切入LAND模式(apm)
+        void set_formation_apm_land();
         //无人机集群上锁
         void set_formation_disarmed();
-
-        //无人机集群切入LAND模式
-        void set_formation_land();
 
         //程序是否等待函数
         void is_wait(int time);
@@ -197,6 +204,18 @@ class mocap_formation
         //5号机位置数据订阅者
         ros::Subscriber uav5_pose_sub;
 
+/*******************客户端*******************/
+
+        ros::ServiceClient uav1_takeoff_client;
+
+        ros::ServiceClient uav2_takeoff_client;
+
+        ros::ServiceClient uav3_takeoff_client;
+
+        ros::ServiceClient uav4_takeoff_client;
+
+        ros::ServiceClient uav5_takeoff_client;
+
 /*******************发布者*******************/
 
         //队形变换发布者
@@ -205,19 +224,19 @@ class mocap_formation
         //控制命令发布者
         ros::Publisher cmd_pub;
 
-        //1号机位置数据发布者
+        //1号机动捕位置数据发布者
         ros::Publisher uav1_mocap_pose_pub;
 
-        //2号机位置数据发布者
+        //2号机动捕位置数据发布者
         ros::Publisher uav2_mocap_pose_pub;
         
-        //3号机位置数据发布者
+        //3号机动捕位置数据发布者
         ros::Publisher uav3_mocap_pose_pub;
 
-        //4号机位置数据发布者
+        //4号机动捕位置数据发布者
         ros::Publisher uav4_mocap_pose_pub;
 
-        //5号机位置数据发布者
+        //5号机动捕位置数据发布者
         ros::Publisher uav5_mocap_pose_pub;
 
 /*******************变量*******************/
@@ -297,6 +316,21 @@ class mocap_formation
         //5号机当前状态
         mavros_msgs::State uav5_state;
 
+        //1号机起飞客户端变量(apm)
+        mavros_msgs::CommandTOL uav1_takeoff_cmd;
+
+        //2号机起飞客户端变量(apm)
+        mavros_msgs::CommandTOL uav2_takeoff_cmd;
+
+        //3号机起飞客户端变量(apm)
+        mavros_msgs::CommandTOL uav3_takeoff_cmd;
+
+        //4号机起飞客户端变量(apm)
+        mavros_msgs::CommandTOL uav4_takeoff_cmd;
+
+        //5号机起飞客户端变量(apm)
+        mavros_msgs::CommandTOL uav5_takeoff_cmd;
+
         //集群队形X轴间隔距离:一字队形以及三角队形飞机之间X轴间隔距离为1倍该变量,菱形队形为2倍
         double formation_distance_x;
 
@@ -327,10 +361,16 @@ class mocap_formation
         //是否为仿真.true代表为仿真,false代表真机
         bool sim;
 
+        //飞行控制系统:px4 或者 apm
+        std::string flight_controller;
+
+        //起飞高度(apm)
+        double takeoff_height;
+
         //程序运行初始时间
         ros::Time begin_time;
 
 };
 
 
-#endif //MOCAP_FORMATION_H
+#endif //FORMATION_H
