@@ -42,7 +42,7 @@ using namespace std;
 class command_to_mavros
 {
     public:
-    //constructed function
+    //constructed function 1
     command_to_mavros(void):
         command_nh("~")
     {
@@ -52,6 +52,53 @@ class command_to_mavros
         {
             uav_name = "";
         }
+        
+        pos_drone_fcu_target    = Eigen::Vector3d(0.0,0.0,0.0);
+        vel_drone_fcu_target    = Eigen::Vector3d(0.0,0.0,0.0);
+        accel_drone_fcu_target  = Eigen::Vector3d(0.0,0.0,0.0);
+        q_fcu_target            = Eigen::Quaterniond(0.0,0.0,0.0,0.0);
+        euler_fcu_target        = Eigen::Vector3d(0.0,0.0,0.0);
+        rates_fcu_target        = Eigen::Vector3d(0.0,0.0,0.0);
+        Thrust_target           = 0.0;
+
+        // 【订阅】无人机期望位置/速度/加速度 坐标系:ENU系
+        //  本话题来自飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp读取), 对应Mavlink消息为POSITION_TARGET_LOCAL_NED, 对应的飞控中的uORB消息为vehicle_local_position_setpoint.msg
+        position_target_sub = command_nh.subscribe<mavros_msgs::PositionTarget>(uav_name + "/mavros/setpoint_raw/target_local", 10, &command_to_mavros::pos_target_cb,this);
+
+        // 【订阅】无人机期望角度/角速度 坐标系:ENU系
+        //  本话题来自飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp读取), 对应Mavlink消息为ATTITUDE_TARGET (#83), 对应的飞控中的uORB消息为vehicle_attitude_setpoint.msg
+        attitude_target_sub = command_nh.subscribe<mavros_msgs::AttitudeTarget>(uav_name + "/mavros/setpoint_raw/target_attitude", 10, &command_to_mavros::att_target_cb,this);
+
+        // 【订阅】无人机底层控制量（Mx My Mz 及 F） [0][1][2][3]分别对应 roll pitch yaw控制量 及 油门推力
+        //  本话题来自飞控(通过Mavros功能包 /plugins/actuator_control.cpp读取), 对应Mavlink消息为ACTUATOR_CONTROL_TARGET, 对应的飞控中的uORB消息为actuator_controls.msg
+        actuator_target_sub = command_nh.subscribe<mavros_msgs::ActuatorControl>(uav_name + "/mavros/target_actuator_control", 10, &command_to_mavros::actuator_target_cb,this);
+
+        // 【发布】位置/速度/加速度期望值 坐标系 ENU系
+        //  本话题要发送至飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp发送), 对应Mavlink消息为SET_POSITION_TARGET_LOCAL_NED (#84), 对应的飞控中的uORB消息为position_setpoint_triplet.msg
+        setpoint_raw_local_pub = command_nh.advertise<mavros_msgs::PositionTarget>(uav_name + "/mavros/setpoint_raw/local", 10);
+
+        // 【发布】角度/角速度期望值 坐标系 ENU系
+        //  本话题要发送至飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp发送), 对应Mavlink消息为SET_ATTITUDE_TARGET (#82), 对应的飞控中的uORB消息为vehicle_attitude_setpoint.msg（角度） 或vehicle_rates_setpoint.msg（角速度）
+        setpoint_raw_attitude_pub = command_nh.advertise<mavros_msgs::AttitudeTarget>(uav_name + "/mavros/setpoint_raw/attitude", 10);
+
+        // 【发布】底层控制量（Mx My Mz 及 F） [0][1][2][3]分别对应 roll pitch yaw控制量 及 油门推力 注意 这里是NED系的！！
+        //  本话题要发送至飞控(通过Mavros功能包 /plugins/actuator_control.cpp发送), 对应Mavlink消息为SET_ACTUATOR_CONTROL_TARGET, 对应的飞控中的uORB消息为actuator_controls.msg
+        actuator_setpoint_pub = command_nh.advertise<mavros_msgs::ActuatorControl>(uav_name + "/mavros/actuator_control", 10);
+
+        // 【服务】解锁/上锁
+        //  本服务通过Mavros功能包 /plugins/command.cpp 实现
+        arming_client = command_nh.serviceClient<mavros_msgs::CommandBool>(uav_name + "/mavros/cmd/arming");
+
+        // 【服务】修改系统模式
+        //  本服务通过Mavros功能包 /plugins/command.cpp 实现
+        set_mode_client = command_nh.serviceClient<mavros_msgs::SetMode>(uav_name + "/mavros/set_mode");
+    }
+
+		//constructed function 2
+    command_to_mavros(string Uav_name):
+        command_nh("~")
+    {
+        uav_name = Uav_name;
         
         pos_drone_fcu_target    = Eigen::Vector3d(0.0,0.0,0.0);
         vel_drone_fcu_target    = Eigen::Vector3d(0.0,0.0,0.0);
