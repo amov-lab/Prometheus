@@ -120,6 +120,10 @@ add_executable(fake_detectioninfo test/fake_detectioninfo.cpp)
 add_dependencies(fake_detectioninfo prometheus_mission_gencpp)
 target_link_libraries(fake_detectioninfo ${catkin_LIBRARIES})
 
+add_executable(formation_mocap_getpose formation/formation_mocap_getpose.cpp)
+add_dependencies(formation_mocap_getpose prometheus_mission_gencpp)
+target_link_libraries(formation_mocap_getpose ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##
