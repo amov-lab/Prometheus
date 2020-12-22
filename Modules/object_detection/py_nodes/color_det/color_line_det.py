@@ -213,7 +213,7 @@ if __name__ == '__main__':
     line_color = rospy.get_param('~line_color', 'black')    
 
 
-    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + config
+    yaml_config_fn = config
     print('Input config file: {}'.format(config))
 
     yaml_config = yaml.load(open(yaml_config_fn))

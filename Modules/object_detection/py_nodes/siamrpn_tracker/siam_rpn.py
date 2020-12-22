@@ -193,7 +193,7 @@ if __name__ == '__main__':
     subscriber = rospy.get_param('~subscriber', '/prometheus/camera/rgb/image_raw')
     config = rospy.get_param('~config', 'camera_param.yaml')
 
-    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + config
+    yaml_config_fn = config
     print('Input config file: {}'.format(config))
 
     yaml_config = yaml.load(open(yaml_config_fn))
