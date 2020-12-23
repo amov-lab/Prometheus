@@ -338,7 +338,7 @@ int main(int argc, char **argv)
             case TRACKING:
             {
                 // 丢失,进入LOST状态
-                if(!landpad_det.is_detected)
+                if(!landpad_det.is_detected && !hold_mode)
                 {
                     exec_state = LOST;
                     message = "Lost the Landing Pad.";
