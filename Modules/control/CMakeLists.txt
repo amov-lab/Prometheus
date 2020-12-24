@@ -97,28 +97,16 @@ add_executable(swarm_ground_station src/swarm_control/swarm_ground_station.cpp)
 add_dependencies(swarm_ground_station prometheus_control_gencpp)
 target_link_libraries(swarm_ground_station ${catkin_LIBRARIES})
 
-##ground_station.cpp
-add_executable(ground_station src/ground_station.cpp)
-add_dependencies(ground_station prometheus_control_gencpp)
-target_link_libraries(ground_station ${catkin_LIBRARIES})
-
-##ground_station_msg.cpp
-add_executable(ground_station_msg src/ground_station_msg.cpp)
-add_dependencies(ground_station_msg prometheus_control_gencpp)
-target_link_libraries(ground_station_msg ${catkin_LIBRARIES})
 
 ###### Test File ##########
 #add_executable(px4_fw_controller src/Test/px4_fw_controller.cpp)
 #add_dependencies(px4_fw_controller prometheus_control_gencpp)
 #target_link_libraries(px4_fw_controller ${catkin_LIBRARIES})
 
-add_executable(px4_sender src/px4_sender/px4_sender.cpp)
+add_executable(px4_sender src/px4_sender.cpp)
 add_dependencies(px4_sender prometheus_control_gencpp)
 target_link_libraries(px4_sender ${catkin_LIBRARIES})
 
-add_executable(sender_ground_station src/px4_sender/sender_ground_station.cpp)
-add_dependencies(sender_ground_station prometheus_control_gencpp)
-target_link_libraries(sender_ground_station ${catkin_LIBRARIES})
 
 ###### Utilities File ##########
 #add_executable(keyboard_control src/Utilities/keyboard_control.cpp)

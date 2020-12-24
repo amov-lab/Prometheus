@@ -7,7 +7,7 @@
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/multi_gate.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_front/P300_Monocular_front.sdf"/>
 	<arg name="model" default="P300_Monocular_front"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
@@ -20,7 +20,12 @@
 	<!-- run the circle_det -->
     <node pkg="prometheus_detection" type="ellipse_det" name="ellipse_det" output="screen">
         <param name="camera_topic" type="string" value="/P300_Monocular_front/Monocular/image_raw" />
-        <param name="camera_info" type="string" value="camera_param_gazebo_monocular.yaml" />
+        <param name="camera_info" type="string" value="$(find prometheus_detection)/config/camera_param_gazebo_monocular.yaml" />
+        <param name="with_training" type="bool" value="false" />
+        <param name="train_imlist" type="string" value="$(find prometheus_detection)/dataset/ellipse/landing_patches.txt" />
+        <param name="train_imdir" type="string" value="$(find prometheus_detection)/dataset/ellipse/landing_patches" />
+        <param name="saving_center" type="bool" value="false" />
+        <param name="saving_path" type="string" value="$(find prometheus_detection)/dataset/ellipse/images_from_camera" />
     </node>
 
 	<!-- run the circle_crossing.cpp -->

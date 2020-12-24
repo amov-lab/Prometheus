@@ -10,7 +10,6 @@
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
 	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
 	
-	
 	<!-- PX4 configs -->
     <arg name="interactive" default="true"/>
     <!-- PX4 SITL -->
@@ -42,11 +41,11 @@
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
     <arg name="x" default="1.0"/>
     <arg name="y" default="1.0"/>
-    <arg name="z" default="0.16"/>
+    <arg name="z" default="0.2"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/AmovUAV/P300_amov.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
 	<arg name="model" default="P300_basic"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
@@ -63,7 +62,7 @@
 	</node>
 	
 	<!-- TF transform -->
-	<include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/tf_transform.launch">
 		<arg name="x" value="$(arg x)"/>
     	<arg name="y" value="$(arg y)"/>
     	<arg name="z" value="$(arg z)"/>
@@ -80,11 +79,10 @@
 		<param name="offset_z" value="$(arg z)" />
 	</node>
 	
-	<!-- run the px4_sender.cpp -->
-	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_sender.yaml"/>
+	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_pos_controller.yaml"/>
 	</node>
-	
+
 	<!-- run the ground_station.cpp -->
 	<node pkg="prometheus_station" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
@@ -92,5 +90,16 @@
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_station" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
+
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
+	</node>	
+		
+	<!-- run the rviz -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_controller_test.rviz" />
+    </group>
 </launch>
 

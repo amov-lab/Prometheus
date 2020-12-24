@@ -46,7 +46,7 @@
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/AmovUAV/P300_amov.sdf"/>
 	<arg name="model" default="P300_basic"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
@@ -63,7 +63,7 @@
 	</node>
 	
 	<!-- TF transform -->
-	<include file="$(find prometheus_gazebo)/launch/tf_transform.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/tf_transform.launch">
 		<arg name="x" value="$(arg x)"/>
     	<arg name="y" value="$(arg y)"/>
     	<arg name="z" value="$(arg z)"/>
@@ -81,7 +81,7 @@
 	</node>
 	
 	<!-- run the px4_pos_controller.cpp -->
-	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
+	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_pos_controller.yaml"/>
 	</node>
 	

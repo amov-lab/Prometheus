@@ -10,7 +10,7 @@
     <arg if="$(arg rgbd)" name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
 	<arg if="$(arg lidar)" name="model" default="P300_3Dlidar"/>
     <arg if="$(arg rgbd)" name="model" default="P300_D435i"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
@@ -33,7 +33,7 @@
     </group> 
     <!-- build octomap via rgbd data -->
     <group if="$(arg rgbd)">
-        <include file="$(find prometheus_gazebo)/launch/depth_proc.launch"></include>
+        <include file="$(find prometheus_gazebo)/launch_basic/depth_proc.launch"></include>
         <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
             <param name="resolution" value="0.1" />
             <!-- 发布地图的坐标系 -->
