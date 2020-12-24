@@ -16,8 +16,10 @@ void formation::init()
     //获取相关参数
     ros::param::param<int>("~OFFBOARD_intervals", offboard_intervals, 3);
     ros::param::param<int>("~LAND_intervals", land_intervals, 3);
-    ros::param::param<string>("Flight_controller", flight_controller, "spm");
-    ros::param::param<double>("Takeoff_height", takeoff_height, 1.0);
+    ros::param::param<string>("~Flight_controller", flight_controller, "spm");
+    ros::param::param<double>("~Takeoff_height", takeoff_height, 1.0);
+
+    check_param();
 }
 
 void formation::is_wait(int time)
@@ -27,7 +29,22 @@ void formation::is_wait(int time)
     {
         sleep(time);
     }
+}
 
+bool formation::check_param()
+{
+    char tmp[100];
+    strncpy(tmp,flight_controller.c_str(),flight_controller.length() + 1);
+    if(flight_controller == "apm" || flight_controller == "px4")
+    {   
+        ROS_INFO("Flight_controller is [%s]\n", tmp);           
+    }
+    else
+    {
+        ROS_ERROR("param [flight_controller] value error, value is [%s], not apm or px4\n", tmp);
+        ros::shutdown();
+    }
+    
 }
 
 void formation::set_formation_px4_offboard()
@@ -505,13 +522,6 @@ void formation::set_mode()
                         break;
                 }
             }
-            else
-            {
-                char tmp[100]; 
-                strncpy(tmp,flight_controller.c_str(),flight_controller.length() + 1);
-                ROS_ERROR("param [flight_controller] value error, value is [%s], not apm or px4", tmp);
-                ros::shutdown();
-            } 
         }  
     }
 }

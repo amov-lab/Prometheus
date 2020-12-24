@@ -1,0 +1,7 @@
+<launch>
+
+    <node pkg="prometheus_mission" type="formation_change" name="formation/change" output="screen">
+        <param name="DIAMOND_intervals" value="5"/>
+    </node>
+
+</launch>

@@ -141,6 +141,10 @@ add_executable(formation_setmode formation/formation_setmode.cpp)
 add_dependencies(formation_setmode prometheus_mission_gencpp)
 target_link_libraries(formation_setmode ${catkin_LIBRARIES})
 
+add_executable(formation_control formation/formation_control.cpp)
+add_dependencies(formation_control prometheus_mission_gencpp)
+target_link_libraries(formation_control ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############

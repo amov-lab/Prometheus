@@ -92,6 +92,9 @@ class formation
         //集群控制函数
         void control();
 
+        //参数检查函数
+        bool check_param();
+
         //获取单台无人机控制数据
         void get_uav_cmd(Eigen::Vector3d offset_pose, mavros_msgs::PositionTarget& desired_pose);
 
@@ -364,6 +367,9 @@ class formation
         //飞行控制系统:px4 或者 apm
         std::string flight_controller;
 
+        //定位数据来源
+        std::string location_source;
+
         //起飞高度(apm)
         double takeoff_height;
 
@@ -371,6 +377,5 @@ class formation
         ros::Time begin_time;
 
 };
-
 
 #endif //FORMATION_H
