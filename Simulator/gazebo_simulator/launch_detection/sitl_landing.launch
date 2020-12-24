@@ -34,6 +34,10 @@
 		<param name="start_point_x" value="0.0" />
 		<param name="start_point_y" value="0.0" />
 		<param name="start_point_z" value="2.5" />
+		<!-- 相机安装偏差 -->
+		<param name="camera_offset_x" value="0.0" />
+		<param name="camera_offset_y" value="0.0" />
+		<param name="camera_offset_z" value="-0.1" />
 		<!-- 追踪控制参数 -->
 		<param name="kpx_land" value="0.2" />
 		<param name="kpy_land" value="0.2" />

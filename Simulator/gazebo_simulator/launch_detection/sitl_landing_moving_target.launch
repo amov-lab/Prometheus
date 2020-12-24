@@ -34,15 +34,19 @@
 		<param name="start_point_x" value="-4.0" />
 		<param name="start_point_y" value="-2.0" />
 		<param name="start_point_z" value="4.5" />
+		<!-- 相机安装偏差 -->
+		<param name="camera_offset_x" value="0.0" />
+		<param name="camera_offset_y" value="0.0" />
+		<param name="camera_offset_z" value="-0.1" />
 		<!-- 追踪控制参数 -->
-		<param name="kpx_land" value="0.35" />
-		<param name="kpy_land" value="0.35" />
+		<param name="kpx_land" value="0.5" />
+		<param name="kpy_land" value="0.5" />
 		<param name="kpz_land" value="0.12" />
 		<param name="arm_height_to_ground" value="0.3" />
 		<param name="arm_distance_to_pad" value="0.4" />
 		<!-- 目标是否移动及其速度 -->
 		<param name="moving_target" value="true" />
-		<param name="target_vel_x" value="1.05" />
+		<param name="target_vel_x" value="1.1" />
 		<param name="target_vel_y" value="0.0" />
 	</node>
 
