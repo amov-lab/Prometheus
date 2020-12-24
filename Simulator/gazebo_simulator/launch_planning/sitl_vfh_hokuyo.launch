@@ -1,12 +1,12 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
-    <arg name="x" default="-3.0"/>
-    <arg name="y" default="-0.0"/>
+    <arg name="x" default="-0.0"/>
+    <arg name="y" default="-10.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
 	<arg name="model" default="P300_hokuyo_2Dlidar"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
@@ -24,11 +24,11 @@
 		<!-- 激光雷达模型,0代表3d雷达,1代表2d雷达 -->
 		<param name="planning/lidar_model" value="1" type="int"/>
 		<!-- 最大速度，设的越小越安全 -->
-		<param name="planning/max_planning_vel" value="0.3" type="double"/>
+		<param name="planning/max_planning_vel" value="0.2" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
 		<param name="vfh/inflate_distance" value="0.6" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="vfh/sensing_distance" value="5" type="double"/>  
+		<param name="vfh/sensing_distance" value="1.5" type="double"/>  
 		<!-- weight -->
 		<param name="vfh/obstacle_weight" value="10.0" type="double"/>
 		<param name="vfh/goalWeight" value="0.1" type="double"/>

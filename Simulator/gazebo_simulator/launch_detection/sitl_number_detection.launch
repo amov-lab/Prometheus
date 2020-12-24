@@ -7,7 +7,7 @@
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/wall_num.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_front/P300_Monocular_front.sdf"/>
 	<arg name="model" default="P300_Monocular_front"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
@@ -20,7 +20,7 @@
 	<!-- run the digitnum_det -->
     <node pkg="prometheus_detection" type="pytorch_mnist_det.py" name="digitnum_det" output="screen">
         <param name="subscriber" value="/P300_Monocular_front/Monocular/image_raw"/>
-        <param name="config" value="camera_param_gazebo_monocular.yaml"/>
+        <param name="config" value="$(find prometheus_detection)/config/camera_param_gazebo_monocular.yaml"/>
     </node>
 
 	<!-- run the number_detection.cpp -->
