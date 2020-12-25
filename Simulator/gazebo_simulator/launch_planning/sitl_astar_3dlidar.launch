@@ -28,42 +28,45 @@
 
     <!-- 启动全局规划算法 -->
     <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
-    <node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen">
-        <remap from="/prometheus/planning/global_pcl" to="$(arg topic_of_global_pcl)" />
+    <node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">
+        <remap from="/prometheus/global_planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
+        <!-- 二维平面规划 -->
+        <param name="global_planner/is_2D" value="false" type="bool"/>
+        <!-- ２维高度，建议与起飞高度一致 -->
+        <param name="global_planner/fly_height_2D" value="1.0" type="double"/>
         <!-- 停止距离 -->
-        <param name="planning/safe_distance" value="0.01" type="double"/>
+        <param name="global_planner/safe_distance" value="0.01" type="double"/>
+        <param name="global_planner/time_per_path" value="1.0" type="double"/>
+        <param name="global_planner/replan_time" value="2.0" type="double"/>
+        <param name="global_planner/map_input" value="0" type="int"/>
+        <param name="global_planner/sim_mode" value="true" type="bool"/>
         <!-- 最大搜索步数 -->
-        <param name="astar/allocate_num" value="100000" type="int"/>
+        <param name="astar/allocate_num" value="10000" type="int"/>
         <!-- 启发式函数系数 -->
         <param name="astar/lambda_heu" value="2.0" type="double"/>
         <!-- 分辨率 -->
-        <param name="astar/resolution_astar" value="0.1" type="double"/>
+        <param name="map/resolution" value="0.1" type="double"/>
         <!-- 障碍物膨胀距离 -->
-        <param name="astar/inflate" value="0.5" type="double"/>
-        <!-- 二维平面规划 -->
-        <param name="astar/is_2D" value="0" type="int"/>
+        <param name="map/inflate" value="0.8" type="double"/>
         <!-- 地图范围 -->
-        <param name="map/map_size_x" value="30.0" type="double"/>
-        <param name="map/map_size_y" value="30.0" type="double"/>
-        <param name="map/map_size_z" value="5.0" type="double"/>
         <param name="map/origin_x" value="-15.0" type="double"/>
         <param name="map/origin_y" value="-15.0" type="double"/>
-        <param name="map/origin_z" value="0.0" type="double"/>
-        <param name="map/ceil_height_" value="5.0" type="double"/>
-        <param name="map/floor_height_" value="0.01" type="double"/>
+        <param name="map/origin_z" value="-0.5" type="double"/>
+        <param name="map/map_size_x" value="30.0" type="double"/>
+        <param name="map/map_size_y" value="30.0" type="double"/>
+        <param name="map/map_size_z" value="3.0" type="double"/>
     </node>
 
-	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
-	<node pkg="prometheus_mission" type="planning_mission_astar" name="planning_mission_astar" output="screen" launch-prefix="gnome-terminal --">	
-		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
+	<!-- run the pub_goal.cpp -->
+	<node pkg="prometheus_mission" type="pub_goal" name="pub_goal" output="screen" launch-prefix="gnome-terminal --">	
 	</node>
-
+    
 	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_planning.rviz" />
-        <!-- obstacle.world 真实点云 -->
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_config_astar.rviz" />
+        <!-- 真实点云 -->
         <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
 		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
 	    </node>

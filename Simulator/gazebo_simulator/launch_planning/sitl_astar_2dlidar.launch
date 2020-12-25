@@ -1,11 +1,11 @@
 <launch>
     <!-- Launch Gazebo Simulation -->
-    <arg name="x" default="-10.0"/>
-    <arg name="y" default="-0.0"/>
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="-10.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
-	<arg name="model" default="P300_D435i"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_hokuyo_2Dlidar/P300_hokuyo_2Dlidar.sdf"/>
+	<arg name="model" default="P300_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -15,26 +15,23 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-    <!-- 启动rtabmap_ros建图 -->
-    <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
-        <arg name="rtabmap_args"       value="--delete_db_on_start"/>
-        <arg name="frame_id"           value="base_link"/>
-        <arg name="visual_odometry"    value="false"/>
-        <!-- RGB-D related topics -->
-        <arg name="approx_sync"         value="true"/>
-        <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
-        <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
-        <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="odom_topic"         value="/prometheus/drone_odom"/> 
+	<!-- run the laser_to_pointcloud -->
+    <node pkg="prometheus_gazebo" type="laser_to_pointcloud.py" name="laser_to_pointcloud" >
+    </node>
+
+    <!-- 启动octomap建图 -->
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+        <param name="resolution" value="0.1" />
         <!-- 发布地图的坐标系 -->
-        <arg name="map_frame_id"       value="rtabmap"/>   
-        <!--visualization-->
-		<arg name="rtabmapviz"         value="false"/>
-        <arg name="rviz"               value="false"/>
-    </include>
+        <param name="frame_id" type="string" value="world" />
+        <!-- 传感器最大感知范围 (speedup!) -->
+        <param name="sensor_model/max_range" value="5.0" />
+        <!-- 局部点云输入 -->
+        <remap from="cloud_in" to="/prometheus/sensors/pcl2" />
+    </node>
 
     <!-- 启动全局规划算法 -->
-    <arg name="topic_of_global_pcl" default="/rtabmap/cloud_map"/>
+    <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
     <node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">
         <remap from="/prometheus/global_planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
@@ -72,8 +69,8 @@
 	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_planning.rviz" />
-        <!-- obstacle.world 真实点云 -->
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_config_astar.rviz" />
+        <!-- 真实点云 -->
         <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
 		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
 	    </node>
