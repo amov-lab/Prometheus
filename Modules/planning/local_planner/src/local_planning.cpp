@@ -1,30 +1,55 @@
-//
-// Created by taojiang on 2019/12/9.
-//
-
 #include "local_planning.h"
 
-namespace local_planner
+namespace Local_Planning
 {
 
 // 局部规划算法 初始化函数
-void LocalPlanningClass::init(ros::NodeHandle& nh)
+void Local_Planner::init(ros::NodeHandle& nh)
 {
-    // set mode
-    flight_type_ = FLIGHT_TYPE::MANUAL_GOAL;
-
-
-    // 发布本节点提示消息
-    message_pub = node_.advertise<prometheus_msgs::Message>("/prometheus/message/local_planner", 10);
-
     // 参数读取
-    // 最大速度
-    nh.param("planning/max_planning_vel", max_planning_vel, 0.4);
+    // 根据参数 planning/algorithm_mode 选择局部避障算法: 0为APF,1为VFH
+    nh.param("local_planner/algorithm_mode", algorithm_mode, 0);
     // 激光雷达模型,0代表3d雷达,1代表2d雷达
     // 3d雷达输入类型为 <sensor_msgs::PointCloud2> 2d雷达输入类型为 <sensor_msgs::LaserScan>
-    nh.param("planning/lidar_model", lidar_model, 0);
-    // 根据参数 planning/algorithm_mode 选择局部避障算法: 0为APF,1为VFH
-    nh.param("planning/algorithm_mode", algorithm_mode, 0);
+    nh.param("local_planner/lidar_model", lidar_model, 0);
+    // TRUE代表2D平面规划及搜索,FALSE代表3D 
+    nh.param("local_planner/is_2D", is_2D, true); 
+    // 2D规划时,定高高度
+    nh.param("local_planner/fly_height_2D", fly_height_2D, 1.0);  
+    // 是否为仿真模式
+    nh.param("local_planner/sim_mode", sim_mode, false); 
+    // 最大速度
+    nh.param("local_planner/max_planning_vel", max_planning_vel, 0.4);
+
+    // 订阅目标点
+    goal_sub = nh.subscribe("/prometheus/planning/goal", 1, &Local_Planner::goal_cb, this);
+
+    // 订阅 无人机状态
+    drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, &Local_Planner::drone_state_cb, this);
+
+    // 订阅传感器点云信息,该话题名字可在launch文件中任意指定
+    if (lidar_model == 0)
+    {
+        local_point_clound_sub = nh.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1, &Local_Planner::localcloudCallback, this);
+    }else if (lidar_model == 1)
+    {
+        local_point_clound_sub = nh.subscribe<sensor_msgs::LaserScan>("/prometheus/planning/local_pcl", 1, &Local_Planner::laserscanCallback, this);
+    }
+
+    // 发布 期望速度
+    command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+    
+    // 发布提示消息
+    message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/local_planner", 10);
+
+    // 发布速度用于显示
+    rviz_vel_pub = nh.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10); 
+
+    // 定时函数,执行周期为1Hz
+    mainloop_timer = nh.createTimer(ros::Duration(0.2), &Local_Planner::mainloop_cb, this);
+
+    // 控制定时器
+    control_timer = nh.createTimer(ros::Duration(0.05), &Local_Planner::control_cb, this);
 
     // 选择避障算法
     if(algorithm_mode==0){
@@ -38,223 +63,144 @@ void LocalPlanningClass::init(ros::NodeHandle& nh)
         local_alg_ptr->init(nh);
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "VFH init.");
     }
-    
+
+    // 规划器状态参数初始化
+    exec_state = EXEC_STATE::WAIT_GOAL;
+    odom_ready = false;
+    drone_ready = false;
+    goal_ready = false;
+    sensor_ready = false;
+    path_ok = false;
+
+    // 初始化发布的指令
+    Command_Now.header.stamp = ros::Time::now();
+    Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+    Command_Now.Command_ID = 0;
+    Command_Now.source = NODE_NAME;
+    desired_yaw = 0.0;
+
+    //　仿真模式下直接发送切换模式与起飞指令
+    if(sim_mode == true)
+    {
+        // Waiting for input
+        int start_flag = 0;
+        while(start_flag == 0)
+        {
+            cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Global Planner<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+            cout << "Please input 1 for start:"<<endl;
+            cin >> start_flag;
+        }
+        // 起飞
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
+        Command_Now.Reference_State.yaw_ref = 999;
+        command_pub.publish(Command_Now);   
+        cout << "Switch to OFFBOARD and arm ..."<<endl;
+        ros::Duration(3.0).sleep();
         
-    // 订阅目标点
-    waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &LocalPlanningClass::waypointCallback, this);
-
-    // 订阅无人机当前位置
-    odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/drone_odom", 10, &LocalPlanningClass::odomCallback, this);
-
-    // 订阅传感器点云信息,该话题名字可在launch文件中任意指定
-    if (lidar_model == 0)
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
+        command_pub.publish(Command_Now);
+        cout << "Takeoff ..."<<endl;
+        ros::Duration(3.0).sleep();
+    }else
     {
-        local_point_clound_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1, &LocalPlanningClass::localcloudCallback, this);
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Subscribe to <sensor_msgs::PointCloud2>.");
-    }else if (lidar_model == 1)
-    {
-        local_point_clound_sub_ = node_.subscribe<sensor_msgs::LaserScan>("/prometheus/planning/local_pcl", 1, &LocalPlanningClass::laserscanCallback, this);
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Subscribe to <sensor_msgs::LaserScan>.");
+        //　真实飞行情况：等待飞机状态变为offboard模式，然后发送起飞指令
     }
-    
-
-    // 订阅节点开始运行指令
-    swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/local_planner", 10, &LocalPlanningClass::switchCallback, this);  
-
-    // 发布规划结果 : 期望速度
-    px4_pos_cmd_pub = node_.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
-
-    // 发布停止紧急指令(无人机离障碍物太近)
-    replan_cmd_Pub = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 1);  
-
-    // 定时函数,执行周期为1Hz
-    exec_timer_ = node_.createTimer(ros::Duration(1.0), &LocalPlanningClass::execFSMCallback, this, false);
 
     // 地图初始化
     sensor_msgs::PointCloud2ConstPtr init_local_map(new sensor_msgs::PointCloud2());
     local_map_ptr_ = init_local_map;
-    // 状态参数初始化
-    trigger_=false;
-    have_goal_=false;
-    has_point_map_=false;
-    have_odom_=false;
 
-    // 规划结果可视化
-    visualization_.reset(new PlanningVisualization(nh));
-    local_map_marker_Pub   = node_.advertise<visualization_msgs::Marker>("/planning/local_map_marker",  10);  
-
-    // loop
     ros::spin();
 }
 
-
-void LocalPlanningClass::execFSMCallback(const ros::TimerEvent& e){
-    static int exect_num=0;
-    exect_num++;
-
-    string print_info;
-    if(exect_num==5){
-        if (!trigger_)
-        {   
-            print_info = "don't trigger!";
-        }
-
-        if(!have_odom_){
-            print_info = "don't have odometry!";
-        }
-            
-        if(!has_point_map_)
-        {
-            print_info = "don't have point cloud! ";
-        }
-        if(!have_goal_){
-            print_info = " wait goal! ";
-        }
-        exect_num=0;
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, print_info);
-    }
-
-
-    if (!trigger_)
-    {   
-        return;
-    }
-    if(!have_odom_){
-        return;
-    }
-        
-    if(!has_point_map_)
-    {
-        return;
-    }
-
-    if(!have_goal_){
-        return;
-    }
-
-
-    if (lidar_model == 0)
-    {
-        local_alg_ptr->set_local_map(local_map_ptr_);
-    }else if (lidar_model == 1)
-    {
-        local_alg_ptr->set_local_map_pcl(pcl_ptr);
-    }
-
-    local_alg_ptr->set_odom(odom_);
-    // 返回值为2时,飞机不安全(距离障碍物太近)
-    int planner_state = local_alg_ptr->compute_force(end_pt_, start_pt_, desired_vel);
-
-    // 
-    static int fix_pub = 0;
-    if (fix_pub==int(2.0/0.05))
-    {
-        if(planner_state==2){
-            // dangerous
-            replan.data = 1;
-            replan_cmd_Pub.publish(replan);
-        } else if(planner_state==1){
-            replan.data = 0;
-            replan_cmd_Pub.publish(replan);
-        }
-        fix_pub = 0;
-    }else{
-        fix_pub++;
-    }
-    
-
-    if(desired_vel.norm() > max_planning_vel)
-    {
-        desired_vel = desired_vel / desired_vel.norm() * max_planning_vel;  // the max velocity is max_planning_vel
-    }
-
-    if(exect_num==20)
-    {
-        char sp[100];
-        sprintf(sp, "local planning desired vel: [%f, %f, %f]", desired_vel(0), desired_vel(1), desired_vel(2));
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,sp);
-        exect_num=0;
-    }
-    
-    // 发布控制指令
-    generate_cmd(desired_vel);
-    control_time = ros::Time::now();
-    // pos_cmd_pub.publish(cmd);
-    if((end_pt_-start_pt_).norm() < 0.05){
-        // printf("reach the goal!\n");
-    }
-
-    // visualization_->drawPath(kino_path, 0.1, Eigen::Vector4d(1, 0, 0, 1));  // red
-
-}
-
-void LocalPlanningClass::generate_cmd(Eigen::Vector3d desired_vel)
+void Local_Planner::goal_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 {
-    // 发布控制指令
-    px4_cmd.x = desired_vel(0);
-    px4_cmd.y = desired_vel(1);
-    px4_cmd.z = desired_vel(2);
-    // px4_cmd.z = 0.0; //高度通道不做控制
-    px4_pos_cmd_pub.publish(px4_cmd);
-
-    // 可视化
-    visualization_->drawVel(start_pt_, desired_vel * 0.5, Eigen::Vector4d(1, 0.3, 0.3, 1.0), 0);
-}
-
-//  the goal is in the world frame. 
-void LocalPlanningClass::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg){
-
-    if (msg->pose.position.z < 0.1)  // the minimal goal height 
-        return;
-
-    double /*goal_x, goal_y,*/ goal_z;
-
-        // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
-    auto conf=[](double v, double min_v, double max_v)->double{
-        return v<min_v? min_v:(v>max_v?max_v:v);
-    };
-
-    if (flight_type_ == FLIGHT_TYPE::MANUAL_GOAL)
+    if (is_2D == true)
     {
-        goal_z = msg->pose.position.z;
-        goal_z = conf(msg->pose.position.z, 0.3, 3.5);
-        end_pt_ << msg->pose.position.x, msg->pose.position.y, goal_z;
+        goal_pos << msg->pose.position.x, msg->pose.position.y, fly_height_2D;
+    }else
+    {
+        goal_pos << msg->pose.position.x, msg->pose.position.y, msg->pose.position.z;
     }
-    else if (flight_type_ == FLIGHT_TYPE::PRESET_GOAL)
-    {}
-    
 
-    char sp[100];
-    sprintf(sp, "get waypoint: [ %f, %f, %f]!---", end_pt_(0),
-                                                            end_pt_(1), 
-                                                            end_pt_(2));
+    goal_ready = true;
 
-    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,sp);
+    // 获得新目标点
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,"Get a new goal point");
 
+    cout << "Get a new goal point:"<< goal_pos(0) << " [m] "  << goal_pos(1) << " [m] "  << goal_pos(2)<< " [m] "   <<endl;
 
-    visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));
+    if(goal_pos(0) == 99 && goal_pos(1) == 99 )
+    {
+        path_ok = false;
+        goal_ready = false;
+        exec_state = EXEC_STATE::LANDING;
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,"Land");
+    }
 
-    end_vel_.setZero();
-    have_goal_ = true;
+}
+
+void Local_Planner::drone_state_cb(const prometheus_msgs::DroneStateConstPtr& msg)
+{
+    _DroneState = *msg;
+
+    if (is_2D == true)
+    {
+        start_pos << msg->position[0], msg->position[1], fly_height_2D;
+        start_vel << msg->velocity[0], msg->velocity[1], 0.0;
+
+        if(abs(fly_height_2D - msg->position[2]) > 0.2)
+        {
+            pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME,"Drone is not in the desired height.");
+        }
+    }else
+    {
+        start_pos << msg->position[0], msg->position[1], msg->position[2];
+        start_vel << msg->velocity[0], msg->velocity[1], msg->velocity[2];
+    }
+
+    odom_ready = true;
+
+    if (_DroneState.connected == true && _DroneState.armed == true )
+    {
+        drone_ready = true;
+    }else
+    {
+        drone_ready = false;
+    }
+
+    Drone_odom.header = _DroneState.header;
+    Drone_odom.child_frame_id = "base_link";
+
+    Drone_odom.pose.pose.position.x = _DroneState.position[0];
+    Drone_odom.pose.pose.position.y = _DroneState.position[1];
+    Drone_odom.pose.pose.position.z = _DroneState.position[2];
+
+    Drone_odom.pose.pose.orientation = _DroneState.attitude_q;
+    Drone_odom.twist.twist.linear.x = _DroneState.velocity[0];
+    Drone_odom.twist.twist.linear.y = _DroneState.velocity[1];
+    Drone_odom.twist.twist.linear.z = _DroneState.velocity[2];
+
+    local_alg_ptr->set_odom(Drone_odom);
 
 }
 
 
-
-void LocalPlanningClass::odomCallback(const nav_msgs::OdometryConstPtr &msg){
-    odom_ = *msg;
-    odom_.header.frame_id = "map";
-    have_odom_ = true;
-    start_pt_ << odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z; 
-}
-
-void LocalPlanningClass::laserscanCallback(const sensor_msgs::LaserScanConstPtr &msg)
+void Local_Planner::laserscanCallback(const sensor_msgs::LaserScanConstPtr &msg)
 {
     /* need odom_ for center radius sensing */
-    if (!have_odom_) {
-        // ROS_INFO("local point cloud: --- no odom!---");
+    if (!odom_ready) 
+    {
         return;
     }
+
+    sensor_ready = true;
 
     sensor_msgs::LaserScan::ConstPtr _laser_scan;
 
@@ -272,94 +218,191 @@ void LocalPlanningClass::laserscanCallback(const sensor_msgs::LaserScanConstPtr 
         newPointAngle = _laser_scan->angle_min + _laser_scan->angle_increment * i;
         newPoint.x = _laser_scan->ranges[i] * cos(newPointAngle);
         newPoint.y = _laser_scan->ranges[i] * sin(newPointAngle);
-        newPoint.z = odom_.pose.pose.position.z;
+        newPoint.z = Drone_odom.pose.pose.position.z;
         _pointcloud.push_back(newPoint);
     }
 
     pcl_ptr = _pointcloud.makeShared();
-
-    latest_local_pcl_ = *pcl_ptr;
-    has_point_map_ = true;
+    local_alg_ptr->set_local_map_pcl(pcl_ptr);
 
 
-    visualization_msgs::Marker m;
-    getOccupancyMarker(m, 0, Eigen::Vector4d(0, 0.5, 0.5, 1.0));
-    local_map_marker_Pub.publish(m);
+    latest_local_pcl_ = *pcl_ptr; 
 }
 
-//  the local cloud is in the local frame. 
-void LocalPlanningClass::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
+void Local_Planner::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
 {
     /* need odom_ for center radius sensing */
-    if (!have_odom_) {
-        // ROS_INFO("local point cloud: --- no odom!---");
+    if (!odom_ready) 
+    {
         return;
     }
-    // printf("receive the local point cloud\n");
+
+    sensor_ready = true;
+
     local_map_ptr_ = msg;
+    local_alg_ptr->set_local_map(local_map_ptr_);
 
-    // ros::Time begin_load_point_cloud = ros::Time::now();
+
     pcl::fromROSMsg(*msg, latest_local_pcl_);
-    has_point_map_ = true;
-
-    visualization_msgs::Marker m;
-    getOccupancyMarker(m, 0, Eigen::Vector4d(0, 0.5, 0.5, 1.0));
-    local_map_marker_Pub.publish(m);
-
 }
 
-
-
-void LocalPlanningClass::getOccupancyMarker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color) {
-    // 坐标系可能有问题
-    m.header.frame_id = "world";
-    m.id = id;
-    m.type = visualization_msgs::Marker::CUBE_LIST;
-    m.action = visualization_msgs::Marker::MODIFY;
-    m.scale.x = 0.1; // resolustion
-    m.scale.y = 0.1;
-    m.scale.z = 0.1;
-    m.color.a = color(3);
-    m.color.r = color(0);
-    m.color.g = color(1);
-    m.color.b = color(2);
-
-    // iterate the map
-    pcl::PointXYZ pt;
-    Eigen::Matrix<double, 3, 3> rotation_mat_local_to_global = Eigen::Quaterniond(odom_.pose.pose.orientation.w,
-                                                                                                                                                                            odom_.pose.pose.orientation.x,
-                                                                                                                                                                            odom_.pose.pose.orientation.y,
-                                                                                                                                                                            odom_.pose.pose.orientation.z).toRotationMatrix();
-    Eigen::Matrix<double, 3, 1> position_world_to_local (odom_.pose.pose.position.x,
-                                                                                                                    odom_.pose.pose.position.y,
-                                                                                                                    odom_.pose.pose.position.z);
-    Eigen::Matrix<double, 3, 1> pointd;
-    for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) {
-        pt = latest_local_pcl_.points[i];
-        geometry_msgs::Point p;
-        pointd(0) = pt.x;
-        pointd(1) = pt.y;
-        pointd(2) = pt.z;
-        // transform to world frame
-        pointd =  rotation_mat_local_to_global * pointd + position_world_to_local;
-
-        p.x = pointd(0);
-        p.y = pointd(1);
-        p.z=pointd(2);
-        // p.x = pt.x;
-        // p.y = pt.y;
-        // p.z = pt.z;
-        m.points.push_back(p);
-
+void Local_Planner::control_cb(const ros::TimerEvent& e)
+{
+    if(!path_ok)
+    {
+        return;
     }
+
+    distance_to_goal = (start_pos - goal_pos).norm();
+
+    // 抵达终点
+    if(distance_to_goal < MIN_DIS)
+    {
+        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.source = NODE_NAME;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = goal_pos[0];
+        Command_Now.Reference_State.position_ref[1]     = goal_pos[1];
+        Command_Now.Reference_State.position_ref[2]     = goal_pos[2];
+
+        Command_Now.Reference_State.yaw_ref             = desired_yaw;
+        command_pub.publish(Command_Now);
+
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Reach the goal!");
+        
+        // 停止执行
+        path_ok = false;
+        // 转换状态为等待目标
+        exec_state = EXEC_STATE::WAIT_GOAL;
+        return;
+    }
+
+    // 目前仅支持定高飞行
+    Command_Now.header.stamp = ros::Time::now();
+    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+    Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+    Command_Now.source = NODE_NAME;
+    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+    Command_Now.Reference_State.velocity_ref[0]     = desired_vel[0];
+    Command_Now.Reference_State.velocity_ref[1]     = desired_vel[1];
+    Command_Now.Reference_State.position_ref[2]     = fly_height_2D;
+    Command_Now.Reference_State.yaw_ref             = desired_yaw;
+    
+    command_pub.publish(Command_Now);
+
+    //　发布rviz显示
+    vel_rviz.x = desired_vel(0);
+    vel_rviz.y = desired_vel(1);
+    vel_rviz.z = desired_vel(2);
+
+    rviz_vel_pub.publish(vel_rviz);
 }
 
-void LocalPlanningClass::switchCallback(const std_msgs::Bool::ConstPtr &msg){
-    trigger_= msg->data;
+void Local_Planner::mainloop_cb(const ros::TimerEvent& e)
+{
+    static int exec_num=0;
+    exec_num++;
 
-    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "local planner trigger.");
+    // 检查当前状态，不满足规划条件则直接退出主循环
+    // 此处打印消息与后面的冲突了，逻辑上存在问题
+    if(!odom_ready || !drone_ready || !sensor_ready)
+    {
+        // 此处改为根据循环时间计算的数值
+        if(exec_num == 10)
+        {
+            if(!odom_ready)
+            {
+                message = "Need Odom.";
+            }else if(!drone_ready)
+            {
+                message = "Drone is not ready.";
+            }else if(!sensor_ready)
+            {
+                message = "Need sensor info.";
+            }
+
+            pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
+            exec_num=0;
+        }  
+
+        return;
+    }else
+    {
+        // 对检查的状态进行重置
+        odom_ready = false;
+        drone_ready = false;
+        sensor_ready = false;
+    }
+
+    switch (exec_state)
+    {
+        case WAIT_GOAL:
+        {
+            path_ok = false;
+            if(!goal_ready)
+            {
+                if(exec_num == 20)
+                {
+                    message = "Waiting for a new goal.";
+                    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME,message);
+                    exec_num=0;
+                }
+            }else
+            {
+                // 获取到目标点后，生成新轨迹
+                exec_state = EXEC_STATE::PLANNING;
+                goal_ready = false;
+            }
+            
+            break;
+        }
+        case PLANNING:
+        {
+            // desired_vel是返回的规划速度；返回值为2时,飞机不安全(距离障碍物太近)
+            planner_state = local_alg_ptr->compute_force(goal_pos, desired_vel);
+
+            path_ok = true;
+
+            //　对规划的速度进行限幅处理
+            if(desired_vel.norm() > max_planning_vel)
+            {
+                desired_vel = desired_vel / desired_vel.norm() * max_planning_vel; 
+            }
+
+            if(exec_num==100)
+            {
+                char sp[100];
+                if(planner_state == 1)
+                {
+                    sprintf(sp, "local planning desired vel: [%f, %f, %f]", desired_vel(0), desired_vel(1), desired_vel(2));
+                }else if(planner_state == 2)
+                {
+                    sprintf(sp, "Dangerous!");
+                }
+                
+                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,sp);
+                exec_num=0;
+            }
+
+            break;
+        }
+        case  LANDING:
+        {
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode         = prometheus_msgs::ControlCommand::Land;
+            Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
+
+            command_pub.publish(Command_Now);
+            break;
+        }
+    }
+
 }
-
 
 }
 
