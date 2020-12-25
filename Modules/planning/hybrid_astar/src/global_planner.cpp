@@ -521,9 +521,9 @@ int Global_Planner::get_start_point_id(void)
     }
 
     //　为防止出现回头的情况，此处对航点进行前馈处理
-    if(id + 2 < Num_total_wp)
+    if(id + 4 < Num_total_wp)
     {
-        id = id + 2;
+        id = id + 4;
     }
 
     return id;
