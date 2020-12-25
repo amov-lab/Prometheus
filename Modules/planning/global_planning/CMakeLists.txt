@@ -22,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
 	INCLUDE_DIRS include
-	LIBRARIES Swarm_Planning
+	LIBRARIES Global_Planning
 	#  DEPENDS system_lib
 )
 

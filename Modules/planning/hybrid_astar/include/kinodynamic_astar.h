@@ -4,7 +4,6 @@
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 #include <iostream>
-#include <map>
 #include <string>
 #include <unordered_map>
 
@@ -12,16 +11,23 @@
 #include <queue>
 
 #include <sensor_msgs/PointCloud2.h>
-
+#include <nav_msgs/Path.h>
 #include "occupy_map.h"
+#include "tools.h"
 #include "message_utils.h"
 
-namespace global_planner
+#define NODE_NAME "Global_Planner [Hybrid Astar]"
+
+namespace Global_Planning
 {
+
 #define IN_CLOSE_SET 'a'
 #define IN_OPEN_SET 'b'
 #define NOT_EXPAND 'c'
 #define inf 1 >> 30
+
+
+extern ros::Publisher message_pub;
 
 class PathNode
 {
@@ -34,6 +40,7 @@ public:
   double duration;
   double time;  // dyn
   int time_idx;
+
   PathNode* parent;
   char node_state;
 
@@ -47,10 +54,14 @@ public:
 };
 typedef PathNode* PathNodePtr;
 
+
 class NodeComparator
 {
 public:
-  bool operator()(PathNodePtr node1, PathNodePtr node2) { return node1->f_score > node2->f_score; }
+  bool operator()(PathNodePtr node1, PathNodePtr node2) 
+  { 
+    return node1->f_score > node2->f_score; 
+  }
 };
 
 template <typename T>
@@ -105,28 +116,38 @@ public:
 class KinodynamicAstar
 {
 private:
-  /* ---------- main data structure ---------- */
-  // 承载节点的容器,这个容器里都是指针,指向某一个节点
+  // 备选路径点指针容器
   std::vector<PathNodePtr> path_node_pool_;
   // 使用节点个数,迭代次数
   int use_node_num_, iter_num_;
-  // 扩张节点 ?
+  // 扩展的节点
   NodeHashTable expanded_nodes_;
   //　定义队列　open_set
   std::priority_queue<PathNodePtr, std::vector<PathNodePtr>, NodeComparator> open_set_;
-  //　规划结果的节点容器
+  // 最终路径点容器
   std::vector<PathNodePtr> path_nodes_;
 
+  // 参数
+  // 启发式参数
+  double lambda_heu_;
+  // 最大搜索次数
+  int max_search_num;
+  // tie breaker
+  double tie_breaker_;
+  int is_2D;
+  double fly_height;
+
   /* ---------- record data ---------- */
-  //　起始速度，终点速度，终点加速度
-  Eigen::Vector3d start_vel_, end_vel_, start_acc_;
+  //　起始速度，起始加速度
+  Eigen::Vector3d start_vel_, start_acc_;
+  // 终点位置，终点速度
+  Eigen::Vector3d goal_pos, end_vel_;
   //　状态转移矩阵？
   Eigen::Matrix<double, 6, 6> phi_;  // state transit matrix
-
-
-  /* map */
   //　全局点云
   sensor_msgs::PointCloud2ConstPtr global_env_;
+
+  // 地图相关
   //　占据图容器
   std::vector<int> occupancy_buffer_;  // 0 is free, 1 is occupied
   // 地图分辨率，及分辨率的倒数
@@ -150,16 +171,12 @@ private:
   double max_acc_ = 3.0;
   double w_time_ = 10.0;
   double horizon_;
-  double lambda_heu_;
+
   double margin_;
-  int allocate_num_;
   int check_num_;
-  double tie_breaker_ = 1.0 + 1.0 / 10000;
-
   double time_origin_;
-  Occupy_map::Ptr Occupy_map_ptr;
-
-  /* helper */
+  
+  //　辅助函数
   Eigen::Vector3i posToIndex(Eigen::Vector3d pt);
   int timeToIndex(double time);
   void retrievePath(PathNodePtr end_node);
@@ -185,24 +202,28 @@ public:
     NO_PATH = 3
   };
 
-  /* main API */
-  void setParam(ros::NodeHandle& nh);
-  void init(ros::NodeHandle& nh);
+  Occupy_map::Ptr Occupy_map_ptr;
+
+  // 重置
   void reset();
+  // 初始化
+  void init(ros::NodeHandle& nh);
+  // 检查安全性
   int search(Eigen::Vector3d start_pt, Eigen::Vector3d start_vel, Eigen::Vector3d start_acc,
              Eigen::Vector3d end_pt, Eigen::Vector3d end_vel, bool init, bool dynamic = false,
              double time_start = -1.0);
   bool check_safety(Eigen::Vector3d &cur_pos, double safe_distance);
-  void setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point);
+  // 返回路径
   std::vector<Eigen::Vector3d> getKinoTraj(double delta_t);
-  Eigen::MatrixXd getSamples(double& ts, int& K);
+  // 返回ros消息格式的路径
+  nav_msgs::Path get_ros_path();
+  
+  // 返回访问过的节点
   std::vector<PathNodePtr> getVisitedNodes();
-
-  ros::Publisher message_pub;
 
   typedef std::shared_ptr<KinodynamicAstar> Ptr;
 };
 
-}  // namespace global_planner
+} 
 
 #endif
