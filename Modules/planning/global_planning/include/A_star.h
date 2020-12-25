@@ -8,8 +8,6 @@
 #include <string>
 #include <unordered_map>
 #include <sstream>
-// #include <boost/functional/hash.hpp>
-// #include <map>
 
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Path.h>
@@ -19,7 +17,6 @@
 #include "message_utils.h"
 
 #define NODE_NAME "Global_Planner [Astar]"
-
 
 namespace Global_Planning
 {
@@ -63,19 +60,19 @@ class NodeComparator0
         }
 };
 
-  template <typename T>
-  struct matrix_hash0 : std::unary_function<T, size_t>
-  {
-      std::size_t operator()(T const& matrix) const
-      {
-          size_t seed = 0;
-          for (size_t i = 0; i < matrix.size(); ++i)
-          {
-              auto elem = *(matrix.data() + i);
-              seed ^= std::hash<typename T::Scalar>()(elem) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-          }
-          return seed;
-      }
+template <typename T>
+struct matrix_hash0 : std::unary_function<T, size_t>
+{
+    std::size_t operator()(T const& matrix) const
+    {
+        size_t seed = 0;
+        for (size_t i = 0; i < matrix.size(); ++i)
+        {
+            auto elem = *(matrix.data() + i);
+            seed ^= std::hash<typename T::Scalar>()(elem) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+        return seed;
+    }
 };
 
 class NodeHashTable0
@@ -116,7 +113,7 @@ class Astar
         std::vector<NodePtr> path_node_pool_;
         // 使用节点计数器、迭代次数计数器
         int use_node_num_, iter_num_;
-        // 扩展的节点？
+        // 扩展的节点
         NodeHashTable0 expanded_nodes_;
         // open set （根据规则已排序好）
         std::priority_queue<NodePtr, std::vector<NodePtr>, NodeComparator0> open_set_;

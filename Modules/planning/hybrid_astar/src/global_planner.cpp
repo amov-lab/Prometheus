@@ -7,6 +7,8 @@ namespace Global_Planning
 void Global_Planner::init(ros::NodeHandle& nh)
 {
     // 读取参数
+    // 选择算法，　0 代表A_star; 1 代表混合A_star
+    nh.param("global_planner/algorithm_mode", algorithm_mode, 0); 
     // TRUE代表2D平面规划及搜索,FALSE代表3D 
     nh.param("global_planner/is_2D", is_2D, true); 
     // 2D规划时,定高高度
@@ -56,12 +58,9 @@ void Global_Planner::init(ros::NodeHandle& nh)
     track_path_timer = nh.createTimer(ros::Duration(time_per_path), &Global_Planner::track_path_cb, this);        
 
 
-
-    // Astar algorithm
-    Astar_ptr.reset(new Astar);
+    Astar_ptr.reset(new KinodynamicAstar);
     Astar_ptr->init(nh);
-    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "A_star init.");
-
+    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Kinodynamic A_star init.");
 
     // 规划器状态参数初始化
     exec_state = EXEC_STATE::WAIT_GOAL;
@@ -425,17 +424,18 @@ void Global_Planner::mainloop_cb(const ros::TimerEvent& e)
             Astar_ptr->reset();
             // 使用规划器执行搜索，返回搜索结果
 
-            int astar_state;
+            
+            bool init = false;
+            bool dynamic = false;
+            double time_start = 0;
 
-            // Astar algorithm
-            astar_state = Astar_ptr->search(start_pos, goal_pos);
+            int astar_state = Astar_ptr->search(start_pos, start_vel, start_acc, goal_pos, goal_vel, init, dynamic, time_start);
 
-            // 未寻找到路径
-            if(astar_state==Astar::NO_PATH)
+            if(astar_state==KinodynamicAstar::NO_PATH)
             {
                 path_ok = false;
                 exec_state = EXEC_STATE::WAIT_GOAL;
-                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Planner can't find path!");
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "a star find no path, please reset the goal!");
             }
             else
             {
@@ -448,8 +448,10 @@ void Global_Planner::mainloop_cb(const ros::TimerEvent& e)
                 tra_start_time = ros::Time::now();
                 exec_state = EXEC_STATE::TRACKING;
                 path_cmd_pub.publish(path_cmd);
-                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Get a new path!");       
+                pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "astart find path success!");
             }
+            
+            
 
             break;
         }

@@ -4,47 +4,29 @@
 using namespace std;
 using namespace Eigen;
 
-#define DEBUG 1
-
-namespace global_planner
+namespace Global_Planning
 {
+
 KinodynamicAstar::~KinodynamicAstar()
 {
-  for (int i = 0; i < allocate_num_; i++)
+  for (int i = 0; i < max_search_num; i++)
   {
+    // delete表示释放堆内存
     delete path_node_pool_[i];
   }
 }
 
 void KinodynamicAstar::init(ros::NodeHandle& nh)
 {
-  /* ---------- map params ---------- */
-  this->inv_resolution_ = 1.0 / resolution_;
-  inv_time_resolution_ = 1.0 / time_resolution_;
+  // 2d参数
+  nh.param("global_planner/is_2D", is_2D, 0);  // 1代表2D平面规划及搜索,0代表3D
+  nh.param("global_planner/2D_fly_height", fly_height, 1.5);  // 2D规划时,定高高度
+  // 地图参数
+  nh.param("map/resolution", resolution_, 0.2);  // 地图分辨率
 
-
-  phi_ = Eigen::MatrixXd::Identity(6, 6);
-
-  has_global_point = false;
-  /* ---------- pre-allocated node ---------- */
-  path_node_pool_.resize(allocate_num_);
-  for (int i = 0; i < allocate_num_; i++)
-  {
-    path_node_pool_[i] = new PathNode;
-  }
-
-  use_node_num_ = 0;
-  iter_num_ = 0;
-
-  //　地图初始化
-  Occupy_map_ptr.reset(new Occupy_map);
-  Occupy_map_ptr->setparam(nh);
-  Occupy_map_ptr->init();
-
-}
-
-void KinodynamicAstar::setParam(ros::NodeHandle& nh)
-{
+  // 规划搜索相关参数
+  nh.param("kinodynamic_astar/lambda_heu", lambda_heu_, 2.0);  // 加速引导参数
+  nh.param("kinodynamic_astar/allocate_num", max_search_num, 100000); //最大搜索节点数
   nh.param("kinodynamic_astar/max_tau", max_tau_, -1.0);
   nh.param("kinodynamic_astar/init_max_tau", init_max_tau_, -1.0);
   nh.param("kinodynamic_astar/max_vel", max_vel_, -1.0);
@@ -53,59 +35,98 @@ void KinodynamicAstar::setParam(ros::NodeHandle& nh)
   nh.param("kinodynamic_astar/horizon", horizon_, -1.0);
   
   nh.param("kinodynamic_astar/time_resolution", time_resolution_, -1.0);
-  nh.param("kinodynamic_astar/lambda_heu", lambda_heu_, -1.0);
   nh.param("kinodynamic_astar/margin", margin_, -1.0);
-  nh.param("kinodynamic_astar/allocate_num", allocate_num_, -1);
   nh.param("kinodynamic_astar/check_num", check_num_, -1);
   
-  nh.param("map/resolution_astar", resolution_, -1.0);
 
-  cout << "margin:" << margin_  
-  <<"  resolution_:   " << resolution_ 
-  << "  time_resolution_:  " << time_resolution_ << endl;
-}
+  tie_breaker_ = 1.0 + 1.0 / max_search_num;
+  this->inv_resolution_ = 1.0 / resolution_;
+  inv_time_resolution_ = 1.0 / time_resolution_;
 
-void KinodynamicAstar::retrievePath(PathNodePtr end_node)
-{
-  PathNodePtr cur_node = end_node;
-  path_nodes_.push_back(cur_node);
+  phi_ = Eigen::MatrixXd::Identity(6, 6);
 
-  while (cur_node->parent != NULL)
+  has_global_point = false;
+  path_node_pool_.resize(max_search_num);
+
+  for (int i = 0; i < max_search_num; i++)
   {
-    cur_node = cur_node->parent;
-    path_nodes_.push_back(cur_node);
+    path_node_pool_[i] = new PathNode;
   }
 
-  reverse(path_nodes_.begin(), path_nodes_.end());
+  use_node_num_ = 0;
+  iter_num_ = 0;
+
+  // 初始化占据地图
+  Occupy_map_ptr.reset(new Occupy_map);
+  Occupy_map_ptr->init(nh);
+
+  // 读取地图参数
+  origin_ =  Occupy_map_ptr->min_range_;
+  map_size_3d_ = Occupy_map_ptr->max_range_ - Occupy_map_ptr->min_range_;
 }
 
+void KinodynamicAstar::reset()
+{
+  // 重置与搜索相关的变量
+  expanded_nodes_.clear();
+  path_nodes_.clear();
+
+  std::priority_queue<PathNodePtr, std::vector<PathNodePtr>, NodeComparator> empty_queue;
+  open_set_.swap(empty_queue);
+
+  for (int i = 0; i < use_node_num_; i++)
+  {
+    PathNodePtr node = path_node_pool_[i];
+    node->parent = NULL;
+    node->node_state = NOT_EXPAND;
+  }
+
+  use_node_num_ = 0;
+  iter_num_ = 0;
+  is_shot_succ_ = false;
+  
+}
+
+// 搜索函数，输入为：起始点及终点
+// 将传输的数组通通变为指针！！！！ 以后改
 int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, Eigen::Vector3d start_a,
                              Eigen::Vector3d end_pt, Eigen::Vector3d end_v, bool init, bool dynamic, double time_start)
 {
+  // 首先检查目标点是否可到达
+  if(Occupy_map_ptr->getOccupancy(end_pt))
+  {
+    pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Astar can't find path: goal point is occupied.");
+    return NO_PATH;
+  }
+
+  // 计时
+  ros::Time time_astar_start = ros::Time::now();
+
   start_vel_ = start_v;
   start_acc_ = start_a;
 
-  /* ---------- initialize ---------- */
+  goal_pos = end_pt;
+  Eigen::VectorXd end_state(6);
+  Eigen::Vector3i end_index = posToIndex(end_pt);
+  //　
+  double time_to_goal;
+  end_state.head(3) = end_pt;
+  end_state.tail(3) = end_v;
+
+  // 初始化,将起始点设为第一个路径点
   PathNodePtr cur_node = path_node_pool_[0];
   cur_node->parent = NULL;
   cur_node->state.head(3) = start_pt;
   cur_node->state.tail(3) = start_v;
   cur_node->index = posToIndex(start_pt);
   cur_node->g_score = 0.0;
-
-  Eigen::VectorXd end_state(6);
-  Eigen::Vector3i end_index;
-  //　
-  double time_to_goal;
-
-  end_state.head(3) = end_pt;
-  end_state.tail(3) = end_v;
-  end_index = posToIndex(end_pt);
   // 计算最优，并对time_to_goal赋值
   cur_node->f_score = lambda_heu_ * estimateHeuristic(cur_node->state, end_state, time_to_goal);
   cur_node->node_state = IN_OPEN_SET;
 
+  // 将当前点推入open set
   open_set_.push(cur_node);
+  // 迭代次数+1
   use_node_num_ += 1;
 
   if (dynamic)
@@ -114,7 +135,6 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
     cur_node->time = time_start;
     cur_node->time_idx = timeToIndex(time_start);
     expanded_nodes_.insert(cur_node->index, cur_node->time_idx, cur_node);
-    // cout << "time start: " << time_start << endl;
   }
   else
   {
@@ -129,34 +149,28 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
   /* ---------- search loop ---------- */
   while (!open_set_.empty())
   {
-    /* ---------- get lowest f_score node ---------- */
+    // 获取f_score最低的点
     cur_node = open_set_.top();
-#ifdef DEBUG
-    cout << "cur pos: " << cur_node->state.head(3).transpose() << endl;
-    cout << "time: " << cur_node->time << endl;
-#endif     
-    /* ---------- determine termination ---------- */
-
-    //　判断是否到达目标点附近
-    bool near_end = abs(cur_node->index(0) - end_index(0)) <= tolerance &&
+  
+    //　判断终止条件
+    bool reach_end = abs(cur_node->index(0) - end_index(0)) <= tolerance &&
                     abs(cur_node->index(1) - end_index(1)) <= tolerance &&
                     abs(cur_node->index(2) - end_index(2)) <= tolerance;
  
     bool reach_horizon = (cur_node->state.head(3) - start_pt).norm() >= horizon_;
 
-    if (reach_horizon || near_end)
+    if (reach_horizon || reach_end)
     {
-      // cout << "[Kino Astar]: used node num: " << use_node_num_ << ", iter num: " << iter_num_ << endl;
+      // 将当前点设为终止点，并往回形成路径
       terminate_node = cur_node;
       retrievePath(terminate_node);
       has_path_ = true;
 
-      if (near_end)
-      {
+      // 时间一般很短，远远小于膨胀点云的时间
+      printf("Astar take time %f s. \n", (ros::Time::now()-time_astar_start).toSec());
 
-#ifdef DEBUG
-        cout << "[Kino Astar]: near end." << endl;
-#endif  
+      if (reach_end)
+      {
         /* one shot trajectory */
         estimateHeuristic(cur_node->state, end_state, time_to_goal);
         computeShotTraj(cur_node->state, end_state, time_to_goal);
@@ -168,16 +182,13 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
       }
       else if (reach_horizon)
       {
-        
-#ifdef DEBUG
-cout << "[Kino Astar]: Reach horizon_" << endl;
-#endif  
         return REACH_HORIZON;
       }
     }
 
     /* ---------- pop node and add to close set ---------- */
     open_set_.pop();
+    // 将当前点推入close set
     cur_node->node_state = IN_CLOSE_SET;
     iter_num_ += 1;
 
@@ -208,6 +219,7 @@ cout << "[Kino Astar]: Reach horizon_" << endl;
             um << ax, ay, 0.5 * az;
             inputs.push_back(um);
           }
+      
       for (double tau = time_res * max_tau_; tau <= max_tau_; tau += time_res * max_tau_)
         durations.push_back(tau);
     }
@@ -347,7 +359,7 @@ cout << "[Kino Astar]: Reach horizon_" << endl;
             tmp_expand_nodes.push_back(pro_node);
 
             use_node_num_ += 1;
-            if (use_node_num_ == allocate_num_)
+            if (use_node_num_ == max_search_num)
             {
               cout << "run out of memory." << endl;
               return NO_PATH;
@@ -378,12 +390,27 @@ cout << "[Kino Astar]: Reach horizon_" << endl;
       }
   }
 
-  /* ---------- open set empty, no path ---------- */
-  cout << "open set empty, no path!" << endl;
-  // cout << "use node num: " << use_node_num_ << endl;
-  // cout << "iter num: " << iter_num_ << endl;
+  // 搜索完所有可行点，即使没达到最大搜索次数，也没有找到路径
+  // 这种一般是因为无人机周围被占据，或者无人机与目标点之间无可通行路径造成的
+  pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "max_search_num: open set empty.");
   return NO_PATH;
 }
+
+// 由最终点往回生成路径
+void KinodynamicAstar::retrievePath(PathNodePtr end_node)
+{
+  PathNodePtr cur_node = end_node;
+  path_nodes_.push_back(cur_node);
+
+  while (cur_node->parent != NULL)
+  {
+    cur_node = cur_node->parent;
+    path_nodes_.push_back(cur_node);
+  }
+
+  reverse(path_nodes_.begin(), path_nodes_.end());
+}
+
 
 
 double KinodynamicAstar::estimateHeuristic(Eigen::VectorXd x1, Eigen::VectorXd x2, double& optimal_time)
@@ -563,42 +590,12 @@ vector<double> KinodynamicAstar::quartic(double a, double b, double c, double d,
   return dts;
 }
 
-void KinodynamicAstar::setEnvironment(const sensor_msgs::PointCloud2ConstPtr & global_point){
-    Occupy_map_ptr->setEnvironment(global_point);
-    // 对地图进行膨胀
-    Occupy_map_ptr->inflate_point_cloud();
-    origin_ =  Occupy_map_ptr->origin_;
-    map_size_3d_ = Occupy_map_ptr->map_size_3d_;
-    // printf("map origin: [%f, %f, %f], map size: [%f, %f, %f]\n", origin_(0), origin_(1),origin_(2), 
-    //                                                                             map_size_3d_(0), map_size_3d_(1), map_size_3d_(2));
 
-}
-
-bool KinodynamicAstar::check_safety(Eigen::Vector3d &cur_pos, double safe_distance){
+bool KinodynamicAstar::check_safety(Eigen::Vector3d &cur_pos, double safe_distance)
+{
   bool is_safety;
   is_safety = Occupy_map_ptr->check_safety(cur_pos, safe_distance);
   return is_safety;
-}
-
-void KinodynamicAstar::reset()
-{
-  expanded_nodes_.clear();
-  path_nodes_.clear();
-
-  std::priority_queue<PathNodePtr, std::vector<PathNodePtr>, NodeComparator> empty_queue;
-  open_set_.swap(empty_queue);
-
-  for (int i = 0; i < use_node_num_; i++)
-  {
-    PathNodePtr node = path_node_pool_[i];
-    node->parent = NULL;
-    node->node_state = NOT_EXPAND;
-  }
-
-  use_node_num_ = 0;
-  iter_num_ = 0;
-  is_shot_succ_ = false;
-  
 }
 
 std::vector<Eigen::Vector3d> KinodynamicAstar::getKinoTraj(double delta_t)
@@ -647,100 +644,34 @@ std::vector<Eigen::Vector3d> KinodynamicAstar::getKinoTraj(double delta_t)
   return state_list;
 }
 
-Eigen::MatrixXd KinodynamicAstar::getSamples(double& ts, int& K)
+
+nav_msgs::Path KinodynamicAstar::get_ros_path()
 {
-  /* ---------- final trajectory time ---------- */
-  double T_sum = 0.0;
-  if (is_shot_succ_)
-    T_sum += t_shot_;
 
-  PathNodePtr node = path_nodes_.back();
-  while (node->parent != NULL)
+  std::vector<Eigen::Vector3d> path = getKinoTraj(0.1);
+
+  nav_msgs::Path A_star_path_cmd;
+  geometry_msgs::PoseStamped path_i_pose;
+
+  A_star_path_cmd.header.frame_id = "world";
+  A_star_path_cmd.header.stamp = ros::Time::now();
+  A_star_path_cmd.poses.clear();
+  for (int i=0; i<path.size(); ++i)
   {
-    T_sum += node->duration;
-    node = node->parent;
-  }
-  // cout << "final time:" << T_sum << endl;
-
-  /* ---------- init for sampling ---------- */
-  K = floor(T_sum / ts);
-  ts = T_sum / (K + 1);
-  // cout << "K:" << K << ", ts:" << ts << endl;
-
-  bool sample_shot_traj = is_shot_succ_;
-
-  Eigen::VectorXd sx(K + 2), sy(K + 2), sz(K + 2);
-  int sample_num = 0;
-  node = path_nodes_.back();
-
-  double t;
-  if (sample_shot_traj)
-    t = t_shot_;
-  else
-  {
-    t = node->duration;
-    end_vel_ = node->state.tail(3);
+      path_i_pose .header.frame_id = "world";
+      path_i_pose.pose.position.x = path[i](0);
+      path_i_pose.pose.position.y = path[i](1);
+      path_i_pose.pose.position.z = path[i](2);
+      A_star_path_cmd.poses.push_back(path_i_pose);
   }
 
-  for (double ti = T_sum; ti > -1e-5; ti -= ts)
-  {
-    /* ---------- sample shot traj---------- */
-    if (sample_shot_traj)
-    {
-      Vector3d coord;
-      VectorXd poly1d, time(4);
-      for (int j = 0; j < 4; j++)
-        time(j) = pow(t, j);
+  path_i_pose .header.frame_id = "world";
+  path_i_pose.pose.position.x = goal_pos[0];
+  path_i_pose.pose.position.y = goal_pos[1];
+  path_i_pose.pose.position.z = goal_pos[2];
+  A_star_path_cmd.poses.push_back(path_i_pose);
 
-      for (int dim = 0; dim < 3; dim++)
-      {
-        poly1d = coef_shot_.row(dim);
-        coord(dim) = poly1d.dot(time);
-      }
-
-      sx(sample_num) = coord(0), sy(sample_num) = coord(1), sz(sample_num) = coord(2);
-      ++sample_num;
-      t -= ts;
-
-      /* end of segment */
-      if (t < -1e-5)
-      {
-        sample_shot_traj = false;
-        if (node->parent != NULL)
-          t += node->duration;
-      }
-    }
-    /* ---------- sample search traj---------- */
-    else
-    {
-      Eigen::Matrix<double, 6, 1> x0 = node->parent->state;
-      Eigen::Matrix<double, 6, 1> xt;
-      Vector3d ut = node->input;
-
-      stateTransit(x0, xt, ut, t);
-      sx(sample_num) = xt(0), sy(sample_num) = xt(1), sz(sample_num) = xt(2);
-      ++sample_num;
-
-      t -= ts;
-      // cout << "t: " << t << ", t acc: " << T_accumulate << endl;
-      if (t < -1e-5 && node->parent->parent != NULL)
-      {
-        node = node->parent;
-        t += node->duration;
-      }
-    }
-  }
-  /* ---------- return samples ---------- */
-  Eigen::MatrixXd samples(3, K + 5);
-  samples.block(0, 0, 1, K + 2) = sx.reverse().transpose();
-  samples.block(1, 0, 1, K + 2) = sy.reverse().transpose();
-  samples.block(2, 0, 1, K + 2) = sz.reverse().transpose();
-  samples.col(K + 2) = start_vel_;
-  samples.col(K + 3) = end_vel_;
-  // samples.col(K + 4) = node->input;
-  samples.col(K + 4) = start_acc_;
-
-  return samples;
+  return A_star_path_cmd;
 }
 
 std::vector<PathNodePtr> KinodynamicAstar::getVisitedNodes()
