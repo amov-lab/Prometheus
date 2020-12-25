@@ -20,7 +20,7 @@
 #include "prometheus_msgs/DroneState.h"
 #include "prometheus_msgs/ControlCommand.h"
 
-#include "A_star.h"
+#include "kinodynamic_astar.h"
 #include "occupy_map.h"
 #include "tools.h"
 #include "message_utils.h"
@@ -75,7 +75,7 @@ private:
     ros::Timer mainloop_timer, track_path_timer, safety_timer;
 
     // A星规划器
-    Astar::Ptr Astar_ptr;
+    KinodynamicAstar::Ptr Astar_ptr;
 
     prometheus_msgs::DroneState _DroneState;
     nav_msgs::Odometry Drone_odom;

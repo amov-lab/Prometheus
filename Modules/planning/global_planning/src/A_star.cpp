@@ -136,7 +136,6 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
     iter_num_ += 1;
 
     /* ---------- init neighbor expansion ---------- */
-
     Eigen::Vector3d cur_pos = cur_node->position;
     Eigen::Vector3d expand_node_pos;
 
