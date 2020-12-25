@@ -2,6 +2,15 @@
 <sdf version="1.5">
   <world name="default">
 
+
+    <!-- 初始视角 -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>0.0 -26.0 10.0 0 0.35 1.5</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
     <physics name='default_physics' default='0' type='ode'>
       <gravity>0 0 -9.8066</gravity>
       <ode>
