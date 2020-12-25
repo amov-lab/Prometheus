@@ -3,8 +3,6 @@
     <arg name="x" default="0.0"/>
     <arg name="y" default="-10.0"/>
     <arg name="z" default="0"/>
-    <arg name="max_vel" default="1.0"/>
-    <arg name="max_acc" default="0.5"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
 	<arg name="model" default="P300_3Dlidar"/>
@@ -39,24 +37,23 @@
         <param name="global_planner/fly_height_2D" value="1.0" type="double"/>
         <!-- 停止距离 -->
         <param name="global_planner/safe_distance" value="0.01" type="double"/>
-        <param name="global_planner/time_per_path" value="1.0" type="double"/>
-        <param name="global_planner/replan_time" value="2.0" type="double"/>
+        <param name="global_planner/time_per_path" value="0.4" type="double"/>
+        <param name="global_planner/replan_time" value="5.0" type="double"/>
         <param name="global_planner/map_input" value="0" type="int"/>
         <param name="global_planner/sim_mode" value="true" type="bool"/>
-
         <param name="kinodynamic_astar/max_tau" value="0.5" type="double"/>
         <param name="kinodynamic_astar/init_max_tau" value="0.5" type="double"/>
-        <param name="kinodynamic_astar/max_vel" value="$(arg max_vel)" type="double"/>
-        <param name="kinodynamic_astar/max_acc" value="$(arg max_acc)" type="double"/>
+        <param name="kinodynamic_astar/max_vel" value="1.0" type="double"/>
+        <param name="kinodynamic_astar/max_acc" value="1.0" type="double"/>
         <param name="kinodynamic_astar/w_time" value="15.0" type="double"/>
         <param name="kinodynamic_astar/horizon" value="9.0" type="double"/>
         <param name="kinodynamic_astar/lambda_heu" value="2.0" type="double"/>
-        <param name="kinodynamic_astar/time_resolution" value="0.5" type="double"/>
+        <param name="kinodynamic_astar/time_resolution" value="2.0" type="double"/>
         <param name="kinodynamic_astar/margin" value="0.4" type="double"/>
         <param name="kinodynamic_astar/allocate_num" value="100000" type="int"/>
         <param name="kinodynamic_astar/check_num" value="5" type="int"/>
         <!-- 分辨率 -->
-        <param name="map/resolution" value="0.1" type="double"/>
+        <param name="map/resolution" value="0.2" type="double"/>
         <!-- 障碍物膨胀距离 -->
         <param name="map/inflate" value="0.8" type="double"/>
         <!-- 地图范围 -->
