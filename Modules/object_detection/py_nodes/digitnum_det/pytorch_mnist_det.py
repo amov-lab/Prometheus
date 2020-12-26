@@ -192,7 +192,7 @@ def switch_callback(boolmsg):
 
 
 if __name__ == '__main__':
-    subscriber = rospy.get_param('~subscriber', '/prometheus/camera/rgb/image_raw')
+    subscriber = rospy.get_param('~camera_topic', '/prometheus/camera/rgb/image_raw')
     config = rospy.get_param('~config', 'camera_param.yaml')
 
     # 接收开关消息，判断程序挂起还是执行
