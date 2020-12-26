@@ -191,7 +191,7 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h):
 
 if __name__ == '__main__':
     subscriber = rospy.get_param('~camera_topic', '/prometheus/camera/rgb/image_raw')
-    config = rospy.get_param('~config', 'camera_param.yaml')
+    config = rospy.get_param('~camera_info', 'camera_param.yaml')
 
     yaml_config_fn = config
     print('Input config file: {}'.format(config))
