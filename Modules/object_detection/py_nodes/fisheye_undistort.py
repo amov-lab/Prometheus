@@ -104,7 +104,7 @@ def get_K_and_D(checkerboard, imgsPath):
 if __name__ == '__main__':
     DIM, K, D = get_K_and_D((6, 9), os.path.dirname(os.path.abspath(__file__)) + '/checkerboard_imgs/*.png')
 
-    subscriber = rospy.get_param('~subscriber', '/camera/fisheye1/image_raw')
+    subscriber = rospy.get_param('~camera_topic', '/camera/fisheye1/image_raw')
     camera_matrix = K
     distortion_coefficients = D
 
