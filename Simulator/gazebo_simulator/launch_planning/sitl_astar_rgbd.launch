@@ -15,24 +15,18 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-    <!-- 启动rtabmap_ros建图 -->
-    <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
-        <arg name="rtabmap_args"       value="--delete_db_on_start"/>
-        <arg name="frame_id"           value="base_link"/>
-        <arg name="visual_odometry"    value="false"/>
-        <!-- RGB-D related topics -->
-        <arg name="approx_sync"         value="true"/>
-        <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
-        <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
-        <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="odom_topic"         value="/prometheus/drone_odom"/> 
-        <!-- 发布地图的坐标系 -->
-        <arg name="map_frame_id"       value="rtabmap"/>   
-        <!--visualization-->
-		<arg name="rtabmapviz"         value="false"/>
-        <arg name="rviz"               value="false"/>
-    </include>
 
+    <!-- 启动octomap_server建图 -->
+    <include file="$(find prometheus_gazebo)/launch_basic/depth_proc.launch"></include>
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+        <param name="resolution" value="0.1" />
+        <!-- 发布地图的坐标系 -->
+        <param name="frame_id" type="string" value="world" />
+        <!-- 传感器最大感知范围 (speedup!) -->
+        <param name="sensor_model/max_range" value="5.0" />
+        <!-- 局部点云输入 (PointCloud2) -->
+        <remap from="cloud_in" to="/realsense_plugin/camera/local_pointclouds" />
+    </node>
     <!-- 启动全局规划算法 -->
     <arg name="topic_of_global_pcl" default="/rtabmap/cloud_map"/>
     <node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">
