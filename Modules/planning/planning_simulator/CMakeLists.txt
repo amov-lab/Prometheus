@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(prometheus_map_generator)
+project(prometheus_planning_sim)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++11")
@@ -11,6 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   pcl_conversions
+  sensor_msgs
+  nav_msgs
+  visualization_msgs
+  tf
+  prometheus_msgs
 )
 find_package(PCL REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -28,3 +33,9 @@ add_executable (random_forest src/random_forest_sensing.cpp )
 target_link_libraries(random_forest
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES})
+
+add_executable(uav_sim src/uav_sim.cpp)
+
+target_link_libraries(uav_sim 
+   ${catkin_LIBRARIES}
+)
