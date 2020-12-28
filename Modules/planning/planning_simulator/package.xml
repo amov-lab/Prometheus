@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>prometheus_map_generator</name>
+  <name>prometheus_planning_sim</name>
   <version>0.0.0</version>
   <description>The map_generator package</description>
 
