@@ -4,8 +4,8 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.03"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/color_line_following.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
-	<arg name="model" default="P300_Monocular_down"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_monocular/amov_solo_monocular.sdf"/>
+	<arg name="model" default="amov_solo_monocular"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -17,7 +17,7 @@
 
 	<!-- run the color_detection.cpp -->
     <node pkg="prometheus_detection" type="color_line_det.py" name="color_det" output="screen">
-        <param name="camera_topic" value="/P300_Monocular_down/Monocular/image_raw"/>
+        <param name="camera_topic" value="/prometheus/sensor/monocular_down/image_raw"/>
         <param name="camera_info" value="$(find prometheus_gazebo)/config/camera_config/camera_param_gazebo_monocular.yaml"/>
         <!-- 线距底边的距离，0-1，0.5表示在图像中间 -->
         <param name="line_location" value="0.5"/>

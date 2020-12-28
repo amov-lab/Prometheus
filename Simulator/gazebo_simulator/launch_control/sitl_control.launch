@@ -3,9 +3,9 @@
     <arg name="x" default="1"/>
     <arg name="y" default="0"/>
     <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_basic/P300_basic.sdf"/>
-	<arg name="model" default="P300_basic"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/cloister.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo/amov_solo.sdf"/>
+	<arg name="model" default="amov_solo"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>

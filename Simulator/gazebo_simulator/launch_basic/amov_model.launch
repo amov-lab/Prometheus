@@ -42,12 +42,12 @@
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
     <arg name="x" default="1.0"/>
     <arg name="y" default="1.0"/>
-    <arg name="z" default="0.2"/>
+    <arg name="z" default="0.24"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/AmovUAV/P300_amov.sdf"/>
-	<arg name="model" default="P300_basic"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/P450/P450.sdf"/>
+	<arg name="model" default="P450"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
 	</node>
