@@ -7,8 +7,8 @@
     <arg name="input_source" default="1"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/indoor_competition.world"/>
     <arg name="lidar" default="true"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_2Dlidar/P300_2Dlidar.sdf"/>
-	<arg name="model" default="P300_2Dlidar"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_hokuyo_2Dlidar/amov_solo_hokuyo_2Dlidar.sdf"/>
+	<arg name="model" default="amov_solo_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
