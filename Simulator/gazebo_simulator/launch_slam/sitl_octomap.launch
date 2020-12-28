@@ -6,10 +6,10 @@
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
     <arg name="lidar" default="false"/>
     <arg name="rgbd" default="true"/>
-	<arg if="$(arg lidar)" name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
-    <arg if="$(arg rgbd)" name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
-	<arg if="$(arg lidar)" name="model" default="P300_3Dlidar"/>
-    <arg if="$(arg rgbd)" name="model" default="P300_D435i"/>
+	<arg if="$(arg lidar)" name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_3Dlidar/amov_solo_3Dlidar.sdf"/>
+    <arg if="$(arg rgbd)" name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_D435i/amov_solo_D435i.sdf"/>
+	<arg if="$(arg lidar)" name="model" default="amov_solo_3Dlidar"/>
+    <arg if="$(arg rgbd)" name="model" default="amov_solo_D435i"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>

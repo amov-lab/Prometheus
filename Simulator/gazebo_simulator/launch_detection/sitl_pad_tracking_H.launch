@@ -4,8 +4,8 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.05"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/landing_pad_H.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
-	<arg name="model" default="P300_Monocular_down"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_monocular/amov_solo_monocular.sdf"/>
+	<arg name="model" default="amov_solo_monocular"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -16,7 +16,7 @@
     </include>
 
     <node pkg="prometheus_detection_landing" type="fisheye_undistort.py" name="fisheye_undistort" output="screen">
-		<remap from="/camera/fisheye1/image_raw" to="/P300_Monocular_down/Monocular/image_raw" />
+		<remap from="/camera/fisheye1/image_raw" to="/prometheus/sensor/monocular_down/image_raw" />
     </node>
 
     <node pkg="prometheus_detection_landing" type="ellipse_det" name="ellipse_det" output="screen">
