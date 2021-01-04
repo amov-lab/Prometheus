@@ -96,7 +96,7 @@ class command_to_mavros
 
 		//constructed function 2
     command_to_mavros(string Uav_name):
-        command_nh("~")
+        command_nh("")
     {
         uav_name = Uav_name;
         
