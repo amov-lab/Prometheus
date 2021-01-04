@@ -256,7 +256,7 @@ void formation::Uav5StateCallBack(const mavros_msgs::StateConstPtr &state_msgs)
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "formation/state");
+    ros::init(argc, argv, "formation_state");
     formation Formation;
     Formation.state();
     return 0;

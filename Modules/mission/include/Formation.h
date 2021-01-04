@@ -92,6 +92,9 @@ class formation
         //集群控制函数
         void control();
 
+        //四边形绕圈函数
+        void square();
+
         //参数检查函数
         bool check_param();
 
@@ -242,6 +245,21 @@ class formation
         //5号机动捕位置数据发布者
         ros::Publisher uav5_mocap_pose_pub;
 
+        //1号机控制指令发布者
+        ros::Publisher uav1_local_pub;
+
+        //1号机控制指令发布者
+        ros::Publisher uav2_local_pub;
+
+        //1号机控制指令发布者
+        ros::Publisher uav3_local_pub;
+
+        //1号机控制指令发布者
+        ros::Publisher uav4_local_pub;
+
+        //1号机控制指令发布者
+        ros::Publisher uav5_local_pub;
+
 /*******************变量*******************/
 
         //1号机期望位置
@@ -375,6 +393,24 @@ class formation
 
         //程序运行初始时间
         ros::Time begin_time;
+
+/***************四机正方形绕圈变量***************/
+
+        //正方形边长
+        double square_length;
+
+        //1,3号点飞行高度
+        double point13_height;
+
+        //2,4号点飞行高度
+        double point24_height;
+
+        //发布目标点的保持时间
+        double hold_time;
+
+        //发布第一个目标点的延长时间
+        double stage1_time;
+
 
 };
 

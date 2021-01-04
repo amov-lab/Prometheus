@@ -18,6 +18,13 @@ void formation::init()
     //集群队形数据订阅者
     formation_type_sub = n.subscribe("/prometheus/formation/change", 10, &formation::FormationChangeCallBack, this);
 
+    //集群五台飞机位置控制数据发布者
+    uav1_local_pub = n.advertise<mavros_msgs::PositionTarget>("/uav1/mavros/setpoint_raw/local", 10);
+    uav2_local_pub = n.advertise<mavros_msgs::PositionTarget>("/uav2/mavros/setpoint_raw/local", 10);
+    uav3_local_pub = n.advertise<mavros_msgs::PositionTarget>("/uav3/mavros/setpoint_raw/local", 10);
+    uav4_local_pub = n.advertise<mavros_msgs::PositionTarget>("/uav4/mavros/setpoint_raw/local", 10);
+    uav5_local_pub = n.advertise<mavros_msgs::PositionTarget>("/uav5/mavros/setpoint_raw/local", 10);
+
     //获取集群X轴间隔距离参数
     ros::param::param<double>("~FORMATION_DISTANCE_x", formation_distance_x, 1);
 
@@ -25,7 +32,10 @@ void formation::init()
     ros::param::param<double>("~FORMATION_DISTANCE_y", formation_distance_y, 2);
 
     //获取定位来源
-    ros::param::param<string>("Location_source", location_source, "gps");
+    ros::param::param<string>("Location_source", location_source, "fps");
+
+    //获取飞控系统
+    ros::param::param<string>("Flight_controller", flight_controller, "spm");
 
     //获取仿真中位置差值
     ros::param::param<double>("uav1_x", uav1_gazebo_offset_pose[0], 0);
@@ -68,6 +78,27 @@ bool formation::check_param()
         ROS_ERROR("param [Location_source] value error, value is [%s], not gps, uwb or mocap\n", tmp);
         ros::shutdown();
     }
+    
+    strncpy(tmp,flight_controller.c_str(),flight_controller.length() + 1);
+    if(flight_controller == "apm" || flight_controller == "px4")
+    {   
+        ROS_INFO("Flight_controller is [%s]\n", tmp);           
+    }
+    else
+    {
+        ROS_ERROR("param [flight_controller] value error, value is [%s], not apm or px4\n", tmp);
+        ros::shutdown();
+    }
+}
+
+//集群位置控制发布函数
+void formation::formation_pos_pub()
+{
+    uav1_local_pub.publish(uav1_desired_pose);
+    uav2_local_pub.publish(uav2_desired_pose);
+    uav3_local_pub.publish(uav3_desired_pose);
+    uav4_local_pub.publish(uav4_desired_pose);
+    uav5_local_pub.publish(uav5_desired_pose);
 }
 
 //获取单台无人机控制数据
@@ -303,81 +334,92 @@ void formation::control()
     //初始化
     init();
     is_sim();
-    while(ros::ok())
+    if(flight_controller == "px4")
     {
-        //处理回调函数
-        ros::spinOnce();
-        //获取集群队形
-        switch(formation_data.type)
+        while(ros::ok())
         {
-            //设置为一字队形
-            case prometheus_msgs::Formation::HORIZONTAL:
-                set_horizontal();
-                break;
+            //处理回调函数
+            ros::spinOnce();
+            //获取集群队形
+            switch(formation_data.type)
+            {
+                //设置为一字队形
+                case prometheus_msgs::Formation::HORIZONTAL:
+                    set_horizontal();
+                    break;
         
-            //设置为三角队形
-            case prometheus_msgs::Formation::TRIANGEL:
-                set_triangle();
-                break;
+                //设置为三角队形
+                case prometheus_msgs::Formation::TRIANGEL:
+                    set_triangle();
+                    break;
 
-            //设置为菱形队形过渡队形
-            case prometheus_msgs::Formation::DIAMOND_STAGE_1:
-                set_diamond_stage1();
-                break;
+                //设置为菱形队形过渡队形
+                case prometheus_msgs::Formation::DIAMOND_STAGE_1:
+                    set_diamond_stage1();
+                    break;
 
-            //设置为菱形队形
-            case prometheus_msgs::Formation::DIAMOND:
-                set_diamond();
-                break;
+                //设置为菱形队形
+                case prometheus_msgs::Formation::DIAMOND:
+                    set_diamond();
+                    break;
+            }
+            //五台无人机获取控制数据
+            get_uav_cmd(uav1_offset_pose, uav1_desired_pose);
+            get_uav_cmd(uav2_offset_pose, uav2_desired_pose);
+            get_uav_cmd(uav3_offset_pose, uav3_desired_pose);
+            get_uav_cmd(uav4_offset_pose, uav4_desired_pose);
+            get_uav_cmd(uav5_offset_pose, uav5_desired_pose);
+            formation_pos_pub();
+
+            //等待0.1秒
+            usleep(100000);
         }
-        //五台无人机获取控制数据
-        get_uav_cmd(uav1_offset_pose, uav1_desired_pose);
-        get_uav_cmd(uav2_offset_pose, uav2_desired_pose);
-        get_uav_cmd(uav3_offset_pose, uav3_desired_pose);
-        get_uav_cmd(uav4_offset_pose, uav4_desired_pose);
-        get_uav_cmd(uav5_offset_pose, uav5_desired_pose);
-
-        Eigen::Vector3d uav1_pose;
-        Eigen::Vector3d uav2_pose;
-        Eigen::Vector3d uav3_pose;
-        Eigen::Vector3d uav4_pose;
-        Eigen::Vector3d uav5_pose;
-
-        uav1_pose[0] = uav1_desired_pose.position.x;
-        uav1_pose[1] = uav1_desired_pose.position.y;
-        uav1_pose[2] = uav1_desired_pose.position.z;
-
-        uav2_pose[0] = uav2_desired_pose.position.x;
-        uav2_pose[1] = uav2_desired_pose.position.y;
-        uav2_pose[2] = uav2_desired_pose.position.z;
-
-        uav3_pose[0] = uav3_desired_pose.position.x;
-        uav3_pose[1] = uav3_desired_pose.position.y;
-        uav3_pose[2] = uav3_desired_pose.position.z;
-
-        uav4_pose[0] = uav4_desired_pose.position.x;
-        uav4_pose[1] = uav4_desired_pose.position.y;
-        uav4_pose[2] = uav4_desired_pose.position.z;
-
-        uav5_pose[0] = uav5_desired_pose.position.x;
-        uav5_pose[1] = uav5_desired_pose.position.y;
-        uav5_pose[2] = uav5_desired_pose.position.z;
-
-        command_to_mavros ctm1("uav1");
-        command_to_mavros ctm2("uav2");
-        command_to_mavros ctm3("uav3");
-        command_to_mavros ctm4("uav4");
-        command_to_mavros ctm5("uav5");
-
-        ctm1.send_pos_setpoint(uav1_pose, control_data.Reference_State.yaw_ref);
-        ctm2.send_pos_setpoint(uav2_pose, control_data.Reference_State.yaw_ref);
-        ctm3.send_pos_setpoint(uav3_pose, control_data.Reference_State.yaw_ref);
-        ctm4.send_pos_setpoint(uav4_pose, control_data.Reference_State.yaw_ref);
-        ctm5.send_pos_setpoint(uav5_pose, control_data.Reference_State.yaw_ref);
-
-        //等待0.1秒
-        usleep(100000);
     }
+    else
+    {
+        if(flight_controller == "uwb")
+        {
+            while(ros::ok())
+            {
+                //处理回调函数
+                ros::spinOnce();
+                //获取集群队形
+                switch(formation_data.type)
+                {
+                    //设置为一字队形
+                    case prometheus_msgs::Formation::HORIZONTAL:
+                        set_horizontal();
+                        break;
+        
+                    //设置为三角队形
+                    case prometheus_msgs::Formation::TRIANGEL:
+                        set_triangle();
+                        break;
+
+                    //设置为菱形队形过渡队形
+                    case prometheus_msgs::Formation::DIAMOND_STAGE_1:
+                        set_diamond_stage1();
+                        break;
+
+                    //设置为菱形队形
+                    case prometheus_msgs::Formation::DIAMOND:
+                        set_diamond();
+                        break;
+                }
+                //五台无人机获取控制数据
+                get_uav_cmd(uav1_offset_pose, uav1_desired_pose);
+                get_uav_cmd(uav2_offset_pose, uav2_desired_pose);
+                get_uav_cmd(uav3_offset_pose, uav3_desired_pose);
+                get_uav_cmd(uav4_offset_pose, uav4_desired_pose);
+                get_uav_cmd(uav5_offset_pose, uav5_desired_pose);
+                formation_pos_pub();
+
+                //等待0.1秒
+                usleep(100000);
+            }
+        }
+    }
+    
     
 
 }

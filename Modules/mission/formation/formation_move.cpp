@@ -78,7 +78,7 @@ void formation::move()
 int main(int argc, char** argv)
 {
     //ROS初始化
-    ros::init(argc, argv, "formation/move");
+    ros::init(argc, argv, "formation_move");
     //创建类并执行move函数
     formation Formation;
     Formation.move();

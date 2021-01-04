@@ -13,7 +13,8 @@
 void formation::init()
 {
     //创建队形变化数据发布者
-    ros::param::param<int>("DIAMOND_intervals", diamond_intervals, 5);
+    ros::param::param<int>("~DIAMOND_intervals", diamond_intervals, 5);
+    ros::param::param<string>("Location_source", location_source, "gps");
     formation_type_pub = n.advertise<prometheus_msgs::Formation>("/prometheus/formation/change", 10);
 }
 
@@ -92,20 +93,29 @@ void formation::change()
 
                 //菱形队形
                 case 2:
-                    //判断当前队形是否为菱形队形,是菱形队形则直接跳出当前队形
-                    if(type_last == type_now)
+                    if(location_source == "mocap")
                     {
+                        //判断当前队形是否为菱形队形,是菱形队形则直接跳出当前队形
+                        if(type_last == type_now)
+                        {
+                            break;
+                        }
+                        //进入过渡队形
+                        formation_data.type = prometheus_msgs::Formation::DIAMOND_STAGE_1;
+                        formation_type_pub.publish(formation_data);
+                        is_wait(diamond_intervals);
+                        //切换为菱形队形
+                        formation_data.type = prometheus_msgs::Formation::DIAMOND;
+                        formation_type_pub.publish(formation_data);
+                        printf_formation_type("Diamond");
                         break;
                     }
-                    //进入过渡队形
-                    formation_data.type = prometheus_msgs::Formation::DIAMOND_STAGE_1;
-                    formation_type_pub.publish(formation_data);
-                    is_wait(diamond_intervals);
-                    //切换为菱形队形
-                    formation_data.type = prometheus_msgs::Formation::DIAMOND;
-                    formation_type_pub.publish(formation_data);
-                    printf_formation_type("Diamond");
-                    break;
+                    if(location_source == "uwb" || location_source == "gps")
+                    {
+                        ROS_WARN("not support diamond formation");
+                        break;
+                    }
+                    
             }
             //把当前集群队形变量赋值给上一集群队形变量
             type_last = type_now;
@@ -122,7 +132,7 @@ void formation::change()
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "formation/change");
+    ros::init(argc, argv, "formation_change");
     formation Formation;
     Formation.change();
     return 0;
