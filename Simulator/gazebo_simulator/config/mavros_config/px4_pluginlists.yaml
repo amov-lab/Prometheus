@@ -4,7 +4,6 @@ plugin_blacklist:
 - safety_area
 - 3dr_radio
 - cam_imu_sync
-- altitude
 - distance_sensor
 - fake_gps
 - gps_rtk
@@ -19,7 +18,6 @@ plugin_blacklist:
 - waypoint
 - wind_estimation
 - px4flow
-- global_position
 - companion_process_status
 - debug_value
 - wheel_odometry
