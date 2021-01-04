@@ -201,7 +201,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     //读取参数表中的参数
-    // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265
+    // 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 ,  9 for outdoor 
     nh.param<int>("input_source", input_source, 0);
     // 动作捕捉设备中设定的刚体名字
     nh.param<string>("object_name", object_name, "UAV");
@@ -350,6 +350,11 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     // 发布无人机状态，具体内容参见 prometheus_msgs::DroneState
     Drone_State = State_from_fcu;
     Drone_State.header.stamp = ros::Time::now();
+    // 户外情况，使用相对高度
+    if(input_source == 9 )
+    {
+        Drone_State.position[2]  = Drone_State.rel_alt;
+    }
     drone_state_pub.publish(Drone_State);
 
     // 发布无人机当前odometry,用于导航及rviz显示
