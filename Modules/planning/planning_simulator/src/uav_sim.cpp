@@ -8,6 +8,7 @@
 #include "prometheus_msgs/ControlCommand.h"
 #include "prometheus_msgs/DroneState.h"
 #include "nav_msgs/Path.h"
+#include "visualization_msgs/Marker.h"
 
 using namespace std;
 
@@ -19,13 +20,16 @@ double  init_pos[3];
 int planner_type;
 
 prometheus_msgs::DroneState _DroneState;
-ros::Publisher drone_state_pub,odom_pub,trajectory_pub;
+ros::Publisher drone_state_pub,odom_pub,trajectory_pub,meshPub;
 
 bool start_flag;
 
 prometheus_msgs::PositionReference traj_now;
 
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
+
+static  string mesh_resource;
+static double color_r, color_g, color_b, color_a, scale;
 
 void uav_pos_pub() ;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数定义<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -63,6 +67,12 @@ int main(int argc,char** argv)
     nh.param("init_pos_y", init_pos[1], 0.0);
     nh.param("init_pos_z", init_pos[2], 1.0);
     nh.param("planner_type", planner_type, 0);
+    nh.param("mesh_resource", mesh_resource, std::string("package://prometheus_planning_sim/meshes/hummingbird.mesh"));
+    nh.param("color/r", color_r, 1.0);
+    nh.param("color/g", color_g, 0.0);
+    nh.param("color/b", color_b, 0.0);
+    nh.param("color/a", color_a, 1.0);
+    nh.param("robot_scale", scale, 2.0);   
 
     // 订阅规划器指令
     ros::Subscriber planner_cmd_sub = nh.subscribe("/prometheus/control_command", 50, planner_cmd_cb);
@@ -72,6 +82,8 @@ int main(int argc,char** argv)
 
     //【发布】无人机odometry，用于RVIZ显示
     odom_pub = nh.advertise<nav_msgs::Odometry>("/prometheus/drone_odom", 10);
+
+    meshPub   = nh.advertise<visualization_msgs::Marker>("/prometheus/robot_marker",   100);  
 
     // 【发布】无人机移动轨迹，用于RVIZ显示
     trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/drone_trajectory", 10);
@@ -146,6 +158,34 @@ void uav_pos_pub()
     Drone_odom.twist.twist.linear.y = _DroneState.velocity[1];
     Drone_odom.twist.twist.linear.z = _DroneState.velocity[2];
     odom_pub.publish(Drone_odom);
+
+
+
+    // 发布mesh
+    // Mesh model             
+    visualization_msgs::Marker meshROS;                                     
+    meshROS.header.frame_id = "world";
+    meshROS.header.stamp =  ros::Time::now();
+    meshROS.ns = "mesh";
+    meshROS.id = 0;
+    meshROS.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    meshROS.action = visualization_msgs::Marker::ADD;
+    meshROS.pose.position.x = _DroneState.position[0];
+    meshROS.pose.position.y = _DroneState.position[1];
+    meshROS.pose.position.z = _DroneState.position[2];
+    meshROS.pose.orientation.w = 1.0;
+    meshROS.pose.orientation.x = 0.0;
+    meshROS.pose.orientation.y = 0.0;
+    meshROS.pose.orientation.z = 0.0;
+    meshROS.scale.z = scale;
+    meshROS.color.a = color_a;
+    meshROS.color.r = color_r;
+    meshROS.color.g = color_g;
+    meshROS.color.b = color_b;
+    meshROS.text = "UAV";
+    // meshROS.mesh_resource = mesh_resource;
+    // meshROS.mesh_use_embedded_materials = true;
+    meshPub.publish(meshROS);         
 
     // 发布无人机运动轨迹，用于rviz显示
     geometry_msgs::PoseStamped drone_pos;
