@@ -8,14 +8,21 @@
         <param name="map/x_size" value="20.0" type="double"/>
         <param name="map/y_size" value="20.0" type="double"/>
         <param name="map/z_size" value="3.0" type="double"/>
-        <param name="map/resolution" value="0.2" type="double"/>
-        <param name="obs/obs_num" value="50" type="double"/>
-        <param name="obs/min_radius" value="0.3" type="double"/>
-        <param name="obs/max_radius" value="0.5" type="double"/>
-        <param name="obs/min_height" value="2.0" type="double"/>
-        <param name="obs/max_height" value="3.0" type="double"/>
+        <param name="map/resolution" value="0.1" type="double"/>
+        <param name="map/pillar_num" value="80" type="double"/>
+        <param name="map/circle_num" value="0" type="double"/>
+        <param name="map/min_distance" value="2.0" type="double"/>
+        <param name="pillar_shape/min_radius" value="0.4" type="double"/>
+        <param name="pillar_shape/max_radius" value="0.7" type="double"/>
+        <param name="pillar_shape/min_height" value="2.0" type="double"/>
+        <param name="pillar_shape/max_height" value="3.0" type="double"/>
+        <param name="circle_shape/min_radius" value="0.7" type="double"/>
+        <param name="circle_shape/max_radius" value="0.5" type="double"/>
+        <param name="circle_shape/min_height" value="0.7" type="double"/>
+        <param name="circle_shape/max_height" value="0.8" type="double"/>
+        <param name="circle_shape/theta" value="0.5" type="double"/>
         <param name="sensing/sense_range" value="5.0" type="double"/>
-        <param name="sensing/sense_rate" value="10.0" type="double"/>
+        <param name="sensing/sense_rate" value="2.0" type="double"/>
     </node>
 
     <!-- 无人机运动学模拟器 -->
@@ -25,6 +32,12 @@
         <param name="init_pos_y" value="0.0" type="double"/>
         <param name="init_pos_z" value="1.0" type="double"/>
         <param name="planner_type" value="0" type="int"/>
+        <param name="color/a" value="1.0"/>    
+        <param name="color/r" value="0.0"/>        
+        <param name="color/g" value="0.0"/>        
+        <param name="color/b" value="0.0"/>       
+        <param name="robot_scale" value="1.0"/>
+        <!-- <param name="mesh_resource" value="$(find prometheus_planning_sim)/meshes/hummingbird.mesh"/> -->
     </node>
 
     <!-- 启动全局规划算法 -->
@@ -49,7 +62,7 @@
         <!-- 分辨率 -->
         <param name="map/resolution" value="0.1" type="double"/>
         <!-- 障碍物膨胀距离 -->
-        <param name="map/inflate" value="1.0" type="double"/>
+        <param name="map/inflate" value="0.4" type="double"/>
         <!-- 地图范围 -->
         <param name="map/origin_x" value="-20.0" type="double"/>
         <param name="map/origin_y" value="-20.0" type="double"/>
