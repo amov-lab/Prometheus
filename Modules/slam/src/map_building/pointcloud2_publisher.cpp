@@ -28,7 +28,7 @@ main(int argc, char **argv)
     //Convert the cloud to ROS message
     pcl::toROSMsg(cloud, output);
     output.header.frame_id = "world"; //this has been done in order to be able to visualize our PointCloud2 message on the RViz visualizer
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(2.0);
     while (ros::ok())
     {
         pcl_pub.publish(output);

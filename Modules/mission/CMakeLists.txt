@@ -96,6 +96,10 @@ add_executable(pub_goal planning_mission/pub_goal.cpp)
 add_dependencies(pub_goal prometheus_mission_gencpp)
 target_link_libraries(pub_goal ${catkin_LIBRARIES})
 
+add_executable(pub_goal_swarm planning_mission/pub_goal_swarm.cpp)
+add_dependencies(pub_goal_swarm prometheus_mission_gencpp)
+target_link_libraries(pub_goal_swarm ${catkin_LIBRARIES})
+
 add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
 add_dependencies(waypoint_tracking prometheus_mission_gencpp)
 target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})

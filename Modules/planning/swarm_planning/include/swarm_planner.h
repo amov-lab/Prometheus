@@ -14,7 +14,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
-
+#include <prometheus_msgs/SwarmCommand.h>
 #include "prometheus_msgs/PositionReference.h"
 #include "prometheus_msgs/Message.h"
 #include "prometheus_msgs/DroneState.h"
@@ -43,6 +43,11 @@ private:
     ros::NodeHandle swarm_planner_nh;
 
     // 参数
+
+    int swarm_num;
+    string uav_name;
+    int uav_id,neighbour_id1,neighbour_id2;
+    string neighbour_name1,neighbour_name2;
     bool is_2D;
     double fly_height_2D;
     double safe_distance;
@@ -52,6 +57,7 @@ private:
     bool consider_neighbour;
     bool sim_mode;
     bool map_groundtruth;
+    double min_dis;
 
     // 本机位置
     // 邻机位置
@@ -62,6 +68,8 @@ private:
     // 订阅无人机状态、目标点、传感器数据（生成地图）
     ros::Subscriber goal_sub;
     ros::Subscriber drone_state_sub;
+
+    ros::Subscriber  nei1_state_sub,nei2_state_sub;
     // 支持2维激光雷达、3维激光雷达、D435i等实体传感器
     // 支持直接输入全局已知点云
     ros::Subscriber Gpointcloud_sub;
@@ -79,9 +87,12 @@ private:
     prometheus_msgs::DroneState _DroneState;
     nav_msgs::Odometry Drone_odom;
 
+    Eigen::Vector3d pos_nei[2];
+    Eigen::Vector3d vel_nei[2];
+
     nav_msgs::Path path_cmd;
     double distance_walked;
-    prometheus_msgs::ControlCommand Command_Now;   
+    prometheus_msgs::SwarmCommand Command_Now;   
 
     double distance_to_goal;
 
@@ -121,6 +132,7 @@ private:
     // 回调函数
     void goal_cb(const geometry_msgs::PoseStampedConstPtr& msg);
     void drone_state_cb(const prometheus_msgs::DroneStateConstPtr &msg);
+    void nei_state_cb(const prometheus_msgs::DroneState::ConstPtr &msg, int nei_id);
     void Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
     void Lpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
     void laser_cb(const sensor_msgs::LaserScanConstPtr &msg);
