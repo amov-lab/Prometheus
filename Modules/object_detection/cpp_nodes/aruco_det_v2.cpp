@@ -21,6 +21,8 @@
 
 #include <ros/ros.h>
 #include <ros/package.h>
+#include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
 #include <yaml-cpp/yaml.h>
 #include <image_transport/image_transport.h>  
 #include <cv_bridge/cv_bridge.h>  
@@ -223,6 +225,11 @@ int main(int argc, char **argv)
                     pose.pose.orientation.z = q.z();
                     pose.pose.orientation.w = q.w();
                     pose_pub.publish(pose);
+
+                    static tf::TransformBroadcaster br;
+                    tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
+                    tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "world", "world_link");
+                    br.sendTransform(trans_world2camera);
                 }
             }
 
