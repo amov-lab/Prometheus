@@ -4,9 +4,9 @@
     <arg name="y" default="-10.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_3Dlidar/P300_3Dlidar.sdf"/>
-	<arg name="model" default="P300_3Dlidar"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_3Dlidar/amov_solo_3Dlidar.sdf"/>
+	<arg name="model" default="amov_solo_3Dlidar"/>
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
@@ -118,6 +118,7 @@
 	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
 	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
 		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
+        <param name="planning_mission/sim_mode" value="true" type="bool"/>
 	</node>
 
 	<!-- 启动rviz,设为false可关闭 -->

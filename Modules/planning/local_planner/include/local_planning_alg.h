@@ -17,7 +17,7 @@
 
 using namespace std;
 
-namespace local_planner{
+namespace Local_Planning{
 
 class local_planning_alg{
 public:
@@ -26,7 +26,7 @@ public:
     virtual void set_odom(nav_msgs::Odometry cur_odom)=0;
     virtual void set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr)=0;
     virtual void set_local_map_pcl(pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_ptr) = 0;
-    virtual int compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel)=0;
+    virtual int compute_force(Eigen::Vector3d &goal,Eigen::Vector3d &desired_vel)=0;
     virtual void init(ros::NodeHandle& nh)=0;
 
     typedef shared_ptr<local_planning_alg> Ptr;
