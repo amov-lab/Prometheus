@@ -17,7 +17,8 @@ uint8 Disarm=4
 uint8 Position_Control=5
 uint8 Velocity_Control=6
 uint8 Accel_Control=7
-uint8 User_Mode1=8
+uint8 Swarm_Planner=8
+uint8 User_Mode1=9
 
 ## 控制参考量 
 uint8 swarm_shape

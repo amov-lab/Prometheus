@@ -1,3 +1,0 @@
-<launch>
-  <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find prometheus_global_planning)/launch/default.rviz" />
-</launch>

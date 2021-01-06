@@ -102,15 +102,15 @@ int main(int argc, char **argv)
 
     ros::Subscriber command_sub1 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav1_name + "/prometheus/swarm_command", 10, swarm_command_cb_1);
     ros::Subscriber drone_state_sub1 = nh.subscribe<prometheus_msgs::DroneState>(uav1_name + "/prometheus/drone_state", 10, drone_state_cb1);
-    ros::Subscriber message_sub1 = nh.subscribe<prometheus_msgs::Message>(uav1_name + "/prometheus/message/main", 10, msg_cb);
+    ros::Subscriber message_sub1 = nh.subscribe<prometheus_msgs::Message>(uav1_name + "/prometheus/message/main", 100, msg_cb);
 
     ros::Subscriber command_sub2 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav2_name + "/prometheus/swarm_command", 10, swarm_command_cb_2);
     ros::Subscriber drone_state_sub2 = nh.subscribe<prometheus_msgs::DroneState>(uav2_name + "/prometheus/drone_state", 10, drone_state_cb2);
-    ros::Subscriber message_sub2 = nh.subscribe<prometheus_msgs::Message>(uav2_name + "/prometheus/message/main", 10, msg_cb);
+    ros::Subscriber message_sub2 = nh.subscribe<prometheus_msgs::Message>(uav2_name + "/prometheus/message/main", 100, msg_cb);
 
     ros::Subscriber command_sub3 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav3_name + "/prometheus/swarm_command", 10, swarm_command_cb_3);
     ros::Subscriber drone_state_sub3 = nh.subscribe<prometheus_msgs::DroneState>(uav3_name + "/prometheus/drone_state", 10, drone_state_cb3);
-    ros::Subscriber message_sub3 = nh.subscribe<prometheus_msgs::Message>(uav3_name + "/prometheus/message/main", 10, msg_cb);
+    ros::Subscriber message_sub3 = nh.subscribe<prometheus_msgs::Message>(uav3_name + "/prometheus/message/main", 100, msg_cb);
 
     ros::Subscriber command_sub4 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav4_name + "/prometheus/swarm_command", 10, swarm_command_cb_4);
     ros::Subscriber drone_state_sub4 = nh.subscribe<prometheus_msgs::DroneState>(uav4_name + "/prometheus/drone_state", 10, drone_state_cb4);
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 
     ros::Subscriber command_sub5 = nh.subscribe<prometheus_msgs::SwarmCommand>(uav5_name + "/prometheus/swarm_command", 10, swarm_command_cb_5);
     ros::Subscriber drone_state_sub5 = nh.subscribe<prometheus_msgs::DroneState>(uav5_name + "/prometheus/drone_state", 10, drone_state_cb5);
-    ros::Subscriber message_sub5 = nh.subscribe<prometheus_msgs::Message>(uav5_name + "/prometheus/message/main", 10, msg_cb);
+    ros::Subscriber message_sub5 = nh.subscribe<prometheus_msgs::Message>(uav5_name + "/prometheus/message/main", 100, msg_cb);
 
 
 
