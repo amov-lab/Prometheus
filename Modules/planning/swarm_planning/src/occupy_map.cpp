@@ -5,6 +5,7 @@ namespace Swarm_Planning
 // 初始化函数
 void Occupy_map::init(ros::NodeHandle& nh)
 {
+    nh.param<string>("swarm_planner/uav_name", uav_name, "/uav0");
     // TRUE代表2D平面规划及搜索,FALSE代表3D 
     nh.param("swarm_planner/is_2D", is_2D, true); 
     // 2D规划时,定高高度
@@ -23,9 +24,9 @@ void Occupy_map::init(ros::NodeHandle& nh)
     nh.param("map/inflate", inflate_,  0.3);
 
     // 发布 地图rviz显示
-    global_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/prometheus/planning/global_pcl",  10); 
+    global_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(uav_name + "/prometheus/swarm_planning/map/global_pcl",  10); 
     // 发布膨胀后的点云
-    inflate_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/prometheus/planning/global_inflate_pcl", 1);
+    inflate_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(uav_name + "/prometheus/swarm_planning/map/global_inflate_pcl", 1);
  
     // 发布二维占据图？
     // 发布膨胀后的二维占据图？
@@ -50,6 +51,13 @@ void Occupy_map::init(ros::NodeHandle& nh)
         min_range_(2) = fly_height_2D - resolution_;
         max_range_(2) = fly_height_2D + resolution_;
     }
+
+    nei_pos1.x = 0.0;
+    nei_pos1.y = 0.0;
+    nei_pos1.z = -1.0;
+    nei_pos2.x = 0.0;
+    nei_pos2.y = 0.0;
+    nei_pos2.z = -1.0;
 }
 
 // 地图更新函数 - 输入：全局点云
@@ -75,6 +83,22 @@ void Occupy_map::map_update_laser(const sensor_msgs::LaserScanConstPtr & local_p
 // 将传递过来的数据转为全局点云
 }
 
+void Occupy_map::setNeiPos(Eigen::Vector3d pos,  int uav_id)
+{
+    if(uav_id == 0)
+    {
+        nei_pos1.x = pos[0];
+        nei_pos1.y = pos[1];
+        nei_pos1.z = pos[2];
+        
+    }else if(uav_id == 1)
+    {
+        nei_pos2.x = pos[0];
+        nei_pos2.y = pos[1];
+        nei_pos2.z = pos[2];
+    }
+}
+
 // 当global_planning节点接收到点云消息更新时，进行设置点云指针并膨胀
 // Astar规划路径时，采用的是此处膨胀后的点云（setOccupancy只在本函数中使用）
 void Occupy_map::inflate_point_cloud(void)
@@ -95,7 +119,17 @@ void Occupy_map::inflate_point_cloud(void)
     pcl::PointCloud<pcl::PointXYZ> latest_global_cloud_;
     pcl::fromROSMsg(*global_env_, latest_global_cloud_);
 
-    //printf("time 1 take %f [s].\n",   (ros::Time::now()-time_start).toSec());
+
+    // 增加邻居位置至全局点云
+    // if(nei_pos1.z != -1.0)
+    // {
+    //     latest_global_cloud_.push_back(nei_pos1);
+    // }
+    // if(nei_pos2.z != -1.0)
+    // {
+    //     latest_global_cloud_.push_back(nei_pos2);
+    // }
+
 
     if ((int)latest_global_cloud_.points.size() == 0)  
     {return;}
@@ -146,6 +180,48 @@ void Occupy_map::inflate_point_cloud(void)
                     this->setOccupancy(p3d_inf, 1);
                 }
     }
+
+    const int ifn_nei = 3*ifn;
+
+    // 膨胀邻居
+    // 不能这么膨胀，这样被膨胀后的地方 不会消失 会一直被占据！！！
+    if(nei_pos1.z != -1.0)
+    {
+        // 根据膨胀距离，膨胀该点
+        for (int x = -ifn_nei; x <= ifn_nei; ++x)
+            for (int y = -ifn_nei; y <= ifn_nei; ++y)
+                for (int z = -ifn_nei; z <= ifn_nei; ++z) 
+                {
+                    // 为什么Z轴膨胀一半呢？ z 轴其实可以不膨胀
+                    p3d_inf(0) = pt_inf.x = nei_pos1.x + x * resolution_;
+                    p3d_inf(1) = pt_inf.y = nei_pos1.y + y * resolution_;
+                    p3d_inf(2) = pt_inf.z = nei_pos1.z + 0.5 * z * resolution_;
+
+                    cloud_inflate_vis_.push_back(pt_inf);
+
+                    // 设置膨胀后的点被占据
+                    this->setOccupancy(p3d_inf, 1);
+                }
+    }
+    if(nei_pos2.z != -1.0)
+    {
+        // 根据膨胀距离，膨胀该点
+        for (int x = -ifn_nei; x <= ifn_nei; ++x)
+            for (int y = -ifn_nei; y <= ifn_nei; ++y)
+                for (int z = -ifn_nei; z <= ifn_nei; ++z) 
+                {
+                    // 为什么Z轴膨胀一半呢？ z 轴其实可以不膨胀
+                    p3d_inf(0) = pt_inf.x = nei_pos2.x + x * resolution_;
+                    p3d_inf(1) = pt_inf.y = nei_pos2.y + y * resolution_;
+                    p3d_inf(2) = pt_inf.z = nei_pos2.z + 0.5 * z * resolution_;
+
+                    cloud_inflate_vis_.push_back(pt_inf);
+
+                    // 设置膨胀后的点被占据
+                    this->setOccupancy(p3d_inf, 1);
+                }
+    }
+
 
     cloud_inflate_vis_.header.frame_id = "world";
 

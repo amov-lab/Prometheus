@@ -38,6 +38,7 @@ class Occupy_map
         sensor_msgs::PointCloud2ConstPtr global_env_;
         // 地图是否占据容器， 从编程角度来讲，这就是地图变为单一序列化后的索引
         std::vector<int> occupancy_buffer_;  // 0 is free, 1 is occupied
+        string uav_name;
         // 地图分辨率
         double resolution_, inv_resolution_;
         // 膨胀参数
@@ -52,6 +53,9 @@ class Occupy_map
         Eigen::Vector3i grid_size_;
 
         bool has_global_point;
+
+        pcl::PointXYZ nei_pos1;
+        pcl::PointXYZ nei_pos2;
            
         // 显示相关
         void show_gpcl_marker(visualization_msgs::Marker &m, int id, Eigen::Vector4d color);
@@ -67,6 +71,8 @@ class Occupy_map
         void map_update_lpcl(const sensor_msgs::PointCloud2ConstPtr & local_point, const nav_msgs::Odometry & odom);
         // 地图更新函数 - 输入：二维激光雷达
         void map_update_laser(const sensor_msgs::LaserScanConstPtr & local_point, const nav_msgs::Odometry & odom);
+        // 设置邻居位置
+        void setNeiPos(Eigen::Vector3d pos,  int uav_id);
         // 地图膨胀
         void inflate_point_cloud(void);
         // 判断当前点是否在地图内

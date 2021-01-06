@@ -1,41 +1,41 @@
 #include "vfh.h"
 #include "math.h"
 
-namespace local_planner
+namespace Local_Planning
 {
 
 void VFH::init(ros::NodeHandle& nh)
 {
     has_local_map_ = false;
-    nh.param("vfh/inflate_distance", inflate_distance, 0.20);  // 感知障碍物距离
-    nh.param("vfh/sensing_distance", sensing_distance, 3.0);  // 感知障碍物距离
 
+    nh.param("vfh/inflate_distance", inflate_distance, 0.50);  // 感知障碍物距离
+    nh.param("vfh/sensor_max_range", sensor_max_range, 3.0);  // 感知障碍物距离
+    nh.param("vfh/goalWeight", goalWeight, 0.2); // 目标权重
+    nh.param("vfh/h_res", Hcnt, 180); // 直方图 个数
+    nh.param("vfh/obstacle_weight", obstacle_weight, 0.0); // 障碍物权重
     nh.param("vfh/safe_distance", safe_distance, 0.2); // 安全停止距离
 
-    nh.param("vfh/goalWeight", goalWeight, 0.2); // 目标权重
-    nh.param("vfh/obstacle_weight", obstacle_weight, 0.0); // 障碍物权重
-    
-    nh.param("vfh/limit_v_norm", limit_v_norm, 0.4); // 极限速度
-
-    nh.param("vfh/h_res", Hcnt, 180); // 直方图 个数
-
+    nh.param("local_planner/max_planning_vel", limit_v_norm, 0.4);
+    // TRUE代表2D平面规划及搜索,FALSE代表3D 
+    nh.param("local_planner/is_2D", is_2D, true); 
     inflate_and_safe_distance = safe_distance + inflate_distance;
     
     Hres = 2*M_PI/Hcnt;
     Hdata = new double[Hcnt]();
-    for(int i(0); i<Hcnt; i++){
+    for(int i(0); i<Hcnt; i++)
+    {
         Hdata[i] =0.0;       
     }
 }
 
 // get the map
-void VFH::set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr){
+void VFH::set_local_map(sensor_msgs::PointCloud2ConstPtr &local_map_ptr)
+{
     local_map_ptr_ = local_map_ptr;
     ros::Time begin_load_point_cloud = ros::Time::now();
 
     pcl::fromROSMsg(*local_map_ptr, latest_local_pcl_);
 
-    begin_update_map = ros::Time::now();
     has_local_map_=true;
 }
 
@@ -45,36 +45,38 @@ void VFH::set_local_map_pcl(pcl::PointCloud<pcl::PointXYZ>::Ptr &pcl_ptr)
     has_local_map_=true;
 }
 
-void VFH::set_odom(nav_msgs::Odometry cur_odom){
+void VFH::set_odom(nav_msgs::Odometry cur_odom)
+{
     cur_odom_ = cur_odom;
+    has_odom_=true;
 }
 
-int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 3, 1> current_odom, Eigen::Vector3d &desired_vel)
+int VFH::compute_force(Eigen::Vector3d  &goal, Eigen::Vector3d &desired_vel)
 {
-    int local_planner_state=0;  // 0 for not init; 1 for safe; 2 for dangerous
+    // 0 for not init; 1for safe; 2 for dangerous
+    int local_planner_state=0;  
     int safe_cnt=0;
 
-    if(!has_local_map_)
+    if(!has_local_map_|| !has_odom_)
         return 0;
 
     if ((int)latest_local_pcl_.points.size() == 0) 
-        return 0;
-
-    if (isnan(current_odom(0)) || isnan(current_odom(1)) || isnan(current_odom(2)))
         return 0;
 
     if (isnan(goal(0)) || isnan(goal(1)) || isnan(goal(2)))
         return 0;
 
     // clear the Hdata
-    for(int i =0; i<Hcnt; i++){
+    for(int i =0; i<Hcnt; i++)
+    {
         Hdata[i]=0;
     }
 
+    ros::Time begin_collision = ros::Time::now();
+
     // 计算障碍物相关cost
-    vector<Eigen::Vector3d> obstacles;
-    pcl::PointXYZ pt;
     Eigen::Vector3d p3d;
+    vector<Eigen::Vector3d> obstacles;
     Eigen::Vector3d p3d_gloabl_rot;
 
     // 排斥力
@@ -88,16 +90,16 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     for (size_t i = 0; i < latest_local_pcl_.points.size(); ++i) 
     {
         // 提取障碍物点
-        pt = latest_local_pcl_.points[i];
-        p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
-        // 不考虑高度的影响
-        p3d(2) = 0.0;
+        p3d(0) = latest_local_pcl_.points[i].x;
+        p3d(1) = latest_local_pcl_.points[i].y;
+        p3d(2) = latest_local_pcl_.points[i].z;
 
         // 将本地点云转化为全局点云点(主要是yaw角)
         p3d_gloabl_rot = rotation_mat_local_to_global * p3d; 
 
-        // sensing_distance为感知距离,只考虑感知距离内的障碍
-        if(isIgnored(p3d_gloabl_rot(0), p3d_gloabl_rot(1), p3d_gloabl_rot(2),sensing_distance)){
+        // sensor_max_range为感知距离,只考虑感知距离内的障碍
+        if(isIgnored(p3d_gloabl_rot(0), p3d_gloabl_rot(1), p3d_gloabl_rot(2),sensor_max_range))
+        {
             continue;
         }
 
@@ -113,19 +115,23 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
             continue;
         }
 
-        double obstacle_cost = obstacle_weight * (1/obs_dist - 1/sensing_distance)* 1.0/(obs_dist * obs_dist);
+        double obstacle_cost = obstacle_weight * (1/obs_dist - 1/sensor_max_range)* 1.0/(obs_dist * obs_dist);
         generate_voxel_data(obs_angle, angle_range, obstacle_cost);
 
         obstacles.push_back(p3d);
     }
 
     // 与目标点相关cost计算
-
-    Eigen::Vector3d odom2goal = goal - current_odom;
+    //　当前位置
+    Eigen::Vector3d current_pos;
+    current_pos[0] = cur_odom_.pose.pose.position.x;
+    current_pos[1] = cur_odom_.pose.pose.position.y;
+    current_pos[2] = cur_odom_.pose.pose.position.z;
+    Eigen::Vector3d uav2goal = goal - current_pos;
     // 不考虑高度影响
-    odom2goal(2) = 0.0;
-    double dist_att = odom2goal.norm();
-    double goal_heading = atan2(odom2goal(1), odom2goal(0));
+    uav2goal(2) = 0.0;
+    double dist_att = uav2goal.norm();
+    double goal_heading = atan2(uav2goal(1), uav2goal(0));
     
     for(int i=0; i<Hcnt; i++)
     {
@@ -171,6 +177,16 @@ int VFH::compute_force(Eigen::Matrix<double, 3, 1> &goal, Eigen::Matrix<double, 
     {
         local_planner_state =1;  //成功规划， 安全
     }
+
+    static int exec_num=0;
+    exec_num++;
+
+    // 此处改为根据循环时间计算的数值
+    if(exec_num == 50)
+    {
+        printf("APF calculate take %f [s].\n",   (ros::Time::now()-begin_collision).toSec());
+        exec_num=0;
+    }  
 
     return local_planner_state;
 }

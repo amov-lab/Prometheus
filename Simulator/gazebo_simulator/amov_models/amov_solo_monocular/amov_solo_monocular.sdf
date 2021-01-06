@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<sdf version='1.6'>
+  <model name='amov_solo_monocular'>
+    <include>
+      <uri>model://amov_solo</uri>
+    </include>
+
+   <!-- 下视相机 -->
+    <link name='Monocular_down_link'>
+      <pose>0 0 -0.1 0 1.5707963 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>4.15e-6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.407e-6</iyy>
+          <iyz>0</iyz>
+          <izz>2.407e-6</izz>
+        </inertia>
+      </inertial>
+      <visual name='visual'>
+        <geometry>
+          <box>
+            <size>0.01 0.01 0.01</size>
+          </box>
+        </geometry>
+      </visual>
+      <sensor name='camera' type='camera'>
+        <camera name='__default__'>
+          <!-- FOV,120度 -->
+          <horizontal_fov>2.0944</horizontal_fov>
+          <image>
+            <width>1280</width>
+            <height>720</height>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.001</stddev>
+          </noise>
+          <lens>
+            <type>custom</type>
+            <custom_function>
+              <c1>1.05</c1>
+              <c2>4</c2>
+              <f>1</f>
+              <fun>tan</fun>
+            </custom_function>
+            <scale_to_hfov>1</scale_to_hfov>
+            <cutoff_angle>3.1415</cutoff_angle>
+          </lens>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>1</visualize>
+        <plugin name='camera_plugin' filename='libgazebo_ros_camera.so'>
+            <robotNamespace>/prometheus/sensor</robotNamespace>
+            <alwaysOn>true</alwaysOn>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <updateRate>30.0</updateRate>
+            <cameraName>monocular_down</cameraName>
+            <frameName>/monocular_down_link</frameName>
+            <CxPrime>640</CxPrime>
+            <Cx>640</Cx>
+            <Cy>360</Cy>
+            <hackBaseline>0</hackBaseline>
+            <focalLength>369.502083</focalLength>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+        </plugin>
+      </sensor>
+      <self_collide>0</self_collide>
+      <kinematic>0</kinematic>
+    </link>
+    <!-- 下视相机关节 -->
+    <joint name="Monocular_down_joint" type="fixed">
+      <child>Monocular_down_link</child>
+      <parent>amov_solo::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>  
+
+    <!-- 前视相机 -->
+    <link name='Monocular_front_link'>
+      <pose>0.2 0 -0.05 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>4.15e-6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.407e-6</iyy>
+          <iyz>0</iyz>
+          <izz>2.407e-6</izz>
+        </inertia>
+      </inertial>
+      <visual name='visual'>
+        <geometry>
+          <box>
+            <size>0.01 0.01 0.01</size>
+          </box>
+        </geometry>
+      </visual>
+      <sensor name='camera' type='camera'>
+        <camera name='__default__'>
+          <!-- FOV,120度 -->
+          <horizontal_fov>2.0944</horizontal_fov>
+          <image>
+            <width>1280</width>
+            <height>720</height>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.001</stddev>
+          </noise>
+          <lens>
+            <type>custom</type>
+            <custom_function>
+              <c1>1.05</c1>
+              <c2>4</c2>
+              <f>1</f>
+              <fun>tan</fun>
+            </custom_function>
+            <scale_to_hfov>1</scale_to_hfov>
+            <cutoff_angle>3.1415</cutoff_angle>
+          </lens>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>1</visualize>
+        <plugin name='camera_plugin' filename='libgazebo_ros_camera.so'>
+            <robotNamespace>/prometheus/sensor</robotNamespace>
+            <alwaysOn>true</alwaysOn>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <updateRate>30.0</updateRate>
+            <cameraName>monocular_front</cameraName>
+            <frameName>/monocular_front_link</frameName>
+            <CxPrime>640</CxPrime>
+            <Cx>640</Cx>
+            <Cy>360</Cy>
+            <hackBaseline>0</hackBaseline>
+            <focalLength>369.502083</focalLength>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+        </plugin>
+      </sensor>
+      <self_collide>0</self_collide>
+      <kinematic>0</kinematic>
+    </link>
+
+    <!-- 前视相机关节 -->
+    <joint name="Monocular_front_joint" type="fixed">
+      <child>Monocular_front_link</child>
+      <parent>amov_solo::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+    
+  </model>
+</sdf>

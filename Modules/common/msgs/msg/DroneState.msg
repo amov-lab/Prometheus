@@ -14,6 +14,7 @@ float32 time_from_start             ## [s]
 
 ## 无人机状态量：位置、速度、姿态
 float32[3] position                 ## [m]
+float32  rel_alt                               ## [m] only for outdoor
 float32[3] velocity                 ## [m/s]
 float32[3] attitude                 ## [rad]
 geometry_msgs/Quaternion attitude_q ## 四元数
