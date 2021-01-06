@@ -1,0 +1,6 @@
+uint8 HORIZONTAL=0
+uint8 TRIANGEL=1
+uint8 DIAMOND=2
+uint8 DIAMOND_STAGE_1=3
+
+uint8 type

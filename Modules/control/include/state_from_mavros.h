@@ -33,6 +33,7 @@
 #include <prometheus_msgs/AttitudeReference.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
+#include <std_msgs/Float64.h>
 #include <tf2_msgs/TFMessage.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf/transform_listener.h>
@@ -71,6 +72,9 @@ class state_from_mavros
         // 【订阅】无人机当前欧拉角 坐标系:ENU系
         //  本话题来自飞控(通过Mavros功能包 /plugins/imu.cpp读取), 对应Mavlink消息为ATTITUDE (#30), 对应的飞控中的uORB消息为vehicle_attitude.msg
         attitude_sub = state_nh.subscribe<sensor_msgs::Imu>(uav_name + "/mavros/imu/data", 10, &state_from_mavros::att_cb,this); 
+
+        // 【订阅】无人机相对高度 此订阅仅针对户外实验
+        alt_sub = state_nh.subscribe<std_msgs::Float64>(uav_name + "/mavros/global_position/rel_alt", 10, &state_from_mavros::alt_cb,this);
     }
 
     //变量声明 
@@ -84,7 +88,7 @@ class state_from_mavros
         ros::Subscriber state_sub;
         ros::Subscriber position_sub;
         ros::Subscriber velocity_sub;
-        ros::Subscriber attitude_sub;
+        ros::Subscriber attitude_sub, alt_sub;
         ros::Subscriber extended_state_sub;
         ros::Publisher trajectory_pub;
 
@@ -140,6 +144,10 @@ class state_from_mavros
             _DroneState.attitude_rate[2] = msg->angular_velocity.x;
         }
 
+        void alt_cb(const std_msgs::Float64::ConstPtr &msg)
+        {
+            _DroneState.rel_alt = msg->data;
+        }
 
 };
 

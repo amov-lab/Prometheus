@@ -1,13 +1,10 @@
 /***************************************************************************************************************************
-* test_planning_static.cpp
+* traj_server.cpp
 *
-* Author: Tao JIANG
+* Author: Tao JIANG, Yuhua QI
 *
-* Update Time: 2020.01.20
+* Update Time: 2021.01.05
 *
-* Introduction:  Planner  
-*         1. 发布控制指令
-*         2. 实现部分显示功能
 ***************************************************************************************************************************/
 #include <ros/ros.h>
 #include "prometheus_plan_manage/Bspline.h"
@@ -17,6 +14,7 @@
 #include "visualization_msgs/Marker.h"
 
 #include "prometheus_msgs/PositionReference.h"
+#include "prometheus_msgs/ControlCommand.h"
 
 using namespace dyn_planner;
 
@@ -24,6 +22,8 @@ using namespace dyn_planner;
 ros::Publisher state_pub, pos_cmd_pub, traj_pub;
 
 nav_msgs::Odometry odom;
+
+bool sim_mode;
 
 // 控制接口
 prometheus_msgs::PositionReference cmd;
@@ -40,8 +40,8 @@ vector<Eigen::Vector3d> traj_cmd, traj_real;
 Eigen::Vector3d hover_pt;
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明与定义<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void displayTrajWithColor(vector<Eigen::Vector3d> path, double resolution,
-                          Eigen::Vector4d color, int id) {
+void displayTrajWithColor(vector<Eigen::Vector3d> path, double resolution, Eigen::Vector4d color, int id) 
+{
   visualization_msgs::Marker mk;
   mk.header.frame_id = "map";
   mk.header.stamp = ros::Time::now();
@@ -164,7 +164,8 @@ void odomCallbck(const nav_msgs::Odometry& msg) {
     traj_real.erase(traj_real.begin(), traj_real.begin() + 1000);
 }
 
-void visCallback(const ros::TimerEvent& e) {
+void visCallback(const ros::TimerEvent& e) 
+{
   // 可视化机器人真实运动轨迹（odom）
   displayTrajWithColor(traj_real, 0.03, Eigen::Vector4d(0.925, 0.054, 0.964, 1),
                        1);
@@ -173,7 +174,8 @@ void visCallback(const ros::TimerEvent& e) {
 }
 
 // 【发布】根据轨迹生成控制指令
-void cmdCallback(const ros::TimerEvent& e) {
+void cmdCallback(const ros::TimerEvent& e) 
+{
   /* no publishing before receive traj */
   if (!receive_traj) return;
 
@@ -182,7 +184,8 @@ void cmdCallback(const ros::TimerEvent& e) {
 
   Eigen::Vector3d pos, vel, acc;
 
-  if (t_cur < traj_duration && t_cur >= 0.0) {
+  if (t_cur < traj_duration && t_cur >= 0.0) 
+  {
     pos = traj[0].evaluateDeBoor(t_cmd_start + t_cur);
     vel = traj[1].evaluateDeBoor(t_cmd_start + t_cur);
     acc = traj[2].evaluateDeBoor(t_cmd_start + t_cur);
@@ -228,26 +231,29 @@ void cmdCallback(const ros::TimerEvent& e) {
     traj_cmd.erase(traj_cmd.begin(), traj_cmd.begin() + 1000);
 }
 
+// 主函数
 int main(int argc, char** argv) 
 {
   ros::init(argc, argv, "traj_server");
   ros::NodeHandle node;
 
-  // 订阅bspline, replan标志， odom信息（只用于显示）
-  ros::Subscriber bspline_sub =
-      node.subscribe("/prometheus/planning/bspline", 10, bsplineCallback);
+  // 是否为仿真模式
+  node.param("sim_mode", sim_mode, false); 
 
-  ros::Subscriber replan_sub =
-      node.subscribe("/prometheus/fast_planning/replan", 10, replanCallback);
+  // 订阅bspline, replan标志， odom信息（只用于显示）
+  ros::Subscriber bspline_sub = node.subscribe("/prometheus/planning/bspline", 10, bsplineCallback);
+
+  ros::Subscriber replan_sub = node.subscribe("/prometheus/fast_planning/replan", 10, replanCallback);
 
   ros::Subscriber odom_sub = node.subscribe("/prometheus/drone_odom", 50, odomCallbck);
 
   // 发布当前机器人指令状态
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
+  
   state_pub = node.advertise<visualization_msgs::Marker>("/prometheus/planning/state", 10);
   
-  pos_cmd_pub =
-    node.advertise<prometheus_msgs::PositionReference>("/prometheus/fast_planner/position_cmd", 50);
+  pos_cmd_pub = node.advertise<prometheus_msgs::PositionReference>("/prometheus/fast_planner/position_cmd", 50);
+  
   // 发布轨迹控制指令，无人机实际轨迹
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.2), visCallback);
   traj_pub = node.advertise<visualization_msgs::Marker>("/prometheus/planning/traj", 10);

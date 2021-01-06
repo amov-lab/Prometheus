@@ -6,7 +6,7 @@
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_3motors/P300_3motors.sdf"/>
 	<arg name="model" default="P300_3motors"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>

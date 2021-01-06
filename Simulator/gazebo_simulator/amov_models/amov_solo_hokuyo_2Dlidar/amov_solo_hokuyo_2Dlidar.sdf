@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<sdf version='1.6'>
+  <model name='amov_solo_hokuyo_2Dlidar'>
+    <include>
+      <uri>model://amov_solo</uri>
+    </include>
+    <include>
+      <uri>model://hokuyo_ust_20lx</uri>
+      <pose>0 0 0.5 0 0 0</pose>
+    </include>
+    <joint name="2Dlidar_joint" type="fixed">
+      <child>hokuyo_ust_20lx::link</child>
+      <parent>amov_solo::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+  </model>
+</sdf>
