@@ -33,6 +33,8 @@ float k_p;
 float k_aij;
 float k_gamma;
 
+bool flag_printf;
+
 //Geigraphical fence 地理围栏
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
@@ -81,7 +83,12 @@ void swarm_command_cb(const prometheus_msgs::SwarmCommand::ConstPtr& msg)
         Command_Now = Command_Last;
     }
 
-    formation_separation = swarm_control_utils::get_formation_separation(Command_Now.swarm_shape, Command_Now.swarm_size, swarm_num);
+    if(Command_Now.Mode == prometheus_msgs::SwarmCommand::Position_Control ||
+        Command_Now.Mode == prometheus_msgs::SwarmCommand::Velocity_Control ||
+        Command_Now.Mode == prometheus_msgs::SwarmCommand::Accel_Control )
+    {
+        formation_separation = swarm_control_utils::get_formation_separation(Command_Now.swarm_shape, Command_Now.swarm_size, swarm_num);
+    }
 }
 
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
@@ -127,6 +134,8 @@ int main(int argc, char **argv)
     nh.param<float>("Disarm_height", Disarm_height, 0.15);
     nh.param<float>("Land_speed", Land_speed, 0.2);
 
+    nh.param<bool>("flag_printf", flag_printf, true);
+
     nh.param<float>("geo_fence/x_min", geo_fence_x[0], -100.0);
     nh.param<float>("geo_fence/x_max", geo_fence_x[1], 100.0);
     nh.param<float>("geo_fence/y_min", geo_fence_y[0], -100.0);
@@ -159,7 +168,11 @@ int main(int argc, char **argv)
     // 用于与mavros通讯的类，通过mavros发送控制指令至飞控【本程序->mavros->飞控】
     command_to_mavros _command_to_mavros;
 
-    printf_param();
+    if(flag_printf)
+    {
+        printf_param();
+    }
+    
     
     // 初始化命令-
     // 默认设置：Idle模式 电机怠速旋转 等待来自上层的控制指令
@@ -179,6 +192,8 @@ int main(int argc, char **argv)
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主  循  环<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     while(ros::ok())
     {
+        static int exec_num=0;
+        exec_num++;
         // 当前时间
         cur_time = prometheus_control_utils::get_time_in_sec(begin_time);
         dt = cur_time  - last_time;
@@ -188,7 +203,10 @@ int main(int argc, char **argv)
         // 执行回调函数
         ros::spinOnce();
 
-        printf_state();
+        if(flag_printf)
+        {
+            printf_state();
+        }
 
         // Check for geo fence: If drone is out of the geo fence, it will land now.
         if(check_failsafe() == 1)
@@ -225,7 +243,6 @@ int main(int argc, char **argv)
         // 【Takeoff】 从摆放初始位置原地起飞至指定高度，偏航角也保持当前角度    
         case prometheus_msgs::SwarmCommand::Takeoff:
             
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to the desired point.");
             // 设定起飞点
             if (Command_Last.Mode != prometheus_msgs::SwarmCommand::Takeoff)
             {
@@ -370,9 +387,23 @@ int main(int argc, char **argv)
 
             break;
 
+        case prometheus_msgs::SwarmCommand::Swarm_Planner:
+
+            //　此控制方式即为　集中式控制，　直接由地面站指定期望位置点
+            state_sp[0] = Command_Now.position_ref[0];
+            state_sp[1] = Command_Now.position_ref[1];
+            state_sp[2] = Command_Now.position_ref[2];
+            yaw_sp = Command_Now.yaw_ref;
+            _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+
+            break;
+
         case prometheus_msgs::SwarmCommand::User_Mode1:
 
-            //To be continued;
+            state_sp = Eigen::Vector3d(Command_Now.position_ref[0],Command_Now.position_ref[1],Command_Now.position_ref[2]);
+            state_sp_extra = Eigen::Vector3d(Command_Now.velocity_ref[0], Command_Now.velocity_ref[1] ,Command_Now.velocity_ref[2]);
+            yaw_sp = Command_Now.yaw_ref;
+            _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp, state_sp_extra,yaw_sp);
 
             break;
         }

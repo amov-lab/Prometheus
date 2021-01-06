@@ -31,6 +31,7 @@ string message;
 std_msgs::Bool vision_switch;
 geometry_msgs::PoseStamped mission_cmd;
 float start_point[3];    // 起始降落位置
+float camera_offset[3];
 bool moving_target;
 float target_vel_xy[2];         // 目标移动速度 enu坐标系 单位：m/s
 std_msgs::Bool flag_start;
@@ -68,9 +69,9 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     landpad_det.Detection_info = *msg;
     // 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     // 相机安装误差 在mission_utils.h中设置
-    landpad_det.pos_body_frame[0] = - landpad_det.Detection_info.position[1] + DOWN_CAMERA_OFFSET_X;
-    landpad_det.pos_body_frame[1] = - landpad_det.Detection_info.position[0] + DOWN_CAMERA_OFFSET_Y;
-    landpad_det.pos_body_frame[2] = - landpad_det.Detection_info.position[2] + DOWN_CAMERA_OFFSET_Z;
+    landpad_det.pos_body_frame[0] = - landpad_det.Detection_info.position[1] + camera_offset[0];
+    landpad_det.pos_body_frame[1] = - landpad_det.Detection_info.position[0] + camera_offset[1];
+    landpad_det.pos_body_frame[2] = - landpad_det.Detection_info.position[2] + camera_offset[2];
 
     // 机体系 -> 机体惯性系 (原点在机体的惯性系) (对无人机姿态进行解耦)
     landpad_det.pos_body_enu_frame = R_Body_to_ENU * landpad_det.pos_body_frame;
@@ -187,9 +188,15 @@ int main(int argc, char **argv)
     nh.param<float>("kpy_land", kp_land[1], 0.1);
     nh.param<float>("kpz_land", kp_land[2], 0.1);
 
+    // 初始起飞点
     nh.param<float>("start_point_x", start_point[0], 0.0);
     nh.param<float>("start_point_y", start_point[1], 0.0);
     nh.param<float>("start_point_z", start_point[2], 1.0);
+
+    // 相机安装偏移,规定为:相机在机体系(质心原点)的位置
+    nh.param<float>("camera_offset_x", camera_offset[0], 0.0);
+    nh.param<float>("camera_offset_y", camera_offset[1], 0.0);
+    nh.param<float>("camera_offset_z", camera_offset[2], 0.0);
 
     //目标运动或静止
     nh.param<bool>("moving_target", moving_target, false);
@@ -262,7 +269,7 @@ int main(int argc, char **argv)
         Command_Now.Reference_State.position_ref[0]     = start_point[0];
         Command_Now.Reference_State.position_ref[1]     = start_point[1];
         Command_Now.Reference_State.position_ref[2]     = start_point[2];
-        Command_Now.Reference_State.yaw_ref             = 0;
+        Command_Now.Reference_State.yaw_ref             = 0.0;
         command_pub.publish(Command_Now);
         cout << "Takeoff ..."<<endl;
         ros::Duration(3.0).sleep();
@@ -309,6 +316,12 @@ int main(int argc, char **argv)
             exec_state = LANDING;
         }
 
+        // 接收到hold转降落指令,将设置hold模式为false
+        if(mission_cmd.pose.position.x == 88)
+        {
+            hold_mode = false;
+        }
+
         switch (exec_state)
         {
             // 初始状态，等待视觉检测结果
@@ -338,7 +351,7 @@ int main(int argc, char **argv)
             case TRACKING:
             {
                 // 丢失,进入LOST状态
-                if(!landpad_det.is_detected)
+                if(!landpad_det.is_detected && !hold_mode)
                 {
                     exec_state = LOST;
                     message = "Lost the Landing Pad.";
@@ -373,7 +386,7 @@ int main(int argc, char **argv)
                 Command_Now.Command_ID   = Command_Now.Command_ID + 1;
                 Command_Now.source = NODE_NAME;
                 Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-                Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
+                Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME;
                 Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_VEL;   //xy velocity z position
                 
                 for (int i=0; i<3; i++)
@@ -452,12 +465,13 @@ int main(int argc, char **argv)
             }
             case LANDING:
             {
-                if(sim_mode)
+                if(sim_mode)    //？？
                 {
                     Command_Now.header.stamp = ros::Time::now();
                     Command_Now.Command_ID   = Command_Now.Command_ID + 1;
                     Command_Now.source = NODE_NAME;
                     Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
+                    //Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
                     command_pub.publish(Command_Now);
                 }else
                 {
@@ -525,6 +539,7 @@ void printf_result()
 
     cout << "vel_cmd: " << Command_Now.Reference_State.velocity_ref[0] << " [m/s] "<< Command_Now.Reference_State.velocity_ref[1] << " [m/s] "<< Command_Now.Reference_State.velocity_ref[2] << " [m/s] "<<endl;
 }
+
 void printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
@@ -541,6 +556,10 @@ void printf_param()
     cout << "start_point_x : "<< start_point[0] << endl;
     cout << "start_point_y : "<< start_point[1] << endl;
     cout << "start_point_z : "<< start_point[2] << endl;
+    cout << "camera_offset_x : "<< camera_offset[0] << endl;
+    cout << "camera_offset_y : "<< camera_offset[1] << endl;
+    cout << "camera_offset_z : "<< camera_offset[2] << endl;
+    
 
     cout << "moving_target : "<< moving_target << endl;
     cout << "target_vel_x : "<< target_vel_xy[0] << endl;

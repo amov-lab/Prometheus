@@ -192,15 +192,15 @@ def switch_callback(boolmsg):
 
 
 if __name__ == '__main__':
-    subscriber = rospy.get_param('~subscriber', '/prometheus/camera/rgb/image_raw')
-    config = rospy.get_param('~config', 'camera_param.yaml')
+    subscriber = rospy.get_param('~camera_topic', '/prometheus/camera/rgb/image_raw')
+    config = rospy.get_param('~camera_info', 'camera_param.yaml')
 
     # 接收开关消息，判断程序挂起还是执行
     rospy.Subscriber('/prometheus/switch/num_det', Bool, switch_callback)
     global suspand
     suspand = False
 
-    yaml_config_fn = os.path.dirname(os.path.abspath(__file__)) + '/../../config/' + config
+    yaml_config_fn = config
     print('Input config file: {}'.format(config))
 
     yaml_config = yaml.load(open(yaml_config_fn))

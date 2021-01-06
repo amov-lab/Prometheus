@@ -6,6 +6,17 @@ namespace Swarm_Planning
 // 初始化函数
 void Swarm_Planner::init(ros::NodeHandle& nh)
 {
+    //无人机编号 1号无人机则为1
+    nh.param<int>("swarm_planner/swarm_num", swarm_num, 1);
+    nh.param<int>("swarm_planner/uav_id", uav_id, 0);
+    nh.param<string>("swarm_planner/uav_name", uav_name, "/uav0");
+    //可监听到的无人机编号，目前设定为可监听到两台无人机，后期考虑可通过数组传递参数，监听任意ID的无人机
+    nh.param<int>("swarm_planner/neighbour_id1", neighbour_id1, 0);
+    nh.param<int>("swarm_planner/neighbour_id2", neighbour_id2, 0);
+    nh.param<string>("swarm_planner/neighbour_name1", neighbour_name1, "/uav0");
+    nh.param<string>("swarm_planner/neighbour_name2", neighbour_name2, "/uav0");
+    nh.param("swarm_planner/min_dis", min_dis, 5.0); 
+
     // 读取参数
     // TRUE代表2D平面规划及搜索,FALSE代表3D 
     nh.param("swarm_planner/is_2D", is_2D, true); 
@@ -24,29 +35,37 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
     nh.param("swarm_planner/map_groundtruth", map_groundtruth, false); 
 
     // 订阅 目标点
-    goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 1, &Swarm_Planner::goal_cb, this);
+    goal_sub = nh.subscribe<geometry_msgs::PoseStamped>(uav_name + "/prometheus/planning/goal", 1, &Swarm_Planner::goal_cb, this);
 
     // 订阅 无人机状态
-    drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, &Swarm_Planner::drone_state_cb, this);
+    drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>(uav_name + "/prometheus/drone_state", 10, &Swarm_Planner::drone_state_cb, this);
+
+    //【订阅】邻居飞机的状态信息
+    nei1_state_sub = nh.subscribe<prometheus_msgs::DroneState>(neighbour_name1 + "/prometheus/drone_state", 10, boost::bind(&Swarm_Planner::nei_state_cb,this,_1, 0));
+    nei2_state_sub = nh.subscribe<prometheus_msgs::DroneState>(neighbour_name2 + "/prometheus/drone_state", 10, boost::bind(&Swarm_Planner::nei_state_cb,this,_1, 1));
+
+    // 应当订阅的是相邻无人机的路径 从而规划出躲避该路径的新路径
+    // 方法1：每个无人机路径都打上时间戳，规划时 不同step对应不同的点云
+    // 方法2：直接膨胀当前无人机位置（当无人机在附近时，需要更新频率更快，并且膨胀距离更大？）
 
     // 根据map_input选择地图更新方式
     if(map_input == 0)
     {
-        Gpointcloud_sub = nh.subscribe<sensor_msgs::PointCloud2>("/prometheus/swarm_planning/global_pcl", 1, &Swarm_Planner::Gpointcloud_cb, this);
+        Gpointcloud_sub = nh.subscribe<sensor_msgs::PointCloud2>(uav_name + "/prometheus/swarm_planning/global_pcl", 1, &Swarm_Planner::Gpointcloud_cb, this);
     }else if(map_input == 1)
     {
-        Lpointcloud_sub = nh.subscribe<sensor_msgs::PointCloud2>("/prometheus/swarm_planning/local_pcl", 1, &Swarm_Planner::Lpointcloud_cb, this);
+        Lpointcloud_sub = nh.subscribe<sensor_msgs::PointCloud2>(uav_name + "/prometheus/swarm_planning/local_pcl", 1, &Swarm_Planner::Lpointcloud_cb, this);
     }else if(map_input == 2)
     {
-        laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>("/prometheus/swarm_planning/laser_scan", 1, &Swarm_Planner::laser_cb, this);
+        laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>(uav_name + "/prometheus/swarm_planning/laser_scan", 1, &Swarm_Planner::laser_cb, this);
     }
 
     // 发布 路径指令
-    command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
+    command_pub = nh.advertise<prometheus_msgs::SwarmCommand>(uav_name + "/prometheus/swarm_command", 10);
     // 发布提示消息
-    message_pub = nh.advertise<prometheus_msgs::Message>("/prometheus/message/global_planner", 10);
+    message_pub = nh.advertise<prometheus_msgs::Message>(uav_name + "/prometheus/message/main", 10);
     // 发布路径用于显示
-    path_cmd_pub   = nh.advertise<nav_msgs::Path>("/prometheus/swarm_planning/path_cmd",  10); 
+    path_cmd_pub   = nh.advertise<nav_msgs::Path>(uav_name + "/prometheus/swarm_planning/path_cmd",  10); 
     // 定时器 安全检测
     // safety_timer = nh.createTimer(ros::Duration(2.0), &Swarm_Planner::safety_cb, this); 
     // 定时器 规划器算法执行周期
@@ -70,7 +89,7 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
 
     // 初始化发布的指令
     Command_Now.header.stamp = ros::Time::now();
-    Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+    Command_Now.Mode  = prometheus_msgs::SwarmCommand::Idle;
     Command_Now.Command_ID = 0;
     Command_Now.source = NODE_NAME;
     desired_yaw = 0.0;
@@ -82,22 +101,22 @@ void Swarm_Planner::init(ros::NodeHandle& nh)
         int start_flag = 0;
         while(start_flag == 0)
         {
-            cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Swarm Planner<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+            cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>  Swarm Planner ["<< uav_name << "]<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
             cout << "Please input 1 for start:"<<endl;
             cin >> start_flag;
         }
         // 起飞
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+        Command_Now.Mode  = prometheus_msgs::SwarmCommand::Idle;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
         Command_Now.source = NODE_NAME;
-        Command_Now.Reference_State.yaw_ref = 999;
+        Command_Now.yaw_ref = 999;
         command_pub.publish(Command_Now);   
         cout << "Switch to OFFBOARD and arm ..."<<endl;
         ros::Duration(3.0).sleep();
         
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode = prometheus_msgs::ControlCommand::Takeoff;
+        Command_Now.Mode = prometheus_msgs::SwarmCommand::Takeoff;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
         Command_Now.source = NODE_NAME;
         command_pub.publish(Command_Now);
@@ -198,6 +217,36 @@ void Swarm_Planner::drone_state_cb(const prometheus_msgs::DroneStateConstPtr& ms
     Drone_odom.twist.twist.linear.z = _DroneState.velocity[2];
 }
 
+void Swarm_Planner::nei_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg, int nei_id)
+{
+
+    if (is_2D == true)
+    {
+        pos_nei[nei_id]  = Eigen::Vector3d(msg->position[0], msg->position[1], fly_height_2D);
+        vel_nei[nei_id]  = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], 0.0);
+    }else
+    {
+        pos_nei[nei_id]  = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
+        vel_nei[nei_id]  = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
+    }
+
+    // 预测1秒？
+    pos_nei[nei_id]  = pos_nei[nei_id]  + vel_nei[nei_id] * 1;
+
+    // 当邻居节点位置过近时 将改位置传递至地图
+    if( (start_pos - pos_nei[nei_id]).norm() >  min_dis)
+    {
+        pos_nei[nei_id][2] = -1.0;
+    }else
+    {
+        //pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME,"test!");
+    }
+    
+
+    // 设置邻居无人机位置到地图
+    Astar_ptr->Occupy_map_ptr->setNeiPos(pos_nei[nei_id],  nei_id);
+}
+
 // 根据全局点云更新地图
 // 情况：已知全局点云的场景、由SLAM实时获取的全局点云
 void Swarm_Planner::Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg)
@@ -222,7 +271,8 @@ void Swarm_Planner::Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg)
         update_num++;
 
         // 此处改为根据循环时间计算的数值
-        if(update_num == 10)
+        // 这里临时更改了一下，为了加快邻居节点位置的更新
+        if(update_num == 1)
         {
             // 对Astar中的地图进行更新
             Astar_ptr->Occupy_map_ptr->map_update_gpcl(msg);
@@ -301,16 +351,14 @@ void Swarm_Planner::track_path_cb(const ros::TimerEvent& e)
     if(cur_id == Num_total_wp - 1)
     {
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Mode                                = prometheus_msgs::SwarmCommand::Swarm_Planner;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
         Command_Now.source = NODE_NAME;
-        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.position_ref[0]     = goal_pos[0];
-        Command_Now.Reference_State.position_ref[1]     = goal_pos[1];
-        Command_Now.Reference_State.position_ref[2]     = goal_pos[2];
+        Command_Now.position_ref[0]     = goal_pos[0];
+        Command_Now.position_ref[1]     = goal_pos[1];
+        Command_Now.position_ref[2]     = goal_pos[2];
 
-        Command_Now.Reference_State.yaw_ref             = desired_yaw;
+        Command_Now.yaw_ref             = desired_yaw;
         command_pub.publish(Command_Now);
 
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Reach the goal!");
@@ -335,18 +383,16 @@ void Swarm_Planner::track_path_cb(const ros::TimerEvent& e)
     // 采用轨迹控制的方式进行追踪，期望速度 = （期望位置 - 当前位置）/预计时间；
     
     Command_Now.header.stamp = ros::Time::now();
-    Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+    Command_Now.Mode                                = prometheus_msgs::SwarmCommand::User_Mode1;
     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
     Command_Now.source = NODE_NAME;
-    Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::TRAJECTORY;
-    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-    Command_Now.Reference_State.position_ref[0]     = path_cmd.poses[i].pose.position.x;
-    Command_Now.Reference_State.position_ref[1]     = path_cmd.poses[i].pose.position.y;
-    Command_Now.Reference_State.position_ref[2]     = path_cmd.poses[i].pose.position.z;
-    Command_Now.Reference_State.velocity_ref[0]     = (path_cmd.poses[i].pose.position.x - _DroneState.position[0])/time_per_path;
-    Command_Now.Reference_State.velocity_ref[1]     = (path_cmd.poses[i].pose.position.y - _DroneState.position[1])/time_per_path;
-    Command_Now.Reference_State.velocity_ref[2]     = (path_cmd.poses[i].pose.position.z - _DroneState.position[2])/time_per_path;
-    Command_Now.Reference_State.yaw_ref             = desired_yaw;
+    Command_Now.position_ref[0]     = path_cmd.poses[i].pose.position.x;
+    Command_Now.position_ref[1]     = path_cmd.poses[i].pose.position.y;
+    Command_Now.position_ref[2]     = path_cmd.poses[i].pose.position.z;
+    Command_Now.velocity_ref[0]     = (path_cmd.poses[i].pose.position.x - _DroneState.position[0])/time_per_path;
+    Command_Now.velocity_ref[1]     = (path_cmd.poses[i].pose.position.y - _DroneState.position[1])/time_per_path;
+    Command_Now.velocity_ref[2]     = (path_cmd.poses[i].pose.position.z - _DroneState.position[2])/time_per_path;
+    Command_Now.yaw_ref             = desired_yaw;
     
     command_pub.publish(Command_Now);
 

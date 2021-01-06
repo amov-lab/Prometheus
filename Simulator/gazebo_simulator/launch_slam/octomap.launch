@@ -1,0 +1,13 @@
+<launch>
+        <include file="$(find prometheus_gazebo)/launch_basic/depth_proc.launch"></include>
+        <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+            <param name="resolution" value="0.1" />
+            <!-- 发布地图的坐标系 -->
+            <param name="frame_id" type="string" value="world" />
+            <!-- 传感器最大感知范围 (speedup!) -->
+            <param name="sensor_model/max_range" value="5.0" />
+            <!-- 局部点云输入 (PointCloud2) -->
+            <remap from="cloud_in" to="/realsense_plugin/camera/local_pointclouds" />
+        </node>  
+</launch>
+
