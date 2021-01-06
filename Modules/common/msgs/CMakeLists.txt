@@ -35,6 +35,7 @@ add_message_files(
   LogMessagePlanning.msg
   LogMessageDetection.msg
   SwarmCommand.msg
+	Formation.msg
 )
 
 add_action_files(

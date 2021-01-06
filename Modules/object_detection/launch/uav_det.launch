@@ -16,7 +16,7 @@
   <node pkg="prometheus_detection" type="darknet_ros" name="darknet_ros" output="screen" launch-prefix="$(arg launch_prefix)">
     <param name="weights_path"          value="$(arg yolo_weights_path)" />
     <param name="config_path"           value="$(arg yolo_config_path)" />
-    <rosparam command="load" file="$(find prometheus_detection)/config/camera_param.yaml" />
+    <rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_detection_config/camera_param.yaml" />
   </node>
 
  <!--<node name="republish" type="republish" pkg="image_transport" output="screen" 	args="compressed in:=/front_camera/image_raw raw out:=/camera/image_raw" /> -->

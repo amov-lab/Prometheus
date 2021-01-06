@@ -1,0 +1,34 @@
+## 相机参数
+fx: 369.502083
+fy: 369.502083
+x0: 640.0
+y0: 360.0
+
+## 畸变参数
+k1: 0.0
+k2: 0.0
+p1: 0.0
+p2: 0.0
+k3: 0.0
+
+## aruco_det 二维码的边长(默认0.2m)
+aruco_det_len: 0.2
+
+## ellipse_det 圆的半径(默认0.2m)
+ellipse_det_r: 0.45
+
+## kcf_tracker 目标高度(默认1.7m)
+kcf_tracker_h: 1.7
+
+## landpad_det 降落板边长(默认0.6m)，0.6m包括边缘白色部分，黑色部分边长为0.4m
+## 仿真中降落板白色边缘边长为0.5357m
+landpad_det_len: 0.5357
+
+## digitnum_det 数字周围的方框边长(默认1m)
+digitnum_det_len: 0.5
+
+## YOLO检测中的行人高度(m)
+yolo_det_person_height: 1.7
+
+## YOLO检测中的无人机宽度(m)
+yolo_det_uav_width: 0.5

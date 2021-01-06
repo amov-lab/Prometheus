@@ -4,9 +4,9 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.25"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/indoor_race_track.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_D435i/P300_D435i.sdf"/>
-	<arg name="model" default="P300_basic"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl.launch">
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_D435i/amov_solo_D435i.sdf"/>
+	<arg name="model" default="amov_solo"/>
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>

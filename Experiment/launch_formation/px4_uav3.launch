@@ -1,0 +1,16 @@
+<launch>
+	<group ns="uav3">
+		<arg name="ID" value="30"/>
+    <arg name="fcu_url" default="/dev/ttyTHS2:921600"/>
+		<arg name="gcs_url" default="udp://:14530@192.168.1.137:14535"/>
+
+		<!-- MAVROS -->
+		<include file="$(find mavros)/launch/px4.launch">
+      <arg name="fcu_url" value="$(arg fcu_url)"/>
+      <arg name="gcs_url" value="$(arg gcs_url)"/>
+      <arg name="tgt_system" value="$(arg ID)"/>
+      <arg name="tgt_component" value="1"/>
+		</include>
+
+	</group>
+</launch>

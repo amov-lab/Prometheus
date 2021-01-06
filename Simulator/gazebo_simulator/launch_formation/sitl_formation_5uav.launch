@@ -1,0 +1,278 @@
+<launch>
+	<!-- 环境变量，PX4仿真启动脚本rcS中需要用到 -->
+	<env name="PX4_SIM_MODEL" value="solo" />
+    <env name="PX4_ESTIMATOR" value="ekf2_vision" />
+
+	<!-- 启动Gazebo，可选择仿真所用的world -->
+    <arg name="gui" default="true"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/formation_stage.world"/>
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+
+	<!-- 使用group标签来对不同的无人机进行分组，因此，不同无人机的话题会带上前缀，如/uav0、/uav1等 -->
+	<!-- 理解仿真的四个模块, 其中1和2为必备模块，3和4可缺省 -->
+	<!-- 1、PX4_SITL PX4软件在环仿真模块，即代表飞控，这块代码在Firmware中，注意部分代码与实际飞行相同，部分则是独立的代码 -->
+	<!-- 2、simulator 仿真器模块，此处即Gazebo，代码为model文件中的plugin -->
+	<!-- 3、Offboard模块 即Mavros -->
+	<!-- 4、QGC模块 即地面站--> 
+
+	<!-- 无人机编号（PX4内部参数） 	MAV_SYS_ID = ID + 1 -->
+	<!-- 仿真器端口号（用于飞控与Gazebo进行通讯）	 simulator_tcp_port = 4560 + ID （需要再SDF文件中配置对应的参数 mavlink_tcp_port）-->
+	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_local = 14580 + ID -->
+	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_remote = 14540 + ID -->
+	<!-- 地面站端口号（用于飞控与QGC进行通讯） udp_gcs_port_local = 14570 + ID -->
+
+
+	<arg name="uav1_name" default="uav1"/>
+	<arg name="uav2_name" default="uav2"/>
+	<arg name="uav3_name" default="uav3"/>
+	<arg name="uav4_name" default="uav4"/>
+	<arg name="uav5_name" default="uav5"/>
+
+	<arg name="uav1_id" default="1"/>
+	<arg name="uav2_id" default="2"/>
+	<arg name="uav3_id" default="3"/>
+	<arg name="uav4_id" default="4"/>
+	<arg name="uav5_id" default="5"/>
+
+    <arg name="uav1_x" default="0"/>
+    <arg name="uav1_y" default="0"/>
+
+    <arg name="uav2_x" default="5"/>
+    <arg name="uav2_y" default="5"/>
+
+    <arg name="uav3_x" default="-5"/>
+    <arg name="uav3_y" default="5"/>
+
+    <arg name="uav4_x" default="5"/>
+    <arg name="uav4_y" default="-5"/>
+
+    <arg name="uav5_x" default="-5"/>
+    <arg name="uav5_y" default="-5"/>
+
+    <!--1~5号机的初始位置-->
+    <param name="uav1_x" value="$(arg uav1_x)"/>
+	<param name="uav1_y" value="$(arg uav1_y)"/>
+
+	<param name="uav2_x" value="$(arg uav2_x)"/>
+	<param name="uav2_y" value="$(arg uav2_y)"/>
+
+	<param name="uav3_x" value="$(arg uav3_x)"/>
+	<param name="uav3_y" value="$(arg uav3_y)"/>
+
+	<param name="uav4_x" value="$(arg uav4_x)"/>
+	<param name="uav4_y" value="$(arg uav4_y)"/>
+
+	<param name="uav5_x" value="$(arg uav5_x)"/>
+	<param name="uav5_y" value="$(arg uav5_y)"/>
+
+    <!-- 1号飞机 -->
+    <group ns="$(arg uav1_name)">
+        <!-- 参数配置-->
+		<!-- ID编号 -->
+        <arg name="ID" value="0"/>
+		<!-- 指定sdf文件及模型名字 -->
+		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav1/P300_uav1.sdf"/>
+		<arg name="model" default="P300_uav1"/>
+		<!-- 初始位置，Yaw为偏航角 -->
+		<arg name="x" default="$(arg uav1_x)"/>
+		<arg name="y" default="$(arg uav1_y)"/>
+		<arg name="z" default="0.164"/>
+		<arg name="Yaw" default="0"/>
+		<!-- Mavros参数 -->
+		<arg name="udp_offboard_port_remote" value="$(eval 14540 + arg('ID'))"/>
+		<arg name="udp_offboard_port_local" value="$(eval 14580 + arg('ID'))"/>
+
+		<!-- 启动PX4 SITL，此处参数配置不可删除 -->
+		<arg name="interactive" default="true"/>
+		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
+		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+		</node>
+
+		<!-- 启动Gazebo模型 -->
+		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
+		</node>
+
+		<!-- 启动MAVROS -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="udp://:$(arg udp_offboard_port_remote)@localhost:$(arg udp_offboard_port_local)"/>
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
+		</node>
+    </group>
+
+
+    <!-- 2号飞机 -->
+    <group ns="$(arg uav2_name)">
+        <!-- 参数配置-->
+		<!-- ID编号 -->
+        <arg name="ID" value="1"/>
+		<!-- 指定sdf文件及模型名字 -->
+		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav2/P300_uav2.sdf"/>
+		<arg name="model" default="P300_uav2"/>
+		<!-- 初始位置，Yaw为偏航角 -->
+		<arg name="x" default="$(arg uav2_x)"/>
+		<arg name="y" default="$(arg uav2_y)"/>
+		<arg name="z" default="0.164"/>
+		<arg name="Yaw" default="0"/>
+		<!-- Mavros参数 -->
+		<arg name="udp_offboard_port_remote" value="$(eval 14540 + arg('ID'))"/>
+		<arg name="udp_offboard_port_local" value="$(eval 14580 + arg('ID'))"/>
+
+		<!-- 启动PX4 SITL，此处参数配置不可删除 -->
+		<arg name="interactive" default="true"/>
+		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
+		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+		</node>
+
+		<!-- 启动Gazebo模型 -->
+		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
+		</node>
+
+		<!-- 启动MAVROS -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="udp://:$(arg udp_offboard_port_remote)@localhost:$(arg udp_offboard_port_local)"/>
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
+		</node>
+    </group>
+
+    <!-- 3号飞机 -->
+    <group ns="$(arg uav3_name)">
+        <!-- 参数配置-->
+		<!-- ID编号 -->
+        <arg name="ID" value="2"/>
+		<!-- 指定sdf文件及模型名字 -->
+		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav3/P300_uav3.sdf"/>
+		<arg name="model" default="P300_uav3"/>
+		<!-- 初始位置，Yaw为偏航角 -->
+		<arg name="x" default="$(arg uav3_x)"/>
+		<arg name="y" default="$(arg uav3_y)"/>
+		<arg name="z" default="0.164"/>
+		<arg name="Yaw" default="0"/>
+		<!-- Mavros参数 -->
+		<arg name="udp_offboard_port_remote" value="$(eval 14540 + arg('ID'))"/>
+		<arg name="udp_offboard_port_local" value="$(eval 14580 + arg('ID'))"/>
+
+		<!-- 启动PX4 SITL，此处参数配置不可删除 -->
+		<arg name="interactive" default="true"/>
+		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
+		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+		</node>
+
+		<!-- 启动Gazebo模型 -->
+		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
+		</node>
+
+		<!-- 启动MAVROS -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="udp://:$(arg udp_offboard_port_remote)@localhost:$(arg udp_offboard_port_local)"/>
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
+		</node>
+    </group>
+
+    <!-- 4号飞机 -->
+    <group ns="$(arg uav4_name)">
+        <!-- 参数配置-->
+		<!-- ID编号 -->
+        <arg name="ID" value="3"/>
+		<!-- 指定sdf文件及模型名字 -->
+		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav4/P300_uav4.sdf"/>
+		<arg name="model" default="P300_uav4"/>
+		<!-- 初始位置，Yaw为偏航角 -->
+		<arg name="x" default="$(arg uav4_x)"/>
+		<arg name="y" default="$(arg uav4_y)"/>
+		<arg name="z" default="0.164"/>
+		<arg name="Yaw" default="0"/>
+		<!-- Mavros参数 -->
+		<arg name="udp_offboard_port_remote" value="$(eval 14540 + arg('ID'))"/>
+		<arg name="udp_offboard_port_local" value="$(eval 14580 + arg('ID'))"/>
+
+		<!-- 启动PX4 SITL，此处参数配置不可删除 -->
+		<arg name="interactive" default="true"/>
+		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
+		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+		</node>
+
+		<!-- 启动Gazebo模型 -->
+		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
+		</node>
+
+		<!-- 启动MAVROS -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="udp://:$(arg udp_offboard_port_remote)@localhost:$(arg udp_offboard_port_local)"/>
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
+		</node>
+    </group>
+
+    <!-- 5号飞机 -->
+    <group ns="$(arg uav5_name)">
+        <!-- 参数配置-->
+		<!-- ID编号 -->
+        <arg name="ID" value="4"/>
+		<!-- 指定sdf文件及模型名字 -->
+		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav5/P300_uav5.sdf"/>
+		<arg name="model" default="P300_uav5"/>
+		<!-- 初始位置，Yaw为偏航角 -->
+		<arg name="x" default="$(arg uav5_x)"/>
+		<arg name="y" default="$(arg uav5_y)"/>
+		<arg name="z" default="0.164"/>
+		<arg name="Yaw" default="0"/>
+		<!-- Mavros参数 -->
+		<arg name="udp_offboard_port_remote" value="$(eval 14540 + arg('ID'))"/>
+		<arg name="udp_offboard_port_local" value="$(eval 14580 + arg('ID'))"/>
+
+		<!-- 启动PX4 SITL，此处参数配置不可删除 -->
+		<arg name="interactive" default="true"/>
+		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
+		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+		</node>
+
+		<!-- 启动Gazebo模型 -->
+		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
+		</node>
+
+		<!-- 启动MAVROS -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="udp://:$(arg udp_offboard_port_remote)@localhost:$(arg udp_offboard_port_local)"/>
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
+		</node>
+    </group>
+
+</launch>
+

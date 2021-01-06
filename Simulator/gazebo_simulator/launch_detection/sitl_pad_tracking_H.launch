@@ -4,9 +4,9 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="0.05"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/landing_pad_H.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/models/P300_Monocular_down/P300_Monocular_down.sdf"/>
-	<arg name="model" default="P300_Monocular_down"/>
-    <include file="$(find prometheus_gazebo)/launch/sitl_px4_sender.launch">
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_monocular/amov_solo_monocular.sdf"/>
+	<arg name="model" default="amov_solo_monocular"/>
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
@@ -16,32 +16,49 @@
     </include>
 
     <node pkg="prometheus_detection_landing" type="fisheye_undistort.py" name="fisheye_undistort" output="screen">
-		<remap from="/camera/fisheye1/image_raw" to="/P300_Monocular_down/Monocular/image_raw" />
+		<remap from="/camera/fisheye1/image_raw" to="/prometheus/sensor/monocular_down/image_raw" />
     </node>
 
     <node pkg="prometheus_detection_landing" type="ellipse_det" name="ellipse_det" output="screen">
         <param name="camera_topic" type="string" value="/camera/fisheye1/image_undistort" />
         <param name="camera_info" type="string" value="camera_param_t265.yaml" />
-        <param name="with_training" type="bool" value="true" />
+        <param name="with_training" type="bool" value="false" />
         <param name="saving_center" type="bool" value="false" />
         <param name="train_imlist" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/labeled_img_class.txt" />
         <param name="train_imdir" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/images_from_camera" />
         <param name="saving_path" type="string" value="$(find prometheus_detection_landing)/dataset/ellipse_with_h/images_from_camera" />
     </node>
 	
-	<!-- run the pad_tracking.cpp -->
-	<node pkg="prometheus_mission" type="pad_tracking" name="pad_tracking" output="screen" launch-prefix="gnome-terminal --">
-		<param name="arm_height_to_ground" value="0.2" />
-		<param name="arm_distance_to_pad" value="0.55" />
-		<param name="kpx_land" value="0.35" />
-		<param name="kpy_land" value="0.35" />
-		<param name="kpz_land" value="0.1" />
-		<param name="start_point_x" value="1.0" />
-		<param name="start_point_y" value="2.0" />
-		<param name="start_point_z" value="4.0" />
+	<!-- run the autonomous_landing.cpp -->
+	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
+		<!-- 仿真模式 - 区别在于是否自动切换offboard模式 -->
 		<param name="sim_mode" value="true" />
+		<!-- 悬停模式 - 仅用于观察检测结果 -->
 		<param name="hold_mode" value="true" />
+		<!-- 是否使用降落板绝对高度 -->
+		<param name="use_pad_height" value="true" />
+		<param name="pad_height" value="0.01" />
+		<!-- 起始点 -->
+		<param name="start_point_x" value="1.0" />
+		<param name="start_point_y" value="1.0" />
+		<param name="start_point_z" value="2.0" />
+		<!-- 相机安装偏差 -->
+		<param name="camera_offset_x" value="0.0" />
+		<param name="camera_offset_y" value="0.0" />
+		<param name="camera_offset_z" value="-0.1" />
+		<!-- 追踪控制参数 -->
+		<param name="kpx_land" value="0.2" />
+		<param name="kpy_land" value="0.2" />
+		<param name="kpz_land" value="0.08" />
+		<param name="arm_height_to_ground" value="0.3" />
+		<param name="arm_distance_to_pad" value="0.4" />
+		<!-- 目标是否移动及其速度 -->
+		<param name="moving_target" value="false" />
+		<param name="target_vel_x" value="0.0" />
+		<param name="target_vel_y" value="0.0" />
 	</node>
 
+	<node pkg="prometheus_mission" type="mission_cmd_pub" name="mission_cmd_pub" output="screen" launch-prefix="gnome-terminal --tab --">	
+	</node>
 </launch>
 
