@@ -85,14 +85,36 @@ int main(int argc, char **argv)
             pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
             camera_id_msg);
     }
+    int framerate = 30;
+    int rate;
+    if (nh.getParam("framerate", rate)) {
+        if (rate > 0) framerate = rate;
+        char framerate_msg[256];
+        sprintf(framerate_msg, "set framerate %d", framerate);
+        if (local_print)
+            cout << framerate_msg << endl;
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
+            framerate_msg);
+    }
+    int flip_method = 0;
+    int flip;
+    if (nh.getParam("flip_method", flip)) {
+        if (flip > 0) flip_method = flip;
+        char flip_method_msg[256];
+        sprintf(flip_method_msg, "set flip_method %d", flip_method);
+        if (local_print)
+            cout << flip_method_msg << endl;
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
+            flip_method_msg);
+    }
 
     int resize_h(0), resize_w(0);
     nh.getParam("resize_h", resize_h);
     nh.getParam("resize_w", resize_w);
 
 
-    int framerate = 30;
-    int flip_method = 0;
     std::string pipeline = gstreamer_pipeline(
         cam_w,
         cam_h,
