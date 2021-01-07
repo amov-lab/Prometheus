@@ -1,4 +1,5 @@
-<!-- 本launch为使用px4_pos_controller进行机载控制时的地面端启动脚本 -->
+<!-- 本launch为使用px4_sender进行机载控制时的地面端启动脚本 -->
+<!-- 硬件清单 -->
 <launch>
 	<!-- run the ground_station.cpp -->
 	<node pkg="prometheus_station" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
@@ -10,7 +11,7 @@
 
 	<!-- run the terminal_control.cpp -->
 	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_config/terminal_control.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/terminal_control.yaml" />
 	</node>	
 
 	<!-- run the rviz -->
