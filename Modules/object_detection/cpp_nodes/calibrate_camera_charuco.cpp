@@ -39,7 +39,13 @@ const char* keys  =
         "{zt       | false | Assume zero tangential distortion }"
         "{a        |       | Fix aspect ratio (fx/fy) to this value }"
         "{pc       | false | Fix the principal point at the center }"
-        "{sc       | false | Show detected chessboard corners after calibration }";
+        "{sc       | false | Show detected chessboard corners after calibration }"
+        "{cw       |       | (MIPI parameter) Camera width }"
+        "{ch       |       | (MIPI parameter) Camera height }"
+        "{dw       |       | (MIPI parameter) Display width }"
+        "{dh       |       | (MIPI parameter) Display height }"
+        "{fr       |       | (MIPI parameter) Framerate }"
+        "{fm       |       | (MIPI parameter) Flip method }";
 }
 
 /**
@@ -169,6 +175,15 @@ int main(int argc, char *argv[]) {
     int display_height = 720 ;
     int framerate = 30 ;
     int flip_method = 0 ;
+
+
+if(parser.has("cw")) { capture_width = parser.get<int>("cw"); }
+if(parser.has("ch")) { capture_height = parser.get<int>("ch"); }
+if(parser.has("dw")) { display_width = parser.get<int>("dw"); }
+if(parser.has("dh")) { display_height = parser.get<int>("dh"); }
+if(parser.has("fr")) { framerate = parser.get<int>("fr"); }
+if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
+
 
     std::string pipeline = gstreamer_pipeline(capture_width,
 	capture_height,
