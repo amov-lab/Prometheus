@@ -130,6 +130,9 @@ int main(int argc, char **argv)
     std::string camera_topic = "/prometheus/camera/rgb/image_raw";
     std::string camera_params_yaml;
     std::string output_topic = "/prometheus/camera/rgb/image_aruco_det";
+
+    int dictionaryId(2);
+    float markerLength(0.0215);
     
     if (nh.getParam("camera_topic", camera_topic)) {
         if (local_print) ROS_INFO("camera_topic is %s", camera_topic.c_str());
@@ -145,6 +148,17 @@ int main(int argc, char **argv)
         if (local_print) ROS_INFO("output_topic is %s", output_topic.c_str());
     } else {
         if (local_print) ROS_WARN("didn't find parameter output_topic");
+    }
+
+    if (nh.getParam("dictionary_type", dictionaryId)) {
+        if (local_print) ROS_INFO("dictionary_type is %d", dictionaryId);
+    } else {
+        if (local_print) ROS_WARN("didn't find parameter dictionary_type");
+    }
+    if (nh.getParam("marker_length", markerLength)) {
+        if (local_print) ROS_INFO("marker_length is %f", markerLength);
+    } else {
+        if (local_print) ROS_WARN("didn't find parameter marker_length");
     }
 
     // 接收图像的话题
@@ -169,8 +183,7 @@ int main(int argc, char **argv)
         cout << distCoeffs << endl;
     }
 
-    int dictionaryId(2);
-    float markerLength(0.2);
+    
     Ptr<aruco::Dictionary> dictionary =
         aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(dictionaryId));
     Ptr<aruco::DetectorParameters> detectorParams = aruco::DetectorParameters::create();
@@ -216,7 +229,7 @@ int main(int argc, char **argv)
                     q.normalize();
 
                     geometry_msgs::PoseStamped pose;
-                    pose.header.frame_id = "map";
+                    pose.header.frame_id = "camera";
                     pose.pose.position.x = tvecs[i][0];
                     pose.pose.position.y = tvecs[i][1];
                     pose.pose.position.z = tvecs[i][2];
@@ -226,9 +239,12 @@ int main(int argc, char **argv)
                     pose.pose.orientation.w = q.w();
                     pose_pub.publish(pose);
 
+
                     static tf::TransformBroadcaster br;
                     tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
-                    tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "world", "world_link");
+                    char obj_str[16];
+                    sprintf(obj_str, "object-%d", ids[i]);
+                    tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
                     br.sendTransform(trans_world2camera);
                 }
             }
