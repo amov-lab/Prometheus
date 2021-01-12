@@ -29,6 +29,7 @@
 #include <sensor_msgs/image_encodings.h>  
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/String.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
@@ -47,11 +48,13 @@
 using namespace std;
 using namespace cv;
 
+//【订阅】运行状态转换开关
+ros::Subscriber switch_subscriber;
 //【订阅】输入图像
 image_transport::Subscriber image_subscriber;
 //【发布】检测得到的位置与姿态信息
 ros::Publisher pose_pub;
-//【发布】输入检测结果图像
+//【发布】检测结果图像
 image_transport::Publisher aruco_pub;
 
 
@@ -66,6 +69,22 @@ cv::Mat cam_image_copy;
 boost::shared_mutex mutex_image_callback;
 bool image_status = false;
 boost::shared_mutex mutex_image_status;
+
+// 运行状态
+// 0: 正常检测Aruco码，输出位姿
+// 1: 世界坐标系标定，标定后，检测结果被转换到世界坐标系下
+int run_state(0);
+
+
+void switchCallback(const std_msgs::String::ConstPtr& msg)
+{
+    ROS_INFO("receiving [%s]", msg->data.c_str());
+    if ("calibrate" == msg->data)
+    {
+        ROS_INFO("run_state = 1");
+        run_state = 1;
+    }
+}
 
 
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
@@ -123,9 +142,6 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(nh);
     // 更新频率为60HZ
     ros::Rate loop_rate(60);
-    //【发布】识别
-    pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/object_detection/aruco_det_v2", 1);
-
 
     std::string camera_topic = "/prometheus/camera/rgb/image_raw";
     std::string camera_params_yaml;
@@ -133,7 +149,7 @@ int main(int argc, char **argv)
 
     int dictionaryId(2);
     float markerLength(0.0215);
-    
+
     if (nh.getParam("camera_topic", camera_topic)) {
         if (local_print) ROS_INFO("camera_topic is %s", camera_topic.c_str());
     } else {
@@ -161,9 +177,14 @@ int main(int argc, char **argv)
         if (local_print) ROS_WARN("didn't find parameter marker_length");
     }
 
-    // 接收图像的话题
+    //【订阅】运行状态转换开关
+    switch_subscriber = nh.subscribe("/prometheus/object_detection/aruco_navigation_switch", 1, switchCallback);
+    //【订阅】输入图像
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
-    // 发布ArUco检测结果的话题
+
+    //【发布】检测得到的位置与姿态信息
+    pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/object_detection/aruco_det_v2", 1);
+    //【发布】检测结果图像
     aruco_pub = it.advertise(output_topic.c_str(), 1);
 
     std::string ros_path = ros::package::getPath("prometheus_detection");
@@ -183,7 +204,7 @@ int main(int argc, char **argv)
         cout << distCoeffs << endl;
     }
 
-    
+
     Ptr<aruco::Dictionary> dictionary =
         aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(dictionaryId));
     Ptr<aruco::DetectorParameters> detectorParams = aruco::DetectorParameters::create();
@@ -214,7 +235,7 @@ int main(int argc, char **argv)
             aruco::detectMarkers(frame, dictionary, corners, ids, detectorParams, rejected);
             if (ids.size() > 0)
                 aruco::estimatePoseSingleMarkers(corners, markerLength, camMatrix, distCoeffs, rvecs, tvecs);
-            
+
             frame.copyTo(frameCopy);
             if(ids.size() > 0) {
                 aruco::drawDetectedMarkers(frameCopy, corners, ids);
@@ -239,13 +260,65 @@ int main(int argc, char **argv)
                     pose.pose.orientation.w = q.w();
                     pose_pub.publish(pose);
 
-
                     static tf::TransformBroadcaster br;
                     tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
                     char obj_str[16];
                     sprintf(obj_str, "object-%d", ids[i]);
                     tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
                     br.sendTransform(trans_world2camera);
+
+                    if (1)
+                    {
+                        if (ids[i] >= 0 && ids[i] <= 16)
+                        {
+                            std::vector<double> vec_t{tvecs[i][0], tvecs[i][1], tvecs[i][2]};
+	                        cv::Mat vec_t_mat{vec_t};
+                            vec_t_mat = vec_t_mat;
+                            vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
+                            //cout <<"vec_t_mat.size():" <<vec_t_mat.size() << endl;
+                            //cout <<"vec_t_mat.type():"<< vec_t_mat.type() <<endl;
+                            if (ids[i] == 0)
+                            {
+                                std::vector<double> id_08_t{0.0345, -0.0345*3, 0};
+	                            cv::Mat id_08_t_mat{id_08_t};
+                                id_08_t_mat.convertTo(id_08_t_mat, CV_32FC1);
+                                //cout <<"id_18_t_mat.size():" <<id_18_t_mat.size() << endl;
+                                //cout <<"id_18_t_mat.type():"<< id_18_t_mat.type() <<endl;
+
+                                rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
+                                //cout <<"rotation_matrix.size():" <<rotation_matrix.size() << endl;
+                                //cout <<"rotation_matrix.type():"<< rotation_matrix.type() <<endl;
+                                cv::invert(rotation_matrix, rotation_matrix);
+                                cv::Mat id_8_t = rotation_matrix * id_08_t_mat + vec_t_mat;
+                                //cout <<"id_8_t.size():" <<id_8_t.size() << endl;
+
+                                static tf::TransformBroadcaster br;
+                                tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
+                                tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", "object-0-8");
+                                br.sendTransform(trans_world2camera);
+                            }
+                            if (ids[i] == 1)
+                            {
+                                std::vector<double> id_18_t{-0.0345, -0.0345*3, 0};
+	                            cv::Mat id_18_t_mat{id_18_t};
+                                id_18_t_mat.convertTo(id_18_t_mat, CV_32FC1);
+                                //cout <<"id_18_t_mat.size():" <<id_18_t_mat.size() << endl;
+                                //cout <<"id_18_t_mat.type():"<< id_18_t_mat.type() <<endl;
+
+                                rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
+                                //cout <<"rotation_matrix.size():" <<rotation_matrix.size() << endl;
+                                //cout <<"rotation_matrix.type():"<< rotation_matrix.type() <<endl;
+                                cv::invert(rotation_matrix, rotation_matrix);
+                                cv::Mat id_8_t = rotation_matrix * id_18_t_mat + vec_t_mat;
+                                //cout <<"id_8_t.size():" <<id_8_t.size() << endl;
+
+                                static tf::TransformBroadcaster br;
+                                tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
+                                tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", "object-1-8");
+                                br.sendTransform(trans_world2camera);
+                            }
+                        }
+                    }
                 }
             }
 
