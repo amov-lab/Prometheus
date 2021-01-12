@@ -1,0 +1,13 @@
+<launch>
+
+    <node pkg="prometheus_mission" type="formation_square" name="formation_square" output="screen">
+        <param name="sim" value="true"/>
+        <param name="square_length" value="6"/>
+        <param name="13_height" value="4"/>
+        <param name="24_height" value="4"/>
+        <param name="hold_time" value="8"/>
+        <param name="stage1_time" value="2"/>
+        <param name="LAND_intervals" value="0"/>
+    </node>
+
+</launch>
