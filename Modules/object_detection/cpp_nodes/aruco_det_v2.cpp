@@ -267,56 +267,135 @@ int main(int argc, char **argv)
                     tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
                     br.sendTransform(trans_world2camera);
 
-                    if (1)
+                    if (1 == run_state)
                     {
+                        std::vector<cv::Point3f> collected_pt3f;
                         if (ids[i] >= 0 && ids[i] <= 16)
                         {
                             std::vector<double> vec_t{tvecs[i][0], tvecs[i][1], tvecs[i][2]};
 	                        cv::Mat vec_t_mat{vec_t};
                             vec_t_mat = vec_t_mat;
                             vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
-                            //cout <<"vec_t_mat.size():" <<vec_t_mat.size() << endl;
-                            //cout <<"vec_t_mat.type():"<< vec_t_mat.type() <<endl;
+                            //cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
+                            //cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
+                            std::vector<double> id_to8_t(3);
                             if (ids[i] == 0)
                             {
-                                std::vector<double> id_08_t{0.0345, -0.0345*3, 0};
-	                            cv::Mat id_08_t_mat{id_08_t};
-                                id_08_t_mat.convertTo(id_08_t_mat, CV_32FC1);
-                                //cout <<"id_18_t_mat.size():" <<id_18_t_mat.size() << endl;
-                                //cout <<"id_18_t_mat.type():"<< id_18_t_mat.type() <<endl;
-
-                                rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
-                                //cout <<"rotation_matrix.size():" <<rotation_matrix.size() << endl;
-                                //cout <<"rotation_matrix.type():"<< rotation_matrix.type() <<endl;
-                                cv::invert(rotation_matrix, rotation_matrix);
-                                cv::Mat id_8_t = rotation_matrix * id_08_t_mat + vec_t_mat;
-                                //cout <<"id_8_t.size():" <<id_8_t.size() << endl;
-
-                                static tf::TransformBroadcaster br;
-                                tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
-                                tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", "object-0-8");
-                                br.sendTransform(trans_world2camera);
+                                id_to8_t[0] = 0.0345;
+                                id_to8_t[1] = -0.0345*3;
+                                id_to8_t[2] = 0.;
                             }
-                            if (ids[i] == 1)
+                            else if (ids[i] == 1)
                             {
-                                std::vector<double> id_18_t{-0.0345, -0.0345*3, 0};
-	                            cv::Mat id_18_t_mat{id_18_t};
-                                id_18_t_mat.convertTo(id_18_t_mat, CV_32FC1);
-                                //cout <<"id_18_t_mat.size():" <<id_18_t_mat.size() << endl;
-                                //cout <<"id_18_t_mat.type():"<< id_18_t_mat.type() <<endl;
-
-                                rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
-                                //cout <<"rotation_matrix.size():" <<rotation_matrix.size() << endl;
-                                //cout <<"rotation_matrix.type():"<< rotation_matrix.type() <<endl;
-                                cv::invert(rotation_matrix, rotation_matrix);
-                                cv::Mat id_8_t = rotation_matrix * id_18_t_mat + vec_t_mat;
-                                //cout <<"id_8_t.size():" <<id_8_t.size() << endl;
-
-                                static tf::TransformBroadcaster br;
-                                tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
-                                tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", "object-1-8");
-                                br.sendTransform(trans_world2camera);
+                                id_to8_t[0] = -0.0345;
+                                id_to8_t[1] = -0.0345*3;
+                                id_to8_t[2] = 0.;
                             }
+                            else if (ids[i] == 2)
+                            {
+                                id_to8_t[0] = 0.0345*2;
+                                id_to8_t[1] = -0.0345*2;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 3)
+                            {
+                                id_to8_t[0] = 0.;
+                                id_to8_t[1] = -0.0345*2;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 4)
+                            {
+                                id_to8_t[0] = -0.0345*2;
+                                id_to8_t[1] = -0.0345*2;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 5)
+                            {
+                                id_to8_t[0] = 0.0345;
+                                id_to8_t[1] = -0.0345;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 6)
+                            {
+                                id_to8_t[0] = -0.0345;
+                                id_to8_t[1] = -0.0345;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 7)
+                            {
+                                id_to8_t[0] = 0.0345*2;
+                                id_to8_t[1] = 0.;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 8)
+                            {
+                                collected_pt3f.push_back(cv::Point3f(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
+                                continue;
+                            }
+                            else if (ids[i] == 9)
+                            {
+                                id_to8_t[0] = -0.0345*2;
+                                id_to8_t[1] = 0.;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 10)
+                            {
+                                id_to8_t[0] = 0.0345;
+                                id_to8_t[1] = 0.0345;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 11)
+                            {
+                                id_to8_t[0] = -0.0345;
+                                id_to8_t[1] = 0.0345;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 12)
+                            {
+                                id_to8_t[0] = 0.0345*2;
+                                id_to8_t[1] = 0.0345*2;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 13)
+                            {
+                                id_to8_t[0] = 0.;
+                                id_to8_t[1] = 0.0345*2;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 14)
+                            {
+                                id_to8_t[0] = -0.0345*2;
+                                id_to8_t[1] = 0.0345*2;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 15)
+                            {
+                                id_to8_t[0] = 0.0345;
+                                id_to8_t[1] = 0.0345*3;
+                                id_to8_t[2] = 0.;
+                            }
+                            else if (ids[i] == 16)
+                            {
+                                id_to8_t[0] = -0.0345;
+                                id_to8_t[1] = 0.0345*3;
+                                id_to8_t[2] = 0.;
+                            }
+                            cv::Mat id_to8_t_mat{id_to8_t};
+                            id_to8_t_mat.convertTo(id_to8_t_mat, CV_32FC1);
+
+                            rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
+                            //cv::invert(rotation_matrix, rotation_matrix);
+                            cv::Mat id_8_t = rotation_matrix * id_to8_t_mat + vec_t_mat;
+
+                            collected_pt3f.push_back(cv::Point3f(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
+
+                            static tf::TransformBroadcaster br;
+                            tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), 
+                                tf::Vector3(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
+                            char obj_str[16];
+                            sprintf(obj_str, "object-%d-8", ids[i]);
+                            tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
+                            br.sendTransform(trans_world2camera);
                         }
                     }
                 }
