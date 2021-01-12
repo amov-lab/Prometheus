@@ -1,8 +1,0 @@
-<launch>
-    <node pkg="prometheus_control" type="TFmini" name="TFmini" output="screen">
-        <param name="serial_port" value="/dev/ttyUSB0" />
-        <param name="baud_rate" value="115200" />
-    </node>
-
-</launch>
-

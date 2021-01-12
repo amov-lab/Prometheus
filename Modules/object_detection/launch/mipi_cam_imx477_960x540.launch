@@ -1,0 +1,11 @@
+<launch>
+    <node pkg="prometheus_detection" type="web_cam" name="web_cam" output="screen">
+        <param name="cam_id" type="int" value="99" />
+        <param name="cam_h" type="int" value="1080" />
+        <param name="cam_w" type="int" value="1920" />
+	<param name="resize_h" type="int" value="540" />
+        <param name="resize_w" type="int" value="960" />
+        <param name="framerate" type="int" value="30" />
+        <param name="flip_method" type="int" value="2" />
+    </node>
+</launch>
