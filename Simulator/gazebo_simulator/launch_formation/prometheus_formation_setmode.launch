@@ -1,0 +1,9 @@
+<launch>
+
+    <node pkg="prometheus_mission" type="formation_setmode" name="formation_setmode" output="screen">
+        <param name="OFFBOARD_intervals" value="0"/>
+        <param name="LAND_intervals" value="0"/>
+        <param name="Takeoff_height" value="1"/>
+    </node>
+
+</launch>
