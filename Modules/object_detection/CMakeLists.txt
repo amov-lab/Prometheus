@@ -373,11 +373,16 @@ add_executable(landpad_det
     cpp_nodes/landpad_det.cpp
 )
 target_link_libraries(landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+
 add_executable(stereo_detection_saving_gazebo_samples
     cpp_nodes/3d_detection_saving_gazebo_samples.cpp
 )
 target_link_libraries(stereo_detection_saving_gazebo_samples ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
+add_executable(aruco_navigation_switch
+    cpp_nodes/aruco_navigation_switch.cpp
+)
+target_link_libraries(aruco_navigation_switch ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 if(CATKIN_ENABLE_TESTING)
   # Download yolov3-tiny.weights
