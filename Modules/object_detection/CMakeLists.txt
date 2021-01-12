@@ -60,6 +60,7 @@ find_package(catkin REQUIRED COMPONENTS
     actionlib
     prometheus_msgs
     tf2_eigen
+    tf
 )
 
 ## System dependencies are found with CMake's conventions
