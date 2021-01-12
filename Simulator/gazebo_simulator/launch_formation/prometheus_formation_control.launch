@@ -1,0 +1,13 @@
+<launch>
+
+    <arg name="sim" default="true"/>
+    <param name="Flight_controller" value="px4"/>
+    <param name="Location_source" value="mocap"/>
+
+    <node pkg="prometheus_mission" type="formation_control" name="formation_control" output="screen">
+        <param name="FORMATION_DISTANCE_x" value="2"/>
+        <param name="FORMATION_DISTANCE_y" value="2"/>
+        <param name="sim" value="$(arg sim)"/>
+    </node>
+
+</launch>
