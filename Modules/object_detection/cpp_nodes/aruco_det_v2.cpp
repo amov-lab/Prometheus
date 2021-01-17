@@ -16,6 +16,7 @@
 #include <pthread.h>
 #include <thread>
 #include <chrono>
+#include <numeric>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
@@ -149,6 +150,7 @@ int main(int argc, char **argv)
 
     int dictionaryId(2);
     float markerLength(0.0215);
+    float squareLength(0.0345);  // Square side length (in meters)
 
     if (nh.getParam("camera_topic", camera_topic)) {
         if (local_print) ROS_INFO("camera_topic is %s", camera_topic.c_str());
@@ -175,6 +177,11 @@ int main(int argc, char **argv)
         if (local_print) ROS_INFO("marker_length is %f", markerLength);
     } else {
         if (local_print) ROS_WARN("didn't find parameter marker_length");
+    }
+    if (nh.getParam("square_length", squareLength)) {
+        if (local_print) ROS_INFO("square_length is %f", squareLength);
+    } else {
+        if (local_print) ROS_WARN("didn't find parameter square_length");
     }
 
     //【订阅】运行状态转换开关
@@ -240,6 +247,9 @@ int main(int argc, char **argv)
             if(ids.size() > 0) {
                 aruco::drawDetectedMarkers(frameCopy, corners, ids);
 
+                std::vector<float> collected_tx, collected_ty, collected_tz;
+                std::vector<float> collected_qx, collected_qy, collected_qz, collected_qw;
+
                 for(unsigned int i = 0; i < ids.size(); i++) {
                     aruco::drawAxis(frameCopy, camMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 0.5f);
                     cv::Mat rotation_matrix;
@@ -269,135 +279,172 @@ int main(int argc, char **argv)
 
                     if (1 == run_state)
                     {
-                        std::vector<cv::Point3f> collected_pt3f;
                         if (ids[i] >= 0 && ids[i] <= 16)
                         {
                             std::vector<double> vec_t{tvecs[i][0], tvecs[i][1], tvecs[i][2]};
 	                        cv::Mat vec_t_mat{vec_t};
                             vec_t_mat = vec_t_mat;
                             vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
-                            //cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
-                            //cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
+                            // cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
+                            // cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
                             std::vector<double> id_to8_t(3);
                             if (ids[i] == 0)
                             {
-                                id_to8_t[0] = 0.0345;
-                                id_to8_t[1] = -0.0345*3;
+                                id_to8_t[0] = squareLength;
+                                id_to8_t[1] = -squareLength*3;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 1)
                             {
-                                id_to8_t[0] = -0.0345;
-                                id_to8_t[1] = -0.0345*3;
+                                id_to8_t[0] = -squareLength;
+                                id_to8_t[1] = -squareLength*3;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 2)
                             {
-                                id_to8_t[0] = 0.0345*2;
-                                id_to8_t[1] = -0.0345*2;
+                                id_to8_t[0] = squareLength*2;
+                                id_to8_t[1] = -squareLength*2;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 3)
                             {
                                 id_to8_t[0] = 0.;
-                                id_to8_t[1] = -0.0345*2;
+                                id_to8_t[1] = -squareLength*2;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 4)
                             {
-                                id_to8_t[0] = -0.0345*2;
-                                id_to8_t[1] = -0.0345*2;
+                                id_to8_t[0] = -squareLength*2;
+                                id_to8_t[1] = -squareLength*2;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 5)
                             {
-                                id_to8_t[0] = 0.0345;
-                                id_to8_t[1] = -0.0345;
+                                id_to8_t[0] = squareLength;
+                                id_to8_t[1] = -squareLength;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 6)
                             {
-                                id_to8_t[0] = -0.0345;
-                                id_to8_t[1] = -0.0345;
+                                id_to8_t[0] = -squareLength;
+                                id_to8_t[1] = -squareLength;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 7)
                             {
-                                id_to8_t[0] = 0.0345*2;
+                                id_to8_t[0] = squareLength*2;
                                 id_to8_t[1] = 0.;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 8)
                             {
-                                collected_pt3f.push_back(cv::Point3f(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
+                                collected_tx.push_back(tvecs[i][0]);
+                                collected_ty.push_back(tvecs[i][1]);
+                                collected_tz.push_back(tvecs[i][2]);
+
+                                collected_qx.push_back(q.x());
+                                collected_qy.push_back(q.y());
+                                collected_qz.push_back(q.z());
+                                collected_qw.push_back(q.w());
                                 continue;
                             }
                             else if (ids[i] == 9)
                             {
-                                id_to8_t[0] = -0.0345*2;
+                                id_to8_t[0] = -squareLength*2;
                                 id_to8_t[1] = 0.;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 10)
                             {
-                                id_to8_t[0] = 0.0345;
-                                id_to8_t[1] = 0.0345;
+                                id_to8_t[0] = squareLength;
+                                id_to8_t[1] = squareLength;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 11)
                             {
-                                id_to8_t[0] = -0.0345;
-                                id_to8_t[1] = 0.0345;
+                                id_to8_t[0] = -squareLength;
+                                id_to8_t[1] = squareLength;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 12)
                             {
-                                id_to8_t[0] = 0.0345*2;
-                                id_to8_t[1] = 0.0345*2;
+                                id_to8_t[0] = squareLength*2;
+                                id_to8_t[1] = squareLength*2;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 13)
                             {
                                 id_to8_t[0] = 0.;
-                                id_to8_t[1] = 0.0345*2;
+                                id_to8_t[1] = squareLength*2;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 14)
                             {
-                                id_to8_t[0] = -0.0345*2;
-                                id_to8_t[1] = 0.0345*2;
+                                id_to8_t[0] = -squareLength*2;
+                                id_to8_t[1] = squareLength*2;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 15)
                             {
-                                id_to8_t[0] = 0.0345;
-                                id_to8_t[1] = 0.0345*3;
+                                id_to8_t[0] = squareLength;
+                                id_to8_t[1] = squareLength*3;
                                 id_to8_t[2] = 0.;
                             }
                             else if (ids[i] == 16)
                             {
-                                id_to8_t[0] = -0.0345;
-                                id_to8_t[1] = 0.0345*3;
+                                id_to8_t[0] = -squareLength;
+                                id_to8_t[1] = squareLength*3;
                                 id_to8_t[2] = 0.;
                             }
                             cv::Mat id_to8_t_mat{id_to8_t};
                             id_to8_t_mat.convertTo(id_to8_t_mat, CV_32FC1);
 
                             rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
-                            //cv::invert(rotation_matrix, rotation_matrix);
+                            // cv::invert(rotation_matrix, rotation_matrix);
                             cv::Mat id_8_t = rotation_matrix * id_to8_t_mat + vec_t_mat;
 
-                            collected_pt3f.push_back(cv::Point3f(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
+                            collected_tx.push_back(id_8_t.at<float>(0));
+                            collected_ty.push_back(id_8_t.at<float>(1));
+                            collected_tz.push_back(id_8_t.at<float>(2));
 
-                            static tf::TransformBroadcaster br;
-                            tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), 
-                                tf::Vector3(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
-                            char obj_str[16];
-                            sprintf(obj_str, "object-%d-8", ids[i]);
-                            tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
-                            br.sendTransform(trans_world2camera);
+                            collected_qx.push_back(q.x());
+                            collected_qy.push_back(q.y());
+                            collected_qz.push_back(q.z());
+                            collected_qw.push_back(q.w());
+
+                            // static tf::TransformBroadcaster br;
+                            // tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), 
+                            //     tf::Vector3(id_8_t.at<float>(0), id_8_t.at<float>(1), id_8_t.at<float>(2)));
+                            // char obj_str[16];
+                            // sprintf(obj_str, "object-%d-8", ids[i]);
+                            // tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
+                            // br.sendTransform(trans_world2camera);
                         }
                     }
+                }
+
+                if (1 == run_state && collected_tx.size() > 1)
+                {
+                    float tx_sum = std::accumulate(std::begin(collected_tx), std::end(collected_tx), 0.0);
+                    float tx_mean =  tx_sum / collected_tx.size();
+                    float ty_sum = std::accumulate(std::begin(collected_ty), std::end(collected_ty), 0.0);
+                    float ty_mean =  ty_sum / collected_ty.size();
+                    float tz_sum = std::accumulate(std::begin(collected_tz), std::end(collected_tz), 0.0);
+                    float tz_mean =  tz_sum / collected_tz.size();
+
+                    float qx_sum = std::accumulate(std::begin(collected_qx), std::end(collected_qx), 0.0);
+                    float qx_mean =  qx_sum / collected_qx.size();
+                    float qy_sum = std::accumulate(std::begin(collected_qy), std::end(collected_qy), 0.0);
+                    float qy_mean =  qy_sum / collected_qy.size();
+                    float qz_sum = std::accumulate(std::begin(collected_qz), std::end(collected_qz), 0.0);
+                    float qz_mean =  qz_sum / collected_qz.size();
+                    float qw_sum = std::accumulate(std::begin(collected_qw), std::end(collected_qw), 0.0);
+                    float qw_mean =  qw_sum / collected_qw.size();
+
+                    static tf::TransformBroadcaster br;
+                    tf::Transform world2camera = tf::Transform(tf::Quaternion(qx_mean, qy_mean, qz_mean, qw_mean), tf::Vector3(tx_mean, ty_mean, tz_mean));
+                    tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "calib-MEAN");
+                    br.sendTransform(trans_world2camera);
                 }
             }
 
