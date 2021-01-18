@@ -4,7 +4,8 @@
         <param name="camera_parameters" type="string" value="$(find prometheus_detection)/shell/calib_imx477_960x540.yaml" />
         <param name="output_topic" type="string" value="/prometheus/camera/rgb/image_aruco_det" />
         <param name="dictionary_type" type="int" value="6" />
-        <param name="marker_length" type="double" value="0.0215" />
-        <param name="square_length" type="double" value="0.0345" />
+        <param name="target_marker_length" type="double" value="0.0207" />
+        <param name="calib_marker_length" type="double" value="0.0207" />
+        <param name="calib_square_length" type="double" value="0.0345" />
     </node>
 </launch>
