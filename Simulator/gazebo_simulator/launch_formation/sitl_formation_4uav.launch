@@ -1,7 +1,7 @@
 <launch>
 	<!-- 环境变量，PX4仿真启动脚本rcS中需要用到 -->
 	<env name="PX4_SIM_MODEL" value="solo" />
-    <env name="PX4_ESTIMATOR" value="ekf2_vision" />
+    <env name="PX4_ESTIMATOR" value="ekf2_gps" />
 
 	<!-- 启动Gazebo，可选择仿真所用的world -->
     <arg name="gui" default="true"/>
