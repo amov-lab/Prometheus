@@ -1,7 +1,7 @@
 <launch>
 	<!-- 环境变量，PX4仿真启动脚本rcS中需要用到 -->
 	<env name="PX4_SIM_MODEL" value="solo" />
-    <env name="PX4_ESTIMATOR" value="ekf2_vision" />
+    <env name="PX4_ESTIMATOR" value="ekf2_gps" />
 
 	<!-- 启动Gazebo，可选择仿真所用的world -->
     <arg name="gui" default="true"/>
@@ -40,17 +40,17 @@
     <arg name="uav1_x" default="0"/>
     <arg name="uav1_y" default="0"/>
 
-    <arg name="uav2_x" default="5"/>
-    <arg name="uav2_y" default="5"/>
+    <arg name="uav2_x" default="0"/>
+    <arg name="uav2_y" default="4"/>
 
-    <arg name="uav3_x" default="-5"/>
-    <arg name="uav3_y" default="5"/>
+    <arg name="uav3_x" default="0"/>
+    <arg name="uav3_y" default="2"/>
 
-    <arg name="uav4_x" default="5"/>
-    <arg name="uav4_y" default="-5"/>
+    <arg name="uav4_x" default="0"/>
+    <arg name="uav4_y" default="-2"/>
 
-    <arg name="uav5_x" default="-5"/>
-    <arg name="uav5_y" default="-5"/>
+    <arg name="uav5_x" default="0"/>
+    <arg name="uav5_y" default="-4"/>
 
     <!--1~5号机的初始位置-->
     <param name="uav1_x" value="$(arg uav1_x)"/>
