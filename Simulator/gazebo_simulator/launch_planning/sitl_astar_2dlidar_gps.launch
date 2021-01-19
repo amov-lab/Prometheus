@@ -6,7 +6,7 @@
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_hokuyo_2Dlidar/amov_solo_hokuyo_2Dlidar.sdf"/>
 	<arg name="model" default="amov_solo_hokuyo_2Dlidar"/>
-    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
 	  <arg name="model" value="$(arg model)"/>
@@ -54,11 +54,11 @@
         <!-- 障碍物膨胀距离 -->
         <param name="map/inflate" value="0.8" type="double"/>
         <!-- 地图范围 -->
-        <param name="map/origin_x" value="-15.0" type="double"/>
-        <param name="map/origin_y" value="-15.0" type="double"/>
+        <param name="map/origin_x" value="-50.0" type="double"/>
+        <param name="map/origin_y" value="-50.0" type="double"/>
         <param name="map/origin_z" value="-0.5" type="double"/>
-        <param name="map/map_size_x" value="30.0" type="double"/>
-        <param name="map/map_size_y" value="30.0" type="double"/>
+        <param name="map/map_size_x" value="100.0" type="double"/>
+        <param name="map/map_size_y" value="100.0" type="double"/>
         <param name="map/map_size_z" value="3.0" type="double"/>
     </node>
     
