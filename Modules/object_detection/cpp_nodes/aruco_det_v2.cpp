@@ -136,6 +136,20 @@ static bool readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeff
 }
 
 
+float _vector_stdev(std::vector<float>& x)
+{
+    float sum, mean, accum, stdev;
+    sum = std::accumulate(std::begin(x), std::end(x), 0.0);  
+    mean = sum / x.size();
+    accum = 0.0;
+    std::for_each (std::begin(x), std::end(x), [&](const float d) {  
+        accum += (d - mean) * (d - mean);  
+    });
+    stdev = sqrt(accum / (x.size() - 1));
+    return stdev;
+}
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "aruco_det_v2");
@@ -149,8 +163,9 @@ int main(int argc, char **argv)
     std::string output_topic = "/prometheus/camera/rgb/image_aruco_det";
 
     int dictionaryId(2);
-    float markerLength(0.0215);
-    float squareLength(0.0345);  // Square side length (in meters)
+    float targetMarkerLength(0.0207);
+    float calibMarkerLength(0.0207);
+    float calibSquareLength(0.0345);  // Square side length (in meters)
 
     if (nh.getParam("camera_topic", camera_topic)) {
         if (local_print) ROS_INFO("camera_topic is %s", camera_topic.c_str());
@@ -173,15 +188,20 @@ int main(int argc, char **argv)
     } else {
         if (local_print) ROS_WARN("didn't find parameter dictionary_type");
     }
-    if (nh.getParam("marker_length", markerLength)) {
-        if (local_print) ROS_INFO("marker_length is %f", markerLength);
+    if (nh.getParam("target_marker_length", targetMarkerLength)) {
+        if (local_print) ROS_INFO("target_marker_length is %f", targetMarkerLength);
     } else {
-        if (local_print) ROS_WARN("didn't find parameter marker_length");
+        if (local_print) ROS_WARN("didn't find parameter target_marker_length");
     }
-    if (nh.getParam("square_length", squareLength)) {
-        if (local_print) ROS_INFO("square_length is %f", squareLength);
+    if (nh.getParam("calib_marker_length", calibMarkerLength)) {
+        if (local_print) ROS_INFO("calib_marker_length is %f", calibMarkerLength);
     } else {
-        if (local_print) ROS_WARN("didn't find parameter square_length");
+        if (local_print) ROS_WARN("didn't find parameter calib_marker_length");
+    }
+    if (nh.getParam("calib_square_length", calibSquareLength)) {
+        if (local_print) ROS_INFO("calib_square_length is %f", calibSquareLength);
+    } else {
+        if (local_print) ROS_WARN("didn't find parameter calib_square_length");
     }
 
     //【订阅】运行状态转换开关
@@ -216,6 +236,10 @@ int main(int argc, char **argv)
         aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(dictionaryId));
     Ptr<aruco::DetectorParameters> detectorParams = aruco::DetectorParameters::create();
 
+    std::vector<float> collected_mtx, collected_mty, collected_mtz;
+    std::vector<float> collected_mqx, collected_mqy, collected_mqz, collected_mqw;
+    float mtx_calib, mty_calib, mtz_calib, mqx_calib, mqy_calib, mqz_calib, mqw_calib;
+
     cv::Mat frame, frameCopy;
     const auto wait_duration = std::chrono::milliseconds(1000);
     while (ros::ok())
@@ -237,6 +261,13 @@ int main(int argc, char **argv)
             vector< int > ids;
             vector< vector< Point2f > > corners, rejected;
             vector< Vec3d > rvecs, tvecs;
+
+            float markerLength = targetMarkerLength;
+            float squareLength = calibSquareLength;
+            if (0 == run_state || 1 == run_state)
+                markerLength = calibMarkerLength;
+            if (2 == run_state)
+                markerLength = targetMarkerLength;
 
             // detect markers and estimate pose
             aruco::detectMarkers(frame, dictionary, corners, ids, detectorParams, rejected);
@@ -270,12 +301,15 @@ int main(int argc, char **argv)
                     pose.pose.orientation.w = q.w();
                     pose_pub.publish(pose);
 
-                    static tf::TransformBroadcaster br;
-                    tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
-                    char obj_str[16];
-                    sprintf(obj_str, "object-%d", ids[i]);
-                    tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
-                    br.sendTransform(trans_world2camera);
+                    if (2 == run_state)
+                    {
+                        static tf::TransformBroadcaster br;
+                        tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
+                        char obj_str[16];
+                        sprintf(obj_str, "object-%d", ids[i]);
+                        tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(pose.header.stamp), "camera", obj_str);
+                        br.sendTransform(trans_world2camera);
+                    }
 
                     if (1 == run_state)
                     {
@@ -423,7 +457,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-                if (1 == run_state && collected_tx.size() > 1)
+                if (1 == run_state && collected_tx.size() > 8)
                 {
                     float tx_sum = std::accumulate(std::begin(collected_tx), std::end(collected_tx), 0.0);
                     float tx_mean =  tx_sum / collected_tx.size();
@@ -445,9 +479,62 @@ int main(int argc, char **argv)
                     tf::Transform world2camera = tf::Transform(tf::Quaternion(qx_mean, qy_mean, qz_mean, qw_mean), tf::Vector3(tx_mean, ty_mean, tz_mean));
                     tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "calib-MEAN");
                     br.sendTransform(trans_world2camera);
+
+                    collected_mtx.push_back(tx_mean);
+                    collected_mty.push_back(ty_mean);
+                    collected_mtz.push_back(tz_mean);
+                    collected_mqx.push_back(qx_mean);
+                    collected_mqy.push_back(qy_mean);
+                    collected_mqz.push_back(qz_mean);
+                    collected_mqw.push_back(qw_mean);
                 }
             }
 
+            if (1 == run_state && collected_mtx.size() >= 10)
+            {
+                
+                float mtx_std = _vector_stdev(collected_mtx);
+                float mty_std = _vector_stdev(collected_mty);
+                float mtz_std = _vector_stdev(collected_mtz);
+
+                float mqx_std = _vector_stdev(collected_mqx);
+                float mqy_std = _vector_stdev(collected_mqy);
+                float mqz_std = _vector_stdev(collected_mqz);
+                float mqw_std = _vector_stdev(collected_mqw);
+
+                // cout<<mtx_std<<", "<<mty_std<<", "<<mtz_std<<", "<<mqx_std<<", "<<mqy_std<<", "<<mqz_std<<", "<<mqw_std<<endl;
+                if (mtx_std < 0.01 && mty_std < 0.01 && mtz_std < 0.01 && mqx_std < 0.01 && mqy_std < 0.01 && mqz_std < 0.01 && mqw_std < 0.01)
+                {
+                    ROS_INFO("Calibration completed!");
+                    run_state = 2;
+
+                    mtx_calib = std::accumulate(std::begin(collected_mtx), std::end(collected_mtx), 0.0) / collected_mtx.size();
+                    mty_calib = std::accumulate(std::begin(collected_mty), std::end(collected_mty), 0.0) / collected_mty.size();
+                    mtz_calib = std::accumulate(std::begin(collected_mtz), std::end(collected_mtz), 0.0) / collected_mtz.size();
+                    mqx_calib = std::accumulate(std::begin(collected_mqx), std::end(collected_mqx), 0.0) / collected_mqx.size();
+                    mqy_calib = std::accumulate(std::begin(collected_mqy), std::end(collected_mqy), 0.0) / collected_mqy.size();
+                    mqz_calib = std::accumulate(std::begin(collected_mqz), std::end(collected_mqz), 0.0) / collected_mqz.size();
+                    mqw_calib = std::accumulate(std::begin(collected_mqw), std::end(collected_mqw), 0.0) / collected_mqw.size();
+                }
+
+                collected_mtx.clear();
+                collected_mty.clear();
+                collected_mtz.clear();
+
+                collected_mqx.clear();
+                collected_mqy.clear();
+                collected_mqz.clear();
+                collected_mqw.clear();
+            }
+
+            if (2 == run_state)
+            {
+                static tf::TransformBroadcaster br;
+                tf::Transform world2camera = tf::Transform(tf::Quaternion(mqx_calib, mqy_calib, mqz_calib, mqw_calib), tf::Vector3(mtx_calib, mty_calib, mtz_calib));
+                tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "map");
+                br.sendTransform(trans_world2camera);
+
+            }
 
             sensor_msgs::ImagePtr det_output_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frameCopy).toImageMsg();
             aruco_pub.publish(det_output_msg);
