@@ -149,6 +149,10 @@ add_executable(formation_square formation/formation_square.cpp)
 add_dependencies(formation_square prometheus_mission_gencpp)
 target_link_libraries(formation_square ${catkin_LIBRARIES})
 
+add_executable(pub_goal_from_qgc planning_mission/pub_goal_from_qgc.cpp)
+add_dependencies(pub_goal_from_qgc prometheus_mission_gencpp)
+target_link_libraries(pub_goal_from_qgc ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
