@@ -340,7 +340,7 @@ void formation::is_wait(int time)
 
 void formation::set_formation_px4_offboard()
 {
-    //创建1~5号机的command_to_mavros类
+    //创建1~4号机的command_to_mavros类
     command_to_mavros ctm1("uav1");
 
     command_to_mavros ctm2("uav2");
@@ -349,23 +349,30 @@ void formation::set_formation_px4_offboard()
 
     command_to_mavros ctm4("uav4");
 
-    command_to_mavros ctm5("uav5");
-    //设置1~5号机模式变量为offboard,解上锁变量为解锁
+    //设置1~4号机模式变量为offboard,解上锁变量为解锁
     ctm1.arm_cmd.request.value = true;
     ctm2.arm_cmd.request.value = true;
     ctm3.arm_cmd.request.value = true;
     ctm4.arm_cmd.request.value = true;
-    ctm5.arm_cmd.request.value = true;
 
     ctm1.mode_cmd.request.custom_mode = "OFFBOARD";
     ctm2.mode_cmd.request.custom_mode = "OFFBOARD";
     ctm3.mode_cmd.request.custom_mode = "OFFBOARD";
     ctm4.mode_cmd.request.custom_mode = "OFFBOARD";
-    ctm5.mode_cmd.request.custom_mode = "OFFBOARD";
 
-    //集群按照23145的顺序对五台无人机分别解锁并切入offboard模式
+    //集群按照1234的顺序对五台无人机分别解锁并切入offboard模式
     //当有一台无人机解锁或者切入offboard模式失败,该函数返回false
     //五台无人机成功解锁并切入offboard模式,该函数返回true
+    if(ctm1.arming_client.call(ctm1.arm_cmd) && ctm1.set_mode_client.call(ctm1.mode_cmd))
+    {
+        ROS_INFO("uav1 armed and set offboard mode success");
+        is_wait(offboard_intervals);
+    }
+    else
+    {
+        ROS_ERROR("uav1 armed and set offboard mode failed");
+    }
+
     if(ctm2.arming_client.call(ctm2.arm_cmd) && ctm2.set_mode_client.call(ctm2.mode_cmd))
     {
         ROS_INFO("uav2 armed and set offboard mode success");
@@ -386,16 +393,6 @@ void formation::set_formation_px4_offboard()
         ROS_ERROR("uav3 armed and set offboard mode failed");
     }
 
-    if(ctm1.arming_client.call(ctm1.arm_cmd) && ctm1.set_mode_client.call(ctm1.mode_cmd))
-    {
-        ROS_INFO("uav1 armed and set offboard mode success");
-        is_wait(offboard_intervals);
-    }
-    else
-    {
-        ROS_ERROR("uav1 armed and set offboard mode failed");
-    }
-
     if(ctm4.arming_client.call(ctm4.arm_cmd) && ctm4.set_mode_client.call(ctm4.mode_cmd))
     {
         ROS_INFO("uav4 armed and set offboard mode success");
@@ -406,14 +403,6 @@ void formation::set_formation_px4_offboard()
         ROS_ERROR("uav4 armed and set offboard mode failed");
     }
 
-    if(ctm5.arming_client.call(ctm5.arm_cmd) && ctm5.set_mode_client.call(ctm5.mode_cmd))
-    {
-        ROS_INFO("uav5 armed and set offboard mode success");
-    }
-    else
-    {
-        ROS_ERROR("uav5 armed and set offboard mode failed");
-    }
 }
 
 void formation::set_formation_px4_land()
