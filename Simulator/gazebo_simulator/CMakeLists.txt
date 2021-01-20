@@ -46,6 +46,7 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIR}
     ${GAZEBO_INCLUDE_DIRS}
+#	/usr/include/sdformat-6.2
 )
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
