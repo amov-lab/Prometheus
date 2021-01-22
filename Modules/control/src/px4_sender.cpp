@@ -614,6 +614,11 @@ geometry_msgs::PoseStamped get_rviz_ref_posistion(const prometheus_msgs::Control
             ref_pose.pose.position.x = _DroneState.position[0] + 0.5 * cmd.Reference_State.acceleration_ref[0] * dt * dt;
             ref_pose.pose.position.y = _DroneState.position[1] + 0.5 * cmd.Reference_State.acceleration_ref[1] * dt * dt;
             ref_pose.pose.position.z = _DroneState.position[2] + 0.5 * cmd.Reference_State.acceleration_ref[2] * dt * dt;
+        }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::TRAJECTORY )
+        {
+            ref_pose.pose.position.x = cmd.Reference_State.position_ref[0];
+            ref_pose.pose.position.y = cmd.Reference_State.position_ref[1];
+            ref_pose.pose.position.z = cmd.Reference_State.position_ref[2];
         }
 
         ref_pose.pose.orientation = _DroneState.attitude_q;

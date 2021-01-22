@@ -1,49 +1,108 @@
 <launch>
-	<!-- 该demo有bug,暂未修复,请勿使用 -->
-    <!-- Launch Gazebo Simulation -->
-    <arg name="x" default="-10.0"/>
-    <arg name="y" default="0.0"/>
-    <arg name="z" default="0"/>
+	<!-- Launch Gazebo Simulation -->
+	<arg name="x" default="0.0"/>
+	<arg name="y" default="-10.0"/>
+	<arg name="z" default="0"/>
+	<arg name="gazebo_gui" default="false"/>
+	<arg name="visualization" default="true"/>
+	<arg name="setup_rtabmap" default="true" />
+	<arg name="depth_mode" default="false"/>
+
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_D435i/amov_solo_D435i.sdf"/>
+	<arg name="pcd_file" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
 	<arg name="model" default="amov_solo_D435i"/>
-    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
-	  <arg name="world" value="$(arg world)"/>
-	  <arg name="sdf" value="$(arg sdf)"/>
-	  <arg name="model" value="$(arg model)"/>
-      <arg name="x" value="$(arg x)"/>
-      <arg name="y" value="$(arg y)"/>
-      <arg name="z" value="$(arg z)"/>
-    </include>
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
+		<arg name="gazebo_gui" default="$(arg gazebo_gui)"/>
+		<arg name="world" value="$(arg world)"/>
+		<arg name="sdf" value="$(arg sdf)"/>
+		<arg name="model" value="$(arg model)"/>
+		<arg name="x" value="$(arg x)"/>
+		<arg name="y" value="$(arg y)"/>
+		<arg name="z" value="$(arg z)"/>
+	</include>
 
-	<!-- RGBD相机局部点云 -->
-	<!-- 实际运行中，D435i可直出局部点云;但此处仿真需要生成局部点云 -->
-	<!-- 可以通过下面这个launch文件生成局部点云(比较吃CPU),也可以通过在D435i.sdf中启动libgazebo_ros_openni_kinect插件来生成局部点云 -->
-	<include file="$(find prometheus_gazebo)/launch_basic/depth_proc.launch"></include>
+	<!-- 启动rtabmap_ros建图 --> <!-- 有点问题，相机没有发布 -->
+	<group if="$(arg setup_rtabmap)">
+		<!-- RTAB-Map: RGB-D mode -->
+		<include if="$(arg depth_mode)" file="$(find rtabmap_ros)/launch/rtabmap.launch">
+			<arg name="rtabmap_args"      value="--delete_db_on_start --Optimizer/GravitySigma 0.3"/>
+			<arg name="rgb_topic"         value="/realsense_plugin/camera/color/image_raw"/>
+			<arg name="depth_topic"       value="/realsense_plugin/camera/depth/image_raw"/>
+			<arg name="camera_info_topic" value="/realsense_plugin/camera/color/camera_info"/>
+			<arg name="visual_odometry"   value="false"/>
+			<arg name="approx_sync"       value="true"/>
+			<arg name="frame_id"          value="base_link"/>
+			<arg name="map_frame_id"	value="map"/>
+			<arg name="odom_topic"         value="/prometheus/drone_odom"/> 
+			<arg name="imu_topic"         value="/mavros/imu/data"/>
+			<arg name="rtabmapviz"        value="false"/>
+			<arg name="rviz"              value="false"/>
+		</include>
 
-	<!-- 设定局部点云话题-->
-	<arg name="topic_of_local_pcl" default="/realsense_plugin/camera/local_pointclouds"/>
+		<!-- RTAB-Map: Stereo mode -->
+		<include unless="$(arg depth_mode)" file="$(find rtabmap_ros)/launch/rtabmap.launch">
+			<arg name="rtabmap_args"            value="--delete_db_on_start --Optimizer/GravitySigma 0.3 "/>
+			<arg name="left_image_topic"        value="/realsense_plugin/camera/ir/image_raw"/>
+			<arg name="right_image_topic"       value="/realsense_plugin/camera/ir2/image_raw"/>
+			<arg name="left_camera_info_topic"  value="/realsense_plugin/camera/ir/camera_info"/>
+			<arg name="right_camera_info_topic" value="/realsense_plugin/camera/ir2/camera_info"/>
+			<arg name="stereo"                  value="true"/>
+			<arg name="frame_id"                value="realsense_camera_link"/>
+			<arg name="imu_topic"               value="/mavros/imu/data"/>
+			<arg name="wait_imu_to_init"        value="true"/>
+			<arg name="rtabmapviz"              value="false"/>
+			<arg name="rviz"                    value="false"/>
+		</include>
+	</group>
+    	<!-- 启动 octomap 建图 -->
+	<group unless="$(arg setup_rtabmap)">
+		<!-- RGBD相机局部点云 -->
+		<!-- 如果没有，可以通过下面这个launch文件，根据RGBD生成局部点云(比较吃CPU) -->
+		<!-- <include file="$(find prometheus_gazebo)/launch_basic/depth_proc.launch"></include> -->
+		<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+			<param name="resolution" value="0.05" />
+			<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+			<param name="frame_id" type="string" value="map" />
+			<!-- maximum range to integrate (speedup!) -->
+			<param name="sensor_model/max_range" value="5.0" />
+			<!-- data source to integrate (PointCloud2) -->
+			<remap from="cloud_in" to="/realsense_plugin/camera/local_pointclouds" />
+		</node>
+	</group>
+
+	
 	<!-- 启动局部规划算法 -->
-	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
+	<arg     if="$(arg setup_rtabmap)" name="topic_of_local_pcl" default="/rtabmap/cloud_map"/>
+	<arg unless="$(arg setup_rtabmap)" name="topic_of_local_pcl" default="/octomap_point_cloud_centers"/>
+	<!-- 如果直接使用  GroundTruth 点云输入 -->
+	<!-- <arg name="topic_of_local_pcl" default="/prometheus/pcl_groundtruth"/> -->
+	<!-- 如果直接使用相机点云输入 -->
+	<!-- <arg name="topic_of_local_pcl" default="/realsense_plugin/camera/local_pointclouds"/> -->
+
+	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen" launch-prefix="gnome-terminal --tab --">
 		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
 		<!-- 参数 -->
+		<param name="local_planner/sim_mode" value="true" type="bool"/>
+		<param name="local_planner/planner_enable" value="true" type="bool"/>
+		<!-- 二维平面规划 -->
+		<param name="global_planner/is_2D" value="false" type="bool"/>
+		<param name="local_planner/control_yaw_flag" value="$(arg is_2DLidar)" type="bool"/>
 		<!-- 选择算法 0代表APF,1代表VFH -->
-		<param name="planning/algorithm_mode" value="0" type="int"/>
-		<!-- 激光雷达模型,0代表3d雷达,1代表2d雷达 -->
-		<param name="planning/lidar_model" value="0" type="int"/>
+		<param name="local_planner/algorithm_mode" value="0" type="int"/>
+		<!-- 激光雷达模型,0代表3d雷达类型<sensor_msgs::PointCloud2>,1代表2d雷达类型<sensor_msgs::LaserScan> -->
+		<param name="local_planner/lidar_model" value="0" type="int"/>
 		<!-- 最大速度，设的越小越安全 -->
-		<param name="planning/max_planning_vel" value="0.3" type="double"/>
+		<param name="local_planner/max_planning_vel" value="0.5" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
-		<param name="apf/inflate_distance" value="0.5" type="double"/>
+		<param name="apf/inflate_distance" value="0.8" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="apf/obs_distance" value="5.0" type="double"/>  
+		<param name="apf/sensor_max_range" value="3.0" type="double"/>  
 		<!-- 增益 -->
 		<param name="apf/k_push" value="2.0" type="double"/>
-		<param name="apf/k_att" value="0.4" type="double"/>
-		<!-- 安全距离，距离障碍物在安全距离内，k_push自动增大 -->
-		<param name="apf/min_dist" value="0.3" type="double"/>
+		<param name="apf/k_att" value="1.0" type="double"/>
 		<!-- 最大吸引距离 -->
-		<param name="apf/max_att_dist" value="5" type="double"/>
+		<param name="apf/max_att_dist" value="4" type="double"/>
 		<!-- 地面高度，不考虑低于地面高度的障碍物 -->
 		<param name="apf/ground_height" value="0.3" type="double"/>
 		<!-- 地面安全高度，小于该高度，会产生向上推力 -->
@@ -52,18 +111,12 @@
 		<param name="apf/safe_distance" value="0.01" type="double"/>
 	</node>	
 
-	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
-	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
-		<param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
-	</node>
-
 	<!-- 启动rviz,设为false可关闭 -->
-	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_planning.rviz" />
-        <!-- obstacle.world 真实点云 -->
-        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
-		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
-	    </node>
-    </group>
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_config_astar.rviz" />
+		<!-- obstacle.world 真实点云 -->
+		<node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+			<param name="pcd_path" type="string" value="$(arg pcd_file)" />
+		</node>
+	</group>
 </launch>

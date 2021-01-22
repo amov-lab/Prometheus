@@ -73,7 +73,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void laser_cb(const tf2_msgs::TFMessage::ConstPtr &msg)
 {
-    //确定是cartographer发出来的/tf信息
+    //确定是 cartographer 发出来的/tf信息
     //有的时候/tf这个消息的发布者不止一个
     //可改成ＴＦ监听
     if (msg->transforms[0].header.frame_id == "map" && msg->transforms[0].child_frame_id == "base_link" && input_source == 1)  
@@ -275,7 +275,7 @@ void send_to_fcu()
 {
     geometry_msgs::PoseStamped vision;
 
-    //vicon
+    //mocap
     if (input_source == 0)
     {
         vision.pose.position.x = pos_drone_mocap[0];
@@ -293,7 +293,8 @@ void send_to_fcu()
             pub_message(message_pub, prometheus_msgs::Message::ERROR, NODE_NAME, "Mocap Timeout.");
         }
         
-        } //laser
+        }
+    // cartographer
     else if (input_source == 1)
     {
         vision.pose.position.x = pos_drone_laser[0];
@@ -307,6 +308,7 @@ void send_to_fcu()
         vision.pose.orientation.z = q_laser.z();
         vision.pose.orientation.w = q_laser.w();
     }
+    // Ground Truth
     else if (input_source == 2)
     {
         vision.pose.position.x = pos_drone_gazebo[0];
@@ -318,6 +320,7 @@ void send_to_fcu()
         vision.pose.orientation.z = q_gazebo.z();
         vision.pose.orientation.w = q_gazebo.w();
     }
+    // Intel T265 dual camera
     else if (input_source == 3)
     {
         vision.pose.position.x = pos_drone_t265[0];
@@ -329,6 +332,7 @@ void send_to_fcu()
         vision.pose.orientation.z = q_t265.z();
         vision.pose.orientation.w = q_t265.w();
     }
+    // SLAM ?? where pub?
     else if (input_source == 4)
     {
         vision.pose.position.x = pos_drone_slam[0];
@@ -342,7 +346,7 @@ void send_to_fcu()
     }
 
     vision.header.stamp = ros::Time::now();
-    vision_pub.publish(vision);
+    vision_pub.publish(vision);//发布
 }
 
 void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
@@ -355,7 +359,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     {
         Drone_State.position[2]  = Drone_State.rel_alt;
     }
-    drone_state_pub.publish(Drone_State);
+    drone_state_pub.publish(Drone_State);//发布
 
     // 发布无人机当前odometry,用于导航及rviz显示
     nav_msgs::Odometry Drone_odom;
@@ -377,7 +381,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     Drone_odom.twist.twist.linear.x = Drone_State.velocity[0];
     Drone_odom.twist.twist.linear.y = Drone_State.velocity[1];
     Drone_odom.twist.twist.linear.z = Drone_State.velocity[2];
-    odom_pub.publish(Drone_odom);
+    odom_pub.publish(Drone_odom);//发布
 
     // 发布无人机运动轨迹，用于rviz显示
     geometry_msgs::PoseStamped drone_pos;
@@ -400,5 +404,5 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     drone_trajectory.header.stamp = ros::Time::now();
     drone_trajectory.header.frame_id = "world";
     drone_trajectory.poses = posehistory_vector_;
-    trajectory_pub.publish(drone_trajectory);
+    trajectory_pub.publish(drone_trajectory);//发布
 }

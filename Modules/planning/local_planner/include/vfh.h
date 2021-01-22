@@ -33,6 +33,7 @@ private:
     double inflate_distance;
     double sensor_max_range;
     double safe_distance;
+    double ground_height;
 
     bool has_local_map_;
     bool has_odom_;
@@ -52,7 +53,6 @@ private:
     sensor_msgs::PointCloud2ConstPtr  local_map_ptr_;
     nav_msgs::Odometry cur_odom_;
 
-    bool isIgnored(float x, float y, float z, float ws);
     int find_Hcnt(double angle);
     double find_angle(int cnt);
     double angle_error(double angle1, double angle2);

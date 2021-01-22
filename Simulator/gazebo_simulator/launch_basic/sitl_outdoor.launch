@@ -6,45 +6,45 @@
 	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
 	<!-- 参看 ~/Firmware_v110/ROMFS/px4fmu_common/init.d-posix/rcS 中的修改内容 -->
 	<!-- ekf2_gps 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
-    <env name="PX4_ESTIMATOR" value="ekf2_gps" />
+	<env name="PX4_ESTIMATOR" value="ekf2_gps" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
 	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
 	
 	<!-- PX4 configs -->
-    <arg name="interactive" default="true"/>
-    <!-- PX4 SITL -->
+	<arg name="interactive" default="true"/>
+	<!-- PX4 SITL -->
 	<arg unless="$(arg interactive)" name="px4_command_arg1" value="-d"/>
-    <arg     if="$(arg interactive)" name="px4_command_arg1" value=""/>
+	<arg if="$(arg interactive)" name="px4_command_arg1" value=""/>
 	<!-- 节点源文件路径: ~/Firmware_v110/platforms/posix/src/px4/common/main.cpp -->
 	<node name="sitl" pkg="px4" type="px4" output="screen" 
 		args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)"/>
 
 	<!-- 启动Gazebo -->
 	<!-- Gazebo configs -->
-    <arg name="gui" default="true"/>
-    <arg name="debug" default="false"/>
-    <arg name="verbose" default="false"/>
-    <arg name="paused" default="false"/>
-    <arg name="respawn_gazebo" default="false"/>
+	<arg name="gui" default="true"/>
+	<arg name="debug" default="false"/>
+	<arg name="verbose" default="false"/>
+	<arg name="paused" default="false"/>
+	<arg name="respawn_gazebo" default="false"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
-    <!-- Gazebo sim -->
-    <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="gui" value="$(arg gui)"/>
-        <arg name="debug" value="$(arg debug)"/>
-        <arg name="verbose" value="$(arg verbose)"/>
-        <arg name="paused" value="$(arg paused)"/>
-        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
-        <arg name="world_name" value="$(arg world)"/>
-    </include>
+	<!-- Gazebo sim -->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="debug" value="$(arg debug)"/>
+		<arg name="verbose" value="$(arg verbose)"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+		<arg name="world_name" value="$(arg world)"/>
+	</include>
 
 	<!-- Spawn vehicle model -->
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
-    <arg name="x" default="1.0"/>
-    <arg name="y" default="1.0"/>
-    <arg name="z" default="0.2"/>
+	<arg name="x" default="1.0"/>
+	<arg name="y" default="1.0"/>
+	<arg name="z" default="0.2"/>
 	<arg name="R" default="0"/>
-    <arg name="P" default="0"/>
-    <arg name="Y" default="0.0"/>
+	<arg name="P" default="0"/>
+	<arg name="Y" default="0.0"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo/amov_solo.sdf"/>
 	<arg name="model" default="amov_solo"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
@@ -66,14 +66,14 @@
 		<arg name="x" value="$(arg x)"/>
     	<arg name="y" value="$(arg y)"/>
     	<arg name="z" value="$(arg z)"/>
-    </include>
+	</include>
 
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
 	<arg name="input_source" default="9"/>
 	<arg name="rate_hz" default="30"/>
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
-		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
+		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for Intel T265 dual camera slam，4 for SLAM (but where pub?), 9 for outdoor (with rel_alt) -->
 		<param name="input_source" value="$(arg input_source)" />
 		<param name="rate_hz" value="$(arg rate_hz)" />
 		<param name="offset_x" value="$(arg x)" />

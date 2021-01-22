@@ -73,8 +73,8 @@ namespace dyn_planner {
             pos(i) = (id(i) + 0.5) * resolution_sdf_ + origin_(i);
     }
 
-    void SDFMap::setOccupancy(Eigen::Vector3d pos, int occ) {
-        if (occ != 1 && occ != 0) {
+    void SDFMap::setOccupancy(Eigen::Vector3d pos, int is_occ) {
+        if (is_occ != 1 && is_occ != 0) {
             cout << "occ value error!" << endl;
             return;
         }
@@ -90,7 +90,7 @@ namespace dyn_planner {
         //      << id(0) * grid_size_(1) * grid_size_(2) + id(1) * grid_size_(2) + id(2)
         //      << endl;
         // cout << "..." << occupancy_buffer_.size() << endl;
-        occupancy_buffer_[id(0) * grid_size_(1) * grid_size_(2) + id(1) * grid_size_(2) + id(2)] = occ;
+        occupancy_buffer_[id(0) * grid_size_(1) * grid_size_(2) + id(1) * grid_size_(2) + id(2)] = is_occ;// occupancy True
     }
 
     int SDFMap::getOccupancy(Eigen::Vector3d pos) {
@@ -177,14 +177,14 @@ namespace dyn_planner {
         Eigen::Vector3d idx_pos, diff;
         indexToPos(idx, idx_pos);
 
-        diff = (pos - idx_pos) * resolution_inv_;
+        diff = (pos - idx_pos) * resolution_inv_; // [diff]: difference from the central of cell
 
         double values[2][2][2];
         for (int x = 0; x < 2; x++) {
             for (int y = 0; y < 2; y++) {
                 for (int z = 0; z < 2; z++) {
                     Eigen::Vector3i current_idx = idx + Eigen::Vector3i(x, y, z);
-                    values[x][y][z] = getDistance(current_idx);
+                    values[x][y][z] = getDistance(current_idx); // octo_pos around pos; 
                 }
             }
         }
@@ -197,7 +197,7 @@ namespace dyn_planner {
         double v0 = (1 - diff[1]) * v00 + diff[1] * v10;
         double v1 = (1 - diff[1]) * v01 + diff[1] * v11;
 
-        double dist = (1 - diff[2]) * v0 + diff[2] * v1;
+        double dist = (1 - diff[2]) * v0 + diff[2] * v1; // weighted distance from the octo_tree
 
         grad[2] = (v1 - v0) * resolution_inv_;
         grad[1] = ((1 - diff[2]) * (v10 - v00) + diff[2] * (v11 - v01)) * resolution_inv_;
@@ -301,7 +301,8 @@ namespace dyn_planner {
             f_set_val(q, val);
         }
     }
-
+	
+	/* --------------- Generate the Euclidean Signed Distance Field(ESDF) Map ---------------- */
     void SDFMap::updateESDF3d(bool neg) {
         for (int x = min_vec_[0]; x <= max_vec_[0]; x++) {
             for (int y = min_vec_[1]; y <= max_vec_[1]; y++) {
@@ -525,7 +526,7 @@ namespace dyn_planner {
         cloud_inflate_vis_.clear();
         pcl::PointXYZ pt, pt_inf;
         Eigen::Vector3d p3d, p3d_inf;
-        const int ifn = ceil(inflate_ * resolution_inv_);
+        const int ifn = ceil(inflate_ * resolution_inv_); // inflate_cloud_index_max
 
         for (size_t i = 0; i < latest_cloud_.points.size(); ++i) {
             pt = latest_cloud_.points[i];
@@ -586,25 +587,25 @@ namespace dyn_planner {
 
         node_.param("sdf_map/resolution_sdf", resolution_sdf_, 0.2);
         node_.param("sdf_map/ceil_height", ceil_height_, 2.0);
-        node_.param("sdf_map/update_rate", update_rate_, 10.0);
+        node_.param("sdf_map/update_rate", update_rate_, 10.0); // useless
         node_.param("sdf_map/update_range", update_range_, 5.0);
         node_.param("sdf_map/inflate", inflate_, 0.2);
-        node_.param("sdf_map/radius_ignore", radius_ignore_, 0.2);
+        node_.param("sdf_map/radius_ignore", radius_ignore_, 0.2); // useless
 
         cout << "origin_: " << origin_.transpose() << endl;
         cout << "map size: " << map_size_.transpose() << endl;
         cout << "resolution: " << resolution_sdf_ << endl;
 
         /* ---------- sub and pub ---------- */
-        odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/odom_world", 10, &SDFMap::odomCallback, this);
-        octomap_sub_ = node_.subscribe<octomap_msgs::Octomap>("/map/octomap", 1, &SDFMap::octomapCallback, this);
+        odom_sub_ = node_.subscribe<nav_msgs::Odometry>("/prometheus/drone_odom", 10, &SDFMap::odomCallback, this);
+        octomap_sub_ = node_.subscribe<octomap_msgs::Octomap>("/prometheus/planning/local_pcl", 1, &SDFMap::octomapCallback, this);
 
-        cloud_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/laser_cloud_surround", 1, &SDFMap::cloudCallback,
+        cloud_sub_ = node_.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pointclouds", 1, &SDFMap::cloudCallback,
                                                                this);
 
         update_timer_ = node_.createTimer(ros::Duration(0.1), &SDFMap::updateCallback, this);
 
-        inflate_cloud_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/inflate_cloud", 1);
+        inflate_cloud_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/prometheus/sdf_map/inflate_cloud", 1);
 
         /* ---------- setting ---------- */
         have_odom_ = false;
@@ -617,7 +618,7 @@ namespace dyn_planner {
         // SETY << "grid num:" << grid_size_.transpose() << REC;
         min_range_ = origin_;
         max_range_ = origin_ + map_size_;
-        min_vec_ = Eigen::Vector3i::Zero();
+        min_vec_ = Eigen::Vector3i::Zero(); // index for *_buffer_
         max_vec_ = grid_size_ - Eigen::Vector3i::Ones();
 
         // initialize size of buffer

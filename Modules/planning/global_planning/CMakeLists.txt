@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 find_package(Eigen3 REQUIRED)
 find_package(PCL 1.7 REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
        roscpp
        rospy
@@ -42,6 +43,7 @@ add_executable(global_planner_main
 	src/global_planner_node.cpp
 	src/global_planner.cpp
 	src/A_star.cpp
+	src/kinodynamic_astar.cpp
 	src/occupy_map.cpp
 	src/tools.cpp
 	)

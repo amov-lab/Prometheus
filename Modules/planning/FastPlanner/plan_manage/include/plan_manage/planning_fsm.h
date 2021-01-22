@@ -66,7 +66,7 @@ private:
 
   EDTEnvironment::Ptr edt_env_;
 
-  Astar::Ptr path_finder0_;
+  Astar::Ptr path_finder0_;// useless
   KinodynamicAstar::Ptr path_finder_;
   BsplineOptimizer::Ptr bspline_optimizer_;
 

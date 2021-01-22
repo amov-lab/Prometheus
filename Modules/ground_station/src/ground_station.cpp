@@ -70,8 +70,8 @@ void pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr& msg)
 void log_control_cb(const prometheus_msgs::LogMessageControl::ConstPtr& msg)
 {
     control_type = msg->control_type;
-    _DroneState = msg->Drone_State;
-    Command_Now = msg->Control_Command;
+    _DroneState = msg->Drone_State; // pos, vel from /mavros/local_position + att from /mavros/imu
+    Command_Now = msg->Control_Command; // when stabilization: from dronestate, when movement: from controller
     _AttitudeReference = msg->Attitude_Reference;
     ref_pose = msg->ref_pose;
 }
@@ -136,7 +136,9 @@ int main(int argc, char **argv)
 
 void printf_info()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Ground Station  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<"=======================================================================" <<endl;
+    cout <<"===>>>>>>>>>>>>>>>>>>>>> Ground Station  <<<<<<<<<<<<<<<<<<<<<<<<<<<===" <<endl;
+    cout <<"=======================================================================" <<endl;
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
@@ -154,12 +156,14 @@ void printf_info()
     // 【打印】来自上层的控制指令
     prometheus_station_utils::printf_command_control(Command_Now);
 
-    // 【打印】控制模块消息
+    // 【打印】控制模块消息，control_type: 0代表px4_sender,1代表px4_pos_controller(姿态控制)
     if(control_type == 1)
     {
         //打印期望位姿
         prometheus_station_utils::prinft_ref_pose(ref_pose);
         prometheus_station_utils::prinft_attitude_reference(_AttitudeReference);
+
+        cout << "" <<endl;
 
         cout <<">>>>>>>>>>>>>>>>>>>>>>>> Target Info FCU <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
         
@@ -178,6 +182,7 @@ void printf_info()
     if(mission_type == 1)
     {
         // 降落任务
+        cout << "" <<endl;
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
         if(detection_info.detected)
         {

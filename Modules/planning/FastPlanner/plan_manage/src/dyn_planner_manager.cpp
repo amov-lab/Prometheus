@@ -18,7 +18,7 @@ void DynPlannerManager::setParam(ros::NodeHandle& nh)
 
 void DynPlannerManager::setPathFinder0(const Astar::Ptr& finder)
 {
-  path_finder0_ = finder;
+  path_finder0_ = finder;// useless
 }
 
 void DynPlannerManager::setPathFinder(const KinodynamicAstar::Ptr& finder)
@@ -43,7 +43,7 @@ bool DynPlannerManager::checkTrajCollision()
   {
     Eigen::Vector3d pos = traj_pos_.evaluateDeBoor(t);
     double dist = dynamic_ ? edt_env_->evaluateCoarseEDT(pos, time_start_ + t - t_start_) :
-                             edt_env_->evaluateCoarseEDT(pos, -1.0);
+                             edt_env_->evaluateCoarseEDT(pos, -1.0); // time useless
 
     if (dist < margin_)
     {
@@ -78,9 +78,9 @@ bool DynPlannerManager::generateTrajectory(Eigen::Vector3d start_pt, Eigen::Vect
                                            Eigen::Vector3d start_acc, Eigen::Vector3d end_pt, Eigen::Vector3d end_vel)
 {
 #ifdef DEBUG
-  std::cout << "[planner]: -----------------------" << std::endl;
-    cout << "start: (pt; vel; acc) " << start_pt.transpose() << ", " << start_vel.transpose() << ", " << start_acc.transpose()
-       << "\ngoal:" << end_pt.transpose() << ", " << end_vel.transpose() << endl;
+  std::cout << "==================================\n" << "[planner]: Searching Starts Now!" << std::endl;
+    cout << "start: \t pt: " << start_pt.transpose() << "\n\t vel: " << start_vel.transpose() << "\n\t acc: " << start_acc.transpose()
+       << "\ngoal: \t pt: " << end_pt.transpose() << "\n\t vel: " << end_vel.transpose() << endl;
 #endif
 
   if ((start_pt - end_pt).norm() < 0.2)
@@ -91,8 +91,7 @@ cout << "Close goal" << endl;
     return false;
   }
 
-  //轨迹开始时间
-  time_traj_start_ = ros::Time::now();
+  //轨迹生成开始时间
   time_start_ = -1.0;
 
   double t_search = 0.0, t_sample = 0.0, t_axb = 0.0, t_opt = 0.0, t_adjust = 0.0;
@@ -101,8 +100,10 @@ cout << "Close goal" << endl;
   Eigen::Vector3d init_vel = start_vel;
   Eigen::Vector3d init_acc = start_acc;
 
-  ros::Time t1, t2;
-  t1 = ros::Time::now();
+  ros::Time start_time, end_time;
+  start_time = ros::Time::now();
+
+
   /* ---------- search kino path ---------- */
   // 全局规划算法清零
   path_finder_->reset();
@@ -139,49 +140,48 @@ cout << "Close goal" << endl;
 #endif     
   }
 
-  t2 = ros::Time::now();
-  // 搜索时间
-  t_search = (t2 - t1).toSec();
+  end_time = ros::Time::now();
+  t_search = (end_time - start_time).toSec(); // 全局搜索时间
+
 
   /* ---------- bspline parameterization ---------- */
-  t1 = ros::Time::now();
+  start_time = ros::Time::now();
 
   int K;
   double ts = time_sample_ / max_vel_;
   Eigen::MatrixXd vel_acc;
 
-  // 选取样本点用于B样条？
+  // 选取全局路径样本点
   Eigen::MatrixXd samples = path_finder_->getSamples(ts, K);
+
   // cout << "[planner]: ts: " <<  ts << endl << " sample:\n" << samples.transpose() << endl;
 
-  t2 = ros::Time::now();
-  // 采样时间？
-  t_sample = (t2 - t1).toSec();
+  end_time = ros::Time::now();
+  t_sample = (end_time - start_time).toSec();// 样本点采样时间
 
-  t1 = ros::Time::now();
 
+  // 拟合全局路径样本点
+  start_time = ros::Time::now();
   Eigen::MatrixXd control_pts;
-  // 将样本点变为控制点
+
   NonUniformBspline::getControlPointEqu3(samples, ts, control_pts);
 
   // cout << "ctrl pts:" << control_pts << endl;
 
-  NonUniformBspline init = NonUniformBspline(control_pts, 3, ts);
+  NonUniformBspline init = NonUniformBspline(control_pts, 3, ts);// 优化前拟合路径
 
-  t2 = ros::Time::now();
-  t_axb = (t2 - t1).toSec();
+  end_time = ros::Time::now();
+  t_axb = (end_time - start_time).toSec();// 样本点拟合时间
+
 
   /* ---------- optimize trajectory ---------- */
-  t1 = ros::Time::now();
-
-  // 设置控制点
-  bspline_optimizer_->setControlPoints(control_pts);
-  // 设置时间间隔
-  bspline_optimizer_->setBSplineInterval(ts);
+  start_time = ros::Time::now();
+  bspline_optimizer_->setControlPoints(control_pts);// 设置控制点
+  bspline_optimizer_->setBSplineInterval(ts);// 设置时间间隔
 
   if (status != KinodynamicAstar::REACH_END){
     // cout << "Kinodynamic Astar not reach end!" <<endl;
-    bspline_optimizer_->optimize(BsplineOptimizer::SOFT_CONSTRAINT, dynamic_, time_start_);
+    bspline_optimizer_->optimize(BsplineOptimizer::SOFT_CONSTRAINT, dynamic_, time_start_); // time useless
   }
   else{
     // cout << "Kinodynamic Astar reach end!" <<endl;
@@ -191,26 +191,26 @@ cout << "Close goal" << endl;
 
   // cout << "optimal ctrl pts:" << control_pts << endl;
 
-  t2 = ros::Time::now();
-  t_opt = (t2 - t1).toSec();
+  end_time = ros::Time::now();
+  t_opt = (end_time - start_time).toSec();// 轨迹优化时间
+
 
   /* ---------- time adjustment ---------- */
-
-  t1 = ros::Time::now();
-  NonUniformBspline pos = NonUniformBspline(control_pts, 3, ts);
+  start_time = ros::Time::now();
+  NonUniformBspline pos = NonUniformBspline(control_pts, 3, ts);// 优化后路径
 
   double tm, tmp, to, tn;
   pos.getTimeSpan(tm, tmp);
   to = tmp - tm;
 
-  bool feasible = pos.checkFeasibility(false);
+  bool feasible = pos.checkFeasibility(false, ts);
 
   int iter_num = 0;
   while (!feasible && ros::ok())
   {
     ++iter_num;
 
-    feasible = pos.reallocateTime();
+    feasible = pos.reallocateTime(false, ts);
     /* actually this not needed, converges within 10 iteration */
     if (iter_num >= 50)
       break;
@@ -219,18 +219,20 @@ cout << "Close goal" << endl;
   // cout << "[Main]: iter num: " << iter_num << endl;
   pos.getTimeSpan(tm, tmp);
   tn = tmp - tm;
+
   // cout << "[planner]: Reallocate ratio: " << tn / to << endl;
 
-  t2 = ros::Time::now();
-  t_adjust = (t2 - t1).toSec();
+  end_time = ros::Time::now();
+  t_adjust = (end_time - start_time).toSec();// 运动动力学可行性修正时间
 
-  pos.checkFeasibility(true);
+  pos.checkFeasibility(true, ts);
   // drawVelAndAccPro(pos);
 
-  /* save result */
+
+  /* ---------- save result ---------- */
   traj_pos_ = pos;
 
-  double t_total = t_search + t_sample + t_axb + t_opt + t_adjust;
+  double t_total = t_search + t_sample + t_axb + t_opt + t_adjust;// 总消耗时间
 
   cout << "[planner]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_sample + t_axb + t_opt
        << ", adjust time:" << t_adjust << endl;
@@ -239,10 +241,9 @@ cout << "Close goal" << endl;
   time_optimize_ = t_sample + t_axb + t_opt;
   time_adjust_ = t_adjust;
 
-  
 
   time_traj_start_ = ros::Time::now();
-  time_start_ = -1.0;
+  // time_start_ = -1.0;
 
   return true;
 }

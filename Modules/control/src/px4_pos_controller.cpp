@@ -377,10 +377,10 @@ int main(int argc, char **argv)
                 //轨迹追踪控制,直接改为PID控制器
                 if(Command_Now.Reference_State.Move_mode != prometheus_msgs::PositionReference::TRAJECTORY)
                 {
-                    _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                    _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);//cascade pid: 内环追踪位置，外环追踪速度
                 }else
                 {
-                    _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                    _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);//dirct pid: 速度误差作为微分项
                     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "CPID NOT SUPPOORT TRAJECTORY TRACKING.");
                 }
                 

@@ -5,7 +5,7 @@
 	<arg name="z" default="0"/>
 	<arg name="gazebo_gui" default="false"/>
 	<arg name="visualization" default="true"/>
-	<arg name="is_2DLidar" default="false"/> <!-- 2dLidar 不行， 找不到路径 -->
+	<arg name="is_2DLidar" default="false"/> <!--建议还是A*用2d的，不卡-->
 	<arg name="setup_rtabmap" default="false" />
 	<arg name="type_in_goal" default="false"/>
 
@@ -90,8 +90,6 @@
 		</node>
 	</group>
 
-
-
 	<!-- 启动全局规划算法 -->
 	<node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --tab --">
 		<remap     if="$(arg setup_rtabmap)" from="/prometheus/global_planning/global_pcl" to="/octomap_obstacles" />
@@ -102,31 +100,22 @@
 		<!-- <remap from="/prometheus/global_planning/global_pcl" to="/prometheus/sensors/3Dlidar_scan" /> -->
 
 		<!-- 参数 -->
-		<param unless="$(arg is_2DLidar)" name="global_planner/algorithm_mode" value="1" type="int"/> <!-- 2dlidar只能用A*，3dLidar可以用kinody-A* -->
 		<param name="global_planner/sim_mode" value="true" type="bool"/>
 		<param name="global_planner/planner_enable" value="true" type="bool"/>
 		<!-- 二维平面规划 -->
-		<param name="global_planner/is_2D" value="$(arg is_2DLidar)" type="bool"/> <!-- 因为启动了地图服务，所以2d时候可以是否 -->
+		<param name="global_planner/is_2D" value="$(arg is_2DLidar)" type="bool"/> <!-- 因为启动了地图服务，所以可以是否 -->
 		<param name="global_planner/control_yaw_flag" value="$(arg is_2DLidar)" type="bool"/> <!-- 如果使用 2dLidar 就需要自旋以感知地图 -->
 		<!-- ２维高度，建议与起飞高度一致 -->
-		<param name="global_planner/fly_height_2D" value="1.0" type="double"/>
+		<param name="global_planner/fly_height_2D" value="1.0" type="double"/> <!-- is_2D情况下有效 -->
 		<!-- 停止距离 -->
-		<param name="global_planner/safe_distance" value="0.01" type="double"/>
-		<param name="global_planner/time_per_path" value="0.01" type="double"/>
-		<param name="global_planner/replan_time" value="10.0" type="double"/>
-		<param name="global_planner/map_input" value="0" type="int"/>
-
-		<param name="kinodynamic_astar/max_tau" value="0.5" type="double"/>
-		<param name="kinodynamic_astar/init_max_tau" value="0.5" type="double"/>
-		<param name="kinodynamic_astar/max_vel" value="1.0" type="double"/>
-		<param name="kinodynamic_astar/max_acc" value="1.0" type="double"/>
-		<param name="kinodynamic_astar/w_time" value="15.0" type="double"/>
-		<param name="kinodynamic_astar/horizon" value="9.0" type="double"/>
-		<param name="kinodynamic_astar/lambda_heu" value="2.0" type="double"/>
-		<param name="kinodynamic_astar/time_resolution" value="2.0" type="double"/>
-		<param name="kinodynamic_astar/margin" value="0.4" type="double"/>
-		<param name="kinodynamic_astar/allocate_num" value="100000" type="int"/>
-		<param name="kinodynamic_astar/check_num" value="5" type="int"/>
+		<param name="global_planner/safe_distance" value="0.01" type="double"/> <!-- 若膨胀距离map/inflate设置已考虑安全距离，建议此处设为0 -->
+		<param name="global_planner/time_per_path" value="0.3" type="double"/> <!-- 路径追踪执行频率 -->
+		<param name="global_planner/replan_time" value="10.0" type="double"/> <!-- 重规划频率 -->
+		<param name="global_planner/map_input" value="0" type="int"/> <!-- 0代表全局点云(其他的好像不行)，１代表局部点云，２代表激光雷达scan数据 -->
+		<!-- 最大搜索步数 -->
+		<param name="astar/allocate_num" value="10000" type="int"/>
+		<!-- 启发式函数系数 -->
+		<param name="astar/lambda_heu" value="2.0" type="double"/>
 		<!-- 分辨率 -->
 		<param name="map/resolution" value="0.2" type="double"/>
 		<!-- 障碍物膨胀距离 -->
@@ -139,6 +128,10 @@
 		<param name="map/map_size_y" value="30.0" type="double"/>
 		<param name="map/map_size_z" value="3.0" type="double"/>
 	</node>
+
+	<!-- terminal输入goal -->
+	<node if="$(arg type_in_goal)" pkg="prometheus_mission" type="pub_goal" name="pub_goal" output="screen" launch-prefix="gnome-terminal --tab --">	
+	</node> 
 
 	<!-- 启动rviz,设为false可关闭 -->
 	<group if="$(arg visualization)">

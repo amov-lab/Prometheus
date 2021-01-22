@@ -65,6 +65,7 @@ int KinodynamicAstar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, 
     /* ---------- get lowest f_score node ---------- */
     cur_node = open_set_.top();
 #ifdef DEBUG
+    cout << "[kinodynamic_A*]: Searching Starts Now!" << endl;
     cout << "cur pos: " << cur_node->state.head(3).transpose() << endl;
     cout << "time: " << cur_node->time << endl;
     cout << "dist: " << edt_env_->evaluateCoarseEDT(cur_node->state.head(3), cur_node->time) << endl;
@@ -441,7 +442,7 @@ bool KinodynamicAstar::computeShotTraj(Eigen::VectorXd state1, Eigen::VectorXd s
     }
 
     if (coord(0) < origin_(0) || coord(0) >= map_size_3d_(0) || coord(1) < origin_(1) || coord(1) >= map_size_3d_(1) ||
-        coord(2) < origin_(2) || coord(2) >= map_size_3d_(2))
+        coord(2) < origin_(2) || coord(2) >= map_size_3d_(2)) // map is defined within origin_ to map_size_3d_???
     {
       return false;
     }

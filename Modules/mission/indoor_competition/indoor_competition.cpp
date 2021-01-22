@@ -5,11 +5,6 @@
 
 using namespace std;
 
-#define START_POINT_X -6.5
-#define START_POINT_Y 0.0
-#define START_POINT_Z 1.7
-#define START_POINT_YAW 0.0
-
 #define CIRCLE_POINT_X -3.5
 #define CIRCLE_POINT_Y 0.0
 #define CIRCLE_POINT_Z 1.8
@@ -39,13 +34,17 @@ using namespace std;
 #define LANDPAD_HEIGHT 0.0
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-Eigen::Vector3f start_point;
+//任务起始位置，可以跳跃之前任务
+float START_POINT_X,START_POINT_Y,START_POINT_Z,START_POINT_YAW;
+
 //椭圆穿越
 Detection_result ellipse_det;
+
 //避障任务
 geometry_msgs::Point desired_vel;  
-int flag_get_cmd = 0;
-int flag_get_cmd_a = 0;
+int flag_get_local_planner_cmd = 0;
+int flag_get_global_planner_cmd = 0;
+
 //走廊穿越
 struct global_planner
 {
@@ -55,6 +54,10 @@ struct global_planner
     int wp_id;  
     int start_id;
 }A_star;
+
+float yaw_rate,desired_yaw;
+bool is_2DLidar;
+ros::Time NOW;
 
 //数字识别+颜色巡线
 int flag_detection;
@@ -78,8 +81,9 @@ std_msgs::Bool switch_on;
 std_msgs::Bool switch_off;
 
 // 状态机
-int State_Machine = 0;
+int State_Machine;
 float kpx_circle_track,kpy_circle_track,kpz_circle_track;                   //控制参数 - 比例参数
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void A_star_planner();
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -117,12 +121,12 @@ void ellipse_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr& msg)
 }
 void local_planner_cmd_cb(const geometry_msgs::Point::ConstPtr& msg)
 {
-    flag_get_cmd = 1;
+    flag_get_local_planner_cmd = 1;
     desired_vel = *msg;
 }
 void global_planner_cmd_cb(const nav_msgs::Path::ConstPtr& msg)
 {
-    flag_get_cmd_a = flag_get_cmd_a + 1;
+    flag_get_global_planner_cmd = 1;
     A_star.path_cmd = *msg;
     A_star.Num_total_wp = A_star.path_cmd.poses.size();
 
@@ -145,13 +149,13 @@ void global_planner_cmd_cb(const nav_msgs::Path::ConstPtr& msg)
     A_star.wp_id = A_star.start_id + 1;
     if(A_star.Num_total_wp - A_star.start_id > 8)
     {
-        A_star.wp_id = A_star.start_id + 7;
+        A_star.wp_id = A_star.start_id + 3;
     }
 }
 void color_line_cb(const geometry_msgs::Pose::ConstPtr &msg)
 {
     error_body_y = - tan(msg->position.x) * NUM_POINT_Z;
-    flag_detection = msg->position.y;
+    flag_detection = msg->position.y;//检测标志位（1代表正常检测，-1代表未检测到）
 
     float x1 = msg->orientation.w;
     float y1 = msg->orientation.x;
@@ -229,7 +233,7 @@ int main(int argc, char **argv)
     ros::Subscriber local_planner_sub  =  nh.subscribe<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 50, local_planner_cmd_cb);
 
     //【订阅】全局路径规划结果,用于避开障碍物 走廊
-    ros::Subscriber global_planner_sub =   nh.subscribe<nav_msgs::Path>("/prometheus/global_planner/path_cmd", 50, global_planner_cmd_cb);
+    ros::Subscriber global_planner_sub =   nh.subscribe<nav_msgs::Path>("/prometheus/global_planning/path_cmd", 50, global_planner_cmd_cb);
 
     //【订阅】无人机当前状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
@@ -249,13 +253,7 @@ int main(int argc, char **argv)
 
     switch_on.data = true;
     switch_off.data = false;
-    //关闭所有节点
-    local_planner_switch_pub.publish(switch_off);
-    global_planner_switch_pub.publish(switch_off);
-    circle_switch_pub.publish(switch_off);
-    num_det_switch_pub.publish(switch_off);
-    color_det_switch_pub.publish(switch_off);
-    pad_det_switch_pub.publish(switch_off);
+    geometry_msgs::PoseStamped goal;
 
     nh.param<float>("kpx_circle_track", kpx_circle_track, 0.1);
     nh.param<float>("kpy_circle_track", kpy_circle_track, 0.1);
@@ -265,6 +263,15 @@ int main(int argc, char **argv)
     nh.param<float>("kpy_land", kpy_land, 0.1);
     nh.param<float>("kpz_land", kpz_land, 0.1);
 
+    nh.param<int>("State_Machine", State_Machine, 1);
+    nh.param<float>("START_POINT_X", START_POINT_X, -6.5);
+    nh.param<float>("START_POINT_Y", START_POINT_Y, 0.0);
+    nh.param<float>("START_POINT_Z", START_POINT_Z, 1.7);
+    nh.param<float>("START_POINT_YAW", START_POINT_YAW, 0.0);
+
+    nh.param<float>("spinning_rate", yaw_rate, 0.5);
+    nh.param<bool>("is_2DLidar", is_2DLidar, true); 
+  
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -278,26 +285,44 @@ int main(int argc, char **argv)
     cout.setf(ios::showpos);
 
     // Waiting for input
-    int start_flag = 0;
-    while(start_flag == 0)
-    {
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Indoor Competition<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please enter 1 to start the mission..."<<endl;
-        cin >> start_flag;
-    }
+    int flag_go_on;
+    bool flag_unlock = false;
+    bool flag_in_air = false;
 
-    // 阶段1: 解锁并起飞
-    Command_Now.Command_ID = 1;
-    while( State_Machine == 0)
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Indoor Competition<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+    cout << "Ready to Takeoff ..."<<endl;
+    cout << "Please type any to go on..."<<endl;
+    cin >> flag_go_on;
+
+    //关闭所有节点
+    local_planner_switch_pub.publish(switch_off);
+    global_planner_switch_pub.publish(switch_off);
+    circle_switch_pub.publish(switch_off);
+    num_det_switch_pub.publish(switch_off);
+    color_det_switch_pub.publish(switch_off);
+    pad_det_switch_pub.publish(switch_off);
+
+    // 阶段0: 解锁
+    while(!flag_unlock)
     {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
-        Command_Now.Command_ID = Command_Now.Command_ID + 1;
+        Command_Now.Command_ID = 1;
         Command_Now.Reference_State.yaw_ref = 999;
         command_pub.publish(Command_Now);   
-        cout << "Switch to OFFBOARD and arm ..."<<endl;
-        ros::Duration(3.0).sleep();
         
+        ros::Duration(3.0).sleep();
+        ros::spinOnce(); // ROS only processes your callbacks when you tell it to
+
+        if(_DroneState.armed){
+            flag_unlock=true;
+            cout << "Switch to OFFBOARD and arm ..."<<endl;
+        }
+    }
+
+    // 阶段1: 起飞
+    while(!flag_in_air && flag_unlock)
+    {
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
@@ -314,16 +339,20 @@ int main(int argc, char **argv)
 
         float dis = cal_distance(Eigen::Vector3f(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]),
                      Eigen::Vector3f(START_POINT_X, START_POINT_Y, START_POINT_Z));
-        ros::spinOnce();
-        if(dis < DIS_THRES)
+
+        if(dis < DIS_THRES) // arrived
         {
-            State_Machine = 1;
+            flag_in_air = true;
+            cout << "Please type any to go on..."<<endl;
+            cin >> flag_go_on;
         }
+
     }
 
-    //阶段2: 过门,准备穿圆
+    //阶段2: 过门
     while(State_Machine == 1)
     {
+        circle_switch_pub.publish(switch_on);
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
@@ -334,9 +363,8 @@ int main(int argc, char **argv)
         Command_Now.Reference_State.position_ref[2]     = CIRCLE_POINT_Z;
         Command_Now.Reference_State.yaw_ref             = CIRCLE_POINT_YAW;
         command_pub.publish(Command_Now);
-        cout << "Moving to CIRCLE_POINT ..."<<endl;
+        cout << "Passing the door ..."<<endl;
         ros::Duration(2.0).sleep();
-
         ros::spinOnce();
 
         float dis = cal_distance(Eigen::Vector3f(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]),
@@ -344,13 +372,14 @@ int main(int argc, char **argv)
 
         if(ellipse_det.is_detected && dis < DIS_THRES)
         {
-            State_Machine = 2;
+            State_Machine = State_Machine + 1;
+            cout << "Arrived at CIRCLE_POINT, and the target has been detected ..."<<endl;
+            cout << "Please type any to go on..."<<endl;
+            cin >> flag_go_on;
         }
     }
 
-    //阶段3: 传圆
-    circle_switch_pub.publish(switch_on);
-    
+    //阶段3: 穿圆
     while(State_Machine == 2)
     {
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
@@ -364,16 +393,17 @@ int main(int argc, char **argv)
         Command_Now.Reference_State.velocity_ref[1]     = kpy_circle_track * ellipse_det.pos_body_enu_frame[1];
         Command_Now.Reference_State.velocity_ref[2]     = kpz_circle_track * ellipse_det.pos_body_enu_frame[2];
         Command_Now.Reference_State.yaw_ref             = 0;
-
         command_pub.publish(Command_Now);   
-        cout << "Tracking the cricle ..."<<endl;
+
+        ros::spinOnce();
+
+        cout << "Passing the cricle ..."<<endl;
 
         printf_detection_result(ellipse_det);
-        ros::spinOnce();
-        ros::Duration(0.05).sleep();
 
         if(abs(ellipse_det.pos_body_enu_frame[0]) < 1)
         {
+            Command_Now.header.stamp                        = ros::Time::now();
             Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
             Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
             Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
@@ -386,8 +416,7 @@ int main(int argc, char **argv)
 
             ros::Duration(5.0).sleep();
 
-            State_Machine = 3;
-            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.header.stamp                        = ros::Time::now();
             Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
             Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
             Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
@@ -397,136 +426,143 @@ int main(int argc, char **argv)
             Command_Now.Reference_State.position_ref[2]     = PILLAR_POINT_Z;
             Command_Now.Reference_State.yaw_ref             = PILLAR_POINT_YAW;
             command_pub.publish(Command_Now);
-            cout << "Moving to PILLAR_POINT ..."<<endl;
+
+            circle_switch_pub.publish(switch_off);
+            State_Machine = State_Machine + 1;
+
+            cout << "Ready to pass the column jungle..."<<endl;
+            cout << "Please type any to go on..."<<endl;
+            cin >> flag_go_on;
         }
     }
-    circle_switch_pub.publish(switch_off);
 
-    //发布目标
-    geometry_msgs::PoseStamped goal;
-    goal.pose.position.x = CORRIDOR_POINT_X;
-    goal.pose.position.y = CORRIDOR_POINT_Y;
-    goal.pose.position.z = CORRIDOR_POINT_Z;
+    //阶段4: 穿越jungle
 
-    while(flag_get_cmd == 0)
+
+    if(State_Machine == 3)
     {
-        goal_pub.publish(goal);
         local_planner_switch_pub.publish(switch_on);
-        cout << "Turn on the local planner and pub the goal point ..."<<endl;
-        ros::spinOnce();
-        ros::Duration(0.05).sleep();
-    }
-    
-    while(State_Machine == 3)
-    {
-        // 高度改为定高飞行
-        Command_Now.header.stamp = ros::Time::now();
+        goal.pose.position.x = CORRIDOR_POINT_X;
+        goal.pose.position.y = CORRIDOR_POINT_Y;
+        goal.pose.position.z = CORRIDOR_POINT_Z;
+        goal_pub.publish(goal);
+        while(flag_get_local_planner_cmd == 0)
+        {
+            ros::spinOnce();
+            ros::Duration(0.05).sleep();
+        }
+        cout << "Turning on the local planner and pub the goal point ..."<<endl;
+
+        NOW = ros::Time::now();
+        while (abs(_DroneState.position[0] - goal.pose.position.x) > (DIS_THRES+0.3)){
+            // 高度改为定高飞行
+            Command_Now.header.stamp                        = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+            Command_Now.Reference_State.velocity_ref[0]     = desired_vel.x;
+            Command_Now.Reference_State.velocity_ref[1]     = desired_vel.y;
+            Command_Now.Reference_State.position_ref[2]     = CORRIDOR_POINT_Z;
+            if(is_2DLidar){
+                desired_yaw += yaw_rate*(Command_Now.header.stamp-NOW).toSec();
+                NOW = Command_Now.header.stamp;
+                desired_yaw = fmod(desired_yaw,2*3.1415f);
+            }
+            Command_Now.Reference_State.yaw_ref             = desired_yaw;
+            command_pub.publish(Command_Now);
+
+            ros::spinOnce();
+            ros::Duration(0.05).sleep();
+
+            cout << "APF planner:"<<endl;
+            cout << "desired_vel: " << desired_vel.x << " [m/s] "<< desired_vel.y << " [m/s] "<< desired_vel.z << " [m/s] "<<endl;
+            cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
+            cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
+        }
+
+        Command_Now.header.stamp                        = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.velocity_ref[0]     = desired_vel.x;
-        Command_Now.Reference_State.velocity_ref[1]     = desired_vel.y;
+        Command_Now.Reference_State.position_ref[0]     = CORRIDOR_POINT_X;
+        Command_Now.Reference_State.position_ref[1]     = CORRIDOR_POINT_Y;
         Command_Now.Reference_State.position_ref[2]     = CORRIDOR_POINT_Z;
-        Command_Now.Reference_State.yaw_ref             = 0.0;
+        Command_Now.Reference_State.yaw_ref             = CORRIDOR_POINT_YAW;
         command_pub.publish(Command_Now);
-        cout << "APF planner:"<<endl;
-        cout << "desired_vel: " << desired_vel.x << " [m/s] "<< desired_vel.y << " [m/s] "<< desired_vel.z << " [m/s] "<<endl;
-        cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
-        cout << "goal_pos: " << goal.pose.position.x << " [m] "<< goal.pose.position.y << " [m] "<< goal.pose.position.z << " [m] "<<endl;
-        ros::spinOnce();
-        ros::Duration(0.05).sleep();
 
-        float dis = abs(_DroneState.position[0] - goal.pose.position.x);
+        cout << "Ready to find numbers ..."<<endl;
+        cout << "Please type any to go on..."<<endl;
+        cin >> flag_go_on;
 
-        if(dis < (DIS_THRES+0.3))
-        {
-            State_Machine = 4;
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-            Command_Now.Reference_State.position_ref[0]     = CORRIDOR_POINT_X;
-            Command_Now.Reference_State.position_ref[1]     = CORRIDOR_POINT_Y;
-            Command_Now.Reference_State.position_ref[2]     = CORRIDOR_POINT_Z;
-            Command_Now.Reference_State.yaw_ref             = CORRIDOR_POINT_YAW;
-            command_pub.publish(Command_Now);
-            cout << "Moving to CORRIDOR_POINT ..."<<endl;
-            ros::Duration(2.0).sleep();
-        }
-    }
-
-    //发布目标
-    goal.pose.position.x = NUM_POINT_X;
-    goal.pose.position.y = NUM_POINT_Y;
-    goal.pose.position.z = NUM_POINT_Z;
-
-    while(flag_get_cmd_a == 0)
-    {
-        goal_pub.publish(goal);
+        State_Machine = State_Machine + 1;
         local_planner_switch_pub.publish(switch_off);
+    } 
+
+    //阶段5: 穿越走廊
+    if (State_Machine == 4)
+    {
         global_planner_switch_pub.publish(switch_on);
-        cout << "Turn on the global planner and pub the goal point ..."<<endl;
-        ros::spinOnce();
-        ros::Duration(0.05).sleep();
-    }
+        goal.pose.position.x = NUM_POINT_X;
+        goal.pose.position.y = NUM_POINT_Y;
+        goal.pose.position.z = NUM_POINT_Z;
+        goal_pub.publish(goal);
 
-    while(State_Machine == 4)
-    {   
-        A_star_planner();
-
-        float dis = abs(_DroneState.position[0] - goal.pose.position.x);
-
-        if(dis < 0.4)
+        while(flag_get_global_planner_cmd == 0)
         {
-            State_Machine = 5;
-            Command_Now.header.stamp = ros::Time::now();
-            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-            Command_Now.Reference_State.position_ref[0]     = NUM_POINT_X;
-            Command_Now.Reference_State.position_ref[1]     = NUM_POINT_Y;
-            Command_Now.Reference_State.position_ref[2]     = NUM_POINT_Z;
-            Command_Now.Reference_State.yaw_ref             = NUM_POINT_YAW;
-            command_pub.publish(Command_Now);
-            cout << "Moving to NUM_POINT ..."<<endl;
-            ros::Duration(2.0).sleep();
+            ros::spinOnce();
+            ros::Duration(0.05).sleep();
         }
+        cout << "Turn on the global planner and pub the goal point ..."<<endl;
+
+        while(abs(_DroneState.position[0] - goal.pose.position.x) > 0.4)
+           A_star_planner();
+
+        Command_Now.header.stamp                        = ros::Time::now();
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.position_ref[0]     = NUM_POINT_X;
+        Command_Now.Reference_State.position_ref[1]     = NUM_POINT_Y;
+        Command_Now.Reference_State.position_ref[2]     = NUM_POINT_Z;
+        Command_Now.Reference_State.yaw_ref             = NUM_POINT_YAW;
+
+        command_pub.publish(Command_Now);
+
+        cout << "Ready to track the line ..."<<endl;
+        cout << "Please type any to go on..."<<endl;
+        cin >> flag_go_on;
+
+        global_planner_switch_pub.publish(switch_off);
+        color_det_switch_pub.publish(switch_on);
+        State_Machine = State_Machine + 1;
     }
-    global_planner_switch_pub.publish(switch_off);
 
-    color_det_switch_pub.publish(switch_on);
-
-
-    //巡线
+    //阶段6：巡线
     while(State_Machine == 5)
     {   
-        Command_Now.header.stamp                    = ros::Time::now();
-        Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
-
-        Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
+        Command_Now.header.stamp                        = ros::Time::now();
+        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::MIX_FRAME;
         Command_Now.Reference_State.velocity_ref[0]     = FOLLOWING_VEL;
         Command_Now.Reference_State.velocity_ref[1]     = FOLLOWING_KP * error_body_y;
         Command_Now.Reference_State.position_ref[2]     = NUM_POINT_Z;
         Command_Now.Reference_State.yaw_ref             = yaw_sp;
-
-        //Publish
-        Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Command_ID   = Command_Now.Command_ID + 1;
         command_pub.publish(Command_Now);
-        cout << "Color Line Following... "<< endl;
-        cout << "error_body_y: " << error_body_y << " [m] "<<endl;
-        cout << "yaw_sp: " << yaw_sp/3.1415926 *180 << " [deg] "<<endl;
+
         ros::spinOnce();
         ros::Duration(0.05).sleep();
 
+        cout << "Color Line Following... "<< endl;
+        cout << "error_body_y: " << error_body_y << " [m] "<<endl;
+        cout << "yaw_sp: " << yaw_sp/3.1415926 *180 << " [deg] "<<endl;
+
         if(_DroneState.position[0] > LAND_POINT_X - 1.0)
         {
-            State_Machine = 6;
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
             Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
@@ -537,8 +573,15 @@ int main(int argc, char **argv)
             Command_Now.Reference_State.position_ref[2]     = LAND_POINT_Z;
             Command_Now.Reference_State.yaw_ref             = LAND_POINT_YAW;
             command_pub.publish(Command_Now);
-            cout << "Moving to LAND_POINT ..."<<endl;
             ros::Duration(4.0).sleep();
+
+            State_Machine = State_Machine + 1;
+            color_det_switch_pub.publish(switch_off);
+            pad_det_switch_pub.publish(switch_on);
+
+            cout << "Ready to land ..."<<endl;
+            cout << "Please type any to go on..."<<endl;
+            cin >> flag_go_on;
         }
     }
 
@@ -546,9 +589,7 @@ int main(int argc, char **argv)
     pos_des_prev[1] = _DroneState.position[1];
     pos_des_prev[2] = _DroneState.position[2];
 
-    color_det_switch_pub.publish(switch_off);
-    pad_det_switch_pub.publish(switch_on);
-    
+    //阶段7： 着陆
     while(State_Machine == 6)
     {   
         float distance_to_setpoint = landpad_det.pos_body_enu_frame.norm();
@@ -556,10 +597,10 @@ int main(int argc, char **argv)
         
         Command_Now.header.stamp                    = ros::Time::now();
         Command_Now.Command_ID                      = Command_Now.Command_ID + 1;
-        Command_Now.Mode = prometheus_msgs::ControlCommand::Move;
-        Command_Now.Reference_State.Move_frame = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
-        Command_Now.Reference_State.yaw_ref = 0.0;
+        Command_Now.Mode                            = prometheus_msgs::ControlCommand::Move;
+        Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;   //xy velocity z position
+        Command_Now.Reference_State.yaw_ref         = 0.0;
         Eigen::Vector3f vel_command;
         vel_command[0] = kpx_land * landpad_det.pos_body_enu_frame[0];
         vel_command[1] = kpy_land * landpad_det.pos_body_enu_frame[1];
@@ -578,18 +619,20 @@ int main(int argc, char **argv)
 
         while(_DroneState.position[2] < 0.4)
         {
-            State_Machine = 7;
             Command_Now.header.stamp = ros::Time::now();
             Command_Now.Mode                                = prometheus_msgs::ControlCommand::Disarm;
             Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
             command_pub.publish(Command_Now);
+
+            State_Machine = State_Machine + 1;
+            pad_det_switch_pub.publish(switch_off);
+
             cout << "Landing and disarm ..."<<endl;
             cout << "The end of the indoor competition ..."<<endl;
             ros::Duration(2.0).sleep();
             ros::spinOnce();
         }
     }
-    pad_det_switch_pub.publish(switch_off);
     return 0;
 
 }
@@ -597,11 +640,12 @@ int main(int argc, char **argv)
 
 void A_star_planner()
 {
-    float current_cmd_id = flag_get_cmd_a;
+    desired_yaw = 0.0;
+    NOW = ros::Time::now();
     //执行给定航点
-    while( A_star.wp_id < A_star.Num_total_wp && flag_get_cmd_a == current_cmd_id)
+    while( A_star.wp_id < A_star.Num_total_wp)
     {
-        Command_Now.header.stamp = ros::Time::now();
+        Command_Now.header.stamp                        = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
@@ -609,9 +653,15 @@ void A_star_planner()
         Command_Now.Reference_State.position_ref[0]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.x;
         Command_Now.Reference_State.position_ref[1]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.y;
         Command_Now.Reference_State.position_ref[2]     = A_star.path_cmd.poses[A_star.wp_id].pose.position.z;
-        Command_Now.Reference_State.yaw_ref             = 0.0;
-        
+        if(is_2DLidar){
+            desired_yaw += yaw_rate*(Command_Now.header.stamp-NOW).toSec();
+            NOW = Command_Now.header.stamp;
+            desired_yaw = fmod(desired_yaw,2*3.1415f);
+        }
+        Command_Now.Reference_State.yaw_ref             = desired_yaw;      
         command_pub.publish(Command_Now);
+
+        ros::spinOnce();
         cout << "A star planner:"<<endl;
         cout << "Moving to Waypoint: [ " << A_star.wp_id << " / "<< A_star.Num_total_wp<< " ] "<<endl;
         cout << "desired_point: "   << A_star.path_cmd.poses[A_star.wp_id].pose.position.x << " [m] "
@@ -619,9 +669,9 @@ void A_star_planner()
                                     << A_star.path_cmd.poses[A_star.wp_id].pose.position.z << " [m] "<<endl; 
         cout << "drone_pos: " << _DroneState.position[0] << " [m] "<< _DroneState.position[1] << " [m] "<< _DroneState.position[2] << " [m] "<<endl;
         
-        float wait_time = 0.25;
-        ros::spinOnce();
-        A_star.wp_id++;
-        ros::Duration(wait_time).sleep();
+	float distance = cal_distance(Eigen::Vector3f(_DroneState.position[0],_DroneState.position[1],_DroneState.position[2]),
+                     Eigen::Vector3f(Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1], Command_Now.Reference_State.position_ref[2]));
+        if (distance < 0.1) A_star.wp_id++;
+        ros::Duration(0.25).sleep();
     }
 }

@@ -19,6 +19,8 @@
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
+              <!--<radius>.32</radius>
+              <length>.3</length>-->
             <size>0.32 0.32 0.3</size>
           </box>
         </geometry>

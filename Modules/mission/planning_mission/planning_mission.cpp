@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
     
     //【订阅】来自planning的指令
-    ros::Subscriber fast_planner_sub   =    nh.subscribe<prometheus_msgs::PositionReference>("/prometheus/fast_planner/position_cmd", 50, fast_planner_cmd_cb);
+    ros::Subscriber fast_planner_sub = nh.subscribe<prometheus_msgs::PositionReference>("/prometheus/fast_planner/position_cmd", 50, fast_planner_cmd_cb);
 
     //【订阅】目标点
     ros::Subscriber goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/prometheus/planning/goal", 10,goal_cb);
@@ -212,21 +212,33 @@ void Fast_planner()
         if( sqrt( fast_planner_cmd.velocity_ref[1]* fast_planner_cmd.velocity_ref[1]
                  +  fast_planner_cmd.velocity_ref[0]* fast_planner_cmd.velocity_ref[0])  >  0.05  )
         {
-            float next_desired_yaw_vel      = atan2(  fast_planner_cmd.velocity_ref[1] , 
-                                                 fast_planner_cmd.velocity_ref[0]);
-            float next_desired_yaw_pos      = atan2(  fast_planner_cmd.position_ref[1] - _DroneState.position[1],
-                                                 fast_planner_cmd.position_ref[0] - _DroneState.position[0]);
-
-            if(next_desired_yaw_pos > 0.8)
+            auto sign=[](double v)->double
             {
-                next_desired_yaw_pos = 0.8;
-            }
-            if(next_desired_yaw_pos < -0.8)
-            {
-                next_desired_yaw_pos = -0.8;
-            }
+                return v<0.0? -1.0:1.0;
+            };
+            Eigen::Vector3d ref_vel;
+            ref_vel[0] = fast_planner_cmd.velocity_ref[0];
+            ref_vel[1] = fast_planner_cmd.velocity_ref[1];
+            ref_vel[2] = fast_planner_cmd.velocity_ref[2];
 
-            desired_yaw = (0.92*desired_yaw + 0.04*next_desired_yaw_pos + 0.04*next_desired_yaw_vel );
+            Eigen::Vector3d ref_pos;
+            ref_pos[0] = fast_planner_cmd.position_ref[0];
+            ref_pos[1] = fast_planner_cmd.position_ref[1];
+            ref_pos[2] = fast_planner_cmd.position_ref[2];
+
+            Eigen::Vector3d curr_pos;
+            curr_pos[0] = _DroneState.position[0];
+            curr_pos[1] = _DroneState.position[1];
+            curr_pos[2] = _DroneState.position[2];
+
+            float sign_ = (Eigen::Vector3d(1.0,0.0,0.0).cross(ref_vel))[2];
+            float next_desired_yaw_vel      = sign(sign_) * acos(Eigen::Vector3d(1.0,0.0,0.0).dot(ref_vel));
+
+            sign_ = (Eigen::Vector3d(1.0,0.0,0.0).cross(ref_pos - curr_pos))[2];
+            float next_desired_yaw_pos      = sign(sign_) * acos(Eigen::Vector3d(1.0,0.0,0.0).dot(ref_pos - curr_pos));
+
+
+            desired_yaw = (0.2*desired_yaw + 0.4*next_desired_yaw_pos + 0.4*next_desired_yaw_vel );
         }
     }else
     {

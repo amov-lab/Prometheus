@@ -5,7 +5,7 @@
  *
  * 说明: 降落目标识别程序，降落板的尺寸为60cmX60cm
  *      1. 【订阅】图像话题 (默认来自web_cam)
- *         /prometheus/camera/rgb/image_raw
+ *         /prometheus/sensor/monocular_down/image_raw
  *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
  *         /prometheus/object_detection/landpad_det
  *      3. 【发布】检测结果的可视化图像话题
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
             ROS_WARN("didn't find parameter camera_topic");
         if (message_print)
             pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_topic");
-        camera_topic = "/prometheus/camera/rgb/image_raw";
+        camera_topic = "/prometheus/sensor/monocular_down/image_raw";
     }
 
     if (nh.getParam("camera_info", camera_info)) {

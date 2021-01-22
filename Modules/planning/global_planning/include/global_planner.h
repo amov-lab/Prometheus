@@ -2,7 +2,6 @@
 #define GLOBAL_PLANNER
 
 #include <ros/ros.h>
-
 #include <Eigen/Eigen>
 #include <iostream>
 #include <algorithm>
@@ -21,6 +20,7 @@
 #include "prometheus_msgs/ControlCommand.h"
 
 #include "A_star.h"
+#include <kinodynamic_astar.h>
 #include "occupy_map.h"
 #include "tools.h"
 #include "message_utils.h"
@@ -45,6 +45,7 @@ private:
     // 参数
     int algorithm_mode;
     bool is_2D;
+    bool control_yaw_flag;
     double fly_height_2D;
     double safe_distance;
     double time_per_path;
@@ -53,6 +54,8 @@ private:
     bool consider_neighbour;
     bool sim_mode;
     bool map_groundtruth;
+    bool planner_enable_default;
+    bool planner_enable;
 
     // 本机位置
     // 邻机位置
@@ -60,8 +63,9 @@ private:
     // 调用路径规划算法 生成路径
     // 调用轨迹优化算法 规划轨迹
 
-    // 订阅无人机状态、目标点、传感器数据（生成地图）
+    // 订阅无人机状态、目标点、传感器数据（生成地图）、规划器使能
     ros::Subscriber goal_sub;
+    ros::Subscriber planner_switch_sub;
     ros::Subscriber drone_state_sub;
     // 支持2维激光雷达、3维激光雷达、D435i等实体传感器
     // 支持直接输入全局已知点云
@@ -75,7 +79,7 @@ private:
     ros::Timer mainloop_timer, track_path_timer, safety_timer;
 
     // A星规划器
-    Astar::Ptr Astar_ptr;
+    global_planning_alg::Ptr global_alg_ptr;
 
     prometheus_msgs::DroneState _DroneState;
     nav_msgs::Odometry Drone_odom;
@@ -120,6 +124,7 @@ private:
     EXEC_STATE exec_state;
 
     // 回调函数
+    void planner_switch_cb(const std_msgs::Bool::ConstPtr& msg);
     void goal_cb(const geometry_msgs::PoseStampedConstPtr& msg);
     void drone_state_cb(const prometheus_msgs::DroneStateConstPtr &msg);
     void Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg);

@@ -7,8 +7,8 @@ namespace dyn_planner
 void BsplineOptimizer::setControlPoints(Eigen::MatrixXd points)
 {
   this->control_points_ = points;
-  this->start_id_ = order_;
-  this->end_id_ = this->control_points_.rows() - order_;
+  this->start_id_ = order_; // the first one control point to be optimized
+  this->end_id_ = this->control_points_.rows() - order_; // the last one
   use_guide_ = false;
 }
 
@@ -27,7 +27,7 @@ void BsplineOptimizer::setParam(ros::NodeHandle& nh)
   nh.param("optimization/lamda4", lamda4_, -1.0);
   nh.param("optimization/lamda5", lamda5_, -1.0);
   nh.param("optimization/dist0", dist0_, -1.0);
-  nh.param("optimization/dist1", dist1_, -1.0);
+  nh.param("optimization/dist1", dist1_, -1.0); // useless
   nh.param("optimization/max_vel", max_vel_, -1.0);
   nh.param("optimization/max_acc", max_acc_, -1.0);
   nh.param("optimization/max_iteration_num", max_iteration_num_, -1);
@@ -61,7 +61,7 @@ void BsplineOptimizer::optimize(int end_cons, bool dynamic, double time_start)
 {
   /* ---------- initialize solver ---------- */
   end_constrain_ = end_cons;
-  dynamic_ = dynamic;
+  dynamic_ = dynamic; // useless
   time_traj_start_ = time_start;
   iter_num_ = 0;
 
@@ -100,14 +100,14 @@ void BsplineOptimizer::optimize(int end_cons, bool dynamic, double time_start)
     }
 
     for (int j = 0; j < 3; j++)
-      q[3 * (i - start_id_) + j] = control_points_(i, j);
+      q[3 * (i - start_id_) + j] = control_points_(i, j); // including the start point but no repeated points
   }
 
   if (end_constrain_ == SOFT_CONSTRAINT)
   {
     end_pt_ = (1 / 6.0) *
               (control_points_.row(control_points_.rows() - 3) + 4 * control_points_.row(control_points_.rows() - 2) +
-               control_points_.row(control_points_.rows() - 1));
+               control_points_.row(control_points_.rows() - 1));// end point of trajectory which is uniquely defined by last _order control points
     // std::cout << "end pt" << std::endl;
   }
 
@@ -118,7 +118,7 @@ void BsplineOptimizer::optimize(int end_cons, bool dynamic, double time_start)
     cout << fixed << setprecision(7);
     vec_time_.clear();
     vec_cost_.clear();
-    time_start_ = ros::Time::now();
+    // time_start_ = ros::Time::now();
 
     nlopt::result result = opt.optimize(q, final_cost);
 
@@ -191,7 +191,7 @@ void BsplineOptimizer::calcDistanceCost(const vector<Eigen::Vector3d>& q, double
     }
     else
     {
-      double time = double(i + 2 - order_) * bspline_interval_ + time_traj_start_;
+      double time = double(i + 2 - order_) * bspline_interval_ + time_traj_start_;// useless
       edt_env_->evaluateEDTWithGrad(q[i], time, dist, dist_grad);
     }
 
@@ -216,17 +216,26 @@ void BsplineOptimizer::calcFeasibilityCost(const vector<Eigen::Vector3d>& q, dou
   ts_inv4 = ts_inv2 * ts_inv2;
 
   /* ---------- velocity feasibility ---------- */
-  for (int i = 0; i < q.size() - 1; i++)
+  for (int i = 0; i < q.size() - 2; i++)
   {
-    Eigen::Vector3d vi = q[i + 1] - q[i];
+    Eigen::Vector3d vi = (q[i + 2] - q[i])/2; // ?? q[i + 2] - q[i]
     for (int j = 0; j < 3; j++)
     {
       double vd = vi(j) * vi(j) * ts_inv2 - vm2;
       cost += vd > 0.0 ? pow(vd, 2) : 0.0;
 
-      gradient[i + 0](j) += vd > 0.0 ? 2.0 * vd * ts_inv2 * (-2.0) * vi(j) : 0.0;
-      gradient[i + 1](j) += vd > 0.0 ? 2.0 * vd * ts_inv2 * (2.0) * vi(j) : 0.0;
+      gradient[i + 0](j) += vd > 0.0 ? 2.0 * vd * ts_inv2 * (-1.0) * vi(j) : 0.0;
+      gradient[i + 2](j) += vd > 0.0 ? 2.0 * vd * ts_inv2 * (1.0) * vi(j) : 0.0;
     }
+//    Eigen::Vector3d vi = q[i + 1] - q[i];
+//    for (int j = 0; j < 3; j++)
+//    {
+//      double vd = vi(j) * vi(j) * ts_inv2 - vm2;
+//      cost += vd > 0.0 ? pow(vd, 2) : 0.0;
+
+//      gradient[i + 0](j) += vd > 0.0 ? 2.0 * vd * ts_inv2 * (-2.0) * vi(j) : 0.0;
+//      gradient[i + 1](j) += vd > 0.0 ? 2.0 * vd * ts_inv2 * (2.0) * vi(j) : 0.0;
+//    }
   }
 
   /* ---------- acceleration feasibility ---------- */
@@ -323,13 +332,14 @@ void BsplineOptimizer::combineCost(const std::vector<double>& x, std::vector<dou
 
   /* ---------- print cost ---------- */
   iter_num_ += 1;
-
+/*
   if (iter_num_ % 100 == 0)
   {
-    // cout << iter_num_ << " smooth: " << lamda1_ * f_smoothness << " , dist: " << lamda2_ * f_distance
-    //      << ", fea: " << lamda3_ * f_feasibility << ", end: " << lamda4_ * f_endpoint << ", total: " << f_combine
-    //      << endl;
+    cout << iter_num_ << " smooth: " << lamda1_ * f_smoothness << " , dist: " << lamda2_ * f_distance
+         << ", fea: " << lamda3_ * f_feasibility << ", end: " << lamda4_ * f_endpoint << ", total: " << f_combine
+         << endl;
   }
+*/
 }
 
 double BsplineOptimizer::costFunction(const std::vector<double>& x, std::vector<double>& grad, void* func_data)

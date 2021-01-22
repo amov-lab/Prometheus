@@ -598,7 +598,7 @@ bool KinodynamicAstar::check_safety(Eigen::Vector3d &cur_pos, double safe_distan
   return is_safety;
 }
 
-std::vector<Eigen::Vector3d> KinodynamicAstar::getKinoTraj(double delta_t)
+std::vector<Eigen::Vector3d> KinodynamicAstar::getPath(double delta_t)
 {
   vector<Vector3d> state_list;
 
@@ -648,7 +648,7 @@ std::vector<Eigen::Vector3d> KinodynamicAstar::getKinoTraj(double delta_t)
 nav_msgs::Path KinodynamicAstar::get_ros_path()
 {
 
-  std::vector<Eigen::Vector3d> path = getKinoTraj(0.1);
+  std::vector<Eigen::Vector3d> path = getPath(0.1);
 
   nav_msgs::Path A_star_path_cmd;
   geometry_msgs::PoseStamped path_i_pose;

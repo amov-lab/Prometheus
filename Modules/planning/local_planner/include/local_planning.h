@@ -9,6 +9,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Time.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/LaserScan.h>
@@ -47,6 +48,7 @@ private:
     int algorithm_mode;
     int lidar_model;
     bool is_2D;
+    bool control_yaw_flag;
     double max_planning_vel;
     double fly_height_2D;
     double safe_distance;
@@ -55,6 +57,7 @@ private:
 
     // 订阅无人机状态、目标点、传感器数据（生成地图）
     ros::Subscriber goal_sub;
+    ros::Subscriber planner_switch_sub;
     ros::Subscriber drone_state_sub;
 
     ros::Subscriber local_point_clound_sub;
@@ -80,6 +83,8 @@ private:
     bool goal_ready; 
     bool is_safety;
     bool path_ok;
+    bool planner_enable_default;
+    bool planner_enable;
 
     // 规划初始状态及终端状态
     Eigen::Vector3d start_pos, start_vel, start_acc, goal_pos, goal_vel;
@@ -107,6 +112,7 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_ptr;
     pcl::PointCloud<pcl::PointXYZ> latest_local_pcl_;
 
+    void planner_switch_cb(const std_msgs::Bool::ConstPtr& msg);
     void goal_cb(const geometry_msgs::PoseStampedConstPtr& msg);
     void drone_state_cb(const prometheus_msgs::DroneStateConstPtr &msg);
     void localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
@@ -123,8 +129,28 @@ public:
     double att_distance;
 
     Eigen::Matrix<double, 3, 1> total_force;
+    Eigen::Matrix3f R_Body_to_ENU;
 
     void init(ros::NodeHandle& nh);
+
+//旋转矩阵：机体系到惯性系
+Eigen::Matrix3f get_rotation_matrix(float phi, float theta, float psi)
+{
+    Eigen::Matrix3f Rota_Mat;
+
+    float r11 = cos(theta)*cos(psi);
+    float r12 = - cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi);
+    float r13 = sin(phi)*sin(psi) + cos(phi)*sin(theta)*cos(psi);
+    float r21 = cos(theta)*sin(psi);
+    float r22 = cos(phi)*cos(psi) + sin(phi)*sin(theta)*sin(psi);
+    float r23 = - sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi);
+    float r31 = - sin(theta);
+    float r32 = sin(phi)*cos(theta);
+    float r33 = cos(phi)*cos(theta); 
+    Rota_Mat << r11,r12,r13,r21,r22,r23,r31,r32,r33;
+
+    return Rota_Mat;
+}
 
 };
 

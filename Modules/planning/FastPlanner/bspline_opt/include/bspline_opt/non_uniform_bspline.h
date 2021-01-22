@@ -49,8 +49,8 @@ public:
                                   const vector<Eigen::Vector3d>& start_end_derivative, Eigen::MatrixXd& ctrl_pts);
 
   /* check feasibility, reallocate time and recompute first 3 ctrl pts */
-  bool checkFeasibility(bool show = false);
-  bool reallocateTime(bool show = false);
+  bool checkFeasibility(bool show = false, double ts = 1.0);
+  bool reallocateTime(bool show = false, double ts = 1.0);
   bool adjustTime(bool show = false);
   void recomputeInit();
 

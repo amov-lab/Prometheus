@@ -41,7 +41,7 @@ NonUniformBspline::NonUniformBspline(Eigen::MatrixXd points, int order, double i
   // this->u_.transpose() << endl; cout << "M3:\n" << M[0] << "\nM4:\n" << M[1]
   // << "\nM5:\n" << M[2] << endl;
 
-  if (zero)
+  if (zero) // if the start point is not determined
   {
     x0_ = (1 / 6.0) * (control_points_.row(0) + 4 * control_points_.row(1) + control_points_.row(2));
     v0_ = (1 / 2.0 / interval_) * (control_points_.row(2) - control_points_.row(0));
@@ -140,7 +140,7 @@ NonUniformBspline NonUniformBspline::getDerivative()
   return derivative;
 }
 
-bool NonUniformBspline::checkFeasibility(bool show)
+bool NonUniformBspline::checkFeasibility(bool show, double ts)
 {
   bool fea = true;
   // SETY << "[Bspline]: total points size: " << control_points_.rows() << endl;
@@ -149,20 +149,34 @@ bool NonUniformBspline::checkFeasibility(bool show)
 
   /* check vel feasibility and insert points */
   double max_vel = -1.0;
-  for (int i = 0; i < P.rows() - 1; ++i)
+  for (int i = 0; i < P.rows() - 2; ++i)
   {
-    Eigen::Vector3d vel = p_ * (P.row(i + 1) - P.row(i)) / (u_(i + p_ + 1) - u_(i + 1));
-    if (fabs(vel(0)) > limit_vel_ + 1e-4 || fabs(vel(1)) > limit_vel_ + 1e-4 || fabs(vel(2)) > limit_vel_ + 1e-4)
+	Eigen::Vector3d vel = p_ * (P.row(i + 2) - P.row(i)) / 2 / (u_(i + p_ + 1) - u_(i + 1));
+	   if (fabs(vel(0)) > limit_vel_ + 1e-4 || fabs(vel(1)) > limit_vel_ + 1e-4 || fabs(vel(2)) > limit_vel_ + 1e-4)
     {
-      /* insert mid point */
-      if (show)
-        cout << "[Check]: Infeasible vel " << i << " :" << vel.transpose() << endl;
       fea = false;
       max_vel = max(max_vel, fabs(vel(0)));
       max_vel = max(max_vel, fabs(vel(1)));
       max_vel = max(max_vel, fabs(vel(2)));
+      if (show)
+        cout << "[Realloc]: Infeasible vel " << i << " :" << vel.transpose() << endl;
     }
   }
+//  double max_vel = -1.0;
+//  for (int i = 0; i < P.rows() - 1; ++i)
+//  {
+//    Eigen::Vector3d vel = p_ * (P.row(i + 1) - P.row(i)) / (u_(i + p_ + 1) - u_(i + 1));
+//    if (fabs(vel(0)) > limit_vel_ + 1e-4 || fabs(vel(1)) > limit_vel_ + 1e-4 || fabs(vel(2)) > limit_vel_ + 1e-4)
+//    {
+//      /* insert mid point */
+//      if (show)
+//        cout << "[Check]: Infeasible vel " << i << " :" << vel.transpose() << endl;
+//      fea = false;
+//      max_vel = max(max_vel, fabs(vel(0)));
+//      max_vel = max(max_vel, fabs(vel(1)));
+//      max_vel = max(max_vel, fabs(vel(2)));
+//    }
+//  }
 
   /* acc feasibility */
   double max_acc = -1.0;
@@ -198,7 +212,7 @@ bool NonUniformBspline::checkFeasibility(bool show)
   return fea;
 }
 
-bool NonUniformBspline::reallocateTime(bool show)
+bool NonUniformBspline::reallocateTime(bool show, double ts)
 {
   // SETY << "[Bspline]: total points size: " << control_points_.rows() << endl;
   // cout << "origin knots:\n" << u_.transpose() << endl;
@@ -213,10 +227,10 @@ bool NonUniformBspline::reallocateTime(bool show)
 
   /* check vel feasibility and insert points */
   double max_vel = -1.0;
-  for (int i = 0; i < P.rows() - 1; ++i)
+  for (int i = 0; i < P.rows() - 2; ++i)
   {
-    Eigen::Vector3d vel = p_ * (P.row(i + 1) - P.row(i)) / (u_(i + p_ + 1) - u_(i + 1));
-    if (fabs(vel(0)) > limit_vel_ + 1e-4 || fabs(vel(1)) > limit_vel_ + 1e-4 || fabs(vel(2)) > limit_vel_ + 1e-4)
+	Eigen::Vector3d vel = p_ * (P.row(i + 2) - P.row(i)) / 2 / (u_(i + p_ + 1) - u_(i + 1));
+	   if (fabs(vel(0)) > limit_vel_ + 1e-4 || fabs(vel(1)) > limit_vel_ + 1e-4 || fabs(vel(2)) > limit_vel_ + 1e-4)
     {
       fea = false;
       max_vel = -1.0;
@@ -230,25 +244,59 @@ bool NonUniformBspline::reallocateTime(bool show)
       if (ratio > limit_ratio_)
         ratio = limit_ratio_;
 
-      double time_ori = u_(i + p_ + 1) - u_(i + 1);
+	  double time_ori = u_(i + p_ - 1) - u_(i - p_ + 1);
       double time_new = ratio * time_ori;
       double delta_t = time_new - time_ori;
-      double t_inc = delta_t / double(p_);
+      double t_inc = delta_t / double(p_+1);
 
-      for (int j = i + 2; j <= i + p_ + 1; ++j)
+      for (int j = i - p_ + 2; j < i + p_ - 1; ++j)
       {
-        u_(j) += double(j - i - 1) * t_inc;
+        u_(j) += double(j - i - 1 + p_) * t_inc;
         if (j <= 5 && j >= 1)
         {
           // cout << "vel j: " << j << endl;
         }
       }
 
-      for (int j = i + p_ + 2; j < u_.rows(); ++j)
+      for (int j = i + p_; j < u_.rows(); ++j)
       {
         u_(j) += delta_t;
       }
     }
+//    Eigen::Vector3d vel = p_ * (P.row(i + 1) - P.row(i)) / (u_(i + p_ + 1) - u_(i + 1));
+//    if (fabs(vel(0)) > limit_vel_ + 1e-4 || fabs(vel(1)) > limit_vel_ + 1e-4 || fabs(vel(2)) > limit_vel_ + 1e-4)
+//    {
+//      fea = false;
+//      max_vel = -1.0;
+//      max_vel = max(max_vel, fabs(vel(0)));
+//      max_vel = max(max_vel, fabs(vel(1)));
+//      max_vel = max(max_vel, fabs(vel(2)));
+//      if (show)
+//        cout << "[Realloc]: Infeasible vel " << i << " :" << vel.transpose() << endl;
+
+//      double ratio = max_vel / limit_vel_ + 1e-4;
+//      if (ratio > limit_ratio_)
+//        ratio = limit_ratio_;
+
+//      double time_ori = u_(i + p_ + 1) - u_(i + 1);
+//      double time_new = ratio * time_ori;
+//      double delta_t = time_new - time_ori;
+//      double t_inc = delta_t / double(p_);
+
+//      for (int j = i + 2; j <= i + p_ + 1; ++j)
+//      {
+//        u_(j) += double(j - i - 1) * t_inc;
+//        if (j <= 5 && j >= 1)
+//        {
+//          // cout << "vel j: " << j << endl;
+//        }
+//      }
+
+//      for (int j = i + p_ + 2; j < u_.rows(); ++j)
+//      {
+//        u_(j) += delta_t;
+//      }
+//    }
   }
 
   /* acc feasibility */
@@ -322,7 +370,7 @@ bool NonUniformBspline::reallocateTime(bool show)
   return fea;
 }
 
-bool NonUniformBspline::adjustTime(bool show)
+bool NonUniformBspline::adjustTime(bool show) // useless
 {
   bool fea = true;
 
@@ -335,7 +383,7 @@ bool NonUniformBspline::adjustTime(bool show)
 
   /* check vel feasibility and insert points */
   double max_vel = -1.0;
-  for (int i = 3; i < P.rows() - 1 - 3; ++i)
+  for (int i = p_; i < P.rows() - 1 - p_; ++i)
   {
     Eigen::Vector3d vel = p_ * (P.row(i + 1) - P.row(i)) / (u_(i + p_ + 1) - u_(i + 1));
     if (fabs(vel(0)) > limit_vel_ + 1e-4 || fabs(vel(1)) > limit_vel_ + 1e-4 || fabs(vel(2)) > limit_vel_ + 1e-4)
@@ -375,7 +423,7 @@ bool NonUniformBspline::adjustTime(bool show)
 
   /* acc feasibility */
   double max_acc = -1.0;
-  for (int i = 3; i < P.rows() - 2 - 3; ++i)
+  for (int i = p_; i < P.rows() - 2 - p_; ++i)
   {
     Eigen::Vector3d acc = p_ * (p_ - 1) *
                           ((P.row(i + 2) - P.row(i + 1)) / (u_(i + p_ + 2) - u_(i + 2)) -
@@ -501,10 +549,10 @@ void NonUniformBspline::recomputeInit()
 //      sample : 3 x (K+2) (for 3 order) for x, y, z sample
 //      ts
 // output:
-//      control_pts (K+6)x3
+//      control_pts (K+6)x3 two repeated points at start and end
 void NonUniformBspline::getControlPointEqu3(Eigen::MatrixXd samples, double ts, Eigen::MatrixXd& control_pts)
 {
-  int K = samples.cols() - 4 - 1;
+  int K = samples.cols() - 4 - 1; // smaples_[3xN]
 
   // write A
   Eigen::VectorXd prow(3), vrow(3), arow(3);

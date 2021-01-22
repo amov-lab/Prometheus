@@ -36,7 +36,7 @@ void Astar::init(ros::NodeHandle& nh)
   // 新建
   for (int i = 0; i < max_search_num; i++)
   {
-    path_node_pool_[i] = new Node;
+    path_node_pool_[i] = new PathNode;
   }
 
   use_node_num_ = 0;
@@ -57,12 +57,12 @@ void Astar::reset()
   expanded_nodes_.clear();
   path_nodes_.clear();
 
-  std::priority_queue<NodePtr, std::vector<NodePtr>, NodeComparator0> empty_queue;
+  std::priority_queue<PathNodePtr, std::vector<PathNodePtr>, NodeComparator> empty_queue;
   open_set_.swap(empty_queue);
 
   for (int i = 0; i < use_node_num_; i++)
   {
-    NodePtr node = path_node_pool_[i];
+    PathNodePtr node = path_node_pool_[i];
     node->parent = NULL;
     node->node_state = NOT_EXPAND;
   }
@@ -73,7 +73,8 @@ void Astar::reset()
 
 // 搜索函数，输入为：起始点及终点
 // 将传输的数组通通变为指针！！！！ 以后改
-int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
+int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d start_v, Eigen::Vector3d start_a,
+                             Eigen::Vector3d end_pt, Eigen::Vector3d end_v, bool init, bool dynamic, double time_start)
 {
   // 首先检查目标点是否可到达
   if(Occupy_map_ptr->getOccupancy(end_pt))
@@ -89,7 +90,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
   Eigen::Vector3i end_index = posToIndex(end_pt);
 
   // 初始化,将起始点设为第一个路径点
-  NodePtr cur_node = path_node_pool_[0];
+  PathNodePtr cur_node = path_node_pool_[0];
   cur_node->parent = NULL;
   cur_node->position = start_pt;
   cur_node->index = posToIndex(start_pt);
@@ -104,7 +105,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
   // 记录当前为已扩展
   expanded_nodes_.insert(cur_node->index, cur_node);
 
-  NodePtr terminate_node = NULL;
+  PathNodePtr terminate_node = NULL;
 
   // 搜索主循环
   while (!open_set_.empty())
@@ -179,7 +180,7 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
           Eigen::Vector3i expand_node_id = d_pos_id + cur_node->index;
 
           //检查当前扩展的点是否在close set中，如果是则跳过
-          NodePtr expand_node = expanded_nodes_.find(expand_node_id);
+          PathNodePtr expand_node = expanded_nodes_.find(expand_node_id);
           if (expand_node != NULL && expand_node->node_state == IN_CLOSE_SET)
           {
             continue;
@@ -244,9 +245,9 @@ int Astar::search(Eigen::Vector3d start_pt, Eigen::Vector3d end_pt)
 }
 
 // 由最终点往回生成路径
-void Astar::retrievePath(NodePtr end_node)
+void Astar::retrievePath(PathNodePtr end_node)
 {
-  NodePtr cur_node = end_node;
+  PathNodePtr cur_node = end_node;
   path_nodes_.push_back(cur_node);
 
   while (cur_node->parent != NULL)
@@ -344,9 +345,9 @@ double Astar::getEuclHeu(Eigen::Vector3d x1, Eigen::Vector3d x2)
   return tie_breaker_ * (x2 - x1).norm();
 }
 
-std::vector<NodePtr> Astar::getVisitedNodes()
+std::vector<PathNodePtr> Astar::getVisitedNodes()
 {
-  vector<NodePtr> visited;
+  vector<PathNodePtr> visited;
   visited.assign(path_node_pool_.begin(), path_node_pool_.begin() + use_node_num_ - 1);
   return visited;
 }

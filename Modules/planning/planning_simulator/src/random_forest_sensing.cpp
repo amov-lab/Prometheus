@@ -348,10 +348,7 @@ void pubSensedPoints()
   }
     
 Eigen::Vector3d p3d;
-Eigen::Matrix<double, 3,3> rotaion_mat_global_to_local = Eigen::Quaterniond(_state[6], 
-                                                                                                                                                                  _state[7],
-                                                                                                                                                                  _state[8],
-                                                                                                                                                                  _state[9]).toRotationMatrix().transpose();
+Eigen::Matrix<double, 3,3> rotaion_mat_global_to_local = Eigen::Quaterniond(_state[6], _state[7], _state[8],_state[9]).toRotationMatrix().transpose();
 
   if (kdtreeLocalMap.radiusSearch(searchPoint, sense_range, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0)
   {
@@ -386,7 +383,7 @@ Eigen::Matrix<double, 3,3> rotaion_mat_global_to_local = Eigen::Quaterniond(_sta
   localMap_pcd.header.frame_id = "base_link";
   local_map_pub.publish(localMap_pcd);
 
-  //发布tf
+  //发布tf，World-ENU <--> Body-ENU
   static tf::TransformBroadcaster br;
   tf::Transform transform;
   transform.setOrigin( tf::Vector3(_state[0], _state[1], _state[2]) );

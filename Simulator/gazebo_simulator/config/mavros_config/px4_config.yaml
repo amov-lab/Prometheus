@@ -169,11 +169,10 @@ fake_gps:
   use_mocap: true         # ~mocap/pose
   mocap_transform: true   # ~mocap/tf instead of pose
   use_vision: false       # ~vision (pose)
-  # origin (default: Zürich)
-  geo_origin:
-    lat: 47.3667          # latitude [degrees]
-    lon: 8.5500           # longitude [degrees]
-    alt: 408.0            # altitude (height over the WGS-84 ellipsoid) [meters]
+  geo_origin:             # origin (default: Paris)
+    lat: 48.8442          # latitude [degrees]
+    lon: 2.3593           # longitude [degrees]
+    alt: 35.0             # altitude (height over the WGS-84 ellipsoid) [meters]
   eph: 2.0
   epv: 2.0
   satellites_visible: 5   # virtual number of visible satellites

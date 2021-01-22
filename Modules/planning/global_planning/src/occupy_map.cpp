@@ -52,14 +52,14 @@ void Occupy_map::init(ros::NodeHandle& nh)
     }
 }
 
-// 地图更新函数 - 输入：全局点云
+// 地图更新函数 - 输入：groundtruth点云、SLAM全局点云
 void Occupy_map::map_update_gpcl(const sensor_msgs::PointCloud2ConstPtr & global_point)
 {
     has_global_point = true;
     global_env_ = global_point;
 }
 
-// 地图更新函数 - 输入：局部点云
+// 地图更新函数 - 输入：RGBD相机、三维激光雷达
 void Occupy_map::map_update_lpcl(const sensor_msgs::PointCloud2ConstPtr & local_point, const nav_msgs::Odometry & odom)
 {
     has_global_point = true;
@@ -67,7 +67,7 @@ void Occupy_map::map_update_lpcl(const sensor_msgs::PointCloud2ConstPtr & local_
 // 将传递过来的局部点云转为全局点云
 }
 
-// 地图更新函数 - 输入：laser
+// 地图更新函数 - 输入：2维激光雷达
 void Occupy_map::map_update_laser(const sensor_msgs::LaserScanConstPtr & local_point, const nav_msgs::Odometry & odom)
 {
     has_global_point = true;
@@ -153,6 +153,7 @@ void Occupy_map::inflate_point_cloud(void)
     sensor_msgs::PointCloud2 map_inflate_vis;
     pcl::toROSMsg(cloud_inflate_vis_, map_inflate_vis);
 
+    // 发布膨胀的点云
     inflate_pcl_pub.publish(map_inflate_vis);
 
     static int exec_num=0;

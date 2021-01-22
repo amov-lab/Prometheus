@@ -1,4 +1,4 @@
-
+#include <string> 
 #include <plan_manage/planning_fsm.h>
 #define DEBUG 0
 #define NODE_NAME "fast_planner"
@@ -89,25 +89,25 @@ void PlanningFSM::init(ros::NodeHandle& nh)
   visualization_.reset(new PlanningVisualization(nh));
 
   /* ---------- callback ---------- */
-  // 0.02秒执行一次，50Hz
+  // [PUB]0.02秒执行一次，50Hz
   exec_timer_ = node_.createTimer(ros::Duration(0.02), &PlanningFSM::execFSMCallback, this);
 
-  // 安全检查，4Hz
+  // [PUB]安全检查，4Hz
   safety_timer_ = node_.createTimer(ros::Duration(0.25), &PlanningFSM::safetyCallback, this);
 
-  // 订阅目标点
+  // [SUB]订阅目标点
   waypoint_sub_ = node_.subscribe("/prometheus/planning/goal", 1, &PlanningFSM::waypointCallback, this);
 
-  // 订阅开关
+  // [SUB]订阅开关
   swith_sub = node_.subscribe<std_msgs::Bool>("/prometheus/switch/fast_planner", 10, &PlanningFSM::switchCallback, this);  
 
-  // 发布重规划
+  // [PUB]发布重规划
   replan_pub_ = node_.advertise<std_msgs::Empty>("/prometheus/fast_planning/replan", 10);
-  // 发布紧急停止指令
+  // [PUB]发布紧急停止指令
   safety_pub_ = node_.advertise<std_msgs::Int8>("/prometheus/planning/stop_cmd", 10);
-  // 发布B样条
+  // [PUB]发布B样条
   bspline_pub_ = node_.advertise<prometheus_plan_manage::Bspline>("/prometheus/planning/bspline", 10);
-  // 发布消息
+  // [PUB]发布消息
   message_pub = node_.advertise<prometheus_msgs::Message>("/prometheus/message/fast_planner", 10);
   // ROS_INFO("---planning_fsm: init finished!---");
   trigger_ = true;
@@ -122,15 +122,13 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
 #endif
 
   if (msg->pose.position.z < 0.1)  // the minimal goal height 
-  { 
+  {
 #ifdef    DEBUG
-    printf("the goal's height is to low (<0.1m)");
+    cout << "the goal's height is limited within [1.0, 2.0], but it is too low (hiehgt= " << msg->pose.position.z << "<0.1m) to reset" << endl;
 #endif
-
-  return;
   }
     
-  double goal_x, goal_y, goal_z;
+  double goal_z;
 
   // two mode: 1. manual setting goal from rviz; 2. preset goal in launch file.
   auto conf=[](double v, double min_v, double max_v)->double
@@ -159,16 +157,10 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
     // cout << "please input waypoints_" << endl;
   }
 #ifdef DEBUG
-  printf("---planning_fsm: get waypoint: [ %f, %f, %f]!---\n", end_pt_(0),
-                                                      end_pt_(1), 
-                                                      end_pt_(2));
+  cout << "---planning_fsm: get waypoint: [" << end_pt_(0) << end_pt_(1) << end_pt_(2) << "]!---" << endl;
 #endif
 
-  char* sp;
-  sprintf(sp, "Get a new goal: [ %f, %f, %f]!---\n",  end_pt_(0),
-                                                      end_pt_(1), 
-                                                      end_pt_(2));
-  pub_message(message_pub, prometheus_msgs::Message::NORMAL,  NODE_NAME, sp);
+  pub_message(message_pub, prometheus_msgs::Message::NORMAL,  NODE_NAME, "Get a new goal: [ " + to_string(end_pt_(0)) + "," + to_string(end_pt_(1)) + "," + to_string(end_pt_(2)) + "]!---");
 
   // 绘制目标点
   visualization_->drawGoal(end_pt_, 0.3, Eigen::Vector4d(1, 0, 0, 1.0));
@@ -176,9 +168,7 @@ void PlanningFSM::waypointCallback(const geometry_msgs::PoseStampedConstPtr& msg
   have_goal_ = true;
 
   // 如果当前状态是等待，则变为生成新轨迹;若当前状态为执行轨迹，则变为重规划轨迹
-  if (exec_state_ == WAIT_GOAL)
-    changeExecState(GEN_NEW_TRAJ, "TRIG");
-  else if (exec_state_ == EXEC_TRAJ)
+  if (exec_state_ == EXEC_TRAJ)
     changeExecState(REPLAN_TRAJ, "TRIG");
 }
 
@@ -201,13 +191,14 @@ void PlanningFSM::printExecState()
 void PlanningFSM::execFSMCallback(const ros::TimerEvent& e)
 {
   static int fsm_num = 0;
+  static int num_gen_traj = 0;
   fsm_num++;
-  // 2秒打印一次状态
+  // 2秒打印一次状态,50Hz pub
   if (fsm_num == 100)
   {
     printExecState();
     if (!trigger_)
-      pub_message(message_pub, prometheus_msgs::Message::NORMAL,  NODE_NAME, "don't trigger!.\n");
+      pub_message(message_pub, prometheus_msgs::Message::NORMAL,  NODE_NAME, "haven't trigger!.\n");
 
     if (!edt_env_->odomValid())
       pub_message(message_pub, prometheus_msgs::Message::NORMAL,  NODE_NAME, "no odom.\n");
@@ -246,6 +237,7 @@ void PlanningFSM::execFSMCallback(const ros::TimerEvent& e)
       else
       {
         changeExecState(GEN_NEW_TRAJ, "FSM");
+        num_gen_traj = 0;
       }
       break;
     }
@@ -274,13 +266,18 @@ void PlanningFSM::execFSMCallback(const ros::TimerEvent& e)
 #endif
         // 若规划成功，则切换为执行轨迹
         changeExecState(EXEC_TRAJ, "FSM");
+        num_gen_traj = 0;
       }
       else
       {
-        // 规划失败：应当切换为等待目标，还是继续规划？
-        // have_goal_ = false;
-        // changeExecState(WAIT_GOAL, "FSM");
-        changeExecState(GEN_NEW_TRAJ, "FSM");
+        num_gen_traj++;
+        // 连续规划三次失败，切换为等待目标，否则继续规划
+        if (num_gen_traj >= 3){
+          have_goal_ = false;
+          changeExecState(WAIT_GOAL, "FSM");
+        }else{
+          changeExecState(GEN_NEW_TRAJ, "FSM");
+        }
       }
       break;
     }
@@ -290,17 +287,22 @@ void PlanningFSM::execFSMCallback(const ros::TimerEvent& e)
       /* determine if need to replan */
       ros::Time time_now = ros::Time::now();
       double t_cur = (time_now - planner_manager_->time_traj_start_).toSec();
-      t_cur = min(planner_manager_->traj_duration_, t_cur);
+      //t_cur = min(planner_manager_->traj_duration_, t_cur);
       // 当前位置？
-      Eigen::Vector3d pos = planner_manager_->traj_pos_.evaluateDeBoor(planner_manager_->t_start_ + t_cur);
+      Eigen::Vector3d pos = planner_manager_->traj_pos_.evaluateDeBoor(planner_manager_->t_start_ + min(planner_manager_->traj_duration_, t_cur));
 
       /* && (end_pt_ - pos).norm() < 0.5 */
-      if (t_cur > planner_manager_->traj_duration_ - 1e-2)
+      if (t_cur > planner_manager_->traj_duration_)
       {
-        have_goal_ = false;
-        // for static debug, to commment this line
-        // changeExecState(WAIT_GOAL, "FSM");
-        return;
+        if  ((end_pt_ - pos).norm() < 0.5)
+        {
+          have_goal_ = false;
+          // for static debug, to commment this line
+          changeExecState(WAIT_GOAL, "FSM");
+          return;
+        }else{
+          changeExecState(REPLAN_TRAJ, "FSM");
+        }
       }
       else if ((end_pt_ - pos).norm() < thresh_no_replan_)
       {
@@ -315,15 +317,14 @@ void PlanningFSM::execFSMCallback(const ros::TimerEvent& e)
       else
       {
         // 切换为重规划的逻辑：时间?或
-        changeExecState(REPLAN_TRAJ, "FSM");
+        // changeExecState(REPLAN_TRAJ, "FSM");
       }
       break;
     }
 
     case REPLAN_TRAJ:
     {
-      ros::Time time_now = ros::Time::now();
-
+      // ros::Time time_now = ros::Time::now();
       // double t_cur = (time_now - planner_manager_->time_traj_start_).toSec();
       // start_pt_ = planner_manager_->traj_pos_.evaluateDeBoor(planner_manager_->t_start_ + t_cur);
       // start_vel_ = planner_manager_->traj_vel_.evaluateDeBoor(planner_manager_->t_start_ + t_cur);
@@ -355,6 +356,7 @@ void PlanningFSM::execFSMCallback(const ros::TimerEvent& e)
         // have_goal_ = false;
         // changeExecState(WAIT_GOAL, "FSM");
         changeExecState(GEN_NEW_TRAJ, "FSM");
+        num_gen_traj++;
       }
       break;
     }
@@ -397,7 +399,6 @@ void PlanningFSM::safetyCallback(const ros::TimerEvent& e)
       
       // ROS_INFO("goal pos: [%f, %f, %f], goal sdf: %f", end_pt_(0), end_pt_(1), end_pt_(2), dist);
       /* try to find a max distance goal around */
-      bool new_goal = false;
       const double dr = 0.5, dtheta = 30, dz = 0.3;
       double new_x, new_y, new_z, max_dist = -1.0;
       Eigen::Vector3d goal;
@@ -520,7 +521,7 @@ bool PlanningFSM::planSearchOpt()
     bspline_pub_.publish(bspline);
 
     /* visulization */
-    vector<Eigen::Vector3d> kino_path = path_finder_->getKinoTraj(0.02);
+    vector<Eigen::Vector3d> kino_path = path_finder_->getKinoTraj(0.02);// kinodynamic A* path
 
     visualization_->drawPath(kino_path, 0.1, Eigen::Vector4d(1, 0, 0, 1));  // red
 

@@ -31,7 +31,6 @@
       <sensor name="color" type="camera">
         <pose frame="">0 -0.0 0.004 0 0 0</pose>
         <camera name="realsense_camera">
-          <!-- 水平视场角，90度 -->
           <horizontal_fov>1.047</horizontal_fov>
           <image>
             <width>640</width>
@@ -104,14 +103,15 @@
       <sensor name="depth" type="depth">
         <pose frame="">0 -0.0 0.004 0 0 0</pose>
         <camera name="depth_camera">
-          <horizontal_fov>1.047</horizontal_fov>
+          <horizontal_fov>1.047198</horizontal_fov>
           <image>
             <width>640</width>
             <height>480</height>
+            <format>R8G8B8</format>
           </image>
           <clip>
             <near>0.1</near>
-            <far>100</far>
+            <far>10</far>
           </clip>
           <noise>
             <type>gaussian</type>
@@ -120,38 +120,22 @@
           </noise>
         </camera>
         <always_on>1</always_on>
-        <update_rate>60</update_rate>
+        <update_rate>30</update_rate>
         <visualize>0</visualize>
-        <!-- 这个插件用于深度转局部点云，实际运行中，D435i可直出局部点云 -->
-        <!-- <plugin name="camera_plugin" filename="libgazebo_ros_depth_camera.so">
-            <alwaysOn>true</alwaysOn>
-            <imageTopicName>image_raw</imageTopicName>
-            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-	          <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
-            <updateRate>20.0</updateRate>
-            <cameraName>realsense_d435i</cameraName>
-            <frameName>/realsense_camera_link</frameName>
-            <hackBaseline>0</hackBaseline>
-            <focalLength>639.997649</focalLength>
-            <distortionK1>0.0</distortionK1>
-            <distortionK2>0.0</distortionK2>
-            <distortionK3>0.0</distortionK3>
-            <distortionT1>0.0</distortionT1>
-            <distortionT2>0.0</distortionT2>
-        </plugin> -->
-        <!-- <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
+        <!-- kinect 插件用于生成RGB-D模型 -->
+        <!--<plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
           <baseline>0.2</baseline>
           <alwaysOn>true</alwaysOn>
-          <updateRate>20.0</updateRate>
-          <cameraName>realsense_d435i</cameraName>
-          <imageTopicName>/realsense_d435i/color/image_raw</imageTopicName>
-          <cameraInfoTopicName>/realsense_d435i/color/camera_info</cameraInfoTopicName>
-          <depthImageTopicName>/realsense_d435i/depth/image_raw</depthImageTopicName>
-          <depthImageCameraInfoTopicName>/realsense_d435i/depth/camera_info</depthImageCameraInfoTopicName>
-          <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
+          <updateRate>0.0</updateRate>
+          <cameraName>realsense_plugin</cameraName>
+          <imageTopicName>camera/color/image_raw</imageTopicName>
+          <cameraInfoTopicName>camera/color/camera_info</cameraInfoTopicName>
+          <depthImageTopicName>camera/depth/image_raw</depthImageTopicName>
+          <depthImageCameraInfoTopicName>camera/depth/camera_info</depthImageCameraInfoTopicName>
+          <pointCloudTopicName>camera/local_pointclouds</pointCloudTopicName>
           <frameName>/realsense_camera_link</frameName>
-          <pointCloudCutoff>0.1</pointCloudCutoff>
-          <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+          <pointCloudCutoff>1</pointCloudCutoff>
+          <pointCloudCutoffMax>4.0</pointCloudCutoffMax>
           <distortionK1>0</distortionK1>
           <distortionK2>0</distortionK2>
           <distortionK3>0</distortionK3>
@@ -160,12 +144,54 @@
           <CxPrime>0</CxPrime>
           <Cx>0</Cx>
           <Cy>0</Cy>
-          <focalLength>639.997649</focalLength>
+          <focalLength>0</focalLength>
           <hackBaseline>0</hackBaseline>
-        </plugin> -->
+        </plugin>-->
+        <!-- depth_camera 插件用于生成RGB-D模型 -->
+        <plugin name="camera_plugin" filename="libgazebo_ros_depth_camera.so">
+          <alwaysOn>true</alwaysOn>
+          <imageTopicName>camera/color/image_raw</imageTopicName>
+          <cameraInfoTopicName>camera/color/camera_info</cameraInfoTopicName>
+          <depthImageTopicName>camera/depth/image_raw</depthImageTopicName>
+          <depthImageCameraInfoTopicName>camera/depth/camera_info</depthImageCameraInfoTopicName>
+	  <pointCloudTopicName>camera/local_pointclouds</pointCloudTopicName>
+          <updateRate>30.0</updateRate>
+          <cameraName>realsense_plugin</cameraName>
+          <frameName>/realsense_camera_link</frameName>
+          <pointCloudCutoff>1</pointCloudCutoff>
+          <hackBaseline>0</hackBaseline>
+          <focalLength>554.254691</focalLength>
+          <distortionK1>0.0</distortionK1>
+          <distortionK2>0.0</distortionK2>
+          <distortionK3>0.0</distortionK3>
+          <distortionT1>0.0</distortionT1>
+          <distortionT2>0.0</distortionT2>
+        </plugin>
       </sensor>
     </link>
-    <plugin name="realsense_plugin" filename="librealsense_gazebo_plugin.so">
-    </plugin>
+    <!-- realsense插件可以生成RGB-D模型，也可以生成Stereo模型（但是该插件不能生成点云）。现实中，D435i可出点云 -->
+    <!--<plugin name="realsense_plugin" filename="librealsense_gazebo_plugin.so">
+      <prefix>realsense_camera</prefix>
+      <depthUpdateRate>60.0</depthUpdateRate>
+      <colorUpdateRate>60.0</colorUpdateRate>
+      <infraredUpdateRate>60.0</infraredUpdateRate>
+      <depthTopicName>camera/depth/image_raw</depthTopicName>
+      <depthCameraInfoTopicName>camera/depth/camera_info</depthCameraInfoTopicName>
+      <colorTopicName>camera/color/image_raw</colorTopicName>
+      <colorCameraInfoTopicName>camera/color/camera_info</colorCameraInfoTopicName>
+      <infrared1TopicName>camera/ir/image_raw</infrared1TopicName>
+      <infrared1CameraInfoTopicName>camera/ir/camera_info</infrared1CameraInfoTopicName>
+      <infrared2TopicName>camera/ir2/image_raw</infrared2TopicName>
+      <infrared2CameraInfoTopicName>camera/ir2/camera_info</infrared2CameraInfoTopicName>
+      <colorOpticalframeName>/realsense_camera_link</colorOpticalframeName>
+      <depthOpticalframeName>/realsense_camera_link</depthOpticalframeName>
+      <infrared1OpticalframeName>/realsense_camera_link</infrared1OpticalframeName>
+      <infrared2OpticalframeName>/realsense_camera_link</infrared2OpticalframeName>
+      <rangeMinDepth>0.1</rangeMinDepth>
+      <rangeMaxDepth>10.0</rangeMaxDepth>
+      <pointCloud>false</pointCloud>
+      <pointCloudTopicName>depth/points</pointCloudTopicName>
+      <pointCloudCutoff>0.2</pointCloudCutoff>
+    </plugin> -->
   </model>
 </sdf>

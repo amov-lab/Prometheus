@@ -93,7 +93,7 @@ public:
 
   // occupancy management
   void resetBuffer(Eigen::Vector3d min, Eigen::Vector3d max);
-  void setOccupancy(Eigen::Vector3d pos, int occ = 1);
+  void setOccupancy(Eigen::Vector3d pos, int is_occ = 1);
   int getOccupancy(Eigen::Vector3d pos);
   int getOccupancy(Eigen::Vector3i id);
   void getOccupancyMarker(visualization_msgs::Marker& m, int id, Eigen::Vector4d color);

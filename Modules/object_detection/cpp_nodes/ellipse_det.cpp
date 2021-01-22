@@ -320,7 +320,7 @@ int main(int argc, char **argv)
             ROS_WARN("didn't find parameter camera_topic");
         if (message_print)
             pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_topic");
-        camera_topic = "/prometheus/camera/rgb/image_raw";
+        camera_topic = "/prometheus/sensor/monocular_front/image_raw";
     }
 
     if (nh.getParam("camera_info", camera_info)) {
@@ -343,7 +343,7 @@ int main(int argc, char **argv)
             ROS_INFO("with_training is %d", wt);
     } else {
         if (local_print)
-            ROS_WARN("didn't find parameter with_training");
+            ROS_WARN("didn't find parameter with_training, set as default");
         wt = false;
     }
 
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
             pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "train_imlist is" + train_imlist);
     } else {
         if (local_print)
-            ROS_WARN("didn't find parameter train_imlist");
+            ROS_WARN("didn't find parameter train_imlist, set as default");
         if (message_print)
             pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter train_imlist");
         train_imlist = "ellipse/labeled_img_class.txt";
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
             pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "train_imdir is" + train_imdir);
     } else {
         if (local_print)
-            ROS_WARN("didn't find parameter train_imdir");
+            ROS_WARN("didn't find parameter train_imdir, set as default");
         if (message_print)
             pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter train_imdir");
         train_imdir = "ellipse/images_from_camera/";
@@ -381,7 +381,7 @@ int main(int argc, char **argv)
             ROS_INFO("saving_center is %d", saving_center);
     } else {
         if (local_print)
-            ROS_WARN("didn't find parameter saving_center");
+            ROS_WARN("didn't find parameter saving_center, set as default");
         saving_center = false;
     }
 
@@ -393,7 +393,7 @@ int main(int argc, char **argv)
             pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "saving_path is" + saving_path);
     } else {
         if (local_print)
-            ROS_WARN("didn't find parameter saving_path");
+            ROS_WARN("didn't find parameter saving_path, set as default");
         if (message_print)
             pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter saving_path");
         saving_path = "ellipse/images_from_camera/";

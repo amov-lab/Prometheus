@@ -34,7 +34,6 @@ private:
     double max_att_dist;
     double k_push;
     double k_att;
-    double min_dist;
     double ground_height;
     double ground_safe_height;
     double safe_distance;

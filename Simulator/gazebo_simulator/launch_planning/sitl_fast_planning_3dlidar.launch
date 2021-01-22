@@ -1,134 +1,184 @@
 <launch>
-    <!-- Launch Gazebo Simulation -->
-    <arg name="x" default="0.0"/>
-    <arg name="y" default="-10.0"/>
-    <arg name="z" default="0"/>
+	<!-- Launch Gazebo Simulation -->
+	<arg name="x" default="0.0"/>
+	<arg name="y" default="-10.0"/>
+	<arg name="z" default="0"/>
+	<arg name="gazebo_gui" default="false"/>
+	<arg name="visualization" default="true"/>
+	<arg name="setup_rtabmap" default="false" />
+	<arg name="local_sdf" default="true"/> <!-- 全局局部输入的都是局部点运 -->
+
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_3Dlidar/amov_solo_3Dlidar.sdf"/>
+	<arg name="pcd_file" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
 	<arg name="model" default="amov_solo_3Dlidar"/>
-    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
-	  <arg name="world" value="$(arg world)"/>
-	  <arg name="sdf" value="$(arg sdf)"/>
-	  <arg name="model" value="$(arg model)"/>
-      <arg name="x" value="$(arg x)"/>
-      <arg name="y" value="$(arg y)"/>
-      <arg name="z" value="$(arg z)"/>
-    </include>
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
+		<arg name="gazebo_gui" default="$(arg gazebo_gui)"/>
+		<arg name="world" value="$(arg world)"/>
+		<arg name="sdf" value="$(arg sdf)"/>
+		<arg name="model" value="$(arg model)"/>
+		<arg name="x" value="$(arg x)"/>
+		<arg name="y" value="$(arg y)"/>
+		<arg name="z" value="$(arg z)"/>
+	</include>
     
-    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
-        <param name="resolution" value="0.05" />
-        <!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
-        <param name="frame_id" type="string" value="map" />
-        <!-- maximum range to integrate (speedup!) -->
-        <param name="sensor_model/max_range" value="5.0" />
-        <!-- data source to integrate (PointCloud2) -->
-        <remap from="cloud_in" to="/prometheus/sensors/3Dlidar_scan" />
-    </node>
-    
-    <!-- 启动Fast Planner -->
-    <!-- 参数较多，请耐心阅读文档，并进行调试设置 -->
-    <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
-    <arg name="max_vel" value="1.0" />
-    <arg name="max_acc" value="0.5" />
-    <arg name="dynamic" value="0" />
-    <arg name="pcd_file" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
-    <node pkg="prometheus_plan_manage" name="dyn_planner_node" type="dyn_planner_node" output="screen">
-        <remap from="/prometheus/planning/global_pcl" to="$(arg topic_of_global_pcl)" />
-        <!-- sdf map updating -->
-        <param name="sdf_map/SDF_MODE" value="1" type="int"/>
-        <param name="sdf_map/origin_x" value="-20.0" type="double"/>
-        <param name="sdf_map/origin_y" value="-20.0" type="double"/>
-        <param name="sdf_map/origin_z" value="0.0" type="double"/>
-        <param name="sdf_map/map_size_x" value="40.0" type="double"/>
-        <param name="sdf_map/map_size_y" value="40.0" type="double"/>
-        <param name="sdf_map/map_size_z" value="5.0" type="double"/>
-        <param name="sdf_map/resolution_sdf" value="0.2" type="double"/>
-        <param name="sdf_map/ceil_height" value="3.5" type="double"/>
-        <param name="sdf_map/update_rate" value="2.0" type="double"/>
-        <param name="sdf_map/update_range" value="8.0" type="double"/>
-        <param name="sdf_map/inflate" value="0.4" type="double"/>
-        <param name="sdf_map/radius_ignore" value="0.2" type="double"/>
+	<!-- 启动 octomap 建图 -->
+	<node unless="$(arg setup_rtabmap)" pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+		<param name="resolution" value="0.1" />
+		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+		<param name="frame_id" type="string" value="map" />
+		<!-- maximum range to integrate (speedup!) -->
+		<param name="sensor_model/max_range" value="5.0" />
+		<!-- data source to integrate (PointCloud2) -->
+		<remap from="cloud_in" to="/prometheus/sensors/3Dlidar_scan" />
+	</node>
+    	<!-- 启动rtabmap_ros建图 -->
+	<node if="$(arg setup_rtabmap)" pkg="rtabmap_ros" type="rtabmap" name="rtabmap" output="screen" args="-d">	  
+		<param name="frame_id"             type="string" value="3Dlidar_link"/>  
+		<param name="subscribe_depth"      type="bool" value="false"/>
+		<param name="subscribe_rgb"        type="bool" value="false"/>
+		<param name="subscribe_scan_cloud" type="bool" value="true"/>
+		<param name="approx_sync"          type="bool" value="true"/>
+      		<remap from="odom"                 to="/prometheus/drone_odom"/>
+		<remap from="scan_cloud" 	   to="/prometheus/sensors/3Dlidar_scan"/>
 
-        <!-- planning fsm , small scene-->
-        <param name="fsm/flight_type" value="1" type="int"/>
-        <param name="fsm/safety_distance" value="0.01" type="double"/>
-        <param name="fsm/thresh_replan" value="1.0" type="double"/>
-        <param name="fsm/thresh_no_replan" value="1.0" type="double"/>
-        <param name="fsm/wp_num" value="3" type="int"/>
-        <param name="fsm/wp0_x" value="-5.5" type="double"/>
-        <param name="fsm/wp0_y" value="-4.0" type="double"/>
-        <param name="fsm/wp0_z" value="1.0" type="double"/>
-        <param name="fsm/wp1_x" value="0.0" type="double"/>
-        <param name="fsm/wp1_y" value="-6.0" type="double"/>
-        <param name="fsm/wp1_z" value="1.0" type="double"/>
-        <param name="fsm/wp2_x" value="2.0" type="double"/>
-        <param name="fsm/wp2_y" value="-3.0" type="double"/>
-        <param name="fsm/wp2_z" value="0.5" type="double"/>
+		<!-- RTAB-Map's parameters -->
+		<param name="Rtabmap/DetectionRate"          type="string" value="1"/>  
+		<param name="RGBD/NeighborLinkRefining"      type="string" value="false"/>
+		<param name="RGBD/ProximityBySpace"          type="string" value="true"/>
+		<param name="RGBD/ProximityMaxGraphDepth"    type="string" value="0"/>
+		<param name="RGBD/ProximityPathMaxNeighbors" type="string" value="1"/>
+		<param name="RGBD/AngularUpdate"             type="string" value="0.05"/>
+		<param name="RGBD/LinearUpdate"              type="string" value="0.05"/>
+		<param name="Mem/NotLinkedNodesKept"         type="string" value="false"/>
+		<param name="Mem/STMSize"                    type="string" value="30"/>
+		<!-- param name="Mem/LaserScanVoxelSize"     type="string" value="0.1"/ -->
+		<!-- param name="Mem/LaserScanNormalK"       type="string" value="10"/ -->
+		<!-- param name="Mem/LaserScanRadius"        type="string" value="0"/ -->
 
-        <!-- planner manager -->
-        <param name="manager/time_sample" value="0.5" type="double"/>
-        <param name="manager/max_vel" value="$(arg max_vel)" type="double"/>
-        <param name="manager/dynamic" value="$(arg dynamic)" type="int"/>
-        <param name="manager/margin" value="0.1" type="double"/>
-        
-        <!-- path searching -->
-        <param name="astar/lambda_heu" value="10.0" type="double"/>
-        <param name="astar/resolution_astar" value="0.1" type="double"/>
-        <param name="astar/time_resolution" value="0.8" type="double"/>
-        <param name="astar/margin" value="0.1" type="double"/>
-        <param name="astar/allocate_num" value="100000" type="int"/>
+		<param name="Reg/Strategy"                   type="string" value="1"/> 
+		<param name="Grid/CellSize"                  type="string" value="0.1"/>
+		<param name="Grid/RangeMax"                  type="string" value="20"/>
+		<param name="Grid/ClusterRadius"             type="string" value="1"/>
+		<param name="Grid/GroundIsObstacle"          type="string" value="true"/>
+	</node>
 
-        <!-- path searching -->
-        <param name="search/max_tau" value="0.8" type="double"/>
-        <param name="search/init_max_tau" value="0.8" type="double"/>
-        <param name="search/max_vel" value="$(arg max_vel)" type="double"/>
-        <param name="search/max_acc" value="$(arg max_acc)" type="double"/>
-        <param name="search/w_time" value="15.0" type="double"/>
-        <param name="search/horizon" value="7.0" type="double"/>
-        <param name="search/lambda_heu" value="10.0" type="double"/>
-        <param name="search/resolution_astar" value="0.1" type="double"/>
-        <param name="search/time_resolution" value="0.8" type="double"/>
-        <param name="search/margin" value="0.4" type="double"/>
-        <param name="search/allocate_num" value="100000" type="int"/>
-        <param name="search/check_num" value="5" type="int"/>
+	<!-- 确定路径规划点云输入 -->
+	<arg unless="$(arg setup_rtabmap)" name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
+	<arg     if="$(arg setup_rtabmap)" name="topic_of_global_pcl" default="/octomap_obstacles" />
+	<arg     if="$(arg setup_rtabmap)" name="topic_of_local_pcl" default="/rtabmap/cloud_map"/>
+	<arg unless="$(arg setup_rtabmap)" name="topic_of_local_pcl" default="/octomap_full"/>
+	<!-- 如果直接使用  GroundTruth 点云输入 -->
+	<!-- <arg name="topic_of_global_pcl" default="/prometheus/pcl_groundtruth"/> -->
+	<!-- 如果直接使用激光点云输入 -->
+	<!-- <arg name="topic_of_global_pcl" default="/prometheus/sensors/3Dlidar_scan"/> -->
 
-        <!-- trajectory optimization -->
-        <param name="optimization/lamda1" value="10.0" type="double"/>
-        <param name="optimization/lamda2" value="0.6" type="double"/>
-        <param name="optimization/lamda3" value="0.00001" type="double"/>
-        <param name="optimization/lamda4" value="0.001" type="double"/>
-        <param name="optimization/dist0" value="0.8" type="double"/>
-        <param name="optimization/dist1" value="0.0" type="double"/>
-        <param name="optimization/max_vel" value="$(arg max_vel)" type="double"/>
-        <param name="optimization/max_acc" value="$(arg max_acc)" type="double"/>
 
-        <param name="optimization/algorithm" value="11" type="int"/>
-        <param name="optimization/max_iteration_num" value="20" type="int"/>
-        <param name="optimization/order" value="3" type="int"/>
+	<!-- 启动Fast Planner -->
+	<!-- 参数较多，请耐心阅读文档，并进行调试设置 -->
+	<arg name="max_vel" value="1.0" />
+	<arg name="max_acc" value="0.5" />
+	<arg name="dynamic" value="0" />
+	<node pkg="prometheus_plan_manage" name="dyn_planner_node" type="dyn_planner_node" output="screen">
+		<remap unless="$(arg local_sdf)" from="/prometheus/planning/global_pcl" to="$(arg topic_of_global_pcl)" />
+		<!--<remap if="$(arg local_sdf)" from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />--> <!-- useless -->
+		<remap if="$(arg local_sdf)" from="/prometheus/planning/local_pointclouds" to="/octomap_point_cloud_centers" />
 
-        <param name="bspline/limit_vel" value="$(arg max_vel)" type="double"/>
-        <param name="bspline/limit_acc" value="$(arg max_acc)" type="double"/>
-        <param name="bspline/limit_ratio" value="1.1" type="double"/>
-    </node>
+		<!-- planning_fsm.cpp , small scene-->
+		<param if="$(arg local_sdf)" name="sdf_map/SDF_MODE" value="0" type="int"/>	<!-- 0: local sdf; 1: global sdf -->
+		<param unless="$(arg local_sdf)" name="sdf_map/SDF_MODE" value="1" type="int"/>
+		<param name="fsm/flight_type" value="1" type="int"/>
+		<param name="fsm/safety_distance" value="0.01" type="double"/>
+		<param name="fsm/thresh_replan" value="1.0" type="double"/>
+		<param name="fsm/thresh_no_replan" value="1.0" type="double"/>
+		<param name="fsm/wp_num" value="3" type="int"/>
+		<param name="fsm/wp0_x" value="-5.5" type="double"/>
+		<param name="fsm/wp0_y" value="-4.0" type="double"/>
+		<param name="fsm/wp0_z" value="1.0" type="double"/>
+		<param name="fsm/wp1_x" value="0.0" type="double"/>
+		<param name="fsm/wp1_y" value="-6.0" type="double"/>
+		<param name="fsm/wp1_z" value="1.0" type="double"/>
+		<param name="fsm/wp2_x" value="2.0" type="double"/>
+		<param name="fsm/wp2_y" value="-3.0" type="double"/>
+		<param name="fsm/wp2_z" value="0.5" type="double"/>
+		<param name="bspline/limit_vel" value="$(arg max_vel)" type="double"/>
+		<param name="bspline/limit_acc" value="$(arg max_acc)" type="double"/>
+		<param name="bspline/limit_ratio" value="1.1" type="double"/>
 
-    <!-- trajectory server -->
-    <node pkg="prometheus_plan_manage" name="traj_server" type="traj_server" output="log">
-    </node>
+		<!-- dyn_planner_manager.cpp -->
+		<param name="manager/time_sample" value="0.5" type="double"/>
+		<param name="manager/max_vel" value="$(arg max_vel)" type="double"/>
+		<param name="manager/dynamic" value="$(arg dynamic)" type="int"/>
+		<param name="manager/margin" value="0.1" type="double"/>
 
-	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
-	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
+		<!-- sdf_map.cp -->
+		<param name="sdf_map/origin_x" value="-20.0" type="double"/>
+		<param name="sdf_map/origin_y" value="-20.0" type="double"/>
+		<param name="sdf_map/origin_z" value="0.0" type="double"/>
+		<param name="sdf_map/map_size_x" value="40.0" type="double"/>
+		<param name="sdf_map/map_size_y" value="40.0" type="double"/>
+		<param name="sdf_map/map_size_z" value="5.0" type="double"/>
+		<param name="sdf_map/resolution_sdf" value="0.2" type="double"/>
+		<param name="sdf_map/ceil_height" value="3.5" type="double"/>
+		<param name="sdf_map/update_rate" value="2.0" type="double"/>
+		<param name="sdf_map/update_range" value="8.0" type="double"/>
+		<param name="sdf_map/inflate" value="0.4" type="double"/>
+		<param name="sdf_map/radius_ignore" value="0.2" type="double"/>
+
+		<!-- A* path searching -->
+		<param name="astar/lambda_heu" value="10.0" type="double"/>
+		<param name="astar/resolution_astar" value="0.1" type="double"/>
+		<param name="astar/time_resolution" value="0.8" type="double"/>
+		<param name="astar/margin" value="0.1" type="double"/>
+		<param name="astar/allocate_num" value="100000" type="int"/>
+		<!-- kinodynamic path searching -->
+		<param name="search/max_tau" value="0.8" type="double"/>
+		<param name="search/init_max_tau" value="0.8" type="double"/>
+		<param name="search/max_vel" value="$(arg max_vel)" type="double"/>
+		<param name="search/max_acc" value="$(arg max_acc)" type="double"/>
+		<param name="search/w_time" value="15.0" type="double"/>
+		<param name="search/horizon" value="7.0" type="double"/>
+		<param name="search/lambda_heu" value="10.0" type="double"/>
+		<param name="search/resolution_astar" value="0.1" type="double"/>
+		<param name="search/time_resolution" value="0.8" type="double"/>
+		<param name="search/margin" value="0.4" type="double"/>
+		<param name="search/allocate_num" value="100000" type="int"/>
+		<param name="search/check_num" value="5" type="int"/>
+
+		<!-- Bspline trajectory optimization -->
+		<param name="optimization/lamda1" value="10.0" type="double"/>	<!-- smoothness jerk-->
+		<param name="optimization/lamda2" value="0.6" type="double"/>	<!-- distance -->
+		<param name="optimization/lamda3" value="0.00001" type="double"/>	<!-- feasibility vel&acc -->
+		<param name="optimization/lamda4" value="0.001" type="double"/>	<!-- endpoint pos -->
+		<param name="optimization/dist0" value="0.8" type="double"/>	<!-- distance to obs -->
+		<param name="optimization/dist1" value="0.0" type="double"/>	<!-- useless -->
+		<param name="optimization/max_vel" value="$(arg max_vel)" type="double"/>	<!-- 最大速度要求 -->
+		<param name="optimization/max_acc" value="$(arg max_acc)" type="double"/>	<!-- 最大加速度要求 -->
+		<param name="optimization/algorithm" value="11" type="int"/>	<!-- 优化算法选择 40: SLSQP(constrained), 11 LBFGS(unconstrained barrier) -->
+		<param name="optimization/max_iteration_num" value="100" type="int"/>	<!-- 最大优化迭代次数 -->
+		<param name="optimization/order" value="3" type="int"/>		<!-- 样条连续阶数 -->
+
+	</node>
+
+	<!-- 发布轨迹点 -->
+	<node pkg="prometheus_plan_manage" name="traj_server" type="traj_server" output="log">
+	</node>
+
+	<!-- 发布指令追踪轨迹， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
+	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --tab --">	
+		<!-- 是否是仿真环境 -->
+		<param name="planning_mission/sim_mode" value="true" type="bool"/>
+		<!-- 是否需要修正相机朝向-->
 		<param name="planning_mission/control_yaw_flag" value="false" type="bool"/>
-        <param name="planning_mission/sim_mode" value="true" type="bool"/>
 	</node>
 
 	<!-- 启动rviz,设为false可关闭 -->
-	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_planning.rviz" />
-        <!-- obstacle.world 真实点云 -->
-        <node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
-		    <param name="pcd_path" type="string" value="$(find prometheus_gazebo)/maps/obstacle.pcd" />
-	    </node>
-    </group>
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_planning.rviz" />
+		<!-- obstacle.world 真实点云 -->
+		<node pkg="prometheus_slam" type="pc2_publisher_node" name="pc2_publisher_node" output="screen">	
+			<param name="pcd_path" type="string" value="$(arg pcd_file)" />
+		</node>
+	</group>
 </launch>
 
