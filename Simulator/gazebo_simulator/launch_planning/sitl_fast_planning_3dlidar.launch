@@ -4,8 +4,8 @@
     <arg name="y" default="-10.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_3Dlidar/amov_solo_3Dlidar.sdf"/>
-	<arg name="model" default="amov_solo_3Dlidar"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_3Dlidar/p450_3Dlidar.sdf"/>
+	<arg name="model" default="p450_3Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
