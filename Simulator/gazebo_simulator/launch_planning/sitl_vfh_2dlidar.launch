@@ -4,8 +4,8 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_hokuyo_2Dlidar/amov_solo_hokuyo_2Dlidar.sdf"/>
-	<arg name="model" default="amov_solo_hokuyo_2Dlidar"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_hokuyo_2Dlidar/p450_hokuyo_2Dlidar.sdf"/>
+	<arg name="model" default="p450_hokuyo_2Dlidar"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -20,7 +20,7 @@
 	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen" launch-prefix="gnome-terminal --">	
 		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
 		<!-- 选择算法 0代表APF,1代表VFH -->
-		<param name="local_planner/algorithm_mode" value="0" type="int"/>
+		<param name="local_planner/algorithm_mode" value="1" type="int"/>
 		<!-- 激光雷达模型,0代表3d雷达,1代表2d雷达 -->
 		<param name="local_planner/lidar_model" value="1" type="int"/>
 		<!-- 飞行高度 -->
@@ -29,9 +29,9 @@
 		<!-- 最大速度，设的越小越安全 -->
 		<param name="local_planner/max_planning_vel" value="0.5" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
-		<param name="vfh/inflate_distance" value="0.8" type="double"/>
+		<param name="vfh/inflate_distance" value="1.0" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="vfh/sensor_max_range" value="3.0" type="double"/>  
+		<param name="vfh/sensor_max_range" value="6.0" type="double"/>  
 		<!-- weight -->
 		<param name="vfh/obstacle_weight" value="10.0" type="double"/>
 		<param name="vfh/goalWeight" value="0.1" type="double"/>

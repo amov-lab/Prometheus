@@ -1,12 +1,11 @@
 <?xml version='1.0'?>
-<sdf version='1.5'>
+<sdf version='1.6'>
   <model name='p450'>
     <!-- p450 body -->
     <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <!-- 此处P450机架重量及转动惯量为预估值，实际请以真机为准 -->
         <mass>1.47</mass>
         <inertia>
           <ixx>0.011</ixx>
@@ -17,12 +16,11 @@
           <izz>0.021</izz>
         </inertia>
       </inertial>
-      <!-- 碰撞参数：假设无人机为立方体 -->
       <collision name='base_link_inertia_collision'>
         <pose>0 0 -0.04 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.45 0.45 0.25</size>
+            <size>0.32 0.32 0.25</size>
           </box>
         </geometry>
         <surface>
@@ -353,15 +351,20 @@
         <use_parent_model_frame>1</use_parent_model_frame>
       </axis>
     </joint>
-    <!-- plugins: not konwn -->
+    <include>
+      <uri>model://gps</uri>
+      <pose>0.1 0 0 0 0 0</pose>
+      <name>gps</name>
+    </include>
+    <joint name='gps_joint' type='fixed'>
+      <child>gps::link</child>
+      <parent>base_link</parent>
+    </joint>
     <plugin name='rosbag' filename='libgazebo_multirotor_base_plugin.so'>
       <robotNamespace></robotNamespace>
       <linkName>base_link</linkName>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <!-- plugins: motor model plugin for front_right_motor -->
-    <!-- 电机模型 = 静态模型 + 动态模型 -->
-    <!-- 订阅电机参考转速（来自mavlink_interface插件），然后计算力和力矩并作用于电机 -->
     <plugin name='front_right_motor_model' filename='libgazebo_motor_model.so'>
       <robotNamespace></robotNamespace>
       <jointName>rotor_0_joint</jointName>
@@ -379,7 +382,6 @@
       <motorSpeedPubTopic>/motor_speed/0</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <!-- plugins: motor model plugin for back_left_motor -->
     <plugin name='back_left_motor_model' filename='libgazebo_motor_model.so'>
       <robotNamespace></robotNamespace>
       <jointName>rotor_1_joint</jointName>
@@ -397,7 +399,6 @@
       <motorSpeedPubTopic>/motor_speed/1</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <!-- plugins: motor model plugin for front_left_motor -->
     <plugin name='front_left_motor_model' filename='libgazebo_motor_model.so'>
       <robotNamespace></robotNamespace>
       <jointName>rotor_2_joint</jointName>
@@ -415,7 +416,6 @@
       <motorSpeedPubTopic>/motor_speed/2</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <!-- plugins: motor model plugin for back_right_motor -->
     <plugin name='back_right_motor_model' filename='libgazebo_motor_model.so'>
       <robotNamespace></robotNamespace>
       <jointName>rotor_3_joint</jointName>
@@ -433,22 +433,9 @@
       <motorSpeedPubTopic>/motor_speed/3</motorSpeedPubTopic>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
-    <!-- plugins: GPS plugin -->
-    <!-- 模拟GPS模型，发布GPS数据（/.../gps）及地面真值（/.../groundtruth） -->
-    <plugin name="gps_plugin" filename="libgazebo_gps_plugin.so">
-      <robotNamespace></robotNamespace>
-      <gpsNoise>true</gpsNoise>
-      <gpsXYRandomWalk>2.0</gpsXYRandomWalk>
-      <gpsZRandomWalk>4.0</gpsZRandomWalk>
-      <gpsXYNoiseDensity>2.0e-4</gpsXYNoiseDensity>
-      <gpsZNoiseDensity>4.0e-4</gpsZNoiseDensity>
-      <gpsVXYNoiseDensity>0.2</gpsVXYNoiseDensity>
-      <gpsVZNoiseDensity>0.4</gpsVZNoiseDensity>
-    </plugin>
     <plugin name='groundtruth_plugin' filename='libgazebo_groundtruth_plugin.so'>
       <robotNamespace/>
     </plugin>
-    <!-- plugins: magnetometer plugin -->
     <plugin name='magnetometer_plugin' filename='libgazebo_magnetometer_plugin.so'>
       <robotNamespace/>
       <pubRate>100</pubRate>
@@ -457,16 +444,11 @@
       <biasCorrelationTime>600</biasCorrelationTime>
       <magTopic>/mag</magTopic>
     </plugin>
-    <!-- plugins: barometer plugin -->
     <plugin name='barometer_plugin' filename='libgazebo_barometer_plugin.so'>
       <robotNamespace/>
       <pubRate>50</pubRate>
       <baroTopic>/baro</baroTopic>
     </plugin>
-    <!-- plugins: mavlink plugin -->
-    <!-- 使用mavlink消息交互的插件 -->
-    <!-- 发布电机参考速度，来自飞控 -->
-    <!-- 订阅各传感器数据，发送至飞控 -->
     <plugin name='mavlink_interface' filename='libgazebo_mavlink_interface.so'>
       <robotNamespace/>
       <imuSubTopic>/imu</imuSubTopic>
@@ -475,7 +457,6 @@
       <baroSubTopic>/baro</baroSubTopic>
       <mavlink_addr>INADDR_ANY</mavlink_addr>
       <mavlink_udp_port>14560</mavlink_udp_port>
-      <mavlink_tcp_port>4560</mavlink_tcp_port>
       <serialEnabled>false</serialEnabled>
       <serialDevice>/dev/ttyACM0</serialDevice>
       <baudRate>921600</baudRate>
@@ -522,8 +503,6 @@
       </control_channels>
     </plugin>
     <static>0</static>
-    <!-- plugins: imu plugin -->
-    <!-- 产生imu数据 -->
     <plugin name='gazebo_imu_plugin' filename='libgazebo_imu_plugin.so'>
       <robotNamespace></robotNamespace>
       <linkName>imu_link</linkName>
