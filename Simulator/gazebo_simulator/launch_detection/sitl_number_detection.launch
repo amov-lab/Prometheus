@@ -5,8 +5,8 @@
     <arg name="z" default="0.06"/>
     <arg name="Y" default="0.0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/wall_num.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_monocular/amov_solo_monocular.sdf"/>
-	<arg name="model" default="amov_solo_monocular"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_monocular/p450_monocular.sdf"/>
+	<arg name="model" default="p450_monocular"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
