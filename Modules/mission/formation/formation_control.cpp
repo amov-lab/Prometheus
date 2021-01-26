@@ -377,8 +377,17 @@ void formation::control()
     }
     else
     {
-        if(flight_controller == "uwb")
+        if(flight_controller == "apm")
         {
+            //起飞后开始控制无人机集群飞行
+            ROS_INFO("When the drone formation takeoff and the control command input,enter 1 to start formation control");
+            int check_flag;
+            std::cin >> check_flag;
+            if(check_flag != 1)
+            {
+                ros::shutdown();
+            }
+
             while(ros::ok())
             {
                 //处理回调函数
@@ -399,11 +408,6 @@ void formation::control()
                     //设置为菱形队形过渡队形
                     case prometheus_msgs::Formation::DIAMOND_STAGE_1:
                         set_diamond_stage1();
-                        break;
-
-                    //设置为菱形队形
-                    case prometheus_msgs::Formation::DIAMOND:
-                        set_diamond();
                         break;
                 }
                 //五台无人机获取控制数据
