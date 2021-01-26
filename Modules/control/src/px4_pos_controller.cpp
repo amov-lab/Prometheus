@@ -256,11 +256,11 @@ int main(int argc, char **argv)
         case prometheus_msgs::ControlCommand::Takeoff:
             
             //当无人机在空中时若受到起飞指令，则发出警告并悬停
-            if (_DroneState.landed == false)
-            {
-                Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
-                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "The drone is in the air!");
-            }
+            // if (_DroneState.landed == false)
+            // {
+            //     Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+            //     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "The drone is in the air!");
+            // }
 
             if (_DroneState.landed == true && Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
             {
@@ -411,7 +411,7 @@ int main(int argc, char **argv)
         rivz_ref_pose_pub.publish(ref_pose_rviz);
 
         //发布log消息，可用rosbag记录
-        LogMessage.control_type = 0;
+        LogMessage.control_type = 1;
         LogMessage.time = cur_time;
         LogMessage.Drone_State = _DroneState;
         LogMessage.Control_Command = Command_Now;

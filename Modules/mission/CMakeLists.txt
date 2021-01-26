@@ -69,9 +69,9 @@ add_executable(mission_cmd_pub test/mission_cmd_pub.cpp)
 add_dependencies(mission_cmd_pub prometheus_mission_gencpp)
 target_link_libraries(mission_cmd_pub ${catkin_LIBRARIES})
 
-add_executable(turtlebot_uav_formation turtlebot_uav_formation/turtlebot_uav_formation.cpp)
-add_dependencies(turtlebot_uav_formation prometheus_mission_gencpp)
-target_link_libraries(turtlebot_uav_formation ${catkin_LIBRARIES})
+add_executable(turtlebot_formation formation_flight/turtlebot_formation.cpp)
+add_dependencies(turtlebot_formation prometheus_mission_gencpp)
+target_link_libraries(turtlebot_formation ${catkin_LIBRARIES})
 
 add_executable(circle_crossing circle_crossing/circle_crossing.cpp)
 add_dependencies(circle_crossing prometheus_mission_gencpp)

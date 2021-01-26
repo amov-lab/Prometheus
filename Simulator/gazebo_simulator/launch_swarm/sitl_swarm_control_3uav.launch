@@ -1,6 +1,6 @@
 <launch>
 	<!-- 环境变量，PX4仿真启动脚本rcS中需要用到 -->
-	<env name="PX4_SIM_MODEL" value="solo" />
+	<env name="PX4_SIM_MODEL" value="p450" />
     <env name="PX4_ESTIMATOR" value="ekf2_vision" />
 
 	<!-- 启动Gazebo，可选择仿真所用的world -->
@@ -31,8 +31,8 @@
 		<!-- ID编号 -->
         <arg name="ID" value="0"/>
 		<!-- 指定sdf文件及模型名字 -->
-		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav1/P300_uav1.sdf"/>
-		<arg name="model" default="P300_uav1"/>
+		<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/MultiUAV/uav1/uav1.sdf"/>
+		<arg name="model" default="uav1"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="0"/>
 		<arg name="y" default="0"/>
@@ -47,11 +47,11 @@
 		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
 		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
 		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
-			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_p450_$(arg ID) $(arg px4_command_arg1)">
 		</node>
 
 		<!-- 启动Gazebo模型 -->
-		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+		<node name="p450_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
 			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
 		</node>
 
@@ -73,8 +73,8 @@
 		<!-- ID编号 -->
         <arg name="ID" value="1"/>
 		<!-- 指定sdf文件及模型名字 -->
-		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav2/P300_uav2.sdf"/>
-		<arg name="model" default="P300_uav2"/>
+		<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/MultiUAV/uav2/uav2.sdf"/>
+		<arg name="model" default="uav2"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="0"/>
 		<arg name="y" default="1"/>
@@ -89,11 +89,11 @@
 		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
 		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
 		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
-			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_p450_$(arg ID) $(arg px4_command_arg1)">
 		</node>
 
 		<!-- 启动Gazebo模型 -->
-		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+		<node name="p450_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
 			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
 		</node>
 
@@ -114,8 +114,8 @@
 		<!-- ID编号 -->
         <arg name="ID" value="2"/>
 		<!-- 指定sdf文件及模型名字 -->
-		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav3/P300_uav3.sdf"/>
-		<arg name="model" default="P300_uav3"/>
+		<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/MultiUAV/uav3/uav3.sdf"/>
+		<arg name="model" default="uav3"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="0"/>
 		<arg name="y" default="-1"/>
@@ -130,11 +130,11 @@
 		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
 		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
 		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
-			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_P300_$(arg ID) $(arg px4_command_arg1)">
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_p450_$(arg ID) $(arg px4_command_arg1)">
 		</node>
 
 		<!-- 启动Gazebo模型 -->
-		<node name="P300_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
+		<node name="p450_$(arg ID)_spawn" output="screen" pkg="gazebo_ros" type="spawn_model" 
 			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -Y $(arg Yaw)">
 		</node>
 
@@ -255,7 +255,7 @@
 
 	<node pkg="prometheus_mission" type="formation_flight" name="formation_flight" output="screen" launch-prefix="gnome-terminal --">
 		<!-- 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式  -->
-		<param name="controller_num" value="０"/>
+		<param name="controller_num" value="0"/>
 		<param name="virtual_leader_pos_x" value="0.0" />
 		<param name="virtual_leader_pos_y" value="0.0" />
 		<param name="virtual_leader_pos_z" value="1.0" />

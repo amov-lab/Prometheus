@@ -5,8 +5,8 @@
     <arg name="y" default="0.0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo_D435i/amov_solo_D435i.sdf"/>
-	<arg name="model" default="amov_solo_D435i"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_D435i/p450_D435i.sdf"/>
+	<arg name="model" default="p450_D435i"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -24,26 +24,29 @@
 	<!-- 设定局部点云话题-->
 	<arg name="topic_of_local_pcl" default="/realsense_plugin/camera/local_pointclouds"/>
 	<!-- 启动局部规划算法 -->
-	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen">
+	<node pkg="prometheus_local_planning" name="local_planner_main" type="local_planner_main" output="screen"  launch-prefix="gnome-terminal --">	
 		<remap from="/prometheus/planning/local_pcl" to="$(arg topic_of_local_pcl)" />
 		<!-- 参数 -->
 		<!-- 选择算法 0代表APF,1代表VFH -->
-		<param name="planning/algorithm_mode" value="0" type="int"/>
+		<param name="local_planner/algorithm_mode" value="0" type="int"/>
 		<!-- 激光雷达模型,0代表3d雷达,1代表2d雷达 -->
-		<param name="planning/lidar_model" value="0" type="int"/>
+		<param name="local_planner/lidar_model" value="0" type="int"/>
+		<!-- 飞行高度 -->
+		<param name="local_planner/fly_height_2D" value="1.0" type="double"/>
+		<param name="local_planner/sim_mode" value="true" type="bool"/>
 		<!-- 最大速度，设的越小越安全 -->
-		<param name="planning/max_planning_vel" value="0.3" type="double"/>
+		<param name="local_planner/max_planning_vel" value="0.5" type="double"/>
 		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
-		<param name="apf/inflate_distance" value="0.5" type="double"/>
+		<param name="apf/inflate_distance" value="1.2" type="double"/>
 		<!-- 感知距离，只考虑感知距离内的障碍物 -->
-		<param name="apf/obs_distance" value="5.0" type="double"/>  
+		<param name="apf/obs_distance" value="8.0" type="double"/>  
 		<!-- 增益 -->
-		<param name="apf/k_push" value="2.0" type="double"/>
-		<param name="apf/k_att" value="0.4" type="double"/>
+		<param name="apf/k_push" value="2.2" type="double"/>
+		<param name="apf/k_att" value="1.0" type="double"/>
 		<!-- 安全距离，距离障碍物在安全距离内，k_push自动增大 -->
-		<param name="apf/min_dist" value="0.3" type="double"/>
+		<param name="apf/min_dist" value="0.1" type="double"/>
 		<!-- 最大吸引距离 -->
-		<param name="apf/max_att_dist" value="5" type="double"/>
+		<param name="apf/max_att_dist" value="4" type="double"/>
 		<!-- 地面高度，不考虑低于地面高度的障碍物 -->
 		<param name="apf/ground_height" value="0.3" type="double"/>
 		<!-- 地面安全高度，小于该高度，会产生向上推力 -->
@@ -52,9 +55,8 @@
 		<param name="apf/safe_distance" value="0.01" type="double"/>
 	</node>	
 
-	<!-- 启动规划mission， 激光输入control_yaw_flag设为false，rgbd输入control_yaw_flag设为true -->
-	<node pkg="prometheus_mission" type="planning_mission" name="planning_mission" output="screen" launch-prefix="gnome-terminal --">	
-		<param name="planning_mission/control_yaw_flag" value="true" type="bool"/>
+	<!-- run the pub_goal.cpp -->
+	<node pkg="prometheus_mission" type="pub_goal" name="pub_goal" output="screen" launch-prefix="gnome-terminal --">	
 	</node>
 
 	<!-- 启动rviz,设为false可关闭 -->
