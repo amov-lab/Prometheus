@@ -66,7 +66,7 @@
 		<!-- ID编号 -->
         <arg name="ID" value="0"/>
 		<!-- 指定sdf文件及模型名字 -->
-		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav1/P300_uav1.sdf"/>
+		<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/MultiUAV/uav1/uav1.sdf"/>
 		<arg name="model" default="P300_uav1"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="$(arg uav1_x)"/>
@@ -108,7 +108,7 @@
 		<!-- ID编号 -->
         <arg name="ID" value="1"/>
 		<!-- 指定sdf文件及模型名字 -->
-		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav2/P300_uav2.sdf"/>
+		<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/MultiUAV/uav2/uav2.sdf"/>
 		<arg name="model" default="P300_uav2"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="$(arg uav2_x)"/>
@@ -149,7 +149,7 @@
 		<!-- ID编号 -->
         <arg name="ID" value="2"/>
 		<!-- 指定sdf文件及模型名字 -->
-		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav3/P300_uav3.sdf"/>
+		<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/MultiUAV/uav3/uav3.sdf"/>
 		<arg name="model" default="P300_uav3"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="$(arg uav3_x)"/>
@@ -190,7 +190,7 @@
 		<!-- ID编号 -->
         <arg name="ID" value="3"/>
 		<!-- 指定sdf文件及模型名字 -->
-		<arg name="sdf" default="$(find prometheus_gazebo)/models/MultiUAV/P300_uav4/P300_uav4.sdf"/>
+		<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/MultiUAV/uav4/uav4.sdf"/>
 		<arg name="model" default="P300_uav4"/>
 		<!-- 初始位置，Yaw为偏航角 -->
 		<arg name="x" default="$(arg uav4_x)"/>
