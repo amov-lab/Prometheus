@@ -21,6 +21,7 @@ using namespace std;
 # define TIME_OUT 20.0
 # define THRES_DISTANCE 0.15
 # define NODE_NAME "waypoint_tracking"
+bool sim_mode;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 prometheus_msgs::ControlCommand Command_Now;
 prometheus_msgs::DroneState _DroneState;                          //无人机状态量
@@ -62,6 +63,8 @@ int main(int argc, char **argv)
     Eigen::Vector3f point5;
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    // 仿真模式 - 区别在于是否自动切换offboard模式
+    nh.param<bool>("sim_mode", sim_mode, true);
     nh.param<float>("point1_x", point1[0], 0.0);
     nh.param<float>("point1_y", point1[1], 0.0);
     nh.param<float>("point1_z", point1[2], 0.0);
@@ -78,8 +81,6 @@ int main(int argc, char **argv)
     nh.param<float>("point5_y", point5[1], 0.0);
     nh.param<float>("point5_z", point5[2], 0.0);
 
-
-    int check_flag;
     // 这一步是为了程序运行前检查一下参数是否正确
     // 输入1,继续，其他，退出程序
     cout << "point1: " << "[ "<<point1[0]<< "," <<point1[1]<<","<<point1[2]<<" ]"<<endl;
@@ -87,22 +88,6 @@ int main(int argc, char **argv)
     cout << "point3: " << "[ "<<point3[0]<< "," <<point3[1]<<","<<point3[2]<<" ]"<<endl;
     cout << "point4: " << "[ "<<point4[0]<< "," <<point4[1]<<","<<point4[2]<<" ]"<<endl;
     cout << "point5: " << "[ "<<point5[0]<< "," <<point5[1]<<","<<point5[2]<<" ]"<<endl;
-    cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
-    cin >> check_flag;
-
-    if(check_flag != 1)
-    {
-        return -1;
-    }
-
-    // 无人机未解锁或者未进入offboard模式前，循环等待
-    while(_DroneState.armed != true || _DroneState.mode != "OFFBOARD")
-    {
-        cout<<"[waypoint_tracking]: "<<"Please arm and switch to OFFBOARD mode."<<endl;
-        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Please arm and switch to OFFBOARD mode.");
-        ros::spinOnce();
-        rate.sleep();
-    }
 
     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Idle;
     Command_Now.Command_ID                          = 0;
@@ -119,6 +104,41 @@ int main(int argc, char **argv)
     Command_Now.Reference_State.acceleration_ref[1] = 0;
     Command_Now.Reference_State.acceleration_ref[2] = 0;
     Command_Now.Reference_State.yaw_ref             = 0;
+
+    if(sim_mode)
+    {
+        // Waiting for input
+        int check_flag;
+        cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
+        cin >> check_flag;
+
+        if(check_flag != 1)
+        {
+            return -1;
+        }
+
+        while(ros::ok() && _DroneState.mode != "OFFBOARD")
+        {
+            Command_Now.header.stamp = ros::Time::now();
+            Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
+            Command_Now.Command_ID = Command_Now.Command_ID + 1;
+            Command_Now.source = NODE_NAME;
+            Command_Now.Reference_State.yaw_ref = 999;
+            move_pub.publish(Command_Now);   
+            cout << "Switch to OFFBOARD and arm ..."<<endl;
+            ros::Duration(2.0).sleep();
+            ros::spinOnce();
+        }
+    }else
+    {
+        while(ros::ok() && _DroneState.mode != "OFFBOARD")
+        {
+            cout<<"[waypoint_tracking]: "<<"Please arm and switch to OFFBOARD mode."<<endl;
+            pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Please arm and switch to OFFBOARD mode.");
+            ros::Duration(1.0).sleep();
+            ros::spinOnce();
+        }
+    }
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主程序<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //takeoff

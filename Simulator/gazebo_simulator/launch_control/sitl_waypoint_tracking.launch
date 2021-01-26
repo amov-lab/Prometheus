@@ -4,8 +4,8 @@
     <arg name="y" default="0"/>
     <arg name="z" default="0"/>
 	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo/amov_solo.sdf"/>
-	<arg name="model" default="amov_solo"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450/p450.sdf"/>
+	<arg name="model" default="p450"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
 	  <arg name="world" value="$(arg world)"/>
 	  <arg name="sdf" value="$(arg sdf)"/>
@@ -14,15 +14,10 @@
       <arg name="y" value="$(arg y)"/>
       <arg name="z" value="$(arg z)"/>
     </include>
-
-	<!-- run the terminal_control.cpp -->
-	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
-	</node>	
 	
 	<!-- run the waypoint_tracking.cpp -->
 	<node pkg="prometheus_mission" type="waypoint_tracking" name="waypoint_tracking" output="screen" launch-prefix="gnome-terminal --">	
-		<rosparam command="load" file="$(find prometheus_mission)/waypoint_tracking/waypoint_tracking.yaml" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_mission_config/waypoint_tracking.yaml" />
 	</node>	
 </launch>
 

@@ -2,10 +2,12 @@
 	<!-- 启动PX4中的SITL功能 -->
 	<!-- 这里的环境变量将传递到rcS启动脚本中-->
 	<!-- 模型选择 -->
-	<env name="PX4_SIM_MODEL" value="solo" />
+	<!-- p450仿真模型 -->
+	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/1045_p450 中的修改内容 -->
+	<env name="PX4_SIM_MODEL" value="p450" />
 	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
-	<!-- 参看 ~/Firmware_v110/ROMFS/px4fmu_common/init.d-posix/rcS 中的修改内容 -->
 	<!-- ekf2_gps 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
+	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/rcS 中的修改内容 -->
     <env name="PX4_ESTIMATOR" value="ekf2_gps" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
 	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
@@ -15,7 +17,7 @@
     <!-- PX4 SITL -->
 	<arg unless="$(arg interactive)" name="px4_command_arg1" value="-d"/>
     <arg     if="$(arg interactive)" name="px4_command_arg1" value=""/>
-	<!-- 节点源文件路径: ~/Firmware_v110/platforms/posix/src/px4/common/main.cpp -->
+	<!-- 节点源文件路径: ~/prometheus_px4/platforms/posix/src/px4/common/main.cpp -->
 	<node name="sitl" pkg="px4" type="px4" output="screen" 
 		args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)"/>
 
@@ -39,14 +41,15 @@
 
 	<!-- Spawn vehicle model -->
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
-    <arg name="x" default="1.0"/>
-    <arg name="y" default="1.0"/>
+    <!-- 初始位置 -->
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
     <arg name="z" default="0.2"/>
-	<arg name="R" default="0"/>
-    <arg name="P" default="0"/>
+	<arg name="R" default="0.0"/>
+    <arg name="P" default="0.0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/amov_solo/amov_solo.sdf"/>
-	<arg name="model" default="amov_solo"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450/p450.sdf"/>
+	<arg name="model" default="p450"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
 	</node>
@@ -57,8 +60,8 @@
 		<param name="gcs_url" value="" />
 		<param name="target_system_id" value="1" />
 		<param name="target_component_id" value="1" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists_gps.yaml" />
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config_gps.yaml" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
 	</node>
 	
 	<!-- TF transform -->
@@ -70,7 +73,7 @@
 
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
-	<arg name="input_source" default="9"/>
+	<arg name="input_source" default="2"/>
 	<arg name="rate_hz" default="30"/>
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
