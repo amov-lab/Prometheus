@@ -52,7 +52,8 @@
         <!-- 分辨率 -->
         <param name="map/resolution" value="0.1" type="double"/>
         <!-- 障碍物膨胀距离 -->
-        <param name="map/inflate" value="0.8" type="double"/>
+        <!-- 为飞机的轴距即可 -->
+        <param name="map/inflate" value="0.4" type="double"/>
         <!-- 地图范围 -->
         <param name="map/origin_x" value="-50.0" type="double"/>
         <param name="map/origin_y" value="-50.0" type="double"/>
