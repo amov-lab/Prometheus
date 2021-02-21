@@ -63,6 +63,16 @@ int main(int argc, char **argv)
             pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
             camera_id_msg);
     }
+    int camera_type = 0; // 0: web_cam, 1: mipi_cam, 2: arducam
+    if (nh.getParam("camera_type", camera_type)) {
+        char camera_type_msg[256];
+        sprintf(camera_type_msg, "camera type is %d", camera_type);
+        if (local_print)
+            cout << camera_type_msg << endl;
+        if (message_print)
+            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
+            camera_type_msg);
+    }
     int camera_height(480), camera_width(640);
     int cam_h, cam_w;
     if (nh.getParam("cam_h", cam_h)) {
@@ -132,8 +142,12 @@ int main(int argc, char **argv)
     
     cv::VideoCapture cap;
 
-    if (camera_id == 99) {
+    if (camera_type == 1) {
         cap.open(pipeline, cv::CAP_GSTREAMER);
+    } else if (camera_type == 2) {
+        cap.open(camera_id, cv::CAP_V4L2);
+        cap.set(CAP_PROP_FOURCC, CV_FOURCC('G', 'R', 'E', 'Y'));
+        cap.set(CAP_PROP_CONVERT_RGB, 0);
     } else {
         cap.open(camera_id);
         // 设置摄像头分辨率
@@ -155,6 +169,9 @@ int main(int argc, char **argv)
         cap >> frame;
         if (resize_w > 0 && resize_h > 0) {
             cv::resize(frame, frame, cv::Size(resize_w, resize_h));
+        }
+        if (camera_type == 2) {
+            cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
         }
         if (!frame.empty())
         {
