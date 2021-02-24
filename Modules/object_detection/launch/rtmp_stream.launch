@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="prometheus_detection" type="ocv_rtmp_stream.py" name="ocv_rtmp_stream" output="screen">
+        <param name="camera_topic" value="/prometheus/camera/rgb/image_raw"/>
+    </node>
+</launch>
