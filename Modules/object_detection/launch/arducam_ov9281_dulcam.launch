@@ -4,8 +4,8 @@
         <param name="camera_type" type="int" value="2" />
         <param name="cam_h" type="int" value="800" />
         <param name="cam_w" type="int" value="2560" />
-	<param name="resize_h" type="int" value="400" />
-        <param name="resize_w" type="int" value="1280" />
+	<param name="resize_h" type="int" value="0" />
+        <param name="resize_w" type="int" value="0" />
         <param name="framerate" type="int" value="60" />
     </node>
 </launch>
