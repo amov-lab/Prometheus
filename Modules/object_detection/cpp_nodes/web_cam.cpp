@@ -155,7 +155,7 @@ int main(int argc, char **argv)
         cap.set(CAP_PROP_FRAME_HEIGHT, camera_height);
     }
 
-    cv::Mat frame;
+    cv::Mat frame, frame_right;
     // 设置全屏
     // namedWindow("web_cam frame", CV_WINDOW_NORMAL);
     // setWindowProperty("web_cam frame", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
@@ -171,6 +171,11 @@ int main(int argc, char **argv)
             cv::resize(frame, frame, cv::Size(resize_w, resize_h));
         }
         if (camera_type == 2) {
+            if (frame.cols > frame.rows * 2)
+            {
+                frame_right = frame.colRange(frame.cols / 2, frame.cols);
+                frame = frame.colRange(0, frame.cols / 2);
+            }
             cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
         }
         if (!frame.empty())
