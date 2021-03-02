@@ -301,12 +301,13 @@ int main(int argc, char **argv)
                 cout << message <<endl;
                 pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, message);
             }
-
+/*	真实飞机也需要打印各个状态信息
             if(sim_mode)
             {
                 printf_result();
             }
-            
+*/
+	    printf_result();           
             printf_num = 0;
         }
 

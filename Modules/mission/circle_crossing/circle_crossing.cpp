@@ -109,6 +109,7 @@ int main(int argc, char **argv)
     Command_Now.source = NODE_NAME;
     while( _DroneState.position[2] < 0.3)
     {
+	/** 自动解锁实际飞机比较危险，且没有进行对飞机当前飞行模式状态和解锁状态进行反馈，采用手动解锁并切offboard模式
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode  = prometheus_msgs::ControlCommand::Idle;
         Command_Now.Command_ID = Command_Now.Command_ID + 1;
@@ -118,6 +119,7 @@ int main(int argc, char **argv)
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Switch to OFFBOARD and arm ....");
         cout << "Switch to OFFBOARD and arm ..."<<endl;
         ros::Duration(3.0).sleep();
+	*/
         
         Command_Now.header.stamp = ros::Time::now();
         Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
@@ -127,7 +129,7 @@ int main(int argc, char **argv)
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
         Command_Now.Reference_State.position_ref[0]     = 0.0;
         Command_Now.Reference_State.position_ref[1]     = 0.0;
-        Command_Now.Reference_State.position_ref[2]     = 1.5;
+        Command_Now.Reference_State.position_ref[2]     = 1.0;
         Command_Now.Reference_State.yaw_ref             = 0.0;
         command_pub.publish(Command_Now);
         cout << "Takeoff ..."<<endl;
@@ -156,15 +158,16 @@ int main(int argc, char **argv)
         {
             tracking(); 
             printf_detection_result(ellipse_det);
+	    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Tracking the circle...");
         }else if(State_Machine == 2)
         {
-            crossing();
+            tracking();
             cout << "Crossing the circle..." <<  endl;
             pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Crossing the circle...");
 
         }else if(State_Machine == 3)
         {
-            return_start_point();
+            tracking();
             cout << "Returning the start point..." <<  endl;
             pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Returning the start point...");
         }
@@ -188,7 +191,7 @@ void tracking()
     Command_Now.Reference_State.position_ref[0]     = 0;
     Command_Now.Reference_State.position_ref[1]     = 0;
     Command_Now.Reference_State.position_ref[2]     = 0;
-    Command_Now.Reference_State.velocity_ref[0]     = kpx_circle_track * ellipse_det.pos_body_enu_frame[0];
+    Command_Now.Reference_State.velocity_ref[0]     = kpx_circle_track * ( ellipse_det.pos_body_enu_frame[0] - 2.0 );
     Command_Now.Reference_State.velocity_ref[1]     = kpy_circle_track * ellipse_det.pos_body_enu_frame[1];
     Command_Now.Reference_State.velocity_ref[2]     = kpz_circle_track * ellipse_det.pos_body_enu_frame[2];
     Command_Now.Reference_State.yaw_ref             = 0;
