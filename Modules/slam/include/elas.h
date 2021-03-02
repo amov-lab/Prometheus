@@ -6,7 +6,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
-#include <emmintrin.h>
+//#include <emmintrin.h>
+#include "sse2neon.h"
 #include <stdint.h>
 
 #ifdef PROFILE

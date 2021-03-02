@@ -1,8 +1,9 @@
 #ifndef __FILTER_H__
 #define __FILTER_H__
 
-#include <emmintrin.h>
-#include <pmmintrin.h>
+//#include <emmintrin.h>
+//#include <pmmintrin.h>
+#include "sse2neon.h"
 #include <stdint.h>
 
 // fast filters: implements 3x3 and 5x5 sobel filters and 

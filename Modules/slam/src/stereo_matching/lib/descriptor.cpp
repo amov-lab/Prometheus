@@ -1,6 +1,7 @@
 #include "../include/descriptor.h"
 #include "../include/filter.h"
-#include <emmintrin.h>
+//#include <emmintrin.h>
+#include "sse2neon.h"
 
 using namespace std;
 
