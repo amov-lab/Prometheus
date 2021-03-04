@@ -1,7 +1,7 @@
 ## parameter for px4_pos_controller.cpp
 
 ## 控制器编号: 0 for 串级PID, 1 for PID, 2 for UDE, 3 for passivity,
-controller_type: "ude"
+controller_type: "ne"
 ## 起飞高度
 Takeoff_height : 1.0
 ## 降落速度
@@ -40,11 +40,12 @@ Limit:
 Quad:
   mass: 1.0
 
-# 位置环参数 for ude
-Pos_ude:
+# 位置环参数 for ne
+Pos_ne:
   Kp_xy : 0.5
   Kp_z : 0.5
   Kd_xy : 2.0
   Kd_z : 2.0
-  T_ude_xy : 2.0
-  T_ude_z : 2.0
+  T_ude_xy : 1.0
+  T_ude_z : 1.0
+  T_ne : 0.1
