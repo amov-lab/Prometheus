@@ -21,6 +21,7 @@
 #include "control_common.h"
 #include "Position_Controller/pos_controller_cascade_PID.h"
 #include "Position_Controller/pos_controller_PID.h"
+#include "Position_Controller/pos_controller_UDE.h"
 #include "Position_Controller/pos_controller_Passivity.h"
 #include "Filter/LowPassFilter.h"
 #define NODE_NAME "pos_controller"
@@ -164,6 +165,7 @@ int main(int argc, char **argv)
     // 可以设置自定义位置环控制算法
     pos_controller_PID pos_controller_pid;
     pos_controller_passivity pos_controller_passivity;
+    pos_controller_UDE pos_controller_UDE;
 
     printf_param();
 
@@ -177,6 +179,9 @@ int main(int argc, char **argv)
     }else if(controller_type == "passivity")
     {
         pos_controller_passivity.printf_param();
+    }else if(controller_type == "ude")
+    {
+        pos_controller_UDE.printf_param();
     }
 
     // 初始化命令-
@@ -391,6 +396,9 @@ int main(int argc, char **argv)
             }else if(controller_type == "passivity")
             {
                 _ControlOutput = pos_controller_passivity.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+            }else if(controller_type == "ude")
+            {
+                _ControlOutput = pos_controller_UDE.pos_controller(_DroneState, Command_Now.Reference_State, dt);
             }
             
         }
