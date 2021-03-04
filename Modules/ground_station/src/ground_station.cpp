@@ -13,7 +13,7 @@
 //头文件
 #include <ros/ros.h>
 #include <prometheus_station_utils.h>
-
+#include "control_common.h"
 //msg 头文件
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
@@ -40,6 +40,7 @@ prometheus_msgs::DetectionInfo detection_info;
 geometry_msgs::PoseStamped ref_pose;
 Eigen::Quaterniond q_fcu_target;
 Eigen::Vector3d euler_fcu_target;
+Eigen::Vector3d bodyrate_fcu_target;
 float Thrust_target;
 //Target pos of the drone [from fcu]
 Eigen::Vector3d pos_drone_fcu_target;
@@ -56,6 +57,8 @@ void att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr& msg)
 
     //Transform the Quaternion to euler Angles
     euler_fcu_target = prometheus_station_utils::quaternion_to_euler(q_fcu_target);
+
+    bodyrate_fcu_target = Eigen::Vector3d(msg->body_rate.x, msg->body_rate.y, msg->body_rate.z);
 
     Thrust_target = - msg->thrust;
 }
@@ -155,7 +158,7 @@ void printf_info()
     prometheus_station_utils::printf_command_control(Command_Now);
 
     // 【打印】控制模块消息
-    if(control_type == 1)
+    if(control_type == PX4_POS_CONTROLLER)
     {
         //打印期望位姿
         prometheus_station_utils::prinft_ref_pose(ref_pose);
@@ -166,12 +169,36 @@ void printf_info()
         cout << "Att_target [R P Y] : " << euler_fcu_target[0] * 180/M_PI <<" [deg]  "<<euler_fcu_target[1] * 180/M_PI << " [deg]  "<< euler_fcu_target[2] * 180/M_PI<<" [deg]  "<<endl;
         
         cout << "Thr_target [ 0-1 ] : " << Thrust_target <<endl;
-    }else if(control_type == 0)
+    }else if(control_type == PX4_SENDER)
     {
         cout <<">>>>>>>>>>>>>>>>>>>>> Target Info from PX4 <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
         cout << "Pos_target [X Y Z] : " << pos_drone_fcu_target[0] << " [ m ] "<< pos_drone_fcu_target[1]<<" [ m ] "<<pos_drone_fcu_target[2]<<" [ m ] "<<endl;
         cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
         // cout << "Acc_target [X Y Z] : " << accel_drone_fcu_target[0] << " [m/s^2] "<< accel_drone_fcu_target[1]<<" [m/s^2] "<<accel_drone_fcu_target[2]<<" [m/s^2] "<<endl;
+    }else if(control_type == PX4_GEO_CONTROLLER)
+    {
+        cout <<">>>>>>>>>>>>>>>>>>>>>>>> Target Info FCU <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+        
+        cout << "Bodyrate_target [R P Y] : " << bodyrate_fcu_target[0] * 180/M_PI <<" [deg/s]  "<<bodyrate_fcu_target[1] * 180/M_PI << " [deg/s]  "<< bodyrate_fcu_target[2] * 180/M_PI<<" [deg/s]  "<<endl;
+        
+        cout << "Thr_target [ 0-1 ] : " << Thrust_target <<endl; 
+    }
+
+    if(Command_Now.Mode == prometheus_msgs::ControlCommand::Move)
+    {
+        
+        
+        //Only for TRAJECTORY tracking
+        if(Command_Now.Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+        {
+            cout <<">>>>>>>>>>>>>>>>>>>>>>>> Tracking Error <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+
+            static Eigen::Vector3d tracking_error;
+            tracking_error = prometheus_station_utils::tracking_error(_DroneState, Command_Now);
+            cout << "Pos_error [m]: " << tracking_error[0] <<endl;
+            cout << "Vel_error [m/s]: " << tracking_error[1] <<endl;
+        }
+        
     }
 
     // 【打印】视觉模块消息

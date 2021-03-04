@@ -18,6 +18,7 @@
 #include "command_to_mavros.h"
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
+#include "control_common.h"
 #include "Position_Controller/pos_controller_cascade_PID.h"
 #include "Position_Controller/pos_controller_PID.h"
 #include "Position_Controller/pos_controller_Passivity.h"

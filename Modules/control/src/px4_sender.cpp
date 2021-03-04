@@ -28,7 +28,7 @@
 #include "command_to_mavros.h"
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
-
+#include "control_common.h"
 #define NODE_NAME "px4_sender"
 
 using namespace std;
@@ -290,7 +290,8 @@ int main(int argc, char **argv)
         //  第二种：当前位置原地降落，降落中到达Disarm_height后，切换为飞控中land模式
         case prometheus_msgs::ControlCommand::Land:
 
-            if(Land_mode == 1){
+            if(Land_mode == 1)
+            {
                 if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
                 {
                     Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
@@ -517,7 +518,7 @@ int main(int argc, char **argv)
         rivz_ref_pose_pub.publish(ref_pose_rviz);
 
         //发布log消息，可用rosbag记录
-        LogMessage.control_type = 0;
+        LogMessage.control_type = PX4_SENDER;
         LogMessage.time = cur_time;
         LogMessage.Drone_State = _DroneState;
         LogMessage.Control_Command = Command_Now;

@@ -5,6 +5,8 @@
 *
 * Update Time: 2021.03.05
 *
+*           控制方式： 期望推力 + 期望角速度
+*           本程序仅支持： 1，纯位置点输入；2，位置点+速度点输入；3，位置点+速度点+加速度点轨迹输入（推荐！）
 ***************************************************************************************************************************/
 
 #include <ros/ros.h>
@@ -12,12 +14,14 @@
 #include "command_to_mavros.h"
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
+#include "control_common.h"
+
 #include "Position_Controller/pos_controller_cascade_PID.h"
 #include "Position_Controller/pos_controller_PID.h"
 #include "Position_Controller/pos_controller_Passivity.h"
 #include "Position_Controller/geometry_controller.h"
 #include "Filter/LowPassFilter.h"
-#define NODE_NAME "pos_controller"
+#define NODE_NAME "geometry_controller"
 
 using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>变量声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -236,14 +240,13 @@ int main(int argc, char **argv)
         // 【Takeoff】 从摆放初始位置原地起飞至指定高度，偏航角也保持当前角度
         case prometheus_msgs::ControlCommand::Takeoff:
             
-            //当无人机在空中时若受到起飞指令，则发出警告并悬停
-            // if (_DroneState.landed == false)
-            // {
-            //     Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
-            //     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "The drone is in the air!");
-            // }
+            // 当无人机在空中时若受到起飞指令，则发出警告并悬停
+            if (_DroneState.landed == false)
+            {
+                pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "The drone is in the air!");
+            }
 
-            if (_DroneState.landed == true && Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
             {
                 pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to the desired point.");
                 // 设定起飞位置
@@ -257,6 +260,12 @@ int main(int argc, char **argv)
                 Command_Now.Reference_State.position_ref[0] = Takeoff_position[0];
                 Command_Now.Reference_State.position_ref[1] = Takeoff_position[1];
                 Command_Now.Reference_State.position_ref[2] = Takeoff_position[2] + Takeoff_height;
+                Command_Now.Reference_State.velocity_ref[0]     = 0;
+                Command_Now.Reference_State.velocity_ref[1]     = 0;
+                Command_Now.Reference_State.velocity_ref[2]     = 0;
+                Command_Now.Reference_State.acceleration_ref[0] = 0;
+                Command_Now.Reference_State.acceleration_ref[1] = 0;
+                Command_Now.Reference_State.acceleration_ref[2] = 0;
                 Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2];
             }
             
@@ -271,6 +280,12 @@ int main(int argc, char **argv)
                 Command_Now.Reference_State.position_ref[0] = _DroneState.position[0];
                 Command_Now.Reference_State.position_ref[1] = _DroneState.position[1];
                 Command_Now.Reference_State.position_ref[2] = _DroneState.position[2];
+                Command_Now.Reference_State.velocity_ref[0]     = 0;
+                Command_Now.Reference_State.velocity_ref[1]     = 0;
+                Command_Now.Reference_State.velocity_ref[2]     = 0;
+                Command_Now.Reference_State.acceleration_ref[0] = 0;
+                Command_Now.Reference_State.acceleration_ref[1] = 0;
+                Command_Now.Reference_State.acceleration_ref[2] = 0;
                 Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2]; //rad
             }
 
@@ -281,16 +296,23 @@ int main(int argc, char **argv)
 
             if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
             {
-                Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
+                Command_Now.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
                 Command_Now.Reference_State.Move_frame      = prometheus_msgs::PositionReference::ENU_FRAME;
                 Command_Now.Reference_State.position_ref[0] = _DroneState.position[0];
                 Command_Now.Reference_State.position_ref[1] = _DroneState.position[1];
-                Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
                 Command_Now.Reference_State.yaw_ref         = _DroneState.attitude[2]; //rad
+                Command_Now.Reference_State.acceleration_ref[0] = 0;
+                Command_Now.Reference_State.acceleration_ref[1] = 0;
+                Command_Now.Reference_State.acceleration_ref[2] = 0;
             }
 
-            //如果距离起飞高度小于10厘米，则直接切换为land模式；
-            if(abs(_DroneState.position[2] - Takeoff_position[2]) < Disarm_height)
+            if(_DroneState.position[2] > Disarm_height)
+            {
+                Command_Now.Reference_State.position_ref[2] = _DroneState.attitude[2] - Land_speed*dt;
+                Command_Now.Reference_State.velocity_ref[0] = 0.0;
+                Command_Now.Reference_State.velocity_ref[1] = 0.0;
+                Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
+            }else
             {
                 if(_DroneState.mode != "AUTO.LAND")
                 {
@@ -373,7 +395,7 @@ int main(int argc, char **argv)
         _command_to_mavros.send_attitude_rate_setpoint(bodyrate_cmd,thrust_sp); 
         
         //发布log消息，可用rosbag记录
-        LogMessage.control_type = 1;
+        LogMessage.control_type = PX4_GEO_CONTROLLER;
         LogMessage.time = cur_time;
         LogMessage.Drone_State = _DroneState;
         LogMessage.Control_Command = Command_Now;
