@@ -169,6 +169,7 @@ void mainloop1()
             Command_to_pub.source = NODE_NAME;
             Command_to_pub.Reference_State.yaw_ref = 999;
             move_pub.publish(Command_to_pub);
+            Command_to_pub.Reference_State.yaw_ref = 0.0;
         }
 
         switch (Control_Mode)
