@@ -212,6 +212,23 @@ void prinft_attitude_reference(const prometheus_msgs::AttitudeReference& _Attitu
     cout << "Throttle_sp [ 0-1 ]  : " << _AttitudeReference.desired_throttle <<endl;
 }
 
+// tracking error
+Eigen::Vector3d tracking_error(const prometheus_msgs::DroneState& _Drone_state, const prometheus_msgs::ControlCommand& _ControlCommand)
+{
+    Eigen::Vector3d error;
+
+    error[0] = sqrt(pow(_Drone_state.position[0] - _ControlCommand.Reference_State.position_ref[0],2)+
+                pow(_Drone_state.position[1] - _ControlCommand.Reference_State.position_ref[1],2)+
+                pow(_Drone_state.position[2] - _ControlCommand.Reference_State.position_ref[2],2));
+    error[1] = sqrt(pow(_Drone_state.velocity[0] - _ControlCommand.Reference_State.velocity_ref[0],2)+
+                pow(_Drone_state.velocity[1] - _ControlCommand.Reference_State.velocity_ref[1],2)+
+                pow(_Drone_state.velocity[2] - _ControlCommand.Reference_State.velocity_ref[2],2));
+    error[2] = 0;
+
+    return error;
+}
+
+
 void prinft_ref_pose(const geometry_msgs::PoseStamped& ref_pose)
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>> Ref Pose <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;

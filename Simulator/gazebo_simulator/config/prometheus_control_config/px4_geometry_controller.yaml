@@ -26,8 +26,11 @@ geo_fence:
 ## 目前参数为PX4默认参数
 geometry_controller:
   max_acc: 10.0
-  Kp_x: 8.0
-  Kp_y: 8.0
-  Kp_z: 10.0
-  normalizedthrust_constant: 0.05
-  normalizedthrust_offset: 0.1
+  Kp_x: 3.0
+  Kp_y: 3.0
+  Kp_z: 5.0
+  Kv_x: 1.0
+  Kv_y: 1.0
+  Kv_z: 2.0
+  normalizedthrust_constant: 0.048
+  normalizedthrust_offset: 0.0

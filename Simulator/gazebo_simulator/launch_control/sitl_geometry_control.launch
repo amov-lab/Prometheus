@@ -74,7 +74,7 @@
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
 	<arg name="input_source" default="2"/>
-	<arg name="rate_hz" default="30"/>
+	<arg name="rate_hz" default="100"/>
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
 		<param name="input_source" value="$(arg input_source)" />
@@ -102,7 +102,7 @@
 	</node>	
 
 	<!-- run the rviz -->
-	<arg name="visualization" default="false"/>
+	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
 		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_controller_test.rviz" />
     </group>
