@@ -78,6 +78,11 @@ add_executable(px4_pos_controller src/px4_pos_controller.cpp)
 add_dependencies(px4_pos_controller prometheus_control_gencpp) 
 target_link_libraries(px4_pos_controller ${catkin_LIBRARIES})
 
+##px4_geometry_controller.cpp
+add_executable(px4_geometry_controller src/px4_geometry_controller.cpp)
+add_dependencies(px4_geometry_controller prometheus_control_gencpp) 
+target_link_libraries(px4_geometry_controller ${catkin_LIBRARIES})
+
 ##px4_pos_estimator.cpp
 add_executable(px4_pos_estimator src/px4_pos_estimator.cpp)
 add_dependencies(px4_pos_estimator prometheus_control_gencpp)
