@@ -468,7 +468,7 @@ void command_to_mavros::send_attitude_rate_setpoint(const Eigen::Vector3d& attit
 
     //Mappings: If any of these bits are set, the corresponding input should be ignored:
     //bit 1: body roll rate, bit 2: body pitch rate, bit 3: body yaw rate. bit 4-bit 6: reserved, bit 7: throttle, bit 8: attitude
-
+    // msg.type_mask = 128;  // Ignore orientation messages
     att_setpoint.type_mask = 0b10000000;
 
     att_setpoint.body_rate.x = attitude_rate_sp[0];
