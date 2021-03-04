@@ -109,6 +109,22 @@ Eigen::Vector4d rot2Quaternion(const Eigen::Matrix3d &R)
   return quat;
 }
 
+static Eigen::Vector3d matrix_hat_inv(const Eigen::Matrix3d &m) 
+{
+  Eigen::Vector3d v;
+  // TODO: Sanity checks if m is skew symmetric
+  v << m(7), m(2), m(3);
+  return v;
+}
+
+Eigen::Vector4d quatMultiplication(const Eigen::Vector4d &q, const Eigen::Vector4d &p) 
+{
+  Eigen::Vector4d quat;
+  quat << p(0) * q(0) - p(1) * q(1) - p(2) * q(2) - p(3) * q(3), p(0) * q(1) + p(1) * q(0) - p(2) * q(3) + p(3) * q(2),
+      p(0) * q(2) + p(1) * q(3) + p(2) * q(0) - p(3) * q(1), p(0) * q(3) - p(1) * q(2) + p(2) * q(1) + p(3) * q(0);
+  return quat;
+}
+
 Eigen::Matrix3d quat2RotMatrix(const Eigen::Vector4d &q) 
 {
   Eigen::Matrix3d rotmat;
