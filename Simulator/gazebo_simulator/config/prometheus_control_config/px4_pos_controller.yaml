@@ -8,6 +8,15 @@ Takeoff_height : 1.0
 Land_speed : 0.15
 ##　上锁高度
 Disarm_height : 0.1
+disturbance_a_xy : 0.0
+disturbance_b_xy : 0.00
+
+disturbance_a_z : 0.0
+disturbance_b_z : 0.00
+disturbance_T : 1.0
+
+disturbance_start_time : 0.0
+disturbance_end_time : 0.0
 
 ##　地理围栏
 geo_fence:

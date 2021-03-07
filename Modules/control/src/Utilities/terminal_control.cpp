@@ -143,7 +143,7 @@ void mainloop1()
             if(Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
             {
                 cout << "For safety, please move the drone near to the trajectory start point firstly!!!"<<endl;
-                cout << "Please choose the trajectory type: 0 for Circle, 1 for Eight Shape, 2 for Step"<<endl;
+                cout << "Please choose the trajectory type: 0 for Circle, 1 for Eight Shape, 2 for Step, 3 for Line"<<endl;
                 cin >> Trjectory_mode;  
                 cout << "Input the trajectory_total_time:"<<endl;
                 cin >> trajectory_total_time;
@@ -227,6 +227,9 @@ void mainloop1()
                         }else if(Trjectory_mode == 2)
                         {
                             Command_to_pub.Reference_State = Controller_Test.Step_trajectory_generation(time_trajectory);
+                        }else if(Trjectory_mode == 3)
+                        {
+                            Command_to_pub.Reference_State = Controller_Test.Line_trajectory_generation(time_trajectory);
                         }
 
                         move_pub.publish(Command_to_pub);
