@@ -54,6 +54,12 @@ prometheus_msgs::LogMessageControl LogMessage;
 geometry_msgs::PoseStamped ref_pose_rviz;
 float dt = 0;
 
+float disturbance_a_xy,disturbance_b_xy;
+float disturbance_a_z,disturbance_b_z;
+float disturbance_T;
+float disturbance_start_time;
+float disturbance_end_time;
+
 ros::Publisher att_ref_pub;
 ros::Publisher rivz_ref_pose_pub;
 ros::Publisher message_pub;
@@ -152,6 +158,23 @@ int main(int argc, char **argv)
     nh.param<float>("geo_fence/y_max", geo_fence_y[1], 100.0);
     nh.param<float>("geo_fence/z_min", geo_fence_z[0], -100.0);
     nh.param<float>("geo_fence/z_max", geo_fence_z[1], 100.0);
+
+    nh.param<float>("disturbance_a_xy", disturbance_a_xy, 0.5);
+    nh.param<float>("disturbance_b_xy", disturbance_b_xy, 0.0);
+    nh.param<float>("disturbance_a_z", disturbance_a_z, 0.5);
+    nh.param<float>("disturbance_b_z", disturbance_b_z, 0.0);
+    nh.param<float>("disturbance_T", disturbance_T, 0.0);
+    nh.param<float>("disturbance_start_time", disturbance_start_time, 10.0);
+    nh.param<float>("disturbance_end_time", disturbance_end_time, -1.0);
+
+    LowPassFilter LPF_x;
+    LowPassFilter LPF_y;
+    LowPassFilter LPF_z;
+
+    LPF_x.set_Time_constant(disturbance_T);
+    LPF_y.set_Time_constant(disturbance_T);
+    LPF_z.set_Time_constant(disturbance_T);
+
 
     // 位置控制一般选取为50Hz，主要取决于位置状态的更新频率
     ros::Rate rate(50.0);
@@ -408,7 +431,32 @@ int main(int argc, char **argv)
             {
                 _ControlOutput = pos_controller_NE.pos_controller(_DroneState, Command_Now.Reference_State, dt);
             }
-            
+
+
+            if(Command_Now.Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+            {
+                // 输入干扰
+                Eigen::Vector3d random;
+
+                // 先生成随机数
+                random[0] = prometheus_control_utils::random_num(disturbance_a_xy, disturbance_b_xy);
+                random[1] = prometheus_control_utils::random_num(disturbance_a_xy, disturbance_b_xy);
+                random[2] = prometheus_control_utils::random_num(disturbance_a_z, disturbance_b_z);
+
+                // 低通滤波
+                random[0] = LPF_x.apply(random[0], dt);
+                random[1] = LPF_y.apply(random[1], dt);
+                random[2] = LPF_z.apply(random[2], dt);
+
+                if(Command_Now.Reference_State.time_from_start>disturbance_start_time && Command_Now.Reference_State.time_from_start<disturbance_end_time)
+                {
+                    //应用输入干扰信号
+                    _ControlOutput.Throttle[0] = _ControlOutput.Throttle[0] + random[0];
+                    _ControlOutput.Throttle[1] = _ControlOutput.Throttle[1] + random[1];
+                    _ControlOutput.Throttle[2] = _ControlOutput.Throttle[2] + random[2];
+                }
+            }
+
         }
 
         throttle_sp[0] = _ControlOutput.Throttle[0];
