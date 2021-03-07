@@ -39,8 +39,8 @@
 
 	<!-- Spawn vehicle model -->
 	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
-    <arg name="x" default="1.0"/>
-    <arg name="y" default="1.0"/>
+    <arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
     <arg name="z" default="0.2"/>
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
@@ -71,17 +71,21 @@
 	<!-- run the px4_pos_estimator.cpp -->
 	<arg name="input_source" default="2"/>
 	<arg name="rate_hz" default="50"/>
-	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
+	<node pkg="prometheus_control" type="px4_pos_estimator_with_noise" name="px4_pos_estimator_with_noise" output="screen">
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
 		<param name="input_source" value="$(arg input_source)" />
 		<param name="rate_hz" value="$(arg rate_hz)" />
 		<param name="offset_x" value="$(arg x)" />
 		<param name="offset_y" value="$(arg y)" />
 		<param name="offset_z" value="$(arg z)" />
+		<param name="noise_a" value="2.0" />
+		<param name="noise_b" value="0.0" />
+		<param name="noise_T" value="1.0" />
+		<param name="apply_noise" value="true" />
 	</node>
 	
 	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
-		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_pos_controller_ude.yaml"/>
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_pos_controller_ne.yaml"/>
 	</node>
 
 	<!-- run the ground_station.cpp -->
@@ -98,7 +102,7 @@
 	</node>	
 		
 	<!-- run the rviz -->
-	<arg name="visualization" default="true"/>
+	<arg name="visualization" default="false"/>
 	<group if="$(arg visualization)">
 		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_controller_test.rviz" />
     </group>
