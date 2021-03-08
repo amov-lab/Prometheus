@@ -414,7 +414,8 @@ int main(int argc, char **argv)
                     _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
                 }else
                 {
-                    _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                    _ControlOutput = pos_controller_cascade_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
+                    // _ControlOutput = pos_controller_pid.pos_controller(_DroneState, Command_Now.Reference_State, dt);
                     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "CPID NOT SUPPOORT TRAJECTORY TRACKING.");
                 }
                 
