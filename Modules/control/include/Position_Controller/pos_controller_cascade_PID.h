@@ -193,6 +193,14 @@ void pos_controller_cascade_PID::_positionController
     {
         vel_setpoint[2] = _Reference_State.velocity_ref[2];
     }
+    
+    // Only for controller test
+    if(_Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+    {
+        vel_setpoint[0] =  Kp_xy * (_Reference_State.position_ref[0] - _DroneState.position[0]);
+        vel_setpoint[1] =  Kp_xy * (_Reference_State.position_ref[1] - _DroneState.position[1]);
+        vel_setpoint[2] =  Kp_z  * (_Reference_State.position_ref[2] - _DroneState.position[2]);
+    }
 
     // Limit the velocity setpoint
     vel_setpoint[0] = constrain_function(vel_setpoint[0], MPC_XY_VEL_MAX);
