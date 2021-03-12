@@ -384,34 +384,56 @@
       <sensor name="camera_imu" type="imu">
         <always_on>1</always_on>
       </sensor>
-      <sensor name="camera" type="camera">
-        <pose>0.0 0 -0.162 0 0 0</pose>
-        <camera>
-          <horizontal_fov>2.0</horizontal_fov>
+      <sensor name='camera' type='camera'>
+        <camera name='__default__'>
+          <!-- FOV,120度 -->
+          <horizontal_fov>2.0944</horizontal_fov>
           <image>
-            <format>R8G8B8</format>
-            <width>640</width>
-            <height>360</height>
+            <width>1280</width>
+            <height>720</height>
           </image>
           <clip>
-            <near>0.05</near>
-            <far>15000</far>
+            <near>0.1</near>
+            <far>100</far>
           </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.001</stddev>
+          </noise>
+          <lens>
+            <type>custom</type>
+            <custom_function>
+              <c1>1.05</c1>
+              <c2>4</c2>
+              <f>1</f>
+              <fun>tan</fun>
+            </custom_function>
+            <scale_to_hfov>1</scale_to_hfov>
+            <cutoff_angle>3.1415</cutoff_angle>
+          </lens>
         </camera>
         <always_on>1</always_on>
-        <update_rate>10</update_rate>
-        <visualize>true</visualize>
-        <plugin name="GstCameraPlugin" filename="libgazebo_gst_camera_plugin.so">
-            <robotNamespace></robotNamespace>
-            <udpHost>127.0.0.1</udpHost>
-            <udpPort>5600</udpPort>
-        </plugin>
-        <plugin name="GeotaggedImagesPlugin" filename="libgazebo_geotagged_images_plugin.so">
-            <robotNamespace>typhoon_h480</robotNamespace>
-            <interval>1</interval>
-            <width>3840</width>
-            <height>2160</height>
-            <maximum_zoom>8.0</maximum_zoom>
+        <update_rate>30</update_rate>
+        <visualize>1</visualize>
+        <plugin name='camera_plugin' filename='libgazebo_ros_camera.so'>
+            <robotNamespace>/prometheus/sensor</robotNamespace>
+            <alwaysOn>true</alwaysOn>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <updateRate>30.0</updateRate>
+            <cameraName>gimbal_camera</cameraName>
+            <frameName>/gimbal_camera</frameName>
+            <CxPrime>640</CxPrime>
+            <Cx>640</Cx>
+            <Cy>360</Cy>
+            <hackBaseline>0</hackBaseline>
+            <focalLength>369.502083</focalLength>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
         </plugin>
       </sensor>
     </link>
@@ -1124,7 +1146,7 @@
       </physics>
     </joint>
 
-    <include>
+    <!-- <include>
       <uri>model://sonar</uri>
       <pose>0.08 0 -0.03 0 0 3.141592</pose>
     </include>
@@ -1138,7 +1160,7 @@
           <lower>0</lower>
         </limit>
       </axis>
-    </joint>
+    </joint> -->
 
 
     <include>
