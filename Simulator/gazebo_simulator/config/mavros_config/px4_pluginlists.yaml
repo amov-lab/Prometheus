@@ -11,7 +11,6 @@ plugin_blacklist:
 - home_position
 - landing_target
 - mocap_pose_estimate
-- mount_control
 - obstacle_distance
 - rc_io
 - vfr_hud
