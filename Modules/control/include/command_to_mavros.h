@@ -32,6 +32,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <mavros_msgs/ActuatorControl.h>
+#include <mavros_msgs/MountControl.h>
 #include <sensor_msgs/Imu.h>
 #include <prometheus_msgs/DroneState.h>
 #include <bitset>
@@ -85,6 +86,9 @@ class command_to_mavros
         //  本话题要发送至飞控(通过Mavros功能包 /plugins/actuator_control.cpp发送), 对应Mavlink消息为SET_ACTUATOR_CONTROL_TARGET, 对应的飞控中的uORB消息为actuator_controls.msg
         actuator_setpoint_pub = command_nh.advertise<mavros_msgs::ActuatorControl>(uav_name + "/mavros/actuator_control", 10);
 
+        //　本话题要发送至飞控(通过Mavros_extra功能包 /plugins/mount_control.cpp发送)
+        mount_control_pub = command_nh.advertise<mavros_msgs::MountControl>(uav_name + "/mavros/mount_control/command", 1);
+
         // 【服务】解锁/上锁
         //  本服务通过Mavros功能包 /plugins/command.cpp 实现
         arming_client = command_nh.serviceClient<mavros_msgs::CommandBool>(uav_name + "/mavros/cmd/arming");
@@ -131,6 +135,9 @@ class command_to_mavros
         // 【发布】底层控制量（Mx My Mz 及 F） [0][1][2][3]分别对应 roll pitch yaw控制量 及 油门推力 注意 这里是NED系的！！
         //  本话题要发送至飞控(通过Mavros功能包 /plugins/actuator_control.cpp发送), 对应Mavlink消息为SET_ACTUATOR_CONTROL_TARGET, 对应的飞控中的uORB消息为actuator_controls.msg
         actuator_setpoint_pub = command_nh.advertise<mavros_msgs::ActuatorControl>(uav_name + "/mavros/actuator_control", 10);
+
+        //　本话题要发送至飞控(通过Mavros_extra功能包 /plugins/mount_control.cpp发送)
+        mount_control_pub = command_nh.advertise<mavros_msgs::MountControl>(uav_name + "/mavros/mount_control/command", 1);
 
         // 【服务】解锁/上锁
         //  本服务通过Mavros功能包 /plugins/command.cpp 实现
@@ -205,6 +212,9 @@ class command_to_mavros
     //发送底层至飞控（输入：MxMyMz,期望推力）[Not recommanded. Because the high delay between the onboard computer and Pixhawk]
     void send_actuator_setpoint(const Eigen::Vector4d& actuator_sp);
 
+    //发送云台控制指令
+    void send_mount_control_command(const Eigen::Vector3d& gimbal_att_sp);
+    
     private:
 
         ros::NodeHandle command_nh;
@@ -216,6 +226,7 @@ class command_to_mavros
         ros::Publisher setpoint_raw_local_pub;
         ros::Publisher setpoint_raw_attitude_pub;
         ros::Publisher actuator_setpoint_pub;
+        ros::Publisher mount_control_pub;
 
         void pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr& msg)
         {
@@ -245,6 +256,19 @@ class command_to_mavros
 
 
 };
+
+void command_to_mavros::send_mount_control_command(const Eigen::Vector3d& gimbal_att_sp)
+{
+  mavros_msgs::MountControl mount_setpoint;
+  //
+  mount_setpoint.mode = 2;
+  mount_setpoint.pitch = gimbal_att_sp[0]; // Gimbal Pitch
+  mount_setpoint.roll = gimbal_att_sp[1]; // Gimbal  Yaw
+  mount_setpoint.yaw = gimbal_att_sp[2]; // Gimbal  Yaw
+
+  mount_control_pub.publish(mount_setpoint);
+
+}
 
 void command_to_mavros::takeoff()
 {
