@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <thread>
 #include <chrono>
+#include <numeric>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <eigen3/Eigen/Core>
@@ -30,6 +31,8 @@
 #include <ros/package.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
 
 // opencv头文件
 #include <opencv2/core/core.hpp>
@@ -39,6 +42,7 @@
 #include <opencv2/aruco/dictionary.hpp>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
+#include <opencv2/core/eigen.hpp>
 
 // topic 头文件
 #include <geometry_msgs/Point.h>
@@ -289,7 +293,7 @@ int main(int argc, char **argv)
     //--------------------------相机参数赋值---------------------
     // 相机内参
     Mat camera_matrix;
-    camera_matrix =cv::Mat(3,3,CV_64FC1,cv::Scalar::all(0));
+    camera_matrix = cv::Mat(3,3,CV_64FC1,cv::Scalar::all(0));
     camera_matrix.ptr<double>(0)[0] = fx;
     camera_matrix.ptr<double>(0)[2] = cx;
     camera_matrix.ptr<double>(1)[1] = fy;
@@ -297,7 +301,7 @@ int main(int argc, char **argv)
     camera_matrix.ptr<double>(2)[2] = 1.0f;
     // 相机畸变参数k1 k2 p1 p2 k3
     Mat distortion_coefficients;
-    distortion_coefficients=cv::Mat(5,1,CV_64FC1,cv::Scalar::all(0));
+    distortion_coefficients = cv::Mat(5,1,CV_64FC1,cv::Scalar::all(0));
     distortion_coefficients.ptr<double>(0)[0] = k1;
     distortion_coefficients.ptr<double>(1)[0] = k2;
     distortion_coefficients.ptr<double>(2)[0] = p1;
@@ -305,7 +309,8 @@ int main(int argc, char **argv)
     distortion_coefficients.ptr<double>(4)[0] = k3;
 
     // ArUco Marker字典选择以及旋转向量和评议向量初始化
-    Ptr<cv::aruco::Dictionary> dictionary=cv::aruco::getPredefinedDictionary(10);
+    Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(10);
+
     vector<double> rv(3), tv(3);
     cv::Mat rvec(rv), tvec(tv);
     // cv::VideoCapture capture(0);
@@ -357,142 +362,156 @@ int main(int argc, char **argv)
             img = cam_image_copy.clone();
         }
 
-        clock_t start=clock();
-        // capture>>img;
-        
-
+        clock_t start = clock();
 
         //------------------调用ArUco Marker库对图像进行识别--------------
         // markerids存储每个识别到二维码的编号  markerCorners每个二维码对应的四个角点的像素坐标
         std::vector<int> markerids;
-        vector<vector<Point2f> > markerCorners,rejectedCandidate;
-        Ptr<cv::aruco::DetectorParameters> parameters=cv::aruco::DetectorParameters::create();
-        cv::aruco::detectMarkers(img,dictionary,markerCorners,markerids,parameters,rejectedCandidate);
+        vector<vector<Point2f> > markerCorners, rejectedCandidate;
+
+        Ptr<cv::aruco::DetectorParameters> parameters = cv::aruco::DetectorParameters::create();
+        cv::aruco::detectMarkers(img, dictionary, markerCorners, markerids, parameters, rejectedCandidate);
 
         //-------------------多于一个目标被识别到，进入算法-----------------
         if (markerids.size() > 0)
         {
+            aruco::drawDetectedMarkers(img, markerCorners, markerids);
+
+            std::vector<float> collected_tx, collected_ty, collected_tz;
+            std::vector<float> collected_qx, collected_qy, collected_qz, collected_qw;
+
             // 未处理后的位置
             vector<cv::Point3f> vec_Position_OcInW;
             vector<double> vec_yaw;
             cv::Point3f A1_Sum_Position_OcInW(0,0,0);
             double A1_Sum_yaw = 0.0;
-            double tx, ty, tz;
             int marker_count = 0;
 
-            std::vector<int> markerids_sel;
-            int t = -1;
+
             for(int tt=0; tt<markerids.size(); tt++)
             {
+                vector< Vec3d > rvecs, tvecs;
                 if (19 == markerids[tt])
-                    t = tt;
-            }
-            if (-1 == t)
-            {
-                for(int tt=0; tt<markerids.size(); tt++)
                 {
-                    if (43 == markerids[tt])
-                        t = tt;
+                    vector<vector<Point2f> > markerCornersONE;
+                    markerCornersONE.push_back(markerCorners[tt]);
+                    aruco::estimatePoseSingleMarkers(markerCornersONE, landpad_det_len*0.666667, camera_matrix, distortion_coefficients, rvecs, tvecs);
+                    aruco::drawAxis(img, camera_matrix, distortion_coefficients, rvecs[0], tvecs[0],landpad_det_len*0.666667*0.5f);
                 }
-            }
-            if (-1 == t)
-            {
-                for(int tt=0; tt<markerids.size(); tt++)
+                else if (43 == markerids[tt])
                 {
-                    if (1 == markerids[tt])
-                        t = tt;
+                    vector<vector<Point2f> > markerCornersONE;
+                    markerCornersONE.push_back(markerCorners[tt]);
+                    aruco::estimatePoseSingleMarkers(markerCornersONE, landpad_det_len*0.066667, camera_matrix, distortion_coefficients, rvecs, tvecs);
+                    aruco::drawAxis(img, camera_matrix, distortion_coefficients, rvecs[0], tvecs[0],landpad_det_len*0.066667*0.5f);
                 }
-            }
-            if (-1 == t)
-            {
-                for(int tt=0; tt<markerids.size(); tt++)
+                else if (1 == markerids[tt] || 2 == markerids[tt] || 3 == markerids[tt] || 4 == markerids[tt])
                 {
-                    if (2 == markerids[tt])
-                        t = tt;
+                    vector<vector<Point2f> > markerCornersONE;
+                    markerCornersONE.push_back(markerCorners[tt]);
+                    aruco::estimatePoseSingleMarkers(markerCornersONE, landpad_det_len*0.133334, camera_matrix, distortion_coefficients, rvecs, tvecs);
+                    aruco::drawAxis(img, camera_matrix, distortion_coefficients, rvecs[0], tvecs[0],landpad_det_len*0.133334*0.5f);
                 }
-            }
-            if (-1 == t)
-            {
-                for(int tt=0; tt<markerids.size(); tt++)
+
+                cv::Mat rotation_matrix;
+                cv::Rodrigues(rvecs[0], rotation_matrix);
+                Eigen::Matrix3d rotation_matrix_eigen;
+                cv::cv2eigen(rotation_matrix, rotation_matrix_eigen);
+                Eigen::Quaterniond q = Eigen::Quaterniond(rotation_matrix_eigen);
+                q.normalize();
+
+                if (43 != markerids[tt] && 19 != markerids[tt])
                 {
-                    if (3 == markerids[tt])
-                        t = tt;
+                static tf::TransformBroadcaster br;
+                tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[0][0], tvecs[0][1], tvecs[0][2]));
+                char obj_str[16];
+                sprintf(obj_str, "object-%d", markerids[tt]);
+                tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", obj_str);
+                br.sendTransform(trans_world2camera);
                 }
-            }
-            if (-1 == t)
-            {
-                for(int tt=0; tt<markerids.size(); tt++)
+
+                std::vector<double> vec_t{tvecs[0][0], tvecs[0][1], tvecs[0][2]};
+                cv::Mat vec_t_mat{vec_t};
+                vec_t_mat = vec_t_mat;
+                vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
+                // cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
+                // cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
+                std::vector<double> id_to8_t(3);
+                if (19 == markerids[tt] || 43 == markerids[tt])
                 {
-                    if (4 == markerids[tt])
-                        t = tt;
+                    collected_tx.push_back(tvecs[0][0]);
+                    collected_ty.push_back(tvecs[0][1]);
+                    collected_tz.push_back(tvecs[0][2]);
+
+                    collected_qx.push_back(q.x());
+                    collected_qy.push_back(q.y());
+                    collected_qz.push_back(q.z());
+                    collected_qw.push_back(q.w());
+                    continue;
                 }
-            }
-            if (-1 != t)
-            {
-                cv::Mat RoteM, TransM;
+                else if (1 == markerids[tt])
+                {
+                    id_to8_t[0] = -(landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[1] = (landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[2] = 0.;
+                }
+                else if (2 == markerids[tt])
+                {
+                    id_to8_t[0] = -(landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[1] = -(landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[2] = 0.;
+                }
+                else if (3 == markerids[tt])
+                {
+                    id_to8_t[0] = (landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[1] = -(landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[2] = 0.;
+                }
+                else if (4 == markerids[tt])
+                {
+                    id_to8_t[0] = (landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[1] = (landpad_det_len*0.666667 + landpad_det_len*0.133334) / 2.;
+                    id_to8_t[2] = 0.;
+                }
+
+                cv::Mat id_to8_t_mat{id_to8_t};
+                id_to8_t_mat.convertTo(id_to8_t_mat, CV_32FC1);
+
+                rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
+                // cv::invert(rotation_matrix, rotation_matrix);
+                cv::Mat id_8_t = rotation_matrix * id_to8_t_mat + vec_t_mat;
+                // cout << id_8_t << endl;
+
+                collected_tx.push_back(id_8_t.at<float>(0));
+                collected_ty.push_back(id_8_t.at<float>(1));
+                collected_tz.push_back(id_8_t.at<float>(2));
+
+                collected_qx.push_back(q.x());
+                collected_qy.push_back(q.y());
+                collected_qz.push_back(q.z());
+                collected_qw.push_back(q.w());
+
+
+                // 将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
+                float r11 = rotation_matrix.ptr<float>(0)[0];
+                float r12 = rotation_matrix.ptr<float>(0)[1];
+                float r13 = rotation_matrix.ptr<float>(0)[2];
+                float r21 = rotation_matrix.ptr<float>(1)[0];
+                float r22 = rotation_matrix.ptr<float>(1)[1];
+                float r23 = rotation_matrix.ptr<float>(1)[2];
+                float r31 = rotation_matrix.ptr<float>(2)[0];
+                float r32 = rotation_matrix.ptr<float>(2)[1];
+                float r33 = rotation_matrix.ptr<float>(2)[2];
+
+                // 计算欧拉角
+                float thetaz = atan2(r21, r11) / CV_PI * 180;
+                float thetay = atan2(-1 * r31, sqrt(r32*r32 + r33*r33)) / CV_PI * 180;
+                float thetax = atan2(r32, r33) / CV_PI * 180;
+
                 // C2W代表 相机坐标系转换到世界坐标系  W2C代表 世界坐标系转换到相机坐标系 Theta为欧拉角
                 cv::Point3f Theta_C2W;
                 cv::Point3f Theta_W2C;
                 cv::Point3f Position_OcInW;
-
-                // 大二维码：19，小二维码：43
-                //--------------对每一个Marker的相对位置进行解算----------------
-                vector<vector<Point2f> > singMarkerCorner_19, singMarkerCorner_43;
-                vector<vector<Point2f> > singMarkerCorner_1, singMarkerCorner_2, singMarkerCorner_3, singMarkerCorner_4;
-                if (markerids[t] == 19)
-                {
-                    singMarkerCorner_19.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_19,landpad_det_len*0.666667,camera_matrix,distortion_coefficients,rvec,tvec);
-                }
-                else if (markerids[t] == 43)
-                {
-                    singMarkerCorner_43.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_43,landpad_det_len*0.066667,camera_matrix,distortion_coefficients,rvec,tvec);
-                }
-                else if (markerids[t] == 1)
-                {
-                    singMarkerCorner_1.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_1,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
-                }
-                else if (markerids[t] == 2)
-                {
-                    singMarkerCorner_2.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_2,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
-                }
-                else if (markerids[t] == 3)
-                {
-                    singMarkerCorner_3.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_3,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
-                }
-                else if (markerids[t] == 4)
-                {
-                    singMarkerCorner_4.push_back(markerCorners[t]);
-                    cv::aruco::estimatePoseSingleMarkers(singMarkerCorner_4,landpad_det_len*0.133334,camera_matrix,distortion_coefficients,rvec,tvec);
-                }
-                else 
-                {
-                    continue;
-                }
-
-                // 将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
-                double rm[9];
-                RoteM = cv::Mat(3, 3, CV_64FC1, rm);
-                // 利用罗德里格斯公式将旋转向量转成旋转矩阵
-                Rodrigues(rvec, RoteM);
-                double r11 = RoteM.ptr<double>(0)[0];
-                double r12 = RoteM.ptr<double>(0)[1];
-                double r13 = RoteM.ptr<double>(0)[2];
-                double r21 = RoteM.ptr<double>(1)[0];
-                double r22 = RoteM.ptr<double>(1)[1];
-                double r23 = RoteM.ptr<double>(1)[2];
-                double r31 = RoteM.ptr<double>(2)[0];
-                double r32 = RoteM.ptr<double>(2)[1];
-                double r33 = RoteM.ptr<double>(2)[2];
-                TransM = tvec;
-                // 计算欧拉角
-                double thetaz = atan2(r21, r11) / CV_PI * 180;
-                double thetay = atan2(-1 * r31, sqrt(r32*r32 + r33*r33)) / CV_PI * 180;
-                double thetax = atan2(r32, r33) / CV_PI * 180;
 
                 Theta_C2W.z = thetaz;
                 Theta_C2W.y = thetay;
@@ -501,14 +520,10 @@ int main(int argc, char **argv)
                 Theta_W2C.x = -1 * thetax;
                 Theta_W2C.y = -1 * thetay;
                 Theta_W2C.z = -1 * thetaz;
-                // 偏移向量
-                tx = tvec.ptr<double>(0)[0];
-                ty = tvec.ptr<double>(0)[1];
-                tz = tvec.ptr<double>(0)[2];
 
-                Position_OcInW.x = tx;
-                Position_OcInW.y = ty;
-                Position_OcInW.z = tz;
+                Position_OcInW.x = id_8_t.at<float>(0);
+                Position_OcInW.y = id_8_t.at<float>(1);
+                Position_OcInW.z = id_8_t.at<float>(2);
 
                 // 计算偏航角之差
                 Eigen::Matrix3d rotateMatrix;
@@ -521,13 +536,34 @@ int main(int argc, char **argv)
 
                 A1_Sum_Position_OcInW += Position_OcInW;
                 A1_Sum_yaw += eulerVec(0); // 待修改
-                
                 marker_count += 1;
             }
-            if (-1 != t)
+
+            if (collected_tx.size() > 0)
             {
+                float tx_sum = std::accumulate(std::begin(collected_tx), std::end(collected_tx), 0.0);
+                float tx_mean =  tx_sum / collected_tx.size();
+                float ty_sum = std::accumulate(std::begin(collected_ty), std::end(collected_ty), 0.0);
+                float ty_mean =  ty_sum / collected_ty.size();
+                float tz_sum = std::accumulate(std::begin(collected_tz), std::end(collected_tz), 0.0);
+                float tz_mean =  tz_sum / collected_tz.size();
+
+                float qx_sum = std::accumulate(std::begin(collected_qx), std::end(collected_qx), 0.0);
+                float qx_mean =  qx_sum / collected_qx.size();
+                float qy_sum = std::accumulate(std::begin(collected_qy), std::end(collected_qy), 0.0);
+                float qy_mean =  qy_sum / collected_qy.size();
+                float qz_sum = std::accumulate(std::begin(collected_qz), std::end(collected_qz), 0.0);
+                float qz_mean =  qz_sum / collected_qz.size();
+                float qw_sum = std::accumulate(std::begin(collected_qw), std::end(collected_qw), 0.0);
+                float qw_mean =  qw_sum / collected_qw.size();
+
+                static tf::TransformBroadcaster br;
+                tf::Transform world2camera = tf::Transform(tf::Quaternion(qx_mean, qy_mean, qz_mean, qw_mean), tf::Vector3(tx_mean, ty_mean, tz_mean));
+                tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "calib-MEAN");
+                br.sendTransform(trans_world2camera);
+
                 // 解算位置的平均值
-                // cout << marker_count << endl;
+                // cout << marker_count << endl; // 可以打印一次检测的marker数量
                 cv::Point3f A1_Position_OcInW(0,0,0);
                 double A1_yaw = 0.0;
                 A1_Position_OcInW = A1_Sum_Position_OcInW / marker_count;
@@ -537,17 +573,18 @@ int main(int argc, char **argv)
                 pose_now.header.stamp = ros::Time::now();
                 pose_now.detected = true;
                 pose_now.frame = 0;
-                pose_now.position[0] = tx;
-                pose_now.position[1] = ty;
-                pose_now.position[2] = tz;
-                pose_now.sight_angle[0] = atan(tx / tz);
-                pose_now.sight_angle[1] = atan(ty / tz);
+                pose_now.position[0] = tx_mean;
+                pose_now.position[1] = ty_mean;
+                pose_now.position[2] = tz_mean;
+                pose_now.sight_angle[0] = atan(tx_mean / tz_mean);
+                pose_now.sight_angle[1] = atan(ty_mean / tz_mean);
                 pose_now.yaw_error = A1_yaw;
 
                 last_x = pose_now.position[0];
                 last_y = pose_now.position[1];
                 last_z = pose_now.position[2];
                 last_yaw = pose_now.yaw_error;
+
             }
             else
             {
@@ -584,7 +621,7 @@ int main(int argc, char **argv)
         // printf_result();
 
         // 画出识别到的二维码
-        cv::aruco::drawDetectedMarkers(img, markerCorners, markerids);
+        // cv::aruco::drawDetectedMarkers(img, markerCorners, markerids);
         
         msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
         landpad_pub.publish(msg_ellipse);
