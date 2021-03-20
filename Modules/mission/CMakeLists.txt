@@ -61,6 +61,10 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
+add_executable(gimbal_control_circle gimbal_control/gimbal_control_circle.cpp)
+add_dependencies(gimbal_control_circle prometheus_mission_gencpp)
+target_link_libraries(gimbal_control_circle ${catkin_LIBRARIES})
+
 add_executable(gimbal_control_demo gimbal_control/gimbal_control_demo.cpp)
 add_dependencies(gimbal_control_demo prometheus_mission_gencpp)
 target_link_libraries(gimbal_control_demo ${catkin_LIBRARIES})
