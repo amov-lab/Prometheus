@@ -314,7 +314,7 @@ int main(int argc, char **argv)
     vector<double> rv(3), tv(3);
     cv::Mat rvec(rv), tvec(tv);
     // cv::VideoCapture capture(0);
-    float last_x(0), last_y(0), last_z(0), last_yaw(0);
+    float last_x(0), last_y(0), last_z(0), last_yaw(0), last_az(0), last_ay(0), last_ax(0), last_qx(0), last_qy(0), last_qz(0), last_qw(0);
     bool switch_state = is_suspanded;
 
     // 节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
@@ -572,6 +572,13 @@ int main(int argc, char **argv)
             pose_now.position[0] = o_tx;
             pose_now.position[1] = o_ty;
             pose_now.position[2] = o_tz;
+            pose_now.attitude[0] = thetaz;
+            pose_now.attitude[1] = thetay;
+            pose_now.attitude[2] = thetax;
+            pose_now.attitude_q[0] = o_qx;
+            pose_now.attitude_q[1] = o_qy;
+            pose_now.attitude_q[2] = o_qz;
+            pose_now.attitude_q[3] = o_qw;
             pose_now.sight_angle[0] = atan(o_tx / o_tz);
             pose_now.sight_angle[1] = atan(o_ty / o_tz);
             pose_now.yaw_error = A1_yaw;
@@ -579,6 +586,13 @@ int main(int argc, char **argv)
             last_x = pose_now.position[0];
             last_y = pose_now.position[1];
             last_z = pose_now.position[2];
+            last_az = pose_now.attitude[0];
+            last_ay = pose_now.attitude[1];
+            last_ax = pose_now.attitude[2];
+            last_qx = pose_now.attitude_q[0];
+            last_qy = pose_now.attitude_q[1];
+            last_qz = pose_now.attitude_q[2];
+            last_qw = pose_now.attitude_q[3];
             last_yaw = pose_now.yaw_error;
         }
         else
@@ -589,6 +603,13 @@ int main(int argc, char **argv)
             pose_now.position[0] = last_x;
             pose_now.position[1] = last_y;
             pose_now.position[2] = last_z;
+            pose_now.attitude[0] = last_az;
+            pose_now.attitude[1] = last_ay;
+            pose_now.attitude[2] = last_ax;
+            pose_now.attitude_q[0] = last_qx;
+            pose_now.attitude_q[1] = last_qy;
+            pose_now.attitude_q[2] = last_qz;
+            pose_now.attitude_q[3] = last_qw;
             pose_now.sight_angle[0] = atan(last_x / last_z);
             pose_now.sight_angle[1] = atan(last_y / last_z);
             pose_now.yaw_error = last_yaw;
