@@ -14,6 +14,7 @@ using namespace Eigen;
 #define PI 3.1415926
 
 bool hold_mode;
+bool ignore_vision;
 Eigen::Vector3d gimbal_att_sp;
 Eigen::Vector3d gimbal_att;
 Eigen::Vector3d gimbal_att_deg;
@@ -24,6 +25,7 @@ Detection_result landpad_det;               // 检测结果
 float sight_angle[2];
 
 float kp_track[3];         //控制参数 - 比例参数
+float kpyaw_track;
 float start_point[3];    // 起始降落位置
 Eigen::Vector3d roi_point;
 //---------------------------------------Drone---------------------------------------------
@@ -38,6 +40,10 @@ void printf_result();
 void groundtruth_cb(const nav_msgs::Odometry::ConstPtr& msg)
 {
     GroundTruth = *msg;
+
+    roi_point[0] = GroundTruth.pose.pose.position.x;
+    roi_point[1] = GroundTruth.pose.pose.position.y;
+    roi_point[2] = GroundTruth.pose.pose.position.z;
 }
 void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
@@ -97,20 +103,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 
     R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
 
-    
     mav_pos_ << _DroneState.position[0],_DroneState.position[1],_DroneState.position[2];
-
-    Eigen::Vector3d error_vec;
-    double distance_2d;
-
-    error_vec = roi_point - mav_pos_;
-
-    distance_2d = std::sqrt(error_vec(0) * error_vec(0) + error_vec(1) * error_vec(1));
-
-    // gimbal_att_sp[0] = std::atan2(error_vec(2), distance_2d)/PI*180; //pitch
-    // gimbal_att_sp[1] = 0.0;
-    // gimbal_att_sp[2] = -std::atan2(error_vec(1), error_vec(0))/PI*180;//yaw
-    
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -121,13 +114,17 @@ int main(int argc, char **argv)
     // 节点运行频率： 20hz 
     ros::Rate rate(20.0);
 
-    roi_point << 0,0,0;
-
+    
+    bool moving_target;
     nh.param<bool>("hold_mode", hold_mode, false);
+    nh.param<bool>("ignore_vision", ignore_vision, false);
+    nh.param<bool>("moving_target", moving_target, false);
     //追踪控制参数
     nh.param<float>("kpx_track", kp_track[0], 0.1);
     nh.param<float>("kpy_track", kp_track[1], 0.1);
     nh.param<float>("kpz_track", kp_track[2], 0.1);
+    nh.param<float>("kpyaw_track", kpyaw_track, 0.1);
+    
 
     // 初始起飞点
     nh.param<float>("start_point_x", start_point[0], 0.0);
@@ -213,56 +210,90 @@ int main(int argc, char **argv)
 
     while(ros::ok())
     {
-        // cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Gimbal Control Mission<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        // cout << "Please enter gimbal attitude: "<<endl;
-        // cout << "Pitch [deg] "<<endl;
-        // cin >> gimbal_att_sp_deg[0];
-        // cout << "Roll [deg] "<<endl;
-        // cin >> gimbal_att_sp_deg[1];    
-        // cout << "Yaw [deg] "<<endl;
-        // cin >> gimbal_att_sp_deg[2];
-
-        
-        // 无人机追踪目标
-        if (!hold_mode)
-        {
-            Command_Now.header.stamp                        = ros::Time::now();
-            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-            Command_Now.source                              = NODE_NAME;
-            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_VEL;
-            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-            Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * (GroundTruth.pose.pose.position.x - 1.0 - mav_pos_[0]); // 暂时使用真值
-            Command_Now.Reference_State.velocity_ref[1]     = - kp_track[1] * sight_angle[0]; // 暂时使用真值
-            Command_Now.Reference_State.velocity_ref[2]     = - kp_track[2] * sight_angle[1];
-            Command_Now.Reference_State.yaw_ref             = 0.0;
-
-            command_pub.publish(Command_Now);
-        }
-
-
+        // 首先控制云台
         gimbal_att = gimbal_control_.get_gimbal_att();
         gimbal_att_deg = gimbal_att/PI*180;
         cout << "gimbal_att    : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
         gimbal_att_rate = gimbal_control_.get_gimbal_att_rate();
         gimbal_att_rate_deg = gimbal_att_rate/PI*180;
         cout << "gimbal_att    : " << gimbal_att_rate_deg[0] << " [deg/s] "<< gimbal_att_rate_deg[1] << " [deg/s] "<< gimbal_att_rate_deg[2] << " [deg/s] "<<endl;
-
         R_camera_to_body = get_rotation_matrix(gimbal_att[0], gimbal_att[1], gimbal_att[2]);
-        //　控制云台
-        gimbal_att_sp[0] = -sight_angle[1]/PI*180; //pitch
-        gimbal_att_sp[1] = 0.0;
-        gimbal_att_sp[2] = sight_angle[0]/PI*180; //pitch
+
+
+        // 几个思考的点： 云台控制频率！！！ 设置定时函数，降低云台控制频率
+        // 通过什么控制云台
+        // 云台角度反馈如何控制无人机速度， 或者是加速度？ 是否需要积分项？
+        // 多了姿态反馈后 如何使得与降落版垂直
+        // 增加追踪人的场景
+        if(ignore_vision)
+        {
+            Eigen::Vector3d error_vec;
+            double distance_2d;
+            error_vec = roi_point - mav_pos_;
+            distance_2d = std::sqrt(error_vec(0) * error_vec(0) + error_vec(1) * error_vec(1));
+            // 理想的吊舱控制情况
+            gimbal_att_sp[0] = std::atan2(error_vec(2), distance_2d)/PI*180; //pitch
+            gimbal_att_sp[1] = 0.0;
+            gimbal_att_sp[2] = -std::atan2(error_vec(1), error_vec(0))/PI*180;//yaw
+        }else
+        {
+            // 使用目标位置的视场角控制云台
+            // 品灵吊舱原做法：根据像素来控制云台
+            // 传统做法：使用视场角误差来反馈，控制吊舱角速度
+            gimbal_att_sp[0] = gimbal_att_deg[0] - 0.1 * sight_angle[1]/PI*180; //pitch
+            //gimbal_att_sp[0] = -sight_angle[1]/PI*180; //pitch
+            // 云台滚转角不控制
+            gimbal_att_sp[1] = 0.0;
+            // 云台偏航角 取决于左右夹角
+            gimbal_att_sp[2] = gimbal_att_deg[2] + 0.1 * sight_angle[0]/PI*180; //pitch
+            //gimbal_att_sp[2] = sight_angle[0]/PI*180;
+        }
+
         gimbal_control_.send_mount_control_command(gimbal_att_sp);
-        cout << "gimbal_att_sp : " << gimbal_att_sp_deg[0] << " [deg] "<< gimbal_att_sp_deg[1] << " [deg] "<< gimbal_att_sp_deg[2] << " [deg] "<<endl;
+
+        
+        // 无人机追踪目标
+        if (!hold_mode)
+        {
+            if(landpad_det.is_detected)
+            {
+                Command_Now.header.stamp                        = ros::Time::now();
+                Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+                Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+                Command_Now.source                              = NODE_NAME;
+                Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_VEL;
+                Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+                Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * (GroundTruth.pose.pose.position.x - 1.0 - mav_pos_[0]); // 暂时使用真值
+                if(moving_target)
+                {
+                    Command_Now.Reference_State.velocity_ref[0] += 0.3;
+                }
+                // 如果不控制无人机偏航角（即yaw_ref = 0），可根据云台偏航角控制无人机y轴速度
+                // Command_Now.Reference_State.velocity_ref[1]     = 0.0;
+                // y轴速度应当根据视觉解算的目标姿态来调整？ 待定
+                Command_Now.Reference_State.velocity_ref[1]     = - kp_track[1] * gimbal_att_sp[2];
+                // z轴速度取决与当前云台俯仰角度（俯仰角速度） 注意gimbal_att_sp的角度是deg
+                // 高度上保持一致，还是保持一个10度俯仰角
+                Command_Now.Reference_State.velocity_ref[2]     = kp_track[2] * (gimbal_att_sp[0] + 2);   
+                // 偏航角 取决于当前云台偏航角
+                Command_Now.Reference_State.Yaw_Rate_Mode       = false;
+                //Command_Now.Reference_State.yaw_ref        = - gimbal_att_sp[2]/180*PI;
+                Command_Now.Reference_State.yaw_ref        = 0.0;
+                Command_Now.Reference_State.yaw_rate_ref        = - kpyaw_track * gimbal_att_sp[2];
+            }else
+            {
+                Command_Now.header.stamp = ros::Time::now();
+                Command_Now.Command_ID   = Command_Now.Command_ID + 1;
+                Command_Now.source = NODE_NAME;
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
+            }
 
 
-
+            command_pub.publish(Command_Now);
+        }
 
 
         printf_result();
-
-
         ros::spinOnce();
         rate.sleep();
     }

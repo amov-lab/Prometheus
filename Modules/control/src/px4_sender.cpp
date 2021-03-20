@@ -52,6 +52,8 @@ prometheus_msgs::ControlCommand Command_Last;                     //无人机上
 Eigen::Vector3d state_sp(0,0,0);
 Eigen::Vector3d state_sp_extra(0,0,0);
 double yaw_sp;
+double yaw_rate_sp;
+
 prometheus_msgs::Message message;
 prometheus_msgs::LogMessageControl LogMessage;
 
@@ -459,7 +461,14 @@ int main(int argc, char **argv)
                 _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
             }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
             {
-                _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
+                if(Command_Now.Reference_State.Yaw_Rate_Mode)
+                {
+                    yaw_rate_sp = Command_Now.Reference_State.yaw_rate_ref;
+                    _command_to_mavros.send_vel_setpoint_yaw_rate(state_sp, yaw_rate_sp);
+                }else
+                {
+                    _command_to_mavros.send_vel_setpoint(state_sp, yaw_sp);
+                }
             }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
             {
                 _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
