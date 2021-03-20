@@ -6,6 +6,8 @@
 #include <math.h>
 #include <mavros_msgs/MountControl.h>
 #include <geometry_msgs/Quaternion.h>
+#include "mission_utils.h"
+
 using namespace std;
 
 class gimbal_control
@@ -29,18 +31,34 @@ class gimbal_control
         mount_control_pub = nh.advertise<mavros_msgs::MountControl>(uav_name + "/mavros/mount_control/command", 1);
 
         gimbal_att        = Eigen::Vector3d(0.0,0.0,0.0);
+        gimbal_att_last   = Eigen::Vector3d(0.0,0.0,0.0);
+
+        begin_time = ros::Time::now();
+
+        dt_time = 0.0;
+
+        last_time = get_time_in_sec(begin_time);
 
     }
 
     string uav_name;
 
     Eigen::Vector3d gimbal_att;
+    Eigen::Vector3d gimbal_att_last;
+    Eigen::Vector3d gimbal_att_rate;
+
+    ros::Time begin_time;
+    float last_time;
+    float dt_time;
+    
 
 
     //发送云台控制指令
     void send_mount_control_command(const Eigen::Vector3d& gimbal_att_sp);
 
     Eigen::Vector3d get_gimbal_att();
+
+    Eigen::Vector3d get_gimbal_att_rate();
     
     private:
 
@@ -51,6 +69,8 @@ class gimbal_control
 
         Eigen::Vector3d quaternion_to_euler(const Eigen::Quaterniond &q);
 
+        float get_time_in_sec(const ros::Time& begin_time);
+
         void gimbal_att_cb(const geometry_msgs::Quaternion::ConstPtr& msg)
         {
             Eigen::Quaterniond gimbal_att_quat;
@@ -59,6 +79,15 @@ class gimbal_control
 
             //Transform the Quaternion to euler Angles
             gimbal_att = quaternion_to_euler(gimbal_att_quat);
+            
+            float cur_time = get_time_in_sec(begin_time);
+            dt_time = cur_time  - last_time;
+            dt_time = constrain_function2(dt_time, 0.01, 0.03);
+            last_time = cur_time;
+
+            gimbal_att_rate = (gimbal_att - gimbal_att_last)/dt_time;
+
+            gimbal_att_last = gimbal_att;
         }
 };
 
@@ -75,6 +104,11 @@ void gimbal_control::send_mount_control_command(const Eigen::Vector3d& gimbal_at
 
   mount_control_pub.publish(mount_setpoint);
 
+}
+
+Eigen::Vector3d gimbal_control::get_gimbal_att_rate()
+{
+    return gimbal_att_rate;
 }
 
 Eigen::Vector3d gimbal_control::get_gimbal_att()
@@ -95,6 +129,14 @@ Eigen::Vector3d gimbal_control::quaternion_to_euler(const Eigen::Quaterniond &q)
     ans[1] = asin(2.0 * (quat[2] * quat[0] - quat[3] * quat[1]));
     ans[2] = atan2(2.0 * (quat[3] * quat[0] + quat[1] * quat[2]), 1.0 - 2.0 * (quat[2] * quat[2] + quat[3] * quat[3]));
     return ans;
+}
+
+float gimbal_control::get_time_in_sec(const ros::Time& begin_time)
+{
+    ros::Time time_now = ros::Time::now();
+    float currTimeSec = time_now.sec - begin_time.sec;
+    float currTimenSec = time_now.nsec / 1e9 - begin_time.nsec / 1e9;
+    return (currTimeSec + currTimenSec);
 }
 
 
