@@ -13,18 +13,25 @@ using namespace Eigen;
 #define NODE_NAME "gimbal_control_demo"
 #define PI 3.1415926
 
+bool hold_mode;
 Eigen::Vector3d gimbal_att_sp;
 Eigen::Vector3d gimbal_att;
 Eigen::Vector3d gimbal_att_deg;
+Eigen::Vector3d gimbal_att_rate;
+Eigen::Vector3d gimbal_att_rate_deg;
 nav_msgs::Odometry GroundTruth;             // 降落板真实位置（仿真中由Gazebo插件提供）
 Detection_result landpad_det;               // 检测结果
 float sight_angle[2];
+
+float kp_track[3];         //控制参数 - 比例参数
+float start_point[3];    // 起始降落位置
+
 //---------------------------------------Drone---------------------------------------------
 prometheus_msgs::DroneState _DroneState;    // 无人机状态
-Eigen::Matrix3f R_Body_to_ENU;              // 无人机机体系至惯性系转换矩阵
+Eigen::Matrix3f R_Body_to_ENU,R_camera_to_body;              // 无人机机体系至惯性系转换矩阵
 
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
-
+gimbal_control gimbal_control_;
 
 void printf_result();
 void groundtruth_cb(const nav_msgs::Odometry::ConstPtr& msg)
@@ -36,11 +43,28 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     
     landpad_det.object_name = "landpad";
     landpad_det.Detection_info = *msg;
+    // 此处相机的姿态一直在变化，因此返回的机体系位置不能直接使用
+    // 根据云台姿态： 相机坐标系 to 集体坐标系
+
     // 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     // 相机安装误差 在mission_utils.h中设置
-    landpad_det.pos_body_frame[0] =  landpad_det.Detection_info.position[2] ;
-    landpad_det.pos_body_frame[1] = - landpad_det.Detection_info.position[0] ;
-    landpad_det.pos_body_frame[2] = - landpad_det.Detection_info.position[1] ;
+    landpad_det.pos_camera_frame[0] =  landpad_det.Detection_info.position[2] ;
+    landpad_det.pos_camera_frame[1] = - landpad_det.Detection_info.position[0] ;
+    landpad_det.pos_camera_frame[2] = - landpad_det.Detection_info.position[1] ;
+
+    gimbal_att = gimbal_control_.get_gimbal_att();
+    gimbal_att_deg = gimbal_att/PI*180;
+    cout << "gimbal_att    : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
+    gimbal_att_rate = gimbal_control_.get_gimbal_att_rate();
+    gimbal_att_rate_deg = gimbal_att_rate/PI*180;
+    cout << "gimbal_att    : " << gimbal_att_rate_deg[0] << " [deg/s] "<< gimbal_att_rate_deg[1] << " [deg/s] "<< gimbal_att_rate_deg[2] << " [deg/s] "<<endl;
+
+    R_camera_to_body = get_rotation_matrix(gimbal_att[0], gimbal_att[1], gimbal_att[2]);
+
+    landpad_det.pos_body_frame = R_Body_to_ENU * landpad_det.pos_camera_frame;
+
+
+
 
     sight_angle[0] = landpad_det.Detection_info.sight_angle[0];
     sight_angle[1] = landpad_det.Detection_info.sight_angle[1];
@@ -93,7 +117,19 @@ int main(int argc, char **argv)
     // 节点运行频率： 20hz 
     ros::Rate rate(20.0);
 
-    gimbal_control gimbal_control_;
+    nh.param<bool>("hold_mode", hold_mode, false);
+    //追踪控制参数
+    nh.param<float>("kpx_track", kp_track[0], 0.1);
+    nh.param<float>("kpy_track", kp_track[1], 0.1);
+    nh.param<float>("kpz_track", kp_track[2], 0.1);
+
+    // 初始起飞点
+    nh.param<float>("start_point_x", start_point[0], 0.0);
+    nh.param<float>("start_point_y", start_point[1], 1.0);
+    nh.param<float>("start_point_z", start_point[2], 1.5);
+
+
+    
 
     //【订阅】地面真值，此信息仅做比较使用 不强制要求提供
     ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/landing_pad", 10, groundtruth_cb);
@@ -155,12 +191,12 @@ int main(int argc, char **argv)
         Command_Now.source                              = NODE_NAME;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
         Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.position_ref[0]     = 0;
-        Command_Now.Reference_State.position_ref[1]     = 0;
-        Command_Now.Reference_State.position_ref[2]     = 2.0;
+        Command_Now.Reference_State.position_ref[0]     = start_point[0];
+        Command_Now.Reference_State.position_ref[1]     = start_point[1];
+        Command_Now.Reference_State.position_ref[2]     = start_point[2];
         Command_Now.Reference_State.yaw_ref             = 0.0;
         command_pub.publish(Command_Now);
-        cout << "Takeoff ..."<<endl;
+        cout << "Takeoff to start point..."<<endl;
         ros::Duration(3.0).sleep();
 
         ros::spinOnce();
@@ -182,17 +218,23 @@ int main(int argc, char **argv)
 
         
         // 无人机追踪目标
-        Command_Now.header.stamp                        = ros::Time::now();
-        Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
-        Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
-        Command_Now.source                              = NODE_NAME;
-        Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-        Command_Now.Reference_State.position_ref[0]     = GroundTruth.pose.pose.position.x - 1.5;
-        Command_Now.Reference_State.position_ref[1]     = GroundTruth.pose.pose.position.y;
-        Command_Now.Reference_State.position_ref[2]     = GroundTruth.pose.pose.position.z + 1;
-        Command_Now.Reference_State.yaw_ref             = 0.0;
-        command_pub.publish(Command_Now);
+        if (!hold_mode)
+        {
+            Command_Now.header.stamp                        = ros::Time::now();
+            Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
+            Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
+            Command_Now.source                              = NODE_NAME;
+            Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_VEL;
+            Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+            Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * landpad_det.pos_body_frame[0];
+            Command_Now.Reference_State.velocity_ref[1]     = 0.0;
+            Command_Now.Reference_State.velocity_ref[2]     = 0.0;
+            Command_Now.Reference_State.yaw_ref             = 0.0;
+
+            command_pub.publish(Command_Now);
+        }
+
+        
 
         //　控制云台
         gimbal_att_sp[0] = -sight_angle[1]/PI*180; //pitch
@@ -203,9 +245,8 @@ int main(int argc, char **argv)
 
 
 
-        gimbal_att = gimbal_control_.get_gimbal_att();
-        gimbal_att_deg = gimbal_att/PI*180;
-        cout << "gimbal_att    : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
+
+
         printf_result();
 
 
@@ -241,7 +282,10 @@ void printf_result()
         cout << "is_detected: false" <<endl;
     }
     
+    cout << "Target_pos (camera): " << landpad_det.pos_camera_frame[0] << " [m] "<< landpad_det.pos_camera_frame[1] << " [m] "<< landpad_det.pos_camera_frame[2] << " [m] "<<endl;
     cout << "Target_pos (body): " << landpad_det.pos_body_frame[0] << " [m] "<< landpad_det.pos_body_frame[1] << " [m] "<< landpad_det.pos_body_frame[2] << " [m] "<<endl;
+
+
 
     cout << "Target_pos (body_enu): " << landpad_det.pos_body_enu_frame[0] << " [m] "<< landpad_det.pos_body_enu_frame[1] << " [m] "<< landpad_det.pos_body_enu_frame[2] << " [m] "<<endl;
 
