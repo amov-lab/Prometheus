@@ -47,6 +47,7 @@ using namespace std;
 
 
 // 定义视觉检测结构体
+// 
 struct Detection_result
 {
     string object_name;
@@ -54,6 +55,8 @@ struct Detection_result
     // 方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     // 标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
     prometheus_msgs::DetectionInfo Detection_info;      
+    // 目标在相机系位置
+    Eigen::Vector3f pos_camera_frame;  
     // 目标在机体系位置
     Eigen::Vector3f pos_body_frame;   
     // 目标在机体-惯性系位置 (原点位于质心，x轴指向前方，y轴指向左，z轴指向上的坐标系)

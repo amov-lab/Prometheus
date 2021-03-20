@@ -90,6 +90,7 @@
 
 	<!-- run the ground_station.cpp -->
 	<node pkg="prometheus_station" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+		<param name="gimbal_enable" type="bool" value="true" />
 	</node>
 
 	<!-- run the ground_station_msg.cpp -->
@@ -105,6 +106,18 @@
 
     <!-- run the gimbal_control.cpp -->
 	<node pkg="prometheus_mission" type="gimbal_control_demo" name="gimbal_control_demo" output="screen" launch-prefix="gnome-terminal --">
+		<!-- 仿真模式 - 区别在于是否自动切换offboard模式 -->
+		<param name="sim_mode" value="true" />
+		<!-- 悬停模式 - 仅用于观察检测结果 -->
+		<param name="hold_mode" value="true" />
+		<!-- 起始点 -->
+		<param name="start_point_x" value="0.0" />
+		<param name="start_point_y" value="2.0" />
+		<param name="start_point_z" value="2.0" />
+		<!-- 追踪控制参数 -->
+		<param name="kpx_track" value="0.2" />
+		<param name="kpy_track" value="0.2" />
+		<param name="kpz_track" value="0.08" />
 	</node>
 
 </launch>
