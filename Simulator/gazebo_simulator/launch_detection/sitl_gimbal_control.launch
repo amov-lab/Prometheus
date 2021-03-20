@@ -28,7 +28,7 @@
     <arg name="verbose" default="false"/>
     <arg name="paused" default="false"/>
     <arg name="respawn_gazebo" default="false"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/autonomous_landing.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/wurenzhengfeng.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -90,6 +90,7 @@
 
 	<!-- run the ground_station.cpp -->
 	<node pkg="prometheus_station" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+		<param name="gimbal_enable" type="bool" value="true" />
 	</node>
 
 	<!-- run the ground_station_msg.cpp -->
