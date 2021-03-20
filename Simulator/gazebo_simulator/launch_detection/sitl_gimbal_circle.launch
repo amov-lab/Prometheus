@@ -28,7 +28,7 @@
     <arg name="verbose" default="false"/>
     <arg name="paused" default="false"/>
     <arg name="respawn_gazebo" default="false"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/wurenzhengfeng.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/autonomous_landing.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -105,19 +105,11 @@
 
 
     <!-- run the gimbal_control.cpp -->
-	<node pkg="prometheus_mission" type="gimbal_control_demo" name="gimbal_control_demo" output="screen" launch-prefix="gnome-terminal --">
-		<!-- 仿真模式 - 区别在于是否自动切换offboard模式 -->
-		<param name="sim_mode" value="true" />
-		<!-- 悬停模式 - 仅用于观察检测结果 -->
-		<param name="hold_mode" value="true" />
+	<node pkg="prometheus_mission" type="gimbal_control_circle" name="gimbal_control_circle" output="screen" launch-prefix="gnome-terminal --">
 		<!-- 起始点 -->
 		<param name="start_point_x" value="0.0" />
 		<param name="start_point_y" value="1.0" />
-		<param name="start_point_z" value="3.0" />
-		<!-- 追踪控制参数 -->
-		<param name="kpx_track" value="0.5" />
-		<param name="kpy_track" value="0.4" />
-		<param name="kpz_track" value="0.4" />
+		<param name="start_point_z" value="2.0" />
 	</node>
 
 </launch>
