@@ -22,7 +22,7 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/ActuatorControl.h>
 #include <sensor_msgs/Imu.h>
-
+#include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/PoseStamped.h>
 
 using namespace std;
@@ -30,6 +30,7 @@ using namespace std;
 float refresh_time;
 int mission_type;
 int control_type;
+bool gimbal_enable;
 
 prometheus_msgs::DroneState _DroneState;
 prometheus_msgs::ControlCommand Command_Now;                      //无人机当前执行命令
@@ -48,6 +49,9 @@ Eigen::Vector3d pos_drone_fcu_target;
 Eigen::Vector3d vel_drone_fcu_target;
 //Target accel of the drone [from fcu]
 Eigen::Vector3d accel_drone_fcu_target;
+
+
+Eigen::Vector3d gimbal_att_deg;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_info();                                                                       //打印函数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -89,6 +93,18 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     detection_info.position[2] = - msg->position[2];
 
 }
+void gimbal_att_cb(const geometry_msgs::Quaternion::ConstPtr& msg)
+{
+    Eigen::Quaterniond gimbal_att_quat;
+
+    gimbal_att_quat = Eigen::Quaterniond(msg->w, msg->x, msg->y, msg->z);
+
+    Eigen::Vector3d gimbal_att;
+    //Transform the Quaternion to euler Angles
+    gimbal_att = prometheus_station_utils::quaternion_to_euler(gimbal_att_quat);
+
+    gimbal_att_deg = gimbal_att/M_PI*180;
+}
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -101,7 +117,8 @@ int main(int argc, char **argv)
     // 根据任务类型 订阅不同话题,打印不同话题
     // 
     nh.param<int>("mission_type", mission_type, 0);
-
+    // 是否有云台
+    nh.param<bool>("gimbal_enable", gimbal_enable, false);
 
     // 【订阅】prometheus_control模块回传的消息
     ros::Subscriber log_control_sub = nh.subscribe<prometheus_msgs::LogMessageControl>("/prometheus/log/control", 10, log_control_cb);
@@ -116,7 +133,9 @@ int main(int argc, char **argv)
     {
         ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/ellipse_det", 10, landpad_det_cb);
     }
-    
+
+    ros::Subscriber gimbal_att_sub = nh.subscribe<geometry_msgs::Quaternion>("/mavros/mount_control/orientation", 10, gimbal_att_cb);
+
     // 频率
     float hz = 1.0 / refresh_time;
     ros::Rate rate(hz);
@@ -215,6 +234,12 @@ void printf_info()
         }
         
         cout << "detection_result (body): " << detection_info.position[0] << " [m] "<< detection_info.position[1] << " [m] "<< detection_info.position[2] << " [m] "<<endl;
+    }
+
+    if(gimbal_enable)
+    {
+        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Gimbal State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+        cout << "Gimbal_att    : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
     }
 
 

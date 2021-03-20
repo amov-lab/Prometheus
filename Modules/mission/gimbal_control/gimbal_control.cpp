@@ -14,14 +14,16 @@ using namespace Eigen;
 Eigen::Vector3d gimbal_att_sp;
 Eigen::Vector3d gimbal_att;
 Eigen::Vector3d gimbal_att_deg;
+Eigen::Vector3d gimbal_att_rate;
+Eigen::Vector3d gimbal_att_rate_deg;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "gimbal_control");
     ros::NodeHandle nh("~");
 
-    // 节点运行频率： 20hz 
-    ros::Rate rate(20.0);
+    // 节点运行频率： 10hz 
+    ros::Rate rate(10.0);
 
     gimbal_control gimbal_control_;
 
@@ -55,19 +57,18 @@ int main(int argc, char **argv)
 
         gimbal_control_.send_mount_control_command(gimbal_att_sp);
 
-        
-        gimbal_att = gimbal_control_.get_gimbal_att();
-        gimbal_att_deg = gimbal_att/PI*180;
-
         cout << "gimbal_att_sp : " << gimbal_att_sp_deg[0] << " [deg] "<< gimbal_att_sp_deg[1] << " [deg] "<< gimbal_att_sp_deg[2] << " [deg] "<<endl;
 
-        for (int i=0; i<20; i++)
+        for (int i=0; i<5; i++)
         {
+            gimbal_att = gimbal_control_.get_gimbal_att();
+            gimbal_att_deg = gimbal_att/PI*180;
             cout << "gimbal_att    : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
-
+            gimbal_att_rate = gimbal_control_.get_gimbal_att_rate();
+            gimbal_att_rate_deg = gimbal_att_rate/PI*180;
+            cout << "gimbal_att    : " << gimbal_att_rate_deg[0] << " [deg/s] "<< gimbal_att_rate_deg[1] << " [deg/s] "<< gimbal_att_rate_deg[2] << " [deg/s] "<<endl;
             ros::spinOnce();
             rate.sleep();
-
         }
 
 
