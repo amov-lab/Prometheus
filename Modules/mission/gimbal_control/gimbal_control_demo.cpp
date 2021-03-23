@@ -35,6 +35,9 @@ Eigen::Matrix3f R_Body_to_ENU,R_camera_to_body;              // 无人机机体�
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 float gimbal_rate;
 Eigen::Vector3d mav_pos_;
+float distance_to_target;
+float integral = 0;
+float ki_track;
 void printf_result();
 void groundtruth_cb(const nav_msgs::Odometry::ConstPtr& msg)
 {
@@ -107,6 +110,7 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
     R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
 
     mav_pos_ << _DroneState.position[0],_DroneState.position[1],_DroneState.position[2];
+
 }
 void gimbal_control_cb(const ros::TimerEvent& e)
 {
@@ -160,6 +164,7 @@ int main(int argc, char **argv)
     nh.param<float>("kpx_track", kp_track[0], 0.1);
     nh.param<float>("kpy_track", kp_track[1], 0.1);
     nh.param<float>("kpz_track", kp_track[2], 0.1);
+    nh.param<float>("ki_track", ki_track, 0.02);
     nh.param<float>("kpyaw_track", kpyaw_track, 0.1);
     
 
@@ -265,13 +270,22 @@ int main(int argc, char **argv)
         {
             if(ignore_vision)
             {
+                //　与目标距离
+                distance_to_target = (roi_point - mav_pos_).norm();
                 Command_Now.header.stamp                        = ros::Time::now();
                 Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
                 Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
                 Command_Now.source                              = NODE_NAME;
                 Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+                //　由于无人机偏航打死，因此　此处使用ENU_FRAME　而非　BODY_FRAME (实际中应当考虑使用机体坐标系进行控制)
                 Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-                Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * (GroundTruth.pose.pose.position.x - 2.0 - mav_pos_[0]); // 暂时使用真值
+                float error = GroundTruth.pose.pose.position.x - 2.0 - mav_pos_[0];
+                integral = integral + error;
+                    if (integral > 10.0)
+                    {
+                        integral = 10;
+                    }
+                Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * error + ki_track*integral; 
                 // 如果不控制无人机偏航角（即yaw_ref = 0），可根据云台偏航角控制无人机y轴速度
                 // y轴速度应当根据视觉解算的目标姿态来调整？ 待定
                 Command_Now.Reference_State.velocity_ref[1]     = 0.0;
@@ -282,9 +296,10 @@ int main(int argc, char **argv)
                 // Command_Now.Reference_State.velocity_ref[2]     = kp_track[2] * (gimbal_att_deg[１] + 2);   
                 Command_Now.Reference_State.position_ref[2]     = 2.5;
                 // 偏航角 取决于当前云台偏航角
-                Command_Now.Reference_State.Yaw_Rate_Mode       = true;
+                //　由于仿真云台使用的是与无人机的相对夹角，应次不能控制无人机偏航角或者偏航角速度，需锁定在0度
+                Command_Now.Reference_State.Yaw_Rate_Mode       = false;
                 Command_Now.Reference_State.yaw_ref        = 0.0;
-                Command_Now.Reference_State.yaw_rate_ref        = - kpyaw_track * gimbal_att_deg[2];
+                //　Command_Now.Reference_State.yaw_rate_ref        = - kpyaw_track * gimbal_att[2];
             }else
             {
                 if(landpad_det.is_detected)
@@ -295,11 +310,15 @@ int main(int argc, char **argv)
                     Command_Now.source                              = NODE_NAME;
                     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
                     Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-                    Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * (GroundTruth.pose.pose.position.x - 1.0 - mav_pos_[0]); // 暂时使用真值
-                    // if(moving_target)
-                    // {
-                    //     Command_Now.Reference_State.velocity_ref[0] += 0.3;
-                    // }
+                    // 此处暂时使用真值，实际中应当使用机体坐标系进行控制
+                    float error = GroundTruth.pose.pose.position.x - 2.0 - mav_pos_[0];
+                    integral = integral + error;
+                        if (integral > 10.0)
+                        {
+                            integral = 10;
+                        }
+                    Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * error + ki_track*integral; 
+
                     // 如果不控制无人机偏航角（即yaw_ref = 0），可根据云台偏航角控制无人机y轴速度
                     Command_Now.Reference_State.velocity_ref[1]     = 0.0;
                     // y轴速度应当根据视觉解算的目标姿态来调整？ 待定
@@ -307,10 +326,9 @@ int main(int argc, char **argv)
                     // z轴速度取决与当前云台俯仰角度（俯仰角速度） 注意gimbal_att_deg的角度是deg
                     Command_Now.Reference_State.position_ref[2]     = 2.5;
                     // 偏航角 取决于当前云台偏航角
+                    //　由于仿真云台使用的是与无人机的相对夹角，应次不能控制无人机偏航角或者偏航角速度，需锁定在0度
                     Command_Now.Reference_State.Yaw_Rate_Mode       = false;
-                    //Command_Now.Reference_State.yaw_ref        = - gimbal_att_deg[2]/180*PI;
                     Command_Now.Reference_State.yaw_ref        = 0.0;
-                    Command_Now.Reference_State.yaw_rate_ref        = - kpyaw_track * gimbal_att_deg[2];
                 }else
                 {
                     Command_Now.header.stamp = ros::Time::now();
@@ -364,14 +382,8 @@ void printf_result()
     
     cout << "Target_pos (camera): " << landpad_det.pos_camera_frame[0] << " [m] "<< landpad_det.pos_camera_frame[1] << " [m] "<< landpad_det.pos_camera_frame[2] << " [m] "<<endl;
     cout << "Target_pos (body): " << landpad_det.pos_body_frame[0] << " [m] "<< landpad_det.pos_body_frame[1] << " [m] "<< landpad_det.pos_body_frame[2] << " [m] "<<endl;
-
-
-
     cout << "Target_pos (body_enu): " << landpad_det.pos_body_enu_frame[0] << " [m] "<< landpad_det.pos_body_enu_frame[1] << " [m] "<< landpad_det.pos_body_enu_frame[2] << " [m] "<<endl;
-
-    cout << "Ground_truth(pos):  " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
     cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
-    cout << "Detection_ENU(yaw): " << landpad_det.att_enu_frame[2]/3.1415926 *180 << " [deg] "<<endl;
-
+    cout << "Ground_truth(pos):  " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
 }
 
