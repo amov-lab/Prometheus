@@ -192,6 +192,7 @@ class command_to_mavros
 
     //发送速度期望值至飞控（输入：期望vxvy z,期望yaw）
     void send_vel_xy_pos_z_setpoint(const Eigen::Vector3d& state_sp, float yaw_sp);
+    void send_vel_xy_pos_z_setpoint_yawrate(const Eigen::Vector3d& state_sp, float yaw_rate_sp);
 
     //发送速度期望值至飞控（机体系）（输入：期望vxvyvz,期望yaw）
     void send_vel_setpoint_body(const Eigen::Vector3d& vel_sp, float yaw_sp);
@@ -210,6 +211,8 @@ class command_to_mavros
 
     //发送角度期望值至飞控（输入：期望角速度,期望推力）
     void send_attitude_rate_setpoint(const Eigen::Vector3d& attitude_rate_sp, float thrust_sp);
+
+    void send_attitude_setpoint_yawrate(const prometheus_msgs::AttitudeReference& _AttitudeReference, float yaw_rate_sp);
 
     //发送底层至飞控（输入：MxMyMz,期望推力）[Not recommanded. Because the high delay between the onboard computer and Pixhawk]
     void send_actuator_setpoint(const Eigen::Vector4d& actuator_sp);
@@ -439,6 +442,29 @@ void command_to_mavros::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d& state_
     // cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
     // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
 }
+void command_to_mavros::send_vel_xy_pos_z_setpoint_yawrate(const Eigen::Vector3d& state_sp, float yaw_rate_sp)
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+    pos_setpoint.type_mask = 0b010111000011;   // 100 111 000 011  vx vy vz z + yawrate
+
+    pos_setpoint.coordinate_frame = 1;
+
+    pos_setpoint.velocity.x = state_sp[0];
+    pos_setpoint.velocity.y = state_sp[1];
+    pos_setpoint.velocity.z = 0.0;
+    pos_setpoint.position.z = state_sp[2];
+
+    pos_setpoint.yaw_rate = yaw_rate_sp;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+    
+    // 检查飞控是否收到控制量
+    // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    // cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
+    // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
+}
 
 void command_to_mavros::send_pos_vel_xyz_setpoint(const Eigen::Vector3d& pos_sp, const Eigen::Vector3d& vel_sp, float yaw_sp)
 {
@@ -503,6 +529,36 @@ void command_to_mavros::send_attitude_setpoint(const prometheus_msgs::AttitudeRe
     att_setpoint.orientation.w = _AttitudeReference.desired_att_q.w;
 
     att_setpoint.thrust = _AttitudeReference.desired_throttle;
+
+    setpoint_raw_attitude_pub.publish(att_setpoint);
+
+    // 检查飞控是否收到控制量
+    // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    // cout << "Att_target [R P Y] : " << euler_fcu_target[0] * 180/M_PI <<" [deg] "<<euler_fcu_target[1] * 180/M_PI << " [deg] "<< euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
+    // cout << "Thr_target [0 - 1] : " << Thrust_target <<endl;
+}
+
+
+//发送角度期望值至飞控（输入：期望角度-四元数,期望推力）
+void command_to_mavros::send_attitude_setpoint_yawrate(const prometheus_msgs::AttitudeReference& _AttitudeReference, float yaw_rate_sp)
+{
+    mavros_msgs::AttitudeTarget att_setpoint;
+
+    //Mappings: If any of these bits are set, the corresponding input should be ignored:
+    //bit 1: body roll rate, bit 2: body pitch rate, bit 3: body yaw rate. bit 4-bit 6: reserved, bit 7: throttle, bit 8: attitude
+
+    att_setpoint.type_mask = 0b00000011;
+
+    att_setpoint.orientation.x = _AttitudeReference.desired_att_q.x;
+    att_setpoint.orientation.y = _AttitudeReference.desired_att_q.y;
+    att_setpoint.orientation.z = _AttitudeReference.desired_att_q.z;
+    att_setpoint.orientation.w = _AttitudeReference.desired_att_q.w;
+
+    att_setpoint.thrust = _AttitudeReference.desired_throttle;
+
+    att_setpoint.body_rate.x = 0.0;
+    att_setpoint.body_rate.y = 0.0;
+    att_setpoint.body_rate.z = yaw_rate_sp;
 
     setpoint_raw_attitude_pub.publish(att_setpoint);
 
