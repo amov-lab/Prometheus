@@ -98,8 +98,8 @@ void gimbal_control::send_mount_control_command(const Eigen::Vector3d& gimbal_at
   mount_setpoint.header.stamp = ros::Time::now();
   mount_setpoint.header.frame_id = "map";
   mount_setpoint.mode = 2;
-  mount_setpoint.pitch = gimbal_att_sp[0]; // Gimbal Pitch [deg]
-  mount_setpoint.roll = gimbal_att_sp[1]; // Gimbal  Roll [deg]
+  mount_setpoint.roll = gimbal_att_sp[0]; // Gimbal Roll [deg]
+  mount_setpoint.pitch = gimbal_att_sp[1]; // Gimbal   Pitch[deg]
   mount_setpoint.yaw = gimbal_att_sp[2]; // Gimbal  Yaw [deg]
 
   mount_control_pub.publish(mount_setpoint);
