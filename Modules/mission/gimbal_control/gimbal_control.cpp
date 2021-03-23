@@ -44,10 +44,10 @@ int main(int argc, char **argv)
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Gimbal Control Mission<<<<<<<<<<<<<<<<<<<<<< "<< endl;
         cout << "Please enter gimbal attitude: "<<endl;
-        cout << "Pitch [deg] "<<endl;
-        cin >> gimbal_att_sp_deg[0];
         cout << "Roll [deg] "<<endl;
-        cin >> gimbal_att_sp_deg[1];    
+        cin >> gimbal_att_sp_deg[0];    
+        cout << "Pitch [deg] "<<endl;
+        cin >> gimbal_att_sp_deg[1];
         cout << "Yaw [deg] "<<endl;
         cin >> gimbal_att_sp_deg[2];
 
@@ -59,14 +59,14 @@ int main(int argc, char **argv)
 
         cout << "gimbal_att_sp : " << gimbal_att_sp_deg[0] << " [deg] "<< gimbal_att_sp_deg[1] << " [deg] "<< gimbal_att_sp_deg[2] << " [deg] "<<endl;
 
-        for (int i=0; i<5; i++)
+        for (int i=0; i<10; i++)
         {
             gimbal_att = gimbal_control_.get_gimbal_att();
             gimbal_att_deg = gimbal_att/PI*180;
-            cout << "gimbal_att    : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
+            cout << "gimbal_att         : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
             gimbal_att_rate = gimbal_control_.get_gimbal_att_rate();
             gimbal_att_rate_deg = gimbal_att_rate/PI*180;
-            cout << "gimbal_att    : " << gimbal_att_rate_deg[0] << " [deg/s] "<< gimbal_att_rate_deg[1] << " [deg/s] "<< gimbal_att_rate_deg[2] << " [deg/s] "<<endl;
+            cout << "gimbal_att_rate    : " << gimbal_att_rate_deg[0] << " [deg/s] "<< gimbal_att_rate_deg[1] << " [deg/s] "<< gimbal_att_rate_deg[2] << " [deg/s] "<<endl;
             ros::spinOnce();
             rate.sleep();
         }
