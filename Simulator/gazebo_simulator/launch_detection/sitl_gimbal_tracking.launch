@@ -114,14 +114,14 @@
 		<param name="ignore_vision" value="false" />
 		<param name="gimbal_rate" value="1.0" />
 		<!-- 追踪控制参数 -->
-		<param name="kpx_track" value="0.4" />
+		<param name="kpx_track" value="1.0" />
 		<param name="kpy_track" value="0.04" />
 		<param name="kpz_track" value="0.05" />
-		<param name="kpyaw_track" value="0.05" />
-		<param name="ki_track" value="0.005" />
+		<param name="kpyaw_track" value="0.8" />
+		<param name="ki_track" value="0.05" />
 
 		<param name="moving_target" value="true" />
-		<param name="start_point_x" value="-6.0" />
+		<param name="start_point_x" value="-10.0" />
 		<param name="start_point_y" value="-2.0" />
 		<param name="start_point_z" value="3.0" />
 	</node>
