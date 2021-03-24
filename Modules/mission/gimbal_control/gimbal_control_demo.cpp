@@ -12,7 +12,7 @@ using namespace Eigen;
 
 #define NODE_NAME "gimbal_control_demo"
 #define PI 3.1415926
-
+#define VISION_THRES_TRACKING 100
 bool hold_mode;
 bool ignore_vision;
 Eigen::Vector3d gimbal_att_sp;
@@ -23,7 +23,7 @@ Eigen::Vector3d gimbal_att_rate_deg;
 nav_msgs::Odometry GroundTruth;             // 降落板真实位置（仿真中由Gazebo插件提供）
 Detection_result landpad_det;               // 检测结果
 float sight_angle[2];
-
+float desired_yaw;
 float kp_track[3];         //控制参数 - 比例参数
 float kpyaw_track;
 float start_point[3];    // 起始降落位置
@@ -87,7 +87,7 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     }
 
     // 当连续一段时间无法检测到目标时，认定目标丢失
-    if(landpad_det.num_lost > VISION_THRES)
+    if(landpad_det.num_lost > VISION_THRES_TRACKING)
     {
         landpad_det.is_detected = false;
 
@@ -97,7 +97,7 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     }
 
     // 当连续一段时间检测到目标时，认定目标得到
-    if(landpad_det.num_regain > VISION_THRES)
+    if(landpad_det.num_regain > 3)
     {
         landpad_det.is_detected = true;
     }
@@ -128,7 +128,8 @@ void gimbal_control_cb(const ros::TimerEvent& e)
         // 理想的吊舱控制情况
         gimbal_att_sp[0] = 0.0;
         gimbal_att_sp[1] = std::atan2(error_vec(2), distance_2d)/PI*180; //pitch
-        gimbal_att_sp[2] = -std::atan2(error_vec(1), error_vec(0))/PI*180;//yaw
+        //desired_yaw = -std::atan2(error_vec(1), error_vec(0))/PI*180;//yaw
+        gimbal_att_sp[2] = 0.0;
     }else
     {
         // 使用目标位置的视场角控制云台
@@ -141,7 +142,8 @@ void gimbal_control_cb(const ros::TimerEvent& e)
         // 云台俯仰角
         gimbal_att_sp[1] = gimbal_att_deg[1] - 0.1 * sight_angle[1]/PI*180; //pitch
         // 云台偏航角 取决于左右夹角
-        gimbal_att_sp[2] = gimbal_att_deg[2] + 0.1 * sight_angle[0]/PI*180; //pitch
+        //gimbal_att_sp[2] = gimbal_att_deg[2] + 0.1 * sight_angle[0]/PI*180; 
+        gimbal_att_sp[2] = 0.0;
     }
 
 
@@ -225,7 +227,6 @@ int main(int argc, char **argv)
         }
     }
 
-
     // 起飞
     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Takeoff to predefined position.");
 
@@ -270,22 +271,36 @@ int main(int argc, char **argv)
         {
             if(ignore_vision)
             {
-                //　与目标距离
-                distance_to_target = (roi_point - mav_pos_).norm();
                 Command_Now.header.stamp                        = ros::Time::now();
                 Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
                 Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
                 Command_Now.source                              = NODE_NAME;
                 Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
                 //　由于无人机偏航打死，因此　此处使用ENU_FRAME　而非　BODY_FRAME (实际中应当考虑使用机体坐标系进行控制)
-                Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
-                float error = GroundTruth.pose.pose.position.x - 2.0 - mav_pos_[0];
+                Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::BODY_FRAME;
+                //float error = GroundTruth.pose.pose.position.x - 2.0 - mav_pos_[0];
+                // 策略！！ 策略！！
+                // 如：进入指定距离后 控制反馈变小
+                // 仍有很大进步空间，但是实际实验可能还要继续调试
+                distance_to_target = (roi_point - mav_pos_).norm();
+                float error = distance_to_target - 3.0;
+                cout << "distance_to_target: " << distance_to_target << " [m] "<<endl;
+
                 integral = integral + error;
                     if (integral > 10.0)
                     {
                         integral = 10;
                     }
                 Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * error + ki_track*integral; 
+                    if (Command_Now.Reference_State.velocity_ref[0] <0 )
+                    {
+                        Command_Now.Reference_State.velocity_ref[0] = 0;
+                    }
+                    if(moving_target)
+                    {
+                        Command_Now.Reference_State.velocity_ref[0] = Command_Now.Reference_State.velocity_ref[0] +0.3;
+                    }
+
                 // 如果不控制无人机偏航角（即yaw_ref = 0），可根据云台偏航角控制无人机y轴速度
                 // y轴速度应当根据视觉解算的目标姿态来调整？ 待定
                 Command_Now.Reference_State.velocity_ref[1]     = 0.0;
@@ -296,12 +311,18 @@ int main(int argc, char **argv)
                 // Command_Now.Reference_State.velocity_ref[2]     = kp_track[2] * (gimbal_att_deg[１] + 2);   
                 Command_Now.Reference_State.position_ref[2]     = 2.5;
                 // 偏航角 取决于当前云台偏航角
-                //　由于仿真云台使用的是与无人机的相对夹角，应次不能控制无人机偏航角或者偏航角速度，需锁定在0度
+                //　由于仿真云台使用的是与无人机的相对夹角，应此不能控制无人机偏航角或者偏航角速度，需锁定在0度
+                // 或者仿真中：不控制云台偏航角，但是仅控制无人机偏航角
                 Command_Now.Reference_State.Yaw_Rate_Mode       = false;
-                Command_Now.Reference_State.yaw_ref        = 0.0;
-                //　Command_Now.Reference_State.yaw_rate_ref        = - kpyaw_track * gimbal_att[2];
+                Eigen::Vector3d error_vec;
+                error_vec = roi_point - mav_pos_;
+                desired_yaw = std::atan2(error_vec(1), error_vec(0));//yaw
+                //cout << "desired_yaw: " << desired_yaw/PI*180 << " [deg] "<<endl;
+                Command_Now.Reference_State.yaw_ref        = desired_yaw;
+                //Command_Now.Reference_State.yaw_rate_ref        = kpyaw_track * (desired_yaw - _DroneState.attitude[2]);
             }else
             {
+                // 和降落不同，此处即使丢失也要继续追，不然没法召回目标
                 if(landpad_det.is_detected)
                 {
                     Command_Now.header.stamp                        = ros::Time::now();
@@ -309,15 +330,28 @@ int main(int argc, char **argv)
                     Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
                     Command_Now.source                              = NODE_NAME;
                     Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-                    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+                    Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::BODY_FRAME;
                     // 此处暂时使用真值，实际中应当使用机体坐标系进行控制
-                    float error = GroundTruth.pose.pose.position.x - 2.0 - mav_pos_[0];
+                    //float error = GroundTruth.pose.pose.position.x - 2.0 - mav_pos_[0];
+                    distance_to_target = (roi_point - mav_pos_).norm();
+                    float error = distance_to_target - 3.0;
+                    cout << "distance_to_target: " << distance_to_target << " [m] "<<endl;
+
                     integral = integral + error;
                         if (integral > 10.0)
                         {
                             integral = 10;
                         }
                     Command_Now.Reference_State.velocity_ref[0]     = kp_track[0] * error + ki_track*integral; 
+                    if (Command_Now.Reference_State.velocity_ref[0] <0 )
+                    {
+                        Command_Now.Reference_State.velocity_ref[0] = 0;
+                    }
+                    if(moving_target)
+                    {
+                        Command_Now.Reference_State.velocity_ref[0] = Command_Now.Reference_State.velocity_ref[0] +0.3;
+                    }
+
 
                     // 如果不控制无人机偏航角（即yaw_ref = 0），可根据云台偏航角控制无人机y轴速度
                     Command_Now.Reference_State.velocity_ref[1]     = 0.0;
@@ -327,8 +361,9 @@ int main(int argc, char **argv)
                     Command_Now.Reference_State.position_ref[2]     = 2.5;
                     // 偏航角 取决于当前云台偏航角
                     //　由于仿真云台使用的是与无人机的相对夹角，应次不能控制无人机偏航角或者偏航角速度，需锁定在0度
-                    Command_Now.Reference_State.Yaw_Rate_Mode       = false;
+                    Command_Now.Reference_State.Yaw_Rate_Mode       = true;
                     Command_Now.Reference_State.yaw_ref        = 0.0;
+                    Command_Now.Reference_State.yaw_rate_ref        = - kpyaw_track * sight_angle[0];
                 }else
                 {
                     Command_Now.header.stamp = ros::Time::now();
