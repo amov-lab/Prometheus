@@ -32,6 +32,9 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <prometheus_msgs/DetectionInfo.h>
+#include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/ArucoInfo.h>
+#include <prometheus_msgs/IndoorSearch.h>
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
@@ -53,14 +56,21 @@ using namespace cv;
 ros::Subscriber switch_subscriber;
 //【订阅】输入图像
 image_transport::Subscriber image_subscriber;
+//【订阅】无人机状态
+ros::Subscriber drone_state_subscriber;
+
 //【发布】检测得到的位置与姿态信息
 ros::Publisher pose_pub;
 //【发布】检测结果图像
 image_transport::Publisher aruco_pub;
+//【发布】融合DroneState的二维码全局位置
+ros::Publisher indoor_search_pub;
 
 
 // 使用cout打印消息
 bool local_print = true;
+// 无人机状态量
+prometheus_msgs::DroneState _drone_state;
 
 
 // 相机话题中的图像同步相关变量
@@ -74,6 +84,8 @@ boost::shared_mutex mutex_image_status;
 // 运行状态
 // 0: 正常检测Aruco码，输出位姿
 // 1: 世界坐标系标定，标定后，检测结果被转换到世界坐标系下
+// 2: 世界坐标系标定，标定后，run_state会自动变为2，在世界坐标系下输出tf位置
+// 3: 使用DroneState信息进行全局位置估计
 int run_state(0);
 
 
@@ -117,6 +129,13 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
     }
     return;
 }
+
+
+void droneStateCallbackb(const prometheus_msgs::DroneState::ConstPtr& msg)
+{
+    _drone_state = *msg;
+}
+
 
 // 用此函数查看是否收到图像话题
 bool getImageStatus(void)
@@ -203,16 +222,30 @@ int main(int argc, char **argv)
     } else {
         if (local_print) ROS_WARN("didn't find parameter calib_square_length");
     }
+    int run_state_init;
+    if (nh.getParam("run_state", run_state_init)) {
+        if (local_print) ROS_INFO("run_state is %d", run_state_init);
+        run_state = run_state_init;
+    } else {
+        if (local_print) ROS_WARN("didn't find parameter run_state");
+    }
 
     //【订阅】运行状态转换开关
     switch_subscriber = nh.subscribe("/prometheus/object_detection/aruco_navigation_switch", 1, switchCallback);
     //【订阅】输入图像
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
+    //【订阅】无人接自身位置信息
+    drone_state_subscriber = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 1, droneStateCallbackb);
 
     //【发布】检测得到的位置与姿态信息
     pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/prometheus/object_detection/aruco_det_v2", 1);
     //【发布】检测结果图像
     aruco_pub = it.advertise(output_topic.c_str(), 1);
+
+    if (3 == run_state){
+        //【发布】融合DroneState的二维码全局位置
+        indoor_search_pub = nh.advertise<prometheus_msgs::IndoorSearch>("/prometheus/indoor_search/detection_result", 1);
+    }
 
     std::string ros_path = ros::package::getPath("prometheus_detection");
     if (local_print) ROS_INFO("DETECTION_PATH: %s", ros_path.c_str());
@@ -229,6 +262,57 @@ int main(int argc, char **argv)
         cout << camMatrix << endl;
         cout << "[distCoeffs]:" << endl;
         cout << distCoeffs << endl;
+    }
+
+
+    // <pose>0 0 -0.1 0 1.5707963 0</pose>
+    Vec3d cam2drn_tvecs, cam2drn_rvecs1, cam2drn_rvecs2;
+    cv::Mat cam2drn_rmat1, cam2drn_rmat2;
+    Eigen::Matrix3d cam2drn_rmat_eigen;
+    Eigen::Quaterniond cam2drn_q;
+
+    prometheus_msgs::IndoorSearch _indoor_search_msg;
+    vector< vector< Vec3d > > aruco_pos(9);
+
+    if (3 == run_state)
+    {
+        cam2drn_tvecs[0] = 0.;
+        cam2drn_tvecs[1] = 0.;
+        cam2drn_tvecs[2] = -0.1;
+        cam2drn_rvecs1[0] = 1.5707963 * 2.;
+        cam2drn_rvecs1[1] = 0.;
+        cam2drn_rvecs1[2] = 0.;
+
+        cv::Rodrigues(cam2drn_rvecs1, cam2drn_rmat1);
+        cam2drn_rvecs2[0] = 0.;
+        cam2drn_rvecs2[1] = 0.;
+        cam2drn_rvecs2[2] = -1.5707963;
+        cv::Rodrigues(cam2drn_rvecs2, cam2drn_rmat2);
+
+        cv::cv2eigen(cam2drn_rmat2 * cam2drn_rmat1, cam2drn_rmat_eigen);
+        cam2drn_q = Eigen::Quaterniond(cam2drn_rmat_eigen);
+        cam2drn_q.normalize();
+
+        vector< prometheus_msgs::ArucoInfo > aruco_infos;
+        for (int i=0; i<9; i++)
+        {
+            prometheus_msgs::ArucoInfo aruco_info;
+            aruco_info.aruco_num = i + 1;
+            aruco_info.detected = false;
+            aruco_info.position[0] = 0;
+            aruco_info.position[1] = 0;
+            aruco_info.position[2] = 0;
+            aruco_infos.push_back(aruco_info);
+        }
+        _indoor_search_msg.Aruco1 = aruco_infos[0];
+        _indoor_search_msg.Aruco2 = aruco_infos[1];
+        _indoor_search_msg.Aruco3 = aruco_infos[2];
+        _indoor_search_msg.Aruco4 = aruco_infos[3];
+        _indoor_search_msg.Aruco5 = aruco_infos[4];
+        _indoor_search_msg.Aruco6 = aruco_infos[5];
+        _indoor_search_msg.Aruco7 = aruco_infos[6];
+        _indoor_search_msg.Aruco8 = aruco_infos[7];
+        _indoor_search_msg.Aruco9 = aruco_infos[8];
     }
 
 
@@ -268,6 +352,8 @@ int main(int argc, char **argv)
                 markerLength = calibMarkerLength;
             if (2 == run_state)
                 markerLength = targetMarkerLength;
+            if (3 == run_state)
+                markerLength = targetMarkerLength;
 
             // detect markers and estimate pose
             aruco::detectMarkers(frame, dictionary, corners, ids, detectorParams, rejected);
@@ -300,6 +386,134 @@ int main(int argc, char **argv)
                     pose.pose.orientation.z = q.z();
                     pose.pose.orientation.w = q.w();
                     pose_pub.publish(pose);
+
+                    if (3 == run_state) // 使用DroneState信息进行全局位置估计
+                    {
+                        static tf::TransformBroadcaster br;
+                        tf::Transform aruco2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
+                        char obj_str[16];
+                        sprintf(obj_str, "aruco-%d", ids[i]);
+                        tf::StampedTransform trans_aruco2camera = tf::StampedTransform(aruco2camera, ros::Time(pose.header.stamp), "camera", obj_str);
+                        // br.sendTransform(trans_aruco2camera);
+
+                        tf::Transform camera2drone = tf::Transform(
+                            tf::Quaternion(cam2drn_q.x(), cam2drn_q.y(), cam2drn_q.z(), cam2drn_q.w()),
+                            tf::Vector3(cam2drn_tvecs[0], cam2drn_tvecs[1], cam2drn_tvecs[2])
+                            );
+                        tf::StampedTransform trans_camera2drone = tf::StampedTransform(camera2drone, ros::Time(pose.header.stamp), "drone", "camera");
+                        // br.sendTransform(trans_camera2drone);
+
+                        tf::Transform drone2world = tf::Transform(
+                            tf::Quaternion(_drone_state.attitude_q.x, _drone_state.attitude_q.y, _drone_state.attitude_q.z, _drone_state.attitude_q.w),
+                            tf::Vector3(_drone_state.position[0], _drone_state.position[1], _drone_state.position[2])
+                            );
+                        tf::StampedTransform trans_drone2world = tf::StampedTransform(drone2world, ros::Time(pose.header.stamp), "world", "drone");
+                        // br.sendTransform(trans_drone2world);
+
+                        tf::Transform aruco2world;
+                        aruco2world = drone2world * camera2drone * aruco2camera;
+                        tf::StampedTransform trans_aruco2world = tf::StampedTransform(aruco2world, ros::Time(pose.header.stamp), "world", obj_str);
+                        br.sendTransform(trans_aruco2world);
+
+                        vector< float > collected_ax, collected_ay, collected_az;
+                        int collected_id;
+                        if (16 == ids[i]) 
+                        {
+                            collected_id = 1;
+                        }
+                        else if (15 == ids[i])
+                        {
+                            collected_id = 2;
+                        }
+                        else if (14 == ids[i])
+                        {
+                            collected_id = 3;
+                        }
+                        else if (13 == ids[i])
+                        {
+                            collected_id = 4;
+                        }
+                        else if (12 == ids[i])
+                        {
+                            collected_id = 5;
+                        }
+                        else if (11 == ids[i])
+                        {
+                            collected_id = 6;
+                        }
+                        else if (10 == ids[i])
+                        {
+                            collected_id = 7;
+                        }
+                        else if (9 == ids[i])
+                        {
+                            collected_id = 8;
+                        }
+                        else if (8 == ids[i])
+                        {
+                            collected_id = 9;
+                        }
+
+                        aruco_pos[collected_id - 1].push_back(Vec3d(aruco2world.getOrigin().x(), aruco2world.getOrigin().y(), aruco2world.getOrigin().z()));
+                        for (Vec3d v : aruco_pos[collected_id - 1])
+                        {
+                            collected_ax.push_back(v[0]);
+                            collected_ay.push_back(v[1]);
+                            collected_az.push_back(v[2]);
+                        }
+
+                        if (collected_ax.size() > 0)
+                        {
+                            prometheus_msgs::ArucoInfo aruco_info;
+                            aruco_info.aruco_num = collected_id;
+                            aruco_info.detected = true;
+                            float ax_sum = std::accumulate(std::begin(collected_ax), std::end(collected_ax), 0.0);
+                            float ax_mean =  ax_sum / collected_ax.size();
+                            float ay_sum = std::accumulate(std::begin(collected_ay), std::end(collected_ay), 0.0);
+                            float ay_mean =  ay_sum / collected_ay.size();
+                            float az_sum = std::accumulate(std::begin(collected_az), std::end(collected_az), 0.0);
+                            float az_mean =  az_sum / collected_az.size();
+                            aruco_info.position[0] = ax_mean;
+                            aruco_info.position[1] = ay_mean;
+                            aruco_info.position[2] = az_mean;
+                            if (1 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco1 = aruco_info;
+                            }
+                            else if (2 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco2 = aruco_info;
+                            }
+                            else if (3 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco3 = aruco_info;
+                            }
+                            else if (4 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco4 = aruco_info;
+                            }
+                            else if (5 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco5 = aruco_info;
+                            }
+                            else if (6 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco6 = aruco_info;
+                            }
+                            else if (7 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco7 = aruco_info;
+                            }
+                            else if (8 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco8 = aruco_info;
+                            }
+                            else if (9 == collected_id)
+                            {
+                                _indoor_search_msg.Aruco9 = aruco_info;
+                            }
+                        }
+                    }
 
                     if (2 == run_state)
                     {
@@ -534,6 +748,10 @@ int main(int argc, char **argv)
                 tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "map");
                 br.sendTransform(trans_world2camera);
 
+            }
+            if (3 == run_state)
+            {
+                indoor_search_pub.publish(_indoor_search_msg);
             }
 
             sensor_msgs::ImagePtr det_output_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frameCopy).toImageMsg();
