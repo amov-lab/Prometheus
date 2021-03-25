@@ -35,7 +35,9 @@ add_message_files(
   LogMessagePlanning.msg
   LogMessageDetection.msg
   SwarmCommand.msg
-	Formation.msg
+  Formation.msg
+  ArucoInfo.msg
+  IndoorSearch.msg
 )
 
 add_action_files(
