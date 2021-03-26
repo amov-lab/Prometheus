@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     gimbal_control gimbal_control_;
     
     //【订阅】地面真值，此信息仅做比较使用 不强制要求提供
-    ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/landing_pad", 10, groundtruth_cb);
+    ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/marker", 10, groundtruth_cb);
 
     //【订阅】无人机状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
