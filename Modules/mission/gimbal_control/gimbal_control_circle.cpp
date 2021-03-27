@@ -65,10 +65,9 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 
     distance_2d = std::sqrt(error_vec(0) * error_vec(0) + error_vec(1) * error_vec(1));
 
-    gimbal_att_sp_deg[0] = std::atan2(error_vec(2), distance_2d)/PI*180; //pitch
-    gimbal_att_sp_deg[1] = 0.0;
+    gimbal_att_sp_deg[0] = 0.0;
+    gimbal_att_sp_deg[1] = std::atan2(error_vec(2), distance_2d)/PI*180; //pitch
     gimbal_att_sp_deg[2] = -std::atan2(error_vec(1), error_vec(0))/PI*180;//yaw
-   
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
