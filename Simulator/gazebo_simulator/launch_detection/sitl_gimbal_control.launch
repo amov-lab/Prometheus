@@ -2,8 +2,7 @@
 	<!-- 启动PX4中的SITL功能 -->
 	<!-- 这里的环境变量将传递到rcS启动脚本中-->
 	<!-- 模型选择 -->
-	<!-- p450仿真模型 -->
-	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/1045_p450 中的修改内容 -->
+	<!-- typhoon_h480仿真模型 -->
 	<env name="PX4_SIM_MODEL" value="typhoon_h480" />
 	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
 	<!-- ekf2_gps 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
@@ -102,16 +101,21 @@
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
 	</node>	
 
-
     <!-- run the gimbal_control.cpp -->
 	<node pkg="prometheus_mission" type="gimbal_control" name="gimbal_control" output="screen" launch-prefix="gnome-terminal --">
 	</node>
 
-	<!-- run the landpad_det.cpp -->
-    <node pkg="prometheus_detection" type="landpad_det" name="landpad_det" output="screen">
+    <!-- 启动二维码检测算法 -->
+    <node pkg="prometheus_detection" type="aruco_det_v2" name="aruco_det_v2" output="screen">
+        <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
         <param name="camera_topic" type="string" value="/prometheus/sensor/gimbal_camera/image_raw" />
-        <param name="camera_info" type="string" value="$(find prometheus_gazebo)/config/camera_config/camera_param_gazebo_monocular.yaml" />
+        <param name="output_topic" type="string" value="/prometheus/camera/rgb/image_aruco_det" />
+        <param name="dictionary_type" type="int" value="6" />
+        <param name="target_marker_length" type="double" value="0.3" />
+        <param name="calib_marker_length" type="double" value="0.3" />
+        <param name="calib_square_length" type="double" value="0.4" />
     </node>
+
 </launch>
 
 
