@@ -420,7 +420,7 @@ int main(int argc, char **argv)
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
                         Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
-                        yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
+                        yaw_sp = Command_Now.Reference_State.yaw_ref;
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
                     {
                         //xy velocity mode
@@ -431,12 +431,13 @@ int main(int argc, char **argv)
                         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_vel_body, d_vel_enu);
                         Command_Now.Reference_State.position_ref[0] = 0;
                         Command_Now.Reference_State.position_ref[1] = 0;
-                        Command_Now.Reference_State.position_ref[2] = Command_Now.Reference_State.position_ref[2];
                         Command_Now.Reference_State.velocity_ref[0] = d_vel_enu[0];
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
                         Command_Now.Reference_State.velocity_ref[2] = 0.0;
+                        // 高度锁定为给定值 2021.3.24 云台追踪控制修改
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.position_ref[2]);
-                        yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
+                        // 偏航角更新为锁定 2021.3.24 云台追踪控制修改
+                        yaw_sp = Command_Now.Reference_State.yaw_ref;
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
                     {
                         float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
@@ -471,7 +472,14 @@ int main(int argc, char **argv)
                 }
             }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
             {
-                _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
+                if(Command_Now.Reference_State.Yaw_Rate_Mode)
+                {
+                    yaw_rate_sp = Command_Now.Reference_State.yaw_rate_ref;
+                    _command_to_mavros.send_vel_xy_pos_z_setpoint_yawrate(state_sp, yaw_rate_sp);
+                }else
+                {
+                    _command_to_mavros.send_vel_xy_pos_z_setpoint(state_sp, yaw_sp);
+                }
             }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
             {
                 // 特殊情况，一般也用不到

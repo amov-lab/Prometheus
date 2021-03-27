@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 
     float gimbal_att_sp_deg[3];
 
+    // 
     while(ros::ok())
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Gimbal Control Mission<<<<<<<<<<<<<<<<<<<<<< "<< endl;
@@ -50,7 +51,12 @@ int main(int argc, char **argv)
         cin >> gimbal_att_sp_deg[1];
         cout << "Yaw [deg] "<<endl;
         cin >> gimbal_att_sp_deg[2];
-
+        
+        // 注意必须要解锁飞机后才可控制云台
+        // 注意：使用角度值直接进行控制
+        // 面向相机朝向的方向，逆时针旋转roll为正，但roll通道一般不控制
+        // pitch向上抬头为正
+        // 面向相机朝向的方向，向右转头yaw为正(与飞机yaw相反)
         gimbal_att_sp[0] = gimbal_att_sp_deg[0];
         gimbal_att_sp[1] = gimbal_att_sp_deg[1];
         gimbal_att_sp[2] = gimbal_att_sp_deg[2];
