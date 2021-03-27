@@ -26,5 +26,13 @@ plugin_blacklist:
 - setpoint_position
 - setpoint_accel
 - setpoint_velocity
+- ftp
+- global_position
+- gps_status
+- log_transfer
+- manual_control
+- play_tune
+- rangefinder
+- setpoint_trajectory
 plugin_whitelist: []
 #- 'sys_*'
