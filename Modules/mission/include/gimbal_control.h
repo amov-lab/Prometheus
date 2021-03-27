@@ -1,6 +1,7 @@
 #ifndef GIMBAL_CONTROL_H
 #define GIMBAL_CONTROL_H
 
+// PX4云台控制类
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 #include <math.h>
@@ -13,23 +14,16 @@ using namespace std;
 class gimbal_control
 {
     public:
-    //constructed function 1
     gimbal_control(void):
         nh("~")
     {
-        nh.param<string>("uav_name", uav_name, "/uav0");
-
-        if (uav_name == "/uav0")
-        {
-            uav_name = "";
-        }
-         
-        // 订阅云台实际角度
+        // 订阅云台当前角度
         gimbal_att_sub = nh.subscribe<geometry_msgs::Quaternion>("/mavros/mount_control/orientation", 10, &gimbal_control::gimbal_att_cb,this);
 
-        //　本话题要发送至飞控(通过Mavros_extra功能包 /plugins/mount_control.cpp发送)
-        mount_control_pub = nh.advertise<mavros_msgs::MountControl>(uav_name + "/mavros/mount_control/command", 1);
+        // 云台控制：本话题要发送至飞控(通过Mavros_extra功能包 /plugins/mount_control.cpp发送)
+        mount_control_pub = nh.advertise<mavros_msgs::MountControl>( "/mavros/mount_control/command", 1);
 
+        // 云台角度初始化
         gimbal_att        = Eigen::Vector3d(0.0,0.0,0.0);
         gimbal_att_last   = Eigen::Vector3d(0.0,0.0,0.0);
 
@@ -38,22 +32,21 @@ class gimbal_control
         dt_time = 0.0;
 
         last_time = get_time_in_sec(begin_time);
-
     }
 
-    string uav_name;
-
+    // 云台角度
     Eigen::Vector3d gimbal_att;
+    // 上一时刻云台角度
     Eigen::Vector3d gimbal_att_last;
+    // 估算的云台角速度
     Eigen::Vector3d gimbal_att_rate;
 
+    // 估算云台角速度
     ros::Time begin_time;
     float last_time;
     float dt_time;
-    
 
-
-    //发送云台控制指令
+    //发送云台控制指令API函数
     void send_mount_control_command(const Eigen::Vector3d& gimbal_att_sp);
 
     Eigen::Vector3d get_gimbal_att();
