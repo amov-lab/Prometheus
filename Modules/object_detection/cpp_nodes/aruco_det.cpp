@@ -417,6 +417,8 @@ int main(int argc, char **argv)
                         tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
                         tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "aruco");
                         br.sendTransform(trans_world2camera);
+
+                        deted = true;
                     }
 
                     if (local_print) {
@@ -427,7 +429,6 @@ int main(int argc, char **argv)
                     multi_pose_now.aruco_infos.push_back(pose_now);
                 }
                 multi_pose_pub.publish(multi_pose_now);
-                deted = true;
             }
             if (!deted)
             {
