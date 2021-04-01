@@ -37,6 +37,7 @@ add_message_files(
   SwarmCommand.msg
   Formation.msg
   ArucoInfo.msg
+  MultiArucoInfo.msg
   IndoorSearch.msg
 )
 
