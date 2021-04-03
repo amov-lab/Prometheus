@@ -1,5 +1,6 @@
 std_msgs/Header header
 
+## 目标类别名称
 string object_name
 
 ## 是否检测到目标
