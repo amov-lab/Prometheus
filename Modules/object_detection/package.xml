@@ -12,7 +12,7 @@
   <url type="website">http://www.ros.org/wiki/roscpp_tutorials</url>
   <url type="bugtracker">https://github.com/ros/ros_tutorials/issues</url>
   <url type="repository">https://github.com/ros/ros_tutorials</url>
-  <author>BIT_vision</author>
+  <author>jario</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
