@@ -13,6 +13,7 @@ using namespace Eigen;
 #define NODE_NAME "gimbal_control_demo"
 #define PI 3.1415926
 #define VISION_THRES_TRACKING 100
+
 bool hold_mode;
 bool ignore_vision;
 Eigen::Vector3d gimbal_att_sp;
@@ -21,7 +22,6 @@ Eigen::Vector3d gimbal_att_deg;
 Eigen::Vector3d gimbal_att_rate;
 Eigen::Vector3d gimbal_att_rate_deg;
 nav_msgs::Odometry GroundTruth;             // 降落板真实位置（仿真中由Gazebo插件提供）
-Detection_result landpad_det;               // 检测结果
 float sight_angle[2];
 float desired_yaw;
 float kp_track[3];         //控制参数 - 比例参数
@@ -47,49 +47,37 @@ void groundtruth_cb(const nav_msgs::Odometry::ConstPtr& msg)
     roi_point[1] = GroundTruth.pose.pose.position.y;
     roi_point[2] = GroundTruth.pose.pose.position.z;
 }
-void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
+
+int num_regain = 0;
+int num_lost = 0;
+bool is_detected = false;
+Eigen::Vector3d aruco_pos_enu;
+prometheus_msgs::ArucoInfo aruco_info;
+
+void aruco_cb(const prometheus_msgs::ArucoInfo::ConstPtr& msg)
 {
-    
-    landpad_det.object_name = "landpad";
-    landpad_det.Detection_info = *msg;
-    // 此处相机的姿态一直在变化，因此返回的机体系位置不能直接使用
-    // 根据云台姿态： 相机坐标系 to 集体坐标系
+    aruco_info = *msg;
 
-    // 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
-    // 相机安装误差 在mission_utils.h中设置
-    landpad_det.pos_camera_frame[0] =  landpad_det.Detection_info.position[2] ;
-    landpad_det.pos_camera_frame[1] = - landpad_det.Detection_info.position[0] ;
-    landpad_det.pos_camera_frame[2] = - landpad_det.Detection_info.position[1] ;
+    // 暂不考虑无人机姿态的影响
+    aruco_pos_enu[0] = mav_pos_[0] - aruco_info.position[1];
+    aruco_pos_enu[1] = mav_pos_[1] - aruco_info.position[0];
+    // 相机安装在无人机下方10cm处，需减去该偏差
+    aruco_pos_enu[2] = mav_pos_[2] - aruco_info.position[2];
 
-    landpad_det.pos_body_frame = R_camera_to_body * landpad_det.pos_camera_frame;
-
-    sight_angle[0] = landpad_det.Detection_info.sight_angle[0];
-    sight_angle[1] = landpad_det.Detection_info.sight_angle[1];
-
-    // 机体系 -> 机体惯性系 (原点在机体的惯性系) (对无人机姿态进行解耦)
-    landpad_det.pos_body_enu_frame = R_Body_to_ENU * landpad_det.pos_body_frame;
-
-    // 机体惯性系 -> 惯性系
-    landpad_det.pos_enu_frame[0] = _DroneState.position[0] + landpad_det.pos_body_enu_frame[0];
-    landpad_det.pos_enu_frame[1] = _DroneState.position[1] + landpad_det.pos_body_enu_frame[1];
-    landpad_det.pos_enu_frame[2] = _DroneState.position[2] + landpad_det.pos_body_enu_frame[2];
-    // 此降落方案不考虑偏航角 （高级版可提供）
-    landpad_det.att_enu_frame[2] = 0.0;
-
-    if(landpad_det.Detection_info.detected)
+    if(aruco_info.detected)
     {
-        landpad_det.num_regain++;
-        landpad_det.num_lost = 0;
+        num_regain++;
+        num_lost = 0;
     }else
     {
-        landpad_det.num_regain = 0;
-        landpad_det.num_lost++;
+        num_regain = 0;
+        num_lost++;
     }
 
     // 当连续一段时间无法检测到目标时，认定目标丢失
-    if(landpad_det.num_lost > VISION_THRES_TRACKING)
+    if(num_lost > VISION_THRES_TRACKING)
     {
-        landpad_det.is_detected = false;
+        is_detected = false;
 
         //　丢失后　对sight_angle清零，否则云台会移动
         sight_angle[0] = 0.0;
@@ -97,12 +85,26 @@ void landpad_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     }
 
     // 当连续一段时间检测到目标时，认定目标得到
-    if(landpad_det.num_regain > 3)
+    if(num_regain > 2)
     {
-        landpad_det.is_detected = true;
+        is_detected = true;
     }
 
+    if(aruco_info.detected)
+    {
+        cout << "Aruco_ID: [" << aruco_info.aruco_num << "]  detected: [yes] " << endl;
+        cout << "Pos [camera]: "<< aruco_info.position[0] << " [m] "<< aruco_info.position[1] << " [m] "<< aruco_info.position[2] << " [m] "<<endl;
+        cout << "Pos [enu]   : "<< aruco_pos_enu[0]       << " [m] "<< aruco_pos_enu[1]       << " [m] "<< aruco_pos_enu[2]       << " [m] "<<endl;
+        // cout << "Att [camera]: "<< aruco_info.position[0] << " [m] "<< aruco_info.position[1] << " [m] "<< aruco_info.position[2] << " [m] "<<endl;
+        cout << "Sight Angle : "<< aruco_info.sight_angle[0]/3.14*180 << " [deg] "<< aruco_info.sight_angle[1]/3.14*180 << " [deg] " <<endl;
+    }else
+    {
+        cout << "Aruco_ID: [" << aruco_info.aruco_num << "]  detected: [no] " << endl;
+    }
+    
+
 }
+
 void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 {
     _DroneState = *msg;
@@ -178,10 +180,8 @@ int main(int argc, char **argv)
     //【订阅】地面真值，此信息仅做比较使用 不强制要求提供
     ros::Subscriber groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/marker", 10, groundtruth_cb);
 
-    //【订阅】降落板与无人机的相对位置及相对偏航角  单位：米   单位：弧度
-    //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
-    //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10, landpad_det_cb);
+    //【订阅】
+    ros::Subscriber aruco_sub = nh.subscribe<prometheus_msgs::ArucoInfo>("/prometheus/object_detection/aruco_det", 10, aruco_cb);
 
     //【订阅】无人机状态
     ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
@@ -323,7 +323,7 @@ int main(int argc, char **argv)
             }else
             {
                 // 和降落不同，此处即使丢失也要继续追，不然没法召回目标
-                if(landpad_det.is_detected)
+                if(is_detected)
                 {
                     Command_Now.header.stamp                        = ros::Time::now();
                     Command_Now.Mode                                = prometheus_msgs::ControlCommand::Move;
@@ -401,7 +401,7 @@ void printf_result()
     cout << ">>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<"<< endl;
 
     cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    if(landpad_det.is_detected)
+    if( is_detected)
     {
         cout << "is_detected: ture" <<endl;
     }else
@@ -409,10 +409,10 @@ void printf_result()
         cout << "is_detected: false" <<endl;
     }
     
-    cout << "Target_pos (camera): " << landpad_det.pos_camera_frame[0] << " [m] "<< landpad_det.pos_camera_frame[1] << " [m] "<< landpad_det.pos_camera_frame[2] << " [m] "<<endl;
-    cout << "Target_pos (body): " << landpad_det.pos_body_frame[0] << " [m] "<< landpad_det.pos_body_frame[1] << " [m] "<< landpad_det.pos_body_frame[2] << " [m] "<<endl;
-    cout << "Target_pos (body_enu): " << landpad_det.pos_body_enu_frame[0] << " [m] "<< landpad_det.pos_body_enu_frame[1] << " [m] "<< landpad_det.pos_body_enu_frame[2] << " [m] "<<endl;
-    cout << "Detection_ENU(pos): " << landpad_det.pos_enu_frame[0] << " [m] "<< landpad_det.pos_enu_frame[1] << " [m] "<< landpad_det.pos_enu_frame[2] << " [m] "<<endl;
+    // cout << "Target_pos (camera): " <<  pos_camera_frame[0] << " [m] "<<  pos_camera_frame[1] << " [m] "<<  pos_camera_frame[2] << " [m] "<<endl;
+    // cout << "Target_pos (body): " <<  pos_body_frame[0] << " [m] "<<  pos_body_frame[1] << " [m] "<<  pos_body_frame[2] << " [m] "<<endl;
+    // cout << "Target_pos (body_enu): " <<  pos_body_enu_frame[0] << " [m] "<<  pos_body_enu_frame[1] << " [m] "<<  pos_body_enu_frame[2] << " [m] "<<endl;
+    // cout << "Detection_ENU(pos): " <<  pos_enu_frame[0] << " [m] "<<  pos_enu_frame[1] << " [m] "<<  pos_enu_frame[2] << " [m] "<<endl;
     cout << "Ground_truth(pos):  " << GroundTruth.pose.pose.position.x << " [m] "<< GroundTruth.pose.pose.position.y << " [m] "<< GroundTruth.pose.pose.position.z << " [m] "<<endl;
 }
 

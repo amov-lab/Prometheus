@@ -346,7 +346,7 @@
           <geometry>
             <box>
               <!-- 尺寸 -->
-              <size>0.3 0.3 0.02</size>
+              <size>0.5 0.5 0.02</size>
             </box>
           </geometry>
           <material>
