@@ -35,8 +35,8 @@
         <param name="target_marker_length" type="double" value="0.4" />
     </node>
 
-	<!-- run the ground_station_msg.cpp -->
-	<node pkg="prometheus_station" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
+	<!-- run the ground_station_aruco.cpp -->
+	<node pkg="prometheus_station" type="ground_station_aruco" name="ground_station_aruco" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
 
 	<!-- run the terminal_control.cpp -->
