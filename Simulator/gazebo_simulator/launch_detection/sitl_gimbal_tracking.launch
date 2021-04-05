@@ -127,9 +127,9 @@
 		<param name="ki_track" value="0.05" />
 
 		<param name="moving_target" value="false" />
-		<param name="start_point_x" value="-2.0" />
-		<param name="start_point_y" value="-2.0" />
-		<param name="start_point_z" value="2.0" />
+		<param name="start_point_x" value="-1.0" />
+		<param name="start_point_y" value="2.0" />
+		<param name="start_point_z" value="1.5" />
 	</node>
 
 </launch>
