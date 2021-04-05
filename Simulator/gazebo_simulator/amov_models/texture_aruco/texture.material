@@ -1,3 +1,4 @@
+// 使用的是6X6_250字典，注意边长为10*10，但是黑边为8*8
 material aruco_1
 {
  technique
@@ -7,7 +8,7 @@ material aruco_1
      texture_unit
      {
        // Relative to the location of the material script
-       texture 1.png
+       texture DICT_6X6_250_1.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -23,7 +24,7 @@ material aruco_2
      texture_unit
      {
        // Relative to the location of the material script
-       texture 2.png
+       texture DICT_6X6_250_2.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -39,7 +40,7 @@ material aruco_3
      texture_unit
      {
        // Relative to the location of the material script
-       texture 3.png
+       texture DICT_6X6_250_3.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -55,7 +56,7 @@ material aruco_4
      texture_unit
      {
        // Relative to the location of the material script
-       texture 4.png
+       texture DICT_6X6_250_4.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -71,7 +72,7 @@ material aruco_5
      texture_unit
      {
        // Relative to the location of the material script
-       texture 5.png
+       texture DICT_6X6_250_5.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -87,7 +88,7 @@ material aruco_6
      texture_unit
      {
        // Relative to the location of the material script
-       texture 6.png
+       texture DICT_6X6_250_6.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -103,7 +104,7 @@ material aruco_7
      texture_unit
      {
        // Relative to the location of the material script
-       texture 7.png
+       texture DICT_6X6_250_7.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -119,7 +120,7 @@ material aruco_8
      texture_unit
      {
        // Relative to the location of the material script
-       texture 8.png
+       texture DICT_6X6_250_8.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
@@ -135,7 +136,191 @@ material aruco_9
      texture_unit
      {
        // Relative to the location of the material script
-       texture 9.png
+       texture DICT_6X6_250_9.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+material aruco_10
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_10.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+material aruco_11
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_11.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+material aruco_12
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_12.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_13
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_13.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_14
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_14.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_15
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_15.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_16
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_16.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_17
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_17.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_18
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_18.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_19
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_19.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+
+material aruco_20
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture DICT_6X6_250_20.png
        // Repeat the texture over the surface (4 per face)
        scale 1.0 1.0
      }
