@@ -12,13 +12,40 @@ float refresh_time;
 int mission_type;
 
 prometheus_msgs::ArucoInfo aruco_info;
+prometheus_msgs::MultiArucoInfo multi_aruco_info;
 
+prometheus_msgs::DroneState _DroneState;    // 无人机状态
+bool get_drone_pos = false;
+Eigen::Vector3d mav_pos_;
+Eigen::Vector3d aruco_pos_enu;
+Eigen::Matrix3f R_Body_to_ENU,R_camera_to_body;              // 无人机机体系至惯性系转换矩阵
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void aruco_cb(const prometheus_msgs::ArucoInfo::ConstPtr& msg)
 {
     aruco_info = *msg;
-}
 
+    if(get_drone_pos)
+    {
+        // 暂不考虑无人机姿态的影响
+        aruco_pos_enu[0] = mav_pos_[0] - aruco_info.position[1];
+        aruco_pos_enu[1] = mav_pos_[1] - aruco_info.position[0];
+        // 相机安装在无人机下方10cm处，需减去该偏差
+        aruco_pos_enu[2] = mav_pos_[2] - aruco_info.position[2] - 0.1;
+    }
+}
+void multi_aruco_cb(const prometheus_msgs::MultiArucoInfo::ConstPtr& msg)
+{
+    multi_aruco_info = *msg;
+}
+void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
+{
+    _DroneState = *msg;
+    
+    get_drone_pos = true;
+
+    mav_pos_ << _DroneState.position[0],_DroneState.position[1],_DroneState.position[2];
+}
+void printf_info();                                                                       //打印函数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -36,6 +63,8 @@ int main(int argc, char **argv)
     // 【订阅】
     ros::Subscriber multi_aruco_sub = nh.subscribe<prometheus_msgs::MultiArucoInfo>("/prometheus/object_detection/multi_aruco_det", 10, multi_aruco_cb);
     
+    //【订阅】无人机状态
+    ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, drone_state_cb);
     // 频率
     float hz = 1.0 / refresh_time;
     ros::Rate rate(hz);
@@ -58,7 +87,7 @@ int main(int argc, char **argv)
 
 void printf_info()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Ground Station  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    cout <<">>>>>>>>>>>>>>>>>>>>>>>> Ground Station Aruco <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
@@ -70,80 +99,35 @@ void printf_info()
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    // 【打印】无人机状态,包括位置,速度等数据信息
-    prometheus_station_utils::prinft_drone_state(_DroneState);
-
-    // 【打印】来自上层的控制指令
-    prometheus_station_utils::printf_command_control(Command_Now);
-
-    // 【打印】控制模块消息
-    if(control_type == PX4_POS_CONTROLLER)
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Aruco Info<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    
+    if(aruco_info.detected)
     {
-        //打印期望位姿
-        prometheus_station_utils::prinft_ref_pose(ref_pose);
-        prometheus_station_utils::prinft_attitude_reference(_AttitudeReference);
-
-        cout <<">>>>>>>>>>>>>>>>>>>>>>>> Target Info FCU <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        
-        cout << "Att_target [R P Y] : " << euler_fcu_target[0] * 180/M_PI <<" [deg]  "<<euler_fcu_target[1] * 180/M_PI << " [deg]  "<< euler_fcu_target[2] * 180/M_PI<<" [deg]  "<<endl;
-        
-        cout << "Thr_target [ 0-1 ] : " << Thrust_target <<endl;
-    }else if(control_type == PX4_SENDER)
+        cout << "Aruco_ID: [" << aruco_info.aruco_num << "]  detected: [yes] " << endl;
+        cout << "Pos [camera]: "<< aruco_info.position[0] << " [m] "<< aruco_info.position[1] << " [m] "<< aruco_info.position[2] << " [m] "<<endl;
+        cout << "Pos [enu]   : "<< aruco_pos_enu[0]       << " [m] "<< aruco_pos_enu[1]       << " [m] "<< aruco_pos_enu[2]       << " [m] "<<endl;
+        // cout << "Att [camera]: "<< aruco_info.position[0] << " [m] "<< aruco_info.position[1] << " [m] "<< aruco_info.position[2] << " [m] "<<endl;
+        cout << "Sight Angle : "<< aruco_info.sight_angle[0]/3.14*180 << " [deg] "<< aruco_info.sight_angle[1]/3.14*180 << " [deg] " <<endl;
+    }else
     {
-        cout <<">>>>>>>>>>>>>>>>>>>>> Target Info from PX4 <<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        cout << "Pos_target [X Y Z] : " << pos_drone_fcu_target[0] << " [ m ] "<< pos_drone_fcu_target[1]<<" [ m ] "<<pos_drone_fcu_target[2]<<" [ m ] "<<endl;
-        cout << "Vel_target [X Y Z] : " << vel_drone_fcu_target[0] << " [m/s] "<< vel_drone_fcu_target[1]<<" [m/s] "<<vel_drone_fcu_target[2]<<" [m/s] "<<endl;
-        // cout << "Acc_target [X Y Z] : " << accel_drone_fcu_target[0] << " [m/s^2] "<< accel_drone_fcu_target[1]<<" [m/s^2] "<<accel_drone_fcu_target[2]<<" [m/s^2] "<<endl;
-    }else if(control_type == PX4_GEO_CONTROLLER)
-    {
-        cout <<">>>>>>>>>>>>>>>>>>>>>>>> Target Info FCU <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        
-        cout << "Bodyrate_target [R P Y] : " << bodyrate_fcu_target[0] * 180/M_PI <<" [deg/s]  "<<bodyrate_fcu_target[1] * 180/M_PI << " [deg/s]  "<< bodyrate_fcu_target[2] * 180/M_PI<<" [deg/s]  "<<endl;
-        
-        cout << "Thr_target [ 0-1 ] : " << Thrust_target <<endl; 
+        cout << "Aruco_ID: [" << aruco_info.aruco_num << "]  detected: [no] " << endl;
     }
-
-    if(Command_Now.Mode == prometheus_msgs::ControlCommand::Move)
+    
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Multi Aruco Info<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    for (int i=0; i<multi_aruco_info.num_arucos; i++)
     {
+        cout << "Aruco_ID: [" << multi_aruco_info.aruco_infos[i].aruco_num << "]  detected: [yes] " << endl;
         
-        
-        //Only for TRAJECTORY tracking
-        if(Command_Now.Reference_State.Move_mode == prometheus_msgs::PositionReference::TRAJECTORY)
+        if(get_drone_pos)
         {
-            cout <<">>>>>>>>>>>>>>>>>>>>>>>> Tracking Error <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-
-            static Eigen::Vector3d tracking_error;
-            tracking_error = prometheus_station_utils::tracking_error(_DroneState, Command_Now);
-            cout << "Pos_error [m]: " << tracking_error[0] <<endl;
-            cout << "Vel_error [m/s]: " << tracking_error[1] <<endl;
+            Eigen::Vector3d multi_aruco_pos_enu;
+            // 暂不考虑无人机姿态的影响
+            multi_aruco_pos_enu[0] = mav_pos_[0] - multi_aruco_info.aruco_infos[i].position[1];
+            multi_aruco_pos_enu[1] = mav_pos_[1] - multi_aruco_info.aruco_infos[i].position[0];
+            // 相机安装在无人机下方10cm处，需减去该偏差
+            multi_aruco_pos_enu[2] = mav_pos_[2] - multi_aruco_info.aruco_infos[i].position[2] - 0.1;
+            cout << "Pos [enu]   : "<< multi_aruco_pos_enu[0]       << " [m] "<< multi_aruco_pos_enu[1]       << " [m] "<< multi_aruco_pos_enu[2]       << " [m] "<<endl;
         }
-        
     }
-
-    // 【打印】视觉模块消息
-    if(mission_type == 1)
-    {
-        // 降落任务
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Vision State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        if(detection_info.detected)
-        {
-            cout << "is_detected: ture" <<endl;
-        }else
-        {
-            cout << "is_detected: false" <<endl;
-        }
-        
-        cout << "detection_result (body): " << detection_info.position[0] << " [m] "<< detection_info.position[1] << " [m] "<< detection_info.position[2] << " [m] "<<endl;
-    }
-
-    if(gimbal_enable)
-    {
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Gimbal State<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-        cout << "Gimbal_att    : " << gimbal_att_deg[0] << " [deg] "<< gimbal_att_deg[1] << " [deg] "<< gimbal_att_deg[2] << " [deg] "<<endl;
-    }
-
-
-
-
 
 }
