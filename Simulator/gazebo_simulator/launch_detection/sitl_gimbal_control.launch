@@ -107,16 +107,23 @@
 
     <!-- 启动二维码检测算法 -->
     <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen">
+		<!-- 相机话题 -->
         <param name="camera_topic" type="string" value="/prometheus/sensor/gimbal_camera/image_raw" />
+		<!-- 相机参数 -->
         <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
+		<!-- 输出话题1 -->
         <param name="output_pose_topic" type="string" value="/prometheus/object_detection/aruco_det" />
+		<!-- 输出话题2 -->
         <param name="output_multi_pose_topic" type="string" value="/prometheus/object_detection/multi_aruco_det" />
+		<!-- 输出图像话题 -->
         <param name="output_image_topic" type="string" value="/prometheus/camera/rgb/image_aruco_det" />
-        <param name="dictionary_type" type="int" value="6" />
+		<!-- 10号字典 -->
+        <param name="dictionary_type" type="int" value="10" />
+		<!-- 指定识别1号marker -->
         <param name="binding_id" type="int" value="1" />
-        <param name="target_marker_length" type="double" value="0.3" />
+		<!-- marker边长 10:8 -->
+        <param name="target_marker_length" type="double" value="0.4" />
     </node>
-
 </launch>
 
 
