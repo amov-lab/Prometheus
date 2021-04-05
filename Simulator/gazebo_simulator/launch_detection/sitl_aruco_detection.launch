@@ -1,0 +1,47 @@
+<launch>
+	<!-- Launch Gazebo Simulation -->
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.05"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/aruco_6X6_250.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_monocular/p450_monocular.sdf"/>
+	<arg name="model" default="p450_monocular"/>
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
+	  <arg name="world" value="$(arg world)"/>
+	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
+    </include>
+
+    <!-- 启动二维码检测算法 -->
+    <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen">
+		<!-- 相机话题 -->
+        <param name="camera_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
+		<!-- 相机参数 -->
+        <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
+		<!-- 输出话题1 -->
+        <param name="output_pose_topic" type="string" value="/prometheus/object_detection/aruco_det" />
+		<!-- 输出话题2 -->
+        <param name="output_multi_pose_topic" type="string" value="/prometheus/object_detection/multi_aruco_det" />
+		<!-- 输出图像话题 -->
+        <param name="output_image_topic" type="string" value="/prometheus/camera/rgb/image_aruco_det" />
+		<!-- 10号字典 -->
+        <param name="dictionary_type" type="int" value="10" />
+		<!-- 指定识别1号marker -->
+        <param name="binding_id" type="int" value="1" />
+		<!-- marker边长 10:8 -->
+        <param name="target_marker_length" type="double" value="0.4" />
+    </node>
+
+	<!-- run the ground_station_msg.cpp -->
+	<node pkg="prometheus_station" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
+	</node>
+
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
+	</node>	
+</launch>
+
