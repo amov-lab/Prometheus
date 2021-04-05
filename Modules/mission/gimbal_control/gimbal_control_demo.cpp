@@ -372,12 +372,6 @@ int main(int argc, char **argv)
                     Command_Now.Mode = prometheus_msgs::ControlCommand::Hold;
                 }
             }
-            
-
-
-
-
-
             command_pub.publish(Command_Now);
         }
 
