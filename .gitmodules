@@ -1,8 +1,1 @@
-[submodule "Modules/planning/RL_swarm_planning"]
-	path = Modules/planning/RL_swarm_planning
-	url = https://github.com/potato77/RL_swarm_planning
-	branch = main
-[submodule "Modules/global_planning"]
-	path = Modules/global_planning
-	url = https://github.com/potato77/prometheus_global_planning
-	branch = main
+
