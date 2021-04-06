@@ -265,7 +265,7 @@ int main(int argc, char **argv)
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
         Command_Now.source                              = NODE_NAME;
         Command_Now.Reference_State.Move_mode           = prometheus_msgs::PositionReference::XYZ_POS;
-        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::ENU_FRAME;
+        Command_Now.Reference_State.Move_frame          = prometheus_msgs::PositionReference::BODY_FRAME;
         Command_Now.Reference_State.position_ref[0]     = start_point[0];
         Command_Now.Reference_State.position_ref[1]     = start_point[1];
         Command_Now.Reference_State.position_ref[2]     = start_point[2];
