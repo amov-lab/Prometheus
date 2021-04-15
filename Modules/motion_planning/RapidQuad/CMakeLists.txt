@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(prometheus_motion_planning)
+project(prometheus_rapid_quad)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -71,16 +71,10 @@ add_library(SingleAxisTrajectory include/SingleAxisTrajectory.cpp)
 ###### Main File ##########
 
 add_executable(main_node src/main_node.cpp)
-add_dependencies(main_node prometheus_motion_planning_gencpp) 
+add_dependencies(main_node prometheus_rapid_quad_gencpp) 
 target_link_libraries(main_node ${catkin_LIBRARIES})
 target_link_libraries(main_node RapidTrajectoryGenerator)
 target_link_libraries(main_node SingleAxisTrajectory)
-
-##px4_pos_estimator.cpp
-#add_executable(px4_pos_estimator src/px4_pos_estimator.cpp)
-#add_dependencies(px4_pos_estimator prometheus_motion_planning_gencpp)
-#target_link_libraries(px4_pos_estimator ${catkin_LIBRARIES})
-#target_link_libraries(px4_pos_estimator OptiTrackFeedbackRigidBody)
 
 #############
 ## Install ##
@@ -126,7 +120,7 @@ install(DIRECTORY launch/
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_prometheus_motion_planning.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_prometheus_rapid_quad.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
