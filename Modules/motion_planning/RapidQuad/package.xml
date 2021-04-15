@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>prometheus_motion_planning</name>
+  <name>prometheus_rapid_quad</name>
   <version>0.0.0</version>
-  <description>The prometheus_motion_planning package</description>
+  <description>The prometheus_rapid_quad package</description>
 
   <maintainer email="fatmoonqyp@126.com">Yuhua Qi</maintainer>
   <author email="fatmoonqyp@126.com">Yuhua Qi</author>
