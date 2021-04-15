@@ -2,8 +2,8 @@
 	<!-- Launch Gazebo Simulation -->
     <arg name="x" default="0.0"/>
     <arg name="y" default="0"/>
-    <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/empty.world"/>
+    <arg name="z" default="0.15"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/prometheus_logo.world"/>
 	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450/p450.sdf"/>
 	<arg name="model" default="p450"/>
     <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
