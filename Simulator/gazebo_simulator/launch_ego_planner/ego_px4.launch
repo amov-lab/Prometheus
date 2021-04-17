@@ -1,0 +1,72 @@
+<launch>
+  <!-- size of map, change the size inflate x, y, z according to your application -->
+  <arg name="map_size_x" value="40.0"/>
+  <arg name="map_size_y" value="40.0"/>
+  <arg name="map_size_z" value=" 3.0"/>
+
+  <!-- topic of your odometry such as VIO or LIO -->
+  <!-- 改为PX4odom -->
+  <arg name="odom_topic" value="/prometheus/drone_odom" />
+
+  <!-- main algorithm params -->
+  <include file="$(find ego_planner)/launch/advanced_param.xml">
+
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <arg name="odometry_topic" value="$(arg odom_topic)"/>
+
+    <!-- topic of point cloud measurement, such as from LIDAR  -->
+    <!-- don't set camera pose and depth, if you already set this one! -->
+    <!-- 局部点云输入 -->
+    <arg name="cloud_topic" value="/prometheus/sensors/3Dlidar_scan"/>
+
+    <!-- maximum velocity and acceleration the drone will reach -->
+    <arg name="max_vel" value="1.0" />
+    <arg name="max_acc" value="2.0" />
+
+    <!--always set to 1.5 times grater than sensing horizen-->
+    <!-- 规划的范围？？ -->
+    <arg name="planning_horizon" value="7.5" /> 
+
+    <!-- 1: use 2D Nav Goal to select goal  -->
+    <!-- 2: use global waypoints below  -->
+    <!-- 航点是给定的 -->
+    <arg name="flight_type" value="1" />
+    
+    <!-- global waypoints -->
+    <!-- It generates a piecewise min-snap traj passing all waypoints -->
+    <arg name="point_num" value="5" />
+
+    <arg name="point0_x" value="0.0" />
+    <arg name="point0_y" value="10.0" />
+    <arg name="point0_z" value="1.0" />
+
+    <arg name="point1_x" value="0.0" />
+    <arg name="point1_y" value="-10.0" />
+    <arg name="point1_z" value="1.0" />
+
+    <arg name="point2_x" value="0.0" />
+    <arg name="point2_y" value="10.0" />
+    <arg name="point2_z" value="1.0" />
+
+    <arg name="point3_x" value="0.0" />
+    <arg name="point3_y" value="-10.0" />
+    <arg name="point3_z" value="1.0" />
+
+    <arg name="point4_x" value="0.0" />
+    <arg name="point4_y" value="10.0" />
+    <arg name="point4_z" value="1.0" />
+    
+  </include>
+
+  <!-- trajectory server -->
+  <!-- 将B样条转化为控制指令 -->
+  <node pkg="ego_planner" name="traj_server" type="traj_server" output="screen">
+    <remap from="/position_cmd" to="planning/pos_cmd"/>
+
+    <remap from="/odom_world" to="$(arg odom_topic)"/>
+    <param name="traj_server/time_forward" value="1.0" type="double"/>
+  </node>
+
+</launch>
