@@ -167,6 +167,7 @@ void geometry_controller::computeBodyRateCmd(Eigen::Vector4d &bodyrate_cmd, cons
 
     if (velocity_yaw_) 
     {
+        // 根据速度计算偏航角
         mavYaw_ = getVelocityYaw(mavVel_);
     }
 

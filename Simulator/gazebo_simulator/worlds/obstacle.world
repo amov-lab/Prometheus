@@ -99,10 +99,10 @@
     </model>
 
     <model name='pillar_l_1'>
-      <include>
+      <!-- <include>
         <uri>model://pillar_l</uri>
 	      <pose> 0 0 1.75 0 0 0 </pose>
-      </include>
+      </include> -->
     </model>
     <model name='pillar_m_1'>
       <include>
