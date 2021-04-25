@@ -28,7 +28,7 @@
     <arg name="verbose" default="false"/>
     <arg name="paused" default="false"/>
     <arg name="respawn_gazebo" default="false"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/prometheus_logo.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
@@ -48,8 +48,9 @@
 	<arg name="R" default="0.0"/>
     <arg name="P" default="0.0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450/p450.sdf"/>
-	<arg name="model" default="p450"/>
+	<!-- 目前使用3dlidar生成局部点云 -->
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_3Dlidar/p450_3Dlidar.sdf"/>
+	<arg name="model" default="p450_3Dlidar"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
 	</node>
@@ -74,7 +75,7 @@
 	<!-- 启动Prometheus代码 -->
 	<!-- run the px4_pos_estimator.cpp -->
 	<arg name="input_source" default="2"/>
-	<arg name="rate_hz" default="30"/>
+	<arg name="rate_hz" default="100"/>
 	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
 		<param name="input_source" value="$(arg input_source)" />
@@ -95,5 +96,32 @@
 	<!-- run the ground_station_msg.cpp -->
 	<node pkg="prometheus_station" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
 	</node>
+
+	<!-- run the planner_server.cpp -->
+	<node pkg="prometheus_control" type="planner_server" name="planner_server" output="screen" launch-prefix="gnome-terminal --">	
+			<param name="sim_mode" value="true" />
+			<param name="controller_flag" value="1" />
+	</node>	
+
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
+	</node>	
+
+    <!-- 启动octomap建图 -->
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+        <param name="resolution" value="0.1" />
+        <!-- 发布地图的坐标系 -->
+        <param name="frame_id" type="string" value="world" />
+        <!-- 传感器最大感知范围 (speedup!) -->
+        <param name="sensor_model/max_range" value="5.0" />
+        <!-- 局部点云输入,该话题定义在3Dlidar.sdf中 (PointCloud2) -->
+        <remap from="cloud_in" to="/prometheus/sensors/3Dlidar_scan" />
+    </node>
+
+	<!-- run the rviz -->
+	<arg name="visualization" default="true"/>
+	<group if="$(arg visualization)">
+		<node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/rviz_config/rviz_ego_planner.rviz" />
+    </group>
 </launch>
 
