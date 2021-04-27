@@ -102,9 +102,9 @@ add_executable(swarm_ground_station src/swarm_control/swarm_ground_station.cpp)
 add_dependencies(swarm_ground_station prometheus_control_gencpp)
 target_link_libraries(swarm_ground_station ${catkin_LIBRARIES})
 
-add_executable(planner_server src/Test/planner_server.cpp)
-add_dependencies(planner_server prometheus_control_gencpp)
-target_link_libraries(planner_server ${catkin_LIBRARIES})
+# add_executable(planner_server src/Test/planner_server.cpp)
+# add_dependencies(planner_server prometheus_control_gencpp)
+# target_link_libraries(planner_server ${catkin_LIBRARIES})
 
 
 ###### Test File ##########
