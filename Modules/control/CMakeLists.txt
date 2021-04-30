@@ -89,6 +89,11 @@ add_dependencies(px4_pos_estimator prometheus_control_gencpp)
 target_link_libraries(px4_pos_estimator ${catkin_LIBRARIES})
 target_link_libraries(px4_pos_estimator OptiTrackFeedbackRigidBody)
 
+##ros_info_color_test.cpp
+add_executable(ros_info_color_test src/Utilities/ros_info_color_test.cpp)
+add_dependencies(ros_info_color_test prometheus_control_gencpp)
+target_link_libraries(ros_info_color_test ${catkin_LIBRARIES})
+
 ##
 add_executable(swarm_estimator src/swarm_control/swarm_estimator.cpp)
 add_dependencies(swarm_estimator prometheus_control_gencpp)
