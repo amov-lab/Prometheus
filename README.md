@@ -34,6 +34,9 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 ## 真机实现
   
  - **Prometheus二次开发平台：**   [Prometheus 450第三代正式发布](https://mp.weixin.qq.com/s/LdtmLQ2eYUwg-pRklMXL8w)！
+    - 丰富的文档资料，详情[请戳这里](https://www.amovlab.com/document) 
+    - 售后服务与技术指导
+    - 免费赠送 Promehteus自主无人机二次开发课程 及 成都线下工程实训课程。
  
  - 其他配套硬件：机架、机载电脑、双目、激光雷达等无人机二次开发硬件请关注 [阿木实验室淘宝店](https://shop142114972.taobao.com/?spm=a230r.7195193.1997079397.2.67d03d8dJQgFRW)　或　[阿木实验室京东旗舰店](https://mall.jd.com/index-10260560.html?from=pc)
  
