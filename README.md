@@ -46,7 +46,7 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 
  - 奖励使用Prometheus进行实验并发表相关论文的学生科研工作者。
  
-   - 如何引用：@misc{Prometheus, author = "Amovlab", title = "Prometheus autonomous UAV opensource project", howpublished = "\url{https://github.com/amov-lab/Prometheus}", } 
+   - 如何引用：@misc{Prometheus, author = "Amovlab", title = "Prometheus autonomous UAV opensource project", howpublished = "\url{https://github.com/amov-lab/Prometheus }", } 
  
  - 奖励为Prometheus提供新功能或帮忙进行测试的学生开发者。
  
