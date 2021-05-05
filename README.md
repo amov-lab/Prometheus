@@ -1,4 +1,4 @@
-<img src="https://z3.ax1x.com/2021/05/05/gKVVjU.png" alt="amov logo" align="right" height="80" />
+<img src="https://z3.ax1x.com/2021/05/05/gKVnHJ.png" alt="prometheus logo" align="right" height="60" />
 
 # Prometheus - 自主无人机开源项目
 
