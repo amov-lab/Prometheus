@@ -65,7 +65,7 @@
             <material>
               <script>
                 <uri>model://texture_prometheus/texture.material</uri>
-                <name>prometheus_logo_square</name>
+                <name>prometheus_logo2</name>
               </script>
             </material>
         </visual>
