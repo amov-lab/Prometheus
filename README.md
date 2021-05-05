@@ -16,14 +16,14 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
     <img src="https://s1.ax1x.com/2020/08/13/dSEJhR.png" alt="amov qrcode" align="right" height="200" />
 
  - 如何交流与本项目有关问题：
-    - 添加微信jiayue199506（备注消息：Prometheus）进入**Prometheus自主无人机交流群**
-    - 在本项目**issue区提问**
+    - 添加微信jiayue199506（备注消息：Prometheus）进入**Prometheus自主无人机交流群**。
     - B站搜索“阿木社区”，开发团队**定期直播答疑**
-    - 获取与本项目有关的资讯，请扫描并关注“阿木实验室”微信公众号
+    - 在本项目**issue区提问**。
+    - 获取更多与本项目有关的资讯，请扫描并关注“阿木实验室”微信公众号。
     
 ## 快速入门
 
- - **安装及使用：** [Prometheus WIKI](https://github.com/amov-lab/Prometheus/wiki)
+ - **安装及使用：** [Prometheus WIKI](https://github.com/amov-lab/Prometheus/wiki)。
 
 ## 进阶学习
 
@@ -34,17 +34,19 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 ## 真机实现
   
  - **Prometheus二次开发平台：**   [Prometheus 450第三代正式发布](https://mp.weixin.qq.com/s/LdtmLQ2eYUwg-pRklMXL8w)！
-    - 丰富的文档资料，详情[请戳这里](https://www.amovlab.com/document) 
-    - 售后服务与技术指导
+    - 丰富的文档资料，详情[请戳这里](https://www.amovlab.com/document) 。
+    - 售后服务与技术指导。
     - 免费赠送 Promehteus自主无人机二次开发课程 及 成都线下工程实训课程。
  
- - 其他配套硬件：机架、机载电脑、双目、激光雷达等无人机二次开发硬件请关注 [阿木实验室淘宝店](https://shop142114972.taobao.com/?spm=a230r.7195193.1997079397.2.67d03d8dJQgFRW)　或　[阿木实验室京东旗舰店](https://mall.jd.com/index-10260560.html?from=pc)
+ - 其他配套硬件：机架、机载电脑、双目、激光雷达等无人机二次开发硬件请关注 [阿木实验室淘宝店](https://shop142114972.taobao.com/?spm=a230r.7195193.1997079397.2.67d03d8dJQgFRW)　或　[阿木实验室京东旗舰店](https://mall.jd.com/index-10260560.html?from=pc)。
  
  - 项目合作、无人机软硬件定制，请添加微信“yanyue199506”（备注消息：Prometheus定制）。
  
 ## Prometheus校园赞助计划
 
  - 奖励使用Prometheus进行实验并发表相关论文的学生科研工作者。
+ 
+   - 如何引用：@misc{Prometheus, author = "Amovlab", title = "Prometheus autonomous UAV opensource project", howpublished = "\url{https://github.com/amov-lab/Prometheus}", } 
  
  - 奖励为Prometheus提供新功能或帮忙进行测试的学生开发者。
  
