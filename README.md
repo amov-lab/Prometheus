@@ -2,7 +2,7 @@
 
 # Prometheus - 自主无人机开源项目
 
-[English Readme](https://github.com/amov-lab/Prometheus/blob/master/README_EN.md)
+[[English Readme]](https://github.com/amov-lab/Prometheus/blob/master/README_EN.md)
 
 **Prometheus**是希腊神话中最具智慧的神明之一，希望本项目能为无人机研发带来无限的智慧与光明。
 
