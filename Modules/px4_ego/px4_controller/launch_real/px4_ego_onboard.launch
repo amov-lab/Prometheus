@@ -1,0 +1,32 @@
+<launch>
+	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+		<param name="fcu_url" value="/dev/ttyUSB0:921600" />
+		<param name="gcs_url" value="" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
+	</node> 
+
+	<!-- vrpn -->
+	<include file="$(find vrpn_client_ros)/launch/sample.launch">
+		<arg name="server" value="192.168.1.2"/>
+	</include>
+
+	<!-- 启动Prometheus代码 -->
+	<!-- run the px4_ego_estimator.cpp -->
+	<!-- 发布odom -->
+	<arg name="input_source" default="0"/>
+	<node pkg="prometheus_ego" type="px4_ego_estimator" name="px4_ego_estimator" output="screen">
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+	
+	<node pkg="prometheus_ego" type="px4_ego_controller" name="px4_ego_controller" output="screen">
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_ego_controller.yaml"/>
+	</node>
+
+	<include file="$(find prometheus_ego)/launch_real/ego_planner_real.launch">
+	</include>
+</launch>
+
