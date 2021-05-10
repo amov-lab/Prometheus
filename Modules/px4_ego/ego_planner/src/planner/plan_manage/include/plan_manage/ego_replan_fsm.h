@@ -28,6 +28,8 @@ namespace ego_planner
 
   private:
     /* ---------- flag ---------- */
+    // 飞行状态机
+    // 包括：初始化、等待目标点、生成新轨迹、重规划轨迹、执行轨迹、紧急停止
     enum FSM_EXEC_STATE
     {
       INIT,
@@ -37,6 +39,8 @@ namespace ego_planner
       EXEC_TRAJ,
       EMERGENCY_STOP
     };
+    // 目标类型
+    // 包括：手动目标、预设目标、预设路径（程序中未实现）
     enum TARGET_TYPE
     {
       MANUAL_TARGET = 1,

@@ -15,7 +15,9 @@ namespace ego_planner
     nh.param("fsm/flight_type", target_type_, -1);
     nh.param("fsm/thresh_replan", replan_thresh_, -1.0);
     nh.param("fsm/thresh_no_replan", no_replan_thresh_, -1.0);
+    // 规划水平范围
     nh.param("fsm/planning_horizon", planning_horizen_, -1.0);
+    // 这个参数没用上
     nh.param("fsm/planning_horizen_time", planning_horizen_time_, -1.0);
     nh.param("fsm/emergency_time_", emergency_time_, 1.0);
 
@@ -33,14 +35,18 @@ namespace ego_planner
     planner_manager_->initPlanModules(nh, visualization_);
 
     /* callback */
+    // 飞行状态定时器 100Hz
     exec_timer_ = nh.createTimer(ros::Duration(0.01), &EGOReplanFSM::execFSMCallback, this);
+    // 安全检测定时器 20Hz
     safety_timer_ = nh.createTimer(ros::Duration(0.05), &EGOReplanFSM::checkCollisionCallback, this);
-
+    // 订阅无人机里程计，存入odom_pos_, odom_vel_, odom_orient_
     odom_sub_ = nh.subscribe("/odom_world", 1, &EGOReplanFSM::odometryCallback, this);
-
+    // 发布B样条（轨迹优化结果）
     bspline_pub_ = nh.advertise<ego_planner::Bspline>("/planning/bspline", 10);
+    // 发布显示数据
     data_disp_pub_ = nh.advertise<ego_planner::DataDisp>("/planning/data_display", 100);
 
+    // 手动目标点，则订阅目标点
     if (target_type_ == TARGET_TYPE::MANUAL_TARGET)
       waypoint_sub_ = nh.subscribe("/waypoint_generator/waypoints", 1, &EGOReplanFSM::waypointCallback, this);
     else if (target_type_ == TARGET_TYPE::PRESET_TARGET)
@@ -65,6 +71,7 @@ namespace ego_planner
 
       end_pt_ = wps.back();
     }
+    // 规划全局轨迹，多个目标点
     bool success = planner_manager_->planGlobalTrajWaypoints(odom_pos_, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), wps, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
 
     for (size_t i = 0; i < (size_t)waypoint_num_; i++)
@@ -116,7 +123,9 @@ namespace ego_planner
     init_pt_ = odom_pos_;
 
     bool success = false;
+    // 将终点设置为传过来的点，z轴固定为1米（注意！！）
     end_pt_ << msg->poses[0].pose.position.x, msg->poses[0].pose.position.y, 1.0;
+    // 规划global轨迹（点到点）
     success = planner_manager_->planGlobalTraj(odom_pos_, odom_vel_, Eigen::Vector3d::Zero(), end_pt_, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
 
     visualization_->displayGoalPoint(end_pt_, Eigen::Vector4d(0, 0.5, 0.5, 1), 0.3, 0);
@@ -138,6 +147,8 @@ namespace ego_planner
       have_new_target_ = true;
 
       /*** FSM ***/
+      // 如果是新的目标点，则规划新轨迹
+      // 如果是在执行当前目标点，则是replan
       if (exec_state_ == WAIT_TARGET)
         changeFSMExecState(GEN_NEW_TRAJ, "TRIG");
       else if (exec_state_ == EXEC_TRAJ)
@@ -200,10 +211,10 @@ namespace ego_planner
 
   void EGOReplanFSM::execFSMCallback(const ros::TimerEvent &e)
   {
-
+    // 100Hz定时器
     static int fsm_num = 0;
     fsm_num++;
-    if (fsm_num == 100)
+    if (fsm_num == 500)
     {
       printFSMExecState();
       if (!have_odom_)
@@ -225,6 +236,7 @@ namespace ego_planner
       {
         return;
       }
+      // odom正常且收到目标点
       changeFSMExecState(WAIT_TARGET, "FSM");
       break;
     }
@@ -256,10 +268,10 @@ namespace ego_planner
       else
         flag_random_poly_init = true;
 
+      // local优化，在这个函数里发布B样条轨迹
       bool success = callReboundReplan(true, flag_random_poly_init);
       if (success)
       {
-
         changeFSMExecState(EXEC_TRAJ, "FSM");
         flag_escape_emergency_ = true;
       }
@@ -272,7 +284,9 @@ namespace ego_planner
 
     case REPLAN_TRAJ:
     {
-
+      
+      // 重规划时并不使用无人机当前的位置和速度
+      // 假设：无人机控制模块能够完美的追踪规划出来的轨迹
       if (planFromCurrentTraj())
       {
         changeFSMExecState(EXEC_TRAJ, "FSM");
@@ -293,9 +307,13 @@ namespace ego_planner
       double t_cur = (time_now - info->start_time_).toSec();
       t_cur = min(info->duration_, t_cur);
 
+      // 根据时间，预估当前位置
+      // 如果无人机没有完美响应轨迹追踪指令（比如没有起飞、追踪滞后等），此处是不是不太合理？
       Eigen::Vector3d pos = info->position_traj_.evaluateDeBoorT(t_cur);
 
       /* && (end_pt_ - pos).norm() < 0.5 */
+      // 按照时间判定是否抵达目标点
+      // 假设：无人机控制模块完美
       if (t_cur > info->duration_ - 1e-2)
       {
         have_target_ = false;
@@ -308,6 +326,7 @@ namespace ego_planner
         // cout << "near end" << endl;
         return;
       }
+      // 按照行进距离进行重规划，每次重规划后，start_pos_会更新
       else if ((info->start_pos_ - pos).norm() < replan_thresh_)
       {
         // cout << "near start" << endl;
@@ -351,6 +370,8 @@ namespace ego_planner
 
     //cout << "info->velocity_traj_=" << info->velocity_traj_.get_control_points() << endl;
 
+    // 重规划时 起始位置速度不是真实的位置速度？？
+    // 这里似乎不太合乎实际情况
     start_pt_ = info->position_traj_.evaluateDeBoorT(t_cur);
     start_vel_ = info->velocity_traj_.evaluateDeBoorT(t_cur);
     start_acc_ = info->acceleration_traj_.evaluateDeBoorT(t_cur);
@@ -435,6 +456,7 @@ namespace ego_planner
 
       /* publish traj */
       ego_planner::Bspline bspline;
+      // 3阶
       bspline.order = 3;
       bspline.start_time = info->start_time_;
       bspline.traj_id = info->traj_id_;

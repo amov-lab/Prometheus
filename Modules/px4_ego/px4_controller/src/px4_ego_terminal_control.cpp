@@ -171,7 +171,7 @@ void mainloop1()
                 Command_to_pub.Reference_State.position_ref[0] = state_desired[0];
                 Command_to_pub.Reference_State.position_ref[1] = state_desired[1];
                 Command_to_pub.Reference_State.position_ref[2] = state_desired[2];
-                Command_to_pub.Reference_State.yaw_ref[2] = state_desired[3];
+                Command_to_pub.Reference_State.yaw_ref = state_desired[3];
                 move_pub.publish(Command_to_pub);
                 break;
             

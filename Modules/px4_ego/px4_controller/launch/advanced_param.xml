@@ -46,7 +46,10 @@
 
     <!-- planning fsm -->
     <param name="fsm/flight_type" value="$(arg flight_type)" type="int"/>
+    <!-- 重规划距离阈值：上一条轨迹起始点与当前位置大于该阈值时，重新规划 -->
+    <!-- 如果要增大规划频率，则减小该数值 -->
     <param name="fsm/thresh_replan" value="1.5" type="double"/>
+    <!-- 重规划阈值：距离终点小于该阈值时，停止规划 -->
     <param name="fsm/thresh_no_replan" value="2.0" type="double"/>
     <param name="fsm/planning_horizon" value="$(arg planning_horizon)" type="double"/> <!--always set to 1.5 times grater than sensing horizen-->
     <param name="fsm/planning_horizen_time" value="3" type="double"/>
