@@ -14,7 +14,7 @@ namespace ego_planner
   void EGOPlannerManager::initPlanModules(ros::NodeHandle &nh, PlanningVisualization::Ptr vis)
   {
     /* read algorithm parameters */
-
+    // 核心的算法在本程序及本程序调用的程序中
     nh.param("manager/max_vel", pp_.max_vel_, -1.0);
     nh.param("manager/max_acc", pp_.max_acc_, -1.0);
     nh.param("manager/max_jerk", pp_.max_jerk_, -1.0);
@@ -26,6 +26,7 @@ namespace ego_planner
     grid_map_.reset(new GridMap);
     grid_map_->initMap(nh);
 
+    //bspline_optimizer_rebound_是一个B样条优化器 类
     bspline_optimizer_rebound_.reset(new BsplineOptimizer);
     bspline_optimizer_rebound_->setParam(nh);
     bspline_optimizer_rebound_->setEnvironment(grid_map_);
