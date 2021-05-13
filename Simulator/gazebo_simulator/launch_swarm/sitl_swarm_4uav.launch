@@ -119,6 +119,10 @@
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="uav_id" value="$(arg uav1_id)"/>
 		<param name="uav_name" value="$(arg uav1_name)"/>
+		<param name="neighbour_id1" value="$(arg uav2_id)" />
+		<param name="neighbour_id2" value="$(arg uav3_id)"/>
+		<param name="neighbour_name1" value="$(arg uav2_name)" />
+		<param name="neighbour_name2" value="$(arg uav3_name)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -134,6 +138,10 @@
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="uav_id" value="$(arg uav2_id)"/>
 		<param name="uav_name" value="$(arg uav2_name)"/>
+		<param name="neighbour_id1" value="$(arg uav1_id)" />
+		<param name="neighbour_id2" value="$(arg uav4_id)"/>
+		<param name="neighbour_name1" value="$(arg uav1_name)" />
+		<param name="neighbour_name2" value="$(arg uav4_name)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -149,6 +157,10 @@
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="uav_id" value="$(arg uav3_id)"/>
 		<param name="uav_name" value="$(arg uav3_name)"/>
+		<param name="neighbour_id1" value="$(arg uav1_id)" />
+		<param name="neighbour_id2" value="$(arg uav4_id)"/>
+		<param name="neighbour_name1" value="$(arg uav1_name)" />
+		<param name="neighbour_name2" value="$(arg uav4_name)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -164,6 +176,10 @@
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="uav_id" value="$(arg uav4_id)"/>
 		<param name="uav_name" value="$(arg uav4_name)"/>
+		<param name="neighbour_id1" value="$(arg uav2_id)" />
+		<param name="neighbour_id2" value="$(arg uav3_id)"/>
+		<param name="neighbour_name1" value="$(arg uav2_name)" />
+		<param name="neighbour_name2" value="$(arg uav3_name)"/>
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
@@ -207,6 +223,8 @@
 		<param name="swarm_num" value="$(arg swarm_num)"/>
 		<param name="formation_size" value="1.0"/>
 		<param name="sim_mode" value="true"/>
+		<!-- // 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式  -->
+		<param name="controller_num" value="0"/>
 		<param name="uav1_name" value="$(arg uav1_name)" />
 		<param name="uav2_name" value="$(arg uav2_name)" />
 		<param name="uav3_name" value="$(arg uav3_name)" />
