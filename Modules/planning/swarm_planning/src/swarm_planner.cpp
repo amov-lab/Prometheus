@@ -351,7 +351,8 @@ void Swarm_Planner::track_path_cb(const ros::TimerEvent& e)
     if(cur_id == Num_total_wp - 1)
     {
         Command_Now.header.stamp = ros::Time::now();
-        Command_Now.Mode                                = prometheus_msgs::SwarmCommand::Swarm_Planner;
+        Command_Now.Mode                                = prometheus_msgs::SwarmCommand::Move;
+        Command_Now.Move_mode                                = prometheus_msgs::SwarmCommand::XYZ_POS;
         Command_Now.Command_ID                          = Command_Now.Command_ID + 1;
         Command_Now.source = NODE_NAME;
         Command_Now.position_ref[0]     = goal_pos[0];
