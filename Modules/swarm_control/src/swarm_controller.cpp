@@ -21,9 +21,9 @@ int main(int argc, char **argv)
     nh.param<string>("neighbour_name1", neighbour_name1, "/uav0");
     nh.param<string>("neighbour_name2", neighbour_name2, "/uav0");
     // 控制变量
-    nh.param<float>("k_p", k_p, 0.95);
-    nh.param<float>("k_aij", k_aij, 0.1);
-    nh.param<float>("k_gamma", k_gamma, 0.1);
+    nh.param<float>("k_p", k_p, 1.2);
+    nh.param<float>("k_aij", k_aij, 0.2);
+    nh.param<float>("k_gamma", k_gamma, 0.4);
     // 起飞高度,上锁高度,降落速度
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
     nh.param<float>("Disarm_height", Disarm_height, 0.15);
