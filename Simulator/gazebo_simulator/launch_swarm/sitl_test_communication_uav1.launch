@@ -1,0 +1,133 @@
+<!-- Case 1 -->
+<launch>
+	<!-- 无人机集群数量 -->
+	<arg name="swarm_num" default="8"/>
+	<!-- 无人机名称 -->
+	<arg name="uav1_name" default="/uav1"/>
+	<arg name="uav2_name" default="/uav2"/>
+	<arg name="uav3_name" default="/uav3"/>
+	<arg name="uav4_name" default="/uav4"/>
+	<arg name="uav5_name" default="/uav5"/>
+	<arg name="uav6_name" default="/uav6"/>
+	<arg name="uav7_name" default="/uav7"/>
+	<arg name="uav8_name" default="/uav8"/>
+	<!-- 无人机ID -->
+	<arg name="uav1_id" default="1"/>
+	<arg name="uav2_id" default="2"/>
+	<arg name="uav3_id" default="3"/>
+	<arg name="uav4_id" default="4"/>
+	<arg name="uav5_id" default="5"/>
+	<arg name="uav6_id" default="6"/>
+	<arg name="uav7_id" default="7"/>
+	<arg name="uav8_id" default="8"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="0.5"/>
+    <arg name="uav1_init_y" default="0.0"/>
+	<!-- swarm_estimator 参数 -->
+	<arg name="input_source" default="2"/>
+	<!-- swarm_controller 参数 -->
+	<arg name="Takeoff_height" default="1.0"/>
+	<arg name="Disarm_height" default="0.2"/>
+	<arg name="Land_speed" default="0.2"/>
+	<!-- 地理围栏 -->
+	<arg name="x_min" default="-4.5"/>
+	<arg name="x_max" default="4.5"/>
+	<arg name="y_min" default="-2.5"/>
+	<arg name="y_max" default="2.5"/>
+	<arg name="z_min" default="-1.0"/>
+	<arg name="z_max" default="3.5"/>
+
+	<!-- 启动顺序 -->
+	<!-- 启动SITL,并加载模型 -->
+	<!-- 启动 swarm_estimator -->
+	<!-- 启动 swarm_controller -->
+	<!-- 启动 地面站 -->
+	<!-- 启动 阵型变化程序 -->
+	<!-- 启动 Gazebo -->
+
+    <!-- 1号飞机 -->
+	<include file="$(find prometheus_gazebo)/launch_CXY/sitl_cxy_basic.launch">
+		<arg name="swarm_num" value="$(arg swarm_num)"/>
+		<arg name="uav_name" value="$(arg uav1_name)"/>
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/amov_models/Multisolo/uav1/uav1.sdf"/>
+		<arg name="model" value="uav1"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+    
+	<!-- run the swarm_estimator.cpp -->
+	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav1" output="screen">
+		<param name="uav_name" value="$(arg uav1_name)"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+	
+	<!-- 启动swarm_controller -->
+	<node pkg="prometheus_swarm_control" type="swarm_controller" name="swarm_controller_uav1" output="screen">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_id" value="$(arg uav1_id)"/>
+		<param name="uav_name" value="$(arg uav1_name)"/>
+		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
+		<param name="Disarm_height" value="$(arg Disarm_height)"/>
+		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+		<param name="geo_fence/z_min" value="$(arg z_min)"/>
+		<param name="geo_fence/z_max" value="$(arg z_max)"/>
+	</node>
+
+	<node pkg="prometheus_swarm_communication" type="communication" name="communication_uav1" output="screen" launch-prefix="gnome-terminal --">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_id" value="$(arg uav1_id)"/>
+		<param name="uav_name" value="$(arg uav1_name)"/>
+		<param name="broadcast_ip" value="172.26.127.255"/>
+		<param name="udp_port" value="8081"/>
+		<param name="frequence" value="5"/>
+	</node>
+
+	<!-- 阵型控制程序 -->
+	<node pkg="prometheus_swarm_control" type="swarm_formation_control" name="swarm_formation_control" output="screen" launch-prefix="gnome-terminal --">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="formation_size" value="1.0"/>
+		<param name="sim_mode" value="true"/>
+		<param name="uav1_name" value="$(arg uav1_name)" />
+		<param name="uav2_name" value="$(arg uav2_name)" />
+		<param name="uav3_name" value="$(arg uav3_name)" />
+		<param name="uav4_name" value="$(arg uav4_name)" />
+		<param name="uav5_name" value="$(arg uav5_name)" />
+		<param name="uav6_name" value="$(arg uav6_name)" />
+		<param name="uav7_name" value="$(arg uav7_name)" />
+		<param name="uav8_name" value="$(arg uav8_name)" />
+		<param name="uav1_id" value="$(arg uav1_id)" />
+		<param name="uav2_id" value="$(arg uav2_id)" />
+		<param name="uav3_id" value="$(arg uav3_id)" />
+		<param name="uav4_id" value="$(arg uav4_id)" />
+		<param name="uav5_id" value="$(arg uav5_id)" />
+		<param name="uav6_id" value="$(arg uav6_id)" />
+		<param name="uav7_id" value="$(arg uav7_id)" />
+		<param name="uav8_id" value="$(arg uav8_id)" />
+	</node>
+
+	<!-- 启动Gazebo -->
+	<!-- Gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/004_CXY/CXY_vicon_room.world"/>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+</launch>
+
