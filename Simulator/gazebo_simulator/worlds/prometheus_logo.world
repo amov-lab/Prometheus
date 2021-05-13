@@ -23,7 +23,7 @@
     <!-- 初始视角 -->
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-9.0 0.0 6.0 0 0.75 0.0</pose>
+        <pose>-13.0 0.0 12.0 0 0.75 0.0</pose>
         <view_controller>orbit</view_controller>
       </camera>
     </gui>
