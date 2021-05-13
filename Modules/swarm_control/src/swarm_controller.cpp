@@ -210,9 +210,9 @@ int main(int argc, char **argv)
 
             //　此控制方式即为　集中式控制，　直接由地面站指定期望位置点
             //  虚拟领机位置 + 队形偏移量
-            state_sp[0] = Command_Now.position_ref[0] + formation_separation(uav_id-1,0) - gazebo_offset[0];
-            state_sp[1] = Command_Now.position_ref[1] + formation_separation(uav_id-1,1) - gazebo_offset[1];
-            state_sp[2] = Command_Now.position_ref[2] + formation_separation(uav_id-1,2) - gazebo_offset[2];
+            state_sp[0] = Command_Now.position_ref[0] + Command_Now.swarm_size * formation_separation(uav_id-1,0) - gazebo_offset[0];
+            state_sp[1] = Command_Now.position_ref[1] + Command_Now.swarm_size * formation_separation(uav_id-1,1) - gazebo_offset[1];
+            state_sp[2] = Command_Now.position_ref[2] + Command_Now.swarm_size * formation_separation(uav_id-1,2) - gazebo_offset[2];
             yaw_sp = Command_Now.yaw_ref;
             send_pos_setpoint(state_sp, yaw_sp);
             // cout << "curPos" << Command_Now.position_ref[0] << " " << Command_Now.position_ref[1] << " " << Command_Now.position_ref[2] << endl;
