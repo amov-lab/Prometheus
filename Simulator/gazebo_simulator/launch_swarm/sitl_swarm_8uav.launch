@@ -1,4 +1,3 @@
-<!-- Case 1 -->
 <launch>
 	<!-- 无人机集群数量 -->
 	<arg name="swarm_num" default="8"/>
