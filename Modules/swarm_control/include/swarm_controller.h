@@ -106,7 +106,7 @@ void swarm_command_cb(const prometheus_msgs::SwarmCommand::ConstPtr& msg)
             // swarm_num 为1时,即无人机无法变换阵型,并只能接收位置控制指令
             Command_Now.Mode = prometheus_msgs::SwarmCommand::Position_Control;
             formation_separation << 0,0,0,0;
-        }else if(swarm_num == 8 || swarm_num == 40)
+        }else if(swarm_num == 4 ||swarm_num == 8 || swarm_num == 40)
         {
             formation_separation = formation_utils::get_formation_separation(Command_Now.swarm_shape, Command_Now.swarm_size, swarm_num);
         }else

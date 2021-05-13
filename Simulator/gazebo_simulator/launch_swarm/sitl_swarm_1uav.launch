@@ -14,15 +14,16 @@
 	<arg name="Takeoff_height" default="1.0"/>
 	<arg name="Disarm_height" default="0.2"/>
 	<arg name="Land_speed" default="0.2"/>
-	<arg name="x_min" default="-4.5"/>
-	<arg name="x_max" default="4.5"/>
-	<arg name="y_min" default="-2.5"/>
-	<arg name="y_max" default="2.5"/>
+	<!-- 地理围栏 -->
+	<arg name="x_min" default="-100.0"/>
+	<arg name="x_max" default="100.0"/>
+	<arg name="y_min" default="-100.0"/>
+	<arg name="y_max" default="100.0"/>
 	<arg name="z_min" default="-1.0"/>
-	<arg name="z_max" default="3.5"/>
+	<arg name="z_max" default="50.0"/>
 
     <!-- 1号飞机 -->
-	<include file="$(find prometheus_gazebo)/launch_CXY/sitl_cxy_basic.launch">
+	<include file="$(find prometheus_gazebo)/launch_swarm/sitl_swarm_basic.launch">
 		<arg name="swarm_num" value="$(arg swarm_num)"/>
 		<arg name="uav_name" value="$(arg uav1_name)"/>
 		<arg name="uav_id" value="$(arg uav1_id)"/>
@@ -80,7 +81,7 @@
     <arg name="verbose" default="false"/>
     <arg name="paused" default="false"/>
     <arg name="respawn_gazebo" default="false"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/004_CXY/CXY_vicon_room.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/prometheus_logo.world"/>
     <!-- Gazebo sim -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="gui" value="$(arg gui)"/>
