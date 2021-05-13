@@ -209,6 +209,7 @@ int main(int argc, char **argv)
         case prometheus_msgs::SwarmCommand::Position_Control:
 
             //　此控制方式即为　集中式控制，　直接由地面站指定期望位置点
+            //  虚拟领机位置 + 队形偏移量
             state_sp[0] = Command_Now.position_ref[0] + formation_separation(uav_id-1,0) - gazebo_offset[0];
             state_sp[1] = Command_Now.position_ref[1] + formation_separation(uav_id-1,1) - gazebo_offset[1];
             state_sp[2] = Command_Now.position_ref[2] + formation_separation(uav_id-1,2) - gazebo_offset[2];

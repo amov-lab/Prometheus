@@ -17,6 +17,18 @@
 
 using namespace Eigen;
 
+float one_column_shape_for_4uav[16] = {
+    0.5,0.0,0.0,0.0,    -0.5,0.0,0.0,0.0,   1.5,0.0,0.0,0.0,    -1.5,0.0,0.0,0.0};
+
+float triangle_shape_for_4uav[16] = {
+    0.5,1.5,0.0,0.0,   -0.5,1.5,0.0,0.0,   1.5,0.0,0.0,0.0,    -1.5,0.0,0.0,0.0};
+
+float square_shape_for_4uav[16] = {
+    0.0,1.5,0.0,0.0,   0.0,-1.5,0.0,0.0,   1.5,0.0,0.0,0.0,    -1.5,0.0,0.0,0.0};
+
+float circular_shape_for_4uav[16] = {
+    0.0,1.5,0.0,0.0,   0.0,-1.5,0.0,0.0,   1.5,0.0,0.0,0.0,    -1.5,0.0,0.0,0.0};
+
 float one_column_shape_for_8uav[32] = {
     0.5,0.0,0.0,0.0,    -0.5,0.0,0.0,0.0,   1.5,0.0,0.0,0.0,    -1.5,0.0,0.0,0.0,
     2.5,0.0,0.0,0.0,    -2.5,0.0,0.0,0.0,   3.5,0.0,0.0,0.0,    -3.5,0.0,0.0,0.0};
@@ -100,6 +112,9 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
         else if(swarm_num == 40)
         {
             seperation = Map<Matrix<float,40,4,RowMajor>>(one_column_shape_for_40uav); 
+        }else if(swarm_num == 4)
+        {
+            seperation = Map<Matrix<float,4,4,RowMajor>>(one_column_shape_for_4uav); 
         }
     }
 
@@ -113,6 +128,9 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
         else if(swarm_num == 40)
         {
             seperation = Map<Matrix<float,40,4,RowMajor>>(triangle_shape_for_40uav); 
+        }else if(swarm_num == 4)
+        {
+            seperation = Map<Matrix<float,4,4,RowMajor>>(triangle_shape_for_4uav); 
         }
     }
 
@@ -126,6 +144,9 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
         else if(swarm_num == 40)
         {
             seperation = Map<Matrix<float,40,4,RowMajor>>(square_shape_for_40uav); 
+        }else if(swarm_num == 4)
+        {
+            seperation = Map<Matrix<float,4,4,RowMajor>>(square_shape_for_4uav); 
         }
     }
 
@@ -139,6 +160,9 @@ Eigen::MatrixXf get_formation_separation(int swarm_shape, float swarm_size, int 
         else if(swarm_num == 40)
         {
             seperation = Map<Matrix<float,40,4,RowMajor>>(circular_shape_for_40uav); 
+        }else if(swarm_num == 4)
+        {
+            seperation = Map<Matrix<float,4,4,RowMajor>>(circular_shape_for_4uav); 
         }
     }
 

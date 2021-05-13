@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     while(ros::ok())
     {
         ros::spinOnce();
-        cout << ">>>>>>>>>>>>>>>>>>>> CXY Ground Station <<<<<<<<<<<<<<<<<<< "<< endl;
+        cout << ">>>>>>>>>>>>>>>>>>>> Swarm Ground Station <<<<<<<<<<<<<<<<<<< "<< endl;
         for(int i = 1; i <= swarm_num; i++)
         {
             if(uav_id[i] != 0)
