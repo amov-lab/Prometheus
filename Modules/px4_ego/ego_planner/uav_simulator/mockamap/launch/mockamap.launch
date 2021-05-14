@@ -1,0 +1,56 @@
+<launch>
+  <node pkg="mockamap" type="mockamap_node" name="mockamap_node" output="screen">
+  <param name="seed" type="int" value="511"/>
+  <param name="update_freq" type="double" value="1.0"/>
+
+  <!--  box edge length, unit meter-->
+  <param name="resolution" type="double" value="0.1"/>
+
+  <!-- map size unit meter-->
+  <param name="x_length" type="int" value="10"/>
+  <param name="y_length" type="int" value="10"/>
+  <param name="z_length" type="int" value="3"/>
+  <!-- 1 perlin noise 3D -->
+  <!-- 2 perlin box random map-->
+  <!-- 3 2d maze still developing-->
+    <param name="type" type="int" value="1"/>
+
+<!-- 1 perlin noise parameters -->
+    <!-- complexity:    base noise frequency,
+                        large value will be complex
+                        typical 0.0 ~ 0.5 -->
+    <!-- fill:          infill persentage
+                        typical: 0.4 ~ 0.0 -->
+    <!-- fractal:       large value will have more detail-->
+    <!-- attenuation:   for fractal attenuation
+                        typical: 0.0 ~ 0.5 -->
+
+    <param name="complexity"    type="double" value="0.03"/>
+    <param name="fill"          type="double" value="0.3"/>
+    <param name="fractal"       type="int"    value="1"/>
+    <param name="attenuation"   type="double" value="0.1"/>
+
+<!--    <param name="type" type="int" value="2"/>-->
+    <param name="width_min"         type="double" value="0.6"/>
+    <param name="width_max"         type="double" value="1.5"/>
+    <param name="obstacle_number"   type="int"    value="50"/>
+
+<!--    <param name="type" type="int" value="3"/>-->
+    <param name="road_width"        type="double" value="0.5"/>
+    <param name="add_wall_x"        type="int"    value="0"/>
+    <param name="add_wall_y"        type="int"    value="1"/>
+    <!--    maze type: -->
+    <!--    1 recursive division maze-->
+    <param name="maze_type"         type="int"    value="1"/>
+
+<!-- 4 maze 3d -->
+    <param name="numNodes"        type="int"    value="40"/>
+    <param name="connectivity"    type="double" value="0.8"/>
+    <param name="nodeRad"         type="int"    value="1"/>
+    <param name="roadRad"         type="int"    value="10"/>
+  </node>
+  <!-- Launch RViz with the demo configuration -->
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find mockamap)/config/rviz.rviz"
+        />
+</launch>
