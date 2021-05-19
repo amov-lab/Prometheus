@@ -1,4 +1,6 @@
+<?xml version="1.0" ?>
 <sdf version='1.6'>
+<!-- 描述：等同于outdoor3，多了几个车模型 -->
   <world name='outdoor'>
     <gui fullscreen='0'>
       <camera name='user_camera'>
