@@ -320,7 +320,7 @@
 	<!-- 启动地面站 -->
 	<node pkg="prometheus_swarm_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
 		<param name="swarm_num" value="$(arg swarm_num)"/>
-		<param name="flag_ros2groundstation" value="true"/>
+		<param name="flag_ros2groundstation" value="false"/>
 		<param name="uav1_name" value="$(arg uav1_name)" />
 		<param name="uav2_name" value="$(arg uav2_name)" />
 		<param name="uav3_name" value="$(arg uav3_name)" />
@@ -386,7 +386,7 @@
 	<!-- 启动rviz,设为false可关闭 -->
 	<arg name="visualization" default="true"/>
 	<group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/swarm_config/rviz_cxy_case1.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/config/swarm_config/rviz_formation.rviz" />
     </group>
 
 	<!-- 启动Gazebo -->
