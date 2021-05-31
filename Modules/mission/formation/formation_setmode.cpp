@@ -10,6 +10,7 @@
 #include "Formation.h"
 #include <unistd.h>
 #include <iostream>
+#include <mavros_msgs/CommandTOL.h>
 
 void formation::init()
 {
@@ -18,6 +19,13 @@ void formation::init()
     ros::param::param<int>("~LAND_intervals", land_intervals, 3);
     ros::param::param<string>("Flight_controller", flight_controller, "spm");
     ros::param::param<double>("~Takeoff_height", takeoff_height, 1.0);
+
+    //初始化takeoff服务客户端
+    uav1_takeoff_client = n.serviceClient<mavros_msgs::CommandTOL>("/uav1/mavros/cmd/takeoff");
+    uav2_takeoff_client = n.serviceClient<mavros_msgs::CommandTOL>("/uav2/mavros/cmd/takeoff");
+    uav3_takeoff_client = n.serviceClient<mavros_msgs::CommandTOL>("/uav3/mavros/cmd/takeoff");
+    uav4_takeoff_client = n.serviceClient<mavros_msgs::CommandTOL>("/uav4/mavros/cmd/takeoff");
+    uav5_takeoff_client = n.serviceClient<mavros_msgs::CommandTOL>("/uav5/mavros/cmd/takeoff");
 }
 
 void formation::is_wait(int time)
@@ -143,6 +151,7 @@ void formation::set_formation_apm_guided()
     {
         ROS_INFO("uav2 armed and set guided mode success");
         sleep(1);
+				
         if(uav2_takeoff_client.call(uav2_takeoff_cmd))
         {
             ROS_INFO("uav2 takeoff success");
@@ -449,6 +458,7 @@ void formation::set_mode()
 {
     //初始化,创建服务调用后客户端以及获取参数
     init();
+		std::cout << takeoff_height;
     while(ros::ok())
     {
         //创建变量用以获取用户输入的值
