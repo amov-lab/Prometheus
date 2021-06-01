@@ -32,6 +32,8 @@ Prometheus是一套开源的**自主无人机软件平台**，为无人机的智
 
 ## 进阶学习
 
+ - **Promehteus仿真入门视频：**  B站搜索“阿木社区”，传送门： https://space.bilibili.com/432575320/channel/detail?cid=168428
+
  - **Promehteus自主无人机直播课：** B站搜索“阿木社区”，定期免费开课。往期录播[请戳这里](https://bbs.amovlab.com/plugin.php?id=zhanmishu_video:video&mod=video&cid=52)。
 
  - **Promehteus自主无人机二次开发课程：** 本课程偏重本项目中的基础知识和操作实践，适合本项目入门者。 课程报名[请戳这里](https://bbs.amovlab.com/plugin.php?id=zhanmishu_video:video&mod=video&cid=43)。
