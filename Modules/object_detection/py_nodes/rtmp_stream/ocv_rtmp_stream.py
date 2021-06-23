@@ -18,7 +18,7 @@ import math
 rospy.init_node('rtmp_stream', anonymous=True)
 
 rtmp = r'rtmp://localhost:1935/live'
-size_str = str(640) + 'x' + str(400)
+size_str = str(640) + 'x' + str(480)
 command = ['ffmpeg',
     '-y', '-an',
     '-f', 'rawvideo',
@@ -46,7 +46,7 @@ def image_callback(imgmsg):
     # end
 
     h, w = frame.shape[:2]
-    img_resize = 400
+    img_resize = 480
     if h > w:
         h = int(float(h) / w * img_resize)
         w = img_resize
