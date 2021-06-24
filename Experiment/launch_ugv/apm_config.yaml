@@ -1,0 +1,257 @@
+# Common configuration for APM2 autopilot
+#
+# node:
+startup_px4_usb_quirk: false
+
+# --- system plugins ---
+
+# sys_status & sys_time connection options
+conn:
+  heartbeat_rate: 1.0    # send hertbeat rate in Hertz
+  heartbeat_mav_type: "ONBOARD_CONTROLLER"
+  timeout: 10.0          # hertbeat timeout in seconds
+  timesync_rate: 0.0    # TIMESYNC rate in Hertz (feature disabled if 0.0)
+  system_time_rate: 0.0  # send system time to FCU rate in Hertz (disabled if 0.0)
+
+# sys_status
+sys:
+  min_voltage: 10.0   # diagnostics min voltage
+  disable_diag: false # disable all sys_status diagnostics, except heartbeat
+
+# sys_time
+time:
+  time_ref_source: "fcu"  # time_reference source
+  timesync_mode: MAVLINK
+  timesync_avg_alpha: 0.6 # timesync averaging factor
+
+# --- mavros plugins (alphabetical order) ---
+
+# 3dr_radio
+tdr_radio:
+  low_rssi: 40  # raw rssi lower level for diagnostics
+
+# actuator_control
+# None
+
+# command
+cmd:
+  use_comp_id_system_control: false # quirk for some old FCUs
+
+# dummy
+# None
+
+# ftp
+# None
+
+# global_position
+global_position:
+  frame_id: "map"             # origin frame
+  child_frame_id: "base_link" # body-fixed frame
+  rot_covariance: 99999.0   # covariance for attitude?
+  gps_uere: 1.0             # User Equivalent Range Error (UERE) of GPS sensor (m)
+  use_relative_alt: true    # use relative altitude for local coordinates
+  tf:
+    send: false               # send TF?
+    frame_id: "map"  # TF frame_id
+    global_frame_id: "earth"  # TF earth frame_id
+    child_frame_id: "base_link" # TF child_frame_id
+
+# imu_pub
+imu:
+  frame_id: "base_link"
+  # need find actual values
+  linear_acceleration_stdev: 0.0003
+  angular_velocity_stdev: 0.0003490659 // 0.02 degrees
+  orientation_stdev: 1.0
+  magnetic_stdev: 0.0
+
+# local_position
+local_position:
+  frame_id: "map"
+  tf:
+    send: false
+    frame_id: "map"
+    child_frame_id: "base_link"
+    send_fcu: false
+
+# param
+# None, used for FCU params
+
+# rc_io
+# None
+
+# safety_area
+safety_area:
+  p1: {x:  1.0, y:  1.0, z:  1.0}
+  p2: {x: -1.0, y: -1.0, z: -1.0}
+
+# setpoint_accel
+setpoint_accel:
+  send_force: false
+
+# setpoint_attitude
+setpoint_attitude:
+  reverse_thrust: false     # allow reversed thrust
+  use_quaternion: false     # enable PoseStamped topic subscriber
+  tf:
+    listen: false           # enable tf listener (disable topic subscribers)
+    frame_id: "map"
+    child_frame_id: "target_attitude"
+    rate_limit: 50.0
+
+# setpoint_raw
+setpoint_raw:
+  thrust_scaling: 1.0       # specify thrust scaling (normalized, 0 to 1) for thrust (like PX4)
+
+# setpoint_position
+setpoint_position:
+  tf:
+    listen: false           # enable tf listener (disable topic subscribers)
+    frame_id: "map"
+    child_frame_id: "target_position"
+    rate_limit: 50.0
+  mav_frame: LOCAL_NED
+
+# setpoint_velocity
+setpoint_velocity:
+  mav_frame: LOCAL_NED
+
+# vfr_hud
+# None
+
+# waypoint
+mission:
+  pull_after_gcs: true  # update mission if gcs updates
+  use_mission_item_int: true # use the MISSION_ITEM_INT message instead of MISSION_ITEM
+                             # for uploading waypoints to FCU
+                             
+# --- mavros extras plugins (same order) ---
+
+# adsb
+# None
+
+# debug_value
+# None
+
+# distance_sensor
+## Currently available orientations:
+#    Check http://wiki.ros.org/mavros/Enumerations
+##
+distance_sensor:
+  rangefinder_pub:
+    id: 0
+    frame_id: "lidar"
+    #orientation: PITCH_270 # sended by FCU
+    field_of_view: 0.0  # XXX TODO
+    send_tf: false
+    sensor_position: {x:  0.0, y:  0.0, z:  -0.1}
+  rangefinder_sub:
+    subscriber: true
+    id: 1
+    orientation: PITCH_270  # only that orientation are supported by APM 3.4+
+
+# image_pub
+image:
+  frame_id: "px4flow"
+
+# fake_gps
+fake_gps:
+  # select data source
+  use_mocap: true         # ~mocap/pose
+  mocap_transform: false  # ~mocap/tf instead of pose
+  mocap_withcovariance: false  # ~mocap/pose uses PoseWithCovarianceStamped Message
+  use_vision: false       # ~vision (pose)
+  use_hil_gps: true
+  gps_id: 4
+  # origin (default: Zürich)
+  geo_origin:
+    lat: 47.3667          # latitude [degrees]
+    lon: 8.5500           # longitude [degrees]
+    alt: 408.0            # altitude (height over the WGS-84 ellipsoid) [meters]
+  eph: 2.0
+  epv: 2.0
+  horiz_accuracy: 0.5
+  vert_accuracy: 0.5
+  speed_accuracy: 0.0
+  satellites_visible: 6   # virtual number of visible satellites
+  fix_type: 3             # type of GPS fix (default: 3D)
+  tf:
+    listen: false
+    send: false           # send TF?
+    frame_id: "map"       # TF frame_id
+    child_frame_id: "fix" # TF child_frame_id
+    rate_limit: 10.0      # TF rate
+  gps_rate: 5.0           # GPS data publishing rate
+
+# landing_target
+landing_target:
+  listen_lt: false
+  mav_frame: "LOCAL_NED"
+  land_target_type: "VISION_FIDUCIAL"
+  image:
+    width: 640            # [pixels]
+    height: 480
+  camera:
+    fov_x: 2.0071286398   # default: 115 [degrees]
+    fov_y: 2.0071286398
+  tf:
+    send: true
+    listen: false
+    frame_id: "landing_target"
+    child_frame_id: "camera_center"
+    rate_limit: 10.0
+  target_size: {x:  0.3, y:  0.3}
+
+# mocap_pose_estimate
+mocap:
+  # select mocap source
+  use_tf: false   # ~mocap/tf
+  use_pose: true  # ~mocap/pose
+
+# odom
+odometry:
+  frame_tf:
+    desired_frame: "ned"
+  estimator_type: 3 # check enum MAV_ESTIMATOR_TYPE in <https://mavlink.io/en/messages/common.html>
+
+# px4flow
+px4flow:
+  frame_id: "px4flow"
+  ranger_fov: 0.118682      # 6.8 degrees at 5 meters, 31 degrees at 1 meter
+  ranger_min_range: 0.3     # meters
+  ranger_max_range: 5.0     # meters
+
+# vision_pose_estimate
+vision_pose:
+  tf:
+    listen: false           # enable tf listener (disable topic subscribers)
+    frame_id: "map"
+    child_frame_id: "vision_estimate"
+    rate_limit: 10.0
+
+# vision_speed_estimate
+vision_speed:
+  listen_twist: true    # enable listen to twist topic, else listen to vec3d topic
+  twist_cov: true       # enable listen to twist with covariance topic
+
+# vibration
+vibration:
+  frame_id: "base_link"
+
+# wheel_odometry
+wheel_odometry:
+  count: 2           # number of wheels to compute odometry
+  use_rpm: false     # use wheel's RPM instead of cumulative distance to compute odometry
+  wheel0: {x: 0.0, y: -0.15, radius: 0.05} # x-, y-offset (m,NED) and radius (m)
+  wheel1: {x: 0.0, y:  0.15, radius: 0.05} # x-, y-offset (m,NED) and radius (m)
+  send_raw: true              # send wheel's RPM and cumulative distance (~/wheel_odometry/rpm, ~/wheel_odometry/distance)
+  send_twist: false           # send geometry_msgs/TwistWithCovarianceStamped instead of nav_msgs/Odometry
+  frame_id: "map"             # origin frame
+  child_frame_id: "base_link" # body-fixed frame
+  vel_error: 0.1              # wheel velocity measurement error 1-std (m/s)
+  tf:
+    send: true
+    frame_id: "map"
+    child_frame_id: "base_link"
+
+# vim:set ts=2 sw=2 et:

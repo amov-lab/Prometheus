@@ -1,0 +1,12 @@
+<launch>
+	<arg name="swarm_num" default="1"/>
+	<arg name="ugv_id" default="1"/>
+	<arg name="sim_mode" default="false"/>
+
+	<!-- 启动地面站 -->
+	<node pkg="prometheus_ugv_control" type="ugv_ground_station" name="ugv_ground_station" output="screen">	
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="ugv1_id" value="$(arg ugv_id)" />
+	</node>
+</launch>
+
