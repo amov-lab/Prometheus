@@ -1,0 +1,50 @@
+<launch>
+	<arg name="swarm_num" default="1"/>
+	<arg name="ugv_id" default="1"/>
+
+	<arg name="x_min" default="-3.0"/>
+	<arg name="x_max" default="3.0"/>
+	<arg name="y_min" default="-3.0"/>
+	<arg name="y_max" default="3.0"/>
+	<arg name="sim_mode" default="false"/>
+
+    <!-- n号小车 -->
+    <group ns="/ugv$(arg ugv_id)">
+		<!-- 启动MAVROS -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="/dev/ttyUSB0:921600" />
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="1" />
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_experiment)/launch_ugv/apm_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_experiment)/launch_ugv/apm_config.yaml" />
+		</node>
+    </group>
+
+	<!-- vrpn -->
+	<!-- 注意修改vicon电脑ip地址 -->
+	<!-- 改为T265 -->
+	<include file="$(find vrpn_client_ros)/launch/sample.launch">
+		<arg name="server" value="192.168.1.2"/>
+	</include>
+
+	<!-- 启动ugv_controller -->
+	<node pkg="prometheus_ugv_control" type="ugv_controller" name="ugv_controller_$(arg ugv_id)" output="screen">
+		<param name="ugv_id" value="$(arg ugv_id)"/>
+		<param name="sim_mode" value="$(arg sim_mode)" />
+		<param name="flag_printf" value="false" />
+		<param name="k_p" value="0.3" />
+		<param name="k_yaw" value="1.0" />
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+	</node>
+
+	<!-- 启动ugv_estimator -->
+	<node pkg="prometheus_ugv_control" type="ugv_estimator" name="ugv_estimator_$(arg ugv_id)" output="screen">
+		<param name="ugv_id" value="$(arg ugv_id)"/>
+		<param name="sim_mode" value="$(arg sim_mode)" />
+	</node>
+
+</launch>
