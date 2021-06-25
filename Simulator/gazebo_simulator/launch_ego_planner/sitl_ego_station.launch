@@ -1,0 +1,16 @@
+<launch>
+	<!-- 无人机集群数量 -->
+	<arg name="swarm_num" default="1"/>
+	<arg name="uav1_id" default="1"/>
+
+	<!-- 启动地面站 -->
+	<node pkg="prometheus_swarm_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav1_id" value="$(arg uav1_id)" />
+	</node>
+
+	<node pkg="prometheus_swarm_control" type="swarm_terminal_control" name="swarm_terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<param name="uav_id" value="1" />
+		<param name="sim_mode" value="true" />
+	</node>
+</launch>    
