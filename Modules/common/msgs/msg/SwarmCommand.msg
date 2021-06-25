@@ -43,5 +43,7 @@ float32 swarm_size
 
 float32[3] position_ref          ## [m]
 float32[3] velocity_ref          ## [m]
+float32[3] acceleration_ref
 float32 yaw_ref                  ## [rad]
+float32 yaw_rate_ref
 

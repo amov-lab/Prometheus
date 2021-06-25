@@ -9,8 +9,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
     // 读取参数
-    // 无人机名字,即group前缀,但本node声明不放入group中
-    nh.param<string>("uav_name", uav_name, "/uav0");
+    nh.param("uav_id", uav_id, 0);
     // 定位数据输入源 0 for vicon, 2 for gazebo ground truth
     nh.param<int>("input_source", input_source, 0);
     //　定位设备偏移量
@@ -19,6 +18,7 @@ int main(int argc, char **argv)
     nh.param<float>("offset_z", pos_offset[2], 0);
     nh.param<float>("offset_yaw", yaw_offset, 0);
 
+    uav_name = "/uav" + std::to_string(uav_id);
     msg_name = uav_name + "/control";
 
     // 变量初始化

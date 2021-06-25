@@ -1,0 +1,45 @@
+<launch>
+	<!-- 无人机集群数量 -->
+	<arg name="swarm_num" default="1"/>
+	<!-- 无人机ID -->
+	<arg name="uav_id" default="1"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav_init_x" default="0.0"/>
+    <arg name="uav_init_y" default="0.0"/>
+	<!-- swarm_estimator 参数 -->
+	<arg name="input_source" default="2"/>
+
+    <!-- x号飞机 -->
+	<include file="$(find prometheus_gazebo)/launch_ego_planner/sitl_ego_px4_basic.launch">
+		<arg name="swarm_num" value="$(arg swarm_num)"/>
+		<arg name="uav_name" value="/uav$(arg uav_id)"/>
+		<arg name="uav_id" value="$(arg uav_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/amov_models/Multisolo/uav$(arg uav_id)/uav$(arg uav_id).sdf"/>
+		<arg name="model" value="uav$(arg uav_id)"/>
+		<arg name="uav_init_x" value="$(arg uav_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- 启动swarm_estimator -->
+	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav_$(arg uav_id)" output="screen">
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+
+	<!-- 启动swarm_ego_controller -->
+	<node pkg="prometheus_swarm_control" type="swarm_ego_controller" name="swarm_ego_controller_uav_$(arg uav_id)" output="screen">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<rosparam command="load" file="$(find prometheus_gazebo)/launch_ego_planner/ego_control_config.yaml"/>
+	</node>
+
+	<!-- 启动ego_traj_to_cmd -->
+	<node pkg="prometheus_swarm_control" type="ego_traj_to_cmd" name="ego_traj_to_cmd_uav_$(arg uav_id)" output="screen">	
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<!-- 控制器标志位: 0for traj ,1 for pos -->
+		<param name="control_flag" value="0"/>
+	</node>
+</launch>

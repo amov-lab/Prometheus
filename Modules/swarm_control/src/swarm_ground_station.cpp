@@ -21,10 +21,13 @@ int main(int argc, char **argv)
     for(int i = 1; i <= swarm_num; i++) 
     {
         // 设置无人机名字，none代表无
-        boost::format fmt1("uav%d_name");
-        nh.param<string>((fmt1%(i)).str(), uav_name[i], "/none");
         boost::format fmt2("uav%d_id");
         nh.param<int>((fmt2%(i)).str(), uav_id[i], 0);
+        if(uav_id[i] == 0)
+        {
+            continue;
+        }
+        uav_name[i] = "/uav" + std::to_string(uav_id[i]);
         // 订阅
         command_sub[i] = nh.subscribe<prometheus_msgs::SwarmCommand>(uav_name[i] + "/prometheus/swarm_command", 10, swarm_command_cb[i]);
         drone_state_sub[i] = nh.subscribe<prometheus_msgs::DroneState>(uav_name[i] + "/prometheus/drone_state", 10, drone_state_cb[i]);
