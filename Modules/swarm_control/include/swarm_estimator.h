@@ -28,6 +28,7 @@
 #define TRA_WINDOW 10                     // 发布轨迹长度
 #define TIMEOUT_MAX 0.1                     // MOCAP超时阈值
 // 变量
+int uav_id;
 string uav_name;                            // 无人机名字(话题前缀)
 string object_name;                         // 动作捕捉软件中设定的刚体名字
 string msg_name;
