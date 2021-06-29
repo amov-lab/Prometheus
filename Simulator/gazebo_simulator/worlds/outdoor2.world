@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version='1.6'>
+<!-- 描述：暂时用不了 -->
   <world name='default'>
     <gui fullscreen='0'>
       <camera name='user_camera'>
@@ -36,7 +37,7 @@
         </constraints>
       </ode>
       <max_step_size>0.004</max_step_size>
-      <real_time_factor>1</real_time_factor>
+      <real_time_factor>1000</real_time_factor>
       <real_time_update_rate>250</real_time_update_rate>
     </physics>
     <light name='sun' type='directional'>
