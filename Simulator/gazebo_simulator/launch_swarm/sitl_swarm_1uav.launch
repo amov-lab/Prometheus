@@ -1,0 +1,95 @@
+<launch>
+	<!-- 无人机集群数量 -->
+	<arg name="swarm_num" default="1"/>
+	<!-- 无人机名称 -->
+	<arg name="uav1_name" default="/uav1"/>
+	<!-- 无人机ID -->
+	<arg name="uav1_id" default="1"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="0.0"/>
+    <arg name="uav1_init_y" default="0.0"/>
+	<!-- swarm_estimator 参数 -->
+	<arg name="input_source" default="2"/>
+	<!-- swarm_controller 参数 -->
+	<arg name="Takeoff_height" default="1.0"/>
+	<arg name="Disarm_height" default="0.2"/>
+	<arg name="Land_speed" default="0.2"/>
+	<!-- 地理围栏 -->
+	<arg name="x_min" default="-100.0"/>
+	<arg name="x_max" default="100.0"/>
+	<arg name="y_min" default="-100.0"/>
+	<arg name="y_max" default="100.0"/>
+	<arg name="z_min" default="-1.0"/>
+	<arg name="z_max" default="50.0"/>
+
+    <!-- 1号飞机 -->
+	<include file="$(find prometheus_gazebo)/launch_swarm/sitl_swarm_basic.launch">
+		<arg name="swarm_num" value="$(arg swarm_num)"/>
+		<arg name="uav_name" value="$(arg uav1_name)"/>
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/amov_models/Multisolo/uav1/uav1.sdf"/>
+		<arg name="model" value="uav1"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- run the swarm_estimator.cpp -->
+	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav1" output="screen">
+		<param name="uav_name" value="$(arg uav1_name)"/>
+		<param name="input_source" value="$(arg input_source)" />
+	</node>
+
+	<!-- 启动swarm_controller -->
+	<node pkg="prometheus_swarm_control" type="swarm_controller" name="swarm_controller_uav1" output="screen">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav_id" value="$(arg uav1_id)"/>
+		<param name="uav_name" value="$(arg uav1_name)"/>
+		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
+		<param name="Disarm_height" value="$(arg Disarm_height)"/>
+		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="geo_fence/x_min" value="$(arg x_min)"/>
+		<param name="geo_fence/x_max" value="$(arg x_max)"/>
+		<param name="geo_fence/y_min" value="$(arg y_min)"/>
+		<param name="geo_fence/y_max" value="$(arg y_max)"/>
+		<param name="geo_fence/z_min" value="$(arg z_min)"/>
+		<param name="geo_fence/z_max" value="$(arg z_max)"/>
+	</node>
+
+	<!-- 启动地面站 -->
+	<node pkg="prometheus_swarm_control" type="swarm_ground_station" name="swarm_ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav1_name" value="$(arg uav1_name)" />
+		<param name="uav1_id" value="$(arg uav1_id)" />
+	</node>
+
+	<node pkg="prometheus_swarm_control" type="swarm_ground_station_msg" name="swarm_ground_station_msg" output="screen"  launch-prefix="gnome-terminal --tab --">
+		<param name="swarm_num" value="$(arg swarm_num)"/>
+		<param name="uav1_name" value="$(arg uav1_name)" />
+		<param name="uav1_id" value="$(arg uav1_id)" />
+	</node>
+
+	<node pkg="prometheus_swarm_control" type="swarm_terminal_control" name="swarm_terminal_control" output="screen" launch-prefix="gnome-terminal --">
+		<param name="uav_name" value="$(arg uav1_name)"/>
+	</node>
+
+	<!-- 启动Gazebo -->
+	<!-- Gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/prometheus_logo.world"/>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+</launch>
+
