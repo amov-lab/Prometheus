@@ -39,6 +39,8 @@
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav1" output="screen">
 		<param name="uav_name" value="$(arg uav1_name)"/>
 		<param name="input_source" value="$(arg input_source)" />
+		<!--bug-->
+		<param name="uav_id" value="$(arg uav1_id)"/>
 	</node>
 
 	<!-- 启动swarm_controller -->
@@ -72,6 +74,8 @@
 
 	<node pkg="prometheus_swarm_control" type="swarm_terminal_control" name="swarm_terminal_control" output="screen" launch-prefix="gnome-terminal --">
 		<param name="uav_name" value="$(arg uav1_name)"/>
+		<!--bug-->
+		<param name="uav_id" value="$(arg uav1_id)"/>
 	</node>
 
 	<!-- 启动Gazebo -->
