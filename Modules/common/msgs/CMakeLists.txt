@@ -39,6 +39,8 @@ add_message_files(
   ArucoInfo.msg
   MultiArucoInfo.msg
   IndoorSearch.msg
+  UgvState.msg
+  UgvCommand.msg
 )
 
 add_action_files(
