@@ -35,6 +35,5 @@
 		<param name="velocity" value="0.5" />
 		<param name="k_p" value="2.0" />
 	</node>	
-
 </launch>
 

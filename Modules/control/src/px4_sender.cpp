@@ -436,8 +436,17 @@ int main(int argc, char **argv)
                         Command_Now.Reference_State.velocity_ref[2] = 0.0;
                         // 高度锁定为给定值 2021.3.24 云台追踪控制修改
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.position_ref[2]);
-                        // 偏航角更新为锁定 2021.3.24 云台追踪控制修改
-                        yaw_sp = Command_Now.Reference_State.yaw_ref;
+                        
+                        if(Command_Now.Reference_State.Move_frame  == prometheus_msgs::PositionReference::MIX_FRAME)
+                        {
+                            // 2021.6.30 for color_line_following
+                            yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
+                        }else
+                        {
+                            // 偏航角更新为锁定 2021.3.24 云台追踪控制修改
+                            yaw_sp = Command_Now.Reference_State.yaw_ref;
+                        }
+                        
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
                     {
                         float d_pos_body[2] = {Command_Now.Reference_State.position_ref[0], Command_Now.Reference_State.position_ref[1]};         //the desired xy position in Body Frame
