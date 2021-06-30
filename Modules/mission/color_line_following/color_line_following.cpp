@@ -33,6 +33,7 @@ float start_point_x,start_point_y,start_point_z;
 int flag_detection;
 float error_body_y;
 float yaw_sp;
+float next_desired_yaw;
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_Now;                               //发送给控制模块 [px4_pos_controller.cpp]的命令
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -49,7 +50,7 @@ void color_line_cb(const geometry_msgs::Pose::ConstPtr &msg)
     float x2 = msg->orientation.y;
     float y2 = msg->orientation.z;
 
-    float next_desired_yaw = - atan2(y2 - y1, x2 - x1);
+    next_desired_yaw = - atan2(y2 - y1, x2 - x1);
 
     yaw_sp = (0.7*yaw_sp + 0.3*next_desired_yaw);
 }
@@ -159,7 +160,7 @@ int main(int argc, char **argv)
         Command_Now.Reference_State.velocity_ref[0]     = FOLLOWING_VEL;
         Command_Now.Reference_State.velocity_ref[1]     = FOLLOWING_KP * error_body_y;
         Command_Now.Reference_State.position_ref[2]     = start_point_z;
-        Command_Now.Reference_State.yaw_ref             = yaw_sp;
+        Command_Now.Reference_State.yaw_ref             = yaw_sp;       // 增量yaw
         command_pub.publish(Command_Now);
         printf_result();
         rate.sleep();
@@ -173,8 +174,9 @@ int main(int argc, char **argv)
 void printf_result()
 {
     cout << ">>>>>>>>>>>>>>>>>>>>>>>>Color Line Following Mission<<<<<<<<<<<<<<<<<<<< "<< endl;
-    cout << "error_body_y: " << error_body_y << " [m] "<<endl;
-    cout << "yaw_sp: " << yaw_sp/3.1415926 *180 << " [deg] "<<endl;
+    cout << "error_body_y   : " << error_body_y << " [ m ] "<<endl;
+    cout << "yaw_from_vision: " << next_desired_yaw/3.1415926 *180 << " [deg] "<<endl;
+    cout << "yaw_sp         : " << yaw_sp/3.1415926 *180 << " [deg] "<<endl;
 }
 void printf_param()
 {
