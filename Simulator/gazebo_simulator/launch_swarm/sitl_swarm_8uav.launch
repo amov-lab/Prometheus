@@ -165,34 +165,42 @@
 	<!-- run the swarm_estimator.cpp -->
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav1" output="screen">
 		<param name="uav_name" value="$(arg uav1_name)"/>
+		<param name="uav_id" value="$(arg uav1_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav2" output="screen">
 		<param name="uav_name" value="$(arg uav2_name)"/>
+		<param name="uav_id" value="$(arg uav2_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav3" output="screen">
 		<param name="uav_name" value="$(arg uav3_name)"/>
+		<param name="uav_id" value="$(arg uav3_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav4" output="screen">
 		<param name="uav_name" value="$(arg uav4_name)"/>
+		<param name="uav_id" value="$(arg uav4_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav5" output="screen">
 		<param name="uav_name" value="$(arg uav5_name)"/>
+		<param name="uav_id" value="$(arg uav5_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav6" output="screen">
 		<param name="uav_name" value="$(arg uav6_name)"/>
+		<param name="uav_id" value="$(arg uav6_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav7" output="screen">
 		<param name="uav_name" value="$(arg uav7_name)"/>
+		<param name="uav_id" value="$(arg uav7_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	<node pkg="prometheus_swarm_control" type="swarm_estimator" name="swarm_estimator_uav8" output="screen">
 		<param name="uav_name" value="$(arg uav8_name)"/>
+		<param name="uav_id" value="$(arg uav8_id)"/>
 		<param name="input_source" value="$(arg input_source)" />
 	</node>
 	
