@@ -21,6 +21,9 @@ float32[4] attitude_q
 ## 视线角度[相机系下：右方x角度为正，下方y角度为正]
 float32[2] sight_angle
 
+## 像素位置[相机系下：右方x为正，下方y为正]
+int32[2] pixel_position
+
 ## 偏航角误差
 float32 yaw_error
 
