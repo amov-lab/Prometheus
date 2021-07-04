@@ -87,34 +87,69 @@ aos_y = math.atan(image_height / 2. / camera_matrix[1][1])
 # print(aos_y)
 
 while not rospy.is_shutdown():
-    data = s.recv(44)  # 35
+    data = s.recv(60)  # 35
     data = data.decode('utf-8')
     print(data)
 
 
     if len(data) > 0:
         nums = data.split(',')
-        if len(nums) == 8:
+        if len(nums) == 11:
             frame_id = int(nums[0])
             deted = int(nums[1])
-            cls = int(nums[2])
-            xmin, ymin, w, h = float(nums[3]), float(nums[4]), float(nums[5]), float(nums[6])
-            score = float(nums[7])
+            order = int(nums[2])
+            cls = int(nums[3])
+            xmin, ymin, w, h = float(nums[4]), float(nums[5]), float(nums[6]), float(nums[7])
+            score = float(nums[8])
+            pixel_cx = int(nums[9])
+            pixel_cy = int(nums[10])
             # print(frame_id)
-            if deted == 1:
+            if deted >= 1:
                 d_info = DetectionInfo()
                 d_info.detected = True
-                d_info.frame = 0
+                d_info.frame = frame_id
                 d_info.object_name = cls_names[cls]
                 d_info.category = cls
                 d_info.sight_angle = [(xmin+w/2.-0.5)*aos_x, (ymin+h/2.-0.5)*aos_y]
+                d_info.pixel_position = [pixel_cx, pixel_cy]
                 
-                if cls == 0 and cls_hs[cls] > 0:
+                if cls_hs[cls] > 0:
                     depth = (cls_hs[cls]*camera_matrix[1][1]) / (h*image_height)
                     d_info.position = [math.tan(d_info.sight_angle[0])*depth, math.tan(d_info.sight_angle[1])*depth, depth]
                 
                 m_info.detection_infos.append(d_info)
                 m_info.num_objs += 1
+                for i in range(deted):
+                    if i > 0:
+                        data = s.recv(60)  # 35
+                        data = data.decode('utf-8')
+                        print(data)
+                        if len(data) > 0:
+                            nums = data.split(',')
+                            if len(nums) == 11:
+                                frame_id = int(nums[0])
+                                deted = int(nums[1])
+                                order = int(nums[2])
+                                cls = int(nums[3])
+                                xmin, ymin, w, h = float(nums[4]), float(nums[5]), float(nums[6]), float(nums[7])
+                                score = float(nums[8])
+                                pixel_cx = int(nums[9])
+                                pixel_cy = int(nums[10])
+                                assert order == i, "server error"
+                                d_info = DetectionInfo()
+                                d_info.detected = True
+                                d_info.frame = frame_id
+                                d_info.object_name = cls_names[cls]
+                                d_info.category = cls
+                                d_info.sight_angle = [(xmin+w/2.-0.5)*aos_x, (ymin+h/2.-0.5)*aos_y]
+                                d_info.pixel_position = [pixel_cx, pixel_cy]
+                
+                                if cls_hs[cls] > 0:
+                                    depth = (cls_hs[cls]*camera_matrix[1][1]) / (h*image_height)
+                                    d_info.position = [math.tan(d_info.sight_angle[0])*depth, math.tan(d_info.sight_angle[1])*depth, depth]
+                
+                                m_info.detection_infos.append(d_info)
+                                m_info.num_objs += 1
 
             if frame_id != last_fid:
                 pub.publish(m_info)
