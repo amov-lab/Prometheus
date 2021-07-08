@@ -148,86 +148,6 @@ void MapGenerateCXY_1()
   _map_ok = true;
 }
 
-void MapGenerateCXY_2() 
-{
-  // 待存入全局点云的点
-  pcl::PointXYZ pt_random;
-
-  double x, y,z;
-
-  // 生成圆柱体障碍物
-  for (int i = 1; i <= 3; i++)
-  {
-    for (int j = 1; j <= 3; j++)
-    {
-
-      x = -4 + 2*i;
-      y = -4 + 2*j;
-
-      if(j%2 == 1)
-      {
-        // y轴单数生成圆柱体
-        x = floor(x / _resolution) * _resolution + _resolution / 2.0;
-        y = floor(y / _resolution) * _resolution + _resolution / 2.0;
-
-        int widNum = ceil((cylinder_radius) / _resolution);
-        int heiNum = ceil(cylinder_height / _resolution);
-
-        // 生成圆柱体的点云
-        for (int r = -widNum; r < widNum; r++)
-          for (int s = -widNum; s < widNum; s++) {
-            for (int t = -1.0; t < heiNum; t++) {
-              double temp_x = x + (r + 0.5) * _resolution + 1e-2;
-              double temp_y = y + (s + 0.5) * _resolution + 1e-2;
-              double temp_z = (t + 0.5) * _resolution + 1e-2;
-              if ( (Eigen::Vector2d(temp_x,temp_y) - Eigen::Vector2d(x,y)).norm() <= cylinder_radius )
-              {
-                pt_random.x = temp_x;
-                pt_random.y = temp_y;
-                pt_random.z = temp_z;
-                cloudMap.points.push_back(pt_random);
-              }
-            }
-          }
-
-      }else
-      {
-        // y轴单数生成正方体
-        z = sqaure_size / 2;
-        x = floor(x / _resolution) * _resolution + _resolution / 2.0;
-        y = floor(y / _resolution) * _resolution + _resolution / 2.0;
-        z = floor(z / _resolution) * _resolution + _resolution / 2.0;
-
-        int widNum = ceil((sqaure_size) / _resolution);
-
-        // 生成正方体的点云
-        for (int r = -widNum / 2.0; r < widNum / 2.0; r++)
-          for (int s = -widNum / 2.0; s < widNum / 2.0; s++) {
-            for (int t = -widNum / 2.0; t < widNum / 2.0; t++) {
-              double temp_x = x + (r + 0.5) * _resolution + 1e-2;
-              double temp_y = y + (s + 0.5) * _resolution + 1e-2;
-              double temp_z = z + (t + 0.5) * _resolution + 1e-2;
-              pt_random.x = temp_x;
-              pt_random.y = temp_y;
-              pt_random.z = temp_z;
-              cloudMap.points.push_back(pt_random);
-            }
-          }
-      }
-      
-    }
-  }
-
-  cloudMap.width = cloudMap.points.size();
-  cloudMap.height = 1;
-  cloudMap.is_dense = true;
-
-  ROS_INFO("\033[1;33;41m----> Finished generate CXY map 2.\033[0m");
-
-  kdtreeLocalMap.setInputCloud(cloudMap.makeShared());
-
-  _map_ok = true;
-}
 
 void generate_cylinder(double x,double y)
 {
@@ -257,6 +177,30 @@ void generate_cylinder(double x,double y)
         }
       }
 }
+
+void MapGenerateCXY_2() 
+{
+  // 待存入全局点云的点
+  pcl::PointXYZ pt_random;
+
+  double x, y,z;
+
+  // 生成圆柱体障碍物
+  generate_cylinder(2.0,0.0);
+  generate_cylinder(4.0,0.0);
+  generate_cylinder(6.0,0.0);
+
+  cloudMap.width = cloudMap.points.size();
+  cloudMap.height = 1;
+  cloudMap.is_dense = true;
+
+  ROS_INFO("\033[1;33;41m----> Finished generate CXY map 2.\033[0m");
+
+  kdtreeLocalMap.setInputCloud(cloudMap.makeShared());
+
+  _map_ok = true;
+}
+
 
 void generate_cube(double x,double y)
 {

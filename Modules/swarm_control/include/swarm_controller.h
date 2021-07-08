@@ -464,6 +464,7 @@ void send_attitude_setpoint(Eigen::Vector4d& u_att)
 // 无人机位置、速度、偏航角
 // 期望位置、速度、加速度、偏航角
 // 输出：
+// roll pitch yaw 油门（0-1）
 void pos_controller()
 {
     // 定点的时候才积分
