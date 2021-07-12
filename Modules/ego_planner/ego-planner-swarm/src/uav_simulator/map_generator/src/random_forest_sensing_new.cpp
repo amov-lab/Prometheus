@@ -67,7 +67,7 @@ sensor_msgs::PointCloud2 localMap_pcd;
 pcl::PointCloud<pcl::PointXYZ> cloudMap,local_map;
 
 
-void MapGenerateCXY_1() 
+void MapGenerateAMOV_1() 
 {
   // 待存入全局点云的点
   pcl::PointXYZ pt_random;
@@ -141,7 +141,7 @@ void MapGenerateCXY_1()
   cloudMap.height = 1;
   cloudMap.is_dense = true;
 
-  ROS_INFO("\033[1;33;41m----> Finished generate CXY map 1.\033[0m");
+  ROS_INFO("\033[1;33;41m----> Finished generate AMOV map 1.\033[0m");
 
   kdtreeLocalMap.setInputCloud(cloudMap.makeShared());
 
@@ -178,7 +178,7 @@ void generate_cylinder(double x,double y)
       }
 }
 
-void MapGenerateCXY_2() 
+void MapGenerateAMOV_2() 
 {
   // 待存入全局点云的点
   pcl::PointXYZ pt_random;
@@ -194,7 +194,7 @@ void MapGenerateCXY_2()
   cloudMap.height = 1;
   cloudMap.is_dense = true;
 
-  ROS_INFO("\033[1;33;41m----> Finished generate CXY map 2.\033[0m");
+  ROS_INFO("\033[1;33;41m----> Finished generate AMOV map 2.\033[0m");
 
   kdtreeLocalMap.setInputCloud(cloudMap.makeShared());
 
@@ -236,7 +236,7 @@ int sign(int num, double mid,bool zero_flag)
   else return 1;
 }
 
-void MapGenerateCXY_3() 
+void MapGenerateAMOV_3() 
 {
   double x,y;
   for(int num = 0; num < 10; num++)
@@ -314,14 +314,14 @@ void MapGenerateCXY_3()
   cloudMap.height = 1;
   cloudMap.is_dense = true;
 
-  ROS_INFO("\033[1;33;41m----> Finished generate CXY map 3.\033[0m");
+  ROS_INFO("\033[1;33;41m----> Finished generate AMOV map 3.\033[0m");
 
   kdtreeLocalMap.setInputCloud(cloudMap.makeShared());
 
   _map_ok = true;
 }
 
-void MapGenerateCXY_4() 
+void MapGenerateAMOV_4() 
 {
   double x,y;
   for(int num = 0; num < 10; num++)
@@ -399,14 +399,14 @@ void MapGenerateCXY_4()
   cloudMap.height = 1;
   cloudMap.is_dense = true;
 
-  ROS_INFO("\033[1;33;41m----> Finished generate CXY map 4.\033[0m");
+  ROS_INFO("\033[1;33;41m----> Finished generate AMOV map 4.\033[0m");
 
   kdtreeLocalMap.setInputCloud(cloudMap.makeShared());
 
   _map_ok = true;
 }
 
-void RandomMapGenerateCXY() 
+void RandomMapGenerateAMOV() 
 {
   // 待存入全局点云的点
   pcl::PointXYZ pt_random;
@@ -689,7 +689,7 @@ void renderSensedPointsUGV(const ros::TimerEvent& event, int ugv_id)
 
 int main(int argc, char** argv) 
 {
-  ros::init(argc, argv, "random_map_sensing_cxy");
+  ros::init(argc, argv, "random_map_sensing_new");
   ros::NodeHandle n("~");
 
   n.param("swarm_num", swarm_num, 0);
@@ -760,11 +760,11 @@ int main(int argc, char** argv)
   cout << "seed=" << seed << endl;
   eng.seed(seed);
 
-  if(map_flag == 0) RandomMapGenerateCXY();
-  else if(map_flag == 1) MapGenerateCXY_1();
-  else if(map_flag == 2) MapGenerateCXY_2();
-  else if(map_flag == 3) MapGenerateCXY_3();
-  else if(map_flag == 4) MapGenerateCXY_4();
+  if(map_flag == 0) RandomMapGenerateAMOV();
+  else if(map_flag == 1) MapGenerateAMOV_1();
+  else if(map_flag == 2) MapGenerateAMOV_2();
+  else if(map_flag == 3) MapGenerateAMOV_3();
+  else if(map_flag == 4) MapGenerateAMOV_4();
   else ROS_ERROR("[Map server] wrong map_flag.");
   
   ros::Rate loop_rate(100.0);

@@ -11,7 +11,7 @@ roslaunch prometheus_gazebo sitl_ego_px4_uav1.launch & sleep 4s;
 roslaunch prometheus_gazebo sitl_ego_planner_uav1.launch & sleep 2s;
 # ego
 # roslaunch prometheus_gazebo sitl_ego_planner_uav2.launch & sleep 2s;
-# case3 station
+# station
 roslaunch prometheus_gazebo sitl_ego_station.launch
 
 
