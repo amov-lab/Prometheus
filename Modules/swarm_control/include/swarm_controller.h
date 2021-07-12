@@ -74,7 +74,7 @@ Eigen::Vector3d pos_nei[MAX_UAV_NUM+1];                     // 邻居位置
 Eigen::Vector3d vel_nei[MAX_UAV_NUM+1];                     // 邻居速度
 Eigen::Vector3d dv;
 float R = 2.0;
-float r = 1.5;
+float r = 1.0;
 // 无人机状态量
 Eigen::Vector3d pos_drone;                      // 无人机位置
 Eigen::Vector3d vel_drone;                      // 无人机速度
