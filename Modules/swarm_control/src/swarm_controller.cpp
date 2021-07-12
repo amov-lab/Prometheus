@@ -34,7 +34,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        nei_state_sub[i] = nh.subscribe<prometheus_msgs::DroneState>("/uav"+std::to_string(i)+ "/prometheus/drone_state", 1, boost::bind(nei_state_cb,_1,i));
+        nei_state_sub[i] = nh.subscribe<prometheus_msgs::DroneState>("/uav"+std::to_string(i)+ "/prometheus/drone_state", 10, boost::bind(nei_state_cb,_1,i));
     }
 
     // 【发布】位置/速度/加速度期望值 坐标系 ENU系
@@ -227,8 +227,8 @@ void mainloop_cb(const ros::TimerEvent &e)
                     dv.setZero();
                 }
 
-                vel_des[0] -= dv[0];
-                vel_des[1] -= dv[1];
+                vel_des[0] -= 2.0*dv[0];
+                vel_des[1] -= 2.0*dv[1];
             }  
         }
 
