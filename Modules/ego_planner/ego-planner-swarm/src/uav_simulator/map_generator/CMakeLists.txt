@@ -31,7 +31,7 @@ target_link_libraries(random_forest
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES})
 
-add_executable (random_forest_cxy src/random_forest_sensing_cxy.cpp )
-target_link_libraries(random_forest_cxy
+add_executable (random_forest_new src/random_forest_sensing_new.cpp )
+target_link_libraries(random_forest_new
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES})
