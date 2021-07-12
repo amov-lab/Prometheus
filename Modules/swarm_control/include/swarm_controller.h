@@ -25,14 +25,16 @@ using namespace std;
 // 宏定义
 #define NODE_NAME "swarm_controller"            // 节点名字
 #define NUM_POINT 2                             // 打印小数点
+#define MAX_UAV_NUM 50
 
 // 变量
-int swarm_num;                                  // 集群数量
+int swarm_num_uav;                                  // 集群数量
 string uav_name;                                // 无人机名字
 int uav_id;                                     // 无人机编号
 int num_neighbour = 2;                          // 邻居数量,目前默认为2
 int neighbour_id1,neighbour_id2;                // 邻居ID
 string neighbour_name1,neighbour_name2;         // 邻居名字
+int collision_flag;
 int controller_flag;
 int controller_hz;
 string msg_name;
@@ -53,8 +55,7 @@ prometheus_msgs::Message message;               // 待打印消息
 ros::Subscriber command_sub;
 ros::Subscriber drone_state_sub;
 ros::Subscriber position_target_sub;
-ros::Subscriber nei1_state_sub;
-ros::Subscriber nei2_state_sub;
+ros::Subscriber nei_state_sub[MAX_UAV_NUM+1];
 
 // 发布
 ros::Publisher setpoint_raw_local_pub;
@@ -68,9 +69,12 @@ mavros_msgs::SetMode mode_cmd;
 mavros_msgs::CommandBool arm_cmd;
 
 // 邻居状态量
-Eigen::Vector3d pos_nei[2];                     // 邻居位置
-Eigen::Vector3d vel_nei[2];                     // 邻居速度
-
+prometheus_msgs::DroneState state_nei[MAX_UAV_NUM+1];
+Eigen::Vector3d pos_nei[MAX_UAV_NUM+1];                     // 邻居位置
+Eigen::Vector3d vel_nei[MAX_UAV_NUM+1];                     // 邻居速度
+Eigen::Vector3d dv;
+float R = 2.0;
+float r = 1.5;
 // 无人机状态量
 Eigen::Vector3d pos_drone;                      // 无人机位置
 Eigen::Vector3d vel_drone;                      // 无人机速度
@@ -121,18 +125,14 @@ float yita;                                     // 速度控制参数
 void init(ros::NodeHandle &nh)
 {
     // 集群数量
-    nh.param<int>("swarm_num", swarm_num, 1);
+    nh.param<int>("swarm_num_uav", swarm_num_uav, 1);
     // 无人机编号 1号无人机则为1
     nh.param<int>("uav_id", uav_id, 0);
     uav_name = "/uav" + std::to_string(uav_id);
-    //可监听到的无人机编号，目前设定为可监听到两台无人机，后期考虑可通过数组传递参数，监听任意ID的无人机
-    nh.param<int>("neighbour_id1", neighbour_id1, 0);
-    nh.param<int>("neighbour_id2", neighbour_id2, 0);
-    neighbour_name1 = "/uav" + std::to_string(neighbour_id1);
-    neighbour_name2 = "/uav" + std::to_string(neighbour_id2);
     // 控制器标志位: 0代表姿态（使用本程序的位置环控制算法），1代表位置、速度（使用PX4的位置环控制算法）
     nh.param<int>("controller_flag", controller_flag, 1);
     nh.param<int>("controller_hz", controller_hz, 50);
+    nh.param<int>("collision_flag", collision_flag, 1);
     
     // 起飞高度,上锁高度,降落速度
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
@@ -186,9 +186,9 @@ void init(ros::NodeHandle &nh)
     nh.param<float>("track_gain/tilt_angle_max" , tilt_angle_max_track, 20.0f);
     
     // 编队控制参数
-    nh.param<float>("k_p", k_p, 0.95);
-    nh.param<float>("k_aij", k_aij, 0.1);
-    nh.param<float>("k_gamma", k_gamma, 0.1);
+    nh.param<float>("k_p", k_p, 1.2);
+    nh.param<float>("k_aij", k_aij, 0.2);
+    nh.param<float>("k_gamma", k_gamma, 1.2);
 
     msg_name = uav_name + "/control";
     // 初始化命令
@@ -200,7 +200,7 @@ void init(ros::NodeHandle &nh)
     Command_Now.yaw_ref             = 0;
     
     // 初始化阵型偏移量
-    formation_separation = Eigen::MatrixXf::Zero(swarm_num,4); 
+    formation_separation = Eigen::MatrixXf::Zero(swarm_num_uav,4); 
 
     int_start_error = 2.0;
     int_e_v.setZero();
@@ -224,20 +224,20 @@ void swarm_command_cb(const prometheus_msgs::SwarmCommand::ConstPtr& msg)
         Command_Now.Mode == prometheus_msgs::SwarmCommand::Velocity_Control ||
         Command_Now.Mode == prometheus_msgs::SwarmCommand::Accel_Control )
     {
-        if (swarm_num == 1)
+        if (swarm_num_uav == 1)
         {
-            // swarm_num 为1时,即无人机无法变换阵型,并只能接收位置控制指令
+            // swarm_num_uav 为1时,即无人机无法变换阵型,并只能接收位置控制指令
             Command_Now.Mode = prometheus_msgs::SwarmCommand::Position_Control;
             formation_separation << 0,0,0,0;
-        }else if(swarm_num == 4 || swarm_num == 8 || swarm_num == 40)
+        }else if(swarm_num_uav == 4 || swarm_num_uav == 8 || swarm_num_uav == 40)
         {
-            formation_separation = formation_utils::get_formation_separation(Command_Now.swarm_shape, Command_Now.swarm_size, swarm_num);
+            formation_separation = formation_utils::get_formation_separation(Command_Now.swarm_shape, Command_Now.swarm_size, swarm_num_uav);
         }else
         {
-            // 未指定阵型,如若想6机按照8机编队飞行,则设置swarm_num为8即可
+            // 未指定阵型,如若想6机按照8机编队飞行,则设置swarm_num_uav为8即可
             Command_Now.Mode = prometheus_msgs::SwarmCommand::Position_Control;
-            formation_separation = Eigen::MatrixXf::Zero(swarm_num,4); 
-            pub_message(message_pub, prometheus_msgs::Message::ERROR, msg_name, "Wrong swarm_num");
+            formation_separation = Eigen::MatrixXf::Zero(swarm_num_uav,4); 
+            pub_message(message_pub, prometheus_msgs::Message::ERROR, msg_name, "Wrong swarm_num_uav");
         }
     }
     // 切换参数
@@ -276,6 +276,8 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 
 void nei_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg, int nei_id)
 {
+    state_nei[nei_id] = *msg;
+
     pos_nei[nei_id]  = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
     vel_nei[nei_id]  = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
 }
@@ -609,28 +611,37 @@ void debug_cb(const ros::TimerEvent &e)
     // 强制显示符号
     cout.setf(ios::showpos);
 
+    cout << GREEN  << "swarm_num_uav : " <<  swarm_num_uav << TAIL << endl;
     cout << GREEN  << "UAV_id : " <<  uav_id << "   UAV_name : " <<  uav_name << TAIL << endl;
-    cout << GREEN  << "neighbour_id1 : " <<  neighbour_id1 << "   neighbour_name1 : " <<  neighbour_name1 << TAIL << endl;
-    cout << GREEN  << "neighbour_id2 : " <<  neighbour_id2 << "   neighbour_name2 : " <<  neighbour_name2 << TAIL << endl;
     cout << GREEN  << "UAV_pos [X Y Z] : " << pos_drone[0] << " [ m ] "<< pos_drone[1]<<" [ m ] "<<pos_drone[2]<<" [ m ] "<< TAIL <<endl;
-    cout << GREEN << "UAV_vel [X Y Z] : " << vel_drone[0] << " [ m/s ] "<< vel_drone[1]<<" [ m/s ] "<<vel_drone[2]<<" [ m/s ] "<< TAIL <<endl;
-    cout << GREEN  << "neighbour_pos [X Y Z] : " << pos_nei[0][0] << " [ m ] "<< pos_nei[0][1]<<" [ m ] "<<pos_nei[0][2]<<" [ m ] "<< TAIL <<endl;
-    cout << GREEN  << "neighbour_vel [X Y Z] : " << vel_nei[0][0] << " [ m/s ] "<< vel_nei[0][1]<<" [ m/s ] "<<vel_nei[0][2]<<" [ m/s ] "<< TAIL <<endl;
-    cout << GREEN  << "neighbour_pos [X Y Z] : " << pos_nei[1][0] << " [ m ] "<< pos_nei[1][1]<<" [ m ] "<<pos_nei[1][2]<<" [ m ] "<< TAIL <<endl;
-    cout << GREEN  << "neighbour_vel [X Y Z] : " << vel_nei[1][0] << " [ m/s ] "<< vel_nei[1][1]<<" [ m/s ] "<<vel_nei[1][2]<<" [ m/s ] "<< TAIL <<endl;
+    cout << GREEN  << "UAV_vel [X Y Z] : " << vel_drone[0] << " [ m/s ] "<< vel_drone[1]<<" [ m/s ] "<<vel_drone[2]<<" [ m/s ] "<< TAIL <<endl;
 
-    cout << GREEN << "----> Debug Info: " << TAIL << endl;
-    cout << GREEN << "----> pos_drone : " << pos_drone(0) << " [ m ] " << pos_drone(1) << " [ m ] " << pos_drone(2) << " [ m ] "<< TAIL << endl;
-    cout << GREEN << "----> pos_des   : " << pos_des(0)   << " [m/s] " << pos_des(1)   << " [m/s] " << pos_des(2)   << " [m/s] "<< TAIL << endl;
-    cout << GREEN << "----> u_attitude: " << u_att(0)*180/3.14 << " [deg] "<< u_att(1)*180/3.14 << " [deg] "<< u_att(2)*180/3.14 << " [deg] "<< TAIL << endl;
-    cout << GREEN << "----> u_throttle: " << u_att(3) << " [0-1] "<< TAIL << endl;
+    for(int i = 1; i <= swarm_num_uav; i++) 
+    {
+        if(i == uav_id)
+        {
+            continue;
+        }
+
+        cout << GREEN  << "nei" <<i<< "_pos [X Y Z] : " << pos_nei[i][0] << " [ m ] "<< pos_nei[i][1]<<" [ m ] "<<pos_nei[i][2]<<" [ m ] "<< TAIL <<endl;
+        cout << GREEN  << "nei" <<i<< "_vel [X Y Z] : " << vel_nei[i][0] << " [ m/s ] "<< vel_nei[i][1]<<" [ m/s ] "<<vel_nei[i][2]<<" [ m/s ] "<< TAIL <<endl;
+    }
+
+
 
     if(controller_flag == 0)
     {
-       cout << GREEN << "----> In attitude control mode. " << TAIL << endl;
+        cout << GREEN << "----> In attitude control mode. " << TAIL << endl;
+        cout << GREEN << "----> Debug Info: " << TAIL << endl;
+        cout << GREEN << "----> pos_drone : " << pos_drone(0) << " [ m ] " << pos_drone(1) << " [ m ] " << pos_drone(2) << " [ m ] "<< TAIL << endl;
+        cout << GREEN << "----> pos_des   : " << pos_des(0)   << " [m/s] " << pos_des(1)   << " [m/s] " << pos_des(2)   << " [m/s] "<< TAIL << endl;
+        cout << GREEN << "----> u_attitude: " << u_att(0)*180/3.14 << " [deg] "<< u_att(1)*180/3.14 << " [deg] "<< u_att(2)*180/3.14 << " [deg] "<< TAIL << endl;
+        cout << GREEN << "----> u_throttle: " << u_att(3) << " [0-1] "<< TAIL << endl;
     }else
     {
-       cout << GREEN << "----> In pos/vel control mode. " << TAIL << endl;
+        cout << GREEN << "----> In pos/vel control mode. " << TAIL << endl;
+        cout << GREEN << "----> Debug Info: " << TAIL << endl;
+        cout << GREEN << "----> dv : " << dv(0) << " [ m ] " << dv(1) << " [ m ] " << dv(2) << " [ m ] "<< TAIL << endl;
     }
 }
 void printf_param()

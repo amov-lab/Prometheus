@@ -14,7 +14,7 @@ using namespace std;
 #define NODE_NAME "swarm_formation_control"
 #define MAX_NUM 40
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-int swarm_num;
+int swarm_num_uav;
 string uav_name[MAX_NUM+1];
 int uav_id[MAX_NUM+1];
 prometheus_msgs::SwarmCommand swarm_command[MAX_NUM+1];
@@ -39,8 +39,8 @@ int main(int argc, char **argv)
     ros::init(argc, argv, NODE_NAME);
     ros::NodeHandle nh("~");
     
-    nh.param<int>("swarm_num", swarm_num, 1);
-    // 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式 
+    nh.param<int>("swarm_num_uav", swarm_num_uav, 1);
+    // 0代表位置追踪模式，1代表速度追踪模式，2代表加速度追踪模式 
     nh.param<int>("controller_num", controller_num, 0);
     nh.param<float>("formation_size", formation_size, 1.0);
     nh.param<bool>("sim_mode",sim_mode,true);
@@ -48,21 +48,11 @@ int main(int argc, char **argv)
     virtual_leader_pos << 0.0,0.0,1.0;
     virtual_leader_yaw = 0.0;
 
-    for(int i = 1; i <= swarm_num; i++) 
+
+    for(int i = 1; i <= swarm_num_uav; i++) 
     {
-        // 设置无人机名字，none代表无
-        boost::format fmt1("uav%d_name");
-        nh.param<string>((fmt1%(i)).str(), uav_name[i], "/none");
-
-        boost::format fmt2("uav%d_id");
-        nh.param<int>((fmt2%(i)).str(), uav_id[i], 0);
-
-        if(uav_name[i] == "/none" || uav_id[i] == 0)
-        {
-            cout << "Wrong UAV Name or ID!"<< endl;
-        }
-
-        command_pub[i] = nh.advertise<prometheus_msgs::SwarmCommand>(uav_name[i] + "/prometheus/swarm_command", 10); //【发布】阵型
+        //【发布】阵型
+        command_pub[i] = nh.advertise<prometheus_msgs::SwarmCommand>("/uav" + std::to_string(i) + "/prometheus/swarm_command", 1); 
     }
 
     //固定的浮点显示
@@ -86,7 +76,7 @@ int main(int argc, char **argv)
         cout << "Please enter 1 to disarm all the UAVs."<<endl;
         cin >> start_flag;
 
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Idle;
             swarm_command[i].yaw_ref = 999;
@@ -101,7 +91,7 @@ int main(int argc, char **argv)
         cout << "Please enter 1 to takeoff all the UAVs."<<endl;
         cin >> start_flag;
 
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Takeoff;
             swarm_command[i].yaw_ref = 0.0;
@@ -139,7 +129,7 @@ int main(int argc, char **argv)
         }
         else if (start_flag == 2)
         {
-            for(int i = 1; i <= swarm_num; i++) 
+            for(int i = 1; i <= swarm_num_uav; i++) 
             {
                 swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Hold;
                 command_pub[i].publish(swarm_command[i]); //【发布】阵型
@@ -147,7 +137,7 @@ int main(int argc, char **argv)
         }
         else if (start_flag == 3)
         {
-            for(int i = 1; i <= swarm_num; i++) 
+            for(int i = 1; i <= swarm_num_uav; i++) 
             {
                 swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Land;
                 command_pub[i].publish(swarm_command[i]); //【发布】阵型
@@ -155,7 +145,7 @@ int main(int argc, char **argv)
         }
         else if (start_flag == 5)
         {
-            for(int i = 1; i <= swarm_num; i++) 
+            for(int i = 1; i <= swarm_num_uav; i++) 
             {
                 swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Disarm;
                 command_pub[i].publish(swarm_command[i]); //【发布】阵型
@@ -179,7 +169,7 @@ void pub_formation_command()
     if(formation_num == 1)
     {
         cout << "Formation shape: [ One_column ]"<<endl;
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].swarm_shape = prometheus_msgs::SwarmCommand::One_column;
         }
@@ -187,7 +177,7 @@ void pub_formation_command()
     else if(formation_num == 2)
     {
         cout << "Formation shape: [ Triangle ]"<<endl;
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].swarm_shape = prometheus_msgs::SwarmCommand::Triangle;
         }
@@ -195,7 +185,7 @@ void pub_formation_command()
     else if(formation_num == 3)
     {
         cout << "Formation shape: [ Square ]"<<endl;
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].swarm_shape = prometheus_msgs::SwarmCommand::Square;
         }
@@ -203,7 +193,7 @@ void pub_formation_command()
     else if(formation_num == 4)
     {
         cout << "Formation shape: [ Circular ]"<<endl;
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].swarm_shape = prometheus_msgs::SwarmCommand::Circular;
         }
@@ -215,28 +205,28 @@ void pub_formation_command()
 
     if(controller_num == 0)
     {
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Position_Control;
         }
     }
     else if(controller_num == 1)
     {
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Velocity_Control;
         }
     }
     else if(controller_num == 2)
     {
-        for(int i = 1; i <= swarm_num; i++) 
+        for(int i = 1; i <= swarm_num_uav; i++) 
         {
             swarm_command[i].Mode = prometheus_msgs::SwarmCommand::Accel_Control;
         }
     }
     // cout << "controller_num: " << controller_num << endl;
 
-    for(int i = 1; i <= swarm_num; i++) 
+    for(int i = 1; i <= swarm_num_uav; i++) 
     {
         swarm_command[i].swarm_size = formation_size;
         swarm_command[i].position_ref[0] = virtual_leader_pos[0] ; 
@@ -254,13 +244,7 @@ void pub_formation_command()
 void printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>> Formation Flight Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout << "swarm_num   : "<< swarm_num <<endl;
+    cout << "swarm_num_uav   : "<< swarm_num_uav <<endl;
     cout << "controller_num   : "<< controller_num <<endl;
     cout << "formation_size : "<< formation_size << " [m] "<< endl;
-
-    for(int i = 1; i <= swarm_num; i++) 
-    {
-        cout << "uav_name["<< i << "]" << uav_name[i] <<endl;
-        cout << "uav_id["<< i << "]" << uav_id[i] <<endl;
-    }  
 }
