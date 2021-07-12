@@ -27,10 +27,14 @@ int main(int argc, char **argv)
     drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>(uav_name + "/prometheus/drone_state", 10, drone_state_cb);
 
     //【订阅】邻居飞机的状态信息
-    if(neighbour_name1 != "/uav0" || neighbour_name2 != "/uav0")
+    for(int i = 1; i <= swarm_num_uav; i++) 
     {
-        nei1_state_sub = nh.subscribe<prometheus_msgs::DroneState>(neighbour_name1 + "/prometheus/drone_state", 10, boost::bind(&nei_state_cb,_1, 0));
-        nei2_state_sub = nh.subscribe<prometheus_msgs::DroneState>(neighbour_name2 + "/prometheus/drone_state", 10, boost::bind(&nei_state_cb,_1, 1));
+        if(i == uav_id)
+        {
+            continue;
+        }
+
+        nei_state_sub[i] = nh.subscribe<prometheus_msgs::DroneState>("/uav"+std::to_string(i)+ "/prometheus/drone_state", 1, boost::bind(nei_state_cb,_1,i));
     }
 
     // 【发布】位置/速度/加速度期望值 坐标系 ENU系
@@ -179,18 +183,55 @@ void mainloop_cb(const ros::TimerEvent &e)
         //　参考文献：Multi-Vehicle consensus with a time-varying reference state 公式(11) - (12)
         //　目前该算法有一定控制偏差，可能是由于参数选取不是最佳导致的
         
-        yita = 1/ ((float)swarm_num * k_aij + k_p);
+        yita = 1/ ((float)swarm_num_uav * k_aij + k_p);
 
         pos_des[0] = 0.0;
         pos_des[1] = 0.0;
         pos_des[2] = Command_Now.position_ref[2] + formation_separation(uav_id-1,2);
-        vel_des[0] = - yita * k_aij * ( vel_nei[0][0] - k_gamma *((pos_drone[0] - pos_nei[0][0]) - ( formation_separation(uav_id-1,0) -  formation_separation(neighbour_id1-1,0)))) 
-                        - yita * k_aij * ( vel_nei[1][0] - k_gamma *((pos_drone[0] - pos_nei[1][0]) - ( formation_separation(uav_id-1,0) -  formation_separation(neighbour_id2-1,0))))
-                        + yita * k_p * ( Command_Now.velocity_ref[0] - k_gamma * (pos_drone[0] - Command_Now.position_ref[0] - formation_separation(uav_id-1,0)));
-        vel_des[1] = - yita * k_aij * ( vel_nei[0][1] - k_gamma *((pos_drone[1] - pos_nei[0][1]) - ( formation_separation(uav_id-1,1) -  formation_separation(neighbour_id1-1,1)))) 
-                        - yita * k_aij * ( vel_nei[1][1] - k_gamma *((pos_drone[1] - pos_nei[1][1]) - ( formation_separation(uav_id-1,1) -  formation_separation(neighbour_id2-1,1))))
-                        + yita * k_p * ( Command_Now.velocity_ref[1] - k_gamma * (pos_drone[1] - Command_Now.position_ref[1] - formation_separation(uav_id-1,1)));
+
+        vel_des[0] = yita * k_p * ( Command_Now.velocity_ref[0] - k_gamma * (pos_drone[0] - Command_Now.position_ref[0] - formation_separation(uav_id-1,0)));
+        vel_des[1] = yita * k_p * ( Command_Now.velocity_ref[1] - k_gamma * (pos_drone[1] - Command_Now.position_ref[1] - formation_separation(uav_id-1,1)));
         vel_des[2] = 0.0;
+
+        for(int i = 1; i <= swarm_num_uav; i++) 
+        {
+            if(i == uav_id)
+            {
+                continue;
+            }
+
+            vel_des[0] += - yita * k_aij * ( vel_nei[i][0] - k_gamma *((pos_drone[0] - pos_nei[i][0]) - ( formation_separation(uav_id-1,0) -  formation_separation(i-1,0))));
+            vel_des[1] += - yita * k_aij * ( vel_nei[i][1] - k_gamma *((pos_drone[1] - pos_nei[i][1]) - ( formation_separation(uav_id-1,1) -  formation_separation(i-1,1))));
+        }
+        
+        if(collision_flag == 1)
+        {
+            // 计算APF项
+            for(int i = 1; i <= swarm_num_uav; i++) 
+            {
+                if(i == uav_id)
+                {
+                    continue;
+                }
+
+                float distance = (pos_drone - pos_nei[i]).norm();
+                
+                if(distance > R)
+                {
+                    dv.setZero();
+                }else if(distance > r)
+                {
+                    dv = 4*(R*R-r*r)*(distance*distance - R*R)/pow(distance*distance - r*r,3) * (pos_drone - pos_nei[i]);
+                }else
+                {
+                    dv.setZero();
+                }
+
+                vel_des[0] -= dv[0];
+                vel_des[1] -= dv[1];
+            }  
+        }
+
         acc_des << 0.0, 0.0, 0.0;
         yaw_des = Command_Now.yaw_ref + formation_separation(uav_id-1,3);
         break;

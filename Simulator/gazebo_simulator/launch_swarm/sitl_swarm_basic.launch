@@ -12,9 +12,7 @@
 	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
 	<!-- 参数 -->
 	<!-- 集群数目 -->
-	<arg name="swarm_num" default="1"/>
-	<!-- 无人机名字 -->
-	<arg name="uav_name" default="/uav1"/>
+	<arg name="swarm_num_uav" default="1"/>
 	<!-- 无人机ID号 -->
 	<arg name="uav_id" default="1"/>
 	<!-- 指定sdf文件及模型名字 -->
@@ -41,7 +39,7 @@
 	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_remote = 24540 + ID -->
 
     <!-- n号飞机 -->
-    <group ns="$(arg uav_name)">
+    <group ns="/uav$(arg uav_id)">
         <!-- 参数配置-->
 		<!-- ID编号 -->
         <arg name="ID" value="$(eval arg('uav_id') - 1)"/>
