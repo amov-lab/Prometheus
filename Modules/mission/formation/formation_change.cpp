@@ -113,7 +113,6 @@ void formation::change()
                     if(location_source == "uwb" || location_source == "gps")
                     {
                         ROS_WARN("not support diamond formation");
-                        type_now = type_last;
                         break;
                     }
                     
