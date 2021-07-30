@@ -87,14 +87,14 @@ aos_y = math.atan(image_height / 2. / camera_matrix[1][1])
 # print(aos_y)
 
 while not rospy.is_shutdown():
-    data = s.recv(60)  # 35
+    data = s.recv(62)  # 35
     data = data.decode('utf-8')
     print(data)
 
 
     if len(data) > 0:
         nums = data.split(',')
-        if len(nums) == 11:
+        if len(nums) == 12:
             frame_id = int(nums[0])
             deted = int(nums[1])
             order = int(nums[2])
@@ -103,6 +103,8 @@ while not rospy.is_shutdown():
             score = float(nums[8])
             pixel_cx = int(nums[9])
             pixel_cy = int(nums[10])
+            detect_track = int(nums[11])  # 0:detect, 1:track
+            m_info.detect_or_track = detect_track
             # print(frame_id)
             if deted >= 1:
                 d_info = DetectionInfo()
@@ -121,7 +123,7 @@ while not rospy.is_shutdown():
                 m_info.num_objs += 1
                 for i in range(deted):
                     if i > 0:
-                        data = s.recv(60)  # 35
+                        data = s.recv(62)  # 35
                         data = data.decode('utf-8')
                         print(data)
                         if len(data) > 0:
@@ -135,6 +137,7 @@ while not rospy.is_shutdown():
                                 score = float(nums[8])
                                 pixel_cx = int(nums[9])
                                 pixel_cy = int(nums[10])
+                                detect_track = int(nums[11])  # 0:detect, 1:track
                                 assert order == i, "server error"
                                 d_info = DetectionInfo()
                                 d_info.detected = True
