@@ -127,8 +127,15 @@ void mainloop_cb(const ros::TimerEvent &e)
         }
         break;
 
-    // 【Land】 降落。当前位置原地降落，降落后会自动上锁，且切换为mannual模式
+    // 【Land】 降落。两种降落方式： 只有加载了参数Land_mode为1时，启用第二种降落方式；默认启用第一种降落方式。
+    //  第一种：当前位置原地降落，降落后会自动上锁，且切换为mannual模式
+    //  第二种：当前位置原地降落，降落中到达Disarm_height后，切换为飞控中land模式
     case prometheus_msgs::SwarmCommand::Land:
+        if(Land_mode == 1)
+        {
+            mode_cmd.request.custom_mode = "AUTO.LAND";
+            set_mode_client.call(mode_cmd);
+        }
         if (Command_Last.Mode != prometheus_msgs::SwarmCommand::Land)
         {
             // 设定起飞位置
