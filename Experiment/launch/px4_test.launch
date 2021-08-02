@@ -1,0 +1,47 @@
+<!-- 本launch为使用px4_sender进行机载控制时的机载端启动脚本 -->
+<launch>
+	<!-- 启动MAVROS -->
+	<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+		<param name="fcu_url" value="/dev/ttyUSB0:921600" />
+		<param name="gcs_url" value="" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_pluginlists.yaml" />
+		<rosparam command="load" file="$(find prometheus_experiment)/config/mavros_config/px4_config.yaml" />
+	</node> 
+
+	<!-- run the px4_pos_estimator.cpp -->
+	<node pkg="prometheus_control" type="fake_vicon" name="fake_vicon" output="screen">
+	</node>
+
+	<!-- run the px4_pos_estimator.cpp -->
+	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
+		<!-- 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth(仿真用) -->
+		<param name="input_source" value="0" />
+		<!-- 如果使用动作捕捉系统，则指定刚体名称，用于订阅vrpn节点发布的话题 -->
+		<param name="object_name" value="UAV"/>
+		<param name="rate_hz" value="20.0"/>
+	</node>
+	
+	<!-- run the px4_sender.cpp -->
+	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/px4_sender.yaml"/>
+	</node>
+
+	<!-- run the ground_station.cpp -->
+	<node pkg="prometheus_station" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+	</node>
+
+	<!-- run the ground_station_msg.cpp -->
+	<node pkg="prometheus_station" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
+	</node>
+
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_experiment)/config/prometheus_control_config/terminal_control.yaml" />
+	</node>	
+
+</launch>
+
