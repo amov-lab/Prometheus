@@ -22,6 +22,7 @@
 	<arg name="Takeoff_height" default="1.0"/>
 	<arg name="Disarm_height" default="0.2"/>
 	<arg name="Land_speed" default="0.2"/>
+	<arg name="Land_mode" default="1"/>
 	<!-- 地理围栏 -->
 	<arg name="x_min" default="-100.0"/>
 	<arg name="x_max" default="100.0"/>
@@ -113,6 +114,7 @@
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="Land_mode" value="$(arg Land_mode)"/>
 		<param name="geo_fence/x_min" value="$(arg x_min)"/>
 		<param name="geo_fence/x_max" value="$(arg x_max)"/>
 		<param name="geo_fence/y_min" value="$(arg y_min)"/>
@@ -128,6 +130,7 @@
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="Land_mode" value="$(arg Land_mode)"/>
 		<param name="geo_fence/x_min" value="$(arg x_min)"/>
 		<param name="geo_fence/x_max" value="$(arg x_max)"/>
 		<param name="geo_fence/y_min" value="$(arg y_min)"/>
@@ -143,6 +146,7 @@
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="Land_mode" value="$(arg Land_mode)"/>
 		<param name="geo_fence/x_min" value="$(arg x_min)"/>
 		<param name="geo_fence/x_max" value="$(arg x_max)"/>
 		<param name="geo_fence/y_min" value="$(arg y_min)"/>
@@ -158,6 +162,7 @@
 		<param name="Takeoff_height" value="$(arg Takeoff_height)"/>
 		<param name="Disarm_height" value="$(arg Disarm_height)"/>
 		<param name="Land_speed" value="$(arg Land_speed)"/>
+		<param name="Land_mode" value="$(arg Land_mode)"/>
 		<param name="geo_fence/x_min" value="$(arg x_min)"/>
 		<param name="geo_fence/x_max" value="$(arg x_max)"/>
 		<param name="geo_fence/y_min" value="$(arg y_min)"/>
@@ -176,7 +181,6 @@
 		<param name="swarm_num_uav" value="$(arg swarm_num_uav)"/>
 		<param name="formation_size" value="1.0"/>
 		<param name="sim_mode" value="true"/>
-		<param name="Land_mode" value="1"/>
 		<!-- // 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式  -->
 		<param name="controller_num" value="0"/>
 	</node>

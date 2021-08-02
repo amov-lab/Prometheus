@@ -23,7 +23,6 @@ ros::Publisher command_pub[MAX_NUM+1];
 int controller_num;
 float formation_size;
 bool sim_mode;
-int land_mode;
 
 Eigen::Vector3f virtual_leader_pos;
 Eigen::Vector3f virtual_leader_vel;
@@ -45,7 +44,6 @@ int main(int argc, char **argv)
     nh.param<int>("controller_num", controller_num, 0);
     nh.param<float>("formation_size", formation_size, 1.0);
     nh.param<bool>("sim_mode",sim_mode,true);
-    nh.param<int>("Land_mode",land_mode, 0);
 
     virtual_leader_pos << 0.0,0.0,1.0;
     virtual_leader_yaw = 0.0;
