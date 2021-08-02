@@ -136,27 +136,31 @@ void mainloop_cb(const ros::TimerEvent &e)
             mode_cmd.request.custom_mode = "AUTO.LAND";
             set_mode_client.call(mode_cmd);
         }
-        if (Command_Last.Mode != prometheus_msgs::SwarmCommand::Land)
+        else
         {
-            // 设定起飞位置
-            pos_des[0] = pos_drone[0];
-            pos_des[1] = pos_drone[1];
-            pos_des[2] = 0.0;
-            vel_des << 0.0, 0.0, -Land_speed;
-            acc_des << 0.0, 0.0, 0.0;
-            yaw_des = yaw_drone;
-        }
+            if (Command_Last.Mode != prometheus_msgs::SwarmCommand::Land)
+            {
+                // 设定起飞位置
+                pos_des[0] = pos_drone[0];
+                pos_des[1] = pos_drone[1];
+                pos_des[2] = 0.0;
+                vel_des << 0.0, 0.0, -Land_speed;
+                acc_des << 0.0, 0.0, 0.0;
+                yaw_des = yaw_drone;
+            }
 
-        if(_DroneState.position[2] < Disarm_height)
-        {
-            //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
-            mode_cmd.request.custom_mode = "MANUAL";
-            set_mode_client.call(mode_cmd);
+            if(_DroneState.position[2] < Disarm_height)
+            {
+                //此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
+                mode_cmd.request.custom_mode = "MANUAL";
+                set_mode_client.call(mode_cmd);
 
-            arm_cmd.request.value = false;
-            arming_client.call(arm_cmd);
-            ROS_INFO_STREAM_ONCE ("---->Landed....");
+                arm_cmd.request.value = false;
+                arming_client.call(arm_cmd);
+                ROS_INFO_STREAM_ONCE ("---->Landed....");
+            }
         }
+        
         break;
 
     case prometheus_msgs::SwarmCommand::Disarm:
