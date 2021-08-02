@@ -48,6 +48,7 @@ Eigen::Vector3d Takeoff_position;               // 起飞位置
 float Disarm_height;                            // 自动上锁高度
 float Land_speed;                               // 降落速度
 bool flag_printf;                               // 是否打印
+int Land_mode;                                  //降落模式
 Eigen::Vector3f gazebo_offset;                  // 偏移量
 prometheus_msgs::Message message;               // 待打印消息
 
@@ -134,10 +135,11 @@ void init(ros::NodeHandle &nh)
     nh.param<int>("controller_hz", controller_hz, 50);
     nh.param<int>("collision_flag", collision_flag, 1);
     
-    // 起飞高度,上锁高度,降落速度
+    // 起飞高度,上锁高度,降落速度,降落模式
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
     nh.param<float>("Disarm_height", Disarm_height, 0.2);
     nh.param<float>("Land_speed", Land_speed, 0.2);
+    nh.param<int>("Land_mode", Land_mode, 0);
     // 是否打印消息
     nh.param<bool>("flag_printf", flag_printf, false);
     // 地理围栏
