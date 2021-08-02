@@ -10,9 +10,9 @@ Disarm_height : 0.25
 
 ##　地理围栏，根据实际情况设置
 geo_fence:
-  x_min: -2.5
-  x_max: 2.5
-  y_min: -2.5
-  y_max: 2.5
-  z_min: -0.2
-  z_max: 1.5
+  x_min: -100
+  x_max: 100
+  y_min: -100
+  y_max: 100
+  z_min: -100.0
+  z_max: 100.0
