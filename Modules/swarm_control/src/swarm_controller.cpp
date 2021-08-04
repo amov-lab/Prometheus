@@ -108,7 +108,7 @@ void mainloop_cb(const ros::TimerEvent &e)
             Takeoff_position = pos_drone;
             pos_des[0] = pos_drone[0];
             pos_des[1] = pos_drone[1];
-            pos_des[2] = pos_drone[2] + 1.0;
+            pos_des[2] = pos_drone[2] + Takeoff_height;
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
             yaw_des    = yaw_drone;
