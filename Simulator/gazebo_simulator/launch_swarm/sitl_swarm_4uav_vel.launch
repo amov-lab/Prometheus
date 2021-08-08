@@ -8,13 +8,13 @@
 	<arg name="uav4_id" default="4"/>
 	<!-- 无人机初始位置 -->
 	<arg name="uav1_init_x" default="1.0"/>
-    <arg name="uav1_init_y" default="0.5"/>
-    <arg name="uav2_init_x" default="-2.0"/>
+    <arg name="uav1_init_y" default="2.5"/>
+    <arg name="uav2_init_x" default="5.0"/>
     <arg name="uav2_init_y" default="0.4"/>
-    <arg name="uav3_init_x" default="2.5"/>
-    <arg name="uav3_init_y" default="0.5"/>
-    <arg name="uav4_init_x" default="-1.0"/>
-    <arg name="uav4_init_y" default="1.0"/>
+    <arg name="uav3_init_x" default="-5.5"/>
+    <arg name="uav3_init_y" default="-3.5"/>
+    <arg name="uav4_init_x" default="-2.0"/>
+    <arg name="uav4_init_y" default="2.0"/>
 	<!-- swarm_estimator 参数 -->
 	<arg name="input_source" default="2"/>
 	<!-- swarm_controller 参数 -->
@@ -179,7 +179,7 @@
 	<!-- 阵型控制程序 -->
 	<node pkg="prometheus_swarm_control" type="swarm_formation_control" name="swarm_formation_control" output="screen" launch-prefix="gnome-terminal --">
 		<param name="swarm_num_uav" value="$(arg swarm_num_uav)"/>
-		<param name="formation_size" value="3.0"/>
+		<param name="formation_size" value="5.0"/>
 		<param name="sim_mode" value="true"/>
 		<!-- // 0代表位置追踪模式，１代表速度追踪模式，２代表加速度追踪模式  -->
 		<param name="controller_num" value="1"/>
