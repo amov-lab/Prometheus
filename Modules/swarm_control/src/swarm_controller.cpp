@@ -238,8 +238,9 @@ void mainloop_cb(const ros::TimerEvent &e)
                     dv.setZero();
                 }
 
-                vel_des[0] -= 2.0*dv[0];
-                vel_des[1] -= 2.0*dv[1];
+                // 降低避障的影响，调小这个参数
+                vel_des[0] -= 0.5*dv[0];
+                vel_des[1] -= 0.5*dv[1];
             }  
         }
 
