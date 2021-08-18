@@ -3,63 +3,40 @@
 #include <ros/ros.h>
 #include <bitset>
 
-#include <mavros_msgs/CommandBool.h>
-#include <mavros_msgs/SetMode.h>
-#include <mavros_msgs/State.h>
-#include <mavros_msgs/PositionTarget.h>
+#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
-#include <geographic_msgs/GeoPointStamped.h>
-
 #include <prometheus_msgs/UgvState.h>
 #include <prometheus_msgs/UgvCommand.h>
 
-#include "message_utils.h"
 #include "math_utils.h"
 #include "Smoother.h"
-
 #include "angles/angles.h"  // vinson: shortest_angular_distance
-#include "Smoother.h"
 #include "printf_utils.h"
-#include "nav_msgs/Odometry.h"
-
-
 
 // 宏定义
 #define NUM_POINT 2                             // 打印小数点
 
 // 变量
-int ugv_id;
-string ugv_name;                                // 无人机名字
-bool sim_mode;
-Eigen::Vector2f geo_fence_x,geo_fence_y; //Geigraphical fence 地理围栏
-prometheus_msgs::UgvCommand Command_Now;      // 无人机当前执行命令
-prometheus_msgs::UgvCommand Command_Last;     // 无人机上一条执行命令
-prometheus_msgs::UgvState _UgvState;        // 无人机状态
-Eigen::Vector3d pos_ugv;                      // 无人机位置
-Eigen::Vector3d vel_ugv;                      // 无人机速度
-float yaw_ugv;
+int ugv_id;                                               // 无人车编号
+string ugv_name;                                // 无人车名字
+Eigen::Vector2f geo_fence_x,geo_fence_y;                           //Geigraphical fence 地理围栏
+prometheus_msgs::UgvCommand Command_Now;      // 无人车当前执行命令
+prometheus_msgs::UgvCommand Command_Last;       // 无人车上一条执行命令
+prometheus_msgs::UgvState _UgvState;                             // 无人车状态
+Eigen::Vector3d pos_ugv;                      // 无人车位置
+Eigen::Vector3d vel_ugv;                      // 无人车速度
+float yaw_ugv;                                          // 无人车偏航角
 float k_p,k_yaw;                                      // 速度控制参数
-bool flag_printf;                               // 是否打印
-geometry_msgs::Twist cmd_vel;
-Eigen::Vector3d state_sp;
-
-nav_msgs::Odometry _odom;
+float max_vel;                                          // 无人车最大速度
+bool flag_printf;                                      // 是否打印
+geometry_msgs::Twist cmd_vel;      // 底层速度指令   
 
 // 订阅
 ros::Subscriber command_sub;
 ros::Subscriber ugv_state_sub;
-ros::Subscriber odom_sub;
 
 // 发布
-ros::Publisher turtlebot_cmd_pub;
-ros::Publisher setpoint_raw_local_pub, ekf_origin_pub,vel_body_pub;
-ros::Publisher message_pub;
-
-// 服务
-ros::ServiceClient arming_client;
-ros::ServiceClient set_mode_client;
-mavros_msgs::SetMode mode_cmd;
-mavros_msgs::CommandBool arm_cmd;
+ros::Publisher cmd_pub;
 
 /// @brief 速度平滑器 
 /// @details 无视了小车加速度，简单实现了速度的平滑控制，使得小车的速度不会变化太大
@@ -73,10 +50,10 @@ bool stop_flag;
 void init(ros::NodeHandle &nh)
 {
     nh.param("ugv_id", ugv_id, 0);
-    nh.param("sim_mode", sim_mode, true);
     // 控制变量
-    nh.param("k_p", k_p, 1.0f);
+    nh.param("k_p", k_p, 2.0f);
     nh.param("k_yaw", k_yaw, 2.0f);
+    nh.param("max_vel", max_vel, 2.0f);
     // 是否打印消息
     nh.param("flag_printf", flag_printf, false);
     // 地理围栏
@@ -88,7 +65,7 @@ void init(ros::NodeHandle &nh)
     ugv_name = "/ugv" + std::to_string(ugv_id);
 
     // 初始化命令
-    Command_Now.Mode                = prometheus_msgs::UgvCommand::Start;
+    Command_Now.Mode                = prometheus_msgs::UgvCommand::Hold;
     Command_Now.Command_ID          = 0;
     Command_Now.linear_vel[0]       = 0;
     Command_Now.linear_vel[1]       = 0;
@@ -96,6 +73,14 @@ void init(ros::NodeHandle &nh)
 
     sm = TB2::Smoother("smoother");
     only_rotate = true;
+
+    cout << GREEN << "ugv_controller_ugv_" <<  ugv_id << " init."<< TAIL <<endl; 
+    cout << "ugv_name   : "<< ugv_name <<endl;
+    cout << "k_p    : "<< k_p <<"  "<<endl;
+    cout << "k_yaw    : "<< k_yaw <<"  "<<endl;
+    cout << "max_vel    : "<< max_vel <<"  "<<endl;
+    cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
+    cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -110,25 +95,9 @@ void ugv_command_cb(const prometheus_msgs::UgvCommand::ConstPtr& msg)
 void ugv_state_cb(const prometheus_msgs::UgvState::ConstPtr& msg)
 {
     _UgvState = *msg;
-
     pos_ugv  = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
     vel_ugv  = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
     yaw_ugv = _UgvState.attitude[2];
-}
-
-void odom_cb(const nav_msgs::Odometry::ConstPtr& msg)
-{
-    _odom = *msg;
-}
-
-void printf_param()
-{
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>> ugv controller Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
-
-    cout << "ugv_name   : "<< ugv_name <<endl;
-    cout << "k_p    : "<< k_p <<"  "<<endl;
-    cout << "geo_fence_x : "<< geo_fence_x[0] << " [m]  to  "<<geo_fence_x[1] << " [m]"<< endl;
-    cout << "geo_fence_y : "<< geo_fence_y[0] << " [m]  to  "<<geo_fence_y[1] << " [m]"<< endl;
 }
 
 void printf_state()
@@ -158,27 +127,10 @@ int check_failsafe()
         cout << RED << "Out of the geo fence, stop!" << TAIL <<endl; 
         return 1;
     }
-    else{
+    else
+    {
         return 0;
     }
-}
-
-//发送速度期望值至飞控（输入：期望vxvyvz,期望yaw）
-void send_vel_setpoint(const Eigen::Vector3d& vel_sp, float yaw_sp)
-{
-    mavros_msgs::PositionTarget pos_setpoint;
-
-    pos_setpoint.type_mask = 0b100111000111;
-
-    pos_setpoint.coordinate_frame = 1;
-
-    pos_setpoint.velocity.x = vel_sp[0];
-    pos_setpoint.velocity.y = vel_sp[1];
-    pos_setpoint.velocity.z = vel_sp[2];
-
-    pos_setpoint.yaw = yaw_sp;
-
-    setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
 #endif
