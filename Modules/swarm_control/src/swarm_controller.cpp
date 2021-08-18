@@ -108,7 +108,7 @@ void mainloop_cb(const ros::TimerEvent &e)
             Takeoff_position = pos_drone;
             pos_des[0] = pos_drone[0];
             pos_des[1] = pos_drone[1];
-            pos_des[2] = pos_drone[2] + 1.0;
+            pos_des[2] = pos_drone[2] + Takeoff_height;
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
             yaw_des    = yaw_drone;
@@ -238,8 +238,9 @@ void mainloop_cb(const ros::TimerEvent &e)
                     dv.setZero();
                 }
 
-                vel_des[0] -= 2.0*dv[0];
-                vel_des[1] -= 2.0*dv[1];
+                // 降低避障的影响，调小这个参数
+                vel_des[0] -= 0.5*dv[0];
+                vel_des[1] -= 0.5*dv[1];
             }  
         }
 
