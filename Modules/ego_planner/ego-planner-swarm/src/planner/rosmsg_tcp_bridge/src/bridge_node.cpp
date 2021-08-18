@@ -783,17 +783,17 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  string sub_traj_topic_name = string("/drone_") + std::to_string(drone_id_) + string("_planning/swarm_trajs");
+  string sub_traj_topic_name = string("/uav") + std::to_string(drone_id_) + string("_planning/swarm_trajs");
   swarm_trajs_sub_ = nh.subscribe(sub_traj_topic_name.c_str(), 10, multitraj_sub_tcp_cb, ros::TransportHints().tcpNoDelay());
 
-  if ( drone_id_ >= 1 )
+  if ( drone_id_ >= 2 )
   {
-    string pub_traj_topic_name = string("/drone_") + std::to_string(drone_id_ - 1) + string("_planning/swarm_trajs");
+    string pub_traj_topic_name = string("/uav") + std::to_string(drone_id_ - 1) + string("_planning/swarm_trajs");
     swarm_trajs_pub_ = nh.advertise<traj_utils::MultiBsplines>(pub_traj_topic_name.c_str(), 10);
   }
 
-  other_odoms_sub_ = nh.subscribe("my_odom", 10, odom_sub_udp_cb, ros::TransportHints().tcpNoDelay());
-  other_odoms_pub_ = nh.advertise<nav_msgs::Odometry>("/others_odom", 10);
+  // other_odoms_sub_ = nh.subscribe("my_odom", 10, odom_sub_udp_cb, ros::TransportHints().tcpNoDelay());
+  // other_odoms_pub_ = nh.advertise<nav_msgs::Odometry>("/others_odom", 10);
 
   //emergency_stop_sub_ = nh.subscribe("emergency_stop_broadcast", 10, emergency_stop_sub_udp_cb, ros::TransportHints().tcpNoDelay());
   //emergency_stop_pub_ = nh.advertise<std_msgs::Empty>("emergency_stop_recv", 10);

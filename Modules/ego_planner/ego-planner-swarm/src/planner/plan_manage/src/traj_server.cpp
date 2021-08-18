@@ -251,7 +251,7 @@ int main(int argc, char **argv)
   cmd.kv[2] = vel_gain[2];
 
   nh.param("traj_server/time_forward", time_forward_, -1.0);
-  last_yaw_ = 0.0;
+  nh.param("traj_server/last_yaw", last_yaw_, 0.0);
   last_yaw_dot_ = 0.0;
 
   ros::Duration(1.0).sleep();
