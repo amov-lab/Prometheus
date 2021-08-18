@@ -74,8 +74,8 @@ prometheus_msgs::DroneState state_nei[MAX_UAV_NUM+1];
 Eigen::Vector3d pos_nei[MAX_UAV_NUM+1];                     // 邻居位置
 Eigen::Vector3d vel_nei[MAX_UAV_NUM+1];                     // 邻居速度
 Eigen::Vector3d dv;
-float R = 2.0;
-float r = 1.0;
+float R = 4.0;
+float r = 0.5;
 // 无人机状态量
 Eigen::Vector3d pos_drone;                      // 无人机位置
 Eigen::Vector3d vel_drone;                      // 无人机速度
@@ -189,7 +189,7 @@ void init(ros::NodeHandle &nh)
     
     // 编队控制参数
     nh.param<float>("k_p", k_p, 1.2);
-    nh.param<float>("k_aij", k_aij, 0.2);
+    nh.param<float>("k_aij", k_aij, 0.1);
     nh.param<float>("k_gamma", k_gamma, 1.2);
 
     msg_name = uav_name + "/control";
