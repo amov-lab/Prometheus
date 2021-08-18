@@ -77,10 +77,6 @@ add_executable(ugv_terminal_control src/ugv_terminal_control.cpp)
 add_dependencies(ugv_terminal_control prometheus_ugv_control_gencpp)
 target_link_libraries(ugv_terminal_control ${catkin_LIBRARIES})
 
-add_executable(ugv_ground_station src/ugv_ground_station.cpp)
-add_dependencies(ugv_ground_station prometheus_ugv_control_gencpp)
-target_link_libraries(ugv_ground_station ${catkin_LIBRARIES})
-
 add_executable(fake_vicon src/fake_vicon.cpp)
 add_dependencies(fake_vicon prometheus_ugv_control_gencpp)
 target_link_libraries(fake_vicon ${catkin_LIBRARIES})
