@@ -8,8 +8,10 @@ void GridMap::initMap(ros::NodeHandle &nh)
   node_ = nh;
 
   /* get parameter */
+  int uav_id;
   double x_size, y_size, z_size;
   // 分辨率
+  node_.param("grid_map/uav_id", uav_id, 1);
   node_.param("grid_map/resolution", mp_.resolution_, -1.0);
   node_.param("grid_map/map_size_x", x_size, -1.0);
   node_.param("grid_map/map_size_y", y_size, -1.0);
@@ -64,7 +66,19 @@ void GridMap::initMap(ros::NodeHandle &nh)
   }
 
   mp_.resolution_inv_ = 1 / mp_.resolution_;
-  mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
+  //todo: different map origin
+  if(uav_id==1)
+  {
+    mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
+  }
+  else if(uav_id==2)
+  {
+    mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
+  }
+  else
+  {
+    mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
+  }
   mp_.map_size_ = Eigen::Vector3d(x_size, y_size, z_size);
 
   //logit(x) (log((x) / (1 - (x))))
@@ -75,11 +89,11 @@ void GridMap::initMap(ros::NodeHandle &nh)
   mp_.min_occupancy_log_ = logit(mp_.p_occ_);
   mp_.unknown_flag_ = 0.01;
 
-  cout << "hit: " << mp_.prob_hit_log_ << endl;
-  cout << "miss: " << mp_.prob_miss_log_ << endl;
-  cout << "min log: " << mp_.clamp_min_log_ << endl;
-  cout << "max: " << mp_.clamp_max_log_ << endl;
-  cout << "thresh log: " << mp_.min_occupancy_log_ << endl;
+  // cout << "hit: " << mp_.prob_hit_log_ << endl;
+  // cout << "miss: " << mp_.prob_miss_log_ << endl;
+  // cout << "min log: " << mp_.clamp_min_log_ << endl;
+  // cout << "max: " << mp_.clamp_max_log_ << endl;
+  // cout << "thresh log: " << mp_.min_occupancy_log_ << endl;
 
   for (int i = 0; i < 3; ++i)
     mp_.map_voxel_num_(i) = ceil(mp_.map_size_(i) / mp_.resolution_);
@@ -104,17 +118,17 @@ void GridMap::initMap(ros::NodeHandle &nh)
   md_.proj_points_.resize(640 * 480 / mp_.skip_pixel_ / mp_.skip_pixel_);
   md_.proj_points_cnt = 0;
 
+  // 相机外参数
   md_.cam2body_ << 0.0, 0.0, 1.0, 0.0,
-      -1.0, 0.0, 0.0, 0.0,
-      0.0, -1.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 1.0;
+                  -1.0, 0.0, 0.0, 0.0,
+                  0.0, -1.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 1.0;
 
   /* init callback */
 
   depth_sub_.reset(new message_filters::Subscriber<sensor_msgs::Image>(node_, "grid_map/depth", 50));
   // 相机外参
-  extrinsic_sub_ = node_.subscribe<nav_msgs::Odometry>(
-      "/vins_estimator/extrinsic", 10, &GridMap::extrinsicCallback, this); //sub
+  extrinsic_sub_ = node_.subscribe<nav_msgs::Odometry>("/vins_estimator/extrinsic", 10, &GridMap::extrinsicCallback, this); //sub
 
   if (mp_.pose_type_ == POSE_STAMPED)
   {
@@ -360,10 +374,12 @@ void GridMap::raycastProcess()
   double min_x = mp_.map_max_boundary_(0);
   double min_y = mp_.map_max_boundary_(1);
   double min_z = mp_.map_max_boundary_(2);
+  // printf("bounding box min:[%f,%f,%f]\n",min_x,min_y,min_z);
 
   double max_x = mp_.map_min_boundary_(0);
   double max_y = mp_.map_min_boundary_(1);
   double max_z = mp_.map_min_boundary_(2);
+  // printf("bounding box max:[%f,%f,%f]\n",max_x,max_y,max_z);
 
   RayCaster raycaster;
   Eigen::Vector3d half = Eigen::Vector3d(0.5, 0.5, 0.5);
@@ -457,9 +473,13 @@ void GridMap::raycastProcess()
   max_z = max(max_z, md_.camera_pos_(2));
   max_z = max(max_z, mp_.ground_height_);
 
+  // printf("bounding box max:000[%f,%f,%f]\n",max_x,max_y,max_z);
+  // printf("bounding box min:000[%f,%f,%f]\n",min_x,min_x,min_x);
   posToIndex(Eigen::Vector3d(max_x, max_y, max_z), md_.local_bound_max_);
   posToIndex(Eigen::Vector3d(min_x, min_y, min_z), md_.local_bound_min_);
+  // printf("md_.local_bound_min_000:[%d,%d,%d]\n",md_.local_bound_min_(0),md_.local_bound_min_(1),md_.local_bound_min_(2));
   boundIndex(md_.local_bound_min_);
+  // printf("md_.local_bound_max_000:[%d,%d,%d]\n",md_.local_bound_max_(0),md_.local_bound_max_(1),md_.local_bound_max_(2));
   boundIndex(md_.local_bound_max_);
 
   md_.local_updated_ = true;
@@ -545,17 +565,23 @@ void GridMap::clearAndInflateLocalMap()
   // vec_margin, vec_margin); Eigen::Vector3i max_vec_margin = max_vec +
   // Eigen::Vector3i(vec_margin, vec_margin, vec_margin);
 
+  // printf("md_.local_bound_min_:[%d,%d,%d]\n",md_.local_bound_min_(0),md_.local_bound_min_(1),md_.local_bound_min_(2));
   Eigen::Vector3i min_cut = md_.local_bound_min_ -
                             Eigen::Vector3i(mp_.local_map_margin_, mp_.local_map_margin_, mp_.local_map_margin_);
+  // printf("md_.local_bound_max_:[%d,%d,%d]\n",md_.local_bound_max_(0),md_.local_bound_max_(1),md_.local_bound_max_(2));
   Eigen::Vector3i max_cut = md_.local_bound_max_ +
                             Eigen::Vector3i(mp_.local_map_margin_, mp_.local_map_margin_, mp_.local_map_margin_);
   boundIndex(min_cut);
+  // printf("min_cut:[%d,%d,%d]\n",min_cut(0),min_cut(1),min_cut(2));
   boundIndex(max_cut);
+  // printf("max_cut:[%d,%d,%d]\n",max_cut(0),max_cut(1),max_cut(2));
 
   Eigen::Vector3i min_cut_m = min_cut - Eigen::Vector3i(vec_margin, vec_margin, vec_margin);
   Eigen::Vector3i max_cut_m = max_cut + Eigen::Vector3i(vec_margin, vec_margin, vec_margin);
   boundIndex(min_cut_m);
+  // printf("min_cut_m:[%d,%d,%d]\n",min_cut_m(0),min_cut_m(1),min_cut_m(2));
   boundIndex(max_cut_m);
+  // printf("max_cut_m:[%d,%d,%d]\n\n",max_cut_m(0),max_cut_m(1),max_cut_m(2));
 
   // clear data outside the local range
 
@@ -682,7 +708,7 @@ void GridMap::updateOccupancyCallback(const ros::TimerEvent & /*event*/)
     return;
   }
 
-  std::cout << "updateOccupancyCallback 1!" << std::endl;
+  // std::cout << "updateOccupancyCallback 1!" << std::endl;
   md_.last_occ_update_time_ = ros::Time::now();
 
   /* update occupancy */
@@ -911,10 +937,38 @@ void GridMap::publishMap()
         cloud.push_back(pt);
       }
 
+  //border
+  for(int i = 0; i < mp_.map_voxel_num_(0); i++)
+  {
+    pt.x = mp_.map_min_boundary_(0)+i*mp_.resolution_;
+    pt.y = mp_.map_min_boundary_(1);
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+
+    pt.x = mp_.map_min_boundary_(0)+i*mp_.resolution_;
+    pt.y = mp_.map_max_boundary_(1);
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+  }
+
+  for(int i = 0; i < mp_.map_voxel_num_(1); i++)
+  {
+    pt.x = mp_.map_min_boundary_(0);
+    pt.y = mp_.map_min_boundary_(1)+i*mp_.resolution_;
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+
+    pt.x = mp_.map_max_boundary_(0);
+    pt.y = mp_.map_min_boundary_(1)+i*mp_.resolution_;
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+  }
+
   cloud.width = cloud.points.size();
   cloud.height = 1;
   cloud.is_dense = true;
   cloud.header.frame_id = mp_.frame_id_;
+
   sensor_msgs::PointCloud2 cloud_msg;
 
   pcl::toROSMsg(cloud, cloud_msg);
@@ -961,6 +1015,33 @@ void GridMap::publishMapInflate(bool all_info)
         cloud.push_back(pt);
       }
 
+  //border x
+  for(int i = 0; i < mp_.map_voxel_num_(0); i++)
+  {
+    pt.x = mp_.map_min_boundary_(0)+i*mp_.resolution_;
+    pt.y = mp_.map_min_boundary_(1);
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+
+    pt.x = mp_.map_min_boundary_(0)+i*mp_.resolution_;
+    pt.y = mp_.map_max_boundary_(1);
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+  }
+  //border y
+  for(int i = 0; i < mp_.map_voxel_num_(1); i++)
+  {
+    pt.x = mp_.map_min_boundary_(0);
+    pt.y = mp_.map_min_boundary_(1)+i*mp_.resolution_;
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+
+    pt.x = mp_.map_max_boundary_(0);
+    pt.y = mp_.map_min_boundary_(1)+i*mp_.resolution_;
+    pt.z = mp_.map_min_boundary_(2);
+    cloud.push_back(pt);
+  }
+
   cloud.width = cloud.points.size();
   cloud.height = 1;
   cloud.is_dense = true;
@@ -1005,7 +1086,6 @@ void GridMap::extrinsicCallback(const nav_msgs::OdometryConstPtr &odom)
 void GridMap::depthOdomCallback(const sensor_msgs::ImageConstPtr &img,
                                 const nav_msgs::OdometryConstPtr &odom)
 {
-  ROS_INFO("test 2");
   /* get pose */
   Eigen::Quaterniond body_q = Eigen::Quaterniond(odom->pose.pose.orientation.w,
                                                  odom->pose.pose.orientation.x,
@@ -1036,4 +1116,7 @@ void GridMap::depthOdomCallback(const sensor_msgs::ImageConstPtr &img,
 
   md_.occ_need_update_ = true;
   md_.flag_use_depth_fusion = true;
+
+  // reset depth lost flag
+  if(md_.flag_depth_odom_timeout_ == true) md_.flag_depth_odom_timeout_ = false;
 }

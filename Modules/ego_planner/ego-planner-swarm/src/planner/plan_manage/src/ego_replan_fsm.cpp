@@ -187,8 +187,18 @@ namespace ego_planner
     if (msg->pose.position.z < -0.1)
       return;
 
-    cout << "Triggered!" << endl;
-    // trigger_ = true;
+    if(msg->pose.position.x == 99.99 && msg->pose.position.y == 99.99)
+    {
+      callEmergencyStop(odom_pos_);
+      have_target_ = false;
+      exec_state_ = WAIT_TARGET;
+      return;
+    }
+
+    callEmergencyStop(odom_pos_);
+    sleep(2.0);
+
+    cout << "Get goal!" << endl;
     init_pt_ = odom_pos_;
 
     // 此处定高1米
@@ -222,6 +232,7 @@ namespace ego_planner
 
   void EGOReplanFSM::BroadcastBsplineCallback(const traj_utils::BsplinePtr &msg)
   {
+    printf("BroadcastBsplineCallback!\n");
     size_t id = msg->drone_id;
     if ((int)id == planner_manager_->pp_.drone_id)
       return;
@@ -292,6 +303,7 @@ namespace ego_planner
     // planner_manager_->swarm_trajs_buf_[id].start_time_ = ros::Time::now(); // Un-reliable time sync
 
     /* Check Collision */
+    printf("Check Collision\n");
     if (planner_manager_->checkCollision(id))
     {
       changeFSMExecState(REPLAN_TRAJ, "TRAJ_CHECK");
@@ -378,6 +390,8 @@ namespace ego_planner
     }
 
     have_recv_pre_agent_ = true;
+
+    printf("have_recv_pre_agent_==true\n");
   }
 
   void EGOReplanFSM::changeFSMExecState(FSM_EXEC_STATE new_state, string pos_call)
@@ -391,6 +405,7 @@ namespace ego_planner
     static string state_str[8] = {"INIT", "WAIT_TARGET", "GEN_NEW_TRAJ", "REPLAN_TRAJ", "EXEC_TRAJ", "EMERGENCY_STOP", "SEQUENTIAL_START"};
     int pre_s = int(exec_state_);
     exec_state_ = new_state;
+    // COMMENT
     cout << "[" + pos_call + "]: from " + state_str[pre_s] + " to " + state_str[int(new_state)] << endl;
   }
 
@@ -403,7 +418,7 @@ namespace ego_planner
   {
     static string state_str[8] = {"INIT", "WAIT_TARGET", "GEN_NEW_TRAJ", "REPLAN_TRAJ", "EXEC_TRAJ", "EMERGENCY_STOP", "SEQUENTIAL_START"};
 
-    cout << "[FSM]: state: " + state_str[int(exec_state_)] << endl;
+    cout << "/uav"<< planner_manager_->pp_.drone_id <<" planner state: " + state_str[int(exec_state_)] << endl;
   }
 
   void EGOReplanFSM::execFSMCallback(const ros::TimerEvent &e)
@@ -413,13 +428,13 @@ namespace ego_planner
 
     static int fsm_num = 0;
     fsm_num++;
-    if (fsm_num == 200)
+    if (fsm_num == 1000)
     {
       printFSMExecState();
       if (!have_odom_)
         cout << "no odom." << endl;
       if (!have_target_)
-        cout << "wait for goal or trigger." << endl;
+        // cout << "wait for goal or trigger." << endl;
       fsm_num = 0;
     }
 
@@ -661,11 +676,19 @@ namespace ego_planner
       return;
 
     /* ---------- check lost of depth ---------- */
-    if (map->getOdomDepthTimeout())
+    if(map->getOdomDepthTimeout())
     {
       ROS_ERROR("Depth Lost! EMERGENCY_STOP");
       enable_fail_safe_ = false;
       changeFSMExecState(EMERGENCY_STOP, "SAFETY");
+    }
+    else
+    {
+      if(enable_fail_safe_ == false)
+      {
+        ROS_INFO("Depth Get! GEN_NEW_TRAJ");
+        enable_fail_safe_ = true;
+      }
     }
 
     /* ---------- check trajectory ---------- */
@@ -739,7 +762,8 @@ namespace ego_planner
         planner_manager_->reboundReplan(start_pt_, start_vel_, start_acc_, local_target_pt_, local_target_vel_, (have_new_target_ || flag_use_poly_init), flag_randomPolyTraj);
     have_new_target_ = false;
 
-    cout << "refine_success=" << plan_and_refine_success << endl;
+    // comment
+    // cout << "refine_success=" << plan_and_refine_success << endl;
 
     if (plan_and_refine_success)
     {

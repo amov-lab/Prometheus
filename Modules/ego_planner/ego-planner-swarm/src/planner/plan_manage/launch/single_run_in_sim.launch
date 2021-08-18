@@ -31,7 +31,7 @@
     </node> -->
 
       <!-- map generator new-->
-    <node pkg ="map_generator" name ="random_forest_new" type ="random_forest_new" output = "screen">    
+    <node pkg ="map_generator" name ="random_forest_cxy" type ="random_forest_cxy" output = "screen">    
         <param name="map_generator/x_size"     value="$(arg map_size_x)" />
         <param name="map_generator/y_size"     value="$(arg map_size_y)" />
         <param name="map_generator/z_size"     value="$(arg map_size_z)" />
