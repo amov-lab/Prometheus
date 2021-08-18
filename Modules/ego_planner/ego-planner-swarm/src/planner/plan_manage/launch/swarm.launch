@@ -5,7 +5,7 @@
 
     <arg name="odom_topic" value="visual_slam/odom" />
 
-    <!-- <node pkg ="map_generator" name ="random_forest" type ="random_forest" output = "screen">    
+    <node pkg ="map_generator" name ="random_forest" type ="random_forest" output = "screen">    
         <param name="map/x_size"     value="36" />
         <param name="map/y_size"     value="20" />
         <param name="map/z_size"     value="3" />
@@ -30,25 +30,6 @@
         <param name="sensing/rate"   value="1.0"/>  
         
         <param name="min_distance" value="1.2"/>         
-    </node> -->
-
-
-      <!-- map generator new-->
-    <node pkg ="map_generator" name ="random_forest_new" type ="random_forest_new" output = "screen">    
-        <param name="map_generator/x_size"     value="$(arg map_size_x)" />
-        <param name="map_generator/y_size"     value="$(arg map_size_y)" />
-        <param name="map_generator/z_size"     value="$(arg map_size_z)" />
-        <param name="map_generator/resolution" value="0.1"/>        
-        
-        <param name="map_generator/cylinder_num"    value="40"/>
-        <param name="map_generator/sqaure_num" value="40"/>
-        <param name="map_generator/cylinder_radius" value="0.2"/>
-        <param name="map_generator/cylinder_height" value="3.0"/>
-        <param name="map_generator/sqaure_size" value="0.4"/>        
-
-        <param name="map_generator/sensing_range" value="10.0"/>        
-        <param name="map_generator/sense_rate" value="10.0"/>        
-        <param name="map_generator/min_distance" value="1.5"/>       
     </node>
 
     <include file="$(find ego_planner)/launch/run_in_sim.launch">

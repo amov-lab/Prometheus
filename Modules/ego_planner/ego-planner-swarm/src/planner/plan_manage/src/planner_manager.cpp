@@ -61,7 +61,8 @@ namespace ego_planner
                                         Eigen::Vector3d local_target_vel, bool flag_polyInit, bool flag_randomPolyTraj)
   {
     static int count = 0;
-    printf("\033[47;30m\n[drone  no.%d , replan %d times]====================================\033[0m\n", pp_.drone_id, count++);
+    // comment
+    // printf("\033[47;30m\n[drone  no.%d , replan %d times]====================================\033[0m\n", pp_.drone_id, count++);
     // cout.precision(3);
     // cout << "start: " << start_pt.transpose() << ", " << start_vel.transpose() << "\ngoal:" << local_target_pt.transpose() << ", " << local_target_vel.transpose()
     //      << endl;
@@ -242,16 +243,16 @@ namespace ego_planner
     {
       // cout << "enter" << endl;
       std::vector<ControlPoints> trajs = bspline_optimizer_->distinctiveTrajs(segments);
-      cout << "\033[1;33m"
-           << "multi-trajs=" << trajs.size() << "\033[1;0m" << endl;
+      // comment
+      // cout << "\033[1;33m"<< "multi-trajs=" << trajs.size() << "\033[1;0m" << endl;
 
       double final_cost, min_cost = 999999.0;
       for (int i = trajs.size() - 1; i >= 0; i--)
       {
         if (bspline_optimizer_->BsplineOptimizeTrajRebound(ctrl_pts_temp, final_cost, trajs[i], ts))
         {
-
-          cout << "traj " << trajs.size() - i << " success." << endl;
+          //comment
+          // cout << "traj " << trajs.size() - i << " success." << endl;
 
           flag_step_1_success = true;
           if (final_cost < min_cost)
@@ -286,8 +287,8 @@ namespace ego_planner
       //static int vis_id = 0;
       visualization_->displayInitPathList(point_set, 0.2, 0);
     }
-
-    cout << "plan_success=" << flag_step_1_success << endl;
+    // comment
+    // cout << "/uav"<< pp_.drone_id<< "  plan_success=" << flag_step_1_success << endl;
     if (!flag_step_1_success)
     {
       visualization_->displayOptimalList(ctrl_pts, 0);
@@ -344,7 +345,8 @@ namespace ego_planner
     static int count_success = 0;
     sum_time += (t_init + t_opt + t_refine).toSec();
     count_success++;
-    cout << "total time:\033[42m" << (t_init + t_opt + t_refine).toSec() << "\033[0m,optimize:" << (t_init + t_opt).toSec() << ",refine:" << t_refine.toSec() << ",avg_time=" << sum_time / count_success << endl;
+    // comment
+    // cout << "total time:\033[42m" << (t_init + t_opt + t_refine).toSec() << "\033[0m,optimize:" << (t_init + t_opt).toSec() << ",refine:" << t_refine.toSec() << ",avg_time=" << sum_time / count_success << endl;
 
     // success. YoY
     continous_failures_count_ = 0;
