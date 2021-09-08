@@ -1,15 +1,20 @@
+<!--版本信息-->
 <?xml version="1.0"?>
 <sdf version='1.6'>
+<!--模型名字-->
   <model name='p450_monocular'>
+  <!--include标签，包含URI编写的资源，可用于嵌套模型-->
     <include>
-      <uri>model://p450</uri>
+      <uri>model://p450</uri> <!--uri编写的p450飞机-->
     </include>
 
-   <!-- 下视相机 -->
+   <!-- 下视相机link -->
     <link name='Monocular_down_link'>
-      <pose>0 0 -0.1 0 1.5707963 0</pose>
+      <pose>0 0 -0.1 0 1.5707963 0</pose> <!--位置-->
+      <!--物理属性-->
       <inertial>
-        <mass>0.001</mass>
+        <mass>0.001</mass> <!--质量-->
+         <!--惯性标签，定义模型当前link的惯性矩，是一个对称正定3x3矩阵-->
         <inertia>
           <ixx>4.15e-6</ixx>
           <ixy>0</ixy>
@@ -19,53 +24,75 @@
           <izz>2.407e-6</izz>
         </inertia>
       </inertial>
+      <!--可视化标签，定义一些图形界面的视觉效果-->
       <visual name='visual'>
+      <!--geometry标签，定义当前link的几何形状-->
         <geometry>
           <box>
             <size>0.01 0.01 0.01</size>
           </box>
         </geometry>
       </visual>
+      <!--传感器标签，定义一个名叫camera的传感器，它的类型是camera-->
       <sensor name='camera' type='camera'>
+      <!--相机标签，在其中定义一些相机的属性-->
+      <!--name可以定义，也可以不定义，它的默认值是_default_-->
         <camera name='__default__'>
           <!-- FOV,120度 -->
-          <horizontal_fov>2.0944</horizontal_fov>
+          <horizontal_fov>2.0944</horizontal_fov><!--定义水平视野场，此处为120度-->
+          <!--image标签，功能是定义以像素为单位的图片大小和图片格式-->
           <image>
             <width>1280</width>
             <height>720</height>
           </image>
+          <!--定义远、近剪裁面，不会渲染远、近剪裁平面之外的对象-->
           <clip>
             <near>0.1</near>
             <far>100</far>
           </clip>
+           <!--噪音标签，定义噪音模型，它将应用到生成的图片上-->
           <noise>
             <type>gaussian</type>
             <mean>0.0</mean>
             <stddev>0.001</stddev>
           </noise>
+          <!--透镜标签，作用是定义相机镜头的投影参数-->
           <lens>
-            <type>custom</type>
+            <type>custom</type><!--镜头映射的类型为custom-->
+            <!--定义投影方程r=c1*f*fun(theta/c2+c3)的参数-->
             <custom_function>
               <c1>1.05</c1>
               <c2>4</c2>
+              <!--c3为角偏移常数，此处不定义，默认值为0，即无偏移-->
               <f>1</f>
               <fun>tan</fun>
             </custom_function>
+            <!--bool变量，默认值为1，即true，图像会以水平视野缩放，如果是false,图像则会根据投影类型参数来缩放-->
             <scale_to_hfov>1</scale_to_hfov>
+            <!--这个标签表示180度以外的所有内容都会被隐藏-->
             <cutoff_angle>3.1415</cutoff_angle>
           </lens>
         </camera>
+
+        <!--bool值，定义传感器是否更新，1为true,即传感器会根据update_rate参数定义的频率更新-->
         <always_on>1</always_on>
+         <!--更新频率参数，默认值为0-->
         <update_rate>30</update_rate>
+        <!--传感器可视化参数，bool变量，1即为true,表示允许传感器在图形界面被观察到-->
         <visualize>1</visualize>
+
+        <!--插件标签，它可以作为world、model、sensor的子元素-->
+        <!--插入一个名为camere_plugin的libgazebo_ros_camera.so插件，此插件的作用是关联摄像头-->
         <plugin name='camera_plugin' filename='libgazebo_ros_camera.so'>
+             <!--机器人的命名空间为/prometheus/sensor-->
             <robotNamespace>/prometheus/sensor</robotNamespace>
             <alwaysOn>true</alwaysOn>
-            <imageTopicName>image_raw</imageTopicName>
-            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-            <updateRate>30.0</updateRate>
-            <cameraName>monocular_down</cameraName>
-            <frameName>/monocular_down_link</frameName>
+            <imageTopicName>image_raw</imageTopicName><!--申明摄像头发布的消息话题为image_raw-->
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName><!--用于发布相机信息的主题名称为camera_info-->
+            <updateRate>30.0</updateRate><!--更新频率为30-->
+            <cameraName>monocular_down</cameraName><!--摄像机命名为monocular_down-->
+            <frameName>/monocular_down_link</frameName><!--定义数据所在的参考系为/monocular_down_link-->
+            <!--相机本身的信息-->
             <CxPrime>640</CxPrime>
             <Cx>640</Cx>
             <Cy>360</Cy>
@@ -77,17 +104,26 @@
             <distortionT1>0.0</distortionT1>
             <distortionT2>0.0</distortionT2>
         </plugin>
+
       </sensor>
-      <self_collide>0</self_collide>
-      <kinematic>0</kinematic>
+      <self_collide>0</self_collide><!--Bool变量，0为false,即不会Model下的其他link发生碰撞-->
+      <kinematic>0</kinematic><!--bool变量，0为false,如果为true，则表示本link仅为运动学link-->
     </link>
+
     <!-- 下视相机关节 -->
+    <!--一个joint连接两个link关于动力学和运动学属性，默认情况下，joint的pose使用子link的参考系-->
+    <!--申明一个Monocular_down_joint的joint-->
+    <!--joint的类型为fixed,表示刚性连接两个link，自由度为0-->
+    <!--joint的全部类型：continuous,revolute,gearbox,revolute2,prismatic,ball,screw,universal,fixed-->
     <joint name="Monocular_down_joint" type="fixed">
-      <child>Monocular_down_link</child>
-      <parent>p450::base_link</parent>
+      <child>Monocular_down_link</child> <!--子link-->
+      <parent>p450::base_link</parent><!--父link-->
+      <!--axis标签，定义与旋转joint的旋转轴相关的参数和prismatic joint的平移轴相关的参数-->
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 1</xyz><!--xyz标签定义轴的方向，是单位向量，默认值为0 0 1，参考系一般为joint参考系-->
+        <!--定义joint具体的限制，如果是旋转joint那么就是角度限制，如果是prismatic joint那么就是平移的距离限制-->
         <limit>
+        <!--因为是fixed joint，所以最低最高均为0-->
           <upper>0</upper>
           <lower>0</lower>
         </limit>
@@ -172,6 +208,8 @@
     </link>
 
     <!-- 前视相机关节 -->
+    <!--申明一个Monocular_front_joint的joint-->
+    <!--joint类型为fixed-->
     <joint name="Monocular_front_joint" type="fixed">
       <child>Monocular_front_link</child>
       <parent>p450::base_link</parent>
