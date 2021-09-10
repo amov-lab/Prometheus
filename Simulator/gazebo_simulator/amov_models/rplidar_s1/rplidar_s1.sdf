@@ -1,11 +1,16 @@
+<!--版本信息-->
 <?xml version="1.0" ?>
 <sdf version="1.6">
+<!--模型名字-->
   <model name="rplidar_s1">
+  <!--定义模型链杆，包含模型的一个主体的物理属性，如惯性、碰撞、可视化等属性，link只能申明在model中，一个model可以申明多个link,尽量减少模型中link数量可以提高性能和稳定-->
     <link name="link">
+
       <!-- 物理参数设置 -->
       <inertial>
-        <pose>0 0 0 0 0 0</pose>
-        <mass>0.1</mass>
+        <pose>0 0 0 0 0 0</pose> <!--位置-->
+        <mass>0.1</mass>  <!--质量-->
+        <!--惯性矩代表了刚体中质量的空间分布,取决于身体的质量、大小和形状，表示为对称正定3x3矩阵的分量，其中有3个对角元素和3个唯一的非对角元素-->
         <inertia>
           <ixx>4.15e-6</ixx>
           <ixy>0</ixy>
@@ -15,45 +20,60 @@
           <izz>2.407e-6</izz>
         </inertia>
       </inertial>
+
       <!-- 显示参数设置 -->
-      <visual name="visual">
+      <visual name="visual"><!--link的可视化信息-->
+      <!--geometry 输入模型的形状。提供box、cylinder、sphere等形态,也可以自己导入-->
         <geometry>
           <box>
             <size>0.05 0.05 0.04</size>
           </box>
         </geometry>
       </visual>
+
       <!-- 传感器参数设置 -->
-      <sensor name="2Dlaser" type="ray">
+      <!--sensor传感器标签，描述传感器的种类和特性-->
+      <!--name标签是传感器的名字，在这个模型中是唯一的-->
+      <!--type标签是传感器的种类,SDF格式支持air_pressure、camera、ray、gpu_ray等等，其中ray表示雷达-->
+      <sensor name="2Dlaser" type="ray"> 
+      <!--雷达的参数设置-->
         <ray>
+        <!--扫描参数-->
           <scan>
-            <horizontal>
-              <samples>360</samples>
-              <resolution>1</resolution>
-              <min_angle>-3.14</min_angle>
+            <horizontal> <!--水平面标签，表示雷达扫描范围是水平面-->
+              <samples>360</samples><!--定义仿真雷达一个完整的扫描周期所产生的射线数-->
+              <resolution>1</resolution><!--分辨率，分辨率乘以samples,即表示雷达一个完整的扫描周最后返回的数据点-->
+              <min_angle>-3.14</min_angle> <!--定义扫描范围-->
               <max_angle>3.14</max_angle>
             </horizontal>
           </scan>
+          <!--每一条模拟射线，具体的扫描范围-->
           <range>
-            <min>0.1</min>
-            <max>20</max>
-            <resolution>0.01</resolution>
+            <min>0.1</min> <!--每条射线的最小扫描距离0.1米-->
+            <max>20</max><!--每条射线的最大扫描距离20米-->
+            <resolution>0.01</resolution><!--每条射线的线分辨率为0.01米-->
           </range>
+          <!--噪音标签，定义噪音的模型-->
           <noise>
-            <type>gaussian</type>
-            <mean>0.0</mean>
-            <stddev>0.001</stddev>
+            <type>gaussian</type> <!--高斯分布的噪音模型-->
+            <mean>0.0</mean>  <!--高斯分布的均值为0.0-->
+            <stddev>0.001</stddev><!--高斯分布的标准差值为0.001-->
           </noise>
         </ray>
-        <plugin name="laser" filename="libRayPlugin.so" />
-        <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
-          <topicName>/prometheus/sensors/2Dlidar_scan</topicName>
-          <frameName>lidar_link</frameName>
+        <!--插件标签，导入插件，filename定义导入的库文件，可以写绝对路径，如果没写绝对路径，则会从配置文件中寻找-->
+        <!--name标签，为导入的库文件定义名称，在当前sdf文件中不可重名-->
+        <plugin name="laser" filename="libRayPlugin.so" /> <!--插入libRayPlugin.so插件，命名为laser-->
+        <plugin name="2Dlidar" filename="libgazebo_ros_laser.so"><!--插入libgazebo_ros_laser.so插件，命名为2Dlidar,此插件提供gazebo中雷达与ros的数据交流-->
+          <topicName>/prometheus/sensors/2Dlidar_scan</topicName><!--定义gazebo中扫描到的雷达数据在ros中的话题名称-->
+          <frameName>lidar_link</frameName> <!--定义数据所在参考系名称为lidar_link-->
         </plugin>
-        <always_on>1</always_on>
-        <update_rate>10</update_rate>
-        <visualize>true</visualize>
+
+        <always_on>1</always_on> <!--bool变量，默认值为0，表示flase;1为true,sensor将会根据update_rate的值来更新-->
+        <update_rate>10</update_rate> <!--更新频率-->
+        <visualize>true</visualize> <!--是否可视，true表示传感器可以在图形界面观察-->
       </sensor>
+
     </link>
+
   </model>
 </sdf>

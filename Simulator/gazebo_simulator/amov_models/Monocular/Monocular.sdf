@@ -1,10 +1,15 @@
+<!--版本信息-->
 <?xml version='1.0'?>
 <sdf version='1.6'>
+<!--模型名字，单目相机-->
     <model name='Monocular'>
-    <pose>0.0 0.0 -0.05 0 0 0</pose>
+    <pose>0.0 0.0 -0.05 0 0 0</pose><!--位置信息-->
+    <!--申明一个link，名字为link-->
       <link name='link'>
+      <!--物理属性-->
         <inertial>
-          <mass>0.001</mass>
+          <mass>0.001</mass> <!--质量-->
+          <!--惯性标签，定义模型当前link的惯性矩，是一个对称正定3x3矩阵-->
           <inertia>
             <ixx>4.15e-6</ixx>
           <ixy>0</ixy>
@@ -14,67 +19,81 @@
           <izz>2.407e-6</izz>
           </inertia>
         </inertial>
+        <!--可视化标签，定义一些图形界面的视觉效果-->
         <visual name='visual'>
+        <!--geometry标签，定义当前link的几何形状-->
           <geometry>
             <box>
-              <size>0.01 0.01 0.01</size>
+              <size>0.01 0.01 0.01</size>  <!--长宽高分别为0.01的矩形-->
             </box>
           </geometry>
         </visual>
-        <sensor name='camera' type='camera'>
-          <camera name='__default__'>
+        <!--传感器标签，定义一个名叫camera的传感器，它的类型是camera-->
+        <sensor name='camera' type='camera'><!--注意type是SDF提供的，name是自己定义的，在当前sensor中必须唯一-->
+           <!--相机标签，在其中定义一些相机的属性-->
+          <camera name='__default__'> <!--name可以定义，也可以不定义，它的默认值是_default_-->
             <!-- FOV,120度 -->
-            <horizontal_fov>2.0944</horizontal_fov>
+            <horizontal_fov>2.0944</horizontal_fov> <!--定义水平视野场，此处为120度-->
+            <!--image标签，功能是定义以像素为单位的图片大小和图片格式-->
             <image>
-              <width>1280</width>
+              <width>1280</width>  <!--图片大小为1280*720-->
               <height>720</height>
             </image>
+            <!--定义远、近剪裁面，不会渲染远、近剪裁平面之外的对象-->
             <clip>
-              <near>0.1</near>
-              <far>100</far>
+              <near>0.1</near><!--近剪裁面为0.1米-->
+              <far>100</far><!--远剪裁面100m-->
             </clip>
+            <!--噪音标签，定义噪音模型，它将应用到生成的图片上-->
             <noise>
-              <type>gaussian</type>
-              <mean>0.0</mean>
-              <stddev>0.001</stddev>
+              <type>gaussian</type> <!--高斯分布-->
+              <mean>0.0</mean><!--高斯分布的均值为0-->
+              <stddev>0.001</stddev><!--标准差为0.001-->
             </noise>
+            <!--透镜标签，作用是定义相机镜头的投影参数-->
             <lens>
-              <type>custom</type>
-              <custom_function>
-                <c1>1.05</c1>
-                <c2>4</c2>
-                <f>1</f>
-                <fun>tan</fun>
+              <type>custom</type> <!--镜头映射的类型为custom，用户自定义,当前sdf支持立体投影、赤平面投影、等角投影等-->
+              <custom_function> <!--定义投影方程r=c1*f*fun(theta/c2+c3)的参数-->
+                <c1>1.05</c1> <!--线标度常数为1.05-->
+                <c2>4</c2> <!--角标度常数为4-->
+                <!--c3为角偏移常数，此处不定义，默认值为0，即无偏移-->
+                <f>1</f> <!--相机焦距为1-->
+                <fun>tan</fun> <!--fun为tan-->
               </custom_function>
-              <scale_to_hfov>1</scale_to_hfov>
-              <cutoff_angle>3.1415</cutoff_angle>
+              <scale_to_hfov>1</scale_to_hfov> <!--bool变量，默认值为1，即true，图像会以水平视野缩放，如果是false,图像则会根据投影类型参数来缩放-->
+              <cutoff_angle>3.1415</cutoff_angle><!--这个标签表示180度以外的所有内容都会被隐藏-->
             </lens>
           </camera>
-          <always_on>1</always_on>
-          <update_rate>30</update_rate>
-          <visualize>1</visualize>
+
+          <always_on>1</always_on> <!--bool值，定义传感器是否更新，1为true,即传感器会根据update_rate参数定义的频率更新-->
+          <update_rate>30</update_rate> <!--更新频率参数，默认值为0-->
+          <visualize>1</visualize> <!--传感器可视化参数，bool变量，1即为true,表示允许传感器在图形界面被观察到-->
+         
+          <!--插件标签，它可以作为world、model、sensor的子元素-->
+          <!--插入一个名为camere_plugin的libgazebo_ros_camera.so插件，此插件的作用是关联摄像头-->
           <plugin name='camera_plugin' filename='libgazebo_ros_camera.so'>
-              <robotNamespace>/prometheus</robotNamespace>
-              <alwaysOn>true</alwaysOn>
-              <imageTopicName>image_raw</imageTopicName>
-              <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-              <updateRate>30.0</updateRate>
-              <cameraName>Monocular</cameraName>
-              <frameName>/monocular_link</frameName>
-              <CxPrime>640</CxPrime>
-              <Cx>640</Cx>
-              <Cy>360</Cy>
+              <robotNamespace>/prometheus</robotNamespace>   <!--机器人的命名空间为/prometheus-->
+              <alwaysOn>true</alwaysOn> 
+              <imageTopicName>image_raw</imageTopicName> <!--申明摄像头发布的消息话题为image_raw-->
+              <cameraInfoTopicName>camera_info</cameraInfoTopicName> <!--用于发布相机信息的主题名称为camera_info-->
+              <updateRate>30.0</updateRate> <!--更新频率为30-->
+              <cameraName>Monocular</cameraName> <!--摄像机命名为Monocular-->
+              <frameName>/monocular_link</frameName><!--定义数据所在的参考系为/monocular_link-->
+              <CxPrime>640</CxPrime> <!--CxPrime为640-->
+              <Cx>640</Cx> <!--Cx为640-->
+              <Cy>360</Cy> <!--Cy为360-->
               <hackBaseline>0</hackBaseline>
-              <focalLength>369.502083</focalLength>
-              <distortionK1>0.0</distortionK1>
-              <distortionK2>0.0</distortionK2>
-              <distortionK3>0.0</distortionK3>
-              <distortionT1>0.0</distortionT1>
-              <distortionT2>0.0</distortionT2>
+              <focalLength>369.502083</focalLength> <!--焦距为369.502083-->
+              <distortionK1>0.0</distortionK1><!--畸变参数k1为0-->
+              <distortionK2>0.0</distortionK2><!--畸变参数k2为0-->
+              <distortionK3>0.0</distortionK3><!--畸变参数k3为0-->
+              <distortionT1>0.0</distortionT1><!--畸变参数T1为0-->
+              <distortionT2>0.0</distortionT2><!--畸变参数T2为0-->
           </plugin>
         </sensor>
-        <self_collide>0</self_collide>
-        <kinematic>0</kinematic>
+
+        <self_collide>0</self_collide> <!--Bool变量，0为false,即不会和这个Model下的其他link发生碰撞-->
+        <kinematic>0</kinematic> <!--bool变量，0为false,如果为true，则表示本link仅为运动学link-->
       </link>
   </model>
 </sdf>
