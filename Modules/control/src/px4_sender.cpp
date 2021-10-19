@@ -29,6 +29,9 @@
 #include "prometheus_control_utils.h"
 #include "message_utils.h"
 #include "control_common.h"
+#include "printf_utils.h"
+#include "prometheus_station_utils.h"
+
 #define NODE_NAME "px4_sender"
 
 using namespace std;
@@ -105,7 +108,23 @@ void drone_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg)
 }
 void timerCallback(const ros::TimerEvent& e)
 {
-    pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Program is running.");
+    cout << GREEN <<">>>>>>>>>>>>>>>>>>>>>>>> PX4 SENDER  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << TAIL <<endl;
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(2);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+
+    // 【打印】无人机状态,包括位置,速度等数据信息
+    prometheus_station_utils::prinft_drone_state(_DroneState);
+
+    // 【打印】来自上层的控制指令
+    prometheus_station_utils::printf_command_control(Command_Now);
 }
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
@@ -136,6 +155,7 @@ int main(int argc, char **argv)
 
     // 10秒定时打印，以确保程序在正确运行
     ros::Timer timer = nh.createTimer(ros::Duration(10.0), timerCallback);
+
     // 参数读取
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
     nh.param<float>("Disarm_height", Disarm_height, 0.15);
