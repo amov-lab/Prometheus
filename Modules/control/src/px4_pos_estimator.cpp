@@ -65,6 +65,7 @@ prometheus_msgs::Message message;
 ros::Publisher odom_pub;
 ros::Publisher trajectory_pub;
 prometheus_msgs::DroneState Drone_State;
+bool _odom_valid = false;
 nav_msgs::Odometry Drone_odom;
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>函数声明<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -98,6 +99,8 @@ void laser_cb(const tf2_msgs::TFMessage::ConstPtr &msg)
             //cout << "Position [X Y Z] : " << pos_drone_laser[0] << " [ m ] "<< pos_drone_laser[1]<<" [ m ] "<< pos_drone_laser[2]<<" [ m ] "<<endl;
             //cout << "Euler [X Y Z] : " << Euler_laser[0] << " [m/s] "<< Euler_laser[1]<<" [m/s] "<< Euler_laser[2]<<" [m/s] "<<endl;
     }
+
+    _odom_valid= true;
 }
 
 void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -129,6 +132,8 @@ void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
     // Transform the Quaternion to Euler Angles
     Euler_mocap = quaternion_to_euler(q_mocap);
+
+    _odom_valid= true;
     
     last_timestamp = msg->header.stamp;
 }
@@ -148,6 +153,8 @@ void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "wrong gazebo ground truth frame id.");
     }
+
+    _odom_valid= true;
 }
 
 void slam_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -168,6 +175,8 @@ void slam_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "wrong slam frame id.");
     }
+
+    _odom_valid= true;
 }
 
 void t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
@@ -188,6 +197,8 @@ void t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
     {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "wrong t265 frame id.");
     }
+
+    _odom_valid= true;
 }
 
 void timerCallback(const ros::TimerEvent &e)
@@ -290,6 +301,7 @@ void send_to_fcu()
         // 此处时间主要用于监测动捕，T265设备是否正常工作
         if( prometheus_control_utils::get_time_in_sec(last_timestamp) > TIMEOUT_MAX)
         {
+            _odom_valid= false;
             pub_message(message_pub, prometheus_msgs::Message::ERROR, NODE_NAME, "Mocap Timeout.");
         }
         
@@ -349,6 +361,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
 {
     // 发布无人机状态，具体内容参见 prometheus_msgs::DroneState
     Drone_State = State_from_fcu;
+    Drone_State.odom_valid= _odom_valid;
     Drone_State.header.stamp = ros::Time::now();
     // 户外情况，使用相对高度
     if(input_source == 9 )

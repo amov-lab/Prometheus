@@ -41,6 +41,7 @@ float Takeoff_height;                                       //默认起飞高度
 float Disarm_height;                                        //自动上锁高度
 float Land_speed;                                           //降落速度
 int Land_mode;                                              //降落策略选择
+bool quick_land = false;
 //Geigraphical fence 地理围栏
 Eigen::Vector2f geo_fence_x;
 Eigen::Vector2f geo_fence_y;
@@ -216,10 +217,21 @@ int main(int argc, char **argv)
         // 执行回调函数
         ros::spinOnce();
 
+
         // Check for geo fence: If drone is out of the geo fence, it will land now.
-        if(check_failsafe() == 1)
+        if(Command_Now.Mode !=prometheus_msgs::ControlCommand::Idle )
         {
-            Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+            int safety_flag = check_failsafe();
+            if(safety_flag == 1)
+            {
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+            }else if(safety_flag == 2)
+            {
+                // 快速降落
+                Land_speed = 0.8;
+                quick_land = true;
+                Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+            }
         }
 
         switch (Command_Now.Mode)
@@ -311,8 +323,14 @@ int main(int argc, char **argv)
         //  第一种：当前位置原地降落，降落后会自动上锁，且切换为mannual模式
         //  第二种：当前位置原地降落，降落中到达Disarm_height后，切换为飞控中land模式
         case prometheus_msgs::ControlCommand::Land:
-
-            if(Land_mode == 1)
+            
+            if(quick_land)
+            {
+                // 紧急降落
+                state_sp << 0.0, 0.0, -Land_speed;
+                yaw_sp = _DroneState.attitude[2]; //rad
+                _command_to_mavros.send_vel_setpoint(state_sp,yaw_sp);
+            }else if(Land_mode == 1)
             {
                 if (Command_Last.Mode != prometheus_msgs::ControlCommand::Land)
                 {
@@ -599,13 +617,18 @@ int check_failsafe()
         _DroneState.position[1] < geo_fence_y[0] || _DroneState.position[1] > geo_fence_y[1] ||
         _DroneState.position[2] < geo_fence_z[0] || _DroneState.position[2] > geo_fence_z[1])
     {
-        pub_message(message_pub, prometheus_msgs::Message::ERROR, NODE_NAME, "Out of the geo fence, the drone is landing...");
+        cout << RED  <<":----> Out of the geo fence, the drone is landing..."<< TAIL << endl;
         return 1;
+    }else if(!_DroneState.odom_valid)
+    {
+        cout << RED  <<":----> Mocap valid..., land quickly!"<< TAIL << endl;
+        return 2;
     }
     else{
         return 0;
     }
 }
+
 
 geometry_msgs::PoseStamped get_rviz_ref_posistion(const prometheus_msgs::ControlCommand& cmd)
 {
