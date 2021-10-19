@@ -8,6 +8,7 @@ bool armed
 bool landed
 ## PX4飞控当前飞行模式
 string mode
+bool odom_valid
 
 ## 系统启动时间
 float32 time_from_start             ## [s]

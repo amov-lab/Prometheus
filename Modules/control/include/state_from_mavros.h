@@ -75,6 +75,8 @@ class state_from_mavros
 
         // 【订阅】无人机相对高度 此订阅仅针对户外实验
         alt_sub = state_nh.subscribe<std_msgs::Float64>(uav_name + "/mavros/global_position/rel_alt", 10, &state_from_mavros::alt_cb,this);
+    
+        _DroneState.odom_valid = false;
     }
 
     //变量声明 
@@ -115,6 +117,9 @@ class state_from_mavros
             _DroneState.position[0] = msg->pose.position.x;
             _DroneState.position[1] = msg->pose.position.y;
             _DroneState.position[2] = msg->pose.position.z;
+
+            // 如何判断T265失效呢？ 或者无人机当前有危险
+            // _DroneState.odom_valid = false;
         }
 
         void vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
