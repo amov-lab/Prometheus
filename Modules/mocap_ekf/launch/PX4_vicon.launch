@@ -1,0 +1,27 @@
+<launch>
+    
+    <node pkg="mocap_ekf" type="mocap_ekf" name="mocap_ekf" output="screen">
+        <!-- 此处用的是PX4融合过的imu数据 -->
+        <remap from="~imu" to="/mavros/imu/data"/>
+        <remap from="~bodyodometry" to="/vrpn_client_ros/uav/pose"/> 
+        <remap from="~ekf_odom" to="/vicon_imu_ekf_odom"/>
+
+        <!-- parms -->
+        <rosparam file="$(find mocap_ekf)/launch/PX4_vio_drone.yaml" command="load" />
+
+        <!--body in IMU frame-->>
+        <param name="imu_trans_x" type="double" value="0.0"/> 
+        <param name="imu_trans_y" type="double" value="0.0"/> 
+        <param name="imu_trans_z" type="double" value="-0.03"/> 
+
+        <!-- Qt -->
+        <param name="gyro_cov" type="double" value="0.02"/> 
+        <param name="acc_cov" type="double" value="0.5"/>
+        <!-- Rt -->
+        <param name="position_cov" type="double" value="0.01"/>
+        <param name="q_rp_cov" type="double" value="0.01"/>
+        <param name="q_yaw_cov" type="double" value="0.01"/>   
+
+    </node>
+
+</launch>
