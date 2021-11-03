@@ -30,7 +30,7 @@ geo_fence:
 
 ## 限制参数 
 Limit:
-  tilt_max: 20.0
+  tilt_max: 30.0
   XY_VEL_MAX : 3.0
   Z_VEL_MAX : 2.0
   THR_MIN: 0.1
@@ -52,10 +52,10 @@ Quad:
 
 # 位置环参数 for ne
 Pos_ne:
-  Kp_xy : 0.5
-  Kp_z : 0.5
-  Kd_xy : 2.0
-  Kd_z : 2.0
-  T_ude_xy : 1.0
-  T_ude_z : 1.0
-  T_ne : 0.1
+  Kp_xy : 0.3
+  Kp_z : 0.3
+  Kd_xy : 1.0
+  Kd_z : 1.0
+  T_ude_xy : 2.0
+  T_ude_z : 2.0
+  T_ne : 0.2

@@ -81,7 +81,7 @@
 		<param name="noise_a" value="2.0" />
 		<param name="noise_b" value="0.0" />
 		<param name="noise_T" value="1.0" />
-		<param name="apply_noise" value="true" />
+		<param name="apply_noise" value="false" />
 	</node>
 	
 	<node pkg="prometheus_control" type="px4_pos_controller" name="px4_pos_controller" output="screen">
