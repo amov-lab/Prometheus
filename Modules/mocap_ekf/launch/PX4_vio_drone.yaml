@@ -1,0 +1,2 @@
+Rr_i:       [1, 0, 0, 0]     #ekf bag     #[1, 0, 0, 0] #car   #quaterniod(w,x,y,z)  
+tr_i:       [0.00, 0.0, 0.01] #ekf bag     #[0, 0, 0.]   #car

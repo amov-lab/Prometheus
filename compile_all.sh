@@ -10,5 +10,4 @@ catkin_make --source Simulator/gazebo_simulator --build build/prometheus_gazebo
 catkin_make --source Modules/ego_planner --build build/ego_planner
 catkin_make --source Modules/swarm_control --build build/swarm_control
 catkin_make --source Experiment --build build/prometheus_experiment
-
-
+catkin_make --source Modules/mocap_ekf --build build/mocap_ekf
