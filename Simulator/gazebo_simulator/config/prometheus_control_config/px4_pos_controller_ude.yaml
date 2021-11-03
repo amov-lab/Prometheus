@@ -52,9 +52,9 @@ Quad:
 
 # 位置环参数 for ude
 Pos_ude:
-  Kp_xy : 0.5
-  Kp_z : 0.5
-  Kd_xy : 2.0
-  Kd_z : 2.0
+  Kp_xy : 0.3
+  Kp_z : 0.3
+  Kd_xy : 1.0
+  Kd_z : 1.0
   T_ude_xy : 2.0
   T_ude_z : 2.0
