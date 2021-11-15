@@ -1,0 +1,2 @@
+- `gimbal.cpp`: 吊舱控制
+- `control.py`: 键盘控制吊舱

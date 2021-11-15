@@ -18,6 +18,8 @@
   <build_depend>std_msgs</build_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <exec_depend>std_msgs</exec_depend>
+  <build_depend>serial</build_depend>
+  <exec_depend>serial</exec_depend>
 
 
 

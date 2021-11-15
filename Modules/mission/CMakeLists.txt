@@ -170,6 +170,10 @@ add_executable(pub_goal_from_qgc planning_mission/pub_goal_from_qgc.cpp)
 add_dependencies(pub_goal_from_qgc prometheus_mission_gencpp)
 target_link_libraries(pub_goal_from_qgc ${catkin_LIBRARIES})
 
+add_executable(circlex_landing_gimbal autonomous_landing/circlex_landing_gimbal.cpp)
+add_dependencies(circlex_landing_gimbal prometheus_msgs_generate_message_cpp)
+target_link_libraries(circlex_landing_gimbal ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############

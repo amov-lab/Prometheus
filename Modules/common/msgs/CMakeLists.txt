@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_eigen
   mavros_msgs
+  serial
 )
 
 find_package(Boost REQUIRED COMPONENTS system)
@@ -41,6 +42,10 @@ add_message_files(
   IndoorSearch.msg
   UgvState.msg
   UgvCommand.msg
+  GimbalTrackError.msg
+  Cloud_platform.msg
+  gimbal.msg
+  GimbalCtl.msg
 )
 
 add_action_files(
