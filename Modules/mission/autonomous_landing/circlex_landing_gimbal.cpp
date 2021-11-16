@@ -197,7 +197,9 @@ int main(int argc, char **argv)
         //回调
         ros::spinOnce();
         Command_now.Command_ID = comid;
+        Command_now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
         comid++;
+        std::stringstream ss;
         if (flag_detected == 0)
         {
             Command_now.Mode = prometheus_msgs::ControlCommand::Hold;
@@ -208,6 +210,7 @@ int main(int argc, char **argv)
                 Command_now.Reference_State.position_ref[0] = 0.;
                 Command_now.Reference_State.position_ref[1] = 0.;
                 Command_now.Reference_State.velocity_ref[2] = curr_pos.z > max_high ? 0 : lost_target_up_vel;
+                ss << " >> object lost << ";
             }
             else if (!is_start)
             {
@@ -233,7 +236,6 @@ int main(int argc, char **argv)
 
             bool get_command = false;
             static bool yaw_lock_finsh = false;
-            std::stringstream ss;
             ss << "yaw: " << y << " pitch: " << p << " high: " << curr_pos.z
                << " horizontal_distance: " << horizontal_distance << "\n";
             if (std::abs(y) > ignore_error_yaw && !yaw_lock_finsh) // 只控制yaw, 偏航角
