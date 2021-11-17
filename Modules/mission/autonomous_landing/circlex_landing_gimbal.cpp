@@ -10,11 +10,9 @@
 #include "prometheus_msgs/GimbalTrackError.h"
 #include "prometheus_msgs/gimbal.h"
 #include <iostream>
-#include <prometheus_msgs/ControlCommand.h>
+#include "prometheus_msgs/ControlCommand.h"
+#include "prometheus_msgs/DroneState.h"
 
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 #include <prometheus_msgs/GimbalCtl.h>
@@ -31,7 +29,7 @@ prometheus_msgs::gimbal read_gimbal;
 //---------------------------------------Vision---------------------------------------------
 // geometry_msgs::Pose pos_target; //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
 
-geometry_msgs::Point curr_pos;
+float curr_pos[3];
 float height_time = 0.0;
 int flag_detected = 0; // 是否检测到目标标志
 
@@ -74,10 +72,12 @@ void printf_result();                              //打印函数
 float satfunc(float data, float Max, float Thres); //限幅函数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-void pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+void pos_cb(const prometheus_msgs::DroneState::ConstPtr &msg)
 {
     // Read the Drone Position from the Mavros Package [Frame: ENU]
-    curr_pos = msg->pose.position;
+    curr_pos[0] = msg->position[0];
+    curr_pos[1] = msg->position[1];
+    curr_pos[2] = msg->position[2];
 }
 
 void sub_diff_callback(const std_msgs::Float32MultiArray::ConstPtr &msg)
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
     ros::Subscriber gimbaldata_sub = nh.subscribe<prometheus_msgs::gimbal>("/readgimbal", 10, sub_gimbaldata_cb);
 
     // 获取 无人机ENU下的位置
-    ros::Subscriber curr_pos_sub = nh.subscribe<geometry_msgs::PoseStamped>("/mavros/local_position/pose", 10, pos_cb);
+    ros::Subscriber curr_pos_sub = nh.subscribe<prometheus_msgs::DroneState>("/prometheus/drone_state", 10, pos_cb);
 
     // 【发布】发送给position_control.cpp的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::ControlCommand>("/prometheus/control_command", 10);
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
                 Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
                 Command_now.Reference_State.position_ref[0] = 0.;
                 Command_now.Reference_State.position_ref[1] = 0.;
-                Command_now.Reference_State.velocity_ref[2] = curr_pos.z > max_high ? 0 : lost_target_up_vel;
+                Command_now.Reference_State.velocity_ref[2] = curr_pos[2] > max_high ? 0 : lost_target_up_vel;
                 ss << " >> object lost << ";
             }
             else if (!is_start)
@@ -236,10 +236,10 @@ int main(int argc, char **argv)
             Command_now.Mode = prometheus_msgs::ControlCommand::Move;
             // 判读航向角是否对齐
             float p = read_gimbal.rel1, y = read_gimbal.rel2;
-            horizontal_distance = curr_pos.z * std::tan(3.141592653 * (90 - p) / 180);
+            horizontal_distance = curr_pos[2] * std::tan(3.141592653 * (90 - p) / 180);
 
             bool get_command = false;
-            ss << "yaw: " << y << " pitch: " << p << " high: " << curr_pos.z
+            ss << "yaw: " << y << " pitch: " << p << " high: " << curr_pos[2]
                << " horizontal_distance: " << horizontal_distance << "\n";
             if (std::abs(y) > ignore_error_yaw && !yaw_lock_finsh) // 只控制yaw, 偏航角
             {
@@ -262,8 +262,8 @@ int main(int argc, char **argv)
                     Command_now.Reference_State.velocity_ref[0] = kpx_track * horizontal_distance / 4.;
                     Command_now.Reference_State.velocity_ref[1] = 0;
                     Command_now.Reference_State.position_ref[2] = 0;
-                    ss << ">> xy control << "
-                       << " vel_x: " << Command_now.Reference_State.velocity_ref[0];
+                    // Command_now.Reference_State.velocity_ref[2] = 0;
+                    ss << ">> xy control << " << " vel_x: " << Command_now.Reference_State.velocity_ref[0];
                     next_status_count_xy = max_next_status_count_xy;
                 }
                 else // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
             // 降落: 关闭吊舱的圆叉跟随, 将吊舱patch锁死在, 直角向下90度
             if (!get_command)
             {
-                if (curr_pos.z > 0.3) // 锁定yaw, xyz点
+                if (curr_pos[2] > 0.3) // 锁定yaw, xyz点
                 {
                     if (next_status_count_h > 0)
                     {
@@ -328,7 +328,7 @@ int main(int argc, char **argv)
                         {
                             Command_now.Reference_State.position_ref[1] = read_pixel.x > 0 ? -0.10 : 0.10;
                         }
-                        Command_now.Reference_State.velocity_ref[2] = -curr_pos.z / 4.;
+                        Command_now.Reference_State.velocity_ref[2] = -curr_pos[2] / 4.;
                         Command_now.Reference_State.yaw_ref = 0.;
                         ss << " >> high control << "
                            << " pixel_x: " << read_pixel.x

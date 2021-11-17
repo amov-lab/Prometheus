@@ -472,6 +472,7 @@ int main(int argc, char **argv)
                         Command_Now.Reference_State.velocity_ref[0] = d_vel_enu[0];
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
                         Command_Now.Reference_State.velocity_ref[2] = 0.0;
+                        Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.position_ref[2];
                         // 高度锁定为给定值 2021.3.24 云台追踪控制修改
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.position_ref[2]);
                         
