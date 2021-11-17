@@ -198,6 +198,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         Command_now.Command_ID = comid;
         Command_now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
+        Command_now.source = "circlex_dectector"
         comid++;
         std::stringstream ss;
         if (flag_detected == 0)
@@ -342,8 +343,6 @@ int main(int argc, char **argv)
                     ss << " >> Into landing status. End of program << ";
                 }
             }
-            std::cout << ss.str() << std::endl;
-            std::cout << "********************************************************************************" << std::endl;
             //速度限幅
             Command_now.Reference_State.velocity_ref[0] = satfunc(Command_now.Reference_State.velocity_ref[0], track_max_vel_x, track_thres_vel_x);
             Command_now.Reference_State.velocity_ref[1] = satfunc(Command_now.Reference_State.velocity_ref[1], track_max_vel_y, track_thres_vel_y);
@@ -355,6 +354,8 @@ int main(int argc, char **argv)
         if (Command_now.Mode == prometheus_msgs::ControlCommand::Land)
             break;
         rate.sleep();
+        std::cout << ss.str() << std::endl;
+        std::cout << "********************************************************************************" << std::endl;
     }
 
     return 0;

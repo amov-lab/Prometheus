@@ -367,7 +367,7 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
     if(input_source == 9 )
     {
         // FIXME rel_alt?
-        // Drone_State.position[2]  = Drone_State.rel_alt;
+        Drone_State.position[2]  = Drone_State.rel_alt;
         _odom_valid= true;
     }
     drone_state_pub.publish(Drone_State);

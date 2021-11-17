@@ -248,7 +248,7 @@ int main(int argc, char **argv)
     return -1;
   }
   //指定循环的频率
-  ros::Rate loop_rate(50);
+  ros::Rate loop_rate(30);
 
   // 启动获取吊舱数据线程
   // std::thread thread_get_gimbal_info(get_gimbal_info);
