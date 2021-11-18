@@ -10,7 +10,7 @@
 #include <std_msgs/UInt8MultiArray.h>
 #include <geometry_msgs/Point.h>
 #include <iostream>
-#include "prometheus_msgs/Cloud_platform.h"
+// #include "prometheus_msgs/Cloud_platform.h"
 #include "prometheus_msgs/GimbalTrackError.h"
 #include "prometheus_msgs/gimbal.h"
 #include <iomanip>
@@ -19,7 +19,7 @@
 
 using namespace std;
 serial::Serial ser;
-prometheus_msgs::Cloud_platform cloud_platform;
+// prometheus_msgs::Cloud_platform cloud_platform;
 prometheus_msgs::GimbalTrackError temp;
 prometheus_msgs::gimbal gimbaldata;
 unsigned char command[8];

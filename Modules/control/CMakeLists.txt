@@ -21,7 +21,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   mavros_msgs
   prometheus_msgs
-  serial
 )
 
 ## System dependencies are found with CMake's conventions
@@ -45,7 +44,6 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS  message_runtime
-  serial
 )
 
 
@@ -157,14 +155,6 @@ target_link_libraries(set_mode ${catkin_LIBRARIES})
 add_executable(eigen_test src/Utilities/eigen_test.cpp)
 add_dependencies(eigen_test prometheus_control_gencpp)
 target_link_libraries(eigen_test ${catkin_LIBRARIES})
-
-add_executable(gimbal_control src/gimbal_control/gimbal.cpp)
-target_link_libraries(gimbal_control ${catkin_LIBRARIES})
-add_dependencies(gimbal_control prometheus_msgs_generate_message_cpp)
-
-add_executable(gimbal_tracking src/gimbal_control/gimbal_tracking.cpp)
-target_link_libraries(gimbal_tracking ${catkin_LIBRARIES})
-add_dependencies(gimbal_tracking prometheus_msgs_generate_message_cpp)
 #############
 ## Install ##
 #############
@@ -178,11 +168,6 @@ add_dependencies(gimbal_tracking prometheus_msgs_generate_message_cpp)
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
-
-catkin_install_python(PROGRAMS
-  src/gimbal_control/control.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node

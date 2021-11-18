@@ -31,12 +31,8 @@ if (CUDA_FOUND)
   )
   add_definitions(-DGPU)
 else()
-  add_definitions(-DCPU_ONLY)
   list(APPEND LIBRARIES "m")
 endif()
-
-# 编译圆叉网络
-add_definitions(-DETECT_MARKER_X_NET)
 
 # Find X11
 MESSAGE ( STATUS "Searching for X11..." )
@@ -181,10 +177,6 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ../common/include
-  circlex/spire_caffe/build/include
-  circlex/spire_caffe/include 
-  circlex/spire_caffe/build/src
-  circlex/include
 )
 
 
@@ -391,16 +383,6 @@ add_executable(aruco_navigation_switch
     cpp_nodes/aruco_navigation_switch.cpp
 )
 target_link_libraries(aruco_navigation_switch ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
-
-
-link_directories(circlex/spire_caffe/build/lib)
-add_executable(circlex_detector 
-  circlex/src/fly_detector.cpp 
-  circlex/src/DAS_Detect.hpp
-  circlex/src/DAS_Detect.cpp
-)
-target_link_libraries(circlex_detector ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} caffe glog)
-
 
 if(CATKIN_ENABLE_TESTING)
   # Download yolov3-tiny.weights

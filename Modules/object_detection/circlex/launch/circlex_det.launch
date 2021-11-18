@@ -1,8 +1,0 @@
-<launch>
-    <node pkg="prometheus_detection_circlex" type="fly_detector" name="fly_detector" output="screen">
-        <param name="video_saver_dir" type="string" value="/root/tmp" />
-        <param name="model_file" type="string" value="$(find prometheus_detection_circlex)/spire_caffe/examples/spire_x_classification/xnet_deploy.prototxt" />
-        <param name="trained_file" type="string" value="$(find prometheus_detection_circlex)/spire_caffe/examples/spire_x_classification/xnet_iter_10000.caffemodel" />
-        <param name="label_file" type="string" value="$(find prometheus_detection_circlex)/spire_caffe/examples/spire_x_classification/label.txt" />
-    </node>
-</launch>
