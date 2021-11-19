@@ -42,7 +42,8 @@ float get_ros_time(ros::Time begin)
 void get_gimbal_info()
 {
 
-  while(true){
+  while (true)
+  {
     unsigned char command[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
     ser.write(command, 5);
     std::this_thread::sleep_for(40ms);
@@ -146,7 +147,7 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
 }
 
 //日志】数据保存
-ofstream file;
+// ofstream file;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 int main(int argc, char **argv)
@@ -164,7 +165,8 @@ int main(int argc, char **argv)
   float RC_target_camera[3], stator_rel_camera_last[3], stator_rel_camera_vel[3];
   float stator_rel_camera[3];
 
-  //注意，里面有iOS：：app，表示打开文件后，在写入的文件不会覆盖原文件中的内容，也就是原来文件中的数据会得到保存。
+  /*
+  注意，里面有iOS：：app，表示打开文件后，在写入的文件不会覆盖原文件中的内容，也就是原来文件中的数据会得到保存。
   file.open("/root/tmp/track_ws/serial_node.txt", ios::binary | ios::app | ios::in | ios::out);
 
   file << "cur_time"
@@ -205,6 +207,7 @@ int main(int argc, char **argv)
        << "  "
        << "pitch_control_last"
        << "\n";
+       */
 
   //    float pitch_imu;
   //    float pitch_rc;
@@ -280,9 +283,6 @@ int main(int argc, char **argv)
         imu_camera[0] = 0.02197 * (256 * r_buffer.data[6] + r_buffer.data[5]);
       }
 
-      imu_camera_vel[0] = (imu_camera[0] - imu_camera_last[0]) / dt;
-      imu_camera_last[0] = imu_camera[0];
-
       if (r_buffer.data[8] > 40)
       {
         RC_target_camera[0] = -0.02197 * (256 * (256 - r_buffer.data[8]) - r_buffer.data[7]);
@@ -302,9 +302,6 @@ int main(int argc, char **argv)
       }
       //printf("stator_rel_camera[0] is %d \n",(stator_rel_camera[0]));
 
-      stator_rel_camera_vel[0] = (stator_rel_camera[0] - stator_rel_camera_last[0]) / dt;
-      stator_rel_camera_last[0] = stator_rel_camera[0];
-
       //----------------------------------------俯仰PITCH-------------------------------------------
       if (r_buffer.data[24] > 40)
       {
@@ -314,9 +311,6 @@ int main(int argc, char **argv)
       {
         imu_camera[1] = 0.02197 * (256 * r_buffer.data[24] + r_buffer.data[23]);
       }
-
-      imu_camera_vel[1] = (imu_camera[1] - imu_camera_last[1]) / dt;
-      imu_camera_last[1] = imu_camera[1];
 
       if (r_buffer.data[26] > 40)
       {
@@ -336,9 +330,6 @@ int main(int argc, char **argv)
         stator_rel_camera[1] = 0.02197 * (256 * r_buffer.data[28] + r_buffer.data[27]);
       }
 
-      stator_rel_camera_vel[1] = (stator_rel_camera[1] - stator_rel_camera_last[1]) / dt;
-      stator_rel_camera_last[1] = stator_rel_camera[1];
-
       //----------------------------------------偏航YAW-------------------------------------------
 
       if (r_buffer.data[42] > 40)
@@ -349,9 +340,6 @@ int main(int argc, char **argv)
       {
         imu_camera[2] = 0.02197 * (256 * r_buffer.data[42] + r_buffer.data[41]);
       }
-
-      imu_camera_vel[2] = (imu_camera[2] - imu_camera_last[2]) / dt;
-      imu_camera_last[2] = imu_camera[2];
 
       //printf("imu_camera[1] is %d \n",(imu_camera[1]));
 
@@ -374,22 +362,26 @@ int main(int argc, char **argv)
         stator_rel_camera[2] = 0.02197 * (256 * r_buffer.data[46] + r_buffer.data[45]);
       }
       //printf("stator_rel_camera[1] is %d \n",(stator_rel_camera[1]));
-
-      stator_rel_camera_vel[2] = (stator_rel_camera[2] - stator_rel_camera_last[2]) / dt;
-      stator_rel_camera_last[2] = stator_rel_camera[2];
-
-      cout << "-----------------imu_camera----------------------" << endl;
-      cout << "rel_roll:" << setprecision(6) << stator_rel_camera[0] << "    "
-           << "rel_pitch:" << setprecision(6) << stator_rel_camera[1] << "    "
-           << "rel_yaw:" << setprecision(6) << stator_rel_camera[2] << endl;
-      //  << "imu_roll:" << setprecision(6) << imu_camera[0] << "    "
-      //  << "imu_pitch:" << setprecision(6) << imu_camera[1] << "    "
-      //  << "imu_yaw:" << setprecision(6) << imu_camera[2] <<  "    "
-      //  << "rc_roll:" << setprecision(6) << RC_target_camera[0] << "    "
-      //  << "rc_pitch:" << setprecision(6) << RC_target_camera[1] << "    "
-      //  << "rc_yaw:" << setprecision(6) << RC_target_camera[2] <<
-      //  endl;
     }
+
+    imu_camera_vel[0] = (imu_camera[0] - imu_camera_last[0]) / dt;
+    imu_camera_last[0] = imu_camera[0];
+
+    stator_rel_camera_vel[0] = (stator_rel_camera[0] - stator_rel_camera_last[0]) / dt;
+    stator_rel_camera_last[0] = stator_rel_camera[0];
+
+    imu_camera_vel[1] = (imu_camera[1] - imu_camera_last[1]) / dt;
+    imu_camera_last[1] = imu_camera[1];
+
+    stator_rel_camera_vel[1] = (stator_rel_camera[1] - stator_rel_camera_last[1]) / dt;
+    stator_rel_camera_last[1] = stator_rel_camera[1];
+
+    imu_camera_vel[2] = (imu_camera[2] - imu_camera_last[2]) / dt;
+    imu_camera_last[2] = imu_camera[2];
+
+    // TODO 速度不正确
+    stator_rel_camera_vel[2] = (stator_rel_camera[2] - stator_rel_camera_last[2]) / dt;
+    stator_rel_camera_last[2] = stator_rel_camera[2];
 
     gimbaldata.imu0 = imu_camera[0];
     gimbaldata.imu1 = imu_camera[1];
@@ -407,7 +399,15 @@ int main(int argc, char **argv)
     gimbaldata.relvel1 = stator_rel_camera_vel[1];
     gimbaldata.relvel2 = stator_rel_camera_vel[2];
 
-    file << cur_time << "  " << dt << "  " << imu_camera[0] << "  " << imu_camera[1] << "  " << imu_camera[2] << "  " << RC_target_camera[0] << "  " << RC_target_camera[1] << "  " << RC_target_camera[2] << "  " << stator_rel_camera[0] << "  " << stator_rel_camera[1] << "  " << stator_rel_camera[2] << "  " << imu_camera_vel[0] << "  " << imu_camera_vel[1] << "  " << imu_camera_vel[2] << "  " << stator_rel_camera_vel[0] << "  " << stator_rel_camera_vel[1] << "  " << stator_rel_camera_vel[2] << "  " << yaw_control_last << "  " << pitch_control_last << "\n";
+    std::cout << "-----------------imu_camera----------------------" << endl;
+    std::cout << "rel_roll:  " << setprecision(6) << stator_rel_camera[0] << std::endl;
+    std::cout << "rel_pitch: " << setprecision(6) << stator_rel_camera[1] << std::endl;
+    std::cout << "rel_yaw:   " << setprecision(6) << stator_rel_camera[2] << std::endl;
+    std::cout << "relvel0:   " << setprecision(6) << gimbaldata.relvel0 << std::endl;
+    std::cout << "relvel1:   " << setprecision(6) << gimbaldata.relvel1 << std::endl;
+    std::cout << "relvel2:   " << setprecision(6) << gimbaldata.relvel2 << std::endl;
+
+    // file << cur_time << "  " << dt << "  " << imu_camera[0] << "  " << imu_camera[1] << "  " << imu_camera[2] << "  " << RC_target_camera[0] << "  " << RC_target_camera[1] << "  " << RC_target_camera[2] << "  " << stator_rel_camera[0] << "  " << stator_rel_camera[1] << "  " << stator_rel_camera[2] << "  " << imu_camera_vel[0] << "  " << imu_camera_vel[1] << "  " << imu_camera_vel[2] << "  " << stator_rel_camera_vel[0] << "  " << stator_rel_camera_vel[1] << "  " << stator_rel_camera_vel[2] << "  " << yaw_control_last << "  " << pitch_control_last << "\n";
     // 此处数据需要完完成分类、创建msg.h、publish出去
     read_pub.publish(gimbaldata);
 
@@ -415,5 +415,5 @@ int main(int argc, char **argv)
     ros::spinOnce();
     loop_rate.sleep();
   }
-  file.close(); //关闭文件，保存文件。
+  // file.close(); //关闭文件，保存文件。
 }

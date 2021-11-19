@@ -56,12 +56,14 @@ int ignore_error_pixel_for_landing;
 int ignore_error_yaw;
 int ignore_error_pitch;
 
-int num_count_vision_lost = 0;                       //视觉丢失计数器
-int count_vision_lost;                               //视觉丢失计数器阈值
-int max_next_status_count_xy = 10;                   //进入下一状态的阈值
-int next_status_count_xy = max_next_status_count_xy; //进入下一状态的阈值
-int max_next_status_count_h = 10;
-int next_status_count_h = max_next_status_count_h;
+int num_count_vision_lost = 0; //视觉丢失计数器
+int count_vision_lost;         //视觉丢失计数器阈值
+const int yaw_max_count = 10;
+int yaw_count = yaw_max_count;
+const int horizontal_max_count = 10;
+int horizontal_count = horizontal_max_count;
+const int vertical_max_count = 10;
+int vertical_count = vertical_max_count;
 int max_high = 10; // 丢失目标后, 上升的最大高度
 
 //---------------------------------------Output---------------------------------------------
@@ -73,12 +75,12 @@ enum State
 {
     Yaw,
     Horizontal,
-    Verticla,
+    Vertical,
     Landing
 };
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void printf_param();                                    //打印各项参数以供检查
+void printf_param();                               //打印各项参数以供检查
 void printf_result();                              //打印函数
 float satfunc(float data, float Max, float Thres); //限幅函数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -108,6 +110,7 @@ void sub_gimbaldata_cb(const prometheus_msgs::gimbal::ConstPtr &msg)
     read_gimbal.rel0 = msg->rel0;
     read_gimbal.rel1 = msg->rel1;
     read_gimbal.rel2 = msg->rel2;
+    read_gimbal.relvel2 = msg->relvel2;
 }
 
 void generate_com(int Move_mode, float state_desired[4])
@@ -199,7 +202,7 @@ int main(int argc, char **argv)
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     //追踪算法比例参数
-    nh.param<float>("kpx_track", kpx_track, 1.0);
+    nh.param<float>("kpx_track", kpx_track, 0.25);
 
     //追踪算法最大追踪速度
     //取决与使用场景，室内或者第一次实验时，建议选小一点
@@ -251,13 +254,20 @@ int main(int argc, char **argv)
     gimbal_control_pub.publish(gimbal_control_);
     gimbal_control_.pitch = 0.;
     int max_count_vision_lost = count_vision_lost;
-    bool is_start = true;
-    bool yaw_lock_finsh = false;
     State Now_State = State::Yaw;
     Command_past.Mode = prometheus_msgs::ControlCommand::Hold;
+    Command_past.Reference_State.velocity_ref[0] = 0.;
+    Command_past.Reference_State.velocity_ref[1] = 0.;
+    Command_past.Reference_State.velocity_ref[2] = 0.;
+    Command_past.Reference_State.position_ref[0] = 0.;
+    Command_past.Reference_State.position_ref[1] = 0.;
+    Command_past.Reference_State.position_ref[2] = 0.;
 
     while (ros::ok())
     {
+        ros::spinOnce();
+        float p = read_gimbal.rel1, y = read_gimbal.rel2;
+
         // TODO 速度衰减, 配置为可变参数
         Command_past.Reference_State.velocity_ref[0] *= 0.6;
         Command_past.Reference_State.velocity_ref[1] *= 0.6;
@@ -265,29 +275,31 @@ int main(int argc, char **argv)
         Command_now = Command_past;
 
         float comm[4]{0, 0, 0, 0};
-        ros::spinOnce();
         Command_now.Command_ID = comid;
         Command_now.header.stamp = ros::Time::now();
         Command_now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
         Command_now.source = "circlex_dectector";
         comid++;
+
+        float y_past = 0.0;
         std::stringstream ss;
         if (flag_detected == 0)
         {
-            if (count_vision_lost <= 0)
-            {
-                Command_now.Mode = prometheus_msgs::ControlCommand::Move;
-                Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
-                comm[0] = 0;
-                comm[1] = 0;
-                comm[2] = curr_pos[2] > max_high ? 0 : lost_target_up_vel;
-                comm[3] = 0;
-                ss << " >> object lost << ";
-            }
-            else
-            {
-                count_vision_lost--;
-            }
+            if (Command_past.Mode != prometheus_msgs::ControlCommand::Hold)
+                if (count_vision_lost <= 0)
+                {
+                    Command_now.Mode = prometheus_msgs::ControlCommand::Move;
+                    Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
+                    comm[0] = 0;
+                    comm[1] = 0;
+                    comm[2] = curr_pos[2] > max_high ? 0 : lost_target_up_vel;
+                    comm[3] = 0;
+                    ss << " >> object lost << ";
+                }
+                else
+                {
+                    count_vision_lost--;
+                }
         }
         //如果捕捉到目标
         else
@@ -302,9 +314,8 @@ int main(int argc, char **argv)
             count_vision_lost = max_count_vision_lost;
             Command_now.Mode = prometheus_msgs::ControlCommand::Move;
             // 判读航向角是否对齐
-            float p = read_gimbal.rel1, y = read_gimbal.rel2;
             horizontal_distance = curr_pos[2] * std::tan(3.141592653 * (90 - p) / 180);
-            ss << "yaw: " << y << " pitch: " << p << " high: " << curr_pos[2]
+            ss << "yaw: " << y << " pitch: " << p << " yaw_relvel: " << read_gimbal.relvel2 << " high: " << curr_pos[2]
                << " horizontal_distance: " << horizontal_distance << "\n";
 
             switch (Now_State)
@@ -312,7 +323,6 @@ int main(int argc, char **argv)
             case State::Yaw:
                 if (std::abs(y) > ignore_error_yaw) // 只控制yaw, 偏航角
                 {
-
                     Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;
                     comm[0] = 0;
                     comm[1] = 0;
@@ -320,16 +330,24 @@ int main(int argc, char **argv)
                     comm[3] = -y;
                     ss << " >> yaw control <<  ";
                 }
-                else
+                // TODO 参数化
+                // 吊舱稳定后再进入下一阶段
+                else if (std::abs(read_gimbal.relvel2) < 10)
                 {
-                    Now_State = State::Horizontal;
+                    if (yaw_count > 0)
+                    {
+                        yaw_count++;
+                    }
+                    {
+                        Now_State = State::Horizontal;
+                    }
                 }
                 break;
             case State::Horizontal:
                 if (std::abs(90 - p) > ignore_error_pitch) // 控yaw, xy速度
                 {
                     Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-                    comm[0] = kpx_track * horizontal_distance / 4.;
+                    comm[0] = kpx_track * horizontal_distance;
                     comm[1] = 0;
                     comm[2] = 0;
                     comm[3] = -y;
@@ -339,9 +357,9 @@ int main(int argc, char **argv)
                 }
                 else // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
                 {
-                    if (next_status_count_xy > 0)
+                    if (horizontal_count > 0)
                     {
-                        next_status_count_xy--;
+                        horizontal_count--;
                     }
                     else
                     {
@@ -356,18 +374,16 @@ int main(int argc, char **argv)
                         gimbal_control_.yaw = -y;
                         gimbal_control_pub.publish(gimbal_control_);
                         // gimbal_control_.yawfollow = 1;
-                        yaw_lock_finsh = true;
                         ss << " >> yaw lock, patch lock << ";
-                        Now_State = State::Verticla;
+                        Now_State = State::Vertical;
                     }
                 }
                 break;
-            case State::Verticla:
+            case State::Vertical:
                 // TODO 高度不准: 使用真实高度
-                if (curr_pos[2] > 0.3) // 锁定yaw, xyz点
+                if (curr_pos[2] > 0.4) // 锁定yaw, xyz点
                 {
                     // 3. xy定点控制无人机, z速度控制
-                    // next_status_count_h = max_next_status_count_h;
                     Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
 
                     // x, y 交换, 机体和相机坐标系x,y正好相反
@@ -399,9 +415,9 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    if (next_status_count_h > 0)
+                    if (vertical_count > 0)
                     {
-                        next_status_count_h--;
+                        vertical_count--;
                     }
                     else
                     {
@@ -429,7 +445,7 @@ int main(int argc, char **argv)
         Command_past = Command_now;
         rate.sleep();
         std::cout << ss.str() << std::endl;
-        std::cout << "********************************************************************************" << std::endl;
+        std::cout << "------------------------------------------------------------------------" << std::endl;
     }
 
     return 0;
