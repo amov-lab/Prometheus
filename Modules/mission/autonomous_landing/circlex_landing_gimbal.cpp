@@ -55,9 +55,9 @@ int ignore_error_pixel_for_landing;
 int ignore_error_yaw;
 int ignore_error_pitch;
 
-int num_count_vision_lost = 0; //视觉丢失计数器
-int count_vision_lost;    //视觉丢失计数器阈值
-int next_status_count_xy = 10; //进入下一状态的阈值
+int num_count_vision_lost = 0;     //视觉丢失计数器
+int count_vision_lost;             //视觉丢失计数器阈值
+int next_status_count_xy = 10;     //进入下一状态的阈值
 int max_next_status_count_xy = 10; //进入下一状态的阈值
 int next_status_count_h = 10;
 int max_next_status_count_h = 10;
@@ -95,6 +95,52 @@ void sub_gimbaldata_cb(const prometheus_msgs::gimbal::ConstPtr &msg)
     read_gimbal.rel0 = msg->rel0;
     read_gimbal.rel1 = msg->rel1;
     read_gimbal.rel2 = msg->rel2;
+}
+
+void generate_com(int Move_mode, float state_desired[4])
+{
+    //# Move_mode 2-bit value:
+    //# 0 for position, 1 for vel, 1st for xy, 2nd for z.
+    //#                   xy position     xy velocity
+    //# z position       	0b00(0)       0b10(2)
+    //# z velocity		0b01(1)       0b11(3)
+
+    if (Move_mode == prometheus_msgs::PositionReference::XYZ_ACC)
+    {
+        cout << "ACC control not support yet." << endl;
+    }
+
+    if ((Move_mode & 0b10) == 0) //xy channel
+    {
+        Command_now.Reference_State.position_ref[0] = state_desired[0];
+        Command_now.Reference_State.position_ref[1] = state_desired[1];
+        Command_now.Reference_State.velocity_ref[0] = 0;
+        Command_now.Reference_State.velocity_ref[1] = 0;
+    }
+    else
+    {
+        Command_now.Reference_State.position_ref[0] = 0;
+        Command_now.Reference_State.position_ref[1] = 0;
+        Command_now.Reference_State.velocity_ref[0] = state_desired[0];
+        Command_now.Reference_State.velocity_ref[1] = state_desired[1];
+    }
+
+    if ((Move_mode & 0b01) == 0) //z channel
+    {
+        Command_now.Reference_State.position_ref[2] = state_desired[2];
+        Command_now.Reference_State.velocity_ref[2] = 0;
+    }
+    else
+    {
+        Command_now.Reference_State.position_ref[2] = 0;
+        Command_now.Reference_State.velocity_ref[2] = state_desired[2];
+    }
+
+    Command_now.Reference_State.acceleration_ref[0] = 0;
+    Command_now.Reference_State.acceleration_ref[1] = 0;
+    Command_now.Reference_State.acceleration_ref[2] = 0;
+
+    Command_now.Reference_State.yaw_ref = state_desired[3] / 180.0 * M_PI;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -198,6 +244,7 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         //回调
+        float comm[4]{0, 0, 0, 0};
         ros::spinOnce();
         Command_now.Command_ID = comid;
         Command_now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
@@ -211,9 +258,10 @@ int main(int argc, char **argv)
             {
                 Command_now.Mode = prometheus_msgs::ControlCommand::Move;
                 Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
-                Command_now.Reference_State.position_ref[0] = 0.;
-                Command_now.Reference_State.position_ref[1] = 0.;
-                Command_now.Reference_State.velocity_ref[2] = curr_pos[2] > max_high ? 0 : lost_target_up_vel;
+                comm[0] = 0;
+                comm[1] = 0;
+                comm[2] = curr_pos[2] > max_high ? 0 : lost_target_up_vel;
+                comm[3] = 0;
                 ss << " >> object lost << ";
             }
             else if (!is_start)
@@ -243,11 +291,12 @@ int main(int argc, char **argv)
                << " horizontal_distance: " << horizontal_distance << "\n";
             if (std::abs(y) > ignore_error_yaw && !yaw_lock_finsh) // 只控制yaw, 偏航角
             {
+
                 Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;
-                Command_now.Reference_State.yaw_ref = -3.141592653 * y / 180;
-                Command_now.Reference_State.position_ref[0] = 0;
-                Command_now.Reference_State.position_ref[1] = 0;
-                Command_now.Reference_State.position_ref[2] = 0;
+                comm[0] = 0;
+                comm[1] = 0;
+                comm[2] = 0;
+                comm[3] = -y;
                 get_command = true;
                 ss << " >> yaw control <<  ";
             }
@@ -258,12 +307,13 @@ int main(int argc, char **argv)
                 if (std::abs(90 - p) > ignore_error_pitch) // 控yaw, xy速度
                 {
                     Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-                    Command_now.Reference_State.yaw_ref = -3.141592653 * y / 180;
-                    Command_now.Reference_State.velocity_ref[0] = kpx_track * horizontal_distance / 4.;
-                    Command_now.Reference_State.velocity_ref[1] = 0;
-                    Command_now.Reference_State.position_ref[2] = 0;
+                    comm[0] = kpx_track * horizontal_distance / 4.;
+                    comm[1] = 0;
+                    comm[2] = 0;
+                    comm[3] = -y;
                     // Command_now.Reference_State.velocity_ref[2] = 0;
-                    ss << ">> xy control << " << " vel_x: " << Command_now.Reference_State.velocity_ref[0];
+                    ss << ">> xy control << "
+                       << " vel_x: " << Command_now.Reference_State.velocity_ref[0];
                     next_status_count_xy = max_next_status_count_xy;
                 }
                 else // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
@@ -285,8 +335,6 @@ int main(int argc, char **argv)
                         gimbal_control_.yaw = -y;
                         gimbal_control_pub.publish(gimbal_control_);
                         // gimbal_control_.yawfollow = 1;
-                        // Command_now.Reference_State.yaw_ref = -3.141592653 * y / 180;
-                        Command_now.Reference_State.yaw_ref = 0;
                         yaw_lock_finsh = true;
                         ss << " >> yaw lock, patch lock << ";
                     }
@@ -312,28 +360,28 @@ int main(int argc, char **argv)
                         // x, y 交换, 机体和相机坐标系x,y正好相反
                         if (std::fabs(read_pixel.y) < ignore_error_pixel_for_landing)
                         {
-                            Command_now.Reference_State.position_ref[0] = 0.;
+                            comm[0] = 0.;
                         }
                         else
                         {
-                            Command_now.Reference_State.position_ref[0] = read_pixel.y > 0 ? -0.10 : 0.10;
+                            comm[0] = read_pixel.y > 0 ? -0.10 : 0.10;
                         }
 
                         if (std::fabs(read_pixel.x) < ignore_error_pixel_for_landing)
                         {
 
-                            Command_now.Reference_State.position_ref[1] = 0;
+                            comm[1] = 0.;
                         }
                         else
                         {
-                            Command_now.Reference_State.position_ref[1] = read_pixel.x > 0 ? -0.10 : 0.10;
+                            comm[1] = read_pixel.x > 0 ? -0.10 : 0.10;
                         }
-                        Command_now.Reference_State.velocity_ref[2] = -curr_pos[2] / 4.;
-                        Command_now.Reference_State.yaw_ref = 0.;
+                        comm[2] = -curr_pos[2] / 4.;
+                        comm[3] = 0.;
                         ss << " >> high control << "
                            << " pixel_x: " << read_pixel.x
                            << " pixel_y: " << read_pixel.y
-                           << " vel_z: " << Command_now.Reference_State.velocity_ref[2];
+                           << " vel_z: " << comm[2];
                     }
                 }
                 else
@@ -348,6 +396,7 @@ int main(int argc, char **argv)
                 }
             }
             //速度限幅
+            generate_com(Command_now.Reference_State.Move_mode, comm);
             Command_now.Reference_State.velocity_ref[0] = satfunc(Command_now.Reference_State.velocity_ref[0], track_max_vel_x, track_thres_vel_x);
             Command_now.Reference_State.velocity_ref[1] = satfunc(Command_now.Reference_State.velocity_ref[1], track_max_vel_y, track_thres_vel_y);
             Command_now.Reference_State.velocity_ref[2] = satfunc(Command_now.Reference_State.velocity_ref[2], track_max_vel_z, track_thres_vel_z);

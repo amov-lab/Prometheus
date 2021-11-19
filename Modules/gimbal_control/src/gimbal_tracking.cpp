@@ -10,7 +10,7 @@
 #include <std_msgs/UInt8MultiArray.h>
 #include <geometry_msgs/Point.h>
 #include <iostream>
-// #include "prometheus_msgs/Cloud_platform.h"
+//#include "prometheus_msgs/Cloud_platform.h"
 #include "prometheus_msgs/GimbalTrackError.h"
 #include "prometheus_msgs/gimbal.h"
 #include <iomanip>
@@ -39,27 +39,22 @@ float get_ros_time(ros::Time begin)
 }
 
 //回调函数
-/*
-void write_callback(const serial_ros::Cloud_platform::ConstPtr &msg)
+void get_gimbal_info()
 {
-  unsigned char com[5], longcmd[20];
 
-  com[0] = msg->get_data_com[0];
-  com[1] = msg->get_data_com[1];
-  com[2] = msg->get_data_com[2];
-  com[3] = msg->get_data_com[3];
-  com[4] = msg->get_data_com[4];
-
-  ser.write(com, 5);
+  while(true){
+    unsigned char command[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
+    ser.write(command, 5);
+    std::this_thread::sleep_for(40ms);
+  }
 }
-*/
 
 void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
 {
 
   // float pKp = 2.6, yKp = 2.6;
   // NOTE PID算法
-  float pKp = 6.0, yKp = 6.0;
+  float pKp = 7.5, yKp = 7.5;
   float pKd = 0.14, yKd = 0.14;
   float pKI = 0.0, yKI = 0.0;
 
@@ -248,11 +243,12 @@ int main(int argc, char **argv)
     return -1;
   }
   //指定循环的频率
-  ros::Rate loop_rate(30);
+  ros::Rate loop_rate(40);
 
   // 启动获取吊舱数据线程
-  // std::thread thread_get_gimbal_info(get_gimbal_info);
+  //std::thread thread_get_gimbal_info(get_gimbal_info);
 
+  unsigned char info[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
   while (ros::ok())
   {
     //cout<<"serial is not avaliable"<<endl;
@@ -264,8 +260,7 @@ int main(int argc, char **argv)
     dt = cur_time - last_time;
     last_time = cur_time;
     ser.write(command, 8);
-    unsigned char command[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
-    ser.write(command, 5);
+    ser.write(info, 5);
     std_msgs::UInt8MultiArray serial_data;
     p = ser.available();
 

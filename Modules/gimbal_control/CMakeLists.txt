@@ -142,11 +142,11 @@ include_directories(
 
 add_executable(gimbal_control src/gimbal.cpp)
 target_link_libraries(gimbal_control ${catkin_LIBRARIES})
-add_dependencies(gimbal_control prometheus_msgs_generate_message_cpp)
+#add_dependencies(gimbal_control prometheus_msgs_generate_message_cpp)
 
 add_executable(gimbal_tracking src/gimbal_tracking.cpp)
 target_link_libraries(gimbal_tracking ${catkin_LIBRARIES})
-add_dependencies(gimbal_tracking prometheus_msgs_generate_message_cpp)
+#add_dependencies(gimbal_tracking prometheus_msgs_generate_message_cpp)
 
 
 ## Rename C++ executable without prefix
