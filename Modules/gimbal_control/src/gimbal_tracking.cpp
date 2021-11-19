@@ -54,7 +54,7 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
 
   // float pKp = 2.6, yKp = 2.6;
   // NOTE PID算法
-  float pKp = 7.5, yKp = 7.5;
+  float pKp = 6.5, yKp = 6.5;
   float pKd = 0.14, yKd = 0.14;
   float pKI = 0.0, yKI = 0.0;
 

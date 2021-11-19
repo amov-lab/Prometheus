@@ -55,16 +55,17 @@ int ignore_error_pixel_for_landing;
 int ignore_error_yaw;
 int ignore_error_pitch;
 
-int num_count_vision_lost = 0;     //视觉丢失计数器
-int count_vision_lost;             //视觉丢失计数器阈值
-int next_status_count_xy = 10;     //进入下一状态的阈值
-int max_next_status_count_xy = 10; //进入下一状态的阈值
-int next_status_count_h = 10;
+int num_count_vision_lost = 0;                       //视觉丢失计数器
+int count_vision_lost;                               //视觉丢失计数器阈值
+int max_next_status_count_xy = 10;                   //进入下一状态的阈值
+int next_status_count_xy = max_next_status_count_xy; //进入下一状态的阈值
 int max_next_status_count_h = 10;
+int next_status_count_h = max_next_status_count_h;
 int max_high = 10; // 丢失目标后, 上升的最大高度
 
 //---------------------------------------Output---------------------------------------------
-prometheus_msgs::ControlCommand Command_now; //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_now;  //发送给position_control.cpp的命令
+prometheus_msgs::ControlCommand Command_past; //发送给position_control.cpp的命令
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_param();                               //打印各项参数以供检查
@@ -201,7 +202,7 @@ int main(int argc, char **argv)
 
     //视觉丢失次数阈值
     //处理视觉丢失时的情况
-    nh.param<int>("count_vision_lost", count_vision_lost, 60);
+    nh.param<int>("count_vision_lost", count_vision_lost, 30);
 
     // 降落过程中目标丢失时的上升速度
     nh.param<float>("lost_target_up_vel", lost_target_up_vel, 0.5);
@@ -240,6 +241,8 @@ int main(int argc, char **argv)
     int max_count_vision_lost = count_vision_lost;
     bool is_start = true;
     bool yaw_lock_finsh = false;
+    bool is_land = false;
+    Command_past.Mode = prometheus_msgs::ControlCommand::Hold;
 
     while (ros::ok())
     {
@@ -253,20 +256,30 @@ int main(int argc, char **argv)
         std::stringstream ss;
         if (flag_detected == 0)
         {
-            Command_now.Mode = prometheus_msgs::ControlCommand::Hold;
-            if (count_vision_lost <= 0 && !is_start)
+            if (!is_start)
             {
-                Command_now.Mode = prometheus_msgs::ControlCommand::Move;
-                Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
-                comm[0] = 0;
-                comm[1] = 0;
-                comm[2] = curr_pos[2] > max_high ? 0 : lost_target_up_vel;
-                comm[3] = 0;
-                ss << " >> object lost << ";
+                if (count_vision_lost <= 0)
+                {
+                    Command_now.Mode = prometheus_msgs::ControlCommand::Move;
+                    Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
+                    comm[0] = 0;
+                    comm[1] = 0;
+                    comm[2] = curr_pos[2] > max_high ? 0 : lost_target_up_vel;
+                    comm[3] = 0;
+                    ss << " >> object lost << ";
+                }
+                else
+                {
+                    count_vision_lost--;
+                    Command_past.Reference_State.velocity_ref[0] /= 2.;
+                    Command_past.Reference_State.velocity_ref[1] /= 2.;
+                    Command_past.Reference_State.velocity_ref[2] /= 2.;
+                    Command_now = Command_past;
+                }
             }
-            else if (!is_start)
+            else
             {
-                count_vision_lost--;
+                Command_now.Mode = prometheus_msgs::ControlCommand::Hold;
             }
         }
         //如果捕捉到目标
@@ -306,14 +319,14 @@ int main(int argc, char **argv)
                 if (std::abs(90 - p) > ignore_error_pitch) // 控yaw, xy速度
                 {
                     Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-                    comm[0] = kpx_track * horizontal_distance / 4.;
+                    comm[0] = kpx_track * horizontal_distance / 5.;
                     comm[1] = 0;
                     comm[2] = 0;
                     comm[3] = -y;
                     // Command_now.Reference_State.velocity_ref[2] = 0;
                     ss << ">> xy control << "
                        << " vel_x: " << Command_now.Reference_State.velocity_ref[0];
-                    next_status_count_xy = max_next_status_count_xy;
+                    // next_status_count_xy = max_next_status_count_xy;
                 }
                 else // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
                 {
@@ -344,7 +357,8 @@ int main(int argc, char **argv)
             // 降落: 关闭吊舱的圆叉跟随, 将吊舱patch锁死在, 直角向下90度
             if (!get_command)
             {
-                if (curr_pos[2] > 0.3) // 锁定yaw, xyz点
+                // TODO 高度不准
+                if (curr_pos[2] > 1.0 && !is_land) // 锁定yaw, xyz点
                 {
                     if (next_status_count_h > 0)
                     {
@@ -353,7 +367,7 @@ int main(int argc, char **argv)
                     else
                     {
                         // 3. xy定点控制无人机, z速度控制
-                        next_status_count_h = max_next_status_count_h;
+                        // next_status_count_h = max_next_status_count_h;
                         Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_POS_Z_VEL;
 
                         // x, y 交换, 机体和相机坐标系x,y正好相反
@@ -363,7 +377,7 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            comm[0] = read_pixel.y > 0 ? -0.10 : 0.10;
+                            comm[0] = (read_pixel.y > 0 ? -0.10 : 0.10) * curr_pos[2];
                         }
 
                         if (std::fabs(read_pixel.x) < ignore_error_pixel_for_landing)
@@ -373,9 +387,9 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            comm[1] = read_pixel.x > 0 ? -0.10 : 0.10;
+                            comm[1] = (read_pixel.x > 0 ? -0.10 : 0.10) * curr_pos[2];
                         }
-                        comm[2] = -curr_pos[2] / 4.;
+                        comm[2] = -curr_pos[2] / 7.5;
                         comm[3] = 0.;
                         ss << " >> high control << "
                            << " pixel_x: " << read_pixel.x
@@ -386,25 +400,27 @@ int main(int argc, char **argv)
                 else
                 {
                     Command_now.Mode = prometheus_msgs::ControlCommand::Land;
+                    is_land = true;
                     // 吊舱回到home
-                    gimbal_control_.pitch = 0.;
-                    gimbal_control_.yaw = 0.;
-                    gimbal_control_.home = 0.;
-                    gimbal_control_pub.publish(gimbal_control_);
+                    // gimbal_control_.pitch = 0.;
+                    // gimbal_control_.yaw = 0.;
+                    // gimbal_control_.home = 1.;
+                    // gimbal_control_pub.publish(gimbal_control_);
                     ss << " >> Into landing status. End of program << ";
                 }
             }
             //速度限幅
-            generate_com(Command_now.Reference_State.Move_mode, comm);
-            Command_now.Reference_State.velocity_ref[0] = satfunc(Command_now.Reference_State.velocity_ref[0], track_max_vel_x, track_thres_vel_x);
-            Command_now.Reference_State.velocity_ref[1] = satfunc(Command_now.Reference_State.velocity_ref[1], track_max_vel_y, track_thres_vel_y);
-            Command_now.Reference_State.velocity_ref[2] = satfunc(Command_now.Reference_State.velocity_ref[2], track_max_vel_z, track_thres_vel_z);
         }
 
         //Publish
+        generate_com(Command_now.Reference_State.Move_mode, comm);
+        Command_now.Reference_State.velocity_ref[0] = satfunc(Command_now.Reference_State.velocity_ref[0], track_max_vel_x, track_thres_vel_x);
+        Command_now.Reference_State.velocity_ref[1] = satfunc(Command_now.Reference_State.velocity_ref[1], track_max_vel_y, track_thres_vel_y);
+        Command_now.Reference_State.velocity_ref[2] = satfunc(Command_now.Reference_State.velocity_ref[2], track_max_vel_z, track_thres_vel_z);
         command_pub.publish(Command_now);
-        if (Command_now.Mode == prometheus_msgs::ControlCommand::Land)
-            break;
+        Command_past = Command_now;
+        // if (Command_now.Mode == prometheus_msgs::ControlCommand::Land)
+        //     break;
         rate.sleep();
         std::cout << ss.str() << std::endl;
         std::cout << "********************************************************************************" << std::endl;
