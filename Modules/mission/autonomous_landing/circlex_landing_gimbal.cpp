@@ -251,7 +251,6 @@ int main(int argc, char **argv)
                 get_command = true;
                 ss << " >> yaw control <<  ";
             }
-
             if (!get_command && !yaw_lock_finsh)
             {
                 get_command = true;

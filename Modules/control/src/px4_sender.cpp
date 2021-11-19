@@ -456,9 +456,11 @@ int main(int argc, char **argv)
                         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_vel_body, d_vel_enu);
                         Command_Now.Reference_State.velocity_ref[0] = d_vel_enu[0];
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
-                        Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
+                        Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.velocity_ref[2] * dt;
+                        // 无法使用, 实际为定点控制
+                        // Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
-                        yaw_sp = Command_Now.Reference_State.yaw_ref;
+                        yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )
                     {
                         //xy velocity mode
@@ -483,7 +485,7 @@ int main(int argc, char **argv)
                         }else
                         {
                             // 偏航角更新为锁定 2021.3.24 云台追踪控制修改
-                            yaw_sp = Command_Now.Reference_State.yaw_ref;
+                            yaw_sp = Command_Now.Reference_State.yaw_ref + _DroneState.attitude[2] ;
                         }
                         
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_POS_Z_VEL )
@@ -497,7 +499,7 @@ int main(int argc, char **argv)
                         Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.velocity_ref[2] * dt;
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
                         state_sp_extra = Eigen::Vector3d(0.0, 0.0 ,Command_Now.Reference_State.velocity_ref[2]);
-                        yaw_sp = Command_Now.Reference_State.yaw_ref;
+                        yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
                     }else if ( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_ACC )
                     {
                        pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "Not Defined. Change to ENU frame");

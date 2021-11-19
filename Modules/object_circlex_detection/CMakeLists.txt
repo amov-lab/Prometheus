@@ -26,6 +26,7 @@ find_package(OpenCV REQUIRED)
 
 # Jario Edit Start
 add_compile_options(-std=c++11)
+add_compile_options(-DDETECT_MARKER_X_NET)
 # Jario Edit End
 
 ## Uncomment this if the package has a setup.py. This macro ensures
