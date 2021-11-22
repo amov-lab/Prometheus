@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 
     // 频率 [20Hz]
     // 这个频率取决于视觉程序输出的频率，一般不能低于10Hz，不然追踪效果不好
-    ros::Rate rate(25.0);
+    ros::Rate rate(35.0);
 
     // 降落的吊舱初始角度， 朝下
     prometheus_msgs::GimbalCtl gimbal_control_;
@@ -268,10 +268,6 @@ int main(int argc, char **argv)
         ros::spinOnce();
         float p = read_gimbal.rel1, y = read_gimbal.rel2;
 
-        // TODO 速度衰减, 配置为可变参数
-        Command_past.Reference_State.velocity_ref[0] *= 0.6;
-        Command_past.Reference_State.velocity_ref[1] *= 0.6;
-        Command_past.Reference_State.velocity_ref[2] *= 0.6;
         Command_now = Command_past;
 
         float comm[4]{0, 0, 0, 0};
@@ -281,10 +277,14 @@ int main(int argc, char **argv)
         Command_now.source = "circlex_dectector";
         comid++;
 
-        float y_past = 0.0;
         std::stringstream ss;
-        if (flag_detected == 0)
+        if (Command_past.Mode == prometheus_msgs::ControlCommand::Land)
         {
+            ss << " >> landing << ";
+        }
+        else if (flag_detected == 0)
+        {
+            // TODO 速度衰减, 配置为可变参数
             if (Command_past.Mode != prometheus_msgs::ControlCommand::Hold)
                 if (count_vision_lost <= 0)
                 {
@@ -298,6 +298,11 @@ int main(int argc, char **argv)
                 }
                 else
                 {
+                    Command_now.Reference_State.velocity_ref[0] *= 0.5;
+                    Command_now.Reference_State.velocity_ref[1] *= 0.5;
+                    Command_now.Reference_State.velocity_ref[2] *= 0.5;
+                    // 保持航向角
+                    Command_now.Reference_State.yaw_ref = 0.;
                     count_vision_lost--;
                 }
         }
@@ -344,18 +349,8 @@ int main(int argc, char **argv)
                 }
                 break;
             case State::Horizontal:
-                if (std::abs(90 - p) > ignore_error_pitch) // 控yaw, xy速度
-                {
-                    Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-                    comm[0] = kpx_track * horizontal_distance;
-                    comm[1] = 0;
-                    comm[2] = 0;
-                    comm[3] = -y;
-                    ss << ">> horizontal control << "
-                       << " vel_x: " << comm[0];
-                    // next_status_count_xy = max_next_status_count_xy;
-                }
-                else // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
+                // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
+                if (std::abs(90 - p) < ignore_error_pitch)
                 {
                     if (horizontal_count > 0)
                     {
@@ -376,6 +371,26 @@ int main(int argc, char **argv)
                         // gimbal_control_.yawfollow = 1;
                         ss << " >> yaw lock, patch lock << ";
                         Now_State = State::Vertical;
+                    }
+                }
+                else // 控yaw, xy速度
+                {
+                    // TODO 参数化
+                    if (std::abs(y) > ignore_error_yaw) // 只控制yaw, 偏航角
+                    {
+                        // 调整偏航角
+                        Now_State = State::Yaw;
+                        Command_now.Mode = prometheus_msgs::ControlCommand::Hold;
+                    }
+                    else
+                    {
+                        Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
+                        comm[0] = kpx_track * horizontal_distance;
+                        comm[1] = 0;
+                        comm[2] = 0;
+                        comm[3] = -y;
+                        ss << ">> horizontal control << "
+                           << " vel_x: " << comm[0];
                     }
                 }
                 break;
@@ -406,7 +421,7 @@ int main(int argc, char **argv)
                         comm[1] = (read_pixel.x > 0 ? -0.10 : 0.10) * curr_pos[2];
                     }
                     // TODO: 0.1调整为可配置参数
-                    comm[2] = -curr_pos[2] * 0.1;
+                    comm[2] = -std::max(curr_pos[2] * 0.1, 0.1);
                     comm[3] = 0.;
                     ss << " >> high control << "
                        << " pixel_error_x: " << read_pixel.x

@@ -167,7 +167,7 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it(nh);
 
   ros::Rate loopRate(50);
-  ros::Publisher position_pub = nh.advertise<std_msgs::Float32MultiArray>("/prometheus/object_detection/circlex_det", 10);
+  ros::Publisher position_pub = nh.advertise<std_msgs::Float32MultiArray>("/prometheus/object_detection/circlex_det", 1);
 
   ros::Publisher diff_pub = nh.advertise<prometheus_msgs::GimbalTrackError>("/prometheus/object_detection/circelx_error", 1);
 

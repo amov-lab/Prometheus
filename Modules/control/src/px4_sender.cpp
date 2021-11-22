@@ -353,13 +353,15 @@ int main(int argc, char **argv)
                 }
                 else if(_DroneState.position[2] > Disarm_height)
                 {
+                    Command_Now.Reference_State.position_ref[0] = _DroneState.position[0];
+                    Command_Now.Reference_State.position_ref[1] = _DroneState.position[1];
                     Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] - Land_speed * dt ;
                     Command_Now.Reference_State.velocity_ref[0] = 0.0;
                     Command_Now.Reference_State.velocity_ref[1] = 0.0;
                     Command_Now.Reference_State.velocity_ref[2] = - Land_speed; //Land_speed
                     state_sp = Eigen::Vector3d(Command_Now.Reference_State.position_ref[0],Command_Now.Reference_State.position_ref[1],Command_Now.Reference_State.position_ref[2]);
                     state_sp_extra = Eigen::Vector3d(0.0,0.0,Command_Now.Reference_State.velocity_ref[2]);
-                    yaw_sp = Command_Now.Reference_State.yaw_ref;
+                    yaw_sp = _DroneState.attitude[2];
                     _command_to_mavros.send_pos_vel_xyz_setpoint(state_sp,state_sp_extra,yaw_sp);
                 }
                 

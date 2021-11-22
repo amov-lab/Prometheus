@@ -46,7 +46,7 @@ void get_gimbal_info()
   {
     unsigned char command[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
     ser.write(command, 5);
-    std::this_thread::sleep_for(40ms);
+    std::this_thread::sleep_for(30ms);
   }
 }
 
@@ -217,9 +217,9 @@ int main(int argc, char **argv)
   // 向串口写入获取数据指令
   // ros::Subscriber write_sub = nh.subscribe<pr::Cloud_platform>("write", 10, write_callback);
   // 控制吊舱中心对准
-  ros::Subscriber pos_diff_sub = nh.subscribe<prometheus_msgs::GimbalTrackError>("/prometheus/object_detection/circelx_error", 10, pos_diff_callback);
+  ros::Subscriber pos_diff_sub = nh.subscribe<prometheus_msgs::GimbalTrackError>("/prometheus/object_detection/circelx_error", 1, pos_diff_callback);
   //发布主题: 吊舱欧拉角
-  ros::Publisher read_pub = nh.advertise<prometheus_msgs::gimbal>("/readgimbal", 10);
+  ros::Publisher read_pub = nh.advertise<prometheus_msgs::gimbal>("/readgimbal", 1);
   ros::Time begin_time = ros::Time::now();
 
   try
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
   ros::Rate loop_rate(40);
 
   // 启动获取吊舱数据线程
-  //std::thread thread_get_gimbal_info(get_gimbal_info);
+  std::thread thread_get_gimbal_info(get_gimbal_info);
 
   unsigned char info[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
   while (ros::ok())
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
     dt = cur_time - last_time;
     last_time = cur_time;
     ser.write(command, 8);
-    ser.write(info, 5);
+    // ser.write(info, 5);
     std_msgs::UInt8MultiArray serial_data;
     p = ser.available();
 
