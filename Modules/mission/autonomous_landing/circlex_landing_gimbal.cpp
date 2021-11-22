@@ -326,7 +326,19 @@ int main(int argc, char **argv)
             switch (Now_State)
             {
             case State::Yaw:
-                if (std::abs(y) > ignore_error_yaw) // 只控制yaw, 偏航角
+                if (std::abs(y) < ignore_error_yaw) // 只控制yaw, 偏航角
+                {
+                    if (yaw_count > 0)
+                    {
+                        yaw_count--;
+                    }
+                    {
+                        Now_State = State::Horizontal;
+                    }
+                }
+                // TODO 参数化
+                // 吊舱稳定后再进入下一阶段
+                else 
                 {
                     Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XYZ_POS;
                     comm[0] = 0;
@@ -334,18 +346,6 @@ int main(int argc, char **argv)
                     comm[2] = 0;
                     comm[3] = -y;
                     ss << " >> yaw control <<  ";
-                }
-                // TODO 参数化
-                // 吊舱稳定后再进入下一阶段
-                else if (std::abs(read_gimbal.relvel2) < 10)
-                {
-                    if (yaw_count > 0)
-                    {
-                        yaw_count++;
-                    }
-                    {
-                        Now_State = State::Horizontal;
-                    }
                 }
                 break;
             case State::Horizontal:
@@ -380,13 +380,12 @@ int main(int argc, char **argv)
                     {
                         // 调整偏航角
                         Now_State = State::Yaw;
-                        Command_now.Mode = prometheus_msgs::ControlCommand::Hold;
                     }
                     else
                     {
                         Command_now.Reference_State.Move_mode = prometheus_msgs::PositionReference::XY_VEL_Z_POS;
-                        comm[0] = kpx_track * horizontal_distance;
-                        comm[1] = 0;
+                        comm[0] = kpx_track * horizontal_distance * std::cos(-y);
+                        comm[1] = kpx_track * horizontal_distance * std::sin(-y);
                         comm[2] = 0;
                         comm[3] = -y;
                         ss << ">> horizontal control << "
@@ -395,7 +394,7 @@ int main(int argc, char **argv)
                 }
                 break;
             case State::Vertical:
-                // TODO 高度不准: 使用真实高度
+                // 使用真实高度
                 if (curr_pos[2] > 0.4) // 锁定yaw, xyz点
                 {
                     // 3. xy定点控制无人机, z速度控制

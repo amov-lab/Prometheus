@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   serial
   std_msgs
+  std_srvs
   prometheus_msgs
 )
 

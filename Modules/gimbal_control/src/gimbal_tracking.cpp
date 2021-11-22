@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <fstream>
 #include <thread>
+#include <std_srvs/SetBool.h>
 
 using namespace std;
 serial::Serial ser;
@@ -26,6 +27,7 @@ unsigned char command[8];
 
 float flag_target;
 short int yaw_control_last, pitch_control_last;
+bool is_land = false;
 
 float imu_yaw_vel, imu_pitch_vel;
 float get_ros_time(ros::Time begin);
@@ -70,11 +72,7 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   temp.Iy = msg->Iy;
 
   yaw_control = (short int)(yKp * temp.x + yKd * (temp.velx) + yKI * temp.Ix);
-  pitch_control = (short int)(pKp * temp.y + pKd * (temp.vely) + pKI * temp.Iy);
-
   yaw_control_last = yaw_control;
-  pitch_control_last = pitch_control;
-
   if (yaw_control - 500.0 > 0.001)
   {
     yaw_control = 500;
@@ -83,7 +81,6 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   {
     yaw_control = -500;
   }
-
   if (yaw_control > 0.001)
   {
     yaw_control = yaw_control + 50.0;
@@ -92,7 +89,12 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   {
     yaw_control = yaw_control - 50.0;
   }
+  xh = (yaw_control & 0xff00) >> 8;
+  xl = (yaw_control & 0x00ff);
 
+
+  pitch_control = (short int)(pKp * temp.y + pKd * (temp.vely) + pKI * temp.Iy);
+  pitch_control_last = pitch_control;
   if (pitch_control - 500.0 > 0.001)
   {
     pitch_control = 500;
@@ -101,7 +103,6 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   {
     pitch_control = -500;
   }
-
   if (pitch_control > 0.001)
   {
     pitch_control = pitch_control + 50.0;
@@ -110,10 +111,6 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   {
     pitch_control = pitch_control - 50.0;
   }
-
-  xh = (yaw_control & 0xff00) >> 8;
-  xl = (yaw_control & 0x00ff);
-
   yh = (pitch_control & 0xff00) >> 8;
   yl = (pitch_control & 0x00ff);
 
@@ -134,11 +131,18 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   else
   {
     //cout<<"============11111111111111111"<<endl;
-
-    command[0] = 0x55;
-    command[1] = 0x01;
-    command[2] = xl;
-    command[3] = xh;
+    if (is_land){
+      command[0] = xl;
+      command[1] = xh;
+      command[2] = 0x55;
+      command[4] = 0x01;
+    }
+    else{
+      command[0] = 0x55;
+      command[1] = 0x01;
+      command[2] = xl;
+      command[3] = xh;
+    }
     command[4] = yl;
     command[5] = yh;
     command[6] = 0x02;
@@ -146,6 +150,12 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   }
 }
 
+bool change_mode(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
+{
+  is_land = req.data;
+  std::cout << (is_land ? "into Land Mode" : "Exit Land Mode") << std::endl;
+  return true;
+}
 //日志】数据保存
 // ofstream file;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -218,6 +228,8 @@ int main(int argc, char **argv)
   // ros::Subscriber write_sub = nh.subscribe<pr::Cloud_platform>("write", 10, write_callback);
   // 控制吊舱中心对准
   ros::Subscriber pos_diff_sub = nh.subscribe<prometheus_msgs::GimbalTrackError>("/prometheus/object_detection/circelx_error", 1, pos_diff_callback);
+  // 降落模式控制, 摄像头朝下, 使用roll, pitch控制, 防止子在yaw, pitch控制时的万向锁
+  ros::ServiceServer server = nh.advertiseService("/prometheus/object_detection/is_land", change_mode);
   //发布主题: 吊舱欧拉角
   ros::Publisher read_pub = nh.advertise<prometheus_msgs::gimbal>("/readgimbal", 1);
   ros::Time begin_time = ros::Time::now();

@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 
   image_transport::ImageTransport it(nh);
 
-  ros::Rate loopRate(50);
+  ros::Rate loopRate(40);
   ros::Publisher position_pub = nh.advertise<std_msgs::Float32MultiArray>("/prometheus/object_detection/circlex_det", 1);
 
   ros::Publisher diff_pub = nh.advertise<prometheus_msgs::GimbalTrackError>("/prometheus/object_detection/circelx_error", 1);
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
     result_vision_pub.publish(tmp_sender);
 
     // cv::imshow("cam", resultIm);
-    waitKey(5);
+    // waitKey(5);
     // if (waitKey(1) == 27)
     //   break;
     totTime += _toc();
