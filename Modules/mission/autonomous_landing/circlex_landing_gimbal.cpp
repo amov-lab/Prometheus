@@ -326,7 +326,7 @@ int main(int argc, char **argv)
                     lost_z_vel = Command_past.Reference_State.velocity_ref[2];
                     lost_x_vel = (lost_x_vel / std::abs(lost_x_vel)) * std::fmax(std::abs(lost_x_vel), 0.2);
                     lost_y_vel = (lost_y_vel / std::abs(lost_y_vel)) * std::fmax(std::abs(lost_y_vel), 0.2);
-                    lost_z_vel = (lost_z_vel / std::abs(lost_z_vel)) * std::fmax(std::abs(lost_z_vel), 0.2);
+                    lost_z_vel = (lost_z_vel / std::abs(lost_z_vel)) * std::fmax(std::abs(lost_z_vel), 0.5);
                     lost_yaw = Command_now.Reference_State.yaw_ref;
                     lost_find_count = hz * object_lost_find_duration;
                 }
