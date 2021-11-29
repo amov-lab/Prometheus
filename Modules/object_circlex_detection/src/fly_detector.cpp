@@ -35,7 +35,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include <std_srvs/Empty.h>
+#include <std_srvs/SetBool.h>
 
 DERROR derrorX, derrorY;
 cv::Mat image;
@@ -51,7 +51,7 @@ using namespace cv;
 #define PROCESS_HEIGHT 480
 
 // 是否放弃对吊舱控制的标志为
-bool is_control_gimal = true;
+bool is_control_gimal = false;
 
 std::string model_file = "/root/Prometheus/Modules/object_detection/circlex/spire_caffe/examples/spire_x_classification/xnet_deploy.prototxt";
 std::string trained_file = "/root/Prometheus/Modules/object_detection/circlex/spire_caffe/examples/spire_x_classification/xnet_iter_10000.caffemodel";
@@ -91,9 +91,9 @@ float get_ros_time(ros::Time begin)
   return (currTimenSec + currTimeSec);
 }
 
-bool control_gimal_srv_callback(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
+bool control_gimal_srv_callback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
 {
-  is_control_gimal = !is_control_gimal;
+  is_control_gimal = req.data;
   std::cout << (is_control_gimal ? "circlx_gimal_control COLSE" : "circlx_gimal_control OPEN") << std::endl;
   return true;
 }
@@ -228,6 +228,9 @@ int main(int argc, char **argv)
     {
       pointsDt.push_back(xp);
       image.copyTo(resultIm);
+    }
+    for (cv::Point xp : pointsDt)
+    {
       circle(resultIm, xp, 4, Scalar(0, 0, 255), 2);
     }
 
@@ -242,7 +245,6 @@ int main(int argc, char **argv)
       msg.data.push_back(pointsDt[0].y);
       msg.data.push_back(PROCESS_WIDTH);
       msg.data.push_back(PROCESS_HEIGHT);
-
 
       error_pixels.detected = true;
       error_pixels.x = pointsDt[0].x - PROCESS_WIDTH / 2;
@@ -272,7 +274,7 @@ int main(int argc, char **argv)
       error_pixels.detected = false;
     }
     position_pub.publish(msg);
-    if (!is_control_gimal)
+    if (is_control_gimal)
     {
       error_pixels.detected = false;
     }
