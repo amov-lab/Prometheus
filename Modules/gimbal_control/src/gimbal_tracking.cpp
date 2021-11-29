@@ -10,7 +10,6 @@
 #include <std_msgs/UInt8MultiArray.h>
 #include <geometry_msgs/Point.h>
 #include <iostream>
-//#include "prometheus_msgs/Cloud_platform.h"
 #include "prometheus_msgs/GimbalTrackError.h"
 #include "prometheus_msgs/gimbal.h"
 #include <iomanip>
@@ -20,7 +19,6 @@
 
 using namespace std;
 serial::Serial ser;
-// prometheus_msgs::Cloud_platform cloud_platform;
 prometheus_msgs::GimbalTrackError temp;
 prometheus_msgs::gimbal gimbaldata;
 unsigned char command[8];
@@ -40,32 +38,20 @@ float get_ros_time(ros::Time begin)
   return (currTimeSec + currTimenSec);
 }
 
-//回调函数
-void get_gimbal_info()
-{
-
-  while (true)
-  {
-    unsigned char command[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
-    ser.write(command, 5);
-    std::this_thread::sleep_for(30ms);
-  }
-}
-
 void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
 {
 
   // float pKp = 2.6, yKp = 2.6;
   // NOTE PID算法
-  float pKp = 6.5, yKp = 6.5;
+  float pKp = 0.3, yKp = 0.3;
   float pKd = 0.14, yKd = 0.14;
   float pKI = 0.0, yKI = 0.0;
 
   unsigned char xl, xh, yl, yh;
   short int yaw_control, pitch_control;
 
-  temp.x = msg->x;
-  temp.y = msg->y;
+  temp.x = msg->x * std::abs(msg->x);
+  temp.y = msg->y * std::abs(msg->y);
   temp.velx = msg->velx;
   temp.vely = msg->vely;
   temp.Ix = msg->Ix;
@@ -91,7 +77,6 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   }
   xh = (yaw_control & 0xff00) >> 8;
   xl = (yaw_control & 0x00ff);
-
 
   pitch_control = (short int)(pKp * temp.y + pKd * (temp.vely) + pKI * temp.Iy);
   pitch_control_last = pitch_control;
@@ -131,13 +116,16 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   else
   {
     //cout<<"============11111111111111111"<<endl;
-    if (is_land){
-      command[0] = xl;
-      command[1] = xh;
-      command[2] = 0x55;
-      command[4] = 0x01;
+    // TODO 无法使用
+    if (is_land)
+    {
+      command[0] = 0x55;
+      command[1] = 0x01;
+      command[2] = 0;
+      command[3] = 0;
     }
-    else{
+    else
+    {
       command[0] = 0x55;
       command[1] = 0x01;
       command[2] = xl;
@@ -231,7 +219,7 @@ int main(int argc, char **argv)
   // 降落模式控制, 摄像头朝下, 使用roll, pitch控制, 防止子在yaw, pitch控制时的万向锁
   ros::ServiceServer server = nh.advertiseService("/prometheus/object_detection/is_land", change_mode);
   //发布主题: 吊舱欧拉角
-  ros::Publisher read_pub = nh.advertise<prometheus_msgs::gimbal>("/readgimbal", 1);
+  ros::Publisher read_pub = nh.advertise<prometheus_msgs::gimbal>("/readgimbal", 10);
   ros::Time begin_time = ros::Time::now();
 
   try
@@ -258,171 +246,182 @@ int main(int argc, char **argv)
     return -1;
   }
   //指定循环的频率
-  ros::Rate loop_rate(40);
-
-  // 启动获取吊舱数据线程
-  std::thread thread_get_gimbal_info(get_gimbal_info);
+  ros::Rate loop_rate(28);
 
   unsigned char info[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
+  ser.write(info, 5);
   while (ros::ok())
   {
     //cout<<"serial is not avaliable"<<endl;
     // ser.available -- Return the number of characters in the buffer
 
-    // if (ser.available())
-
-    float cur_time = get_ros_time(begin_time);
-    dt = cur_time - last_time;
-    last_time = cur_time;
-    ser.write(command, 8);
-    // ser.write(info, 5);
-    std_msgs::UInt8MultiArray serial_data;
-    p = ser.available();
-
-    ser.read(serial_data.data, p);
-    r_buffer.data.resize(p + 1);
-    r_buffer.data[0] = p;
-    for (i = 0; i < p; i++)
+    if (ser.available())
     {
-      r_buffer.data[i + 1] = serial_data.data[i];
+      float cur_time = get_ros_time(begin_time);
+      dt = cur_time - last_time;
+      last_time = cur_time;
+      ser.write(command, 8);
+      ser.write(info, 5);
+      p = ser.available();
+      std_msgs::UInt8MultiArray serial_data;
 
-      if (r_buffer.data[6] > 40)
+      ser.read(serial_data.data, p);
+      r_buffer.data.resize(p + 1);
+      r_buffer.data[0] = p;
+      for (i = 0; i < p; i++)
       {
-        imu_camera[0] = -0.02197 * (256 * (256 - r_buffer.data[6]) - r_buffer.data[5]);
-      }
-      else if (r_buffer.data[6] < 40)
-      {
-        imu_camera[0] = 0.02197 * (256 * r_buffer.data[6] + r_buffer.data[5]);
+        r_buffer.data[i + 1] = serial_data.data[i];
+
+        if (r_buffer.data[6] > 40)
+        {
+          imu_camera[0] = -0.02197 * (256 * (256 - r_buffer.data[6]) - r_buffer.data[5]);
+        }
+        else if (r_buffer.data[6] < 40)
+        {
+          imu_camera[0] = 0.02197 * (256 * r_buffer.data[6] + r_buffer.data[5]);
+        }
+
+        imu_camera_vel[0] = (imu_camera[0] - imu_camera_last[0]) / dt;
+        imu_camera_last[0] = imu_camera[0];
+
+        //printf("r_buffer.data[6] is %d \n",r_buffer.data[6]);
+        // printf("r_buffer.data[5] is %d \n",r_buffer.data[5]);
+        // printf("imu_camera[0] is %f \n",imu_camera[0]);
+
+        if (r_buffer.data[8] > 40)
+        {
+          RC_target_camera[0] = -0.02197 * (256 * (256 - r_buffer.data[8]) - r_buffer.data[7]);
+        }
+        else if (r_buffer.data[8] < 40)
+        {
+          RC_target_camera[0] = 0.02197 * (256 * r_buffer.data[8] + r_buffer.data[7]);
+        }
+
+        if (r_buffer.data[10] > 40)
+        {
+          stator_rel_camera[0] = -0.02197 * (256 * (256 - r_buffer.data[10]) - r_buffer.data[9]);
+        }
+        else if (r_buffer.data[10] < 40)
+        {
+          stator_rel_camera[0] = 0.02197 * (256 * r_buffer.data[10] + r_buffer.data[9]);
+        }
+        //printf("stator_rel_camera[0] is %d \n",(stator_rel_camera[0]));
+
+        //----------------------------------------俯仰PITCH-------------------------------------------
+        if (r_buffer.data[24] > 40)
+        {
+          imu_camera[1] = -0.02197 * (256 * (256 - r_buffer.data[24]) - r_buffer.data[23]);
+        }
+        else if (r_buffer.data[24] < 40)
+        {
+          imu_camera[1] = 0.02197 * (256 * r_buffer.data[24] + r_buffer.data[23]);
+        }
+
+        imu_camera_vel[1] = (imu_camera[1] - imu_camera_last[1]) / dt;
+        imu_camera_last[1] = imu_camera[1];
+
+        if (r_buffer.data[26] > 40)
+        {
+          RC_target_camera[1] = -0.02197 * (256 * (256 - r_buffer.data[26]) - r_buffer.data[25]);
+        }
+        else if (r_buffer.data[26] < 40)
+        {
+          RC_target_camera[1] = 0.02197 * (256 * r_buffer.data[26] + r_buffer.data[25]);
+        }
+
+        if (r_buffer.data[28] > 40)
+        {
+          stator_rel_camera[1] = -0.02197 * (256 * (256 - r_buffer.data[28]) - r_buffer.data[27]);
+        }
+        else if (r_buffer.data[28] < 40)
+        {
+          stator_rel_camera[1] = 0.02197 * (256 * r_buffer.data[28] + r_buffer.data[27]);
+        }
+
+        //----------------------------------------偏航YAW-------------------------------------------
+
+        if (r_buffer.data[42] > 40)
+        {
+          imu_camera[2] = -0.02197 * (256 * (256 - r_buffer.data[42]) - r_buffer.data[41]);
+        }
+        else if (r_buffer.data[42] < 40)
+        {
+          imu_camera[2] = 0.02197 * (256 * r_buffer.data[42] + r_buffer.data[41]);
+        }
+
+        imu_camera_vel[2] = (imu_camera[2] - imu_camera_last[2]) / dt;
+        imu_camera_last[2] = imu_camera[2];
+
+        //printf("imu_camera[1] is %d \n",(imu_camera[1]));
+
+        if (r_buffer.data[44] > 40)
+        {
+          RC_target_camera[2] = -0.02197 * (256 * (256 - r_buffer.data[44]) - r_buffer.data[43]);
+        }
+        else if (r_buffer.data[44] < 40)
+        {
+          RC_target_camera[2] = 0.02197 * (256 * r_buffer.data[44] + r_buffer.data[43]);
+        }
+        //printf("RC_target_camera[1] is %d \n",(RC_target_camera[1]));
+
+        if (r_buffer.data[46] > 40)
+        {
+          stator_rel_camera[2] = -0.02197 * (256 * (256 - r_buffer.data[46]) - r_buffer.data[45]);
+        }
+        else if (r_buffer.data[46] < 40)
+        {
+          stator_rel_camera[2] = 0.02197 * (256 * r_buffer.data[46] + r_buffer.data[45]);
+        }
+        //printf("stator_rel_camera[1] is %d \n",(stator_rel_camera[1]));
       }
 
-      if (r_buffer.data[8] > 40)
-      {
-        RC_target_camera[0] = -0.02197 * (256 * (256 - r_buffer.data[8]) - r_buffer.data[7]);
-      }
-      else if (r_buffer.data[8] < 40)
-      {
-        RC_target_camera[0] = 0.02197 * (256 * r_buffer.data[8] + r_buffer.data[7]);
-      }
+      imu_camera_vel[0] = (imu_camera[0] - imu_camera_last[0]) / dt;
+      imu_camera_last[0] = imu_camera[0];
 
-      if (r_buffer.data[10] > 40)
-      {
-        stator_rel_camera[0] = -0.02197 * (256 * (256 - r_buffer.data[10]) - r_buffer.data[9]);
-      }
-      else if (r_buffer.data[10] < 40)
-      {
-        stator_rel_camera[0] = 0.02197 * (256 * r_buffer.data[10] + r_buffer.data[9]);
-      }
-      //printf("stator_rel_camera[0] is %d \n",(stator_rel_camera[0]));
+      stator_rel_camera_vel[0] = (stator_rel_camera[0] - stator_rel_camera_last[0]) / dt;
+      stator_rel_camera_last[0] = stator_rel_camera[0];
 
-      //----------------------------------------俯仰PITCH-------------------------------------------
-      if (r_buffer.data[24] > 40)
-      {
-        imu_camera[1] = -0.02197 * (256 * (256 - r_buffer.data[24]) - r_buffer.data[23]);
-      }
-      else if (r_buffer.data[24] < 40)
-      {
-        imu_camera[1] = 0.02197 * (256 * r_buffer.data[24] + r_buffer.data[23]);
-      }
+      imu_camera_vel[1] = (imu_camera[1] - imu_camera_last[1]) / dt;
+      imu_camera_last[1] = imu_camera[1];
 
-      if (r_buffer.data[26] > 40)
-      {
-        RC_target_camera[1] = -0.02197 * (256 * (256 - r_buffer.data[26]) - r_buffer.data[25]);
-      }
-      else if (r_buffer.data[26] < 40)
-      {
-        RC_target_camera[1] = 0.02197 * (256 * r_buffer.data[26] + r_buffer.data[25]);
-      }
+      stator_rel_camera_vel[1] = (stator_rel_camera[1] - stator_rel_camera_last[1]) / dt;
+      stator_rel_camera_last[1] = stator_rel_camera[1];
 
-      if (r_buffer.data[28] > 40)
-      {
-        stator_rel_camera[1] = -0.02197 * (256 * (256 - r_buffer.data[28]) - r_buffer.data[27]);
-      }
-      else if (r_buffer.data[28] < 40)
-      {
-        stator_rel_camera[1] = 0.02197 * (256 * r_buffer.data[28] + r_buffer.data[27]);
-      }
+      imu_camera_vel[2] = (imu_camera[2] - imu_camera_last[2]) / dt;
+      imu_camera_last[2] = imu_camera[2];
 
-      //----------------------------------------偏航YAW-------------------------------------------
+      // TODO 速度不正确
+      stator_rel_camera_vel[2] = (stator_rel_camera[2] - stator_rel_camera_last[2]) / dt;
+      stator_rel_camera_last[2] = stator_rel_camera[2];
 
-      if (r_buffer.data[42] > 40)
-      {
-        imu_camera[2] = -0.02197 * (256 * (256 - r_buffer.data[42]) - r_buffer.data[41]);
-      }
-      else if (r_buffer.data[42] < 40)
-      {
-        imu_camera[2] = 0.02197 * (256 * r_buffer.data[42] + r_buffer.data[41]);
-      }
+      gimbaldata.imu0 = imu_camera[0];
+      gimbaldata.imu1 = imu_camera[1];
+      gimbaldata.imu2 = imu_camera[2];
+      gimbaldata.rc0 = RC_target_camera[0];
+      gimbaldata.rc1 = RC_target_camera[1];
+      gimbaldata.rc2 = RC_target_camera[2];
+      gimbaldata.rel0 = stator_rel_camera[0];
+      gimbaldata.rel1 = stator_rel_camera[1];
+      gimbaldata.rel2 = stator_rel_camera[2];
+      gimbaldata.imuvel0 = imu_camera_vel[0];
+      gimbaldata.imuvel1 = imu_camera_vel[1];
+      gimbaldata.imuvel2 = imu_camera_vel[2];
+      gimbaldata.relvel0 = stator_rel_camera_vel[0];
+      gimbaldata.relvel1 = stator_rel_camera_vel[1];
+      gimbaldata.relvel2 = stator_rel_camera_vel[2];
 
-      //printf("imu_camera[1] is %d \n",(imu_camera[1]));
+      std::cout << "-----------------imu_camera----------------------" << endl;
+      std::cout << "rel_roll:  " << setprecision(6) << stator_rel_camera[0] << std::endl;
+      std::cout << "rel_pitch: " << setprecision(6) << stator_rel_camera[1] << std::endl;
+      std::cout << "rel_yaw:   " << setprecision(6) << stator_rel_camera[2] << std::endl;
+      std::cout << "relvel0:   " << setprecision(6) << gimbaldata.relvel0 << std::endl;
+      std::cout << "relvel1:   " << setprecision(6) << gimbaldata.relvel1 << std::endl;
+      std::cout << "relvel2:   " << setprecision(6) << gimbaldata.relvel2 << std::endl;
 
-      if (r_buffer.data[44] > 40)
-      {
-        RC_target_camera[2] = -0.02197 * (256 * (256 - r_buffer.data[44]) - r_buffer.data[43]);
-      }
-      else if (r_buffer.data[44] < 40)
-      {
-        RC_target_camera[2] = 0.02197 * (256 * r_buffer.data[44] + r_buffer.data[43]);
-      }
-      //printf("RC_target_camera[1] is %d \n",(RC_target_camera[1]));
-
-      if (r_buffer.data[46] > 40)
-      {
-        stator_rel_camera[2] = -0.02197 * (256 * (256 - r_buffer.data[46]) - r_buffer.data[45]);
-      }
-      else if (r_buffer.data[46] < 40)
-      {
-        stator_rel_camera[2] = 0.02197 * (256 * r_buffer.data[46] + r_buffer.data[45]);
-      }
-      //printf("stator_rel_camera[1] is %d \n",(stator_rel_camera[1]));
+      // file << cur_time << "  " << dt << "  " << imu_camera[0] << "  " << imu_camera[1] << "  " << imu_camera[2] << "  " << RC_target_camera[0] << "  " << RC_target_camera[1] << "  " << RC_target_camera[2] << "  " << stator_rel_camera[0] << "  " << stator_rel_camera[1] << "  " << stator_rel_camera[2] << "  " << imu_camera_vel[0] << "  " << imu_camera_vel[1] << "  " << imu_camera_vel[2] << "  " << stator_rel_camera_vel[0] << "  " << stator_rel_camera_vel[1] << "  " << stator_rel_camera_vel[2] << "  " << yaw_control_last << "  " << pitch_control_last << "\n";
+      // 此处数据需要完完成分类、创建msg.h、publish出去
+      read_pub.publish(gimbaldata);
     }
-
-    imu_camera_vel[0] = (imu_camera[0] - imu_camera_last[0]) / dt;
-    imu_camera_last[0] = imu_camera[0];
-
-    stator_rel_camera_vel[0] = (stator_rel_camera[0] - stator_rel_camera_last[0]) / dt;
-    stator_rel_camera_last[0] = stator_rel_camera[0];
-
-    imu_camera_vel[1] = (imu_camera[1] - imu_camera_last[1]) / dt;
-    imu_camera_last[1] = imu_camera[1];
-
-    stator_rel_camera_vel[1] = (stator_rel_camera[1] - stator_rel_camera_last[1]) / dt;
-    stator_rel_camera_last[1] = stator_rel_camera[1];
-
-    imu_camera_vel[2] = (imu_camera[2] - imu_camera_last[2]) / dt;
-    imu_camera_last[2] = imu_camera[2];
-
-    // TODO 速度不正确
-    stator_rel_camera_vel[2] = (stator_rel_camera[2] - stator_rel_camera_last[2]) / dt;
-    stator_rel_camera_last[2] = stator_rel_camera[2];
-
-    gimbaldata.imu0 = imu_camera[0];
-    gimbaldata.imu1 = imu_camera[1];
-    gimbaldata.imu2 = imu_camera[2];
-    gimbaldata.rc0 = RC_target_camera[0];
-    gimbaldata.rc1 = RC_target_camera[1];
-    gimbaldata.rc2 = RC_target_camera[2];
-    gimbaldata.rel0 = stator_rel_camera[0];
-    gimbaldata.rel1 = stator_rel_camera[1];
-    gimbaldata.rel2 = stator_rel_camera[2];
-    gimbaldata.imuvel0 = imu_camera_vel[0];
-    gimbaldata.imuvel1 = imu_camera_vel[1];
-    gimbaldata.imuvel2 = imu_camera_vel[2];
-    gimbaldata.relvel0 = stator_rel_camera_vel[0];
-    gimbaldata.relvel1 = stator_rel_camera_vel[1];
-    gimbaldata.relvel2 = stator_rel_camera_vel[2];
-
-    std::cout << "-----------------imu_camera----------------------" << endl;
-    std::cout << "rel_roll:  " << setprecision(6) << stator_rel_camera[0] << std::endl;
-    std::cout << "rel_pitch: " << setprecision(6) << stator_rel_camera[1] << std::endl;
-    std::cout << "rel_yaw:   " << setprecision(6) << stator_rel_camera[2] << std::endl;
-    std::cout << "relvel0:   " << setprecision(6) << gimbaldata.relvel0 << std::endl;
-    std::cout << "relvel1:   " << setprecision(6) << gimbaldata.relvel1 << std::endl;
-    std::cout << "relvel2:   " << setprecision(6) << gimbaldata.relvel2 << std::endl;
-
-    // file << cur_time << "  " << dt << "  " << imu_camera[0] << "  " << imu_camera[1] << "  " << imu_camera[2] << "  " << RC_target_camera[0] << "  " << RC_target_camera[1] << "  " << RC_target_camera[2] << "  " << stator_rel_camera[0] << "  " << stator_rel_camera[1] << "  " << stator_rel_camera[2] << "  " << imu_camera_vel[0] << "  " << imu_camera_vel[1] << "  " << imu_camera_vel[2] << "  " << stator_rel_camera_vel[0] << "  " << stator_rel_camera_vel[1] << "  " << stator_rel_camera_vel[2] << "  " << yaw_control_last << "  " << pitch_control_last << "\n";
-    // 此处数据需要完完成分类、创建msg.h、publish出去
-    read_pub.publish(gimbaldata);
-
     //处理ROS的信息，比如订阅消息,并调用回调函数
     ros::spinOnce();
     loop_rate.sleep();

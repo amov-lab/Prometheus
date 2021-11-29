@@ -24,10 +24,7 @@ find_package(OpenCV REQUIRED)
 
 # FIND_PACKAGE(aruco REQUIRED)
 
-# Jario Edit Start
 add_compile_options(-std=c++11)
-add_compile_options(-DDETECT_MARKER_X_NET)
-# Jario Edit End
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed

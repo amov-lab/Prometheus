@@ -28,6 +28,7 @@ Modules/object_detection_circlex/
 # Editor temporaries
 *.swn
 *.swo
+*.log
 *.swp
 *~
 
