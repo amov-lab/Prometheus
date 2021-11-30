@@ -21,7 +21,7 @@ using namespace std;
 serial::Serial ser;
 prometheus_msgs::GimbalTrackError temp;
 prometheus_msgs::gimbal gimbaldata;
-unsigned char command[8];
+unsigned char command[20];
 
 float flag_target;
 short int yaw_control_last, pitch_control_last;
@@ -43,21 +43,24 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
 
   // float pKp = 2.6, yKp = 2.6;
   // NOTE PID算法
-  float pKp = 0.2, yKp = 0.2;
-  float pKd = 0.14, yKd = 0.14;
+  float pKp = 2, yKp = 2;
+  float pKd = 0.2, yKd = 0.2;
   float pKI = 0.0, yKI = 0.0;
 
   unsigned char xl, xh, yl, yh;
   short int yaw_control, pitch_control;
+  // unsigned char command[20];
+  int tmp = 0;
 
-  temp.x = msg->x * std::abs(msg->x);
-  temp.y = msg->y * std::abs(msg->y);
+  temp.x = msg->x; //* std::abs(msg->x);
+  temp.y = msg->y; //* std::abs(msg->y);
   temp.velx = msg->velx;
   temp.vely = msg->vely;
   temp.Ix = msg->Ix;
   temp.Iy = msg->Iy;
 
   yaw_control = (short int)(yKp * temp.x + yKd * (temp.velx) + yKI * temp.Ix);
+  std::cout << ">>> " << yaw_control << std::endl;
   yaw_control_last = yaw_control;
   if (yaw_control - 500.0 > 0.001)
   {
@@ -67,16 +70,16 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   {
     yaw_control = -500;
   }
-  if (yaw_control > 0.001)
-  {
-    yaw_control = yaw_control + 50.0;
-  }
-  if (yaw_control < 0.001)
-  {
-    yaw_control = yaw_control - 50.0;
-  }
-  xh = (yaw_control & 0xff00) >> 8;
-  xl = (yaw_control & 0x00ff);
+  // if (yaw_control > 0.001)
+  // {
+  //   yaw_control = yaw_control + 50.0;
+  // }
+  // if (yaw_control < 0.001)
+  // {
+  //   yaw_control = yaw_control - 50.0;
+  // }
+  // xh = (yaw_control & 0xff00) >> 8;
+  // xl = (yaw_control & 0x00ff);
 
   pitch_control = (short int)(pKp * temp.y + pKd * (temp.vely) + pKI * temp.Iy);
   pitch_control_last = pitch_control;
@@ -88,19 +91,94 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   {
     pitch_control = -500;
   }
-  if (pitch_control > 0.001)
-  {
-    pitch_control = pitch_control + 50.0;
-  }
-  if (pitch_control < 0.001)
-  {
-    pitch_control = pitch_control - 50.0;
-  }
+  // if (pitch_control > 0.001)
+  // {
+  //   pitch_control = pitch_control + 50.0;
+  // }
+  // if (pitch_control < 0.001)
+  // {
+  //   pitch_control = pitch_control - 50.0;
+  // }
   yh = (pitch_control & 0xff00) >> 8;
   yl = (pitch_control & 0x00ff);
 
-  //cout<<temp.x<<endl;
+  command[0] = 0xFF;
+  command[1] = 0x01;
+  command[2] = 0x0F;
+  command[3] = 0x10;
+  command[5] = 0x01;
+  // Roll
+  command[9] = 0x00;
+  command[10] = 0x00;
+  // Pitch
+  command[13] = 0x00;
+  command[14] = 0x00;
+  // Yaw
+  command[17] = 0x00;
+  command[18] = 0x00;
+  command[19] = 0;
+  if (!msg->detected)
+  {
+    command[4] = 0x01;
+    command[5] = 0x01;
+    command[6] = 0x01;
+    command[7] = 0x00;
+    command[8] = 0x00;
+    command[9] = 0x00;
+    command[10] = 0x00;
+    command[11] = 0x00;
+    command[12] = 0x00;
+    command[13] = 0x00;
+    command[14] = 0x00;
+    command[15] = 0x00;
+    command[16] = 0x00;
+    command[17] = 0x00;
+    command[18] = 0x00;
+  }
+  else
+  {
+    if (is_land)
+    {
+      xh = (-yaw_control & 0xff00) >> 8;
+      xl = (-yaw_control & 0x00ff);
+      // 控制模式
+      command[4] = 0x01;
+      command[6] = 0x00;
+      // roll
+      command[7] = xl;
+      command[8] = xh;
+      // yaw
+      command[15] = 0x00;
+      command[16] = 0x00;
+    }
+    else
+    {
+      xh = (yaw_control & 0xff00) >> 8;
+      xl = (yaw_control & 0x00ff);
+      // 控制模式
+      command[4] = 0x00;
+      command[6] = 0x01;
+      // roll
+      command[7] = 0x00;
+      command[8] = 0x00;
+      // yaw
+      command[15] = xl;
+      command[16] = xh;
+    }
+    command[11] = yl;
+    command[12] = yh;
+  }
+  for (int i = 4; i < 19; i++)
+  {
+    tmp += (int)command[i];
+  }
+  command[19] = tmp % 256;
+  for (int i = 0; i < 20; i++)
+    std::cout << std::hex << (int)command[i] << ' ';
+  // std::cout << std::endl;
+  // command = {0xff, 0x01, 0x0f, 0x10, 0x00, 0x05, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD0, 0x07, 0x00, 0x00, 0xE8, 0x03, 0xcc};
 
+  /*
   if (!msg->detected)
   {
     //cout<<"============000000000000000000"<<endl;
@@ -136,6 +214,7 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
     command[6] = 0x02;
     command[7] = (command[0] + command[1] + command[2] + command[3] + command[4] + command[5] + command[6]) % 256;
   }
+  */
 }
 
 bool change_mode(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res)
@@ -260,7 +339,7 @@ int main(int argc, char **argv)
       float cur_time = get_ros_time(begin_time);
       dt = cur_time - last_time;
       last_time = cur_time;
-      ser.write(command, 8);
+      ser.write(command, 20);
       ser.write(info, 5);
       p = ser.available();
       std_msgs::UInt8MultiArray serial_data;
@@ -410,13 +489,13 @@ int main(int argc, char **argv)
       gimbaldata.relvel1 = stator_rel_camera_vel[1];
       gimbaldata.relvel2 = stator_rel_camera_vel[2];
 
-      std::cout << "-----------------imu_camera----------------------" << endl;
-      std::cout << "rel_roll:  " << setprecision(6) << stator_rel_camera[0] << std::endl;
-      std::cout << "rel_pitch: " << setprecision(6) << stator_rel_camera[1] << std::endl;
-      std::cout << "rel_yaw:   " << setprecision(6) << stator_rel_camera[2] << std::endl;
-      std::cout << "relvel0:   " << setprecision(6) << gimbaldata.relvel0 << std::endl;
-      std::cout << "relvel1:   " << setprecision(6) << gimbaldata.relvel1 << std::endl;
-      std::cout << "relvel2:   " << setprecision(6) << gimbaldata.relvel2 << std::endl;
+      // std::cout << "-----------------imu_camera----------------------" << endl;
+      // std::cout << "rel_roll:  " << setprecision(6) << stator_rel_camera[0] << std::endl;
+      // std::cout << "rel_pitch: " << setprecision(6) << stator_rel_camera[1] << std::endl;
+      // std::cout << "rel_yaw:   " << setprecision(6) << stator_rel_camera[2] << std::endl;
+      // std::cout << "relvel0:   " << setprecision(6) << gimbaldata.relvel0 << std::endl;
+      // std::cout << "relvel1:   " << setprecision(6) << gimbaldata.relvel1 << std::endl;
+      // std::cout << "relvel2:   " << setprecision(6) << gimbaldata.relvel2 << std::endl;
 
       // file << cur_time << "  " << dt << "  " << imu_camera[0] << "  " << imu_camera[1] << "  " << imu_camera[2] << "  " << RC_target_camera[0] << "  " << RC_target_camera[1] << "  " << RC_target_camera[2] << "  " << stator_rel_camera[0] << "  " << stator_rel_camera[1] << "  " << stator_rel_camera[2] << "  " << imu_camera_vel[0] << "  " << imu_camera_vel[1] << "  " << imu_camera_vel[2] << "  " << stator_rel_camera_vel[0] << "  " << stator_rel_camera_vel[1] << "  " << stator_rel_camera_vel[2] << "  " << yaw_control_last << "  " << pitch_control_last << "\n";
       // 此处数据需要完完成分类、创建msg.h、publish出去
