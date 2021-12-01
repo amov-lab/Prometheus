@@ -20,6 +20,7 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <fstream>
 #include <sstream>
+#include <Eigen/Eigen>
 
 using namespace std;
 
@@ -77,13 +78,17 @@ enum State
 {
     Horizontal,
     Vertical,
-    Landing
 };
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>声 明 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void printf_param();  //打印各项参数以供检查
 void printf_result(); //打印函数
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回 调 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+inline float angle2radians(float angle)
+{
+    return 3.141592653 * angle / 180;
+}
 
 void pos_cb(const prometheus_msgs::DroneState::ConstPtr &msg)
 {
@@ -118,7 +123,7 @@ void sub_gimbaldata_cb(const prometheus_msgs::gimbal::ConstPtr &msg)
     read_gimbal.relvel2 = msg->relvel2;
 }
 
-void generate_com(int Move_mode, float state_desired[4])
+inline void generate_com(int Move_mode, float state_desired[4])
 {
     //# Move_mode 2-bit value:
     //# 0 for position, 1 for vel, 1st for xy, 2nd for z.
@@ -192,8 +197,11 @@ int main(int argc, char **argv)
     ros::Publisher gimbal_control_pub = nh.advertise<prometheus_msgs::GimbalCtl>("/GimbalCtl", 10);
 
     // 控制吊舱是否接受圆叉检测器的控制
-    ros::ServiceClient gimbal_control_flag_client = nh.serviceClient<std_srvs::SetBool>("/circlex_gimbal_control");
+    ros::ServiceClient gimbal_control_flag_client = nh.serviceClient<std_srvs::SetBool>("/prometheus/circlex_gimbal_control");
     gimbal_control_flag_client.waitForExistence();
+
+    ros::ServiceClient gimbal_change_landing = nh.serviceClient<std_srvs::SetBool>("/prometheus/gimbal/is_land");
+    gimbal_change_landing.waitForExistence();
 
     // 频率 [20Hz]
     // 这个频率取决于视觉程序输出的频率，一般不能低于10Hz，不然追踪效果不好
@@ -216,7 +224,7 @@ int main(int argc, char **argv)
     // 速度平滑
     nh.param<float>("vel_smooth_scale", vel_smooth_scale, 0.2);
     // 使用速度平滑的阈值
-    nh.param<float>("vel_smooth_thresh", land_move_scale, 0.3);
+    nh.param<float>("vel_smooth_thresh", vel_smooth_thresh, 0.3);
 
     //吊舱默认向下的转的角度
     nh.param<float>("default_pitch", default_pitch, -60.);
@@ -238,23 +246,33 @@ int main(int argc, char **argv)
 
     int check_flag;
     //输入1,继续，其他，退出程序
-    cout << "Please check the parameter and setting，1 for go on， else for quit: " << endl;
+    cout << "Please check the parameter and setting，\n 1 for (yaw + pitch) control \n 2 for mode (roll + pitch) control \n else for quit: " << endl;
     cin >> check_flag;
 
-    if (check_flag != 1)
+    // 吊舱位置初始化
+    // 摄像头向下90度
+    std_srvs::SetBool tmp;
+    gimbal_control_.pitch = default_pitch;
+    gimbal_control_pub.publish(gimbal_control_);
+    switch (check_flag)
     {
+    case 1:
+        tmp.request.data = false;
+        break;
+
+    case 2:
+        tmp.request.data = true;
+        break;
+    default:
         return -1;
     }
+    gimbal_change_landing.call(tmp);
+    gimbal_control_.pitch = 0.;
 
     // 丢失时使用的数据
     float lost_x_vel, lost_y_vel, lost_z_vel, lost_yaw;
     int lost_find_count = hz * object_lost_find_duration;
-    float smooth_count[3] = {1, 1, 1};
 
-    // 摄像头向下90度
-    gimbal_control_.pitch = default_pitch;
-    gimbal_control_pub.publish(gimbal_control_);
-    gimbal_control_.pitch = 0.;
     count_vision_lost = max_count_vision_lost;
     State Now_State = State::Horizontal;
     Command_past.Mode = prometheus_msgs::ControlCommand::Hold;
@@ -264,23 +282,15 @@ int main(int argc, char **argv)
     Command_past.Reference_State.position_ref[0] = 0.;
     Command_past.Reference_State.position_ref[1] = 0.;
     Command_past.Reference_State.position_ref[2] = 0.;
-    float p_past, y_past;
     for (int i = 0; i < 50; i++)
     {
         ros::spinOnce();
-        p_past = read_gimbal.rel1, y_past = read_gimbal.rel2;
     }
 
     while (ros::ok())
     {
         ros::spinOnce();
-        float p = std::fabs(read_gimbal.rel1 - p_past) > 10 ? p_past : read_gimbal.rel1;
-        float y = std::fabs(read_gimbal.rel2 - y_past) > 10 ? y_past : read_gimbal.rel2;
-        p_past = p;
-        y_past = y;
-
         Command_now = Command_past;
-
         float comm[4]{0, 0, 0, 0};
         Command_now.Command_ID = comid;
         Command_now.header.stamp = ros::Time::now();
@@ -289,13 +299,13 @@ int main(int argc, char **argv)
         comid++;
 
         std::stringstream ss;
+
         if (Command_past.Mode == prometheus_msgs::ControlCommand::Land)
         {
             ss << "\n >> landing << ";
         }
         else if (flag_detected == 0)
         {
-            // TODO 速度衰减, 配置为可变参数
             if (Command_past.Mode == prometheus_msgs::ControlCommand::Hold)
             {
                 ss << "\n >> Hold << ";
@@ -326,7 +336,7 @@ int main(int argc, char **argv)
                     lost_z_vel = Command_past.Reference_State.velocity_ref[2];
                     lost_x_vel = (lost_x_vel / std::abs(lost_x_vel)) * std::fmax(std::abs(lost_x_vel), 0.2);
                     lost_y_vel = (lost_y_vel / std::abs(lost_y_vel)) * std::fmax(std::abs(lost_y_vel), 0.2);
-                    lost_z_vel = (lost_z_vel / std::abs(lost_z_vel)) * std::fmax(std::abs(lost_z_vel), 0.2);
+                    lost_z_vel = (lost_z_vel / std::abs(lost_z_vel)) * std::fmax(std::abs(lost_z_vel), 0.5);
                     lost_yaw = Command_now.Reference_State.yaw_ref;
                     lost_find_count = hz * object_lost_find_duration;
                 }
@@ -340,60 +350,63 @@ int main(int argc, char **argv)
                 lost_yaw += lost_yaw * object_lost_vel_weaken;
             }
         }
-        //如果捕捉到目标
         else
         {
+            //如果捕捉到目标
             // 重置丢失次数
             count_vision_lost = max_count_vision_lost;
             Command_now.Mode = prometheus_msgs::ControlCommand::Move;
             Command_now.Reference_State.Move_frame = prometheus_msgs::PositionReference::XYZ_VEL;
-            // 判读航向角是否对齐
-            horizontal_distance = curr_pos[2] * std::tan(3.141592653 * (90 - p) / 180);
-            ss << "\nyaw: " << y << " pitch: " << p << " yaw_relvel: " << read_gimbal.relvel2 << " high: " << curr_pos[2]
-               << " horizontal_distance: " << horizontal_distance;
-
-            switch (Now_State)
+            float r, p, y;
+            switch (check_flag)
             {
-            case State::Horizontal:
-                // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
-                if (std::abs(90 - p) < ignore_error_pitch)
+            case 1:
+                p = read_gimbal.rel1;
+                y = read_gimbal.rel2;
+                horizontal_distance = curr_pos[2] * std::tan(3.141592653 * (90 - p) / 180);
+                ss << "\nyaw: " << y << " pitch: " << p << " yaw_relvel: " << read_gimbal.relvel2 << " high: " << curr_pos[2]
+                   << " horizontal_distance: " << horizontal_distance;
+
+                switch (Now_State)
                 {
-                    if (horizontal_count > 0)
+                case State::Horizontal:
+                    // 如果无人机在接近降落板的正上方时, 锁定吊舱偏航角, 锁定无人机偏航角对齐吊舱
+                    if (std::abs(90 - p) < ignore_error_pitch)
                     {
-                        horizontal_count--;
+                        if (horizontal_count > 0)
+                        {
+                            horizontal_count--;
+                        }
+                        else
+                        {
+                            // 1. 关闭吊舱跟随
+                            std_srvs::SetBool tmp;
+                            tmp.request.data = true;
+                            gimbal_control_flag_client.call(tmp);
+                            // 2. 锁死patch -90, 锁死yaw
+                            gimbal_control_.pitch = -90.;
+                            gimbal_control_pub.publish(gimbal_control_);
+                            gimbal_control_.pitch = 0.;
+                            // 3. yaw 回到0度
+                            gimbal_control_.yaw = -y;
+                            gimbal_control_pub.publish(gimbal_control_);
+                            // gimbal_control_.yawfollow = 1;
+                            ss << "\n >> yaw lock, patch lock << ";
+                            Now_State = State::Vertical;
+                        }
                     }
-                    else
+                    else // 控yaw, xy速度
                     {
-                        // 1. 关闭吊舱跟随
-                        std_srvs::SetBool tmp;
-                        tmp.request.data = true;
-                        gimbal_control_flag_client.call(tmp);
-                        // 2. 锁死patch -90, 锁死yaw
-                        gimbal_control_.pitch = -90.;
-                        gimbal_control_pub.publish(gimbal_control_);
-                        gimbal_control_.pitch = 0.;
-                        // 3. yaw 回到0度
-                        gimbal_control_.yaw = -y;
-                        gimbal_control_pub.publish(gimbal_control_);
-                        // gimbal_control_.yawfollow = 1;
-                        ss << "\n >> yaw lock, patch lock << ";
-                        Now_State = State::Vertical;
+                        comm[0] = kpx_track * horizontal_distance * std::abs(std::cos(angle2radians(y)));
+                        //  * std::abs(std::cos(-y));
+                        comm[1] = 0;
+                        comm[2] = 0;
+                        comm[3] = -y;
+                        ss << "\n>> horizontal control << ";
                     }
-                }
-                else // 控yaw, xy速度
-                {
-                    comm[0] = kpx_track * horizontal_distance;
-                    //  * std::abs(std::cos(-y));
-                    comm[1] = 0;
-                    comm[2] = 0;
-                    comm[3] = -y;
-                    ss << "\n>> horizontal control << ";
-                }
-                break;
-            case State::Vertical:
-                // 使用真实高度
-                if (curr_pos[2] > 0.3) // 锁定yaw, xyz点
-                {
+                    break;
+                case State::Vertical:
+                    // 使用真实高度
                     // 3. xy定点控制无人机, z速度控制
 
                     // float offset = std::max(curr_pos[2] * 0.10, 0.10);
@@ -411,42 +424,61 @@ int main(int argc, char **argv)
                     ss << "\n >> high control << "
                        << " pixel_error_x: " << read_pixel.x
                        << " pixel_error_y: " << read_pixel.y;
+                    break;
+                }
+                break;
+            case 2:
+                r = read_gimbal.rel0;
+                p = read_gimbal.rel1;
+                y = std::atan(std::tan(angle2radians(r)) / std::tan(angle2radians(90 - p))) * 180 / 3.141592653;
+                horizontal_distance = (std::tan(angle2radians(90 - p)) / std::abs(std::tan(angle2radians(90 - p)))) *
+                                      curr_pos[2] *
+                                      std::sqrt(std::pow(std::tan(angle2radians(90 - p)), 2) + std::pow(std::tan(angle2radians(r)), 2));
+                ss << "\nyaw: " << y
+                   << " pitch: " << (90 - p)
+                   << " roll: " << r
+                   << " high: " << curr_pos[2]
+                   << " horizontal_distance: " << horizontal_distance;
+                // 靠近时, 不控航向角
+                if ((90 - p) < ignore_error_pitch)
+                {
+                    comm[0] = kpx_track * curr_pos[2] * std::tan(angle2radians(90 - p)) * 3;
+                    comm[1] = kpx_track * curr_pos[2] * std::tan(angle2radians(r)) * 3;
+                    comm[2] = -kpx_track * curr_pos[2];
+                    comm[3] = 0;
                 }
                 else
                 {
-                    if (vertical_count > 0)
-                    {
-                        vertical_count--;
-                    }
-                    else
-                    {
-                        Now_State = State::Landing;
-                        file.close();
-                    }
+                    comm[0] = kpx_track * horizontal_distance * std::abs(std::cos(angle2radians(y)));
+                    comm[1] = 0;
+                    comm[2] = -kpx_track * curr_pos[2] * std::fmin(1 / std::abs(std::log2(horizontal_distance)), 0.5);
+                    comm[3] = -y;
                 }
                 break;
-            case State::Landing:
+            }
+            if (curr_pos[2] < 0.3)
+            {
                 Command_now.Mode = prometheus_msgs::ControlCommand::Land;
-                // 吊舱回到home
                 gimbal_control_.pitch = 0.;
                 gimbal_control_.yaw = 0.;
                 gimbal_control_.home = 1.;
                 gimbal_control_pub.publish(gimbal_control_);
-                break;
+                file.close();
             }
-            ss << "\n now      vel : x_vel " << curr_vel[0] << " y_vel " << curr_vel[1] << " z_vel " << curr_vel[2];
-            ss << "\n   command_vel: x_vel " << comm[0] << " y_vel " << comm[1] << " z_vel " << comm[2];
+            // 判读航向角是否对齐
+            ss << "\nnow      vel >> x_vel: " << curr_vel[0] << " y_vel: " << curr_vel[1] << " z_vel: " << curr_vel[2];
+            ss << "\ncommand  vel >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2];
             // 数据平滑, 防止猛冲
             for (int i = 0; i < 3; i++)
             {
                 // 加速时平滑
-                float delta = curr_vel[i] - comm[i];
-                if (delta < 0 && std::abs(delta) > vel_smooth_thresh)
+                float delta = comm[i] - curr_vel[i];
+                if (delta > vel_smooth_thresh)
                 {
-                    comm[i] = comm[i] / std::abs(comm[i]) * std::max(std::abs(delta * vel_smooth_scale), vel_smooth_scale) + curr_vel[i];
+                    comm[i] = comm[i] / std::abs(comm[i]) * std::max(delta * vel_smooth_scale, vel_smooth_scale) + curr_vel[i];
                 }
             }
-            ss << "\n after smooth : x_vel " << comm[0] << " y_vel " << comm[1] << " z_vel " << comm[2];
+            ss << "\nafter smooth >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2];
             generate_com(Command_now.Reference_State.Move_mode, comm);
         }
         //Publish

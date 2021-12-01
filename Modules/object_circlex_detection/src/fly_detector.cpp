@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 
   ros::Publisher diff_pub = nh.advertise<prometheus_msgs::GimbalTrackError>("/prometheus/object_detection/circelx_error", 1);
 
-  ros::ServiceServer server = nh.advertiseService("/circlex_gimbal_control", control_gimal_srv_callback);
+  ros::ServiceServer server = nh.advertiseService("/prometheus/circlex_gimbal_control", control_gimal_srv_callback);
   image_transport::Subscriber img_sub = it.subscribe("/prometheus/camera/rgb/image_raw", 1, img_callback);
   image_transport::Publisher result_vision_pub = it.advertise("/prometheus/camera/circlex", 1);
 
