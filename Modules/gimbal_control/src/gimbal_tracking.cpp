@@ -173,8 +173,8 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
     tmp += (int)command[i];
   }
   command[19] = tmp % 256;
-  for (int i = 0; i < 20; i++)
-    std::cout << std::hex << (int)command[i] << ' ';
+  // for (int i = 0; i < 20; i++)
+    // std::cout << std::hex << (int)command[i] << ' ';
   // std::cout << std::endl;
   // command = {0xff, 0x01, 0x0f, 0x10, 0x00, 0x05, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD0, 0x07, 0x00, 0x00, 0xE8, 0x03, 0xcc};
 
