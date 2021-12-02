@@ -47,6 +47,7 @@ float default_pitch;
 float kpx_track; //追踪比例系数
 
 float land_move_scale; //降落移动系数
+float land_high;
 int ignore_error_yaw;
 int ignore_error_pitch;
 
@@ -67,7 +68,6 @@ float vel_smooth_scale = 0.2;
 float vel_smooth_thresh = 0.3;
 // 目标丢失时速度衰减
 float object_lost_vel_weaken;
-float object_lost_find_duration;
 
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_now;  //发送给position_control.cpp的命令
@@ -87,7 +87,7 @@ void printf_result(); //打印函数
 
 inline float angle2radians(float angle)
 {
-    return 3.141592653 * angle / 180;
+    return M_PI * angle / 180;
 }
 
 void pos_cb(const prometheus_msgs::DroneState::ConstPtr &msg)
@@ -231,12 +231,11 @@ int main(int argc, char **argv)
 
     // 降落速度
     nh.param<float>("land_move_scale", land_move_scale, 0.2);
+    // 自动降落高度
+    nh.param<float>("land_high", land_high, 0.2);
 
     // 目标丢失时速度衰减
     nh.param<float>("object_lost_vel_weaken", object_lost_vel_weaken, 0.5);
-
-    // 目标丢失时速度衰减
-    nh.param<float>("object_lost_find_duration", object_lost_find_duration, 1);
 
     // 忽略的俯仰角误差: 在误差内,判定为无人机已经到达降落板的正上方
     nh.param<int>("ignore_error_pitch", ignore_error_pitch, 5);
@@ -271,7 +270,6 @@ int main(int argc, char **argv)
 
     // 丢失时使用的数据
     float lost_x_vel, lost_y_vel, lost_z_vel, lost_yaw;
-    int lost_find_count = hz * object_lost_find_duration;
 
     count_vision_lost = max_count_vision_lost;
     State Now_State = State::Horizontal;
@@ -312,7 +310,7 @@ int main(int argc, char **argv)
             }
             else if (count_vision_lost <= 0)
             {
-                if (lost_find_count <= 0 || curr_pos[2] > max_high)
+                if (curr_pos[2] > max_high)
                     Command_now.Mode = prometheus_msgs::ControlCommand::Land;
                 else
                 {
@@ -324,21 +322,17 @@ int main(int argc, char **argv)
                     lost_x_vel *= 0.99;
                     lost_y_vel *= 0.99;
                     ss << "\n>> object lost, back << ";
-                    lost_find_count--;
                 }
             }
             else
             {
                 if (count_vision_lost == max_count_vision_lost)
                 {
-                    lost_x_vel = Command_past.Reference_State.velocity_ref[0];
-                    lost_y_vel = Command_past.Reference_State.velocity_ref[1];
-                    lost_z_vel = Command_past.Reference_State.velocity_ref[2];
-                    lost_x_vel = (lost_x_vel / std::abs(lost_x_vel)) * std::fmax(std::abs(lost_x_vel), 0.2);
-                    lost_y_vel = (lost_y_vel / std::abs(lost_y_vel)) * std::fmax(std::abs(lost_y_vel), 0.2);
-                    lost_z_vel = (lost_z_vel / std::abs(lost_z_vel)) * std::fmax(std::abs(lost_z_vel), 0.5);
+                    lost_x_vel = Command_past.Reference_State.velocity_ref[0] * 2;
+                    lost_y_vel = Command_past.Reference_State.velocity_ref[1] * 2;
+                    lost_z_vel = Command_past.Reference_State.velocity_ref[2] * 2;
+                    lost_z_vel = -std::fmax(std::abs(lost_z_vel), 0.5);
                     lost_yaw = Command_now.Reference_State.yaw_ref;
-                    lost_find_count = hz * object_lost_find_duration;
                 }
                 Command_now.Reference_State.velocity_ref[0] *= object_lost_vel_weaken;
                 Command_now.Reference_State.velocity_ref[1] *= object_lost_vel_weaken;
@@ -363,7 +357,7 @@ int main(int argc, char **argv)
             case 1:
                 p = read_gimbal.rel1;
                 y = read_gimbal.rel2;
-                horizontal_distance = curr_pos[2] * std::tan(3.141592653 * (90 - p) / 180);
+                horizontal_distance = curr_pos[2] * std::tan(M_PI * (90 - p) / 180);
                 ss << "\nyaw: " << y << " pitch: " << p << " yaw_relvel: " << read_gimbal.relvel2 << " high: " << curr_pos[2]
                    << " horizontal_distance: " << horizontal_distance;
 
@@ -413,13 +407,13 @@ int main(int argc, char **argv)
                     float offset = land_move_scale * curr_pos[2];
                     // 垂直观测范围:39.8°(近焦) 到 4.2°(远焦)。
                     // tan(53.2/2)=0.50
-                    comm[0] = -(read_pixel.y / (pic_high * 0.5)) * std::tan(3.141592653 * (39.8 / 2) / 180) * offset * 3;
+                    comm[0] = -(read_pixel.y / (pic_high * 0.5)) * std::tan(M_PI * (39.8 / 2) / 180) * offset * 3;
                     // 水平观测范围:53.2°(近焦) 到 5.65°(远焦)。
                     // tan(53.2/2)=0.50
-                    comm[1] = -(read_pixel.x / (pic_width * 0.5)) * std::tan(3.141592653 * (53.2 / 2) / 180) * offset * 3;
+                    comm[1] = -(read_pixel.x / (pic_width * 0.5)) * std::tan(M_PI * (53.2 / 2) / 180) * offset * 3;
 
-                    comm[2] = -offset;
-                    // comm[2] = -std::fmax(offset, 0.1);
+                    // comm[2] = -offset;
+                    comm[2] = -std::fmax(offset, 0.1);
                     comm[3] = 0.;
                     ss << "\n >> high control << "
                        << " pixel_error_x: " << read_pixel.x
@@ -428,9 +422,13 @@ int main(int argc, char **argv)
                 }
                 break;
             case 2:
-                r = read_gimbal.rel0;
+                r = -read_gimbal.rel0;
                 p = read_gimbal.rel1;
-                y = std::atan(std::tan(angle2radians(r)) / std::tan(angle2radians(90 - p))) * 180 / 3.141592653;
+                Eigen::Matrix3d rotation_matrix3;
+                rotation_matrix3 = Eigen::AngleAxisd(r * M_PI / 180, Eigen::Vector3d::UnitX()) *
+                                   Eigen::AngleAxisd(p * M_PI / 180, Eigen::Vector3d::UnitY());
+                Eigen::Vector3d euler_angles = rotation_matrix3.eulerAngles(2, 1, 0);
+                y = euler_angles[0];
                 horizontal_distance = (std::tan(angle2radians(90 - p)) / std::abs(std::tan(angle2radians(90 - p)))) *
                                       curr_pos[2] *
                                       std::sqrt(std::pow(std::tan(angle2radians(90 - p)), 2) + std::pow(std::tan(angle2radians(r)), 2));
@@ -440,23 +438,25 @@ int main(int argc, char **argv)
                    << " high: " << curr_pos[2]
                    << " horizontal_distance: " << horizontal_distance;
                 // 靠近时, 不控航向角
-                if ((90 - p) < ignore_error_pitch)
+                if ((90 - p) < ignore_error_pitch && r < ignore_error_pitch)
                 {
-                    comm[0] = kpx_track * curr_pos[2] * std::tan(angle2radians(90 - p)) * 3;
-                    comm[1] = kpx_track * curr_pos[2] * std::tan(angle2radians(r)) * 3;
-                    comm[2] = -kpx_track * curr_pos[2];
+                    comm[0] = kpx_track * curr_pos[2] * std::tan(angle2radians(90 - p));
+                    comm[1] = kpx_track * curr_pos[2] * std::tan(angle2radians(r));
+                    comm[2] = -std::fmax(curr_pos[2] * land_move_scale, 0.1);
                     comm[3] = 0;
+                    ss << "\n 近距离模式: ";
                 }
                 else
                 {
                     comm[0] = kpx_track * horizontal_distance * std::abs(std::cos(angle2radians(y)));
                     comm[1] = 0;
-                    comm[2] = -kpx_track * curr_pos[2] * std::fmin(1 / std::abs(std::log2(horizontal_distance)), 0.5);
+                    comm[2] = -kpx_track * curr_pos[2] * std::fmin(1 / std::abs(horizontal_distance), 0.1);
                     comm[3] = -y;
+                    ss << "\n 远距离模式: ";
                 }
                 break;
             }
-            if (curr_pos[2] < 0.3)
+            if (curr_pos[2] < land_high)
             {
                 Command_now.Mode = prometheus_msgs::ControlCommand::Land;
                 gimbal_control_.pitch = 0.;
@@ -473,9 +473,9 @@ int main(int argc, char **argv)
             {
                 // 加速时平滑
                 float delta = comm[i] - curr_vel[i];
-                if (delta > vel_smooth_thresh)
+                if (std::abs(delta) > vel_smooth_thresh && std::abs(comm[i]) > vel_smooth_thresh)
                 {
-                    comm[i] = comm[i] / std::abs(comm[i]) * std::max(delta * vel_smooth_scale, vel_smooth_scale) + curr_vel[i];
+                    comm[i] = comm[i] / std::abs(comm[i]) * std::max(delta * vel_smooth_scale, vel_smooth_scale * vel_smooth_scale) + curr_vel[i];
                 }
             }
             ss << "\nafter smooth >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2];
@@ -497,6 +497,7 @@ void printf_param()
     cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Parameter <<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
     cout << "default_pitch           " << default_pitch << endl;
     cout << "land_move_scale         " << land_move_scale << endl;
+    cout << "land_high               " << land_high << endl;
     cout << "ignore_error_pitch      " << ignore_error_pitch << endl;
     cout << "max_count_vision_lost   " << max_count_vision_lost << endl;
     cout << "vel_smooth_scale        " << vel_smooth_scale << endl;
