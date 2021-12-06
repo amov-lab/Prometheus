@@ -208,7 +208,6 @@ int main(int argc, char **argv)
     {
       std::cout << "Waiting for image...." << std::endl;
       ros::spinOnce();
-      loopRate.sleep();
       cv::waitKey(1000);
     }
     cur_time = get_ros_time(begin_time);
@@ -220,6 +219,7 @@ int main(int argc, char **argv)
 
     _tic();
     // cap >> image;
+    bool is_findX = false;
     pointsDt.clear();
     axisbDt.clear();
     cx_detect(image, resultIm, pointsDt, axisbDt);
@@ -228,6 +228,7 @@ int main(int argc, char **argv)
     {
       pointsDt.push_back(xp);
       image.copyTo(resultIm);
+      is_findX = true;
     }
     for (cv::Point xp : pointsDt)
     {
@@ -240,7 +241,7 @@ int main(int argc, char **argv)
 
     if (pointsDt.size() > 0)
     {
-      msg.data.push_back(1);
+      msg.data.push_back(is_findX ? 2 : 1);
       msg.data.push_back(pointsDt[0].x);
       msg.data.push_back(pointsDt[0].y);
       msg.data.push_back(PROCESS_WIDTH);

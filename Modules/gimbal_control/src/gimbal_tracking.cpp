@@ -60,7 +60,6 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   temp.Iy = msg->Iy;
 
   yaw_control = (short int)(yKp * temp.x + yKd * (temp.velx) + yKI * temp.Ix);
-  std::cout << ">>> " << yaw_control << std::endl;
   yaw_control_last = yaw_control;
   if (yaw_control - 500.0 > 0.001)
   {
@@ -174,7 +173,7 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   }
   command[19] = tmp % 256;
   // for (int i = 0; i < 20; i++)
-    // std::cout << std::hex << (int)command[i] << ' ';
+  // std::cout << std::hex << (int)command[i] << ' ';
   // std::cout << std::endl;
   // command = {0xff, 0x01, 0x0f, 0x10, 0x00, 0x05, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD0, 0x07, 0x00, 0x00, 0xE8, 0x03, 0xcc};
 
@@ -347,6 +346,9 @@ int main(int argc, char **argv)
       ser.read(serial_data.data, p);
       r_buffer.data.resize(p + 1);
       r_buffer.data[0] = p;
+      for (int i = 0; i < p; i++)
+        std::cout << std::hex << (int)r_buffer.data[i] << " ";
+      std::cout << std::endl;
       for (i = 0; i < p; i++)
       {
         r_buffer.data[i + 1] = serial_data.data[i];

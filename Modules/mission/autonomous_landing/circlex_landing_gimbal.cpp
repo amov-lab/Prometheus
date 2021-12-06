@@ -7,7 +7,6 @@
 #include <ros/ros.h>
 
 //topic 头文件
-#include "prometheus_msgs/GimbalTrackError.h"
 #include "prometheus_msgs/gimbal.h"
 #include <iostream>
 #include "prometheus_msgs/ControlCommand.h"
@@ -26,14 +25,14 @@ using namespace std;
 
 ofstream file("/home/amov/Prometheus/circlex_detect.log");
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-prometheus_msgs::GimbalTrackError read_pixel;
+float pixel_x, pixel_y;
 prometheus_msgs::gimbal read_gimbal;
 //---------------------------------------Vision---------------------------------------------
 // geometry_msgs::Pose pos_target; //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
 
 float curr_pos[3];
 float curr_vel[3];
-// float high_error = 0.0;
+std::string drone_mode;
 float height_time = 0.0;
 int flag_detected = 0; // 是否检测到目标标志
 
@@ -68,6 +67,9 @@ float vel_smooth_scale = 0.2;
 float vel_smooth_thresh = 0.3;
 // 目标丢失时速度衰减
 float object_lost_vel_weaken;
+// 视觉降落计数器
+int cv_land_count;
+int cv_land_cnt[5]{0, 0, 0, 0, 0};
 
 //---------------------------------------Output---------------------------------------------
 prometheus_msgs::ControlCommand Command_now;  //发送给position_control.cpp的命令
@@ -100,14 +102,15 @@ void pos_cb(const prometheus_msgs::DroneState::ConstPtr &msg)
     curr_vel[0] = msg->velocity[0];
     curr_vel[1] = msg->velocity[1];
     curr_vel[2] = msg->velocity[2];
+    drone_mode = msg->mode;
     // high_error = msg->position[2] - msg->rel_alt;
 }
 
 void sub_diff_callback(const std_msgs::Float32MultiArray::ConstPtr &msg)
 {
     flag_detected = msg->data[0];
-    read_pixel.x = msg->data[1] - msg->data[3] / 2;
-    read_pixel.y = msg->data[2] - msg->data[4] / 2;
+    pixel_x = msg->data[1] - msg->data[3] / 2;
+    pixel_y = msg->data[2] - msg->data[4] / 2;
     pic_width = msg->data[3];
     pic_high = msg->data[4];
 }
@@ -237,6 +240,8 @@ int main(int argc, char **argv)
     // 目标丢失时速度衰减
     nh.param<float>("object_lost_vel_weaken", object_lost_vel_weaken, 0.5);
 
+    nh.param<int>("cv_land_count", cv_land_count, 5);
+
     // 忽略的俯仰角误差: 在误差内,判定为无人机已经到达降落板的正上方
     nh.param<int>("ignore_error_pitch", ignore_error_pitch, 5);
 
@@ -270,6 +275,7 @@ int main(int argc, char **argv)
 
     // 丢失时使用的数据
     float lost_x_vel, lost_y_vel, lost_z_vel, lost_yaw;
+    int land_cnt = 0;
 
     count_vision_lost = max_count_vision_lost;
     State Now_State = State::Horizontal;
@@ -290,6 +296,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         Command_now = Command_past;
         float comm[4]{0, 0, 0, 0};
+        bool cv_land = false;
         Command_now.Command_ID = comid;
         Command_now.header.stamp = ros::Time::now();
         Command_now.Reference_State.Move_frame = prometheus_msgs::PositionReference::BODY_FRAME;
@@ -298,17 +305,34 @@ int main(int argc, char **argv)
 
         std::stringstream ss;
 
-        if (Command_past.Mode == prometheus_msgs::ControlCommand::Land)
+        if (curr_pos[2] < land_high || cv_land)
         {
-            ss << "\n >> landing << ";
+            Command_now.Mode = prometheus_msgs::ControlCommand::Land;
+            gimbal_control_.pitch = 0.;
+            gimbal_control_.yaw = 0.;
+            gimbal_control_.home = 1.;
+            gimbal_control_pub.publish(gimbal_control_);
+            file.close();
+            break;
         }
         else if (flag_detected == 0)
         {
-            if (Command_past.Mode == prometheus_msgs::ControlCommand::Hold)
+            if (drone_mode != "OFFBOARD")
             {
-                ss << "\n >> Hold << ";
+                ss << "ready into offboard ....";
+                continue;
             }
-            else if (count_vision_lost <= 0)
+            int tmp_cv = 0;
+            for (int i = 0; i < cv_land_count; i++)
+            {
+                tmp_cv += cv_land_cnt[i];
+                cv_land_cnt[i] = 0;
+            }
+            if (tmp_cv == cv_land_count)
+            {
+                cv_land = true;
+            }
+            else if (count_vision_lost <= 0) // 进入重新寻回目标模式
             {
                 if (curr_pos[2] > max_high)
                     Command_now.Mode = prometheus_msgs::ControlCommand::Land;
@@ -326,6 +350,7 @@ int main(int argc, char **argv)
             }
             else
             {
+                // 记录目标丢失时数据
                 if (count_vision_lost == max_count_vision_lost)
                 {
                     lost_x_vel = Command_past.Reference_State.velocity_ref[0] * 2;
@@ -407,17 +432,17 @@ int main(int argc, char **argv)
                     float offset = land_move_scale * curr_pos[2];
                     // 垂直观测范围:39.8°(近焦) 到 4.2°(远焦)。
                     // tan(53.2/2)=0.50
-                    comm[0] = -(read_pixel.y / (pic_high * 0.5)) * std::tan(M_PI * (39.8 / 2) / 180) * offset * 3;
+                    comm[0] = -(pixel_y / (pic_high * 0.5)) * std::tan(M_PI * (39.8 / 2) / 180) * offset * 3;
                     // 水平观测范围:53.2°(近焦) 到 5.65°(远焦)。
                     // tan(53.2/2)=0.50
-                    comm[1] = -(read_pixel.x / (pic_width * 0.5)) * std::tan(M_PI * (53.2 / 2) / 180) * offset * 3;
+                    comm[1] = -(pixel_x / (pic_width * 0.5)) * std::tan(M_PI * (53.2 / 2) / 180) * offset * 3;
 
                     // comm[2] = -offset;
                     comm[2] = -std::fmax(offset, 0.1);
                     comm[3] = 0.;
                     ss << "\n >> high control << "
-                       << " pixel_error_x: " << read_pixel.x
-                       << " pixel_error_y: " << read_pixel.y;
+                       << " pixel_error_x: " << pixel_x
+                       << " pixel_error_y: " << pixel_y;
                     break;
                 }
                 break;
@@ -456,15 +481,6 @@ int main(int argc, char **argv)
                 }
                 break;
             }
-            if (curr_pos[2] < land_high)
-            {
-                Command_now.Mode = prometheus_msgs::ControlCommand::Land;
-                gimbal_control_.pitch = 0.;
-                gimbal_control_.yaw = 0.;
-                gimbal_control_.home = 1.;
-                gimbal_control_pub.publish(gimbal_control_);
-                file.close();
-            }
             // 判读航向角是否对齐
             ss << "\nnow      vel >> x_vel: " << curr_vel[0] << " y_vel: " << curr_vel[1] << " z_vel: " << curr_vel[2];
             ss << "\ncommand  vel >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2];
@@ -480,15 +496,20 @@ int main(int argc, char **argv)
             }
             ss << "\nafter smooth >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2];
             generate_com(Command_now.Reference_State.Move_mode, comm);
+            // 视觉降落判断
+            land_cnt = (land_cnt + 1) % cv_land_count;
+            cv_land_cnt[land_cnt] = flag_detected == 2 ? 1 : 0;
         }
         //Publish
+        rate.sleep();
         command_pub.publish(Command_now);
         Command_past = Command_now;
-        rate.sleep();
         ss << "\n------------------------------------------------------------------------" << std::endl;
         std::cout << ss.str() << std::endl;
         file << ss.str();
     }
+    cout << "land finish, press any key to exit" << endl;
+    cin >> check_flag;
     return 0;
 }
 
