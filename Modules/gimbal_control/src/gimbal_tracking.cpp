@@ -234,7 +234,6 @@ int main(int argc, char **argv)
   //声明节点句柄
   ros::NodeHandle nh;
   static int p;
-  int i;
   float dt;
   float imu_camera[3], imu_camera_last[3], imu_camera_vel[3];
   float last_time;
@@ -327,6 +326,8 @@ int main(int argc, char **argv)
   ros::Rate loop_rate(28);
 
   unsigned char info[5] = {0x3e, 0x3d, 0x00, 0x3d, 0x00};
+  unsigned char header[4]{0x3e, 0x3d, 0x36, 0x73};
+
   ser.write(info, 5);
   while (ros::ok())
   {
@@ -344,14 +345,45 @@ int main(int argc, char **argv)
       std_msgs::UInt8MultiArray serial_data;
 
       ser.read(serial_data.data, p);
-      r_buffer.data.resize(p + 1);
+      r_buffer.data.resize(59 + 1);
       r_buffer.data[0] = p;
-      for (int i = 0; i < p; i++)
-        std::cout << std::hex << (int)r_buffer.data[i] << " ";
-      std::cout << std::endl;
-      for (i = 0; i < p; i++)
+
+      // 计算机header所在位置
+      if (p < 59)
+        continue;
+      int bias = 0;
+      for (int j = 0; j < p - 55;)
       {
-        r_buffer.data[i + 1] = serial_data.data[i];
+        bool find = true;
+        for (int i = 0; i < 4; i++)
+        {
+          if (serial_data.data[j + i] != header[i])
+          {
+            j += i + 1;
+            find = false;
+            break;
+          }
+        }
+        if (find == true)
+        {
+          bias = j;
+          break;
+        }
+      }
+
+      // 校验和验证
+      int check_sum = 0;
+      for (int i = bias + 4; i < bias + 57; i++)
+      {
+        check_sum += serial_data.data[i];
+      }
+      if (check_sum % 256 != serial_data.data[bias + 58])
+        continue;
+
+      // 解析数据
+      for (int i = bias; i < bias + 59; i++)
+      {
+        r_buffer.data[i + 1 - bias] = serial_data.data[i];
 
         if (r_buffer.data[6] > 40)
         {
