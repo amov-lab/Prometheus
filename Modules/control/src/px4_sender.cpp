@@ -458,9 +458,6 @@ int main(int argc, char **argv)
                         prometheus_control_utils::rotation_yaw(_DroneState.attitude[2], d_vel_body, d_vel_enu);
                         Command_Now.Reference_State.velocity_ref[0] = d_vel_enu[0];
                         Command_Now.Reference_State.velocity_ref[1] = d_vel_enu[1];
-                        Command_Now.Reference_State.position_ref[2] = _DroneState.position[2] + Command_Now.Reference_State.velocity_ref[2] * dt;
-                        // 无法使用, 实际为定点控制
-                        // Command_Now.Reference_State.velocity_ref[2] = Command_Now.Reference_State.velocity_ref[2];
                         state_sp = Eigen::Vector3d(Command_Now.Reference_State.velocity_ref[0],Command_Now.Reference_State.velocity_ref[1],Command_Now.Reference_State.velocity_ref[2]);
                         yaw_sp = _DroneState.attitude[2] + Command_Now.Reference_State.yaw_ref;
                     }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XY_VEL_Z_POS )

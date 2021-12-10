@@ -118,9 +118,9 @@ void pos_diff_callback(const prometheus_msgs::GimbalTrackError::ConstPtr &msg)
   command[19] = 0;
   if (!msg->detected)
   {
-    command[4] = 0x01;
-    command[5] = 0x01;
-    command[6] = 0x01;
+    command[4] = 0x00;
+    command[5] = 0x00;
+    command[6] = 0x00;
     command[7] = 0x00;
     command[8] = 0x00;
     command[9] = 0x00;
