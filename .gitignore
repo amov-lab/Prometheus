@@ -15,6 +15,8 @@ Modules/object_detection_persistence/
 Modules/object_detection_yolov5openvino/
 Modules/object_detection_yolov5tensorrt/
 Modules/object_detection_circlex/
+Modules/data/
+Modules/object_detection_oneshot/
 
 # pytorch/python/numpy formats
 # *.pth
