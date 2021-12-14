@@ -273,13 +273,6 @@ int main(int argc, char **argv)
         p = read_gimbal.rel1 + drone_pitch;
         y = read_gimbal.rel2;
         horizontal_distance = curr_pos[2] * std::tan(M_PI * (90 - p) / 180);
-        ss << "\nyaw: " << y
-           << " pitch: " << p
-           << " roll: " << r
-           << " drone_pitch: " << drone_pitch
-           << " high: " << curr_pos[3]
-           << " horizontal_distance: " << horizontal_distance;
-
         if ((curr_pos[2] < land_high || cv_land) && drone_mode == "OFFBOARD")
         {
             Command_now.Mode = prometheus_msgs::ControlCommand::Land;
@@ -393,7 +386,6 @@ int main(int argc, char **argv)
                     }
                     else // 控yaw, xy速度
                     {
-                        // comm[0] = kpx_track * horizontal_distance * std::abs(std::cos(angle2radians(y)));
                         comm[0] = kpx_track * horizontal_distance / std::fmax(std::abs(y) - 5, 1);
                         //  * std::abs(std::cos(-y));
                         comm[1] = 0;
@@ -415,7 +407,7 @@ int main(int argc, char **argv)
                     // tan(53.2/2)=0.50
                     comm[1] = -(pixel_x / (pic_width * 0.5)) * std::tan(M_PI * (53.2 / 2) / 180) * offset * 2;
                     // ((480 + 640)/2)/10 = 56
-                    comm[2] = -offset / std::fmax((std::abs(pixel_y) + std::abs(pixel_x)) / 56, 1);
+                    comm[2] = -offset / std::fmax((90 - p) + (std::abs(pixel_y) + std::abs(pixel_x)) / 56, 1);
                     // comm[2] = -std::fmax(offset, 0.05);
                     comm[3] = 0.;
                     ss << "\n >> high control << "
@@ -427,18 +419,20 @@ int main(int argc, char **argv)
             case 2:
                 Eigen::Matrix3d rotation_matrix3;
                 rotation_matrix3 = Eigen::AngleAxisd(r * M_PI / 180, Eigen::Vector3d::UnitX()) *
-                                   Eigen::AngleAxisd((p - drone_pitch) * M_PI / 180, Eigen::Vector3d::UnitY());
+                                   Eigen::AngleAxisd(p * M_PI / 180, Eigen::Vector3d::UnitY());
                 Eigen::Vector3d euler_angles = rotation_matrix3.eulerAngles(2, 1, 0);
-                y = euler_angles[0];
+                y = euler_angles[0] * 180 / M_PI;
+                y = r > 0 ? y : (y - 180);
                 horizontal_distance = (std::tan(angle2radians(90 - p)) / std::abs(std::tan(angle2radians(90 - p)))) *
                                       curr_pos[2] *
                                       std::sqrt(std::pow(std::tan(angle2radians(90 - p)), 2) + std::pow(std::tan(angle2radians(r)), 2));
                 // 靠近时, 不控航向角
-                if (std::abs(90 - p) < ignore_error_pitch || std::abs(r) < ignore_error_pitch)
+                if (std::abs(90 - p) < ignore_error_pitch * 2)
                 {
                     comm[0] = land_move_scale * curr_pos[2] * std::tan(angle2radians(90 - p));
                     comm[1] = land_move_scale * curr_pos[2] * std::tan(angle2radians(r));
-                    comm[2] = -land_move_scale * curr_pos[2] / std::fmax((std::abs(90 - p) + std::abs(r)) / ((ignore_error_pitch + ignore_error_pitch) / 10), 1);
+                    // -1 吊舱误差偏移
+                    comm[2] = -land_move_scale * curr_pos[2] / std::fmax(std::abs(std::abs(90 - p - 1) + std::abs(r)), 1);
                     comm[3] = 0;
                     ss << "\n 近距离模式: ";
                 }
@@ -448,7 +442,7 @@ int main(int argc, char **argv)
                     comm[0] = kpx_track * horizontal_distance / std::fmax(std::abs(y) - 5, 1);
                     comm[1] = 0;
                     comm[2] = -kpx_track * curr_pos[2] * std::fmin(1 / horizontal_distance * horizontal_distance, 0.1);
-                    comm[3] = -y;
+                    comm[3] = y/4;
                     ss << "\n 远距离模式: ";
                 }
                 break;
@@ -467,6 +461,12 @@ int main(int argc, char **argv)
                 comm[3] = 0;
             }
         }
+        ss << "\nyaw: " << y
+           << " pitch: " << p
+           << " roll: " << r
+           << " drone_pitch: " << drone_pitch
+           << " high: " << curr_pos[2]
+           << " horizontal_distance: " << horizontal_distance;
         ss << "\nnow      vel >> x_vel: " << curr_vel[0] << " y_vel: " << curr_vel[1] << " z_vel: " << curr_vel[2];
         ss << "\ncommand  vel >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2] << " max_vel: " << max_vel;
         for (int i = 0; i < 3; i++)
