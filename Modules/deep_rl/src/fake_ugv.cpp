@@ -1,19 +1,20 @@
 #include "fake_ugv.h"
 
-void Fake_UGV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, double init_yaw)
+void Fake_UGV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, double _init_yaw)
 {
     agent_id = id;
     model_name = "fake_ugv_" + std::to_string(agent_id);
     node_name = "fake_ugv" + std::to_string(agent_id);
     get_move_cmd = false;
     ugv_state_update = false;
-    cmd_id = 0;
+    cmd_id = -1;
     block_size = 0.2;
 
     // 初始化 ugv_state
-    ugv_state.pos = init_pos;
+    ugv_state.pos = _init_pos;
+    init_pos = _init_pos;
     ugv_state.vel << 0.0,0.0,0.0;
-    ugv_state.euler << 0.0,0.0,init_yaw;
+    ugv_state.euler << 0.0,0.0,_init_yaw;
     ugv_state.quat2 = quaternion_from_rpy(ugv_state.euler);
     ugv_state.quat.x = ugv_state.quat2.x();
     ugv_state.quat.y = ugv_state.quat2.y();
@@ -21,10 +22,10 @@ void Fake_UGV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, doubl
     ugv_state.quat.w = ugv_state.quat2.w();
     // 初始化 gazebo_model_state
     gazebo_model_state.model_name = model_name;
-    gazebo_model_state.pose.position.x = init_pos[0];
-    gazebo_model_state.pose.position.y = init_pos[1];
-    gazebo_model_state.pose.position.z = init_pos[2];
-    ugv_state.euler << 0.0,0.0,init_yaw;
+    gazebo_model_state.pose.position.x = _init_pos[0];
+    gazebo_model_state.pose.position.y = _init_pos[1];
+    gazebo_model_state.pose.position.z = _init_pos[2];
+    ugv_state.euler << 0.0,0.0,_init_yaw;
     ugv_state.quat2 = quaternion_from_rpy(ugv_state.euler);
     gazebo_model_state.pose.orientation.x = ugv_state.quat2.x();
     gazebo_model_state.pose.orientation.y = ugv_state.quat2.y();
@@ -35,11 +36,13 @@ void Fake_UGV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, doubl
     move_cmd_sub      = nh.subscribe<prometheus_drl::ugv_move_cmd>("/ugv"+std::to_string(agent_id) + "/move_cmd", 1, &Fake_UGV::move_cmd_cb, this);
     
     fake_odom_pub    = nh.advertise<nav_msgs::Odometry>("/ugv"+std::to_string(agent_id) + "/prometheus/fake_odom", 1);
-    
+    // 【发布】mesh，用于RVIZ显示
+    ugv_mesh_pub =  nh.advertise<visualization_msgs::Marker>("/ugv"+std::to_string(agent_id) + "/prometheus/ugv_mesh", 1);
+
     fake_odom_pub_timer = nh.createTimer(ros::Duration(0.05), &Fake_UGV::fake_odom_pub_cb, this);
     // debug_timer = nh.createTimer(ros::Duration(0.2), &Fake_UGV::debug_cb, this);
 
-    cout << GREEN  << node_name << "---> Fake_UGV init sucess in position: " << init_pos[0] <<" [ m ] "<<init_pos[1] <<" [ m ] "<< TAIL <<endl;
+    cout << GREEN  << node_name << "---> Fake_UGV init sucess in position: " << _init_pos[0] <<" [ m ] "<<_init_pos[1] <<" [ m ] "<< TAIL <<endl;
 }
 
 void Fake_UGV::move_cmd_cb(const prometheus_drl::ugv_move_cmd::ConstPtr& msg)
@@ -49,7 +52,7 @@ void Fake_UGV::move_cmd_cb(const prometheus_drl::ugv_move_cmd::ConstPtr& msg)
         cout << RED << node_name << "---> wrong cmd id."<< TAIL << endl;
         return;
     }
-
+    cmd_id = msg->ID;
     get_move_cmd = true;
 
     if(msg->CMD == prometheus_drl::ugv_move_cmd::HOLD)
@@ -67,6 +70,10 @@ void Fake_UGV::move_cmd_cb(const prometheus_drl::ugv_move_cmd::ConstPtr& msg)
     }else if(msg->CMD == prometheus_drl::ugv_move_cmd::RIGHT)
     {
         ugv_state.pos[1] = ugv_state.pos[1] - block_size;
+    }else if(msg->CMD == prometheus_drl::ugv_move_cmd::RESET)
+    {
+        cmd_id = -1;
+        ugv_state.pos = init_pos;
     }else
     {
         cout << RED << node_name << "---> wrong move cmd."<< TAIL << endl;
@@ -87,6 +94,28 @@ void Fake_UGV::fake_odom_pub_cb(const ros::TimerEvent &e)
     fake_odom.twist.twist.linear.y = ugv_state.vel[1];
     fake_odom.twist.twist.linear.z = ugv_state.vel[2];
     fake_odom_pub.publish(fake_odom);
+
+    // 发布mesh
+    visualization_msgs::Marker meshROS;
+    meshROS.header.frame_id = "world";
+    meshROS.header.stamp = ros::Time::now();
+    meshROS.ns = "ugv_mesh";
+    meshROS.id = 0;
+    meshROS.type = visualization_msgs::Marker::MESH_RESOURCE;
+    meshROS.action = visualization_msgs::Marker::ADD;
+    meshROS.pose.position.x = ugv_state.pos[0];
+    meshROS.pose.position.y = ugv_state.pos[1];
+    meshROS.pose.position.z = ugv_state.pos[2];
+    meshROS.pose.orientation = ugv_state.quat;
+    meshROS.scale.x = 0.8/4.5;
+    meshROS.scale.y = 0.8/4.5;
+    meshROS.scale.z = 0.8/4.5;
+    meshROS.color.a = 1.0;
+    meshROS.color.r = 0.0;
+    meshROS.color.g = 0.0;
+    meshROS.color.b = 0.5;
+    meshROS.mesh_resource = std::string("package://prometheus_drl/meshes/car.dae");
+    ugv_mesh_pub.publish(meshROS); 
 
 
     // 发布TF用于RVIZ显示

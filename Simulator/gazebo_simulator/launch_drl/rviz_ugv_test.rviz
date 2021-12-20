@@ -153,6 +153,14 @@ Visualization Manager:
           Topic: /ugv1/prometheus/fake_odom
           Unreliable: false
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /ugv1/prometheus/ugv_mesh
+          Name: Marker
+          Namespaces:
+            ugv_mesh: true
+          Queue Size: 1
+          Value: true
       Enabled: true
       Name: UGV1
     - Class: rviz/Group
@@ -238,16 +246,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 16.3333740234375
+      Distance: 12.43270206451416
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 4.660800457000732
-        Y: -1.9958081245422363
-        Z: -1.1494449377059937
+        X: 3.555473804473877
+        Y: -2.0666937828063965
+        Z: -1.2897433042526245
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -275,4 +283,4 @@ Window Geometry:
     collapsed: false
   Width: 1826
   X: 445
-  Y: 100
+  Y: 63
