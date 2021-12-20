@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     while(ros::ok())
     {
         cout << ">>>>>>>>>>>>>>>> Welcome to use Prometheus Terminal Control <<<<<<<<<<<<<<<<"<< endl;
-        cout << "Please select cmd: 0 for hold, 1 for forward, 2 for back, 3 for left, 4 for right.."<<endl;
+        cout << "Please select cmd: 0 for hold, 1 for forward, 2 for back, 3 for left, 4 for right, 99 for reset.."<<endl;
         cin >> cmd_mode;
 
         if(cmd_mode == 0)
@@ -46,6 +46,10 @@ int main(int argc, char **argv)
         {
             move_cmd.ID += 1;
             move_cmd.CMD = prometheus_drl::ugv_move_cmd::RIGHT;
+        }else if(cmd_mode == 99)
+        {
+            move_cmd.ID += 1;
+            move_cmd.CMD = prometheus_drl::ugv_move_cmd::RESET;
         }else
         {
             ROS_ERROR("wrong input");

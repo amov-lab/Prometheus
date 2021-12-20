@@ -11,7 +11,7 @@
 #include <gazebo_msgs/ModelState.h>
 #include <geometry_msgs/TransformStamped.h>
 #include "tf2_ros/transform_broadcaster.h"  //发布动态坐标关系
-
+#include <visualization_msgs/Marker.h>
 #include "math_utils.h"
 #include "printf_utils.h"
 
@@ -31,6 +31,7 @@ class Fake_UGV
         // 订阅
         ros::Subscriber move_cmd_sub;
         ros::Publisher fake_odom_pub;
+        ros::Publisher ugv_mesh_pub;
         ros::Timer fake_odom_pub_timer;
         ros::Timer debug_timer;
 
@@ -45,6 +46,7 @@ class Fake_UGV
 
         nav_msgs::Odometry fake_odom;
         gazebo_msgs::ModelState gazebo_model_state;
+        Eigen::Vector3d init_pos;
 
         struct UGV_state
         {

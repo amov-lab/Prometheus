@@ -9,4 +9,4 @@ uint8 FORWARD=1
 uint8 BACK=2
 uint8 LEFT=3
 uint8 RIGHT=4
-
+uint8 RESET=99
