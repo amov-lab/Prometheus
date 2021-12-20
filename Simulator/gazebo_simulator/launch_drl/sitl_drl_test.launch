@@ -1,0 +1,27 @@
+<launch>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/drl_worlds/drl_world_1.world"/>
+    <!-- Rviz config -->
+    <arg name="visualization" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_gazebo)/launch_drl/rviz_ugv_test.rviz"/>
+
+    <!-- 启动 fake_odom_node -->
+    <node pkg="prometheus_drl" type="fake_odom_node" name="fake_odom_node" output="screen">
+        <param name="fake_odom/swarm_num_ugv" value="1"/>
+    </node>
+
+    <!-- 启动Gazebo -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+
+	<!-- 启动Rviz-->
+	<group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
+
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_drl" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+	</node>	
+
+</launch>
+
