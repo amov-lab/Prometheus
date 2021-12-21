@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <prometheus_drl/ugv_move_cmd.h>
+#include <prometheus_drl/ugv_reset.h>
 
 using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>　主函数　<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -12,8 +13,11 @@ int main(int argc, char **argv)
 
     //　【发布】　控制指令
     ros::Publisher move_pub = nh.advertise<prometheus_drl::ugv_move_cmd>("/ugv1/move_cmd", 10);
+    //　【发布】　reset指令
+    ros::Publisher reset_pub = nh.advertise<prometheus_drl::ugv_reset>("/reset", 10);
 
     prometheus_drl::ugv_move_cmd move_cmd;
+    prometheus_drl::ugv_reset reset;
 
     move_cmd.ID = 0;
     move_cmd.CMD = prometheus_drl::ugv_move_cmd::HOLD;
@@ -30,31 +34,37 @@ int main(int argc, char **argv)
         {
             move_cmd.ID += 1;
             move_cmd.CMD = prometheus_drl::ugv_move_cmd::HOLD;
+            move_pub.publish(move_cmd);
         }else if(cmd_mode == 1)
         {
             move_cmd.ID += 1;
             move_cmd.CMD = prometheus_drl::ugv_move_cmd::FORWARD;
+            move_pub.publish(move_cmd);
         }else if(cmd_mode == 2)
         {
             move_cmd.ID += 1;
             move_cmd.CMD = prometheus_drl::ugv_move_cmd::BACK;
+            move_pub.publish(move_cmd);
         }else if(cmd_mode == 3)
         {
             move_cmd.ID += 1;
             move_cmd.CMD = prometheus_drl::ugv_move_cmd::LEFT;
+            move_pub.publish(move_cmd);
         }else if(cmd_mode == 4)
         {
             move_cmd.ID += 1;
             move_cmd.CMD = prometheus_drl::ugv_move_cmd::RIGHT;
+            move_pub.publish(move_cmd);
         }else if(cmd_mode == 99)
         {
-            move_cmd.ID += 1;
-            move_cmd.CMD = prometheus_drl::ugv_move_cmd::RESET;
+            move_cmd.ID = 0;
+            reset.reset = 1;
+            reset_pub.publish(reset);
         }else
         {
             ROS_ERROR("wrong input");
         }
-        move_pub.publish(move_cmd);
+        
 
         sleep(0.5);
     }

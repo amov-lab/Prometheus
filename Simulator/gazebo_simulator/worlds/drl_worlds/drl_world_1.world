@@ -111,9 +111,168 @@
     </model>
     <!-- 装饰结束 -->
 
+    <!-- 房间四周墙体 -->
+    <model name='room_wall'>
+      <static>true</static>
+      <!-- 前墙 -->
+      <link name="wall_front">
+          <pose frame=''>2.5 0 1 0 -0 1.57</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+      <!-- 后墙 -->
+      <link name="wall_back">
+          <pose frame=''>-2.5 0 1 0 -0 1.57</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+      <!-- 左墙 -->
+      <link name="wall_left">
+          <pose frame=''>-0 2.5 1 0 -0 0</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+      <!-- 右墙 -->
+      <link name="wall_right">
+          <pose frame=''>-0 -2.5 1 0 -0 0</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>5.0 0.1 2</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+    </model>
+
+
+    <model name='cylinder_1'>
+      <include>
+        <uri>model://cylinder</uri>
+        <pose>1.5 1.5 1.0 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='cylinder_2'>
+      <include>
+        <uri>model://cylinder</uri>
+        <pose>-1.5 -1.5 1.0 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_ugv_1'>
+      <include>
+        <uri>model://fake_ugv_1</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_ugv_2'>
+      <include>
+        <uri>model://fake_ugv_2</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_ugv_3'>
+      <include>
+        <uri>model://fake_ugv_3</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    </world>
+</sdf>
+
+
     <!-- http://gazebosim.org/tutorials?tut=model_population&cat=build_world -->
     <!-- 使用tag population表示批量放置，而tag distribution控制批量放置模型的排列形式，有随机、成行、成列等方式。具体使用方法可以见参考链接 -->
-    <population name="square_population">
+    <!-- random 是全随机，均匀（uniform）分布，网格（grid）分布，linear-x分布：沿全局x轴均匀地放置各个模型 -->
+
+    <!-- <population name="square_population">
       <model name="square">
         <include>
           <static>true</static>
@@ -126,38 +285,6 @@
       </box>
       <model_count>50</model_count>
       <distribution>
-      <!-- random 是全随机，均匀（uniform）分布，网格（grid）分布，linear-x分布：沿全局x轴均匀地放置各个模型 -->
         <type>uniform</type>
       </distribution>
-    </population>
-
-    <model name='cylinder_1'>
-      <include>
-        <uri>model://cylinder</uri>
-        <pose>1.0 1.0 1.5 0 0 0</pose>
-      </include>
-    </model>
-
-    <model name='fake_ugv_1'>
-      <include>
-        <uri>model://fake_ugv_1</uri>
-        <pose>0.0 0.0 0.08 0 0 0</pose>
-      </include>
-    </model>
-
-    <!-- <model name='fake_ugv_2'>
-      <include>
-        <uri>model://fake_ugv_2</uri>
-        <pose>0.0 0.0 0.08 0 0 0</pose>
-      </include>
-    </model>
-
-    <model name='fake_ugv_3'>
-      <include>
-        <uri>model://fake_ugv_3</uri>
-        <pose>0.0 0.0 0.08 0 0 0</pose>
-      </include>
-    </model> -->
-
-    </world>
-</sdf>
+    </population> -->
