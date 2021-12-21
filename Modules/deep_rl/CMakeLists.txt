@@ -20,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_eigen
   mavros_msgs
+  laser_geometry
+  pcl_ros
   prometheus_msgs
 )
 
@@ -36,6 +38,9 @@ add_message_files(
   DIRECTORY msg
   FILES
   ugv_move_cmd.msg
+  ugv_state.msg
+  ugv_goal.msg
+  ugv_reset.msg
 )
 
 generate_messages(
@@ -50,8 +55,6 @@ catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS  message_runtime
 )
-
-
 
 ###########
 ## Build ##
@@ -69,18 +72,27 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
-add_library(fake_ugv src/fake_ugv.cpp)
-target_link_libraries(fake_ugv ${catkin_LIBRARIES})
 
+add_executable(drl_main_node
+	src/drl_main_node.cpp
+  src/drl_actuator.cpp
+	src/drl_sensing.cpp
+	src/occupy_map_2d.cpp
+	)
 
-add_executable(fake_odom_node src/fake_odom_node.cpp)
-add_dependencies(fake_odom_node prometheus_drl_gencpp)
-target_link_libraries(fake_odom_node ${catkin_LIBRARIES})
-target_link_libraries(fake_odom_node fake_ugv)
+target_link_libraries(drl_main_node
+    ${catkin_LIBRARIES}
+	  ${PCL_LIBRARIES}
+	)
 
 add_executable(terminal_control src/terminal_control.cpp)
 add_dependencies(terminal_control prometheus_drl_gencpp)
 target_link_libraries(terminal_control ${catkin_LIBRARIES})
+
+add_executable(read_ugv_state src/read_ugv_state.cpp)
+add_dependencies(read_ugv_state prometheus_drl_gencpp)
+target_link_libraries(read_ugv_state ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##

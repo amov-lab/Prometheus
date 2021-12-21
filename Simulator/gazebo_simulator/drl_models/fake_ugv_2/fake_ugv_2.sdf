@@ -290,13 +290,13 @@
         </ray>
         <plugin name="laser" filename="libRayPlugin.so" />
         <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
-          <topicName>/fake_ugv_2/scan</topicName>
-          <frameName>/fake_ugv_2/lidar_link</frameName>
+          <topicName>/ugv2/scan</topicName>
+          <frameName>/ugv2/lidar_link</frameName>
         </plugin>
         <always_on>1</always_on>
         <!-- 更新频率 10HZ -->
         <update_rate>10</update_rate>
-        <visualize>true</visualize>
+        <visualize>false</visualize>
       </sensor>
     </link>
 
@@ -311,5 +311,19 @@
         </limit>
       </axis>
     </joint>
+
+    <!-- plugins: libgazebo_ros_p3d -->
+    <!-- 发布真值,模拟vicon系统 -->
+    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>50.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>/ugv2/odom</topicName>
+      <gaussianNoise>0.00</gaussianNoise>
+      <frameName>world</frameName>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
+    </plugin>
+
   </model>
 </sdf>
