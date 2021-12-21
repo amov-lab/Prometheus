@@ -1,18 +1,18 @@
-#include "fake_ugv.h"
-
-void Fake_UGV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, double _init_yaw)
+#include "drl_actuator.h"
+namespace drl_ns
+{
+void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, double _init_yaw)
 {
     agent_id = id;
     model_name = "fake_ugv_" + std::to_string(agent_id);
     node_name = "fake_ugv" + std::to_string(agent_id);
     get_move_cmd = false;
     ugv_state_update = false;
-    cmd_id = -1;
+    cmd_id = 0;
     block_size = 0.2;
 
     // 初始化 ugv_state
     ugv_state.pos = _init_pos;
-    init_pos = _init_pos;
     ugv_state.vel << 0.0,0.0,0.0;
     ugv_state.euler << 0.0,0.0,_init_yaw;
     ugv_state.quat2 = quaternion_from_rpy(ugv_state.euler);
@@ -25,62 +25,75 @@ void Fake_UGV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, doub
     gazebo_model_state.pose.position.x = _init_pos[0];
     gazebo_model_state.pose.position.y = _init_pos[1];
     gazebo_model_state.pose.position.z = _init_pos[2];
-    ugv_state.euler << 0.0,0.0,_init_yaw;
-    ugv_state.quat2 = quaternion_from_rpy(ugv_state.euler);
     gazebo_model_state.pose.orientation.x = ugv_state.quat2.x();
     gazebo_model_state.pose.orientation.y = ugv_state.quat2.y();
     gazebo_model_state.pose.orientation.z = ugv_state.quat2.z();
     gazebo_model_state.pose.orientation.w = ugv_state.quat2.w();
     gazebo_model_state.reference_frame = "ground_plane::link";
 
-    move_cmd_sub      = nh.subscribe<prometheus_drl::ugv_move_cmd>("/ugv"+std::to_string(agent_id) + "/move_cmd", 1, &Fake_UGV::move_cmd_cb, this);
-    
-    fake_odom_pub    = nh.advertise<nav_msgs::Odometry>("/ugv"+std::to_string(agent_id) + "/prometheus/fake_odom", 1);
+    // 【订阅】 drl 动作   
+    move_cmd_sub = nh.subscribe<prometheus_drl::ugv_move_cmd>("/ugv"+std::to_string(agent_id) + "/move_cmd", 1, &drl_actuator::move_cmd_cb, this);
+    // 【发布】 odom，用于RVIZ显示 
+    fake_odom_pub    = nh.advertise<nav_msgs::Odometry>("/ugv"+std::to_string(agent_id) + "/fake_odom", 1);
     // 【发布】mesh，用于RVIZ显示
-    ugv_mesh_pub =  nh.advertise<visualization_msgs::Marker>("/ugv"+std::to_string(agent_id) + "/prometheus/ugv_mesh", 1);
+    ugv_mesh_pub =  nh.advertise<visualization_msgs::Marker>("/ugv"+std::to_string(agent_id) + "/ugv_mesh", 1);
+    // 【定时器】
+    fake_odom_pub_timer = nh.createTimer(ros::Duration(0.05), &drl_actuator::fake_odom_pub_cb, this);
 
-    fake_odom_pub_timer = nh.createTimer(ros::Duration(0.05), &Fake_UGV::fake_odom_pub_cb, this);
-    // debug_timer = nh.createTimer(ros::Duration(0.2), &Fake_UGV::debug_cb, this);
-
-    cout << GREEN  << node_name << "---> Fake_UGV init sucess in position: " << _init_pos[0] <<" [ m ] "<<_init_pos[1] <<" [ m ] "<< TAIL <<endl;
+    cout << GREEN  << node_name << "---> drl_actuator init sucess in position: " << _init_pos[0] <<" [ m ] "<<_init_pos[1] <<" [ m ] "<< TAIL <<endl;
 }
 
-void Fake_UGV::move_cmd_cb(const prometheus_drl::ugv_move_cmd::ConstPtr& msg)
+void drl_actuator::reset(Eigen::Vector3d _init_pos, double _init_yaw)
 {
-    if(msg->ID <= cmd_id)
+    // 初始化 ugv_state
+    ugv_state.pos = _init_pos;
+    ugv_state.vel << 0.0,0.0,0.0;
+    ugv_state.euler << 0.0,0.0,_init_yaw;
+    ugv_state.quat2 = quaternion_from_rpy(ugv_state.euler);
+    ugv_state.quat.x = ugv_state.quat2.x();
+    ugv_state.quat.y = ugv_state.quat2.y();
+    ugv_state.quat.z = ugv_state.quat2.z();
+    ugv_state.quat.w = ugv_state.quat2.w();
+
+    cmd_id = 0;
+    action.ID = 0;
+    action.CMD = prometheus_drl::ugv_move_cmd::HOLD;
+}
+
+void drl_actuator::move_cmd_cb(const prometheus_drl::ugv_move_cmd::ConstPtr& msg)
+{
+    action = *msg;
+
+    if(action.ID <= cmd_id)
     {
         cout << RED << node_name << "---> wrong cmd id."<< TAIL << endl;
         return;
     }
-    cmd_id = msg->ID;
+    cmd_id = action.ID;
     get_move_cmd = true;
 
-    if(msg->CMD == prometheus_drl::ugv_move_cmd::HOLD)
+    if(action.CMD == prometheus_drl::ugv_move_cmd::HOLD)
     {
 
-    }else if(msg->CMD == prometheus_drl::ugv_move_cmd::FORWARD)
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::FORWARD)
     {
         ugv_state.pos[0] = ugv_state.pos[0] + block_size;
-    }else if(msg->CMD == prometheus_drl::ugv_move_cmd::BACK)
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::BACK)
     {
         ugv_state.pos[0] = ugv_state.pos[0] - block_size;
-    }else if(msg->CMD == prometheus_drl::ugv_move_cmd::LEFT)
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::LEFT)
     {
         ugv_state.pos[1] = ugv_state.pos[1] + block_size;
-    }else if(msg->CMD == prometheus_drl::ugv_move_cmd::RIGHT)
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::RIGHT)
     {
         ugv_state.pos[1] = ugv_state.pos[1] - block_size;
-    }else if(msg->CMD == prometheus_drl::ugv_move_cmd::RESET)
-    {
-        cmd_id = -1;
-        ugv_state.pos = init_pos;
     }else
     {
         cout << RED << node_name << "---> wrong move cmd."<< TAIL << endl;
     }
 }
 
-void Fake_UGV::fake_odom_pub_cb(const ros::TimerEvent &e)
+void drl_actuator::fake_odom_pub_cb(const ros::TimerEvent &e)
 {
     // 发布fake odom
     fake_odom.header.stamp = ros::Time::now();
@@ -126,7 +139,7 @@ void Fake_UGV::fake_odom_pub_cb(const ros::TimerEvent &e)
     tfs.header.stamp = ros::Time::now();  //时间戳
     
     //  |----坐标系 ID
-    tfs.child_frame_id =  model_name + "/lidar_link";  //子坐标系，无人机的坐标系
+    tfs.child_frame_id =  "ugv" + std::to_string(agent_id) + "/lidar_link";  //子坐标系，无人机的坐标系
 
     //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
     tfs.transform.translation.x = ugv_state.pos[0];
@@ -152,9 +165,8 @@ void Fake_UGV::fake_odom_pub_cb(const ros::TimerEvent &e)
     gazebo_model_state.reference_frame = "ground_plane::link";
 }
 
-void Fake_UGV::debug_cb(const ros::TimerEvent &e)
+void drl_actuator::printf_cb()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Fake Odom <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
@@ -166,15 +178,43 @@ void Fake_UGV::debug_cb(const ros::TimerEvent &e)
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    cout << GREEN  << "ugv_state.pos [X Y Z]  : " << ugv_state.pos[0] << " [ m ] "<< ugv_state.pos[1]<<" [ m ] "<<ugv_state.pos[2]<<" [ m ] "<< TAIL <<endl;
+    if(action.CMD == prometheus_drl::ugv_move_cmd::HOLD)
+    {
+        cout << GREEN  << "Action : [" << action.ID << "] " << "[  HOLD   ]" << TAIL <<endl;
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::FORWARD)
+    {
+        cout << GREEN  << "Action : [" << action.ID << "] " << "[ FORWARD ]" << TAIL <<endl;
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::BACK)
+    {
+        cout << GREEN  << "Action : [" << action.ID << "] " << "[  BACK   ]" << TAIL <<endl;
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::LEFT)
+    {
+        cout << GREEN  << "Action : [" << action.ID << "] " << "[  LEFT   ]" << TAIL <<endl;
+    }else if(action.CMD == prometheus_drl::ugv_move_cmd::RIGHT)
+    {
+        cout << GREEN  << "Action : [" << action.ID << "] " << "[  RIGHT  ]" << TAIL <<endl;
+    }
+
 }
 
-Eigen::Vector3d Fake_UGV::get_ugv_pos()
+Eigen::Vector3d drl_actuator::get_ugv_pos()
 {
     return ugv_state.pos;
 }
 
-gazebo_msgs::ModelState Fake_UGV::get_model_state()
+gazebo_msgs::ModelState drl_actuator::get_model_state()
 {
     return gazebo_model_state;
+}
+
+// 从(roll,pitch,yaw)创建四元数  by a 3-2-1 intrinsic Tait-Bryan rotation sequence
+Eigen::Quaterniond drl_actuator::quaternion_from_rpy(const Eigen::Vector3d &rpy)
+{
+        // YPR - ZYX
+        return Eigen::Quaterniond(
+                        Eigen::AngleAxisd(rpy.z(), Eigen::Vector3d::UnitZ()) *
+                        Eigen::AngleAxisd(rpy.y(), Eigen::Vector3d::UnitY()) *
+                        Eigen::AngleAxisd(rpy.x(), Eigen::Vector3d::UnitX())
+                        );
+}
 }

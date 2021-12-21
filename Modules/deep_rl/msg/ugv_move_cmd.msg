@@ -1,6 +1,6 @@
 std_msgs/Header header
 
-uint8 ID
+uint32 ID
 ## 控制命令的模式 
 uint8 CMD
 # enum CMD 控制模式枚举

@@ -15,12 +15,12 @@
         <geometry>
           <cylinder>
             <radius>0.2</radius>
-            <length>3.0</length>
+            <length>2.0</length>
           </cylinder>
         </geometry>
         <material>
           <script>
-            <name>Gazebo/DarkGrey</name>
+            <name>Gazebo/Grey</name>
             <uri>file://media/materials/scripts/gazebo.material</uri>
           </script>
         </material>
