@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(prometheus_swarm_communication)
+project(prometheus_communication)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -31,11 +31,11 @@ include_directories(
 )
 
 ## Specify libraries to link a library or executable target against
-add_executable(cxy_msg_103_104 src/cxy_msg_103_104.cpp)
-add_dependencies(cxy_msg_103_104 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(cxy_msg_103_104 ${catkin_LIBRARIES})
+add_executable(msg_pub_test src/msg_pub_test.cpp)
+add_dependencies(msg_pub_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(msg_pub_test ${catkin_LIBRARIES})
 
-add_executable(cxy_multicast_bridge src/cxy_multicast_bridge.cpp)
-add_dependencies(cxy_multicast_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(cxy_multicast_bridge ${catkin_LIBRARIES})
+add_executable(ground_station_bridge src/ground_station_bridge.cpp)
+add_dependencies(ground_station_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ground_station_bridge ${catkin_LIBRARIES})
 

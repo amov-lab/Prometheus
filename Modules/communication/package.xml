@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>prometheus_swarm_communication</name>
+  <name>prometheus_communication</name>
   <version>0.0.0</version>
-  <description>The swarm communication module</description>
+  <description>The communication module</description>
 
-  <maintainer email="zhongshp@todo.todo">zhongshp</maintainer> 
+  <maintainer email="qiyh@todo.todo">qiyh</maintainer> 
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>
