@@ -1,3 +1,19 @@
+material num1
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture num1.PNG
+       // Repeat the texture over the surface (4 per face)
+       scale 1 1
+     }
+   }
+ }
+}
 material Poster1
 {
  technique
@@ -39,7 +55,7 @@ material sysu_logo
      texture_unit
      {
        // Relative to the location of the material script
-       texture sysu_logo.png
+       texture sysu_logo.PNG
        // Repeat the texture over the surface (4 per face)
        scale 1 1
      }

@@ -242,6 +242,44 @@
       </axis>
     </joint>
 
+    <!-- <link name="num1">
+      <pose>-0.0 -0.0 0.4 0 0 0</pose>
+      <visual name="visual">
+        <cast_shadows>false</cast_shadows>
+        <geometry>
+          <box>
+            <size>2.0 2.0 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://texture_CXY/texture.material</uri>
+            <name>num1</name>
+          </script>
+        </material>
+      </visual>
+    </link> -->
+
+    <link name="xty">
+      <pose>0.00 -0.0 0.4 0 0 0</pose>
+      <visual name="visual">
+        <cast_shadows>false</cast_shadows>
+        <geometry>
+          <box>
+            <size>0.4 0.4 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://texture_CXY/texture.material</uri>
+            <name>xty</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+
+
     <link name="lidar_link">
       <pose>0 0 0.2 0 0.0 0</pose>
       <!-- 物理参数设置 -->

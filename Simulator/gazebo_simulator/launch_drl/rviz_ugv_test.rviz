@@ -4,8 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Grid1
         - /UGV11
-        - /UGV31/Odometry1/Status1
       Splitter Ratio: 0.5726872086524963
     Tree Height: 511
   - Class: rviz/Selection
@@ -46,7 +46,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 20
+      Plane Cell Count: 40
       Reference Frame: world
       Value: true
     - Class: rviz/TF
@@ -470,7 +470,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 13.081295013427734
+      Distance: 25.82015609741211
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -485,10 +485,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5547963380813599
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.135627031326294
+      Yaw: 3.145627737045288
     Saved: ~
 Window Geometry:
   Displays:
@@ -506,5 +506,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1285
-  X: 822
-  Y: 41
+  X: 997
+  Y: 51
