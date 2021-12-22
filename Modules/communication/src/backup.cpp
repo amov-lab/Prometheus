@@ -929,10 +929,10 @@ private:
 
 int main(int argc, char **argv) 
 {
-    ros::init(argc,argv,"cxy_multicast_bridge");
+    ros::init(argc,argv,"prometheus_bridge");
     ros::NodeHandle nh("~");
 
-    printf("\033[1;32m---->[cxy_multicast_bridge] start running\n\033[0m");
+    printf("\033[1;32m---->[prometheus_bridge] start running\n\033[0m");
 
     multicast_bridge mb(nh);
 
