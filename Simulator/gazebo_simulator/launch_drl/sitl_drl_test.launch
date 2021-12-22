@@ -1,5 +1,5 @@
 <launch>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/drl_worlds/drl_world_1.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/drl_worlds/drl_world_2.world"/>
     <!-- Rviz config -->
     <arg name="visualization" default="true"/>
     <arg name="rivz_config" default="$(find prometheus_gazebo)/launch_drl/rviz_ugv_test.rviz"/>
@@ -7,14 +7,14 @@
 	<arg name="swarm_num_ugv" default="3"/>
     <!-- 启动 fake_odom_node -->
     <node pkg="prometheus_drl" type="drl_main_node" name="drl_main_node" output="screen">
-        <param name="fake_odom/swarm_num_ugv" value="$(arg swarm_num_ugv)"/>
         <param name="swarm_num_ugv" value="$(arg swarm_num_ugv)"/>
+        <param name="block_size" value="0.5"/>
         <param name="sim_mode" value="true" type="bool"/>
         <!-- 地图参数 -->
-        <param name="map/origin_x" value="-5.0" type="double"/>
-        <param name="map/origin_y" value="-5.0" type="double"/>
-        <param name="map/map_size_x" value="10.0" type="double"/>
-        <param name="map/map_size_y" value="10.0" type="double"/>
+        <param name="map/origin_x" value="-10.0" type="double"/>
+        <param name="map/origin_y" value="-10.0" type="double"/>
+        <param name="map/map_size_x" value="20.0" type="double"/>
+        <param name="map/map_size_y" value="20.0" type="double"/>
         <param name="map/resolution" value="0.1" type="double"/>
         <param name="map/inflate" value="0.1" type="double"/>
         <param name="map/odom_inflate" value="0.0" type="double"/>

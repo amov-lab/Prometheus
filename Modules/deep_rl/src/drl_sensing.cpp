@@ -159,6 +159,8 @@ void drl_sensing::pub_ugv_state_cb(const ros::TimerEvent& e)
     // 目标矩阵
     // 首先全部置0
     // ugv_goal(ugv_id-1,0)
+    ugv_state.goal_pos[0] = ugv_goal(ugv_id-1,0);
+    ugv_state.goal_pos[1] = ugv_goal(ugv_id-1,1);
     for(int i = 0; i < matrix_size*matrix_size; i++)
     {
         ugv_state.goal_matrix[i] = 0; 

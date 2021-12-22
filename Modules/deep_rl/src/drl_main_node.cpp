@@ -10,7 +10,6 @@ using namespace drl_ns;
 #define MAX_NUM 10
 
 int swarm_num_ugv;
-int preset_init_pos_flag;
 
 drl_actuator ugv_actuator[MAX_NUM];
 drl_sensing ugv_sensor[MAX_NUM];
@@ -37,11 +36,11 @@ Eigen::MatrixXd get_random_goal()
     eng.seed(seed);
 
     rand_x = uniform_real_distribution<double>(-2.5 , 2.5);
-    rand_y = uniform_real_distribution<double>(-2.5 , 2.5);
+    rand_y = uniform_real_distribution<double>(-9.5 , 9.5);
 
     for(int i = 0; i<swarm_num_ugv; i++)
     {
-        goal(i,0) = rand_x(eng);
+        goal(i,0) = 9.5;
         goal(i,1) = rand_y(eng);
     }
     return goal;
@@ -90,8 +89,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "drl_main_node");
     ros::NodeHandle nh("~");
-    nh.param("fake_odom/swarm_num_ugv", swarm_num_ugv, 1);
-    nh.param("fake_odom/preset_init_pos_flag", preset_init_pos_flag, 1);
+    nh.param("swarm_num_ugv", swarm_num_ugv, 1);
 
     ros::Subscriber reset_sub = nh.subscribe<prometheus_drl::ugv_reset>("/reset", 1, reset_cb);
 
@@ -125,30 +123,9 @@ void get_preset_pos_ugv(int i)
     unsigned int seed = rd();
     eng.seed(seed);
 
-    int ugv_id = i;
-    if(preset_init_pos_flag == 1)
-    {
-        if(ugv_id%2==1)
-        {
-            init_pos_ugv[i][0] = 0.5 * ugv_id;
-            init_pos_ugv[i][1] = -1.0;
-            init_pos_ugv[i][2] = 0.0;
-            init_yaw_ugv[i] = 0.0;
-        }else
-        {
-            init_pos_ugv[i][0] = -0.5 * (ugv_id - 1);
-            init_pos_ugv[i][1] = -1.0;
-            init_pos_ugv[i][2] = 0.0;
-            init_yaw_ugv[i] = 0.0;
-        }
-    }else
-    {
-        rand_y = uniform_real_distribution<double>(-10 , 10);
-        init_pos_ugv[i][0] = -1.0;
-        init_pos_ugv[i][1] = rand_y(eng);
-        init_pos_ugv[i][2] = 0.0;
-        init_yaw_ugv[i] = 0.0;
-        cout << RED  << "Wrong preset_init_pos_flag (ugv)."<< TAIL << endl;
-    }
-
+    rand_y = uniform_real_distribution<double>(-9.5 , 9.5);
+    init_pos_ugv[i][0] = -9.5;
+    init_pos_ugv[i][1] = rand_y(eng);
+    init_pos_ugv[i][2] = 0.0;
+    init_yaw_ugv[i] = 0.0;
 }
