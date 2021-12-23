@@ -56,6 +56,6 @@ Pos_ne:
   Kp_z : 0.5
   Kd_xy : 2.0
   Kd_z : 2.0
-  T_ude_xy : 1.0
-  T_ude_z : 1.0
+  T_ude_xy : 2.0
+  T_ude_z : 2.0
   T_ne : 0.1
