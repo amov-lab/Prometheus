@@ -68,6 +68,7 @@ class pos_controller_NE
             integral_LLF    = Eigen::Vector3f(0.0,0.0,0.0);
             NoiseEstimator  = Eigen::Vector3f(0.0,0.0,0.0);
             output_LLF      = Eigen::Vector3f(0.0,0.0,0.0);
+            pos_initial     = Eigen::Vector3d(0.0,0.0,0.0);
             set_filter();
         }
 
