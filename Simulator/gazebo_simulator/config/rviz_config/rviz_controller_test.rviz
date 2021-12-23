@@ -33,46 +33,19 @@ Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
-        3Dlidar_link:
-          Value: true
         All Enabled: true
-        base_link:
-          Value: true
-        base_link_frd:
-          Value: true
-        map:
-          Value: true
-        map_ned:
-          Value: true
-        map_slam:
-          Value: true
-        odom:
-          Value: true
-        odom_ned:
-          Value: true
-        realsense_camera_link:
-          Value: true
-        lidar_link:
-          Value: true
-        world:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          map:
-            map_ned:
-              {}
-            map_slam:
-              {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
@@ -231,5 +204,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1440
-  X: 445
-  Y: 217
+  X: 994
+  Y: 572
