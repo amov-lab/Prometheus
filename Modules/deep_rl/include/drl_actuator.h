@@ -34,6 +34,7 @@ class drl_actuator
     private:
         // 订阅
         ros::Subscriber move_cmd_sub;
+        ros::Subscriber vel_cmd_sub;
         ros::Publisher fake_odom_pub;
         ros::Publisher ugv_mesh_pub;
         ros::Timer fake_odom_pub_timer;
@@ -47,6 +48,8 @@ class drl_actuator
         bool ugv_state_update;
         int cmd_id;
         double block_size;
+        float dt;
+        int car_model;      // 0代表全向轮，1代表差速轮
 
         nav_msgs::Odometry fake_odom;
         gazebo_msgs::ModelState gazebo_model_state;
@@ -55,8 +58,9 @@ class drl_actuator
 
         struct UGV_state
         {
-            Eigen::Vector3d pos;
-            Eigen::Vector3d vel;
+            Eigen::Vector3d pos;    // 惯性系位置
+            Eigen::Vector3d vel;    // 惯性系速度
+            Eigen::Vector3d vel_body;    // 机体系速度
             Eigen::Vector3d euler;
             geometry_msgs::Quaternion quat;
             Eigen::Quaterniond quat2; 
@@ -64,6 +68,7 @@ class drl_actuator
 
         // 回调函数
         void move_cmd_cb(const prometheus_drl::ugv_move_cmd::ConstPtr& msg);
+        void vel_cmd_cb(const geometry_msgs::Twist::ConstPtr& msg);
         void fake_odom_pub_cb(const ros::TimerEvent& e);
         Eigen::Quaterniond quaternion_from_rpy(const Eigen::Vector3d &rpy);
 

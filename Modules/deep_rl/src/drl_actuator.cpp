@@ -10,6 +10,8 @@ void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, 
     ugv_state_update = false;
     cmd_id = 0;
     block_size = 0.2;
+    dt = 0.1;
+    car_model = 0;      // 0代表全向轮，1代表差速轮
 
     // 初始化 ugv_state
     ugv_state.pos = _init_pos;
@@ -31,12 +33,14 @@ void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, 
     gazebo_model_state.pose.orientation.w = ugv_state.quat2.w();
     gazebo_model_state.reference_frame = "ground_plane::link";
 
-    // 【订阅】 drl 动作   
-    move_cmd_sub = nh.subscribe<prometheus_drl::ugv_move_cmd>("/ugv"+std::to_string(agent_id) + "/move_cmd", 1, &drl_actuator::move_cmd_cb, this);
+    // 【订阅】 drl 离散动作   
+    move_cmd_sub  = nh.subscribe<prometheus_drl::ugv_move_cmd>("/ugv"+std::to_string(agent_id) + "/move_cmd", 1, &drl_actuator::move_cmd_cb, this);
+    // 【订阅】 drl 连续动作 
+    vel_cmd_sub   = nh.subscribe<geometry_msgs::Twist>("/ugv"+std::to_string(agent_id) + "/cmd_vel", 1, &drl_actuator::vel_cmd_cb, this);
     // 【发布】 odom，用于RVIZ显示 
-    fake_odom_pub    = nh.advertise<nav_msgs::Odometry>("/ugv"+std::to_string(agent_id) + "/fake_odom", 1);
+    fake_odom_pub = nh.advertise<nav_msgs::Odometry>("/ugv"+std::to_string(agent_id) + "/fake_odom", 1);
     // 【发布】mesh，用于RVIZ显示
-    ugv_mesh_pub =  nh.advertise<visualization_msgs::Marker>("/ugv"+std::to_string(agent_id) + "/ugv_mesh", 1);
+    ugv_mesh_pub  = nh.advertise<visualization_msgs::Marker>("/ugv"+std::to_string(agent_id) + "/ugv_mesh", 1);
     // 【定时器】
     fake_odom_pub_timer = nh.createTimer(ros::Duration(0.05), &drl_actuator::fake_odom_pub_cb, this);
 
@@ -91,6 +95,51 @@ void drl_actuator::move_cmd_cb(const prometheus_drl::ugv_move_cmd::ConstPtr& msg
     {
         cout << RED << node_name << "---> wrong move cmd."<< TAIL << endl;
     }
+}
+
+void drl_actuator::vel_cmd_cb(const geometry_msgs::Twist::ConstPtr& msg)
+{
+    if(car_model == 0)
+    {
+        // 默认vel_cmd_cb的回调频率是10Hz
+        // 全向小车
+        ugv_state.euler << 0.0,0.0,0.0;
+        ugv_state.quat2 = quaternion_from_rpy(ugv_state.euler);
+        ugv_state.quat.x = ugv_state.quat2.x();
+        ugv_state.quat.y = ugv_state.quat2.y();
+        ugv_state.quat.z = ugv_state.quat2.z();
+        ugv_state.quat.w = ugv_state.quat2.w();
+
+        ugv_state.vel[0] = msg->linear.x;
+        ugv_state.vel[1] = msg->linear.y;
+        ugv_state.vel[2] = 0.0;
+
+        ugv_state.pos = ugv_state.pos + ugv_state.vel * dt;
+    }else if(car_model == 0)
+    {
+        // 默认vel_cmd_cb的回调频率是10Hz
+        // 差速模型小车
+        ugv_state.euler[0] = 0.0;
+        ugv_state.euler[1] = 0.0;
+        ugv_state.euler[2] = ugv_state.euler[2] + msg->angular.z * dt;
+
+        ugv_state.quat2 = quaternion_from_rpy(ugv_state.euler);
+        ugv_state.quat.x = ugv_state.quat2.x();
+        ugv_state.quat.y = ugv_state.quat2.y();
+        ugv_state.quat.z = ugv_state.quat2.z();
+        ugv_state.quat.w = ugv_state.quat2.w();
+
+        ugv_state.vel_body[0] = msg->linear.x;
+        ugv_state.vel_body[1] = 0.0;
+        ugv_state.vel_body[2] = 0.0;
+
+        ugv_state.vel[0] = ugv_state.vel_body[0] * cos(ugv_state.euler[2]);
+        ugv_state.vel[1] = ugv_state.vel_body[0] * sin(ugv_state.euler[2]);
+        ugv_state.vel[2] = 0.0;
+
+        ugv_state.pos = ugv_state.pos + ugv_state.vel * dt;
+    }
+
 }
 
 void drl_actuator::fake_odom_pub_cb(const ros::TimerEvent &e)
