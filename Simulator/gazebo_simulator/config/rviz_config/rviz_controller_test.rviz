@@ -3,7 +3,8 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Global Options1
       Splitter Ratio: 0.5
     Tree Height: 455
   - Class: rviz/Selection
@@ -33,46 +34,19 @@ Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
-        3Dlidar_link:
-          Value: true
         All Enabled: true
-        base_link:
-          Value: true
-        base_link_frd:
-          Value: true
-        map:
-          Value: true
-        map_ned:
-          Value: true
-        map_slam:
-          Value: true
-        odom:
-          Value: true
-        odom_ned:
-          Value: true
-        realsense_camera_link:
-          Value: true
-        lidar_link:
-          Value: true
-        world:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          map:
-            map_ned:
-              {}
-            map_slam:
-              {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
@@ -111,7 +85,7 @@ Visualization Manager:
       Axes Radius: 0.15000000596046448
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
       Name: Ref_Pose
@@ -120,7 +94,7 @@ Visualization Manager:
       Shape: Axes
       Topic: /prometheus/control/ref_pose_rviz
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 30
       Class: rviz/Path
@@ -169,7 +143,7 @@ Visualization Manager:
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 238; 238; 236
     Default Light: true
     Fixed Frame: map
     Frame Rate: 30
@@ -195,7 +169,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 8.334606170654297
+      Distance: 19.472965240478516
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -210,10 +184,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.37539833784103394
+      Pitch: 1.5103973150253296
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.84539794921875
+      Yaw: 0.050398629158735275
     Saved: ~
 Window Geometry:
   Displays:
@@ -231,5 +205,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1440
-  X: 445
-  Y: 217
+  X: 994
+  Y: 534

@@ -10,7 +10,7 @@
 #include "message_utils.h"
 
 using namespace std;
-#define TRA_WINDOW 1000
+#define TRA_WINDOW 1200
 #define TIMEOUT_MAX 0.05
 #define NODE_NAME "pos_estimator"
 //---------------------------------------相关参数-----------------------------------------------
@@ -377,7 +377,9 @@ void pub_to_nodes(prometheus_msgs::DroneState State_from_fcu)
         random[2] = LPF_z.apply(random[2], dt);
 
 
-        for (int i=0;i<3;i++)
+        cout<<"random_num"<<random<<endl;
+
+        for (int i=0;i<2;i++)
         {
             Drone_State.velocity[i] = Drone_State.velocity[i] + random[i];
         }
