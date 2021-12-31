@@ -41,6 +41,11 @@ add_message_files(
   IndoorSearch.msg
   UgvState.msg
   UgvCommand.msg
+  StationCommand.msg
+  Case2Result.msg
+  Case3Result.msg
+  Msg103.msg
+  Msg104.msg
 )
 
 add_action_files(

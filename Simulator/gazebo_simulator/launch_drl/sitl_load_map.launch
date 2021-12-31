@@ -1,0 +1,16 @@
+<launch>
+
+    <!--地图文件路径-->
+    <arg name="map_file"         default="$(find prometheus_gazebo)/launch_drl/map.yaml"/>
+
+    <!--加载地图和rviz-->
+    <node pkg="map_server" type="map_server" name="map_server" args="$(arg map_file)"/>
+
+    <!-- Rviz config -->
+    <arg name="visualization" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_gazebo)/launch_drl/rviz_ugv_test.rviz"/>
+	<group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
+
+</launch>
