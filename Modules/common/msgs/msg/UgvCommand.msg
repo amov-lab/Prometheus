@@ -15,6 +15,10 @@ uint8 ENU_Vel_Control=5
 uint8 ENU_Pos_Control=6
 uint8 Path_Control=7
 
+uint8 Direct_Control_BODY=11
+uint8 Direct_Control_ENU=12
+uint8 Test=15
+
 float32[2] position_ref     ## [m]
 float32 yaw_ref             ## [rad]
 

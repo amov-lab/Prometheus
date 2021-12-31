@@ -37,7 +37,9 @@ uint8 XY_VEL_Z_POS = 2  ##0b10
 uint8 XYZ_VEL = 3       ##0b11
 uint8 XYZ_ACC = 4
 uint8 TRAJECTORY   = 5 
-
+uint8 XYZ_POS_BODY = 6  
+uint8 XYZ_VEL_BODY = 7
+uint8 XY_VEL_Z_POS_BODY = 8
 
 float32 swarm_size
 

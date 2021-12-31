@@ -316,7 +316,7 @@ int main(int argc, char **argv)
             //     pub_message(message_pub, prometheus_msgs::Message::WARN, NODE_NAME, "The drone is in the air!");
             // }
 
-            if (_DroneState.landed == true && Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
+            if (Command_Last.Mode != prometheus_msgs::ControlCommand::Takeoff)
             {
                 pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "Takeoff to the desired point.");
                 // 设定起飞位置
@@ -475,6 +475,7 @@ int main(int argc, char **argv)
                     _ControlOutput.Throttle[0] = _ControlOutput.Throttle[0] + random[0];
                     _ControlOutput.Throttle[1] = _ControlOutput.Throttle[1] + random[1];
                     _ControlOutput.Throttle[2] = _ControlOutput.Throttle[2] + random[2];
+                    cout<<"add disturbance"<<endl;
                 }
             }
 
