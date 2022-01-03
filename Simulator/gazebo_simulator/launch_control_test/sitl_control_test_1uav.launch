@@ -1,0 +1,44 @@
+<launch>
+	<!-- 无人机ID -->
+	<arg name="uav1_id" default="1"/>
+	
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="0.0"/>
+    <arg name="uav1_init_y" default="0.0"/>
+
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/004_CXY/CXY_empty.world"/>
+    <!-- 启动Gazebo -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+
+    <!-- Rviz config -->
+    <arg name="visualization" default="false"/>
+    <arg name="rivz_config" default="$(find prometheus_gazebo)/launch_swarm/rviz_cxy_case1.rviz"/>
+    <!-- 启动Rviz-->
+	<group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
+
+    <!-- 1号飞机 PX4 SITL -->
+	<include file="$(find prometheus_gazebo)/launch_control_test/sitl_control_test_uav_basic.launch">
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/amov_models/Multisolo/uav1/uav1.sdf"/>
+		<arg name="model" value="uav1"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- uav_control_main -->
+	<arg name="input_source" default="2"/>
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_uav$(arg uav1_id)" output="screen">
+		<param name="uav_id" value="$(arg uav1_id)"/>
+        <rosparam command="load" file="$(find prometheus_gazebo)/launch_control_test/control_param_uav.yaml" />
+	</node>
+
+	<!-- 手动控制 -->
+    <node pkg="prometheus_uav_control" type="uav_command_pub" name="uav_command_pub" output="screen" launch-prefix="gnome-terminal --">
+    </node>
+</launch>

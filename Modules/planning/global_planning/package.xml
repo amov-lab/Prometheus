@@ -4,7 +4,8 @@
     <version>0.0.0</version>
     <description>The prometheus_global_planning package</description>
 
-    <maintainer email="fatmoonqyp@126.com">Yuhua Qi</maintainer>
+      <!-- One maintainer tag required, multiple allowed, one person per tag -->
+  <maintainer email="qiyh8@mail.sysu.edu.cn">Yuhua Qi</maintainer>
 
     <license>TODO</license>
 
