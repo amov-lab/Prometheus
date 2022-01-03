@@ -46,6 +46,14 @@ add_message_files(
   Case3Result.msg
   Msg103.msg
   Msg104.msg
+  ManCommand.msg
+  UAVState.msg
+  AgentStateUGV.msg
+  AgentStateMAN.msg
+  MultiAgentState.msg
+  UAVCommand.msg
+  AgentCommandUGV.msg
+  AgentCommandMAN.msg
 )
 
 add_action_files(
