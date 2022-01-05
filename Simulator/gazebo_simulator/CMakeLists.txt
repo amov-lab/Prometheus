@@ -59,6 +59,8 @@ add_library(
 target_link_libraries(realsense_gazebo_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 add_dependencies(realsense_gazebo_plugin ${catkin_EXPORTED_TARGETS})
 
+add_executable(joy cpp_nodes/joy_node.cpp)
+target_link_libraries(joy ${catkin_LIBRARIES})
 
 add_executable(qrcode_control cpp_nodes/qrcode_control.cpp)
 add_dependencies(qrcode_control prometheus_gazebo_gencpp) 
