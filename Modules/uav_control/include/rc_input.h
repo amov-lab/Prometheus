@@ -11,10 +11,11 @@ class RC_Input
         void handle_rc_data(mavros_msgs::RCInConstPtr pMsg);
         
         double ch[4];           // 1-4通道数值: roll pitch yaw thrust 
-        double channel_5;       // 通道5
-        double channel_6;       // 通道6
-        double channel_7;       // 通道7
-        double channel_8;       // 通道8
+        double channel_5;       // 通道5（三段） - 切换HOVER_CONTROL
+        double channel_6;       // 通道6（三段） - 切换COMMAND_CONTROL
+        double channel_7;       // 通道7（二段） - 切换LAND_CONTROL
+        double channel_8;       // 通道8（二段） - 重启飞控
+        double channel_9;       // 通道9（二段） - 解锁
         double last_channel_5;
         double last_channel_6;
         double last_channel_7;
