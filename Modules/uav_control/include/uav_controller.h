@@ -19,7 +19,6 @@
 #include <prometheus_msgs/AgentStateMAN.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
-#include <quadrotor_msgs/PositionCommand.h>
 
 #include <nav_msgs/Odometry.h>
 
