@@ -1,0 +1,7 @@
+<launch>
+    <node pkg="prometheus_detection" type="oriented_object_segs_client.py" name="oriented_object_segs_client" output="screen">
+        <param name="output_topic" value="/prometheus/object_detection/oriented_object_segs"/>
+        <param name="camera_parameters" type="string" value="$(find prometheus_detection)/shell/calib_webcam_640x480.yaml" />
+        <param name="object_names_txt" value="dota"/>
+    </node>
+</launch>
