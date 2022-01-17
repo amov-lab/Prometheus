@@ -151,6 +151,28 @@
       </include>
     </model>
 
+
+    <model name='fake_uav_1'>
+      <include>
+        <uri>model://fake_uav_1</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_uav_2'>
+      <include>
+        <uri>model://fake_uav_2</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_uav_3'>
+      <include>
+        <uri>model://fake_uav_3</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
     </world>
 </sdf>
 

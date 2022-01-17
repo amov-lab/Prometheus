@@ -5,7 +5,9 @@ namespace drl_ns
 // 初始化函数
 void Occupy_map::init(ros::NodeHandle& nh, int id)
 {
-    ugv_id = id;
+    agent_id = id;
+    // 模型前缀 - 默认为 agent，无人机则设置为 uav
+    nh.param<string>("agent_prefix", agent_prefix, "/ugv");    
     // 地图原点
     nh.param("map/origin_x", origin_(0), -5.0);
     nh.param("map/origin_y", origin_(1), -5.0);
@@ -13,7 +15,7 @@ void Occupy_map::init(ros::NodeHandle& nh, int id)
     // 地图实际尺寸，单位：米
     nh.param("map/map_size_x", map_size_3d_(0), 10.0);
     nh.param("map/map_size_y", map_size_3d_(1), 10.0);
-    nh.param("map/map_size_z", map_size_3d_(2), 2.0);
+    nh.param("map/map_size_z", map_size_3d_(2), 3.0);
     // 地图分辨率，单位：米
     nh.param("map/resolution", resolution_,  0.1);
     // 地图膨胀距离，单位：米
@@ -24,22 +26,29 @@ void Occupy_map::init(ros::NodeHandle& nh, int id)
     // show border
     nh.param("map/border", show_border, false);
 
-    ugv_name = "/ugv" + std::to_string(ugv_id);
+    agent_name = agent_prefix + std::to_string(agent_id);
     // 【发布】全局地图 - rviz显示
-    global_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(ugv_name + "/map/global_pcl",  1); 
+    global_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(agent_name + "/map/global_pcl",  1); 
     // 【发布】全局膨胀点云 - rviz显示
-    global_inflate_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(ugv_name + "/map/global_inflate_pcl", 1);
+    global_inflate_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(agent_name + "/map/global_inflate_pcl", 1);
     // 【定时器】地图发布定时器 - rviz显示
     map_pub_timer = nh.createTimer(ros::Duration(0.2), &Occupy_map::map_pub_cb, this);
 
     // 地图指针初始化
     global_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
     global_inflate_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
-    other_ugv_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    other_agent_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
     input_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
     input_transformed_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
 
-    ugv_height = 0.1; 
+    if(agent_prefix == "/uav")
+    {
+        agent_height = 1.0;
+    }else
+    {
+        agent_height = 0.1;
+    }
+    
     // 局部地图滑窗指示器
     st_it = 0;
     // 存储的上一帧odom
@@ -59,15 +68,15 @@ void Occupy_map::init(ros::NodeHandle& nh, int id)
     min_range_ = origin_;
     max_range_ = origin_ + map_size_3d_;   
 
-    min_range_(2) = ugv_height - 2*resolution_;
-    max_range_(2) = ugv_height + 2*resolution_;
+    min_range_(2) = agent_height - 2*resolution_;
+    max_range_(2) = agent_height + 2*resolution_;
 
-    inflate_index_ugv = 0;
+    inflate_index_agent = 0;
     ifn = ceil(odom_inflate_ * inv_resolution_);
     for(int x = -ifn; x <= ifn; x++)
         for(int y = -ifn; y <= ifn;)
         {
-            enum_p_ugv[inflate_index_ugv++] << x*resolution_, y*resolution_, 0.0;
+            enum_p_agent[inflate_index_agent++] << x*resolution_, y*resolution_, 0.0;
             if(x == -ifn || x == ifn) y++;
             else y += 2*ifn;
         }
@@ -75,7 +84,7 @@ void Occupy_map::init(ros::NodeHandle& nh, int id)
     for(int x = -ifn-1; x <= ifn+1; x++)
         for(int y = -ifn-1; y <= ifn+1;)
         {
-            enum_p_ugv[inflate_index_ugv++] << x*resolution_, y*resolution_, 0.0;
+            enum_p_agent[inflate_index_agent++] << x*resolution_, y*resolution_, 0.0;
             if(x == -ifn-1 || x == ifn+1) y++;
             else y += 2*ifn+2;
         }
@@ -131,7 +140,7 @@ void Occupy_map::reset()
     // 地图指针初始化
     global_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
     global_inflate_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
-    other_ugv_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    other_agent_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
     input_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
     input_transformed_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
 
@@ -177,35 +186,35 @@ void Occupy_map::map_update_laser(const sensor_msgs::LaserScanConstPtr & local_p
     local_map_merge_odom(odom);
 }
 
-// function: update global ugv occupy grid (10Hz, defined by fsm)
-void Occupy_map::map_update_other_ugv(Eigen::Vector3d *input_ugv_odom, bool *get_ugv_odom, int swarm_num)
+// function: update global agent occupy grid (10Hz, defined by fsm)
+void Occupy_map::map_update_other_agent(Eigen::Vector3d *input_agent_odom, bool *get_agent_odom, int swarm_num)
 {
     Eigen::Vector3d p3d_inf;
 
-    // update global ugv occupy grid with input ugv odom
+    // update global agent occupy grid with input agent odom
     pcl::PointXYZ pt;
-    other_ugv_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
+    other_agent_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
 
     for(int i = 1; i <= swarm_num; i++)
     {
-        if(i == ugv_id)
+        if(i == agent_id)
         {
             continue;
         }
         
-        if(get_ugv_odom[i])
-            for(int j = 0; j < inflate_index_ugv; j++)
+        if(get_agent_odom[i])
+            for(int j = 0; j < inflate_index_agent; j++)
             {
-                pt.x = input_ugv_odom[i][0] + enum_p_ugv[j](0);
-                pt.y = input_ugv_odom[i][1] + enum_p_ugv[j](1);
-                pt.z = input_ugv_odom[i][2] + enum_p_ugv[j](2);
+                pt.x = input_agent_odom[i][0] + enum_p_agent[j](0);
+                pt.y = input_agent_odom[i][1] + enum_p_agent[j](1);
+                pt.z = input_agent_odom[i][2] + enum_p_agent[j](2);
 
-                other_ugv_pcl_ptr->points.push_back(pt);
+                other_agent_pcl_ptr->points.push_back(pt);
             }
     }
-    other_ugv_pcl_ptr->width = other_ugv_pcl_ptr->points.size();
-    other_ugv_pcl_ptr->height = 1;
-    other_ugv_pcl_ptr->is_dense = true;
+    other_agent_pcl_ptr->width = other_agent_pcl_ptr->points.size();
+    other_agent_pcl_ptr->height = 1;
+    other_agent_pcl_ptr->is_dense = true;
 }
 
 
@@ -223,9 +232,9 @@ void Occupy_map::local_map_merge_odom(const nav_msgs::Odometry & odom)
     tf::quaternionMsgToTF(odom.pose.pose.orientation, orientation);    
     tf::Matrix3x3(orientation).getRPY(roll, pitch, yaw);
 
-    // ugv is moving
+    // agent is moving
     bool pos_change = (abs(x-f_x)>0.1) || (abs(y-f_y)>0.1);
-    // update map even though ugv doesn't move
+    // update map even though agent doesn't move
     static int update_num=0;
     update_num++;
 
@@ -333,15 +342,15 @@ void Occupy_map::inflate_point_cloud(void)
     }
 
     // ② 设置其他无人车位置占据
-    for(int i = 0; i < other_ugv_pcl_ptr->points.size(); i++)
+    for(int i = 0; i < other_agent_pcl_ptr->points.size(); i++)
     {
-        p3d_inf(0) = other_ugv_pcl_ptr->points[i].x;
-        p3d_inf(1) = other_ugv_pcl_ptr->points[i].y;
-        p3d_inf(2) = other_ugv_pcl_ptr->points[i].z;
+        p3d_inf(0) = other_agent_pcl_ptr->points[i].x;
+        p3d_inf(1) = other_agent_pcl_ptr->points[i].y;
+        p3d_inf(2) = other_agent_pcl_ptr->points[i].z;
         this->setOccupancy(p3d_inf, 1); // set to 1
     }
     // ③ 加上其他无人车的位置点云
-    *global_inflate_pcl_ptr += *other_ugv_pcl_ptr;
+    *global_inflate_pcl_ptr += *other_agent_pcl_ptr;
     // ④ 加上border,仅用作显示作用
     if(show_border)
     {
