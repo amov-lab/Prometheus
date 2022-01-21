@@ -4,6 +4,8 @@
 //ROS 头文件
 #include <ros/ros.h>
 #include <iostream>
+#include <tf/transform_datatypes.h>
+
 #include <prometheus_msgs/ArucoInfo.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVCommand.h>
@@ -19,8 +21,8 @@ struct Parameter
 {
     bool hold_mode;                                 //【参数】悬停模式，用于测试检测精度
     bool sim_mode;                                  //【参数】选择Gazebo仿真模式 或 真实实验模式
-    double camera_offset[3];                         //【参数】相机安装偏差
-    double kp_land[3];                               //【参数】控制比例参数
+    float camera_offset[3];                         //【参数】相机安装偏差
+    float kp_land[3];                               //【参数】控制比例参数
 };
 Parameter param;
 
@@ -48,7 +50,7 @@ struct VISION_INFO
     bool is_detected;
     int num_detected;
     int num_lost;
-    double distance_to_aruco;
+    float distance_to_pad;
     prometheus_msgs::ArucoInfo aruco_info;              // 检测结果
     Eigen::Vector3d aruco_body;
     Eigen::Vector3d aruco_body_enu;
@@ -60,6 +62,7 @@ VISION_INFO vision_info;
 Eigen::Vector3d uav_pos;
 Eigen::Matrix3d R_Body_to_ENU;              // 无人机机体系至惯性系转换矩阵
 Eigen::Vector3d return_point;
+
 
 Eigen::Vector3d search_point;
 float dis_to_search_point;
