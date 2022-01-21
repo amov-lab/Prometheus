@@ -12,24 +12,24 @@ int main(int argc, char **argv)
     ros::Rate rate(100.0);
 
     // 【参数】悬停模式，用于测试检测精度
-    nh.param("hold_mode", param.hold_mode, false);
+    nh.param<bool>("hold_mode", param.hold_mode, false);
     // 【参数】选择Gazebo仿真模式 或 真实实验模式
-    nh.param("sim_mode", param.sim_mode, true);
+    nh.param<bool>("sim_mode", param.sim_mode, true);
     //【参数】相机安装偏差,规定为:相机在机体系(质心原点)的位置（设置为0影响也不大）
-    nh.param("camera_offset_x", param.camera_offset[0], 0.0);
-    nh.param("camera_offset_y", param.camera_offset[1], 0.0);
-    nh.param("camera_offset_z", param.camera_offset[2], 0.0);
+    nh.param<float>("camera_offset_x", param.camera_offset[0], 0.0);
+    nh.param<float>("camera_offset_y", param.camera_offset[1], 0.0);
+    nh.param<float>("camera_offset_z", param.camera_offset[2], 0.0);
     //【参数】控制比例参数
-    nh.param("kpx_land", param.kp_land[0], 0.1);
-    nh.param("kpy_land", param.kp_land[1], 0.1);
-    nh.param("kpz_land", param.kp_land[2], 0.1);
+    nh.param<float>("kpx_land", param.kp_land[0], 0.1);
+    nh.param<float>("kpy_land", param.kp_land[1], 0.1);
+    nh.param<float>("kpz_land", param.kp_land[2], 0.1);
     // 默认使用1号机进行实验
     string uav_name = "/uav" + std::to_string(1);      
     //【订阅】靶标位置
     //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
     aruco_sub = nh.subscribe<prometheus_msgs::ArucoInfo>("/prometheus/object_detection/aruco_det", 10, aruco_cb);
-    //【订阅】真值，此信息仅做比较使用 不强制要求提供
+    //【订阅】地面真值，此信息仅做比较使用 不强制要求提供
     groundtruth_sub = nh.subscribe<nav_msgs::Odometry>("/ground_truth/aruco_marker", 10, groundtruth_cb);
     //【订阅】无人机状态
     uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>(uav_name + "/prometheus/drone_state", 10, uav_state_cb);
@@ -55,8 +55,8 @@ int main(int argc, char **argv)
     vision_info.num_detected = 0;
     vision_info.num_lost = 0;
     vision_info.is_detected = false;
-    vision_info.distance_to_aruco = 0;
-    
+    vision_info.distance_to_pad = 0;
+
     exec_state = EXEC_STATE::INIT;      // 状态机初始化
 
     //打印参数,用于检查
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     cout << GREEN << "autonomous_landing init!"<< TAIL << endl;
 
     int start_flag;
-    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Demo<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<<<< "<< endl;
     cout << "Please check the parameter and setting，enter 1 to continue， else for quit: "<<endl;
     cin >> start_flag;
 
@@ -223,19 +223,11 @@ void control_cb(const ros::TimerEvent& e)
     }
 }
 
+
 void printf_cb(const ros::TimerEvent& e)
 {
-    cout << ">>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Demo<<<<<<<<<<<<<<<<<<<"<< endl;
-    //固定的浮点显示
-    cout.setf(ios::fixed);
-    //setprecision(n) 设显示小数精度为n位
-    cout<<setprecision(2);
-    //左对齐
-    cout.setf(ios::left);
-    // 强制显示小数点
-    cout.setf(ios::showpoint);
-    // 强制显示符号
-    cout.setf(ios::showpos);
+    cout << ">>>>>>>>>>>>>>>>>>>>>>Autonomous Landing Mission<<<<<<<<<<<<<<<<<<<"<< endl;
+
     switch (exec_state)
     {
         case INIT:
@@ -250,7 +242,7 @@ void printf_cb(const ros::TimerEvent& e)
         case HORIZON_APPROACH:
             cout << "[HORIZON_APPROACH]" << "ENU_FRAME, XY_VEL_Z_POS" <<endl;
             cout << "Reference [ X Y Z ]: " << uav_command.velocity_ref[0] << " [m/s] "<< uav_command.velocity_ref[1] << " [m/s] "<< uav_command.position_ref[2] << " [m] "<<endl;
-            cout << "distance_to_aruco: "  << vision_info.distance_to_aruco<< endl;
+            cout << "distance_to_pad: "  << vision_info.distance_to_pad<< endl;
             
             break;
 
@@ -277,6 +269,5 @@ void printf_cb(const ros::TimerEvent& e)
     cout << "Target_pos (body_enu): " << vision_info.aruco_body_enu[0] << " [m] "<< vision_info.aruco_body_enu[1] << " [m] "<< vision_info.aruco_body_enu[2] << " [m] "<<endl;
     cout << "Ground_truth(pos)    :  " << vision_info.GroundTruth.pose.pose.position.x << " [m] "<< vision_info.GroundTruth.pose.pose.position.y << " [m] "<< vision_info.GroundTruth.pose.pose.position.z << " [m] "<<endl;
     cout << "Detection_ENU(pos)   : " << vision_info.aruco_enu[0] << " [m] "<< vision_info.aruco_enu[1] << " [m] "<< vision_info.aruco_enu[2] << " [m] "<<endl;
-
 }
 
