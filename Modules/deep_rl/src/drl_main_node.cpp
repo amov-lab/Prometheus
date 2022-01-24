@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     // 【发布】 智能体位置(写在这里发布是因为set_model_state这个函数不能反复调用，会出现卡顿)
     gazebo_model_state_pub = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
     // 【定时器】
-    ros::Timer gazebo_pub_timer = nh.createTimer(ros::Duration(0.1), gazebo_pub_cb);
+    ros::Timer gazebo_pub_timer = nh.createTimer(ros::Duration(0.05), gazebo_pub_cb);
     // 【定时器】
     ros::Timer debug_timer = nh.createTimer(ros::Duration(5.0), debug_cb);
 

@@ -91,6 +91,7 @@ void drl_actuator::move_cmd_cb(const prometheus_drl::move_cmd::ConstPtr& msg)
     if(discreated_action.ID <= cmd_id)
     {
         cout << RED << node_name << "---> wrong cmd id."<< TAIL << endl;
+        cmd_id = discreated_action.ID;
         return;
     }
     cmd_id = discreated_action.ID;

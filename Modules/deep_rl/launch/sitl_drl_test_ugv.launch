@@ -1,5 +1,5 @@
 <launch>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/drl_worlds/drl_world_2.world"/>
+	<arg name="world" default="$(find prometheus_drl)/worlds/drl_world_2.world"/>
     <!-- Rviz config -->
     <arg name="visualization" default="true"/>
     <arg name="rivz_config" default="$(find prometheus_drl)/launch/rviz_ugv_test.rviz"/>

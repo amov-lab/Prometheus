@@ -115,14 +115,17 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
 
     // 确定左上角位置
     Eigen::Vector3d left_up_corner_pos;
-    left_up_corner_pos[0] = agent_odom.pose.pose.position.x + block_size*matrix_size/2;
-    left_up_corner_pos[1] = agent_odom.pose.pose.position.y + block_size*matrix_size/2;
+    left_up_corner_pos[0] = agent_odom.pose.pose.position.x + block_size*matrix_size/2 + block_size/2;
+    left_up_corner_pos[1] = agent_odom.pose.pose.position.y + block_size*matrix_size/2 + block_size/2;
     left_up_corner_pos[2] = agent_height; 
     Eigen::Vector3d right_down_corner_pos;
-    right_down_corner_pos[0] = agent_odom.pose.pose.position.x - block_size*matrix_size/2;
-    right_down_corner_pos[1] = agent_odom.pose.pose.position.y - block_size*matrix_size/2;
+    right_down_corner_pos[0] = agent_odom.pose.pose.position.x - block_size*matrix_size/2 - block_size/2;
+    right_down_corner_pos[1] = agent_odom.pose.pose.position.y - block_size*matrix_size/2 - block_size/2;
     right_down_corner_pos[2] = agent_height; 
 
+    // 智能体位置
+    agent_state.agent_pos[0] = agent_odom.pose.pose.position.x;
+    agent_state.agent_pos[1] = agent_odom.pose.pose.position.y;
 
     // 障碍物矩阵
     for(int i = 0; i < matrix_size; i++)
@@ -135,6 +138,8 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
             agent_state.obstacle_matrix[i*matrix_size+ j] = Occupy_map_ptr->getOccupancy(new_corner_pos, block_size); 
         }
     }
+
+    agent_state.obstacle_matrix[5*matrix_size+ 5] = 0;
 
     // 邻居位置矩阵
     // 首先全部置0
@@ -210,6 +215,34 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
             }
             // 如何赋值呢？
             agent_state.nei_goal_matrix[id(0)*matrix_size+id(1)] = i; 
+        }
+        else
+        {
+            // Eigen::Vector3d dis_goal;
+            // Eigen::Vector3d min_dis_goal;
+            // float min_distance = 1000;
+            // float goal_distance;
+            // for(int j = 0; j < matrix_size; j++)
+            // {
+            //     for(int k = 0; k < matrix_size; k++)
+            //     {
+            //         dis_goal[0] = left_up_corner_pos[0] + j*block_size;
+            //         dis_goal[1] = left_up_corner_pos[1] + k*block_size;
+            //         goal_distance = sqrt(pow((dis_goal[0] - agent_goal(agent_id-1,0)),2) + pow((dis_goal[1] - agent_goal(agent_id-1,1)),2));
+            //         if(goal_distance < min_distance)
+            //         {
+            //             min_dis_goal = dis_goal;
+            //             min_distance = goal_distance;
+            //         }
+            //     }
+            // }
+            // Eigen::Vector3i id;
+            // for (int j = 0; j < 2; ++j)
+            // {
+            //     id(j) = floor( (left_up_corner_pos(j) - min_dis_goal[j]) * inv_block_size );
+            // }
+            // // 如何赋值呢？
+            // agent_state.nei_goal_matrix[id(0)*matrix_size+id(1)] = i; 
         }
     }
 

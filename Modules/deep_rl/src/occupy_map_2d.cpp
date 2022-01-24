@@ -32,7 +32,7 @@ void Occupy_map::init(ros::NodeHandle& nh, int id)
     // 【发布】全局膨胀点云 - rviz显示
     global_inflate_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(agent_name + "/map/global_inflate_pcl", 1);
     // 【定时器】地图发布定时器 - rviz显示
-    map_pub_timer = nh.createTimer(ros::Duration(0.2), &Occupy_map::map_pub_cb, this);
+    map_pub_timer = nh.createTimer(ros::Duration(0.1), &Occupy_map::map_pub_cb, this);
 
     // 地图指针初始化
     global_pcl_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>);
