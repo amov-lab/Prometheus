@@ -7,17 +7,17 @@ void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, 
     nh.param<string>("agent_prefix", agent_prefix, "/ugv");
     // 动作模式 - 0 代表离散控制，1代表连续控制
     nh.param("action_mode", action_mode, 0);
+    // 矩阵方格每一格的实际长度(离散情况下，实际运行的block_size是否需要减小，从而降低危险？)
+    nh.param("block_size", block_size, 0.5);
 
     agent_id = id;
     if(agent_prefix == "/uav")
     {
         model_name = "fake_uav_" + std::to_string(agent_id);
-        node_name = "fake_uav" + std::to_string(agent_id);
         actuator_model = 0;     
     }else if(agent_prefix == "/ugv")
     {
         model_name = "fake_ugv_" + std::to_string(agent_id);
-        node_name = "fake_ugv" + std::to_string(agent_id);
         // actuator_model = 1;     // 差速
         actuator_model = 0;  // 全向
     }
@@ -25,7 +25,6 @@ void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, 
     agent_name = agent_prefix + std::to_string(agent_id);
     get_move_cmd = false;
     cmd_id = 0;
-    block_size = 0.2;
     dt = 0.1;
 
     // 初始化 agent_state
@@ -57,14 +56,14 @@ void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, 
         // 【订阅】 drl 连续动作 
         vel_cmd_sub  = nh.subscribe<geometry_msgs::Twist>(agent_name + "/cmd_vel", 1, &drl_actuator::vel_cmd_cb, this);
     }
-    // 【发布】 odom，用于RVIZ显示 
+    // 【发布】odom
     fake_odom_pub = nh.advertise<nav_msgs::Odometry>(agent_name + "/fake_odom", 1);
     // 【发布】mesh，用于RVIZ显示
     mesh_pub  = nh.advertise<visualization_msgs::Marker>(agent_name + "/mesh", 1);
-    // 【定时器】
-    fake_odom_pub_timer = nh.createTimer(ros::Duration(0.05), &drl_actuator::fake_odom_pub_cb, this);
+    // 【定时器】发布智能体odom - 略快于drl_sensing中订阅的频率
+    fake_odom_pub_timer = nh.createTimer(ros::Duration(0.02), &drl_actuator::fake_odom_pub_cb, this);
 
-    cout << GREEN  << node_name << "---> drl_actuator init sucess in position: " << _init_pos[0] <<" [ m ] "<<_init_pos[1] <<" [ m ] "<< TAIL <<endl;
+    cout << GREEN << "---> drl_actuator init sucess in position: " << _init_pos[0] <<" [ m ] "<<_init_pos[1] <<" [ m ] "<< TAIL <<endl;
 }
 
 void drl_actuator::reset(Eigen::Vector3d _init_pos, double _init_yaw)
@@ -82,6 +81,8 @@ void drl_actuator::reset(Eigen::Vector3d _init_pos, double _init_yaw)
     cmd_id = 0;
     discreated_action.ID = 0;
     discreated_action.CMD = prometheus_drl::move_cmd::HOLD;
+
+    cout << GREEN << "---> drl_actuator reset sucess in position:: " << _init_pos[0] <<" [ m ] "<<_init_pos[1] <<" [ m ] "<< TAIL <<endl;
 }
 
 void drl_actuator::move_cmd_cb(const prometheus_drl::move_cmd::ConstPtr& msg)
@@ -90,10 +91,11 @@ void drl_actuator::move_cmd_cb(const prometheus_drl::move_cmd::ConstPtr& msg)
 
     if(discreated_action.ID <= cmd_id)
     {
-        cout << RED << node_name << "---> wrong cmd id."<< TAIL << endl;
-        cmd_id = discreated_action.ID;
+        cout << RED << "---> drl_actuator wrong cmd id."<< TAIL << endl;
+        // cmd_id = discreated_action.ID;
         return;
     }
+
     cmd_id = discreated_action.ID;
     get_move_cmd = true;
 
@@ -114,7 +116,7 @@ void drl_actuator::move_cmd_cb(const prometheus_drl::move_cmd::ConstPtr& msg)
         agent_state.pos[1] = agent_state.pos[1] - block_size;
     }else
     {
-        cout << RED << node_name << "---> wrong move cmd."<< TAIL << endl;
+        cout << RED  << "---> drl_actuator wrong move cmd."<< TAIL << endl;
     }
 }
 
@@ -216,7 +218,6 @@ void drl_actuator::fake_odom_pub_cb(const ros::TimerEvent &e)
 
     mesh_pub.publish(meshROS); 
 
-
     // 发布TF用于RVIZ显示
     static tf2_ros::TransformBroadcaster broadcaster;
     geometry_msgs::TransformStamped tfs;
@@ -266,6 +267,7 @@ void drl_actuator::printf_cb()
 
     if(action_mode == 0)
     {
+        cout << GREEN  << "In discreated_action mode :"<< TAIL <<endl;
         if(discreated_action.CMD == prometheus_drl::move_cmd::HOLD)
         {
             cout << GREEN  << "Action : [" << discreated_action.ID << "] " << "[  HOLD   ]" << TAIL <<endl;
@@ -284,11 +286,9 @@ void drl_actuator::printf_cb()
         }
     }else if(action_mode == 1)
     {
-
+        cout << GREEN  << "In continued_action mode :"<< TAIL <<endl;
+        cout << GREEN  << "Action [X Y]: [" << continued_action.linear.x << "[m/s]" << continued_action.linear.y << "[m/s]" << TAIL <<endl;
     }
-
-
-
 }
 
 Eigen::Vector3d drl_actuator::get_agent_pos()
@@ -304,11 +304,11 @@ gazebo_msgs::ModelState drl_actuator::get_model_state()
 // 从(roll,pitch,yaw)创建四元数  by a 3-2-1 intrinsic Tait-Bryan rotation sequence
 Eigen::Quaterniond drl_actuator::quaternion_from_rpy(const Eigen::Vector3d &rpy)
 {
-        // YPR - ZYX
-        return Eigen::Quaterniond(
-                        Eigen::AngleAxisd(rpy.z(), Eigen::Vector3d::UnitZ()) *
-                        Eigen::AngleAxisd(rpy.y(), Eigen::Vector3d::UnitY()) *
-                        Eigen::AngleAxisd(rpy.x(), Eigen::Vector3d::UnitX())
-                        );
+    // YPR - ZYX
+    return Eigen::Quaterniond(
+                    Eigen::AngleAxisd(rpy.z(), Eigen::Vector3d::UnitZ()) *
+                    Eigen::AngleAxisd(rpy.y(), Eigen::Vector3d::UnitY()) *
+                    Eigen::AngleAxisd(rpy.x(), Eigen::Vector3d::UnitX())
+                    );
 }
 }

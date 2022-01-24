@@ -12,23 +12,22 @@ void drl_sensing::init(ros::NodeHandle& nh, int id, Eigen::MatrixXd goal)
     // 是否为仿真模式
     nh.param("sim_mode", sim_mode, false); 
     // 矩阵方格每一格的实际长度
-    nh.param("block_size", block_size, 0.5f);
-
+    nh.param("block_size", block_size, 0.5);
     inv_block_size = 1.0 / block_size;
-    // 矩阵的维数
+    
+    // 状态矩阵的维数
     matrix_size = 10; 
 
     agent_id = id;
     agent_name = agent_prefix + std::to_string(agent_id);
-
     agent_goal = goal;
 
-    // 【订阅】 智能体真实位置 - 来自gazebo
-    odom_sub = nh.subscribe<nav_msgs::Odometry>(agent_name + "/odom", 1, &drl_sensing::odom_cb, this);
+    // 【订阅】 智能体真实位置 - 来自drl_actuator
+    odom_sub = nh.subscribe<nav_msgs::Odometry>(agent_name + "/fake_odom", 1, &drl_sensing::odom_cb, this);
     // 【订阅】 激光雷达原始数据 - 来自gazebo
     scan_sub = nh.subscribe<sensor_msgs::LaserScan>(agent_name + "/scan", 1, &drl_sensing::scan_cb, this);
 
-    // 【订阅】其他智能体位置
+    // 【订阅】其他智能体位置 - 来自drl_actuator
     for(int i = 1; i <= swarm_num; i++)
     {
         if(i == agent_id)
@@ -44,8 +43,8 @@ void drl_sensing::init(ros::NodeHandle& nh, int id, Eigen::MatrixXd goal)
     agent_state_pub = nh.advertise<prometheus_drl::agent_state>(agent_name + "/agent_state", 1);
     // 【定时器】发布智能体状态定时器
     pub_agent_state_timer = nh.createTimer(ros::Duration(0.05), &drl_sensing::pub_agent_state_cb, this);        
-    // 【定时器】在全局地图中更新其他智能体位置
-    update_other_agent_pos_timer = nh.createTimer(ros::Duration(0.1), &drl_sensing::update_other_agent_pos_cb, this);        
+    // 【定时器】在全局地图中更新其他智能体位置 todo
+    // update_other_agent_pos_timer = nh.createTimer(ros::Duration(0.1), &drl_sensing::update_other_agent_pos_cb, this);        
     
     // 初始化占据地图
     Occupy_map_ptr.reset(new Occupy_map);
@@ -60,7 +59,8 @@ void drl_sensing::init(ros::NodeHandle& nh, int id, Eigen::MatrixXd goal)
     {
         agent_height = 0.1;
     }
-    
+
+    cout << GREEN << "---> drl_sensing init sucess with goal: " << goal(agent_id-1,0) <<" [ m ] "<< goal(agent_id-1,1) <<" [ m ] "<< TAIL <<endl;
 }
 
 void drl_sensing::reset(Eigen::MatrixXd goal)
@@ -79,7 +79,10 @@ void drl_sensing::reset(Eigen::MatrixXd goal)
     }
     odom_ready = false;
     sensor_ready = false;
+    // 重置占据地图
     Occupy_map_ptr->reset();
+
+    cout << GREEN << "---> drl_sensing reset sucess with goal: " << goal(agent_id-1,0) <<" [ m ] "<< goal(agent_id-1,1) <<" [ m ] "<< TAIL <<endl;
 }
 
 void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
@@ -164,7 +167,7 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
             continue;
         }
         Eigen::Vector3i id;
-        for (int j = 0; j < 2; ++j)
+        for (int j = 0; j < 2; j++)
         {
             id(j) = floor( (left_up_corner_pos(j) - odom_nei[i][j]) * inv_block_size );
         }
@@ -185,7 +188,7 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
         agent_goal(agent_id-1,1)<left_up_corner_pos[1] && agent_goal(agent_id-1,1)>right_down_corner_pos[1])
     {
         Eigen::Vector3i id;
-        for (int j = 0; j < 2; ++j)
+        for (int j = 0; j < 2; j++)
         {
             id(j) = floor( (left_up_corner_pos(j) - agent_goal(agent_id-1,j)) * inv_block_size );
         }
@@ -209,7 +212,7 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
             agent_goal(i-1,1)<left_up_corner_pos[1] && agent_goal(i-1,1)>right_down_corner_pos[1])
         {
             Eigen::Vector3i id;
-            for (int j = 0; j < 2; ++j)
+            for (int j = 0; j < 2; j++)
             {
                 id(j) = floor( (left_up_corner_pos(j) - agent_goal(i-1,j)) * inv_block_size );
             }
@@ -248,8 +251,7 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
 
     agent_state_pub.publish(agent_state);
 
-    // 此处改为根据循环时间计算的数值
-    if(exec_num == 1000)
+    if(exec_num == 500)
     {
         // 膨胀地图效率与地图大小有关
         cout << YELLOW << "drl_sensing: Matrix update take " << (ros::Time::now()-time_start).toSec() <<" [s]. " << TAIL <<endl;
@@ -296,10 +298,8 @@ void drl_sensing::nei_odom_cb(const nav_msgs::Odometry::ConstPtr& odom, int id)
 void drl_sensing::printf_cb()
 {
     cout << GREEN  << "State  : " << TAIL <<endl;
-
     cout << GREEN  << "pos    : " << agent_odom.pose.pose.position.x << " [m] "<< agent_odom.pose.pose.position.y <<" [m] "<< TAIL <<endl;
     cout << GREEN  << "goal   : " << agent_goal(agent_id-1,0) << " [m] "<< agent_goal(agent_id-1,1) <<" [m] "<< TAIL <<endl;
-
 }
 
 }

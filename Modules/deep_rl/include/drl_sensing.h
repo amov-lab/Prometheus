@@ -25,6 +25,8 @@
 
 using namespace std;
 
+#define MAX_NUM 100  
+
 namespace drl_ns
 {
 
@@ -49,7 +51,7 @@ private:
     int agent_id;                                     
     // 智能体高度
     double agent_height;
-    float block_size;
+    double block_size;
     int matrix_size;
     float inv_block_size;
     int block_num;
@@ -61,11 +63,11 @@ private:
     ros::Subscriber odom_sub;
     ros::Subscriber scan_sub;
     
-    ros::Subscriber nei_odom_sub[21];
+    ros::Subscriber nei_odom_sub[MAX_NUM];
     // 其他智能体位置
-    nav_msgs::Odometry nei_odom[21];
-    Eigen::Vector3d odom_nei[21];
-    bool get_nei_odom[21];
+    nav_msgs::Odometry nei_odom[MAX_NUM];
+    Eigen::Vector3d odom_nei[MAX_NUM];
+    bool get_nei_odom[MAX_NUM];
 
     // 【发布】
     ros::Publisher agent_state_pub;

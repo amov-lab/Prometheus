@@ -15,6 +15,8 @@
 
 #include "printf_utils.h"
 
+#define MAX_NUM 100 
+
 using namespace std;
 
 namespace drl_ns

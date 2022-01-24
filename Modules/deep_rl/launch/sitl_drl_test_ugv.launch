@@ -1,7 +1,7 @@
 <launch>
 	<arg name="world" default="$(find prometheus_drl)/worlds/drl_world_2.world"/>
     <!-- Rviz config -->
-    <arg name="visualization" default="true"/>
+    <arg name="visualization" default="false"/>
     <arg name="rivz_config" default="$(find prometheus_drl)/launch/rviz_ugv_test.rviz"/>
 
 	<arg name="swarm_num" default="3"/>
