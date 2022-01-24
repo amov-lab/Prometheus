@@ -60,7 +60,7 @@
           <cast_shadows>false</cast_shadows>
           <geometry>
             <box>
-              <size>40 40 0.05</size>
+              <size>24 24 0.05</size>
             </box>
           </geometry>
           <material>
@@ -116,21 +116,21 @@
       <static>true</static>
       <!-- 前墙 -->
       <link name="wall_front">
-          <pose frame=''>2.5 0 1 0 -0 1.57</pose>
+          <pose frame=''>12.0 0 1 0 -0 1.57</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
           <collision name="collision">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
               </box>
             </geometry>
           </collision>
           <visual name="visual">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
               </box>
             </geometry>
             <material>
@@ -144,21 +144,21 @@
       </link>
       <!-- 后墙 -->
       <link name="wall_back">
-          <pose frame=''>-2.5 0 1 0 -0 1.57</pose>
+          <pose frame=''>-12.0 0 1 0 -0 1.57</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
           <collision name="collision">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
               </box>
             </geometry>
           </collision>
           <visual name="visual">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
               </box>
             </geometry>
             <material>
@@ -172,21 +172,21 @@
       </link>
       <!-- 左墙 -->
       <link name="wall_left">
-          <pose frame=''>-0 2.5 1 0 -0 0</pose>
+          <pose frame=''>-0 12.0 1 0 -0 0</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
           <collision name="collision">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
               </box>
             </geometry>
           </collision>
           <visual name="visual">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
               </box>
             </geometry>
             <material>
@@ -200,21 +200,77 @@
       </link>
       <!-- 右墙 -->
       <link name="wall_right">
-          <pose frame=''>-0 -2.5 1 0 -0 0</pose>
+          <pose frame=''>-0 -12.0 1 0 -0 0</pose>
           <inertial>
             <mass>2.0</mass>
           </inertial>
           <collision name="collision">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
               </box>
             </geometry>
           </collision>
           <visual name="visual">
             <geometry>
               <box>
-                <size>5.0 0.1 2</size>
+                <size>24.0 0.1 2</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+      <!-- 中间墙1 -->
+      <link name="wall_mid1">
+          <pose frame=''>-0.0 6.0 1 0 -0 1.57</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>10.0 0.1 2</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>10.0 0.1 2</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/Wood</name>
+              </script>
+              <ambient>1 1 1 1</ambient>
+            </material>
+          </visual>
+      </link>
+      <!-- 中间墙2 -->
+      <link name="wall_mid2">
+          <pose frame=''>-0.0 -6.0 1 0 -0 1.57</pose>
+          <inertial>
+            <mass>2.0</mass>
+          </inertial>
+          <collision name="collision">
+            <geometry>
+              <box>
+                <size>10.0 0.1 2</size>
+              </box>
+            </geometry>
+          </collision>
+          <visual name="visual">
+            <geometry>
+              <box>
+                <size>10.0 0.1 2</size>
               </box>
             </geometry>
             <material>
@@ -229,19 +285,13 @@
     </model>
 
 
-    <model name='cylinder_1'>
+    <!-- <model name='cylinder_1'>
       <include>
         <uri>model://cylinder</uri>
         <pose>1.5 1.5 1.0 0 0 0</pose>
       </include>
-    </model>
+    </model> -->
 
-    <model name='cylinder_2'>
-      <include>
-        <uri>model://cylinder</uri>
-        <pose>-1.5 -1.5 1.0 0 0 0</pose>
-      </include>
-    </model>
 
     <model name='fake_ugv_1'>
       <include>
@@ -264,6 +314,28 @@
       </include>
     </model>
 
+    <model name='fake_uav_1'>
+      <include>
+        <uri>model://fake_uav_1</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_uav_2'>
+      <include>
+        <uri>model://fake_uav_2</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_uav_3'>
+      <include>
+        <uri>model://fake_uav_3</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+
     </world>
 </sdf>
 
@@ -281,7 +353,7 @@
       </model>
       <pose>0.0 0.0 0.2 0 0 0</pose>
       <box>
-        <size>20 20 0.01</size>
+        <size>24 24 0.01</size>
       </box>
       <model_count>50</model_count>
       <distribution>
