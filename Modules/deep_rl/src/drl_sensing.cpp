@@ -122,8 +122,8 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
     left_up_corner_pos[1] = agent_odom.pose.pose.position.y + block_size*matrix_size/2 + block_size/2;
     left_up_corner_pos[2] = agent_height; 
     Eigen::Vector3d right_down_corner_pos;
-    right_down_corner_pos[0] = agent_odom.pose.pose.position.x - block_size*matrix_size/2 - block_size/2;
-    right_down_corner_pos[1] = agent_odom.pose.pose.position.y - block_size*matrix_size/2 - block_size/2;
+    right_down_corner_pos[0] = agent_odom.pose.pose.position.x - block_size*matrix_size/2 + block_size/2;
+    right_down_corner_pos[1] = agent_odom.pose.pose.position.y - block_size*matrix_size/2 + block_size/2;
     right_down_corner_pos[2] = agent_height; 
 
     // 智能体位置
@@ -144,7 +144,7 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
 
     agent_state.obstacle_matrix[5*matrix_size+ 5] = 0;
 
-    // 邻居位置矩阵
+    // 邻居位置矩阵（问题在这）
     // 首先全部置0
     for(int i = 0; i < matrix_size*matrix_size; i++)
     {
@@ -161,8 +161,8 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
         {
             continue;
         }
-        if( odom_nei[i][0]>left_up_corner_pos[0] || odom_nei[i][0]<right_down_corner_pos[0]||
-            odom_nei[i][1]>left_up_corner_pos[1] || odom_nei[i][1]<right_down_corner_pos[1])
+        if( odom_nei[i][0]>=left_up_corner_pos[0] || odom_nei[i][0]<=right_down_corner_pos[0]||
+            odom_nei[i][1]>=left_up_corner_pos[1] || odom_nei[i][1]<=right_down_corner_pos[1])
         {
             continue;
         }
@@ -171,7 +171,6 @@ void drl_sensing::pub_agent_state_cb(const ros::TimerEvent& e)
         {
             id(j) = floor( (left_up_corner_pos(j) - odom_nei[i][j]) * inv_block_size );
         }
-
         agent_state.agent_matrix[id(0)*matrix_size+id(1)] = i; 
     }
 
