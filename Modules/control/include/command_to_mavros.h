@@ -312,13 +312,14 @@ void command_to_mavros::loiter()
 
 void command_to_mavros::idle()
 {
-    mavros_msgs::PositionTarget pos_setpoint;
+    // NOTE 新飞控无此模式，切入会一直答应警告
+    // mavros_msgs::PositionTarget pos_setpoint;
 
     //飞控如何接收该信号请见mavlink_receiver.cpp
     //飞控如何执行该指令请见FlightTaskOffboard.cpp
-    pos_setpoint.type_mask = 0x4000;
+    // pos_setpoint.type_mask = 0x4000;
 
-    setpoint_raw_local_pub.publish(pos_setpoint);
+    // setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
 //发送位置期望值至飞控（输入：期望xyz,期望yaw）

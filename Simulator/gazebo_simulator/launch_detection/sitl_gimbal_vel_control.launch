@@ -47,7 +47,7 @@
 	<arg name="R" default="0.0"/>
     <arg name="P" default="0.0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/typhoon_h480/typhoon_h480.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/typhoon_h480/typhoon_h480_vel.sdf"/>
 	<arg name="model" default="typhoon_h480"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
@@ -101,8 +101,8 @@
 		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
 	</node>	
 
-    <!-- run the gimbal_control.cpp -->
-	<node pkg="prometheus_mission" type="gimbal_control" name="gimbal_control" output="screen" launch-prefix="gnome-terminal --">
+    <!-- run the gimbal_control_vel.cpp -->
+	<node pkg="prometheus_mission" type="gimbal_control_vel" name="gimbal_control_vel" output="screen" launch-prefix="gnome-terminal --">
 	</node>
 
     <!-- 启动二维码检测算法 -->
