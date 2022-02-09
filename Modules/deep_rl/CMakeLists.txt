@@ -4,6 +4,7 @@ project(prometheus_drl)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
+set (CMAKE_CXX_STANDARD 11)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -37,10 +38,9 @@ find_package(Boost REQUIRED COMPONENTS system)
 add_message_files(
   DIRECTORY msg
   FILES
-  ugv_move_cmd.msg
-  ugv_state.msg
-  ugv_goal.msg
-  ugv_reset.msg
+  move_cmd.msg
+  agent_state.msg
+  agent_reset.msg
 )
 
 generate_messages(
@@ -89,9 +89,9 @@ add_executable(terminal_control src/terminal_control.cpp)
 add_dependencies(terminal_control prometheus_drl_gencpp)
 target_link_libraries(terminal_control ${catkin_LIBRARIES})
 
-add_executable(read_ugv_state src/read_ugv_state.cpp)
-add_dependencies(read_ugv_state prometheus_drl_gencpp)
-target_link_libraries(read_ugv_state ${catkin_LIBRARIES})
+add_executable(read_agent_state src/read_agent_state.cpp)
+add_dependencies(read_agent_state prometheus_drl_gencpp)
+target_link_libraries(read_agent_state ${catkin_LIBRARIES})
 
 
 #############

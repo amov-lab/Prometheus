@@ -38,8 +38,10 @@ class Occupy_map
         ros::Publisher global_inflate_pcl_pub;
         ros::Timer map_pub_timer;
 
-        int ugv_id;                                     // 无人机编号
-        string ugv_name;                                // 无人机名字
+        int agent_id;                                     // 无人机编号
+        // 智能体前缀  
+        string agent_prefix; 
+        string agent_name;                                // 无人机名字
         // 地图分辨率
         double resolution_, inv_resolution_;
         // 膨胀参数
@@ -52,8 +54,8 @@ class Occupy_map
         // flag：展示地图边界
         bool show_border;
         int ifn;
-        int inflate_index, inflate_index_ugv, cost_index, cost_inflate;
-        double ugv_height;
+        int inflate_index, inflate_index_agent, cost_index, cost_inflate;
+        double agent_height;
         // 上一帧odom
         double f_x, f_y, f_z, f_roll, f_pitch, f_yaw;
         // 局部地图滑窗，指示器以及大小
@@ -66,7 +68,7 @@ class Occupy_map
         // 全局膨胀点云指针
         pcl::PointCloud<pcl::PointXYZ>::Ptr global_inflate_pcl_ptr;
         // 其他无人车点云指针
-        pcl::PointCloud<pcl::PointXYZ>::Ptr other_ugv_pcl_ptr;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr other_agent_pcl_ptr;
         // 输入点云指针 - 临时
         pcl::PointCloud<pcl::PointXYZ>::Ptr input_pcl_ptr;
         // 输入点云指针（坐标转换后） - 临时
@@ -79,7 +81,7 @@ class Occupy_map
         // VoxelGrid过滤器用于下采样
         pcl::VoxelGrid<pcl::PointXYZ> vg; 
 
-        Eigen::Vector3d enum_p[100], enum_p_ugv[1000], enum_p_cost[1000];
+        Eigen::Vector3d enum_p[100], enum_p_agent[1000], enum_p_cost[1000];
 
         //初始化
         void init(ros::NodeHandle& nh, int id);
@@ -89,7 +91,7 @@ class Occupy_map
         // 地图更新函数 - 输入：二维激光雷达
         void map_update_laser(const sensor_msgs::LaserScanConstPtr & local_point, const nav_msgs::Odometry & odom);
         // 地图更新函数
-        void map_update_other_ugv(Eigen::Vector3d *input_ugv_odom, bool *get_ugv_odom, int swarm_num);
+        void map_update_other_agent(Eigen::Vector3d *input_agent_odom, bool *get_agent_odom, int swarm_num);
         // 工具函数：合并局部地图
         void local_map_merge_odom(const nav_msgs::Odometry & odom);
         // 地图膨胀

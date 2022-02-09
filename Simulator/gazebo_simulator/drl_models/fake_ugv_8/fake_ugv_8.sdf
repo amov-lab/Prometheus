@@ -295,7 +295,7 @@
         </plugin>
         <always_on>1</always_on>
         <!-- 更新频率 10HZ -->
-        <update_rate>10</update_rate>
+        <update_rate>20</update_rate>
         <visualize>false</visualize>
       </sensor>
     </link>
