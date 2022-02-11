@@ -22,10 +22,10 @@ class gimbal_control_vel
         nh("~")
     {
         // 订阅云台当前角度
-        gimbal_att_sub = nh.subscribe<geometry_msgs::Quaternion>("/mavros/mount_control/orientation", 10, &gimbal_control_vel::gimbal_att_cb,this);
+        gimbal_att_sub = nh.subscribe<geometry_msgs::Quaternion>("/mavros/gimbal_control/orientation", 10, &gimbal_control_vel::gimbal_att_cb,this);
 
-        // 云台控制：本话题要发送至飞控(通过Mavros_extra功能包 /plugins/mount_control.cpp发送)
-        mount_control_pub = nh.advertise<mavros_msgs::MountControl>( "/mavros/mount_control/command", 1);
+        // 云台控制：本话题要发送至飞控(通过Mavros_extra功能包 /plugins/gimbal_control.cpp发送)
+        mount_control_pub = nh.advertise<mavros_msgs::MountControl>( "/mavros/gimbal_control/command", 1);
 
         // 云台角度初始化
         gimbal_att        = Eigen::Vector3d(0.0,0.0,0.0);

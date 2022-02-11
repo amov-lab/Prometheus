@@ -244,8 +244,8 @@
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
-          <lower>-1e16</lower>
-          <upper>1e16</upper>
+          <lower>-3.1415</lower>
+          <upper>3.1415</upper>
           <effort>100</effort>
           <velocity>-1</velocity>
         </limit>
@@ -306,8 +306,8 @@
       <axis>
         <xyz>-1 0 0</xyz>
         <limit>
-          <lower>-0.785398</lower>
-          <upper>0.785398</upper>
+          <lower>-3.1415</lower>
+          <upper>3.1415</upper>
           <effort>100</effort>
           <velocity>-1</velocity>
         </limit>
@@ -444,8 +444,8 @@
       <axis>
         <xyz>0 -1 0</xyz>
         <limit>
-          <lower>-1.05</lower>
-          <upper>2.09</upper>
+          <lower>-3.1415</lower>
+          <upper>3.1415</upper>
           <effort>100</effort>
           <velocity>-1</velocity>
         </limit>
@@ -1462,7 +1462,7 @@
       <control_gimbal_channels>
         <channel>
           <joint_control_pid>
-            <p>0.6</p>
+            <p>1.0</p>
             <i>0.1</i>
             <d>0.02</d>
             <iMax>0</iMax>
@@ -1474,25 +1474,25 @@
         </channel>
         <channel>
           <joint_control_pid>
-            <p>0.8</p>
-            <i>0.035</i>
+            <p>1.0</p>
+            <i>0.1</i>
             <d>0.02</d>
             <iMax>0</iMax>
             <iMin>0</iMin>
-            <cmdMax>0.3</cmdMax>
-            <cmdMin>-0.3</cmdMin>
+            <cmdMax>1.0</cmdMax>
+            <cmdMin>-1.0</cmdMin>
           </joint_control_pid>
           <joint_axis>joint_roll</joint_axis>
         </channel>
         <channel>
           <joint_control_pid>
-            <p>2.068</p>
-            <i>0.01245</i>
-            <d>0.01</d>
+            <p>1.0</p>
+            <i>0.1</i>
+            <d>0.02</d>
             <iMax>0</iMax>
             <iMin>0</iMin>
-            <cmdMax>0.3</cmdMax>
-            <cmdMin>-0.3</cmdMin>
+            <cmdMax>1.0</cmdMax>
+            <cmdMin>-1.0</cmdMin>
           </joint_control_pid>
           <joint_axis>joint_pitch</joint_axis>
         </channel>
