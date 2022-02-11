@@ -470,8 +470,8 @@ int main(int argc, char **argv)
                     Command_Now.header.stamp = ros::Time::now();
                     Command_Now.Command_ID   = Command_Now.Command_ID + 1;
                     Command_Now.source = NODE_NAME;
-                    Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm;
-                    //Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
+                    // Command_Now.Mode = prometheus_msgs::ControlCommand::Disarm; // 新飞控不支持直接上锁,会变成返航模式
+                    Command_Now.Mode = prometheus_msgs::ControlCommand::Land;
                     command_pub.publish(Command_Now);
                 }else
                 {
