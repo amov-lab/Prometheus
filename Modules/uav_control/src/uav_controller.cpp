@@ -2,7 +2,7 @@
 
 UAV_controller::UAV_controller(ros::NodeHandle& nh)
 {
-    // 【参数】编号
+    // 【参数】编号，从1开始编号
     nh.param<int>("uav_id", uav_id, 0);
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);

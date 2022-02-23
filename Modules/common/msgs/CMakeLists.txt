@@ -54,6 +54,7 @@ add_message_files(
   UAVCommand.msg
   AgentCommandUGV.msg
   AgentCommandMAN.msg
+  MultiUAVState.msg
 )
 
 add_action_files(
