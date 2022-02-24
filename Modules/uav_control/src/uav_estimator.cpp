@@ -302,8 +302,8 @@ int UAV_estimator::check_uav_odom()
     }
 
     // 速度过大
-    Eigen::Vector3d vel_drone = Eigen::Vector3d(uav_state.velocity[0],uav_state.velocity[1],uav_state.velocity[2]); 
-    if(vel_drone.norm() > 2.0 || vel_drone(2) > 1.0)
+    Eigen::Vector3d uav_vel = Eigen::Vector3d(uav_state.velocity[0],uav_state.velocity[1],uav_state.velocity[2]); 
+    if(uav_vel.norm() > 2.0 || uav_vel(2) > 1.0)
     {
         return 2;
     }
