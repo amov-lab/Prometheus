@@ -1,0 +1,184 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- 动力学库 -->
+    <physics type='ode'>
+      <gravity>0 0 -9.8066</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>10</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+      <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
+    </physics>
+
+    <!-- 初始视角 -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>-11.0 0.0 7.0 0 0.57 0.0</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+    <!-- 光源 -->
+   <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 100 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.9 0.9 0.9 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>0.2 0.2 -0.9</direction>
+    </light>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- 装饰 -->
+    <model name='texture'>
+      <static>true</static>
+      <link name="lawn_ground">
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>24 24 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://lawn_plane/materials/scripts</uri>
+              <uri>model://lawn_plane/materials/textures</uri>
+              <name>vrc/lawn</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+      <!-- LOGO -->
+      <link name="sysu_logo2">
+        <pose>-0.0 -4.0 0.05 0 0 0</pose>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>1.0 5.0 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://texture_CXY/texture.material</uri>
+              <name>xty</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+      <!-- LOGO -->
+      <link name="sysu_logo">
+        <pose>-0.0 4.0 0.05 0 0 0</pose>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>1.0 5.0 0.01</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://texture_CXY/texture.material</uri>
+              <name>xty</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- 装饰结束 -->
+
+
+    <population name="cylinder_population">
+      <model name="cylinder">
+        <include>
+          <static>true</static>
+          <uri>model://cylinder</uri>
+        </include>
+      </model>
+      <pose>0.0 0.0 1.0 0 0 0</pose>
+      <box>
+        <size>20 20 0.01</size>
+      </box>
+      <model_count>50</model_count>
+      <distribution>
+        <type>uniform</type>
+      </distribution>
+    </population>
+
+
+    <model name='fake_ugv_1'>
+      <include>
+        <uri>model://fake_ugv_1</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_ugv_2'>
+      <include>
+        <uri>model://fake_ugv_2</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_ugv_3'>
+      <include>
+        <uri>model://fake_ugv_3</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+
+    <model name='fake_uav_1'>
+      <include>
+        <uri>model://fake_uav_1</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_uav_2'>
+      <include>
+        <uri>model://fake_uav_2</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name='fake_uav_3'>
+      <include>
+        <uri>model://fake_uav_3</uri>
+        <pose>0.0 0.0 0.08 0 0 0</pose>
+      </include>
+    </model>
+
+    </world>
+</sdf>
+
+
+    <!-- http://gazebosim.org/tutorials?tut=model_population&cat=build_world -->
+    <!-- 使用tag population表示批量放置，而tag distribution控制批量放置模型的排列形式，有随机、成行、成列等方式。具体使用方法可以见参考链接 -->
+    <!-- random 是全随机，均匀（uniform）分布，网格（grid）分布，linear-x分布：沿全局x轴均匀地放置各个模型 -->
+
+
