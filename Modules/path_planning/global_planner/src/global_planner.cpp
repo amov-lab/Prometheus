@@ -88,18 +88,18 @@ namespace GlobalPlannerNS
         {
             // Waiting for input
             int start_flag = 0;
-            while(start_flag == 0)
+            while (start_flag == 0)
             {
-                cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Global Planner<<<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-                cout << "Please input 1 for start:"<<endl;
+                cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Global Planner<<<<<<<<<<<<<<<<<<<<<<<<<<< " << endl;
+                cout << "Please input 1 for start:" << endl;
                 cin >> start_flag;
             }
             // 起飞
             uav_command.header.stamp = ros::Time::now();
-            uav_command.Agent_CMD  = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
             uav_command.Command_ID = uav_command.Command_ID + 1;
             uav_cmd_pub.publish(uav_command);
-            cout << "Takeoff ..."<<endl;
+            cout << "Takeoff ..." << endl;
             ros::Duration(3.0).sleep();
         }
         else
@@ -222,7 +222,7 @@ namespace GlobalPlannerNS
             uav_command.header.stamp = ros::Time::now();
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
             uav_command.Command_ID = uav_command.Command_ID + 1;
-            
+
             uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
             uav_command.position_ref[0] = goal_pos[0];
             uav_command.position_ref[1] = goal_pos[1];
@@ -254,7 +254,7 @@ namespace GlobalPlannerNS
         uav_command.header.stamp = ros::Time::now();
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
         uav_command.Command_ID = uav_command.Command_ID + 1;
-        
+
         uav_command.Move_mode = prometheus_msgs::UAVCommand::TRAJECTORY;
         uav_command.position_ref[0] = path_cmd.poses[i].pose.position.x;
         uav_command.position_ref[1] = path_cmd.poses[i].pose.position.y;
@@ -385,7 +385,6 @@ namespace GlobalPlannerNS
             uav_command.header.stamp = ros::Time::now();
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
             uav_command.Command_ID = uav_command.Command_ID + 1;
-            
 
             uav_cmd_pub.publish(uav_command);
             break;
