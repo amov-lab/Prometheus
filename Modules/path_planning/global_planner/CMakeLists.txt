@@ -4,17 +4,17 @@ project(prometheus_global_planner)
 find_package(Eigen3 REQUIRED)
 find_package(PCL 1.7 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
-       roscpp
-       rospy
-       std_msgs
-	   sensor_msgs
-	   laser_geometry
-	   geometry_msgs
-	   nav_msgs
-	   pcl_ros
-       visualization_msgs
-	   prometheus_msgs
-	)
+	roscpp
+	rospy
+	std_msgs
+	sensor_msgs
+	laser_geometry
+	geometry_msgs
+	nav_msgs
+	pcl_ros
+	visualization_msgs
+	prometheus_msgs
+)
 
 
 catkin_package(
