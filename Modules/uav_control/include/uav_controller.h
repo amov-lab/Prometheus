@@ -16,6 +16,7 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
+#include <prometheus_msgs/MavrosInterface.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -47,6 +48,7 @@ public:
     ros::Subscriber px4_position_target_sub;
     ros::Subscriber px4_attitude_target_sub;
     ros::Subscriber px4_rc_sub;
+    ros::Subscriber mavros_interface_sub;
     // 发布话题
     ros::Publisher px4_setpoint_raw_local_pub;
     ros::Publisher px4_setpoint_raw_attitude_pub;
@@ -151,6 +153,7 @@ public:
 private:
     void uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg);
     void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg);
+    void mavros_interface_cb(const prometheus_msgs::MavrosInterface::ConstPtr &msg);
     void px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg);
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
@@ -171,6 +174,7 @@ private:
     void enable_offboard_mode();
     void enable_manual_mode();
     void arm_disarm_func(bool on_or_off);
+    void set_mode_func(string mode);
     void reboot_PX4();
 
     void send_pos_cmd_to_px4_original_controller();
