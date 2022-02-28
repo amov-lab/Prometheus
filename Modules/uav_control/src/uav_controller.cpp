@@ -88,6 +88,12 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
                                                         1,
                                                         &UAV_controller::px4_rc_cb, this);
 
+    //【订阅】提供mavros相关借口
+    mavros_interface_sub = 
+        nh.subscribe<prometheus_msgs::MavrosInterface>("/uav"+std::to_string(uav_id) + "/prometheus/mavros_interface",
+                                                        1,
+                                                        &UAV_controller::mavros_interface_cb, this);
+
     // 【发布】位置/速度/加速度期望值 坐标系 ENU系
     px4_setpoint_raw_local_pub = nh.advertise<mavros_msgs::PositionTarget>("/uav"+std::to_string(uav_id) + "/mavros/setpoint_raw/local", 10);
  
@@ -698,6 +704,31 @@ int UAV_controller::check_failsafe()
     else{
         return 0;
     }
+}
+
+void UAV_controller::mavros_interface_cb(const prometheus_msgs::MavrosInterface::ConstPtr &msg)
+{
+    if(msg->type == prometheus_msgs::MavrosInterface::ARMING)
+    {
+        arm_disarm_func(msg->arming);
+    }
+
+    if(msg->type == prometheus_msgs::MavrosInterface::SET_MODE)
+    {
+        set_mode_func(msg->mode);
+    }
+    
+    if(msg->type == prometheus_msgs::MavrosInterface::REBOOT_PX4)
+    {
+        reboot_PX4();
+    }
+}
+
+void UAV_controller::set_mode_func(string mode)
+{
+    mavros_msgs::SetMode mode_cmd;
+    mode_cmd.request.custom_mode = mode;
+    px4_set_mode_client.call(mode_cmd);
 }
 
 void UAV_controller::arm_disarm_func(bool on_or_off)
