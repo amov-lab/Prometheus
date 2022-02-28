@@ -29,6 +29,7 @@ add_message_files(
   AttitudeReference.msg
   DroneState.msg
   ControlOutput.msg
+  MavrosInterface.msg
   Message.msg
   LogMessage.msg
   LogMessageControl.msg
