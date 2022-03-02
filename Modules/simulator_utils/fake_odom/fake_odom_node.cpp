@@ -5,6 +5,7 @@
 #define MAX_NUM 40
 int swarm_num_uav,swarm_num_ugv;
 bool manual_init_pos;
+bool pub_gazebo_model_state;
 int preset_init_pos_flag;
 string node_name;
 gazebo_msgs::ModelState model_state;
@@ -36,10 +37,9 @@ int main(int argc, char **argv)
     nh.param("fake_odom/swarm_num_ugv", swarm_num_ugv, 8);
     nh.param("fake_odom/manual_init_pos", manual_init_pos, false);
     nh.param("fake_odom/preset_init_pos_flag", preset_init_pos_flag, 1);
+    nh.param("fake_odom/pub_gazebo_model_state", pub_gazebo_model_state, false);
 
     unsigned int seed = rd();
-    // unsigned int seed = 2433201515;
-    // cout << GREEN<< "random seed=" << seed << TAIL<< endl;
     eng.seed(seed);
 
     for(int i = 0; i<swarm_num_uav;i++)
@@ -78,12 +78,14 @@ int main(int argc, char **argv)
 
     sleep(0.5);
 
-    gazebo_model_state_pub = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
-    ros::Timer gazebo_pub_timer = nh.createTimer(ros::Duration(0.1), gazebo_pub_cb);
+    if(pub_gazebo_model_state)
+    {
+        gazebo_model_state_pub = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
+        ros::Timer gazebo_pub_timer = nh.createTimer(ros::Duration(0.1), gazebo_pub_cb);
+    }
 
     node_name = "[fake_odom_node]"; 
     cout << GREEN << node_name << " init! "<< TAIL << endl;
-
 
     ros::spin();
 

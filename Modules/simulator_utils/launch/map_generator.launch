@@ -26,10 +26,12 @@
         <param name="uav_init_y" value="0.0" type="double"/>
     </node>
 
-	<!-- 启动rviz,设为false可关闭 -->
-	<arg name="visualization" default="true"/>
+    <!-- Rviz config -->
+    <arg name="visualization" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_simulator_utils)/launch/map_generator.rviz"/>
+    <!-- 启动Rviz-->
 	<group if="$(arg visualization)">
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_simulator_utils)/launch/map_generator.rviz" />
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
     </group>
 </launch>
 

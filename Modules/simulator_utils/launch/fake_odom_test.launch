@@ -1,0 +1,70 @@
+<launch>
+	<!-- 无人机ID -->
+	<arg name="uav1_id" default="1"/>
+	
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="0.0"/>
+    <arg name="uav1_init_y" default="0.0"/>
+
+    <!-- Rviz config -->
+    <arg name="visualization" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_simulator_utils)/launch/map_generator.rviz"/>
+    <!-- 启动Rviz-->
+	<group if="$(arg visualization)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
+
+    <!-- 1号飞机 FAKE ODOM -->
+	<!-- 参数 -->
+	<arg name="swarm_num_uav" default="1"/>
+    <arg name="swarm_num_ugv" default="0"/>
+	<arg name="fake_odom" default="true"/>
+    <!-- 启动 fake_odom_node -->
+	<node pkg="prometheus_simulator_utils" type="fake_odom_node" name="fake_odom_node" output="screen" launch-prefix="gnome-terminal --tab --">
+		<param name="fake_odom/swarm_num_uav" value="$(arg swarm_num_uav)"/>
+		<param name="fake_odom/swarm_num_ugv" value="$(arg swarm_num_ugv)"/>
+		<param name="fake_odom/manual_init_pos" value="false"/>
+		<param name="fake_odom/preset_init_pos_flag" value="1"/>
+	</node>
+
+	<!-- uav_control_main -->
+	<arg name="input_source" default="3"/>
+	<!-- FAKE_ODOM = 3 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_uav$(arg uav1_id)" output="screen">
+		<param name="uav_id" value="$(arg uav1_id)"/>
+		<param name="control/location_source" value="$(arg input_source)"/>
+        <!-- <rosparam command="load" file="$(find prometheus_gazebo)/launch_control_test/control_param_uav.yaml" /> -->
+	</node>
+
+	<!-- 手动控制 -->
+    <node pkg="prometheus_uav_control" type="uav_command_pub" name="uav_command_pub" output="screen" launch-prefix="gnome-terminal --">
+    </node>
+
+    <!-- 生成随机地图，并发布全局、局部点云 -->
+    <node pkg="prometheus_simulator_utils" name="map_generator" type="map_generator" output="screen">
+        <param name="swarm_num" value="1" type="int"/>
+        <param name="map_generator/map_flag" value="0" type="int"/>
+        <param name="map_generator/x_size" value="20.0" type="double"/>
+        <param name="map_generator/y_size" value="30.0" type="double"/>
+        <param name="map_generator/z_size" value="5.0" type="double"/>
+        <param name="map_generator/resolution" value="0.1" type="double"/>
+        <param name="map_generator/sensing_range" value="10.0" type="double"/>
+        <param name="map_generator/sensing_horizon" value="5.0" type="double"/>
+        <param name="map_generator/sensing_rate" value="10.0" type="double"/>
+
+        <param name="map_generator/obs_min_dist" value="2.0" type="double"/>
+
+        <param name="map_generator/cylinder_num" value="20" type="double"/>
+        <param name="map_generator/cylinder_radius" value="0.4" type="double"/>
+        <param name="map_generator/cylinder_height" value="3.0" type="double"/>
+
+        <param name="map_generator/cuboid_num" value="20" type="double"/>
+        <param name="map_generator/cuboid_size" value="0.4" type="double"/>
+        <param name="map_generator/cuboid_height" value="1.0" type="double"/>
+
+
+        <param name="uav_init_x" value="0.0" type="double"/>
+        <param name="uav_init_y" value="0.0" type="double"/>
+    </node>
+
+</launch>

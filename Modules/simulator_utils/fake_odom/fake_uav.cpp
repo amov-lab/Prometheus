@@ -3,8 +3,8 @@
 void Fake_UAV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, double init_yaw)
 {
     agent_id = id;
-    fake_mode = FAKE_MODE::ATT_CONTROL_MODE;
-    model_name = "cxy_fake_solo_" + std::to_string(agent_id);
+    fake_mode = FAKE_MODE::POS_CONTROL_MODE;
+    model_name = "fake_uav_" + std::to_string(agent_id);
     node_name = "fake_uav" + std::to_string(agent_id);
     get_pos_cmd = false;
     get_att_cmd = false;
