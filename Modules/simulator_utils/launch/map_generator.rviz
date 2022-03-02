@@ -115,15 +115,15 @@ Visualization Manager:
             Shaft Length: 1
             Shaft Radius: 0.05000000074505806
             Value: Axes
-          Topic: /prometheus/drone_odom
+          Topic: /uav1/prometheus/odom
           Unreliable: false
           Value: true
         - Class: rviz/Marker
           Enabled: true
-          Marker Topic: /prometheus/robot_marker
+          Marker Topic: /uav1/prometheus/uav_mesh
           Name: Marker
           Namespaces:
-            {}
+            mesh: true
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -146,7 +146,7 @@ Visualization Manager:
           Radius: 0.029999999329447746
           Shaft Diameter: 0.10000000149011612
           Shaft Length: 0.10000000149011612
-          Topic: /prometheus/drone_trajectory
+          Topic: /uav1/prometheus/trajectory
           Unreliable: false
           Value: true
         - Alpha: 1
@@ -158,8 +158,8 @@ Visualization Manager:
           Axis: Z
           Channel Name: intensity
           Class: rviz/PointCloud2
-          Color: 255; 255; 255
-          Color Transformer: ""
+          Color: 255; 85; 0
+          Color Transformer: FlatColor
           Decay Time: 0
           Enabled: true
           Invert Rainbow: false
@@ -168,11 +168,11 @@ Visualization Manager:
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: 局部点云
-          Position Transformer: ""
+          Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
           Size (Pixels): 3
-          Size (m): 0.009999999776482582
+          Size (m): 0.10000000149011612
           Style: Flat Squares
           Topic: /uav1/map_generator/local_cloud
           Unreliable: false
@@ -200,7 +200,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 32.57840347290039
+      Distance: 25.901052474975586
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -215,10 +215,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8147974610328674
+      Pitch: 0.6847977638244629
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.1725544929504395
+      Yaw: 3.102552652359009
     Saved: ~
 Window Geometry:
   Displays:
