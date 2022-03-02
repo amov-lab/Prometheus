@@ -31,5 +31,20 @@
 	<group if="$(arg visualization)">
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_simulator_utils)/launch/map_generator.rviz" />
     </group>
+
+    <!-- 无人机运动学模拟器 -->
+    <node pkg="prometheus_planning_sim" name="uav_sim" type="uav_sim" output="screen">	
+        <!-- 参数 -->
+        <param name="init_pos_x" value="0.0" type="double"/>
+        <param name="init_pos_y" value="0.0" type="double"/>
+        <param name="init_pos_z" value="1.0" type="double"/>
+        <param name="planner_type" value="0" type="int"/>
+        <param name="color/a" value="1.0"/>    
+        <param name="color/r" value="0.0"/>        
+        <param name="color/g" value="0.0"/>        
+        <param name="color/b" value="0.0"/>       
+        <param name="robot_scale" value="1.0"/>
+        <!-- <param name="mesh_resource" value="$(find prometheus_planning_sim)/meshes/hummingbird.mesh"/> -->
+    </node>
 </launch>
 

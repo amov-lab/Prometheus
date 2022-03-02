@@ -40,7 +40,8 @@ int cylinder_num;                        // 圆柱体数量
 double cylinder_radius, cylinder_height; // 圆柱体参数
 int cuboid_num;                          // 立方体数量
 double cuboid_size, cuboid_height;       // 立方体参数
-
+double wall_length, wall_height;         // 墙参数
+double line_height;
 // 初始状态量
 bool global_map_ok = false;
 bool uav_odom_ok[MAX_SWRAM_NUM] = {false};
@@ -69,6 +70,8 @@ vector<int> pointIdxRadiusSearch;
 vector<float> pointRadiusSquaredDistance;
 
 // 生成圆柱体
+// 圆柱体半径：cylinder_radius
+// 圆柱体高度：cylinder_height
 void generate_cylinder(double x, double y)
 {
   // 必须在地图范围内
@@ -84,7 +87,7 @@ void generate_cylinder(double x, double y)
   int heiNum = ceil(cylinder_height / map_resolution);
   for (int r = -widNum; r <= widNum; r++)
     for (int s = -widNum; s <= widNum; s++)
-      for (int t = -1.0; t <= heiNum; t++)
+      for (int t = -1; t <= heiNum; t++)
       {
         double temp_x = x + r * map_resolution;
         double temp_y = y + s * map_resolution;
@@ -99,7 +102,9 @@ void generate_cylinder(double x, double y)
       }
 }
 
-// 生成长方体？ todo:check
+// 生成长方体
+// 长方体长宽：cuboid_height
+// 长方体高度：cuboid_height
 void generate_cuboid(double x, double y)
 {
   // 必须在地图范围内
@@ -109,24 +114,22 @@ void generate_cuboid(double x, double y)
   }
 
   pcl::PointXYZ pt_random;
-  double z = cuboid_size / 2.0;
   x = floor(x / map_resolution) * map_resolution;
   y = floor(y / map_resolution) * map_resolution;
-  z = floor(z / map_resolution) * map_resolution + map_resolution / 2.0;
+  // z = floor(z / map_resolution) * map_resolution + map_resolution / 2.0;
   int widNum = ceil((cuboid_size / 2.0) / map_resolution);
   int heiNum = ceil(cuboid_height / map_resolution);
   int temp_wid = cuboid_size / 2.0 / map_resolution;
   int flag = 0;
   if (widNum != temp_wid)
     flag = 1;
-  printf("%d,%d\n", widNum, temp_wid);
   for (int r = -widNum; r <= widNum; r++)
     for (int s = -widNum; s <= widNum; s++)
-      for (int t = -1.0; t < heiNum; t++)
+      for (int t = -1; t <= heiNum; t++)
       {
         double temp_x = x + r * map_resolution + flag * 0.5 * map_resolution;
         double temp_y = y + s * map_resolution + flag * 0.5 * map_resolution;
-        double temp_z = z + t * map_resolution;
+        double temp_z = t * map_resolution;
         if ((Eigen::Vector2d(temp_x, temp_y) - Eigen::Vector2d(x, y)).norm() <= cuboid_size / 2.0 * sqrt(2) + 1e-1)
         {
           pt_random.x = temp_x;
@@ -137,34 +140,9 @@ void generate_cuboid(double x, double y)
       }
 }
 
-// 生成墙？ todo:check
-void generate_wall(double x, double y)
-{
-  // 必须在地图范围内
-  if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
-  {
-    return;
-  }
-
-  pcl::PointXYZ pt_random;
-  int heiNum = ceil(cuboid_height / map_resolution);
-
-  double z = 0;
-
-  for (int r = -5; r <= 5; r++)
-    for (int t = 0.0; t < heiNum; t++)
-    {
-      double temp_x = x + r * 0.2;
-      double temp_y = y;
-      double temp_z = z + t * map_resolution;
-      pt_random.x = temp_x;
-      pt_random.y = temp_y;
-      pt_random.z = temp_z;
-      global_map_pcl.points.push_back(pt_random);
-    }
-}
-
-// 生成墙？ todo:check
+// 生成横墙，即与X轴平行的墙
+// 横墙长度：wall_length
+// 横墙高度：wall_height
 void generate_row_wall(double x, double y)
 {
   // 必须在地图范围内
@@ -174,16 +152,15 @@ void generate_row_wall(double x, double y)
   }
 
   pcl::PointXYZ pt_random;
-  int heiNum = ceil(cuboid_height / map_resolution);
+  int widNum = ceil((wall_length / 2.0) / map_resolution);
+  int heiNum = ceil(wall_height / map_resolution);
 
-  double z = 0;
-
-  for (int r = -1; r <= 1; r++)
-    for (int t = 0.0; t < heiNum; t++)
+  for (int r = -widNum; r <= widNum; r++)
+    for (int t = -1; t <= heiNum; t++)
     {
-      double temp_x = x;
-      double temp_y = y + r * 0.1;
-      double temp_z = z + t * map_resolution;
+      double temp_x = x + r * map_resolution;
+      double temp_y = y;
+      double temp_z = t * map_resolution;
       pt_random.x = temp_x;
       pt_random.y = temp_y;
       pt_random.z = temp_z;
@@ -191,7 +168,37 @@ void generate_row_wall(double x, double y)
     }
 }
 
-// 生成线？ todo:check
+// 生成竖墙，即与Y轴平行的墙
+// 横墙长度：wall_length
+// 横墙高度：wall_height
+void generate_column_wall(double x, double y)
+{
+  // 必须在地图范围内
+  if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
+  {
+    return;
+  }
+
+  pcl::PointXYZ pt_random;
+  int widNum = ceil((wall_length / 2.0) / map_resolution);
+  int heiNum = ceil(wall_height / map_resolution);
+
+
+  for (int r = -widNum; r <= widNum; r++)
+    for (int t = -1; t < heiNum; t++)
+    {
+      double temp_x = x;
+      double temp_y = y + r * map_resolution;
+      double temp_z = t * map_resolution;
+      pt_random.x = temp_x;
+      pt_random.y = temp_y;
+      pt_random.z = temp_z;
+      global_map_pcl.points.push_back(pt_random);
+    }
+}
+
+// 生成一根竖直的线
+// 长度：line_height
 void generate_line(double x, double y)
 {
   // 必须在地图范围内
@@ -201,20 +208,32 @@ void generate_line(double x, double y)
   }
 
   pcl::PointXYZ pt_random;
-  int heiNum = ceil(cuboid_height / map_resolution);
+  int heiNum = ceil(line_height / map_resolution);
 
-  double z = 0;
-
-  for (int t = 0.0; t < heiNum; t++)
+  for (int t = -1; t < heiNum; t++)
   {
     double temp_x = x;
     double temp_y = y;
-    double temp_z = z + t * map_resolution;
+    double temp_z = t * map_resolution;
     pt_random.x = temp_x;
     pt_random.y = temp_y;
     pt_random.z = temp_z;
     global_map_pcl.points.push_back(pt_random);
   }
+}
+
+void GenerateBorder()
+{
+  wall_height = 0.1;
+
+  wall_length = map_size_x;
+  generate_row_wall(0.0, map_y_min);
+  generate_row_wall(0.0, map_y_max);
+  wall_length = map_size_y;
+  generate_column_wall(map_x_min, 0.0);
+  generate_column_wall(map_x_max, 0.0);
+
+  cout << GREEN << "[map_generator] Finished generate border." << TAIL << endl;
 }
 
 void GenerateMap1()
@@ -223,11 +242,11 @@ void GenerateMap1()
 
   generate_cuboid(2.0, 2.0);
 
-  generate_wall(10.0, 10.0);
+  generate_row_wall(10.0, 10.0);
 
-  generate_row_wall(-10.0, -10.0);
+  generate_column_wall(-10.0, -10.0);
 
-  generate_line(5.0, 5.0);
+  generate_line(0.0, 0.0);
 
   global_map_pcl.width = global_map_pcl.points.size();
   global_map_pcl.height = 1;
@@ -276,79 +295,34 @@ void GenerateRandomMap()
     // 将本次生成的障碍物位置推入容器
     obs_position.push_back(Eigen::Vector2d(x, y));
 
-    // floor 是向下取整函数
-    x = floor(x / map_resolution) * map_resolution + map_resolution / 2.0;
-    y = floor(y / map_resolution) * map_resolution + map_resolution / 2.0;
-
-    int widNum = ceil((cylinder_radius) / map_resolution);
-    int heiNum = ceil(cylinder_height / map_resolution);
-
-    // 生成圆柱体的点云
-    for (int r = -widNum; r < widNum; r++)
-      for (int s = -widNum; s < widNum; s++)
-      {
-        for (int t = -1.0; t < heiNum; t++)
-        {
-          double temp_x = x + (r + 0.5) * map_resolution + 1e-2;
-          double temp_y = y + (s + 0.5) * map_resolution + 1e-2;
-          double temp_z = (t + 0.5) * map_resolution + 1e-2;
-          if ((Eigen::Vector2d(temp_x, temp_y) - Eigen::Vector2d(x, y)).norm() <= cylinder_radius)
-          {
-            pt_random.x = temp_x;
-            pt_random.y = temp_y;
-            pt_random.z = temp_z;
-            global_map_pcl.points.push_back(pt_random);
-          }
-        }
-      }
+    generate_cylinder(x, y);
   }
 
-  // 生成正方形障碍物 // todo
-  // for (int i = 0; i < cuboid_num; ++i)
-  // {
-  //   double x, y, z;
-  //   // 随机生成障碍物位置：[x,y]
-  //   x = rand_x(eng);
-  //   y = rand_y(eng);
-  //   z = sqaure_size / 2;
+  // 生成长方体障碍物 
+  for (int i = 0; i < cuboid_num; ++i)
+  {
+    double x, y, z;
+    // 随机生成障碍物位置：[x,y]
+    x = rand_x(eng);
+    y = rand_y(eng);
 
-  //   // 检查是否与已经生成的障碍物重叠：两个障碍物之间距离大于 _min_dist，否则生成失败
-  //   bool flag_continue = false;
-  //   for (auto p : obs_position)
-  //     if ((Eigen::Vector2d(x, y) - p).norm() < obs_min_dist /*metres*/)
-  //     {
-  //       i--; // i--代表此次生成失败，重新生成障碍物
-  //       flag_continue = true;
-  //       break;
-  //     }
-  //   if (flag_continue)
-  //     continue;
+    // 检查是否与已经生成的障碍物重叠：两个障碍物之间距离大于 _min_dist，否则生成失败
+    bool flag_continue = false;
+    for (auto p : obs_position)
+      if ((Eigen::Vector2d(x, y) - p).norm() < obs_min_dist /*metres*/)
+      {
+        i--; // i--代表此次生成失败，重新生成障碍物
+        flag_continue = true;
+        break;
+      }
+    if (flag_continue)
+      continue;
 
-  //   // 将本次生成的障碍物位置推入容器
-  //   obs_position.push_back(Eigen::Vector2d(x, y));
+    // 将本次生成的障碍物位置推入容器
+    obs_position.push_back(Eigen::Vector2d(x, y));
 
-  //   x = floor(x / map_resolution) * map_resolution + map_resolution / 2.0;
-  //   y = floor(y / map_resolution) * map_resolution + map_resolution / 2.0;
-  //   z = floor(z / map_resolution) * map_resolution + map_resolution / 2.0;
-
-  //   int widNum = ceil((sqaure_size) / map_resolution);
-
-  //   // 生成正方体的点云
-  //   for (int r = -widNum / 2.0; r < widNum / 2.0; r++)
-  //     for (int s = -widNum / 2.0; s < widNum / 2.0; s++)
-  //     {
-  //       for (int t = -widNum / 2.0; t < widNum / 2.0; t++)
-  //       {
-  //         double temp_x = x + (r + 0.5) * map_resolution + 1e-2;
-  //         double temp_y = y + (s + 0.5) * map_resolution + 1e-2;
-  //         double temp_z = z + (t + 0.5) * map_resolution + 1e-2;
-  //         pt_random.x = temp_x;
-  //         pt_random.y = temp_y;
-  //         pt_random.z = temp_z;
-  //         global_map_pcl.points.push_back(pt_random);
-  //       }
-  //     }
-  // }
+    generate_cuboid(x, y);
+  }
 
   global_map_pcl.width = global_map_pcl.points.size();
   global_map_pcl.height = 1;
@@ -471,7 +445,10 @@ int main(int argc, char **argv)
   // 【参数】障碍物参数 - 立方体
   nh.param("map_generator/cuboid_size", cuboid_size, 0.3);
   nh.param("map_generator/cuboid_height", cuboid_height, 0.3);
-  // nh.param("map_generator/circle_num", _circle_num, 30);
+  // 【参数】障碍物参数 - 墙
+  nh.param("map_generator/wall_length", wall_length, 10.0);
+  nh.param("map_generator/wall_height", wall_height, 2.0);
+  nh.param("map_generator/line_height", line_height, 2.0);
   // 【参数】初始位置
   nh.param("uav_init_x", uav_init_x, 0.0);
   nh.param("uav_init_y", uav_init_y, 0.0);
@@ -513,6 +490,9 @@ int main(int argc, char **argv)
   // unsigned int seed = 2433201515;
   cout << "seed=" << seed << endl;
   eng.seed(seed);
+
+  // 生成边界
+  GenerateBorder();
 
   if (map_flag == 0)
   {
