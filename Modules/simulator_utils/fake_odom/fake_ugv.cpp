@@ -4,7 +4,7 @@ void Fake_UGV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, doubl
 {
     agent_id = id;
     car_model == CAR_MODEL::POINT;
-    model_name = "cxy_fake_ugv_" + std::to_string(agent_id);
+    model_name = "fake_ugv_" + std::to_string(agent_id);
     node_name = "fake_ugv" + std::to_string(agent_id);
     get_vel_cmd = false;
     ugv_state_update = false;

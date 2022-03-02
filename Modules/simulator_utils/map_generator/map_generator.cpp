@@ -358,7 +358,7 @@ void pub_local_map_cb(const ros::TimerEvent &event, int uav_id)
 {
   if (!global_map_ok || !uav_odom_ok[uav_id])
   {
-    cout << RED << "[map_generator] fail to pub local map." << TAIL << endl;
+    // cout << RED << "[map_generator] fail to pub local map." << TAIL << endl;
     return;
   }
 
@@ -471,7 +471,7 @@ int main(int argc, char **argv)
   {
     uav_id[i] = i;
     // 【订阅】里程计数据
-    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/drone_odom", 1, boost::bind(&uav_odom_cb, _1, uav_id[i]));
+    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/odom", 1, boost::bind(&uav_odom_cb, _1, uav_id[i]));
     // 【发布】模拟的局部点云信息
     local_map_pub[i] = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(i) + "/map_generator/local_cloud", 1);
     // 【定时器】发布局部点云定时器
