@@ -2,7 +2,7 @@
 
 UAV_controller::UAV_controller(ros::NodeHandle& nh)
 {
-    // 【参数】编号
+    // 【参数】编号，从1开始编号
     nh.param<int>("uav_id", uav_id, 0);
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);
@@ -88,6 +88,12 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
                                                         1,
                                                         &UAV_controller::px4_rc_cb, this);
 
+    //【订阅】提供mavros相关借口
+    mavros_interface_sub = 
+        nh.subscribe<prometheus_msgs::MavrosInterface>("/uav"+std::to_string(uav_id) + "/prometheus/mavros_interface",
+                                                        1,
+                                                        &UAV_controller::mavros_interface_cb, this);
+
     // 【发布】位置/速度/加速度期望值 坐标系 ENU系
     px4_setpoint_raw_local_pub = nh.advertise<mavros_msgs::PositionTarget>("/uav"+std::to_string(uav_id) + "/mavros/setpoint_raw/local", 10);
  
@@ -122,8 +128,8 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
         
     u_att.setZero();
 
-    pos_drone.setZero();
-    vel_drone.setZero();
+    uav_pos.setZero();
+    uav_vel.setZero();
 }
 
 // bool UAV_controller::arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res)
@@ -260,12 +266,12 @@ void UAV_controller::mainloop()
 
             if (last_exec_state = EXEC_STATE::LAND_CONTROL)
             {
-                pos_des[0] = pos_drone[0];
-                pos_des[1] = pos_drone[1];
+                pos_des[0] = uav_pos[0];
+                pos_des[1] = uav_pos[1];
                 pos_des[2] = Takeoff_position[2];           // 高度设定为初始起飞时的高度
                 vel_des << 0.0, 0.0, -Land_speed;
                 acc_des << 0.0, 0.0, 0.0;
-                yaw_des = yaw_drone;
+                yaw_des = uav_yaw;
             }
 
             // 当无人机位置低于指定高度时，自动上锁
@@ -353,8 +359,8 @@ void UAV_controller::mainloop()
 void UAV_controller::set_hover_pose_with_odom()
 {
     // 设定悬停点
-    Hover_position = pos_drone;
-    Hover_yaw = yaw_drone;
+    Hover_position = uav_pos;
+    Hover_yaw = uav_yaw;
 
 	last_set_hover_pose_time = ros::Time::now();
 }
@@ -396,8 +402,8 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
         // 【Current_Pos_Hover】 悬停。当前位置悬停
         if(uav_command_last.Agent_CMD != prometheus_msgs::UAVCommand::Current_Pos_Hover)
         {
-            Hover_position = pos_drone;
-            Hover_yaw = yaw_drone;
+            Hover_position = uav_pos;
+            Hover_yaw = uav_yaw;
         }
         pos_des << Hover_position;
         vel_des << 0.0, 0.0, 0.0;
@@ -472,11 +478,11 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
             {
                 float d_pos_body[2] = {uav_command.position_ref[0], uav_command.position_ref[1]};        
                 float d_pos_enu[2];                    
-                rotation_yaw(yaw_drone, d_pos_body, d_pos_enu);
+                rotation_yaw(uav_yaw, d_pos_body, d_pos_enu);
 
-                uav_command.position_ref[0] = pos_drone[0] + d_pos_enu[0];
-                uav_command.position_ref[1] = pos_drone[1] + d_pos_enu[1];
-                uav_command.position_ref[2] = pos_drone[2] + uav_command.position_ref[2];
+                uav_command.position_ref[0] = uav_pos[0] + d_pos_enu[0];
+                uav_command.position_ref[1] = uav_pos[1] + d_pos_enu[1];
+                uav_command.position_ref[2] = uav_pos[2] + uav_command.position_ref[2];
                 pos_des[0] = uav_command.position_ref[0];
                 pos_des[1] = uav_command.position_ref[1];
                 pos_des[2] = uav_command.position_ref[2];
@@ -492,7 +498,7 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
                 // 【XYZ_VEL_BODY】XYZ速度转换为惯性系，偏航角固定
                 float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};         
                 float d_vel_enu[2];                   
-                rotation_yaw(yaw_drone, d_vel_body, d_vel_enu);
+                rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
                 uav_command.velocity_ref[0] = d_vel_enu[0];
                 uav_command.velocity_ref[1] = d_vel_enu[1];
                 pos_des[0] = 0.0;
@@ -520,7 +526,7 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
                 // 【XY_VEL_Z_POS_BODY】Z轴定高，偏航角固定，XY速度转换为惯性系
                 float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};         
                 float d_vel_enu[2];                   
-                rotation_yaw(yaw_drone, d_vel_body, d_vel_enu);
+                rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
                 uav_command.velocity_ref[0] = d_vel_enu[0];
                 uav_command.velocity_ref[1] = d_vel_enu[1];
                 pos_des[0] = 0.0;
@@ -645,21 +651,21 @@ void UAV_controller::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr& msg
 {
     uav_state = *msg;
 
-    pos_drone  = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
-    vel_drone  = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
+    uav_pos  = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
+    uav_vel  = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
 
-    q_drone.w() = msg->attitude_q.w;
-    q_drone.x() = msg->attitude_q.x;
-    q_drone.y() = msg->attitude_q.y;
-    q_drone.z() = msg->attitude_q.z;    
+    uav_quat.w() = msg->attitude_q.w;
+    uav_quat.x() = msg->attitude_q.x;
+    uav_quat.y() = msg->attitude_q.y;
+    uav_quat.z() = msg->attitude_q.z;    
 
-    yaw_drone = geometry_utils::get_yaw_from_quaternion(q_drone);
+    uav_yaw = geometry_utils::get_yaw_from_quaternion(uav_quat);
 
     // 将无人机解锁位置设定为起飞点
     if(uav_state.armed && !uav_state_last.armed)
     {
-        Takeoff_position = pos_drone;
-        Takeoff_yaw      = yaw_drone;
+        Takeoff_position = uav_pos;
+        Takeoff_yaw      = uav_yaw;
     }
 
     uav_state_last = uav_state;
@@ -713,6 +719,31 @@ int UAV_controller::check_failsafe()
     else{
         return 0;
     }
+}
+
+void UAV_controller::mavros_interface_cb(const prometheus_msgs::MavrosInterface::ConstPtr &msg)
+{
+    if(msg->type == prometheus_msgs::MavrosInterface::ARMING)
+    {
+        arm_disarm_func(msg->arming);
+    }
+
+    if(msg->type == prometheus_msgs::MavrosInterface::SET_MODE)
+    {
+        set_mode_func(msg->mode);
+    }
+    
+    if(msg->type == prometheus_msgs::MavrosInterface::REBOOT_PX4)
+    {
+        reboot_PX4();
+    }
+}
+
+void UAV_controller::set_mode_func(string mode)
+{
+    mavros_msgs::SetMode mode_cmd;
+    mode_cmd.request.custom_mode = mode;
+    px4_set_mode_client.call(mode_cmd);
 }
 
 /***
@@ -1051,8 +1082,8 @@ void UAV_controller::debug_cb(const ros::TimerEvent &e)
 
     cout << "[ " << uav_state.mode<<" ] " << TAIL <<endl;
 
-    cout << GREEN  << "UAV_pos [X Y Z] : " << pos_drone[0] << " [ m ] "<< pos_drone[1]<<" [ m ] "<<pos_drone[2]<<" [ m ] "<< TAIL <<endl;
-    cout << GREEN  << "UAV_vel [X Y Z] : " << vel_drone[0] << " [m/s] "<< vel_drone[1]<<" [m/s] "<<vel_drone[2]<<" [m/s] "<< TAIL <<endl;
+    cout << GREEN  << "UAV_pos [X Y Z] : " << uav_pos[0] << " [ m ] "<< uav_pos[1]<<" [ m ] "<<uav_pos[2]<<" [ m ] "<< TAIL <<endl;
+    cout << GREEN  << "UAV_vel [X Y Z] : " << uav_vel[0] << " [m/s] "<< uav_vel[1]<<" [m/s] "<<uav_vel[2]<<" [m/s] "<< TAIL <<endl;
     cout << GREEN  << "UAV_att [R P Y] : " << uav_state.attitude[0] * 180/M_PI <<" [deg] "<<uav_state.attitude[1] * 180/M_PI << " [deg] "<< uav_state.attitude[2] * 180/M_PI<<" [deg] "<< TAIL<<endl;
 
     // 打印 exec_state
