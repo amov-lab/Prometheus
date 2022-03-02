@@ -19,7 +19,7 @@ int main(int argc, char** argv)
   ros::Duration(1.0).sleep();
 
   bool sim_mode;
-  nh.param<bool>("sim_mode", sim_mode, false);
+  nh.param<bool>("sim_mode", sim_mode, true);
 
   UAV_controller uav_controller(nh);
   UAV_estimator uav_estimator(nh);
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
   {
     ros::spinOnce();
     ros::Duration(5.0).sleep();
-    ROS_ERROR("Waiting for connect PX4!");
+    // ROS_ERROR("Waiting for connect PX4!");
   }
 
   // 主循环

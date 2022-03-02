@@ -9,7 +9,7 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     // 【变量】节点名字
     node_name = "[uav_controller_uav" + std::to_string(uav_id) + "]";
     // 【参数】是否仿真模式
-    nh.param<bool>("sim_mode", sim_mode, false);
+    nh.param<bool>("sim_mode", sim_mode, true);
     // 【参数】控制器标志位,具体说明见CONTOLLER_FLAG说明
     nh.param<int>("control/controller_flag", controller_flag, 0);
     // 【参数】使用外部控制器的控制指令，直接发送至PX4，这种方式依赖外部控制器的稳定性，需要小心！
@@ -104,6 +104,9 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     // 【服务】解锁/上锁
     px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav"+std::to_string(uav_id) + "/mavros/cmd/arming");
 
+    // 【服务】紧急上锁服务
+    px4_emergency_client = nh.serviceClient<mavros_msgs::CommandLong>("/uav"+std::to_string(uav_id) + "/mavros/cmd/command");
+    
     // 【服务】修改系统模式
     px4_set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/uav"+std::to_string(uav_id) + "/mavros/set_mode");
 
@@ -128,6 +131,11 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     uav_pos.setZero();
     uav_vel.setZero();
 }
+
+// bool UAV_controller::arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res)
+// {
+//     arming_res = res.success;
+// }
 
 void UAV_controller::mainloop()
 {
@@ -191,6 +199,10 @@ void UAV_controller::mainloop()
                 }
                 reboot_PX4();
             }
+            // pos_des = Hover_position;
+            // // vel_des << 0.0, 0.0, 0.0;
+            // // acc_des << 0.0, 0.0, 0.0;
+            // yaw_des = Hover_yaw;
             break;
         
         case EXEC_STATE::HOVER_CONTROL:
@@ -198,6 +210,7 @@ void UAV_controller::mainloop()
             // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
             if (!rc_input.in_hover_control)
             {
+                // quick_land = true;
                 // 推出成为LAND模式，还是手动模式（那能控的住吗？）
                 exec_state = EXEC_STATE::LAND_CONTROL;
                 cout << RED << node_name << "----> RC input wrong, swtich to land control mode!"<< TAIL << endl;
@@ -226,6 +239,7 @@ void UAV_controller::mainloop()
             if (!rc_input.in_hover_control)
             {
                 // 推出成为LAND模式，还是手动模式（那能控的住吗？）
+                // quick_land = true;
                 exec_state = EXEC_STATE::LAND_CONTROL;
                 cout << RED << node_name << "----> RC input wrong, swtich to land control mode!"<< TAIL << endl;
                 break;
@@ -250,7 +264,7 @@ void UAV_controller::mainloop()
                 Land_speed = 1.0;
             }
 
-            if (last_exec_state != EXEC_STATE::LAND_CONTROL)
+            if (last_exec_state = EXEC_STATE::LAND_CONTROL)
             {
                 pos_des[0] = uav_pos[0];
                 pos_des[1] = uav_pos[1];
@@ -265,8 +279,8 @@ void UAV_controller::mainloop()
             {
                 // 此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
                 enable_manual_mode();       
-                // 上锁
-                arm_disarm_func(true);     
+                // 进入急停
+                enable_emergency_func();     
 
                 if(!uav_state.armed)
                 {
@@ -574,7 +588,7 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
 void UAV_controller::send_pos_cmd_to_px4_original_controller()
 {
     // HOVER_CONTROL
-    if(exec_state == EXEC_STATE::MANUAL_CONTROL)
+    if(exec_state == EXEC_STATE::HOVER_CONTROL)
     {
         send_pos_setpoint(pos_des, yaw_des);
         return;
@@ -582,13 +596,14 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
 
     if(exec_state == EXEC_STATE::LAND_CONTROL)
     {
-        if(quick_land)
-        {
-            // quick_land一般用于位置失效情况，因此直接使用速度控制
-            send_vel_setpoint(vel_des, yaw_des);
-        }else{
-            send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
-        }
+        // if(quick_land)
+        // {
+        //     // quick_land一般用于位置失效情况，因此直接使用速度控制
+        //     send_vel_setpoint(vel_des, yaw_des);
+        // }else{
+        //     send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
+        // }
+        send_vel_setpoint(vel_des,yaw_des);
         return;
     }
 
@@ -731,25 +746,86 @@ void UAV_controller::set_mode_func(string mode)
     px4_set_mode_client.call(mode_cmd);
 }
 
+/***
+ * 上锁解锁函数，调用mavros上锁和解决服务
+ * 参数：bool on_or_off，true为解锁指令，false为上锁指令
+ * 判断当前无人机状态，为解锁状态且on_or_off为
+ * -----------------------------------------------------------------------|
+ * |on_or_off/armed    |     true(无人机已解锁)      |   false（无人机未解锁） |
+ * -----------------------------------------------------------------------|
+ * |true（解锁指令）     |     无人机已经解锁           | 无人机正在解锁，解锁成功|
+ * ----------------------------------------------------------------------|
+ * |false（上锁指令）    |     无人机正在上锁，上锁成功  |   无人机已经上锁        |
+ * -----------------------------------------------------------------------|
+*/
 void UAV_controller::arm_disarm_func(bool on_or_off)
 {
-    // 上锁 - 此时无人机已解锁，uav_state.armed应为true,on_or_off = false
-    // 解锁 - 此时无人机未解锁，uav_state.armed应为false,on_or_off = true
     mavros_msgs::CommandBool arm_cmd;
 
-    if(uav_state.armed && !on_or_off)
-    {
-        arm_cmd.request.value = on_or_off;
-        px4_arming_client.call(arm_cmd);
-        cout << GREEN << node_name << " arm_disarm_func : Arm, be careful!"<< TAIL<<endl;
-    }else if(!uav_state.armed && on_or_off)
-    {
-        arm_cmd.request.value = on_or_off;
-        px4_arming_client.call(arm_cmd);
-    }else
-    {
-        cout << YELLOW << node_name << " arm_disarm_func : Disarm!"<< TAIL<<endl;
+    if(uav_state.armed){
+        if(!on_or_off){
+            arm_cmd.request.value = on_or_off;
+            px4_arming_client.call(arm_cmd);
+            if(arm_cmd.response.success){
+                cout << GREEN << node_name << "无人机正在上锁，上锁成功" << TAIL <<endl;
+            }else{
+                cout << GREEN << node_name << "无人机正在上锁，上锁失败" << TAIL <<endl;
+            }
+        }else{
+            cout << YELLOW << node_name << " 无人机已经解锁"<< TAIL<<endl;
+        }
+    }else if(on_or_off){
+            arm_cmd.request.value = on_or_off;
+            px4_arming_client.call(arm_cmd);
+            if(arm_cmd.response.success){
+                cout << GREEN << node_name << "无人机正在解锁，解锁成功" << TAIL <<endl;
+            }else{
+                cout << GREEN << node_name << "无人机正在解锁，解锁失败" << TAIL <<endl;
+            }
+    }else{
+        cout << YELLOW << node_name << " 无人机已经上锁"<< TAIL<<endl;
     }
+    // if(uav_state.armed && !on_or_off)
+    // {
+    //     arm_cmd.request.value = on_or_off;
+    //     px4_arming_client.call(arm_cmd);
+    //     cout << GREEN << node_name << " arm_disarm_func : Arm, be careful!"<< TAIL<<endl;
+    // }else if(!uav_state.armed && on_or_off)
+    // {
+    //     arm_cmd.request.value = on_or_off;
+    //     px4_arming_client.call(arm_cmd);
+    // }else
+    // {
+    //     cout << YELLOW << node_name << " arm_disarm_func : Disarm!"<< TAIL<<endl;
+    // }
+}
+
+/**
+ * @brief 无人机紧急制动函数
+ * https://mavlink.io/en/messages/common.html#MAV_CMD_COMPONENT_ARM_DISARM
+ * @return ** void 
+ */
+void UAV_controller::enable_emergency_func()
+{
+    mavros_msgs::CommandLong emergency_srv;
+    emergency_srv.request.broadcast = false;
+    emergency_srv.request.command = 400;
+    emergency_srv.request.confirmation = 0;
+    emergency_srv.request.param1 = 0.0;
+    emergency_srv.request.param2 = 21196;
+    emergency_srv.request.param3 = 0.0;
+    emergency_srv.request.param4 = 0.0;
+    emergency_srv.request.param5 = 0.0;
+    emergency_srv.request.param6 = 0.0;
+    emergency_srv.request.param7 = 0.0;
+
+    px4_emergency_client.call(emergency_srv);
+    ROS_INFO("emergency FCU");
+    cout << GREEN << node_name << " 电机已经停转 "<< TAIL <<endl;
+
+    // if(emergency_srv.response.success){
+    //     ROS_INFO(" 紧急制动 ");
+    // }
 }
 
 void UAV_controller::reboot_PX4()
@@ -768,6 +844,12 @@ void UAV_controller::reboot_PX4()
     cout << GREEN << node_name << " Reboot PX4!"<< TAIL<<endl;
 }
 
+/**
+ * @brief 切换offboard模式
+ * 只能调用切换飞行模式的服务，不能保证服务切换成功，只能保证飞行模式指令发送成功
+ * 
+ * @return ** void 
+ */
 void UAV_controller::enable_offboard_mode()
 {
     // 自动切入OFFBOARD模式的前提条件：1、PX4飞控能够收到控制指令（如期望位置、速度等）
@@ -777,7 +859,11 @@ void UAV_controller::enable_offboard_mode()
     {
         mode_cmd.request.custom_mode = "OFFBOARD";
         px4_set_mode_client.call(mode_cmd);
-        cout << GREEN << node_name << " Switch to OFFBOARD mode!"<< TAIL<<endl;
+        if(uav_state.mode == "OFFBOARD"){
+            cout << GREEN << node_name << " 正在切换offboard，切换成功 "<< TAIL<<endl;
+        }else{
+            cout << GREEN << node_name << " 切换offboard模式失败 "<< TAIL<<endl;
+        }
     }else
     {
         cout << GREEN << node_name << " Already in OFFBOARD mode!"<< TAIL<<endl;
