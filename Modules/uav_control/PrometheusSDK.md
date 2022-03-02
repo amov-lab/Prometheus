@@ -1,13 +1,13 @@
 #### uav_control模块逻辑
 
-遥控器3个拨杆
+**遥控器4个拨杆**
 
 - 拨杆1：进入程序控制（HOVER_CONTROL）
 - 拨杆2：进入指令控制（COMMAND_CONTROL）
 - 拨杆3：原地降落（LAND_CONTROL）
 - 拨杆4：重启飞控（只有在MANUAL_CONTROL且未解锁时）
 
-设想的流程：
+**设想的流程**
 
 - 解锁，默认为MANUAL_CONTROL模式，此时可以正常控制无人机进行手动控制
 - 在MANUAL_CONTROL模式中，可以通过手动控制确定PX4姿态环没有问题
@@ -21,7 +21,22 @@
 
 - 无人机利用LAND_CONTROL将落后，此时程序自动切换为MANUAL_CONTROL模式，可以将所有拨杆归零，继续进行操控
 
-对于MATLAB控制：
+**集群控制**
+
+- 地面站（发布：起飞、阵型切换、降落、紧急降落等顶层指令） -> 通信节点（转发为ROS MSG）  -> 集群控制节点（根据当前状态及地面站指令发送/prometheus/command）-> uav_control节点
+- 集群控制节点中订阅无人机状态信息 - "/uav"+std::to_string(uav_id)+"/prometheus/state"
+- 集群控制节点中发布指令控制信息 - "/uav"+std::to_string(uav_id)+ "/prometheus/command"
+- 对于集群位置控制：
+  - 先发送Init_Pos_Hover指令，即起飞
+  - 编队控制发送Move指令，子模式选择XYZ_POS，直接指定每个无人机的位置
+- 对于集群速度控制：
+  - 先发送Init_Pos_Hover指令，即起飞
+  - 编队控制发送Move指令，子模式选择XY_VEL_Z_POS
+- 对于集群加速度控制：
+  - 先发送Init_Pos_Hover指令，即起飞
+  - 编队控制发送Move指令，子模式选择XYZ_ATT
+
+**对于MATLAB控制**
 
 - 需要将controller_flag设定为CONTOLLER_FLAG::EXTERNAL_CONTROLLER
 - MATLAB中订阅无人机状态信息 - "/uav"+std::to_string(uav_id)+"/prometheus/state"

@@ -13,12 +13,10 @@
 #include <mavros_msgs/RCIn.h>
 #include <mavros_msgs/CommandLong.h>
 
-#include <prometheus_msgs/ManCommand.h>
 #include <prometheus_msgs/UAVState.h>
-#include <prometheus_msgs/AgentStateUGV.h>
-#include <prometheus_msgs/AgentStateMAN.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
+#include <prometheus_msgs/MavrosInterface.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -32,12 +30,11 @@
 #include "pos_controller_UDE.h"
 #include "pos_controller_NE.h"
 
-
 using namespace std;
 
 // 宏定义
-#define NUM_POINT 2                             // 打印小数点
-#define CMD_TIMEOUT 0.1        
+#define NUM_POINT 2 // 打印小数点
+#define CMD_TIMEOUT 0.1
 
 class UAV_controller
 {
@@ -186,7 +183,5 @@ class UAV_controller
 
         // bool arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res);
 };
-
-
 
 #endif

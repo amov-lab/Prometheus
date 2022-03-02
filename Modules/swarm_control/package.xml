@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>prometheus_swarm_control</name>
+  <version>0.0.0</version>
+  <description>The prometheus_swarm_control package</description>
+
+  <maintainer email="qiyh8@mail.sysu.edu.cn">Yuhua Qi</maintainer>
+
+  <license>TODO</license>
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <exec_depend>std_msgs</exec_depend>
+  
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+  </export>
+</package>
