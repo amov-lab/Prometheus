@@ -29,6 +29,7 @@ add_message_files(
   AttitudeReference.msg
   DroneState.msg
   ControlOutput.msg
+  MavrosInterface.msg
   Message.msg
   LogMessage.msg
   LogMessageControl.msg
@@ -54,6 +55,7 @@ add_message_files(
   UAVCommand.msg
   AgentCommandUGV.msg
   AgentCommandMAN.msg
+  MultiUAVState.msg
 )
 
 add_action_files(
