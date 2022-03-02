@@ -90,57 +90,57 @@ int main(int argc, char **argv)
 
     float time_trajectory = 0.0;
     int start_flag = 0;
-    if(sim_mode)
-    {
-        while(start_flag == 0)
-        {
-            cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-            cout << "Please enter 1 to disarm the UAV ..."<<endl;
-            cin >> start_flag;
+    // if(sim_mode)
+    // {
+    //     /*while(start_flag == 0)
+    //     {
+    //         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+    //         cout << "Please enter 1 to disarm the UAV ..."<<endl;
+    //         cin >> start_flag;
 
-            mavros_msgs::CommandBool arm_cmd;
-            arm_cmd.request.value = true;
-            px4_arming_client.call(arm_cmd);
+    //         mavros_msgs::CommandBool arm_cmd;
+    //         arm_cmd.request.value = true;
+    //         px4_arming_client.call(arm_cmd);
 
-            ros::Duration(2.0).sleep();
-            ros::spinOnce();
+    //         ros::Duration(2.0).sleep();
+    //         ros::spinOnce();
 
-            if(!uav_state.armed)
-            {
-                start_flag = 0;
-            }
-        }
+    //         if(!uav_state.armed)
+    //         {
+    //             start_flag = 0;
+    //         }
+    //     }*/
 
-        start_flag = 0;
-        while(start_flag == 0)
-        {
-            cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-            cout << "Please enter 1 switch to COMMAND_CONTROL state and takeoff the UAV."<<endl;
-            cin >> start_flag;
+    //     start_flag = 0;
+    //     while(start_flag == 0)
+    //     {
+    //         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+    //         cout << "Please enter 1 switch to COMMAND_CONTROL state and takeoff the UAV."<<endl;
+    //         cin >> start_flag;
             
-            // 1-4通道 全部设为中值
-            raw_rc_in[0] = 1500;
-            raw_rc_in[1] = 1500;
-            raw_rc_in[2] = 1500;
-            raw_rc_in[3] = 1500;
-            // 5通道
-            raw_rc_in[4] = 1900;
-            // 6通道
-            raw_rc_in[5] = 1900;
-            rc.channels = raw_rc_in;
-            // MANUAL_CONTROL -> HOVER_CONTROL -> COMMAND_CONTROL
-            rc_pub.publish(rc);
+    //         // 1-4通道 全部设为中值
+    //         raw_rc_in[0] = 1500;
+    //         raw_rc_in[1] = 1500;
+    //         raw_rc_in[2] = 1500;
+    //         raw_rc_in[3] = 1500;
+    //         // 5通道
+    //         raw_rc_in[4] = 2000;
+    //         // 6通道
+    //         raw_rc_in[5] = 2000;
+    //         rc.channels = raw_rc_in;
+    //         // MANUAL_CONTROL -> HOVER_CONTROL -> COMMAND_CONTROL
+    //         rc_pub.publish(rc);
 
-            ros::Duration(1.0).sleep();
-            ros::spinOnce();
+    //         ros::Duration(1.0).sleep();
+    //         ros::spinOnce();
 
-            // 怎么判断？
-            if(!uav_state.armed)
-            {
-                start_flag = 0;
-            }
-        }
-    }
+    //         // 怎么判断？
+    //         if(!uav_state.armed)
+    //         {
+    //             start_flag = 0;
+    //         }
+    // //     }
+    // }
     
     while(ros::ok())
     {
