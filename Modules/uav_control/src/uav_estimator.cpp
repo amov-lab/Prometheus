@@ -5,7 +5,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【参数】编号
     nh.param<int>("uav_id", uav_id, 0);
     // 【参数】定位源： 0 for mocap, 1 for t265, 2 for gazebo, 3 for fake_odom, 4 for GPS
-    nh.param<int>("control/location_source", location_source, LOC_SOURCE::MOCAP);
+    nh.param<int>("control/location_source", location_source, LOC_SOURCE::GPS);
 
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);
@@ -258,6 +258,12 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     px4_vision_pose_pub.publish(vision_pose);
 }
 
+/**
+ * @brief 检查无人机状态，包括无人机与PX4连接状态、是否有本地位置数据
+ * 是否解锁状态？是否处于offboard模式状态？在此处有点鸡肋
+ * 
+ * @return int 
+ */
 int UAV_estimator::check_uav_state()
 {
     ros::Time time_now = ros::Time::now();
@@ -467,6 +473,9 @@ void UAV_estimator::printf_param()
     }else if(location_source == LOC_SOURCE::FAKE_ODOM)
     {
         cout << "location_source: [FAKE_ODOM] "<<endl;
+    }else if(location_source == LOC_SOURCE::GPS)
+    {
+        cout << "location_source: [GPS] "<<endl;
     }else
     {
         cout << "location_source: [UNKNOW] "<<endl;

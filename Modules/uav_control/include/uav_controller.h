@@ -58,6 +58,7 @@ class UAV_controller
         ros::ServiceClient px4_arming_client;
         ros::ServiceClient px4_set_mode_client;
         ros::ServiceClient px4_reboot_client;
+        ros::ServiceClient px4_emergency_client;
         // 定时器
         ros::Timer debug_timer;
 
@@ -68,6 +69,7 @@ class UAV_controller
         prometheus_msgs::UAVState uav_state;                 // 无人机状态
         prometheus_msgs::UAVState uav_state_last;                 // 无人机状态
         RC_Input rc_input;
+        // bool arming_res = true;
         
         enum CONTOLLER_FLAG
         {
@@ -175,11 +177,14 @@ class UAV_controller
         void enable_offboard_mode();
         void enable_manual_mode();
         void arm_disarm_func(bool on_or_off);
+        void enable_emergency_func();
         void reboot_PX4();
         
         void send_pos_cmd_to_px4_original_controller();
         void send_att_cmd_to_px4_attitude_controller();
         void rotation_yaw(double yaw_angle, float body_frame[2], float enu_frame[2]);
+
+        // bool arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res);
 };
 
 
