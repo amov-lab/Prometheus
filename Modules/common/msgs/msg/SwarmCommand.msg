@@ -6,11 +6,12 @@ string source
 ## 命令
 uint8 Swarm_CMD
 # enum CMD 控制模式枚举
-uint8 Init=0
-uint8 Start=1
-uint8 Hold=2
-uint8 Stop=3
-uint8 Formation=4
+uint8 Ready=0
+uint8 Init=1
+uint8 Start=2
+uint8 Hold=3
+uint8 Stop=4
+uint8 Formation=5
 
 uint8 Follow=11
 uint8 Search=12
