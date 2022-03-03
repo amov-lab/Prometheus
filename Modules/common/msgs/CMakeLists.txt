@@ -43,6 +43,7 @@ add_message_files(
   UgvState.msg
   UgvCommand.msg
   StationCommand.msg
+  StationFeedback.msg
   Case2Result.msg
   Case3Result.msg
   Msg103.msg
