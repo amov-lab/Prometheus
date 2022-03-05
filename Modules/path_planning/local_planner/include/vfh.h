@@ -16,8 +16,9 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include "tools.h"
+#include "math.h"
 #include "local_planner_alg.h"
+#include "local_planner_utils.h"
 
 using namespace std;
 
@@ -30,16 +31,12 @@ namespace LocalPlannerNS
         double inflate_distance;
         double sensor_max_range;
         double safe_distance;
-
         bool has_local_map_;
         bool has_odom_;
-        bool is_2D;
 
         double goalWeight, obstacle_weight;
-
         double inflate_and_safe_distance;
-
-        double limit_v_norm;
+        double velocity;
 
         double *Hdata;
         double Hres;
@@ -47,7 +44,7 @@ namespace LocalPlannerNS
 
         pcl::PointCloud<pcl::PointXYZ> latest_local_pcl_;
         sensor_msgs::PointCloud2ConstPtr local_map_ptr_;
-        nav_msgs::Odometry cur_odom_;
+        nav_msgs::Odometry current_odom;
 
         bool isIgnored(float x, float y, float z, float ws);
         int find_Hcnt(double angle);
