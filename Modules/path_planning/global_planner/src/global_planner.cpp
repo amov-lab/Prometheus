@@ -48,13 +48,13 @@ namespace GlobalPlannerNS
             laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + "/prometheus/global_planning/laser_scan", 1, &GlobalPlanner::laser_cb, this);
         }
 
-        // 【发布】 控制指令
+        // 【发布】控制指令
         uav_cmd_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command", 1);
         // 【发布】发布路径用于显示
         path_cmd_pub = nh.advertise<nav_msgs::Path>("/uav" + std::to_string(uav_id) + "/prometheus/global_planning/path_cmd", 1);
-        // 【定时器】 安全检测
+        // 【定时器】安全检测
         // safety_timer = nh.createTimer(ros::Duration(2.0), &GlobalPlanner::safety_cb, this);
-        // 【定时器】 规划器算法执行周期
+        // 【定时器】规划器算法执行周期
         mainloop_timer = nh.createTimer(ros::Duration(1.5), &GlobalPlanner::mainloop_cb, this);
         // 【定时器】路径追踪循环，快速移动场景应当适当提高执行频率
         // time_per_path
