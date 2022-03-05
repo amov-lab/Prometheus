@@ -3,7 +3,7 @@
 namespace LocalPlannerNS
 {
     // 初始化函数
-    void LocalPlanner::LocalPlanner(ros::NodeHandle &nh)
+    LocalPlanner::LocalPlanner(ros::NodeHandle &nh)
     {
         // 【参数】编号，从1开始编号
         nh.param("uav_id", uav_id, 0);
@@ -20,7 +20,7 @@ namespace LocalPlannerNS
         nh.param("local_planner/max_planning_vel", max_planning_vel, 0.4);
 
         //【订阅】订阅目标点
-        goal_sub = nh.subscribe("/prometheus/planning/goal", 1, &LocalPlanner::goal_cb, this);
+        goal_sub = nh.subscribe("/uav" + std::to_string(uav_id) + "/prometheus/planning/goal", 1, &LocalPlanner::goal_cb, this);
 
         //【订阅】无人机状态信息
         uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/drone_state",
@@ -30,18 +30,18 @@ namespace LocalPlannerNS
         // 订阅传感器点云信息,该话题名字可在launch文件中任意指定
         if (lidar_model == 0)
         {
-            local_point_clound_sub = nh.subscribe<sensor_msgs::PointCloud2>("/prometheus/planning/local_pcl", 1, &LocalPlanner::localcloudCallback, this);
+            local_point_cloud_sub = nh.subscribe<sensor_msgs::PointCloud2>("/uav" + std::to_string(uav_id) + "/prometheus/planning/local_pcl", 1, &LocalPlanner::pcl_cb, this);
         }
         else if (lidar_model == 1)
         {
-            local_point_clound_sub = nh.subscribe<sensor_msgs::LaserScan>("/prometheus/planning/local_pcl", 1, &LocalPlanner::laserscanCallback, this);
+            local_point_cloud_sub = nh.subscribe<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + "/prometheus/planning/local_pcl", 1, &LocalPlanner::laserscan_cb, this);
         }
 
         // 【发布】控制指令
         uav_cmd_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command", 1);
 
         // 【发布】速度用于显示
-        rviz_vel_pub = nh.advertise<geometry_msgs::Point>("/prometheus/local_planner/desired_vel", 10);
+        rviz_vel_pub = nh.advertise<geometry_msgs::Point>("/uav" + std::to_string(uav_id) + "/prometheus/local_planner/desired_vel", 10);
 
         // 【定时器】执行周期为1Hz
         mainloop_timer = nh.createTimer(ros::Duration(0.2), &LocalPlanner::mainloop_cb, this);
@@ -54,13 +54,13 @@ namespace LocalPlannerNS
         {
             local_alg_ptr.reset(new APF);
             local_alg_ptr->init(nh);
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "APF init.");
+            // pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "APF init.");
         }
         else if (algorithm_mode == 1)
         {
             local_alg_ptr.reset(new VFH);
             local_alg_ptr->init(nh);
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "VFH init.");
+            // pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "VFH init.");
         }
 
         // 规划器状态参数初始化
@@ -162,19 +162,12 @@ namespace LocalPlannerNS
         local_alg_ptr->set_odom(uav_odom);
     }
 
-    void LocalPlanner::laserscanCallback(const sensor_msgs::LaserScanConstPtr &msg)
+    void LocalPlanner::laserscan_cb(const sensor_msgs::LaserScanConstPtr &msg)
     {
-        /* need odom_ for center radius sensing */
         if (!odom_ready)
         {
             return;
         }
-
-        sensor_ready = true;
-
-        sensor_msgs::LaserScan::ConstPtr _laser_scan;
-
-        _laser_scan = msg;
 
         pcl::PointCloud<pcl::PointXYZ> _pointcloud;
 
@@ -182,36 +175,35 @@ namespace LocalPlannerNS
         pcl::PointXYZ newPoint;
         double newPointAngle;
 
-        int beamNum = _laser_scan->ranges.size();
+        int beamNum = msg->ranges.size();
         for (int i = 0; i < beamNum; i++)
         {
-            newPointAngle = _laser_scan->angle_min + _laser_scan->angle_increment * i;
-            newPoint.x = _laser_scan->ranges[i] * cos(newPointAngle);
-            newPoint.y = _laser_scan->ranges[i] * sin(newPointAngle);
-            newPoint.z = Drone_odom.pose.pose.position.z;
+            newPointAngle = msg->angle_min + msg->angle_increment * i;
+            newPoint.x = msg->ranges[i] * cos(newPointAngle);
+            newPoint.y = msg->ranges[i] * sin(newPointAngle);
+            newPoint.z = uav_odom.pose.pose.position.z;
             _pointcloud.push_back(newPoint);
         }
 
         pcl_ptr = _pointcloud.makeShared();
         local_alg_ptr->set_local_map_pcl(pcl_ptr);
+        latest_local_pcl_ = *pcl_ptr; // 没用
 
-        latest_local_pcl_ = *pcl_ptr;
+        sensor_ready = true;
     }
 
-    void LocalPlanner::localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
+    void LocalPlanner::pcl_cb(const sensor_msgs::PointCloud2ConstPtr &msg)
     {
-        /* need odom_ for center radius sensing */
         if (!odom_ready)
         {
             return;
         }
 
-        sensor_ready = true;
-
         local_map_ptr_ = msg;
         local_alg_ptr->set_local_map(local_map_ptr_);
+        pcl::fromROSMsg(*msg, latest_local_pcl_); // 没用
 
-        pcl::fromROSMsg(*msg, latest_local_pcl_);
+        sensor_ready = true;
     }
 
     void LocalPlanner::control_cb(const ros::TimerEvent &e)
@@ -280,18 +272,16 @@ namespace LocalPlannerNS
             {
                 if (!odom_ready)
                 {
-                    message = "Need Odom.";
+                    cout << YELLOW << NODE_NAME << "Need Odom." << TAIL << endl;
                 }
                 else if (!drone_ready)
                 {
-                    message = "Drone is not ready.";
+                    cout << YELLOW << NODE_NAME << "Drone is not ready." << TAIL << endl;
                 }
                 else if (!sensor_ready)
                 {
-                    message = "Need sensor info.";
+                    cout << YELLOW << NODE_NAME << "Need sensor info." << TAIL << endl;
                 }
-
-                cout << YELLOW << NODE_NAME << message << TAIL << endl;
                 exec_num = 0;
             }
 
@@ -314,8 +304,7 @@ namespace LocalPlannerNS
             {
                 if (exec_num == 20)
                 {
-                    message = "Waiting for a new goal.";
-                    cout << YELLOW << NODE_NAME << message << TAIL << endl;
+                    cout << GREEN << NODE_NAME << "Waiting for a new goal." << TAIL << endl;
                     exec_num = 0;
                 }
             }
@@ -343,18 +332,14 @@ namespace LocalPlannerNS
 
             if (exec_num == 100)
             {
-                // todo
-                char sp[100];
                 if (planner_state == 1)
                 {
-                    sprintf(sp, "local planning desired vel: [%f, %f, %f]", desired_vel(0), desired_vel(1), desired_vel(2));
+                    cout << GREEN << NODE_NAME << "local planning desired vel [XY]:" << desired_vel(0) << "[m/s]" << desired_vel(1) << "[m/s]" << TAIL << endl;
                 }
                 else if (planner_state == 2)
                 {
-                    sprintf(sp, "Dangerous!");
+                    cout << YELLOW << NODE_NAME << "Dangerous!" << TAIL << endl;
                 }
-
-                // pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, sp);
                 exec_num = 0;
             }
 

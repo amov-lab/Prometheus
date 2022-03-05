@@ -16,8 +16,9 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include "tools.h"
 #include "local_planner_alg.h"
+#include "local_planner_utils.h"
+
 using namespace std;
 
 namespace LocalPlannerNS
@@ -29,8 +30,8 @@ namespace LocalPlannerNS
         double inflate_distance;
         double sensor_max_range;
         double max_att_dist;
-        double k_push;
-        double k_att;
+        double k_repulsion;
+        double k_attraction;
         double min_dist;
         double ground_height;
         double ground_safe_height;
@@ -38,14 +39,13 @@ namespace LocalPlannerNS
 
         bool has_local_map_;
         bool has_odom_;
-        bool is_2D;
 
-        Eigen::Vector3d push_force;
+        Eigen::Vector3d repulsive_force;
         Eigen::Vector3d attractive_force;
 
         pcl::PointCloud<pcl::PointXYZ> latest_local_pcl_;
         sensor_msgs::PointCloud2ConstPtr local_map_ptr_;
-        nav_msgs::Odometry cur_odom_;
+        nav_msgs::Odometry current_odom;
 
     public:
         virtual void set_odom(nav_msgs::Odometry cur_odom);
