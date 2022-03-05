@@ -1,20 +1,4 @@
 <launch>
-    <!-- Launch Gazebo Simulation -->
-    <arg name="x" default="-10.0"/>
-    <arg name="y" default="0.0"/>
-    <arg name="z" default="0"/>
-	<arg name="world" default="$(find prometheus_gazebo)/worlds/obstacle.world"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_hokuyo_2Dlidar/p450_hokuyo_2Dlidar.sdf"/>
-	<arg name="model" default="p450_hokuyo_2Dlidar"/>
-    <include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor.launch">
-	  <arg name="world" value="$(arg world)"/>
-	  <arg name="sdf" value="$(arg sdf)"/>
-	  <arg name="model" value="$(arg model)"/>
-      <arg name="x" value="$(arg x)"/>
-      <arg name="y" value="$(arg y)"/>
-      <arg name="z" value="$(arg z)"/>
-    </include>
-
 	<!-- run the laser_to_pointcloud -->
     <node pkg="prometheus_gazebo" type="laser_to_pointcloud.py" name="laser_to_pointcloud" >
     </node>
@@ -32,7 +16,7 @@
 
     <!-- 启动全局规划算法 -->
     <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
-    <node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">
+    <node pkg="prometheus_global_planner" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">
         <remap from="/prometheus/global_planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
         <!-- 二维平面规划 -->

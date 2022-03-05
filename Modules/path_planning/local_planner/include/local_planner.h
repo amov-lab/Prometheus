@@ -22,11 +22,9 @@
 
 #include "apf.h"
 #include "vfh.h"
-#include "printf_utils.h"
+#include "local_planner_utils.h"
 
 using namespace std;
-
-#define MIN_DIS 0.1
 
 namespace LocalPlannerNS
 {
@@ -38,6 +36,7 @@ namespace LocalPlannerNS
 
     private:
         // 参数
+        int uav_id;
         int algorithm_mode;
         int lidar_model;
         double max_planning_vel;
@@ -50,12 +49,12 @@ namespace LocalPlannerNS
         ros::Subscriber goal_sub;
         ros::Subscriber uav_state_sub;
 
-        ros::Subscriber local_point_clound_sub;
+        ros::Subscriber local_point_cloud_sub;
 
         // 发布控制指令
         ros::Publisher uav_cmd_pub;
         ros::Publisher rviz_vel_pub;
-        ros::Timer mainloop_timer
+        ros::Timer mainloop_timer;
         ros::Timer control_timer;
 
         // 局部避障算法 算子
@@ -105,8 +104,8 @@ namespace LocalPlannerNS
 
         void goal_cb(const geometry_msgs::PoseStampedConstPtr &msg);
         void uav_state_cb(const prometheus_msgs::UAVStateConstPtr &msg);
-        void localcloudCallback(const sensor_msgs::PointCloud2ConstPtr &msg);
-        void laserscanCallback(const sensor_msgs::LaserScanConstPtr &msg);
+        void pcl_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
+        void laserscan_cb(const sensor_msgs::LaserScanConstPtr &msg);
         void mainloop_cb(const ros::TimerEvent &e);
         void control_cb(const ros::TimerEvent &e);
     };

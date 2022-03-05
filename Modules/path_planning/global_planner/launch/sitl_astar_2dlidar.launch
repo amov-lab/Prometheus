@@ -32,7 +32,7 @@
 
     <!-- 启动全局规划算法 -->
     <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
-    <node pkg="prometheus_global_planning" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">
+    <node pkg="prometheus_global_planner" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">
         <remap from="/prometheus/global_planning/global_pcl" to="$(arg topic_of_global_pcl)" />
         <!-- 参数 -->
         <!-- 二维平面规划 -->

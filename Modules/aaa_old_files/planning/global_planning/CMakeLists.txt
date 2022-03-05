@@ -22,8 +22,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
 	INCLUDE_DIRS include
-	LIBRARIES Global_Planning
-	#  DEPENDS system_lib
 )
 
 include_directories(
