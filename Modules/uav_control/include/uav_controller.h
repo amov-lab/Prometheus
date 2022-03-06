@@ -20,7 +20,6 @@
 
 #include <nav_msgs/Odometry.h>
 
-#include "message_utils.h"
 #include "geometry_utils.h"
 #include "printf_utils.h"
 #include "rc_input.h"

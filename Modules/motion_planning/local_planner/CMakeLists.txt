@@ -44,5 +44,5 @@ add_executable(local_planner_main
 
 target_link_libraries(local_planner_main
        ${catkin_LIBRARIES}
-	   ${PCL_LIBRARIES}
+       ${PCL_LIBRARIES}
 	)
