@@ -284,19 +284,16 @@ namespace GlobalPlannerNS
             {
                 if (!odom_ready)
                 {
-                    message = "Need Odom.";
+                    cout << YELLOW << NODE_NAME << "Need Odom." << TAIL << endl;
                 }
                 else if (!drone_ready)
                 {
-                    message = "Drone is not ready.";
+                    cout << YELLOW << NODE_NAME << "Drone is not ready." << TAIL << endl;
                 }
                 else if (!sensor_ready)
                 {
-                    message = "Need sensor info.";
+                    cout << YELLOW << NODE_NAME << "Need sensor info." << TAIL << endl;
                 }
-
-                cout << YELLOW << NODE_NAME << message << TAIL << endl;
-
                 exec_num = 0;
             }
 
@@ -319,8 +316,7 @@ namespace GlobalPlannerNS
             {
                 if (exec_num == 10)
                 {
-                    message = "Waiting for a new goal.";
-                    cout << YELLOW << NODE_NAME << message << TAIL << endl;
+                    cout << YELLOW << NODE_NAME << "Waiting for a new goal." << TAIL << endl;
 
                     exec_num = 0;
                 }

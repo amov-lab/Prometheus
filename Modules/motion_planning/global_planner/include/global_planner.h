@@ -95,9 +95,6 @@ namespace GlobalPlannerNS
         ros::Time tra_start_time;
         float tra_running_time;
 
-        // 打印的提示消息
-        string message;
-
         // 五种状态机
         enum EXEC_STATE
         {
