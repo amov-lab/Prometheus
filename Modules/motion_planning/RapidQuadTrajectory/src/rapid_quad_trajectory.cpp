@@ -6,6 +6,11 @@
 // 题目：A computationally efficient motion primitive for quadrocopter trajectory generation
 // 期刊：IEEE Transactions on Robotics
 
+// todo:
+// 1,阅读论文,理解概念
+// 2,阅读源码,是否支持多个路径点的设置
+// 3,与控制联调(需要使用轨迹追踪控制器)
+// 4,加入高飞的轨迹生成,作为补充
 RapidQuadTrajectory::RapidQuadTrajectory(ros::NodeHandle &nh)
 {
     // 【参数】编号，从1开始编号
