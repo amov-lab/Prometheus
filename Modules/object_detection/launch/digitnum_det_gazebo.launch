@@ -1,6 +1,0 @@
-<launch>
-    <node pkg="prometheus_detection" type="pytorch_mnist_det.py" name="digitnum_det" output="screen">
-        <param name="camera_topic" value="/amov_solo_monocular/Monocular/image_raw"/>
-        <param name="camera_info" value="$(find prometheus_gazebo)/config/camera_config/camera_param_gazebo_monocular.yaml"/>
-    </node>
-</launch>
