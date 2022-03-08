@@ -3,6 +3,17 @@ std_msgs/Header header
 ## 消息来源
 string source
 
+## 编队套件数量
+uint8 swarm_num
+
+uint8 swarm_location_source
+
+# enum loc 定位来源枚举
+uint8 mocap = 0
+uint8 gps = 4
+uint8 rtk = 5
+uint8 uwb = 6
+
 ## 命令
 uint8 Swarm_CMD
 # enum CMD 控制模式枚举
