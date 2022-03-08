@@ -12,6 +12,7 @@
 #include <prometheus_msgs/AgentStateMAN.h>
 
 #include <mavros_msgs/State.h>
+#include <mavros_msgs/GPSRAW.h>
 #include <mavros_msgs/PositionTarget.h>
 #include <sensor_msgs/BatteryState.h>
 
@@ -52,12 +53,14 @@ class UAV_estimator
         ros::Subscriber mocap_sub;
         ros::Subscriber gazebo_sub;
         ros::Subscriber fake_odom_sub;
+        ros::Subscriber gps_status_sub;
         // 发布话题
         ros::Publisher px4_vision_pose_pub;
         ros::Publisher uav_state_pub;
         ros::Publisher uav_odom_pub;
         ros::Publisher uav_trajectory_pub;
         ros::Publisher uav_mesh_pub;
+        ros::Publisher gps_status_pub;
         // 定时器
         ros::Timer timer_px4_vision_pub;
         ros::Timer timer_uav_state_pub;
@@ -82,7 +85,9 @@ class UAV_estimator
             T265 = 1,
             GAZEBO = 2,
             FAKE_ODOM = 3,
-            GPS = 4
+            GPS = 4,
+            RTK = 5,
+            uwb = 6
         };
 
         // 基本变量
@@ -105,6 +110,7 @@ class UAV_estimator
         void px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
         void px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
         void px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg);
+        void gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg);
 
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);
