@@ -11,6 +11,25 @@ uint8 ready=1
 uint8 dead=2
 uint8 lost=3
 
+## 无人机定位来源
+uint8 location_source
+
+# enum agent定位来源枚举
+uint8 mocap=0
+uint8 t265=1
+uint8 gazebo=2
+uint8 fake_odom=3
+uint8 gps = 4
+uint8 rtk = 5
+uint8 uwb = 6
+
+## 经纬度
+float64 latitude
+float64 longitude
+
+## GPS状态,变量对应状态可参考mavros_msgs/GPSRAW中的fix_type
+uint8 gps_status
+
 ## PX4飞控当前飞行模式  int8
 string mode
 ## 机载电脑是否连接上飞控，true已连接，false则不是
