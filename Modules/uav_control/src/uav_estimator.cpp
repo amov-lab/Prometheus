@@ -49,7 +49,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     }else if(location_source == LOC_SOURCE::GPS)
     {
         // 【订阅】GPS相关状态量
-        
+        gps_status_sub = nh.subscribe<mavros_msgs::GPSRAW>("/uav"+std::to_string(uav_id)+"/mavros/gpsstatus/gps1/raw", 10, &UAV_estimator::gps_status_cb, this);
     }else
     {
         cout << YELLOW << node_name << ": wrong location_source param, no external location information input!"<< TAIL << endl;
@@ -88,6 +88,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.state = prometheus_msgs::UAVState::ready;
     uav_state.connected = false;
     uav_state.armed = false;
+    uav_state.location_source = location_source;
     uav_state.mode = "";
     uav_state.odom_valid = false;
     uav_state.position[0] = 0.0;
@@ -153,6 +154,11 @@ void UAV_estimator::px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg)
     uav_state.attitude_rate[0] = msg->angular_velocity.x;
     uav_state.attitude_rate[1] = msg->angular_velocity.y;
     uav_state.attitude_rate[2] = msg->angular_velocity.z;
+}
+
+void UAV_estimator::gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg)
+{
+    uav_state.gps_status = msg->fix_type;
 }
 
 void UAV_estimator::mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
