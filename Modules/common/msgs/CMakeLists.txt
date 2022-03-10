@@ -57,6 +57,7 @@ add_message_files(
   AgentCommandUGV.msg
   AgentCommandMAN.msg
   MultiUAVState.msg
+  HomePoint.msg
 )
 
 add_action_files(

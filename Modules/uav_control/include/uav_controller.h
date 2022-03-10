@@ -12,11 +12,13 @@
 #include <mavros_msgs/AttitudeTarget.h>
 #include <mavros_msgs/RCIn.h>
 #include <mavros_msgs/CommandLong.h>
+#include <mavros_msgs/CommandHome.h>
 
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/MavrosInterface.h>
+#include <prometheus_msgs/HomePoint.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -56,6 +58,7 @@ public:
     ros::ServiceClient px4_set_mode_client;
     ros::ServiceClient px4_reboot_client;
     ros::ServiceClient px4_emergency_client;
+    ros::ServiceClient px4_set_home_client;
     // 定时器
     ros::Timer debug_timer;
 
@@ -178,6 +181,7 @@ private:
     void enable_emergency_func();
     void reboot_PX4();
     void set_mode_func(string mode);
+    void set_home_func(prometheus_msgs::HomePoint home_point);
 
     void send_pos_cmd_to_px4_original_controller();
     void send_att_cmd_to_px4_attitude_controller();
