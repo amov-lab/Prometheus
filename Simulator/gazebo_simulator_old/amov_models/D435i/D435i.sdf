@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="D435i">
+    <pose>0 0 0.015 0 0 0</pose>
+    <link name="realsense_camera_link">
+      <!-- 物理参数 -->
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.000001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.000001</iyy>
+          <iyz>0</iyz>
+          <izz>0.000001</izz>
+        </inertia>
+      </inertial>
+      <self_collide>0</self_collide>
+      <enable_wind>0</enable_wind>
+      <kinematic>0</kinematic>
+      <gravity>1</gravity>
+      <!-- 显示参数 -->
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://D435i/meshes/D435i.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <!-- 传感器参数 -->
+      <sensor name="color" type="camera">
+        <pose frame="">0 -0.0 0.004 0 0 0</pose>
+        <camera name="realsense_camera">
+          <!-- 水平视场角，90度 -->
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>RGB_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>60</update_rate>
+        <visualize>1</visualize>
+      </sensor>
+      <!-- 左目 -->
+      <sensor name="ired1" type="camera">
+        <pose frame="">0 -0.025 0.004 0 0 0</pose>
+        <camera name="ired1">
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>L_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>60</update_rate>
+        <visualize>0</visualize>
+      </sensor>
+      <!-- 右目 -->
+      <sensor name="ired2" type="camera">
+        <pose frame="">0 0.025 0.004 0 0 0</pose>
+        <camera name="ired2">
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>L_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.001</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>60</update_rate>
+        <visualize>0</visualize>
+      </sensor>
+      <!-- 深度相机 -->
+      <sensor name="depth" type="depth">
+        <pose frame="">0 -0.0 0.004 0 0 0</pose>
+        <camera name="depth_camera">
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>60</update_rate>
+        <visualize>0</visualize>
+        <!-- 这个插件用于深度转局部点云，实际运行中，D435i可直出局部点云 -->
+        <!-- <plugin name="camera_plugin" filename="libgazebo_ros_depth_camera.so">
+            <alwaysOn>true</alwaysOn>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+	          <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
+            <updateRate>20.0</updateRate>
+            <cameraName>realsense_d435i</cameraName>
+            <frameName>/realsense_camera_link</frameName>
+            <hackBaseline>0</hackBaseline>
+            <focalLength>639.997649</focalLength>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+        </plugin> -->
+        <!-- <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
+          <baseline>0.2</baseline>
+          <alwaysOn>true</alwaysOn>
+          <updateRate>20.0</updateRate>
+          <cameraName>realsense_d435i</cameraName>
+          <imageTopicName>/realsense_d435i/color/image_raw</imageTopicName>
+          <cameraInfoTopicName>/realsense_d435i/color/camera_info</cameraInfoTopicName>
+          <depthImageTopicName>/realsense_d435i/depth/image_raw</depthImageTopicName>
+          <depthImageCameraInfoTopicName>/realsense_d435i/depth/camera_info</depthImageCameraInfoTopicName>
+          <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
+          <frameName>/realsense_camera_link</frameName>
+          <pointCloudCutoff>0.1</pointCloudCutoff>
+          <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+          <distortionK1>0</distortionK1>
+          <distortionK2>0</distortionK2>
+          <distortionK3>0</distortionK3>
+          <distortionT1>0</distortionT1>
+          <distortionT2>0</distortionT2>
+          <CxPrime>0</CxPrime>
+          <Cx>0</Cx>
+          <Cy>0</Cy>
+          <focalLength>639.997649</focalLength>
+          <hackBaseline>0</hackBaseline>
+        </plugin> -->
+      </sensor>
+    </link>
+    <plugin name="realsense_plugin" filename="librealsense_gazebo_plugin.so">
+    </plugin>
+  </model>
+</sdf>

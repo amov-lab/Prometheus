@@ -1,0 +1,21 @@
+
+
+agent_id            : 1  # 编号
+agent_id_in_team    : 1  # 整队编号（暂时没用）
+sim_mode            : true 
+
+ugv_control: 
+    input_source       : 0  # 0 for mocap, 1 for t265, 2 for gazebo, 3 for fake_odom
+    k_pos_point        : 2.0
+    k_pos_path         : 4.0
+    k_yaw_point        : 4.0
+    k_yaw_path         : 4.0
+    max_vel            : 1.0
+    max_yaw_error      : 5.0 ##deg
+    flag_printf        : true
+
+geo_fence: 
+    x_min : -100.0
+    x_max : 100.0
+    y_min : -100.0
+    y_max : 100.0

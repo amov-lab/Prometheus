@@ -1,0 +1,15 @@
+material Cube/landing_pad
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture landing_pad.PNG
+      }
+    }
+  }
+}
+  

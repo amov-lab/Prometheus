@@ -3,7 +3,7 @@
 UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
 {
     // 【参数】编号
-    nh.param<int>("uav_id", uav_id, 0);
+    nh.param<int>("uav_id", uav_id, 1);
     // 【参数】定位源： 0 for mocap, 1 for t265, 2 for gazebo, 3 for fake_odom, 4 for GPS
     nh.param<int>("control/location_source", location_source, LOC_SOURCE::GPS);
 
@@ -314,8 +314,9 @@ int UAV_estimator::check_uav_odom()
     }
 
     // 速度过大
+    // 2022.3.9 速度范围先设置较大，在指点飞行过程中速度过大导致odom为false，进入失控保护
     Eigen::Vector3d uav_vel = Eigen::Vector3d(uav_state.velocity[0],uav_state.velocity[1],uav_state.velocity[2]); 
-    if(uav_vel.norm() > 2.0 || uav_vel(2) > 1.0)
+    if(uav_vel.norm() > 5.0 || uav_vel(2) > 4.0)
     {
         return 2;
     }
