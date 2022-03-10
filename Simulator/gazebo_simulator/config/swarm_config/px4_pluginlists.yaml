@@ -5,7 +5,7 @@ plugin_blacklist:
 - 3dr_radio
 - cam_imu_sync
 - distance_sensor
-- fake_gps
+# - fake_gps
 - gps_rtk
 - hil
 - home_position
@@ -13,7 +13,7 @@ plugin_blacklist:
 - mocap_pose_estimate
 - mount_control
 - obstacle_distance
-- rc_io
+# - rc_io
 - vfr_hud
 - waypoint
 - wind_estimation

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<sdf version='1.6'>
+  <model name='p450_D435i'>
+    <include>
+      <uri>model://p450</uri>
+    </include>
+    <include>
+      <uri>model://D435i</uri>
+      <pose>0.2 0 -0.1 0 0 0</pose>
+    </include>
+    <joint name="D435i_joint" type="fixed">
+      <child>D435i::realsense_camera_link</child>
+      <parent>p450::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+  </model>
+</sdf>
