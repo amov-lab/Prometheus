@@ -1,0 +1,141 @@
+<launch>
+	<!-- 启动PX4中的SITL功能 -->
+	<!-- 这里的环境变量将传递到rcS启动脚本中-->
+	<!-- 模型选择 -->
+	<!-- p450仿真模型 -->
+	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/1045_p450 中的修改内容 -->
+	<env name="PX4_SIM_MODEL" value="typhoon_h480" />
+	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
+	<!-- ekf2_gps 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
+	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/rcS 中的修改内容 -->
+    <env name="PX4_ESTIMATOR" value="ekf2_vision" />
+	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
+	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
+	
+	<!-- PX4 configs -->
+    <arg name="interactive" default="true"/>
+    <!-- PX4 SITL -->
+	<arg unless="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+    <arg     if="$(arg interactive)" name="px4_command_arg1" value=""/>
+	<!-- 节点源文件路径: ~/prometheus_px4/platforms/posix/src/px4/common/main.cpp -->
+	<node name="sitl" pkg="px4" type="px4" output="screen" 
+		args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS $(arg px4_command_arg1)"/>
+
+	<!-- 启动Gazebo -->
+	<!-- Gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/wurenzhengfeng.world"/>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+
+	<!-- Spawn vehicle model -->
+	<!-- https://github.com/ros-simulation/gazebo_ros_pkgs/blob/kinetic-devel/gazebo_ros/scripts/spawn_model -->
+    <!-- 初始位置 -->
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.2"/>
+	<arg name="R" default="0.0"/>
+    <arg name="P" default="0.0"/>
+    <arg name="Y" default="0.0"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/typhoon_h480/typhoon_h480.sdf"/>
+	<arg name="model" default="typhoon_h480"/>
+	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
+		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
+	</node>
+
+	<!-- 启动MAVROS -->
+	<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+		<param name="fcu_url" value="udp://:14540@localhost:14557" />
+		<param name="gcs_url" value="" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
+	</node>
+	
+	<!-- TF transform -->
+	<include file="$(find prometheus_gazebo)/launch_basic/tf_transform.launch">
+		<arg name="x" value="$(arg x)"/>
+    	<arg name="y" value="$(arg y)"/>
+    	<arg name="z" value="$(arg z)"/>
+    </include>
+
+	<!-- 启动Prometheus代码 -->
+	<!-- run the px4_pos_estimator.cpp -->
+	<arg name="input_source" default="2"/>
+	<arg name="rate_hz" default="30"/>
+	<node pkg="prometheus_control" type="px4_pos_estimator" name="px4_pos_estimator" output="screen">
+		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
+		<param name="input_source" value="$(arg input_source)" />
+		<param name="rate_hz" value="$(arg rate_hz)" />
+		<param name="offset_x" value="$(arg x)" />
+		<param name="offset_y" value="$(arg y)" />
+		<param name="offset_z" value="$(arg z)" />
+	</node>
+	
+	<node pkg="prometheus_control" type="px4_sender" name="px4_sender" output="screen">
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/px4_sender.yaml"/>
+	</node>
+
+	<!-- run the ground_station.cpp -->
+	<node pkg="prometheus_station" type="ground_station" name="ground_station" output="screen" launch-prefix="gnome-terminal --tab --">	
+		<param name="gimbal_enable" type="bool" value="true" />
+	</node>
+
+	<!-- run the ground_station_msg.cpp -->
+	<node pkg="prometheus_station" type="ground_station_msg" name="ground_station_msg" output="screen" launch-prefix="gnome-terminal --tab --">	
+	</node>
+
+    <!-- 启动二维码检测算法 -->
+    <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen">
+        <param name="camera_topic" type="string" value="/prometheus/sensor/gimbal_camera/image_raw" />
+        <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
+        <param name="output_pose_topic" type="string" value="/prometheus/object_detection/aruco_det" />
+        <param name="output_multi_pose_topic" type="string" value="/prometheus/object_detection/multi_aruco_det" />
+        <param name="output_image_topic" type="string" value="/prometheus/camera/rgb/image_aruco_det" />
+        <param name="dictionary_type" type="int" value="6" />
+        <param name="binding_id" type="int" value="1" />
+        <param name="target_marker_length" type="double" value="0.3" />
+    </node>
+
+
+    <!-- run the gimbal_control.cpp -->
+	<node pkg="prometheus_mission" type="gimbal_control_demo" name="gimbal_control_demo" output="screen" launch-prefix="gnome-terminal --">
+		<!-- 仿真模式 - 区别在于是否自动切换offboard模式 -->
+		<param name="sim_mode" value="true" />
+		<!-- 悬停模式 - 仅用于观察检测结果 -->
+		<param name="hold_mode" value="true" />
+		<!-- 忽略视觉算法模式 - 云台角度由真实值得到 -->
+		<param name="ignore_vision" value="false" />
+		<param name="gimbal_rate" value="1.0" />
+		<!-- 追踪控制参数 -->
+		<param name="kpx_track" value="1.0" />
+		<param name="kpy_track" value="0.04" />
+		<param name="kpz_track" value="0.05" />
+		<param name="kpyaw_track" value="0.8" />
+		<param name="ki_track" value="0.05" />
+
+		<param name="moving_target" value="false" />
+		<param name="start_point_x" value="-1.0" />
+		<param name="start_point_y" value="2.0" />
+		<param name="start_point_z" value="1.5" />
+	</node>
+
+</launch>
+
+
+
+
+	
+

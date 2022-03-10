@@ -1,0 +1,6 @@
+<launch>
+  <!-- assumes ds4drv is running -->
+  <node name="joy_node" pkg="joy" type="joy_node">
+    <!-- <remap from="joy" to="joy_orig"/> -->
+  </node>
+</launch>
