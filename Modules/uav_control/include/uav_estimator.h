@@ -22,6 +22,7 @@
 #include <visualization_msgs/Marker.h>
 
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/NavSatFix.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/Float64.h>
@@ -47,6 +48,7 @@ class UAV_estimator
         // 订阅话题
         ros::Subscriber px4_state_sub;
         ros::Subscriber px4_battery_sub;
+        ros::Subscriber px4_global_position_sub;
         ros::Subscriber px4_position_sub;
         ros::Subscriber px4_velocity_sub;
         ros::Subscriber px4_attitude_sub;
@@ -107,6 +109,7 @@ class UAV_estimator
         void t265_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void px4_state_cb(const mavros_msgs::State::ConstPtr &msg);
         void px4_battery_cb(const sensor_msgs::BatteryState::ConstPtr &msg);
+        void px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &msg);
         void px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
         void px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
         void px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg);
