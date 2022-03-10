@@ -1,0 +1,35 @@
+<!--   
+    This is an launch file to use when you want to run Ros UI Controller
+
+    @param node_name (optional) If provided, the value will be set as the name of the node when it is launched. Otherwise, the default value is 'amu_ui_throttler'
+    @param config_file (optional) If provided, rosparam will attempt to load the file into the private namespace of the node.
+-->
+
+<launch>
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+      <arg name="port" value="9098" doc="websocket server port number, and the number must be matched in the url. default value 9099"/>
+      <arg name="address" default="127.0.0.1"/>
+      <!--arg name="address" default="192.168.31.225"/-->
+    </include>
+	
+    <arg name="frame_rate" default="1" doc="transmition rate. set it as low as possible, make sure the UI response in time." />
+    
+	<!-- The output argument sets the node's stdout/stderr location. Set to 'screen' to see this node's output in the terminal. -->
+    <arg name="output" default="screen" doc="The stdout/stderr location for this node. Set to 'screen' to see this node's output in the terminal." />    
+    
+	<!-- The following node sets the messages' throttle command. Generally, All the messages are going to transmit and calcuate over the network should be set to frame_rate -->
+    <node name="control_command_throttler" pkg="topic_tools" type="throttle" args="messages /prometheus/control_command $(arg frame_rate)" output="$(arg output)">
+	</node>
+
+    <node name="reference_traj_throttler" pkg="topic_tools" type="throttle" args="messages /prometheus/reference_trajectory $(arg frame_rate)" output="$(arg output)">
+    </node>
+
+    <node name="drone_traj_throttler" pkg="topic_tools" type="throttle" args="messages /prometheus/drone_trajectory $(arg frame_rate)" output="$(arg output)">
+    </node>
+
+    <node name="drone_state_throttler" pkg="topic_tools" type="throttle" args="messages /prometheus/drone_state $(arg frame_rate)" output="$(arg output)">
+    </node>
+
+    <node name="lidar_scan_throttler" pkg="topic_tools" type="throttle" args="messages /prometheus/sensors/3Dlidar_scan $(arg frame_rate)" output="$(arg output)">
+    </node>
+</launch>
