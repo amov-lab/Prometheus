@@ -1,0 +1,27 @@
+<launch>
+	<!-- Launch Gazebo Simulation -->
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.05"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/world_for_yolo_test.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_monocular/p450_monocular.sdf"/>
+	<arg name="model" default="p450_monocular"/>
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
+	  <arg name="world" value="$(arg world)"/>
+	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
+    </include>
+
+    <!-- 启动yolo+siamrpn框选检测算法 -->
+	<!-- 待补充 -->
+
+
+	<!-- run the terminal_control.cpp -->
+	<node pkg="prometheus_control" type="terminal_control" name="terminal_control" output="screen" launch-prefix="gnome-terminal --">	
+		<rosparam command="load" file="$(find prometheus_gazebo)/config/prometheus_control_config/terminal_control.yaml" />
+	</node>	
+</launch>
+

@@ -1,0 +1,48 @@
+
+
+uav_id   : 1  # 编号
+sim_mode : true 
+
+control: 
+    location_source     : 2  # 0 for mocap, 1 for t265, 2 for gazebo, 3 for fake_odom
+    controller_flag     : 0 
+    enable_external_control : false
+    Disarm_height       : 0.2
+    Land_speed          : 0.2
+    flag_printf         : true
+
+geo_fence: 
+    x_min : -100.0
+    x_max : 100.0
+    y_min : -100.0
+    y_max : 100.0
+    z_min : -0.5
+    z_max : 10.0
+
+controller: 
+    quad_mass: 1.0
+    hov_percent: 0.5
+    pxy_int_max: 0.5
+    pz_int_max: 0.5
+
+hover_gain:  
+    Kp_xy   : 2.0
+    Kp_z    : 2.0
+    Kv_xy   : 2.0
+    Kv_z    : 2.0
+    Kvi_xy  : 0.3
+    Kvi_z   : 0.3
+    Ka_xy   : 1.0
+    Ka_z    : 1.0
+    tilt_angle_max : 10.0
+
+track_gain:  
+    Kp_xy   : 2.0
+    Kp_z    : 2.0
+    Kv_xy   : 2.0
+    Kv_z    : 2.0
+    Kvi_xy  : 0.3
+    Kvi_z   : 0.3
+    Ka_xy   : 1.0
+    Ka_z    : 1.0
+    tilt_angle_max : 20.0

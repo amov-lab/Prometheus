@@ -1,0 +1,20 @@
+material iros/sky
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.5 0.5 0.5 1.0
+			diffuse 0.5 0.5 0.5 1.0
+			emissive 0.0 0.0 0.0 1
+
+			texture_unit
+			{
+				texture sky.jpg
+				filtering anistropic
+				max_anisotropy 16
+				scale 1.0 1.0
+			}
+		}
+	}
+}
