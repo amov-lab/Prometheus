@@ -1,0 +1,54 @@
+<launch>
+	<!-- Launch Gazebo Simulation -->
+	<arg name="x" default="0.0"/>
+    <arg name="y" default="0.0"/>
+    <arg name="z" default="0.05"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/autonomous_landing.world"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450_monocular/p450_monocular.sdf"/>
+	<arg name="model" default="p450_monocular"/>
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl.launch">
+	  <arg name="world" value="$(arg world)"/>
+	  <arg name="sdf" value="$(arg sdf)"/>
+	  <arg name="model" value="$(arg model)"/>
+      <arg name="x" value="$(arg x)"/>
+      <arg name="y" value="$(arg y)"/>
+      <arg name="z" value="$(arg z)"/>
+    </include>
+
+	<!-- run the landpad_det.cpp -->
+    <node pkg="prometheus_detection" type="landpad_det" name="landpad_det" output="screen">
+        <param name="camera_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
+        <param name="camera_info" type="string" value="$(find prometheus_gazebo)/config/camera_config/camera_param_gazebo_monocular.yaml" />
+    </node>
+
+	<!-- run the autonomous_landing.cpp -->
+	<node pkg="prometheus_mission" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
+		<!-- 仿真模式 - 区别在于是否自动切换offboard模式 -->
+		<param name="sim_mode" value="true" />
+		<!-- 悬停模式 - 仅用于观察检测结果 -->
+		<param name="hold_mode" value="false" />
+		<!-- 是否使用降落板绝对高度 -->
+		<param name="use_pad_height" value="true" />
+		<param name="pad_height" value="0.99" />
+		<!-- 起始点 -->
+		<param name="start_point_x" value="-4.0" />
+		<param name="start_point_y" value="-2.0" />
+		<param name="start_point_z" value="4.5" />
+		<!-- 相机安装偏差 -->
+		<param name="camera_offset_x" value="0.0" />
+		<param name="camera_offset_y" value="0.0" />
+		<param name="camera_offset_z" value="-0.1" />
+		<!-- 追踪控制参数 -->
+		<param name="kpx_land" value="0.5" />
+		<param name="kpy_land" value="0.5" />
+		<param name="kpz_land" value="0.12" />
+		<param name="arm_height_to_ground" value="0.5" />
+		<param name="arm_distance_to_pad" value="0.6" />
+		<!-- 目标是否移动及其速度 -->
+		<param name="moving_target" value="true" />
+		<param name="target_vel_x" value="1.1" />
+		<param name="target_vel_y" value="0.0" />
+	</node>
+
+</launch>
+

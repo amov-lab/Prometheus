@@ -24,9 +24,9 @@ find_package(gazebo REQUIRED)
 find_package(Threads REQUIRED)
 
 
-generate_messages(DEPENDENCIES 
-	std_msgs
-)
+# generate_messages(DEPENDENCIES 
+# 	std_msgs
+# )
 
 catkin_package(
     CATKIN_DEPENDS
@@ -76,7 +76,6 @@ target_link_libraries(qrcode_control ${catkin_LIBRARIES})
 #add_dependencies(PriusHybridPlugin ${catkin_EXPORTED_TARGETS})
 
 catkin_install_python(PROGRAMS 
-    py_nodes/joystick_translator
     py_nodes/keyboard_control_px4.py 
     py_nodes/move_landing_pad.py 
     py_nodes/get_ground_truth_formation.py  

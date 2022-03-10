@@ -1,0 +1,17 @@
+material iros/gate_back
+{
+	technique
+	{
+
+		pass
+		{
+			texture_unit
+			{
+				texture gate_back.jpg
+				filtering anistropic
+				max_anisotropy 16
+				scale 0.1 0.1
+			}
+		}
+	}
+}

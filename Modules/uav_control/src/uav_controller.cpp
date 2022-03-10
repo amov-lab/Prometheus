@@ -3,7 +3,7 @@
 UAV_controller::UAV_controller(ros::NodeHandle& nh)
 {
     // 【参数】编号，从1开始编号
-    nh.param<int>("uav_id", uav_id, 0);
+    nh.param<int>("uav_id", uav_id, 1);
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);
     // 【变量】节点名字
@@ -767,37 +767,24 @@ void UAV_controller::arm_disarm_func(bool on_or_off)
             arm_cmd.request.value = on_or_off;
             px4_arming_client.call(arm_cmd);
             if(arm_cmd.response.success){
-                cout << GREEN << node_name << "无人机正在上锁，上锁成功" << TAIL <<endl;
+                cout << GREEN << node_name << "vehicle disarming, success!" << TAIL <<endl;
             }else{
-                cout << GREEN << node_name << "无人机正在上锁，上锁失败" << TAIL <<endl;
+                cout << RED << node_name << "vehicle disarming, fail!" << TAIL <<endl;
             }
         }else{
-            cout << YELLOW << node_name << " 无人机已经解锁"<< TAIL<<endl;
+            cout << YELLOW << node_name << "vehicle already armed"<< TAIL<<endl;
         }
     }else if(on_or_off){
             arm_cmd.request.value = on_or_off;
             px4_arming_client.call(arm_cmd);
             if(arm_cmd.response.success){
-                cout << GREEN << node_name << "无人机正在解锁，解锁成功" << TAIL <<endl;
+                cout << GREEN << node_name << "vehicle arming, success!" << TAIL <<endl;
             }else{
-                cout << GREEN << node_name << "无人机正在解锁，解锁失败" << TAIL <<endl;
+                cout << RED << node_name << "vehicle arming, success!" << TAIL <<endl;
             }
     }else{
-        cout << YELLOW << node_name << " 无人机已经上锁"<< TAIL<<endl;
+        cout << YELLOW << node_name << "vehicle already disarmed"<< TAIL<<endl;
     }
-    // if(uav_state.armed && !on_or_off)
-    // {
-    //     arm_cmd.request.value = on_or_off;
-    //     px4_arming_client.call(arm_cmd);
-    //     cout << GREEN << node_name << " arm_disarm_func : Arm, be careful!"<< TAIL<<endl;
-    // }else if(!uav_state.armed && on_or_off)
-    // {
-    //     arm_cmd.request.value = on_or_off;
-    //     px4_arming_client.call(arm_cmd);
-    // }else
-    // {
-    //     cout << YELLOW << node_name << " arm_disarm_func : Disarm!"<< TAIL<<endl;
-    // }
 }
 
 /**
@@ -821,11 +808,7 @@ void UAV_controller::enable_emergency_func()
 
     px4_emergency_client.call(emergency_srv);
     ROS_INFO("emergency FCU");
-    cout << GREEN << node_name << " 电机已经停转 "<< TAIL <<endl;
-
-    // if(emergency_srv.response.success){
-    //     ROS_INFO(" 紧急制动 ");
-    // }
+    cout << GREEN << node_name << " force disarmed "<< TAIL <<endl;
 }
 
 void UAV_controller::reboot_PX4()
@@ -860,9 +843,9 @@ void UAV_controller::enable_offboard_mode()
         mode_cmd.request.custom_mode = "OFFBOARD";
         px4_set_mode_client.call(mode_cmd);
         if(uav_state.mode == "OFFBOARD"){
-            cout << GREEN << node_name << " 正在切换offboard，切换成功 "<< TAIL<<endl;
+            cout << GREEN << node_name << "offboard mode switch successfully"<< TAIL<<endl;
         }else{
-            cout << GREEN << node_name << " 切换offboard模式失败 "<< TAIL<<endl;
+            cout << GREEN << node_name << "offboard mode switch failed"<< TAIL<<endl;
         }
     }else
     {
