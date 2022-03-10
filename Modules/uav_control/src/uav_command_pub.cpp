@@ -12,7 +12,13 @@
 #include "controller_test.h"
 
 using namespace std;
+// 获取无人机当前信息
 prometheus_msgs::UAVState uav_state;
+// 发布的指令
+prometheus_msgs::UAVCommand agent_command;
+
+// 发布指点飞行
+ros::Publisher uav_command_pub;
 
 void agent_state_cb(const prometheus_msgs::UAVState::ConstPtr& msg)
 {
@@ -48,9 +54,9 @@ int main(int argc, char **argv)
     int CMD = 0;
     float state_desired[4];
 
-    prometheus_msgs::UAVCommand agent_command;
+    // prometheus_msgs::UAVCommand agent_command;
     agent_command.header.stamp = ros::Time::now();
-    agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+    agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
     agent_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
     agent_command.position_ref[0] = 0.0;
     agent_command.position_ref[1] = 0.0;
@@ -70,77 +76,8 @@ int main(int argc, char **argv)
     agent_command.Command_ID = 0;
     // 发布指令初始值
     uav_command_pub.publish(agent_command);
-
-
-    mavros_msgs::RCIn rc;
-
-    std::vector<uint16_t> raw_rc_in;
-    raw_rc_in.resize(8);
-    raw_rc_in[0] = 1000;
-    raw_rc_in[1] = 1000;
-    raw_rc_in[2] = 1000;
-    raw_rc_in[3] = 1000;
-    raw_rc_in[4] = 1000;
-    raw_rc_in[5] = 1000;
-    raw_rc_in[6] = 1000;
-    raw_rc_in[7] = 1000;
-    rc.channels = raw_rc_in;
-    // 发布遥控器初始值
-    rc_pub.publish(rc);
-
     float time_trajectory = 0.0;
     int start_flag = 0;
-    // if(sim_mode)
-    // {
-    //     /*while(start_flag == 0)
-    //     {
-    //         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-    //         cout << "Please enter 1 to disarm the UAV ..."<<endl;
-    //         cin >> start_flag;
-
-    //         mavros_msgs::CommandBool arm_cmd;
-    //         arm_cmd.request.value = true;
-    //         px4_arming_client.call(arm_cmd);
-
-    //         ros::Duration(2.0).sleep();
-    //         ros::spinOnce();
-
-    //         if(!uav_state.armed)
-    //         {
-    //             start_flag = 0;
-    //         }
-    //     }*/
-
-    //     start_flag = 0;
-    //     while(start_flag == 0)
-    //     {
-    //         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-    //         cout << "Please enter 1 switch to COMMAND_CONTROL state and takeoff the UAV."<<endl;
-    //         cin >> start_flag;
-            
-    //         // 1-4通道 全部设为中值
-    //         raw_rc_in[0] = 1500;
-    //         raw_rc_in[1] = 1500;
-    //         raw_rc_in[2] = 1500;
-    //         raw_rc_in[3] = 1500;
-    //         // 5通道
-    //         raw_rc_in[4] = 2000;
-    //         // 6通道
-    //         raw_rc_in[5] = 2000;
-    //         rc.channels = raw_rc_in;
-    //         // MANUAL_CONTROL -> HOVER_CONTROL -> COMMAND_CONTROL
-    //         rc_pub.publish(rc);
-
-    //         ros::Duration(1.0).sleep();
-    //         ros::spinOnce();
-
-    //         // 怎么判断？
-    //         if(!uav_state.armed)
-    //         {
-    //             start_flag = 0;
-    //         }
-    // //     }
-    // }
     
     while(ros::ok())
     {
@@ -170,6 +107,7 @@ int main(int argc, char **argv)
             agent_command.position_ref[1] = state_desired[1];
             agent_command.position_ref[2] = state_desired[2];
             agent_command.yaw_ref = state_desired[3];
+            agent_command.Command_ID = agent_command.Command_ID + 1;
             uav_command_pub.publish(agent_command);
 
             cout << "pos_des [X Y Z] : " << state_desired[0] << " [ m ] "<< state_desired[1] <<" [ m ] "<< state_desired[2] <<" [ m ] "<< endl;

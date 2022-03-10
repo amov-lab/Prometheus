@@ -1,0 +1,32 @@
+material prometheus_logo1
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture prometheus_logo_square.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
+material prometheus_logo2
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture prometheus_logo_square2.png
+       // Repeat the texture over the surface (4 per face)
+       scale 1.0 1.0
+     }
+   }
+ }
+}
