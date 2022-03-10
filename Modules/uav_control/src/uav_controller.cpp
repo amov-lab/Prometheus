@@ -113,6 +113,9 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     // 【服务】重启PX4飞控
     px4_reboot_client = nh.serviceClient<mavros_msgs::CommandLong>("/uav"+std::to_string(uav_id) + "/mavros/cmd/command");
 
+    // 【服务】设定home点
+    px4_set_home_client = nh.serviceClient<mavros_msgs::CommandHome>("/uav"+std::to_string(uav_id) + "/mavros/cmd/set_home");
+
     //【定时器】打印调试
     debug_timer = nh.createTimer(ros::Duration(2.0), &UAV_controller::debug_cb, this);
 
@@ -737,6 +740,10 @@ void UAV_controller::mavros_interface_cb(const prometheus_msgs::MavrosInterface:
     {
         reboot_PX4();
     }
+    if(msg->type == prometheus_msgs::MavrosInterface::SET_HOME)
+    {
+        set_home_func(msg->home_point);
+    }
 }
 
 void UAV_controller::set_mode_func(string mode)
@@ -744,6 +751,17 @@ void UAV_controller::set_mode_func(string mode)
     mavros_msgs::SetMode mode_cmd;
     mode_cmd.request.custom_mode = mode;
     px4_set_mode_client.call(mode_cmd);
+}
+
+void UAV_controller::set_home_func(prometheus_msgs::HomePoint home_point)
+{
+    mavros_msgs::CommandHome home_cmd;
+    home_cmd.request.current_gps = home_point.current_gps;
+    home_cmd.request.yaw = home_point.yaw;
+    home_cmd.request.latitude = home_point.latitude;
+    home_cmd.request.longitude = home_point.longitude;
+    home_cmd.request.altitude = home_point.altitude;
+    px4_set_home_client.call(home_cmd);
 }
 
 /***

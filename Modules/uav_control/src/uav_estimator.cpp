@@ -28,6 +28,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【订阅】无人机当前速度 坐标系:ENU系
     px4_velocity_sub = nh.subscribe<geometry_msgs::TwistStamped>("/uav"+std::to_string(uav_id)+ "/mavros/local_position/velocity_local", 1, &UAV_estimator::px4_vel_cb, this);
 
+    // 【订阅】无人机当前经纬度
+    px4_global_position_sub = nh.subscribe<sensor_msgs::NavSatFix>("/uav"+std::to_string(uav_id)+ "/mavros/global_position/global", 1, &UAV_estimator::px4_global_pos_cb, this);
+
     // 【订阅】无人机当前欧拉角 坐标系:ENU系
     px4_attitude_sub = nh.subscribe<sensor_msgs::Imu>("/uav"+std::to_string(uav_id)+ "/mavros/imu/data", 1, &UAV_estimator::px4_att_cb, this); 
 
@@ -131,6 +134,13 @@ void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     uav_state.position[0] = msg->pose.position.x;
     uav_state.position[1] = msg->pose.position.y;
     uav_state.position[2] = msg->pose.position.z;
+}
+
+void UAV_estimator::px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
+{
+    uav_state.global_position[0] = msg->latitude;
+    uav_state.global_position[1] = msg->longitude;
+    uav_state.global_position[2] = msg->altitude;
 }
 
 void UAV_estimator::px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
