@@ -23,10 +23,6 @@ uint8 gps = 4
 uint8 rtk = 5
 uint8 uwb = 6
 
-## 经纬度
-float64 latitude
-float64 longitude
-
 ## GPS状态,变量对应状态可参考mavros_msgs/GPSRAW中的fix_type
 uint8 gps_status
 
@@ -40,6 +36,7 @@ bool armed
 bool odom_valid
 
 ## 无人机状态量：位置、速度、姿态
+float32[3] global_position
 float32[3] position                 ## [m]
 float32[3] velocity                 ## [m/s]
 float32[3] attitude                 ## [rad]
