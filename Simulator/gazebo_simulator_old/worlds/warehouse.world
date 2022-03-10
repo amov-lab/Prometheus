@@ -1,0 +1,477 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://asphalt_plane</uri>
+    </include>
+
+    <!-- Only one ROS interface plugin is required per world, as any other plugin can connect a Gazebo
+         topic to a ROS topic (or vise versa). -->
+    <plugin name="ros_interface_plugin" filename="librotors_gazebo_ros_interface_plugin.so"/>
+
+    <physics name='default_physics' default='0' type='ode'>
+      <gravity>0 0 -9.8066</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>10</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+      <max_step_size>0.002</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>500</real_time_update_rate>
+      <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    </physics>
+
+    <!-- SHELVES -->
+    <include>
+      <name>shelves 1</name>
+      <uri>model://shelves_high2</uri>
+      <pose>1 3.4 0   0 0 0</pose>
+    </include>
+    <include>
+      <name>shelves 2</name>
+      <uri>model://shelves_high2</uri>
+      <pose>-4.13394 3.4 0 0 -0 0</pose>
+    </include>
+
+    <!-- SHELVES -->
+    <include>
+      <name>shelves 3</name>
+      <uri>model://shelves_high2</uri>
+      <pose>1 4.7 0   0 0 0</pose>
+    </include>
+    <include>
+      <name>shelves 4</name>
+      <uri>model://shelves_high2</uri>
+      <pose>-4.13394 4.7 0 0 -0 0</pose>
+    </include>
+
+    <!-- SHELVES -->
+    <include>
+      <name>shelves 5</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>1 -1.5 0   0 0 0</pose>
+    </include>
+    <include>
+      <name>shelves 6</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>-4.13394 -1.5 0 0 -0 0</pose>
+    </include>
+
+    <!-- SHELVES -->
+    <include>
+      <name>shelves 7</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>1 -2.8 0   0 0 0</pose>
+    </include>
+    <include>
+      <name>shelves 8</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>-4.13394 -2.8 0 0 -0 0</pose>
+    </include>
+
+    <!-- SHELVES -->
+    <include>
+      <name>shelves 9</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>1 -7.8 0   0 0 0</pose>
+    </include>
+    <include>
+      <name>shelves 10</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>-4.13394 -7.8 0 0 -0 0</pose>
+    </include>
+
+    <!-- SHELVES -->
+    <include>
+      <name>shelves 11</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>1 -9.1 0   0 0 0</pose>
+    </include>
+    <include>
+      <name>shelves 12</name>
+      <uri>model://shelves_high2_no_collision</uri>
+      <pose>-4.13394 -9.1 0 0 -0 0</pose>
+    </include>
+
+    <!-- =================================
+            Ground level
+         ================================= -->
+
+    <!-- PALLET 1 -->
+    <include>
+      <name>pallet 1 box</name>
+      <uri>model://big_box3</uri>
+      <pose>1.48626 3.390705 0.760253 0 0.000143 -1.57317</pose>
+    </include>
+    <include>
+      <name>pallet 1 support</name>
+      <uri>model://europallet</uri>
+      <pose>1.48088 3.400944 0.0635 0 0 -1.56736</pose>
+    </include>
+
+    <!-- PALLET 4 -->
+    <include>
+      <name>pallet 4 box</name>
+      <uri>model://big_box3</uri>
+      <pose>-2.37439 3.440964 0.776474 0 0 -1.59804</pose>
+    </include>
+    <include>
+      <name>pallet 4 support</name>
+      <uri>model://europallet</uri>
+      <pose>-2.40127 3.415746 0.0635 0 0 -1.5558</pose>
+    </include>
+
+    <!-- PALLET 7 -->
+    <include>
+      <name>pallet 7 box</name>
+      <uri>model://big_box4</uri>
+      <pose>2.61297 3.464591 0.774725 0 0 -1.59992</pose>
+    </include>
+    <include>
+      <name>pallet 7 support</name>
+      <uri>model://europallet</uri>
+      <pose>2.59788 3.454115 0.0635 0 0 -1.56921</pose>
+    </include>
+
+    <!-- PALLET 10 -->
+    <include>
+      <name>pallet 10 box</name>
+      <uri>model://big_box3</uri>
+      <pose>-3.45548 3.349857 0.774725 0 0 -1.56894</pose>
+    </include>
+    <include>
+      <name>pallet 10 support</name>
+      <uri>model://europallet</uri>
+      <pose>-3.41303 3.343739 0.0635 0 -0 1.56536</pose>
+    </include>
+
+    <!-- PALLET 11 -->
+    <include>
+      <name>pallet 11 box</name>
+      <uri>model://big_box4</uri>
+      <pose>-4.67439 3.440964 0.776474 0 0 -1.59804</pose>
+    </include>
+    <include>
+      <name>pallet 11 support</name>
+      <uri>model://europallet</uri>
+      <pose>-4.70127 3.415746 0.0635 0 0 -1.5558</pose>
+    </include>
+
+    <!-- PALLET 12 -->
+    <include>
+      <name>pallet 12 box</name>
+      <uri>model://big_box3</uri>
+      <pose>-5.95548 3.349857 0.774725 0 0 -1.56894</pose>
+    </include>
+    <include>
+      <name>pallet 12 support</name>
+      <uri>model://europallet</uri>
+      <pose>-5.91303 3.343739 0.0635 0 -0 1.56536</pose>
+    </include>
+
+    <!-- EMPTY PALLET 18 -->
+    <include>
+      <name>pallet 18 support</name>
+      <uri>model://europallet</uri>
+      <pose>0.234986 3.337637 0.0635 0 -0 1.56536</pose>
+    </include>
+    <include>
+      <name>pallet 18b support</name>
+      <uri>model://europallet</uri>
+      <pose>0.134986 3.337637 0.2102 0 -0 1.2</pose>
+    </include>
+
+    <!-- =================================
+            1st level
+         ================================= -->
+
+    <!-- PALLET 2 -->
+    <include>
+      <name>pallet 2 box</name>
+      <uri>model://big_box3</uri>
+      <pose>-3.25548 3.349857 2.3397 0 0 -1.56894</pose>
+    </include>
+    <include>
+      <name>pallet 2 support</name>
+      <uri>model://europallet</uri>
+      <pose>-3.21303 3.343739 1.6373 0 -0 1.56536</pose>
+    </include>
+
+
+    <!-- PALLET 5 - SMALL BOXES -->
+    <include>
+      <name>pallet 5 multi boxes</name>
+      <uri>model://pallet_full</uri>
+      <pose>0.334986 3.337637 1.63184 0 0 -1.57575</pose>
+      <static>true</static>
+    </include>
+
+    <!-- PALLET 17 - SMALL BOXES -->
+    <include>
+      <name>pallet 17 multi boxes</name>
+      <uri>model://pallet_full</uri>
+      <pose>0.334986 3.337637 2.31 0 0 -1.57575</pose>
+      <static>true</static>
+    </include>
+
+    <!-- PALLET 8 -->
+    <include>
+      <name>pallet 8 box</name>
+      <uri>model://big_box4</uri>
+      <pose>2.56918 3.321158 2.35696 0 0 -1.56652</pose>
+    </include>
+    <include>
+      <name>pallet 8 support</name>
+      <uri>model://europallet</uri>
+      <pose>2.64128 3.308661 1.64676 0 0 -1.55378</pose>
+    </include>
+
+    <!-- PALLET 9 -->
+    <include>
+      <name>pallet 9 box</name>
+      <uri>model://big_box4</uri>
+      <pose>-2.30257 2.987644 2.35696 0 0 -1.57937</pose>
+    </include>
+    <include>
+      <name>pallet 9 support</name>
+      <uri>model://europallet</uri>
+      <pose>-2.28744 2.915349 1.64676 0 -0 1.5541</pose>
+    </include>
+
+    <!-- PALLET 13 -->
+    <include>
+      <name>pallet 13 box</name>
+      <uri>model://big_box3</uri>
+      <pose>-4.67439 3.440964 2.35696 0 0 -1.59804</pose>
+    </include>
+    <include>
+      <name>pallet 13 support</name>
+      <uri>model://europallet</uri>
+      <pose>-4.70127 3.415746 1.64676 0 0 -1.5558</pose>
+    </include>
+
+    <!-- PALLET 14 -->
+    <include>
+      <name>pallet 14 box</name>
+      <uri>model://big_box4</uri>
+      <pose>-5.95548 3.349857 2.35696 0 0 -1.56894</pose>
+    </include>
+    <include>
+      <name>pallet 14 support</name>
+      <uri>model://europallet</uri>
+      <pose>-5.91303 3.343739 1.64676 0 -0 1.56536</pose>
+    </include>
+
+    <!-- PALLET 19 -->
+    <include>
+      <name>pallet 19 box</name>
+      <uri>model://big_box3</uri>
+      <pose>-0.8 3.337637 2.3397 0 0 -1.56894</pose>
+    </include>
+    <include>
+      <name>pallet 19 support</name>
+      <uri>model://europallet</uri>
+      <pose>-0.8 3.337637 1.6373 0 -0 1.56536</pose>
+    </include>
+
+
+    <!-- =================================
+            2nd level
+         ================================= -->
+
+    <!-- PALLET 6 - SMALL BOXES -->
+    <include>
+      <name>pallet 6 multi boxes</name>
+      <uri>model://pallet_full</uri>
+      <pose>-2.18966 3.351916 3.27046 0 0 -1.58092</pose>
+      <static>true</static>
+    </include>
+
+    <!-- PALLET 15 - SMALL BOXES -->
+    <include>
+      <name>pallet 15 multi boxes</name>
+      <uri>model://pallet_full</uri>
+      <pose>-4.68966 3.351916 3.27046 0 0 -1.58092</pose>
+      <static>true</static>
+    </include>
+
+    <!-- PALLET 16 - SMALL BOXES -->
+    <include>
+      <name>pallet 16 multi boxes</name>
+      <uri>model://pallet_full</uri>
+      <pose>-5.88966 3.351916 3.27046 0 0 -1.58092</pose>
+      <static>true</static>
+    </include>
+
+
+    <!-- PALLET 20 -->
+    <include>
+      <name>pallet 20 box</name>
+      <uri>model://big_box4</uri>
+      <pose>-3.25548 3.349857 3.97286 0 0 -1.56894</pose>
+    </include>
+    <include>
+      <name>pallet 20 support</name>
+      <uri>model://europallet</uri>
+      <pose>-3.21303 3.343739 3.27046 0 -0 1.56536</pose>
+    </include>
+
+    <!-- PALLET 21 -->
+    <include>
+      <name>pallet 21 box</name>
+      <uri>model://big_box3</uri>
+      <pose>2.56918 3.321158 3.97286 0 0 -1.56652</pose>
+    </include>
+    <include>
+      <name>pallet 21 support</name>
+      <uri>model://europallet</uri>
+      <pose>2.64128 3.308661 3.27046 0 0 -1.55378</pose>
+    </include>
+
+    <!-- PALLET 22 -->
+    <include>
+      <name>pallet 22 box</name>
+      <uri>model://big_box4</uri>
+      <pose>-0.8 3.337637 3.97286 0 0 -1.56894</pose>
+    </include>
+    <include>
+      <name>pallet 22 support</name>
+      <uri>model://europallet</uri>
+      <pose>-0.8 3.337637 3.27046 0 -0 1.56536</pose>
+    </include>
+
+
+    <!-- =================================
+            Shelves B - Ground level
+         ================================= -->
+
+    <!-- PALLET 1 -->
+    <include>
+      <name>pallet B-0-1 box</name>
+      <uri>model://big_box3</uri>
+      <pose>1.48626 -1.5 0.760253 0 0.000143 1.57317</pose>
+    </include>
+    <include>
+      <name>pallet B-0-1 support</name>
+      <uri>model://europallet</uri>
+      <pose>1.48088 -1.5 0.0635 0 0 1.56736</pose>
+    </include>
+
+    <!-- PALLET 7 -->
+    <include>
+      <name>pallet B-0-2 box</name>
+      <uri>model://big_box4</uri>
+      <pose>2.9 -1.5 0.774725 0 0 1.59992</pose>
+    </include>
+    <include>
+      <name>pallet B-0-2 support</name>
+      <uri>model://europallet</uri>
+      <pose>2.9 -1.5 0.0635 0 0 1.56921</pose>
+    </include>
+
+
+    <!-- =================================
+            Shelves B - 1st level
+         ================================= -->
+
+    <!-- PALLET 1 -->
+    <include>
+      <name>pallet B-1-1 box</name>
+      <uri>model://big_box3</uri>
+      <pose>1.6 -1.5 2.30 0 0.000143 1.57317</pose>
+      <static>true</static>
+    </include>
+    <include>
+      <name>pallet B-1-1-1 support</name>
+      <uri>model://europallet</uri>
+      <pose>1.6 -1.5 1.60 0 0 1.56736</pose>
+      <static>true</static>
+    </include>
+
+    <!-- PALLET 7 -->
+    <include>
+      <name>pallet B-1-2 box</name>
+      <uri>model://big_box3</uri>
+      <pose>2.9 -1.5 2.30 0 0 1.59992</pose>
+      <static>true</static>
+    </include>
+    <include>
+      <name>pallet B-1-2 support</name>
+      <uri>model://europallet</uri>
+      <pose>2.9 -1.5 1.60 0 0 1.56921</pose>
+      <static>true</static>
+    </include>
+
+    <!-- =================================
+            Shelves B - 2st level
+         ================================= -->
+
+    <!-- PALLET 1 -->
+    <include>
+      <name>pallet B-2-1 box</name>
+      <uri>model://big_box4</uri>
+      <pose>1.6 -1.5 3.97 0 0.000143 1.57317</pose>
+      <static>true</static>
+    </include>
+    <include>
+      <name>pallet B-1-1-1 support</name>
+      <uri>model://europallet</uri>
+      <pose>1.6 -1.5 3.27 0 0 1.56736</pose>
+      <static>true</static>
+    </include>
+
+    <!-- PALLET 7 -->
+    <include>
+      <name>pallet B-2-2 box</name>
+      <uri>model://big_box3</uri>
+      <pose>2.9 -1.5 3.97 0 0 1.59992</pose>
+      <static>true</static>
+    </include>
+    <include>
+      <name>pallet B-1-2 support</name>
+      <uri>model://europallet</uri>
+      <pose>2.9 -1.5 3.27 0 0 1.56921</pose>
+      <static>true</static>
+    </include>
+
+    <!-- ACCESSORIES -->
+    <include>
+      <name>first_2015_trash_can</name>
+      <uri>model://first_2015_trash_can</uri>
+      <pose>3.8239 3.403029 0 0 -0 0</pose>
+    </include>
+
+
+    <include>
+      <name>grey_wall</name>
+      <uri>model://grey_wall</uri>
+      <pose>-8.34545 0 0 0 0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>grey_wall2</name>
+      <uri>model://grey_wall</uri>
+      <pose>-3.5 9 0 0 0 0</pose>
+    </include>
+
+
+  </world>
+</sdf>

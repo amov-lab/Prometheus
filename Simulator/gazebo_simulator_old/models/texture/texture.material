@@ -1,0 +1,161 @@
+material Floor
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture floor.jpg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.05 0.05
+     }
+   }
+ }
+}
+material Floor_Wood
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture floor.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.05 0.05
+     }
+   }
+ }
+}
+material Wallpaper1
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture wallpaper_1.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.5 0.5
+     }
+   }
+ }
+}
+material Wallpaper2
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture wallpaper_2.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.5 0.5
+     }
+   }
+ }
+}
+material Wallpaper3
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture wallpaper_3.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.5 0.5
+     }
+   }
+ }
+}
+material Poster1
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture poster1.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 1 1
+     }
+   }
+ }
+}
+material Poster2
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture poster2.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.5 0.5
+     }
+   }
+ }
+}
+material Poster3
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture poster3.jpeg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.5 0.5
+     }
+   }
+ }
+}
+material Poster4
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture poster4.jpg
+       // Repeat the texture over the surface (4 per face)
+       scale 0.5 0.5
+     }
+   }
+ }
+}
+material gate_texture
+{
+ technique
+ {
+   pass
+   {
+     texture_unit
+     {
+       // Relative to the location of the material script
+       texture com.png
+       // Repeat the texture over the surface (4 per face)
+       scale 0.1 0.1
+     }
+   }
+ }
+}
+
