@@ -290,17 +290,17 @@ int UAV_estimator::check_uav_state()
         return 0;
     }
 
-    if(!uav_state.armed)
-    {
-        cout << YELLOW << node_name << "--->  PX4 Armed ! " << TAIL <<endl; 
-        return 1;
-    }
+    // if(!uav_state.armed)
+    // {
+    //     cout << YELLOW << node_name << "--->  PX4 Armed ! " << TAIL <<endl; 
+    //     return 0;
+    // }
 
-    if(uav_state.mode != "OFFBOARD")
-    {
-        cout << YELLOW << node_name << "--->  PX4 not in OFFBOARD mode ! " << TAIL <<endl; 
-        return 2;
-    }
+    // if(uav_state.mode != "OFFBOARD")
+    // {
+    //     cout << YELLOW << node_name << "--->  PX4 not in OFFBOARD mode ! " << TAIL <<endl; 
+    //     return 0;
+    // }
 
     return 9;
 }
