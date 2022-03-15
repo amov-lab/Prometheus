@@ -195,12 +195,12 @@ void UAV_controller::mainloop()
             {
                 rc_input.toggle_reboot = false;
                 // 如果已经解锁，无法重启飞控
-                if (uav_state.armed)
-                {
-                    cout << RED << node_name << " Reject reboot PX4! Disarm the drone first!"<< TAIL << endl;
-                    break;
-                }
-                reboot_PX4();
+                // if (uav_state.armed)
+                // {
+                //     cout << RED << node_name << " Reject reboot PX4! Disarm the drone first!"<< TAIL << endl;
+                //     break;
+                // }
+                arm_disarm_func(true);
             }
             // pos_des = Hover_position;
             // // vel_des << 0.0, 0.0, 0.0;
@@ -211,7 +211,7 @@ void UAV_controller::mainloop()
         case EXEC_STATE::HOVER_CONTROL:
         
             // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
-            if (!rc_input.in_hover_control)
+            if (!rc_input.in_hover_control || rc_input.toggle_land)
             {
                 // quick_land = true;
                 // 推出成为LAND模式，还是手动模式（那能控的住吗？）
@@ -239,7 +239,7 @@ void UAV_controller::mainloop()
         case EXEC_STATE::COMMAND_CONTROL:
         
             // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
-            if (!rc_input.in_hover_control)
+            if (!rc_input.in_hover_control || rc_input.toggle_land)
             {
                 // 推出成为LAND模式，还是手动模式（那能控的住吗？）
                 // quick_land = true;
@@ -278,6 +278,7 @@ void UAV_controller::mainloop()
             }
 
             // 当无人机位置低于指定高度时，自动上锁
+            // 需要考虑万一高度数据不准确时，从高处自由落体
             if(uav_state.position[2] < Disarm_height)
             {
                 // 此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
@@ -288,9 +289,9 @@ void UAV_controller::mainloop()
                 if(!uav_state.armed)
                 {
                     exec_state = EXEC_STATE::MANUAL_CONTROL;
-                }          
+                }    
             }
-            ROS_INFO_STREAM_ONCE ("---->Landed....");
+            ROS_INFO_STREAM_ONCE ("\033[1;32m---->Landed!....\033[0m");
             break;
     }
 
@@ -825,8 +826,11 @@ void UAV_controller::enable_emergency_func()
     emergency_srv.request.param7 = 0.0;
 
     px4_emergency_client.call(emergency_srv);
-    ROS_INFO("emergency FCU");
-    cout << GREEN << node_name << " force disarmed "<< TAIL <<endl;
+    ROS_INFO_STREAM_ONCE ("\033[1;32m---->emergency FCU....\033[0m");
+    ROS_INFO_STREAM_ONCE ("\033[1;32m---->force disarmed....\033[0m");
+    // ROS_INFO_STREAM_ONCE("emergency FCU");
+    // cout << GREEN << node_name << " force disarmed "<< TAIL <<endl;
+    // break;
 }
 
 void UAV_controller::reboot_PX4()
@@ -855,15 +859,16 @@ void UAV_controller::enable_offboard_mode()
 {
     // 自动切入OFFBOARD模式的前提条件：1、PX4飞控能够收到控制指令（如期望位置、速度等）
 	mavros_msgs::SetMode mode_cmd;
+    last_request = ros::Time::now();
 
     if(uav_state.mode != "OFFBOARD")
     {
         mode_cmd.request.custom_mode = "OFFBOARD";
         px4_set_mode_client.call(mode_cmd);
-        if(uav_state.mode == "OFFBOARD"){
-            cout << GREEN << node_name << "offboard mode switch successfully"<< TAIL<<endl;
+        if(uav_state.mode == "OFFBOARD" && (ros::Time::now() - last_request > ros::Duration(2.0))){
+            cout << RED << node_name << "offboard mode switch failed"<< TAIL<<endl;
         }else{
-            cout << GREEN << node_name << "offboard mode switch failed"<< TAIL<<endl;
+            cout << GREEN << node_name << "offboard mode switch successfully"<< TAIL<<endl;
         }
     }else
     {
@@ -880,7 +885,8 @@ void UAV_controller::enable_manual_mode()
     {
         mode_cmd.request.custom_mode = "MANUAL";
         px4_set_mode_client.call(mode_cmd);
-        cout << GREEN << node_name << " Switch to MANUAL mode!"<< TAIL<<endl;
+        // cout << GREEN << node_name << " Switch to MANUAL mode!"<< TAIL<<endl;
+        ROS_INFO_STREAM_ONCE ("\033[1;32m---->Switch to MANUAL mode!....\033[0m");
     }else
     {
         cout << GREEN << node_name << " Already in MANUAL mode!"<< TAIL<<endl;
