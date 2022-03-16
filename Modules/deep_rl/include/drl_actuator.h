@@ -11,6 +11,8 @@
 #include <gazebo_msgs/ModelState.h>
 #include <geometry_msgs/TransformStamped.h>
 #include "tf2_ros/transform_broadcaster.h"  //发布动态坐标关系
+#include "quadrotor_msgs/PositionCommand.h"
+
 #include <visualization_msgs/Marker.h>
 
 #include "printf_utils.h"
@@ -37,7 +39,12 @@ class drl_actuator
         // 订阅
         ros::Subscriber move_cmd_sub;
         ros::Subscriber vel_cmd_sub;
+        ros::Subscriber ego_cmd_sub;
         ros::Publisher fake_odom_pub;
+        ros::Publisher ego_action_pub;
+
+        geometry_msgs::Twist ego_action;
+        double last_yaw;
         ros::Publisher mesh_pub;
         ros::Timer fake_odom_pub_timer;
         ros::Timer debug_timer;
@@ -76,6 +83,7 @@ class drl_actuator
         // 回调函数
         void move_cmd_cb(const prometheus_drl::move_cmd::ConstPtr& msg);
         void vel_cmd_cb(const geometry_msgs::Twist::ConstPtr& msg);
+        void ego_cmd_cb(const quadrotor_msgs::PositionCommand::ConstPtr& msg);
         void fake_odom_pub_cb(const ros::TimerEvent& e);
         Eigen::Quaterniond quaternion_from_rpy(const Eigen::Vector3d &rpy);
 

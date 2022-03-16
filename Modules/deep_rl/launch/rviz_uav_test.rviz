@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Grid1
         - /UAV11
+        - /Map_generator1
       Splitter Ratio: 0.5726872086524963
     Tree Height: 511
   - Class: rviz/Selection
@@ -128,7 +129,7 @@ Visualization Manager:
           Queue Size: 1
           Selectable: true
           Size (Pixels): 3
-          Size (m): 0.05000000074505806
+          Size (m): 0.10000000149011612
           Style: Flat Squares
           Topic: /uav1/scan
           Unreliable: false
@@ -453,6 +454,110 @@ Visualization Manager:
           Value: true
       Enabled: false
       Name: UAV3
+    - Class: rviz/Group
+      Displays:
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 255; 255; 255
+          Color Transformer: Intensity
+          Decay Time: 0
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Min Color: 0; 0; 0
+          Name: global
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 3
+          Size (m): 0.009999999776482582
+          Style: Flat Squares
+          Topic: /map_generator/global_cloud
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 255; 255; 255
+          Color Transformer: Intensity
+          Decay Time: 0
+          Enabled: false
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Min Color: 0; 0; 0
+          Name: local
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 3
+          Size (m): 0.009999999776482582
+          Style: Flat Squares
+          Topic: /uav1/map_generator/local_cloud
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: false
+        - Alpha: 1
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 10
+            Min Value: -10
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 114; 159; 207
+          Color Transformer: FlatColor
+          Decay Time: 0
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Min Color: 0; 0; 0
+          Name: infl_ego
+          Position Transformer: XYZ
+          Queue Size: 1
+          Selectable: true
+          Size (Pixels): 1
+          Size (m): 0.009999999776482582
+          Style: Flat Squares
+          Topic: /uav1_ego_planner_node/grid_map/occupancy_inflate
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav1_ego_planner_node/optimal_list
+          Name: Marker
+          Namespaces:
+            "": true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav1_ego_planner_node/goal_point
+          Name: Marker
+          Namespaces:
+            "": true
+          Queue Size: 100
+          Value: true
+      Enabled: true
+      Name: Map_generator
   Enabled: true
   Global Options:
     Background Color: 85; 87; 83
@@ -470,25 +575,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 25.82015609741211
+      Distance: 39.360076904296875
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.5126938223838806
-        Y: -0.4778704345226288
-        Z: 4.905205726623535
+        X: 5.580750942230225
+        Y: 0.06360726058483124
+        Z: 8.1567964553833
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.5047965049743652
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.145627737045288
+      Yaw: 3.055623769760132
     Saved: ~
 Window Geometry:
   Displays:
@@ -506,5 +611,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1285
-  X: 997
-  Y: 51
+  X: 1000
+  Y: 192

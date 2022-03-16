@@ -1,6 +1,10 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Int16.h>
+
+#include <geometry_msgs/PoseStamped.h>
+
 #include <prometheus_drl/move_cmd.h>
 #include <prometheus_drl/agent_reset.h>
 
@@ -26,7 +30,9 @@ int main(int argc, char **argv)
     ros::Publisher continued_action_pub = nh.advertise<geometry_msgs::Twist>(agent_name + "/cmd_vel", 10);    
     
     //　【发布】　reset指令
+    ros::Publisher collect_pub = nh.advertise<geometry_msgs::PoseStamped>("/collect", 10);
     ros::Publisher reset_pub = nh.advertise<prometheus_drl::agent_reset>("/reset", 10);
+    ros::Publisher ego_goal_pub = nh.advertise<geometry_msgs::PoseStamped>(agent_name + "/prometheus/ego/goal", 10);
 
     prometheus_drl::move_cmd discreated_action;
     geometry_msgs::Twist continued_action;
@@ -34,6 +40,9 @@ int main(int argc, char **argv)
 
     discreated_action.ID = 0;
     discreated_action.CMD = prometheus_drl::move_cmd::HOLD;
+
+    geometry_msgs::PoseStamped collect_cmd;
+    geometry_msgs::PoseStamped goal;
 
     int cmd_mode;
 
@@ -160,7 +169,43 @@ int main(int argc, char **argv)
                 ROS_ERROR("wrong input");
             }
         }
+        else if(action_mode == 2)
+        {
+            cout << ">>>>>>>>>>>>>>>> Welcome to use Prometheus Terminal Control <<<<<<<<<<<<<<<<"<< endl;
+            cout << "Please select cmd: 0 for Goal, 1 for stop collect.."<<endl;
+            cin >> cmd_mode;  
 
+            // todo
+            if(cmd_mode == 0)
+            {
+                cout << "X:"<<endl;
+                cin >> goal.pose.position.x;  
+                cout << "Y:"<<endl;
+                cin >> goal.pose.position.y;  
+                ego_goal_pub.publish(goal);
+
+                sleep(4.0);
+                ROS_INFO("start collect");
+                collect_cmd.pose.position.x = goal.pose.position.x;  
+                collect_cmd.pose.position.y = goal.pose.position.y; 
+                collect_cmd.pose.position.z = 1;   // 开始采集
+                collect_pub.publish(collect_cmd);
+
+            }else if(cmd_mode == 1)
+            {
+                ROS_INFO("end collect");
+                collect_cmd.pose.position.x = 0;  
+                collect_cmd.pose.position.y = 0; 
+                collect_cmd.pose.position.z = 2;   // 停止采集
+                collect_pub.publish(collect_cmd);
+
+                // reset.reset = 1;
+                // reset_pub.publish(reset);
+            }else
+            {
+                ROS_ERROR("wrong input");
+            }
+        }
         
 
         sleep(0.5);

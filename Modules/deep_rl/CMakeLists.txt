@@ -28,7 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(PCL REQUIRED)
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -65,6 +65,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
   ../common/include
 )
 
@@ -89,10 +90,22 @@ add_executable(terminal_control src/terminal_control.cpp)
 add_dependencies(terminal_control prometheus_drl_gencpp)
 target_link_libraries(terminal_control ${catkin_LIBRARIES})
 
+add_executable(collect src/collect.cpp)
+add_dependencies(collect prometheus_drl_gencpp)
+target_link_libraries(collect ${catkin_LIBRARIES})
+
 add_executable(read_agent_state src/read_agent_state.cpp)
 add_dependencies(read_agent_state prometheus_drl_gencpp)
 target_link_libraries(read_agent_state ${catkin_LIBRARIES})
 
+add_executable(scan_change src/scan_change.cpp)
+add_dependencies(scan_change prometheus_drl_gencpp)
+target_link_libraries(scan_change ${catkin_LIBRARIES})
+
+add_executable (map_generator src/map_generator.cpp )
+target_link_libraries(map_generator
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES})
 
 #############
 ## Install ##

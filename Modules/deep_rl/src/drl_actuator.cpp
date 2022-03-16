@@ -1,4 +1,5 @@
 #include "drl_actuator.h"
+
 namespace drl_ns
 {
 void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, double _init_yaw)
@@ -55,15 +56,25 @@ void drl_actuator::init(ros::NodeHandle& nh, int id, Eigen::Vector3d _init_pos, 
     {
         // 【订阅】 drl 连续动作 
         vel_cmd_sub  = nh.subscribe<geometry_msgs::Twist>(agent_name + "/cmd_vel", 1, &drl_actuator::vel_cmd_cb, this);
+    }else if(action_mode == 2)
+    {
+        // 【订阅】 ego cmd 
+        ego_cmd_sub  = nh.subscribe<quadrotor_msgs::PositionCommand>(agent_name + "/ego/traj_cmd", 1, &drl_actuator::ego_cmd_cb, this);
     }
+
     // 【发布】odom
     fake_odom_pub = nh.advertise<nav_msgs::Odometry>(agent_name + "/fake_odom", 1);
+
+    // 【发布】odom
+    ego_action_pub = nh.advertise<geometry_msgs::Twist>(agent_name + "/ego_action", 1);
+
     // 【发布】mesh，用于RVIZ显示
     mesh_pub  = nh.advertise<visualization_msgs::Marker>(agent_name + "/mesh", 1);
     // 【定时器】发布智能体odom - 略快于drl_sensing中订阅的频率
-    fake_odom_pub_timer = nh.createTimer(ros::Duration(0.02), &drl_actuator::fake_odom_pub_cb, this);
+    fake_odom_pub_timer = nh.createTimer(ros::Duration(0.05), &drl_actuator::fake_odom_pub_cb, this);
 
     cout << GREEN << "---> drl_actuator init sucess in position: " << _init_pos[0] <<" [ m ] "<<_init_pos[1] <<" [ m ] "<< TAIL <<endl;
+    last_yaw = 0.0;
 }
 
 void drl_actuator::reset(Eigen::Vector3d _init_pos, double _init_yaw)
@@ -120,6 +131,44 @@ void drl_actuator::move_cmd_cb(const prometheus_drl::move_cmd::ConstPtr& msg)
     }
 }
 
+void drl_actuator::ego_cmd_cb(const quadrotor_msgs::PositionCommand::ConstPtr& msg)
+{
+    
+    agent_state.pos[0] = msg->position.x;
+    agent_state.pos[1] = msg->position.y;
+    agent_state.pos[2] = msg->position.z;
+
+    agent_state.vel[0] = msg->velocity.x;
+    agent_state.vel[1] = msg->velocity.y;
+    agent_state.vel[2] = msg->velocity.z;
+
+    agent_state.euler << 0.0,0.0,msg->yaw;
+
+    agent_state.quat2 = quaternion_from_rpy(agent_state.euler);
+    agent_state.quat.x = agent_state.quat2.x();
+    agent_state.quat.y = agent_state.quat2.y();
+    agent_state.quat.z = agent_state.quat2.z();
+    agent_state.quat.w = agent_state.quat2.w();
+
+
+
+    // Eigen::Vector3d alpha = Eigen::Vector3d(msg->acceleration.x, msg->acceleration.y, msg->acceleration.z) + 9.8*Eigen::Vector3d(0,0,1);
+    // Eigen::Vector3d xC(cos(msg->yaw), sin(msg->yaw), 0);
+    // Eigen::Vector3d yC(-sin(msg->yaw), cos(msg->yaw), 0);
+    // Eigen::Vector3d xB = (yC.cross(alpha)).normalized();
+    // Eigen::Vector3d yB = (alpha.cross(xB)).normalized();
+    // Eigen::Vector3d zB = xB.cross(yB);
+    // Eigen::Matrix3d R;
+    // R.col(0) = xB;
+    // R.col(1) = yB;
+    // R.col(2) = zB;
+    // Eigen::Quaterniond q(R);
+    // agent_state.quat2 = q;
+    // agent_state.quat.x = agent_state.quat2.x();
+    // agent_state.quat.y = agent_state.quat2.y();
+    // agent_state.quat.z = agent_state.quat2.z();
+    // agent_state.quat.w = agent_state.quat2.w();
+}
 void drl_actuator::vel_cmd_cb(const geometry_msgs::Twist::ConstPtr& msg)
 {
     continued_action = *msg;
@@ -179,7 +228,14 @@ void drl_actuator::fake_odom_pub_cb(const ros::TimerEvent &e)
     fake_odom.twist.twist.linear.x = agent_state.vel[0];
     fake_odom.twist.twist.linear.y = agent_state.vel[1];
     fake_odom.twist.twist.linear.z = agent_state.vel[2];
+    fake_odom.twist.twist.angular.z = agent_state.euler[2];
     fake_odom_pub.publish(fake_odom);
+
+    ego_action.linear.x = sqrt(agent_state.vel[0]*agent_state.vel[0]+ agent_state.vel[1]*agent_state.vel[1]);
+    ego_action.angular.z = (agent_state.euler[2] - last_yaw)/0.05;
+    last_yaw = agent_state.euler[2];
+
+    ego_action_pub.publish(ego_action);
 
     // 发布mesh
     visualization_msgs::Marker meshROS;
