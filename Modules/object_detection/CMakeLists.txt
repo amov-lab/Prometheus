@@ -341,12 +341,7 @@ target_link_libraries(kcf_tracker ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenC
 add_executable(aruco_det
     cpp_nodes/aruco_det.cpp
 )
-target_link_libraries(aruco_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
-
-add_executable(aruco_det_v2
-    cpp_nodes/aruco_det_v2.cpp
-)
-target_link_libraries(aruco_det_v2 ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp Eigen3::Eigen)
+target_link_libraries(aruco_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp Eigen3::Eigen)
 
 add_executable(create_board_charuco
     cpp_nodes/create_board_charuco.cpp
@@ -357,16 +352,6 @@ add_executable(calibrate_camera_charuco
     cpp_nodes/calibrate_camera_charuco.cpp
 )
 target_link_libraries(calibrate_camera_charuco ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS})
-
-add_executable(landpad_det
-    cpp_nodes/landpad_det.cpp
-)
-target_link_libraries(landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
-
-add_executable(stereo_detection_saving_gazebo_samples
-    cpp_nodes/3d_detection_saving_gazebo_samples.cpp
-)
-target_link_libraries(stereo_detection_saving_gazebo_samples ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 add_executable(aruco_navigation_switch
     cpp_nodes/aruco_navigation_switch.cpp
