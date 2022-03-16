@@ -1,8 +1,0 @@
-<launch>
-    <node pkg="prometheus_detection" type="stereo_detection_saving_gazebo_samples" name="stereo_detection_saving_gazebo_samples" output="screen">
-        <param name="camera_left_topic" type="string" value="/P300_basic/stereo_camera/left/image_raw" />
-        <param name="camera_right_topic" type="string" value="/P300_basic/stereo_camera/right/image_raw" />
-        <param name="img_left_path" type="string" value="$(find prometheus_detection)/dataset/stereo_images/left" />
-        <param name="img_right_path" type="string" value="$(find prometheus_detection)/dataset/stereo_images/right" />
-    </node>
-</launch>
