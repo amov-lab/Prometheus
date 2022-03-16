@@ -859,13 +859,12 @@ void UAV_controller::enable_offboard_mode()
 {
     // 自动切入OFFBOARD模式的前提条件：1、PX4飞控能够收到控制指令（如期望位置、速度等）
 	mavros_msgs::SetMode mode_cmd;
-    last_request = ros::Time::now();
 
     if(uav_state.mode != "OFFBOARD")
     {
         mode_cmd.request.custom_mode = "OFFBOARD";
         px4_set_mode_client.call(mode_cmd);
-        if(uav_state.mode == "OFFBOARD" && (ros::Time::now() - last_request > ros::Duration(2.0))){
+        if(uav_state.mode == "OFFBOARD"){
             cout << RED << node_name << "offboard mode switch failed"<< TAIL<<endl;
         }else{
             cout << GREEN << node_name << "offboard mode switch successfully"<< TAIL<<endl;
