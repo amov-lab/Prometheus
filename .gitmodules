@@ -1,0 +1,3 @@
+[submodule "Modules/swarm_control"]
+	path = Modules/swarm_control
+	url = https://gitee.com/amovlab/swarm_control.git
