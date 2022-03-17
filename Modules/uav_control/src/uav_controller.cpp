@@ -10,6 +10,8 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     node_name = "[uav_controller_uav" + std::to_string(uav_id) + "]";
     // 【参数】是否仿真模式
     nh.param<bool>("sim_mode", sim_mode, true);
+    // 【参数】是否为集群
+    nh.param<bool>("swarm", swarm, false);
     // 【参数】控制器标志位,具体说明见CONTOLLER_FLAG说明
     nh.param<int>("control/controller_flag", controller_flag, 0);
     // 【参数】使用外部控制器的控制指令，直接发送至PX4，这种方式依赖外部控制器的稳定性，需要小心！
@@ -119,7 +121,14 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     //【定时器】打印调试
     debug_timer = nh.createTimer(ros::Duration(2.0), &UAV_controller::debug_cb, this);
 
-    exec_state = EXEC_STATE::MANUAL_CONTROL;
+    if(swarm)
+    {
+        exec_state = EXEC_STATE::COMMAND_CONTROL;
+    }
+    else
+    {
+        exec_state = EXEC_STATE::MANUAL_CONTROL;
+    }
 
     // 初始化命令
     uav_command.Agent_CMD           = prometheus_msgs::UAVCommand::Init_Pos_Hover;
@@ -238,6 +247,11 @@ void UAV_controller::mainloop()
         
         case EXEC_STATE::COMMAND_CONTROL:
         
+            if(swarm)
+            {
+                break;
+            }
+
             // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
             if (!rc_input.in_hover_control || rc_input.toggle_land)
             {
