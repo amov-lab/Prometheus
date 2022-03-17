@@ -58,6 +58,7 @@ add_message_files(
   AgentCommandMAN.msg
   MultiUAVState.msg
   HomePoint.msg
+  OffsetPose.msg
 )
 
 add_action_files(
