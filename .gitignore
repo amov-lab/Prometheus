@@ -16,7 +16,6 @@ Modules/object_detection_yolov5openvino/
 Modules/object_detection_yolov5tensorrt/
 Modules/object_detection_circlex/
 Modules/data/
-Modules/swarm_control/
 Modules/object_detection_oneshot/
 
 
