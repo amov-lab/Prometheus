@@ -29,6 +29,12 @@ enum MATLAB_CMD_Y
     ATT_CTRL_MODE = 2
 };
 
+enum MATLAB_RESULT_X
+{
+    REJECT = 0,
+    SUCCESS = 1
+};
+
 int uav_id;
 int matlab_control_mode;
 bool ready_for_matlab_check;
