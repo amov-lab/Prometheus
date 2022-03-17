@@ -108,6 +108,7 @@ public:
     int controller_flag;
     bool enable_external_control;
     bool sim_mode;
+    bool swarm;
     bool flag_printf; // 是否打印
     bool quick_land;
     float Takeoff_height; // 默认起飞高度

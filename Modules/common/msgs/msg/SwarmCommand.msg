@@ -29,7 +29,7 @@ uint8 Search=12
 uint8 Attack=13
 
 ## 编队控制参考量 
-float32[2] leader_pos
+float32[3] leader_pos
 float32[2] leader_vel
 float32 swarm_size
 uint8 swarm_shape
