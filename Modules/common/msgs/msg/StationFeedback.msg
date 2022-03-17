@@ -7,5 +7,6 @@ uint8 ERROR=2
 #ERROR:任务执行过程中,软件崩溃或无人机飞控崩溃导致无人机完全失控,需要迅速人为接管控制无人机降落减少炸机损失.
 uint8 FATAL=3
 
+std_msgs/Header header
 uint8 MessageType
 string Message
