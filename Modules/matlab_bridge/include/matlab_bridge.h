@@ -14,25 +14,24 @@ using namespace std;
 
 enum MATLAB_CMD_X
 {
-    CHECK = 0,
-    TAKEOFF = 1,
-    LAND = 2,
-    HOLD = 3,
-    REBOOT_PX4 = 4,
+    CHECK = 1,
+    TAKEOFF = 2,
+    LAND = 3,
+    HOLD = 4,
     MATLAB_CMD = 5
 };
 
 enum MATLAB_CMD_Y
 {
-    POS_CTRL_MODE = 0,
-    VEL_CTRL_MODE = 1,
-    ATT_CTRL_MODE = 2
+    POS_CTRL_MODE = 1,
+    VEL_CTRL_MODE = 2,
+    ATT_CTRL_MODE = 3
 };
 
 enum MATLAB_RESULT_X
 {
-    REJECT = 0,
-    SUCCESS = 1
+    REJECT = 1,
+    SUCCESS = 2
 };
 
 int uav_id;
