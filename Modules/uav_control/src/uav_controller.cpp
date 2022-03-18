@@ -121,6 +121,7 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     //【定时器】打印调试
     debug_timer = nh.createTimer(ros::Duration(2.0), &UAV_controller::debug_cb, this);
 
+    //集群控制中EXEC_STATE全程为COMMAND_CONTROL,因此初始化直接赋值为COMMAND_CONTROL
     if(swarm)
     {
         exec_state = EXEC_STATE::COMMAND_CONTROL;
@@ -246,7 +247,7 @@ void UAV_controller::mainloop()
             break;
         
         case EXEC_STATE::COMMAND_CONTROL:
-        
+            //集群控制中全程维持该状态,并不做状态切换处理
             if(swarm)
             {
                 break;
