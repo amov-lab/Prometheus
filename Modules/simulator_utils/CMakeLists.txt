@@ -37,6 +37,7 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
+##     智能体模拟    ##
 # add_library(Quadrotor_dynamics src/Quadrotor_dynamics.cpp)
 add_library(fake_ugv fake_odom/fake_ugv.cpp)
 add_library(fake_uav fake_odom/fake_uav.cpp)
@@ -47,10 +48,19 @@ target_link_libraries(fake_odom_node ${catkin_LIBRARIES})
 target_link_libraries(fake_odom_node fake_ugv)
 target_link_libraries(fake_odom_node fake_uav)
 
+##     地图生成    ##
 add_executable (map_generator map_generator/map_generator.cpp )
 target_link_libraries(map_generator
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES})
+
+
+##     可视化    ##
+add_library(plan_visual visualization/plan_visual.cpp)
+target_link_libraries(plan_visual ${catkin_LIBRARIES})
+
+add_executable(min_snap_visual visualization/min_snap_visual.cpp)
+target_link_libraries(min_snap_visual plan_visual)
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
