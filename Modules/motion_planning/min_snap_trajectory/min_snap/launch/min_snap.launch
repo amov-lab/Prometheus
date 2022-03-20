@@ -33,7 +33,7 @@
   </node>
 
   <!-- visualization, display goals, vel, acc, jerk, planning path -->
-  <node pkg="my_visualization" name="min_snap_visual" type="min_snap_visual" output="screen">
+  <node pkg="prometheus_simulator_utils" name="min_snap_visual" type="min_snap_visual" output="screen">
     <remap from="/goal_list" to="/planning/goal_list" />
     <remap from="/position_cmd" to="/planning/pos_cmd" />
     <remap from="/traj_pts" to="/planning/traj_pts" />
