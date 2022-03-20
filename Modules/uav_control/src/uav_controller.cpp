@@ -407,6 +407,7 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
     get_valid_command = true;
     get_cmd_time = ros::Time::now();        // 时间戳
     mavros_msgs::SetMode mode_cmd;
+    // 增加统一的uav_cmd有效性 检查机制
     
     if(uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Init_Pos_Hover)
     {
