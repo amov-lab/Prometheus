@@ -3,6 +3,7 @@
 void matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr& msg)
 {
     matlab_setting_cmd = *msg;
+    last_matlab_setting_cmd_time = ros::Time::now();
     // 收到配置信息，默认设置屏蔽控制消息
     ready_for_matlab_cmd = false;
 
@@ -85,6 +86,14 @@ void matlab_cmd_cb(const geometry_msgs::Pose::ConstPtr& msg)
 
     matlab_cmd = *msg;
 
+    last_matlab_cmd_time = ros::Time::now();
+
+    if(cmd_timeout)
+    {
+        cmd_timeout = false;
+        cout << GREEN  << "MATLAB_CMD regain!" << TAIL<<endl;
+    }
+
     if(matlab_control_mode == MATLAB_CMD_Y::POS_CTRL_MODE)
     {
         uav_command.header.stamp = ros::Time::now();
@@ -123,6 +132,7 @@ void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr& msg)
     uav_state = *msg;
 }
 void printf_msgs(const ros::TimerEvent &e);
+void matlab_safety_check(const ros::TimerEvent &e);
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -147,6 +157,9 @@ int main(int argc, char **argv)
     //【定时器】打印定时器
     ros::Timer timer_printf = nh.createTimer(ros::Duration(0.1), printf_msgs);
 
+    //【定时器】安全检查定时器
+    ros::Timer timer_matlab_safety_check = nh.createTimer(ros::Duration(0.1), matlab_safety_check);
+
     cout << GREEN  << "matlab bridge init!" << TAIL<<endl;
 
     while(ros::ok())
@@ -156,6 +169,48 @@ int main(int argc, char **argv)
         ros::Duration(0.01).sleep();
     }
     return 0;
+}
+
+void matlab_safety_check(const ros::TimerEvent &e)
+{
+    ros::Time time_now = ros::Time::now();
+    double delta_time_matlab_cmd = (time_now - last_matlab_cmd_time).toSec();
+
+    // 指令控制模式下
+    if(ready_for_matlab_cmd)
+    {
+        // 接收指令超时（网络状态较差会导致），原地悬停等待
+        if(delta_time_matlab_cmd > MATLAB_TIMEOUT)
+        {
+            if(!cmd_timeout)
+            {
+                cout << RED  << "MATLAB_TIMEOUT!" << TAIL<<endl;
+                uav_command.header.stamp = ros::Time::now();
+                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
+                uav_command_pub.publish(uav_command);
+            }else
+            {
+                // 接收指令超时，降落
+                if(delta_time_matlab_cmd > LAND_TIMEOUT)
+                {
+                    cout << RED  << "MATLAB_TIMEOUT, LAND now!" << TAIL<<endl;
+                    uav_command.header.stamp = ros::Time::now();
+                    uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
+                    uav_command_pub.publish(uav_command);
+                }
+                // 接收指令超时，返回起始点
+                else if(delta_time_matlab_cmd > RETURN_INIT_POS_TIMEOUT)
+                {
+                    cout << RED  << "MATLAB_TIMEOUT，RETURN Init Pos!" << TAIL<<endl;
+                    uav_command.header.stamp = ros::Time::now();
+                    uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+                    uav_command_pub.publish(uav_command);
+                }
+            }
+            
+            cmd_timeout = true;
+        }
+    }
 }
 
 void printf_msgs(const ros::TimerEvent &e)
