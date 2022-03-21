@@ -174,6 +174,9 @@ add_executable(circlex_landing_gimbal autonomous_landing/circlex_landing_gimbal.
 add_dependencies(circlex_landing_gimbal prometheus_msgs_generate_message_cpp)
 target_link_libraries(circlex_landing_gimbal ${catkin_LIBRARIES})
 
+add_executable(circlex_landing_fixed_camera autonomous_landing/circlex_landing_fixed_camera.cpp)
+target_link_libraries(circlex_landing_fixed_camera ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
