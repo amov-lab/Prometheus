@@ -1,0 +1,135 @@
+<launch>
+  <!-- size of map, change the size inflate x, y, z according to your application -->
+  <arg name="map_size_x"/>
+  <arg name="map_size_y"/>
+  <arg name="map_size_z"/>
+  <arg name="init_x"/>
+  <arg name="init_y"/>
+  <arg name="init_z"/>
+  <arg name="target_x"/>
+  <arg name="target_y"/>
+  <arg name="target_z"/>
+
+  <arg name="drone_id"/>
+
+  <!-- topic of your odometry such as VIO or LIO -->
+  <arg name="odom_topic"/>
+
+  <!-- number of moving objects -->
+  <arg name="obj_num" value="10" />
+
+  <!-- main algorithm params -->
+  <include file="$(find ego_planner)/launch/advanced_param.xml">
+
+    <arg name="drone_id" value="$(arg drone_id)"/>
+
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <arg name="odometry_topic" value="$(arg odom_topic)"/>
+
+    <arg name="obj_num_set" value="$(arg obj_num)" />
+
+    <!-- camera pose: transform of camera frame in the world frame -->
+    <!-- depth topic: depth image, 640x480 by default -->
+    <!-- don't set cloud_topic if you already set these ones! -->
+    <arg name="camera_pose_topic" value="pcl_render_node/camera_pose"/>
+    <arg name="depth_topic" value="pcl_render_node/depth"/>
+
+    <!-- topic of point cloud measurement, such as from LIDAR  -->
+    <!-- don't set camera pose and depth, if you already set this one! -->
+    <arg name="cloud_topic" value="pcl_render_node/cloud"/>
+
+    <!-- intrinsic params of the depth camera -->
+    <arg name="cx" value="321.04638671875"/>
+    <arg name="cy" value="243.44969177246094"/>
+    <arg name="fx" value="387.229248046875"/>
+    <arg name="fy" value="387.229248046875"/>
+
+    <!-- maximum velocity and acceleration the drone will reach -->
+    <arg name="max_vel" value="2.0" />
+    <arg name="max_acc" value="3.0" />
+
+    <!--always set to 1.5 times grater than sensing horizen-->
+    <arg name="planning_horizon" value="7.5" /> 
+
+    <arg name="use_distinctive_trajs" value="true" />
+
+    <!-- 1: use 2D Nav Goal to select goal  -->
+    <!-- 2: use global waypoints below  -->
+    <arg name="flight_type" value="2" />
+    
+    <!-- global waypoints -->
+    <!-- It generates a piecewise min-snap traj passing all waypoints -->
+    <arg name="point_num" value="1" />
+
+    <arg name="point0_x" value="$(arg target_x)" />
+    <arg name="point0_y" value="$(arg target_y)" />
+    <arg name="point0_z" value="$(arg target_z)" />
+
+    <arg name="point1_x" value="0.0" />
+    <arg name="point1_y" value="15.0" />
+    <arg name="point1_z" value="1.0" />
+
+    <arg name="point2_x" value="15.0" />
+    <arg name="point2_y" value="0.0" />
+    <arg name="point2_z" value="1.0" />
+
+    <arg name="point3_x" value="0.0" />
+    <arg name="point3_y" value="-15.0" />
+    <arg name="point3_z" value="1.0" />
+
+    <arg name="point4_x" value="-15.0" />
+    <arg name="point4_y" value="0.0" />
+    <arg name="point4_z" value="1.0" />
+    
+  </include>
+
+  <!-- trajectory server -->
+  <node pkg="ego_planner" name="drone_$(arg drone_id)_traj_server" type="traj_server" output="screen">
+    <remap from="position_cmd" to="drone_$(arg drone_id)_planning/pos_cmd"/>
+    <remap from="~planning/bspline" to="drone_$(arg drone_id)_planning/bspline"/>
+
+    <param name="traj_server/time_forward" value="1.0" type="double"/>
+  </node>
+
+  <!--node pkg="waypoint_generator" name="waypoint_generator" type="waypoint_generator" output="screen">
+    <remap from="~odom" to="$(arg odom_topic)"/>        
+    <remap from="~goal" to="/move_base_simple/goal"/>
+    <remap from="~traj_start_trigger" to="/traj_start_trigger" />
+    <param name="waypoint_type" value="manual-lonely-waypoint"/>    
+  </node-->
+
+  <!-- use simulator -->
+  <include file="$(find ego_planner)/launch/simulator.xml">
+
+    <arg name="drone_id" value="$(arg drone_id)"/>
+
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+
+    <arg name="init_x_" value="$(arg init_x)"/>
+    <arg name="init_y_" value="$(arg init_y)"/>
+    <arg name="init_z_" value="$(arg init_z)"/>
+
+    <arg name="odometry_topic" value="$(arg odom_topic)" />
+  </include>
+
+  <![CDATA[node pkg="plan_env" name="obj_generator" type="obj_generator" output="screen">
+    <param name="obj_generator/obj_num" value="$(arg obj_num)"/>    
+    <param name="obj_generator/x_size" value="12.0"/>  
+    <param name="obj_generator/y_size" value="12.0"/>  
+    <param name="obj_generator/h_size" value="1.0"/>   
+    <param name="obj_generator/vel" value="1.5"/>   
+    <param name="obj_generator/yaw_dot" value="2.0"/>   
+    <param name="obj_generator/acc_r1" value="1.0"/>   
+    <param name="obj_generator/acc_r2" value="1.0"/>   
+    <param name="obj_generator/acc_z" value="0.0"/>   
+    <param name="obj_generator/scale1" value="0.5"/>   
+    <param name="obj_generator/scale2" value="1.0"/>   
+    <param name="obj_generator/interval" value="100.0"/>    
+    <param name="obj_generator/input_type" value="1"/> <!-- 1: Vel input, 2: Acc input-->>   
+  </node]]>
+
+</launch>

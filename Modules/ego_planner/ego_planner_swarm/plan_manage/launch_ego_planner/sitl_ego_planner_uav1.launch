@@ -6,7 +6,7 @@
   <arg name="odom_topic" default="prometheus/drone_odom" />
 
   <!-- main algorithm params -->
-  <include file="$(find prometheus_gazebo)/launch_ego_planner/advanced_param.xml">
+  <include file="$(find ego_planner)/launch_ego_planner/advanced_param.xml">
     <!-- 无人机编号 -->
     <arg name="uav_id" value="$(arg uav_id)"/>
     <!-- 地图尺寸 -->

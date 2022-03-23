@@ -59,8 +59,8 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
-  <build_depend>traj_utils</build_depend>
-  <exec_depend>traj_utils</exec_depend>
+  <build_depend>mini_snap_traj_utils</build_depend>
+  <exec_depend>mini_snap_traj_utils</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

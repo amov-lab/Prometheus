@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   quadrotor_msgs
-  traj_utils
+  mini_snap_traj_utils
 )
 
 ## System dependencies are found with CMake's conventions
@@ -111,7 +111,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES min_snap
- CATKIN_DEPENDS roscpp rospy std_msgs traj_utils
+ CATKIN_DEPENDS roscpp rospy std_msgs mini_snap_traj_utils
 #  DEPENDS system_lib
 )
 

@@ -4,7 +4,7 @@
 #include <Eigen/Eigen>
 #include <algorithm>
 #include <iostream>
-#include <traj_utils/polynomial_traj.h>
+#include <mini_snap_traj_utils/polynomial_traj.h>
 #include <ros/ros.h>
 #include <vector>
 #include <visualization_msgs/Marker.h>

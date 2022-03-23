@@ -1,0 +1,18 @@
+<launch>
+
+  <arg name="drone_id" value="1" />
+
+  <!-- <node pkg="rosmsg_tcp_bridge" name="drone_$(arg drone_id)_bridge_node" type="bridge_node" output="screen" launch-prefix="valgrind" > -->
+  <node pkg="rosmsg_tcp_bridge" name="drone_$(arg drone_id)_bridge_node" type="bridge_node" output="screen" >
+    <remap from="position_cmd" to="drone_$(arg drone_id)_planning/pos_cmd"/>
+    <remap from="planning/bspline" to="drone_$(arg drone_id)_planning/bspline"/>
+    <remap from="~my_odom" to="/vins_estimator/imu_propagate"/>
+
+    <param name="next_drone_ip" value="127.0.0.1" type="string"/>
+    <param name="broadcast_ip" value="127.0.0.255" type="string"/>
+    <param name="drone_id" value="$(arg drone_id)"/>
+    <param name="odom_max_freq" value="70"/>
+
+  </node>
+
+</launch>
