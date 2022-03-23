@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /全局点云1
         - /无人机 - 11
+        - /无人机 - 11/无人机位置1/Shape1
       Splitter Ratio: 0.5617647171020508
     Tree Height: 1034
   - Class: rviz/Selection
@@ -107,8 +108,8 @@ Visualization Manager:
           Position Tolerance: 0.10000000149011612
           Shape:
             Alpha: 1
-            Axes Length: 1
-            Axes Radius: 0.20000000298023224
+            Axes Length: 0.30000001192092896
+            Axes Radius: 0.10000000149011612
             Color: 255; 25; 0
             Head Length: 0.30000001192092896
             Head Radius: 0.10000000149011612
@@ -200,7 +201,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 25.901052474975586
+      Distance: 13.086782455444336
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -215,10 +216,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6847977638244629
+      Pitch: 0.29479753971099854
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.102552652359009
+      Yaw: 3.282564401626587
     Saved: ~
 Window Geometry:
   Displays:
