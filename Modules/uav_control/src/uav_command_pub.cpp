@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     ros::ServiceClient px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav"+std::to_string(uav_id) + "/mavros/cmd/arming");
 
     //【发布】虚拟遥控器指令
-    ros::Publisher rc_pub = nh.advertise<mavros_msgs::RCIn>("/uav"+std::to_string(uav_id)+ "/mavros/rc/in", 1);
+    // ros::Publisher rc_pub = nh.advertise<mavros_msgs::RCIn>("/uav"+std::to_string(uav_id)+ "/mavros/rc/in", 1);
 
     //【发布】UAVCommand
     ros::Publisher uav_command_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav"+std::to_string(uav_id)+ "/prometheus/command", 1);
@@ -82,11 +82,17 @@ int main(int argc, char **argv)
     while(ros::ok())
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please choose the CMD: 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land， 5 for Trajectory..."<<endl;
+        cout << "Please choose the CMD: 0 for Takeoff, 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land， 5 for Trajectory..."<<endl;
         cin >> CMD;
 
         switch (CMD)
         {
+        case 0:
+            agent_command.header.stamp = ros::Time::now();
+            agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+            uav_command_pub.publish(agent_command);
+            break;
+
         case 1:
                         
             cout << "Move in ENU frame, Pls input the desired position and yaw angle"<<endl;
