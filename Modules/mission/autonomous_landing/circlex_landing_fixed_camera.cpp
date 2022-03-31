@@ -37,9 +37,12 @@ int flag_detected = 0; // 是否检测到目标标志
 float kpx_track; //追踪比例系数
 
 float land_move_scale; //降落移动系数
+float x_move_scale;
+float y_move_scale;
 float land_high;
 float static_vel_thresh;
 float max_vel;
+bool is_gps = false;
 
 int max_count_vision_lost = 0; //视觉丢失计数器
 int count_vision_lost;         //视觉丢失计数器阈值
@@ -50,8 +53,6 @@ float pic_high;
 // 几秒到达最大速度
 float vel_smooth_scale = 0.2;
 float vel_smooth_thresh = 0.3;
-// 像素误差 到 航向角误差的缩放
-float pixels_error_to_yaw_rate_error_scale = 0.001;
 // 目标丢失时速度衰减
 float object_lost_vel_weaken;
 // 视觉降落计数器
@@ -71,8 +72,14 @@ void pos_cb(const prometheus_msgs::DroneState::ConstPtr &msg)
     // Read the Drone Position from the Mavros Package [Frame: ENU]
     curr_pos[0] = msg->position[0];
     curr_pos[1] = msg->position[1];
-    // curr_pos[2] = msg->position[2];
-    curr_pos[2] = msg->rel_alt;
+    if (is_gps)
+    {
+        curr_pos[2] = msg->rel_alt;
+    }
+    else
+    {
+        curr_pos[2] = msg->position[2];
+    }
     curr_vel[0] = msg->velocity[0];
     curr_vel[1] = msg->velocity[1];
     curr_vel[2] = msg->velocity[2];
@@ -115,8 +122,6 @@ int main(int argc, char **argv)
 
     //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>参数读取<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    nh.param<float>("pixels_error_to_yaw_scale", pixels_error_to_yaw_rate_error_scale, 0.001);
-
     //视觉丢失次数阈值
     //处理视觉丢失时的情况
     nh.param<int>("max_count_vision_lost", max_count_vision_lost, 30);
@@ -128,6 +133,11 @@ int main(int argc, char **argv)
 
     // 降落速度
     nh.param<float>("land_move_scale", land_move_scale, 0.2);
+        // 降落速度
+    nh.param<float>("x_move_scale", x_move_scale, 0.2);
+        // 降落速度
+    nh.param<float>("y_move_scale", y_move_scale, 0.2);
+
     // 自动降落高度
     nh.param<float>("land_high", land_high, 0.2);
 
@@ -140,6 +150,9 @@ int main(int argc, char **argv)
     nh.param<float>("static_vel_thresh", static_vel_thresh, 0.02);
 
     nh.param<float>("max_vel", max_vel, 1);
+
+    // 是否室外
+    nh.param<bool>("is_gps", is_gps, false);
 
     //打印现实检查参数
     printf_param();
@@ -263,16 +276,14 @@ int main(int argc, char **argv)
             count_vision_lost = max_count_vision_lost;
             // 使用真实高度
             // float offset = std::max(curr_pos[2] * 0.10, 0.10);
-            float offset = land_move_scale * curr_pos[2];
-            comm[0] = -pixel_y * offset;
-            // 视场角比例
-            comm[1] = -pixel_x * offset * pic_width / pic_high;
-            comm[2] = -offset / (std::abs(pixel_y) + std::abs(pixel_x));
+            comm[0] = -pixel_y * x_move_scale * curr_pos[2] / 100;
+            comm[1] = -pixel_x * y_move_scale * curr_pos[2] / 100;
+            comm[2] = -land_move_scale * curr_pos[2] / std::fmax((comm[1] +comm[0]) * 10,1);
             comm[3] = 0.;
             ss << "\n"
                << "pixel_error_x: " << pixel_x
                << " pixel_error_y: " << pixel_y
-               << "curr_pos: " << curr_pos[2] << " ";
+               << " curr_pos: " << curr_pos[2] << " ";
             // 视觉降落判断
             land_cnt = (land_cnt + 1) % cv_land_count;
             cv_land_cnt[land_cnt] = flag_detected == 2 ? 1 : 0;
@@ -286,20 +297,9 @@ int main(int argc, char **argv)
                 comm[2] = 0;
                 comm[3] = 0;
             }
-
-            // 是否调整航向角
-            if (std::fabs(pixel_x) > pic_width / 6)
-            {
-                comm[1] = 0;
-                Command_now.Reference_State.yaw_rate_ref = comm[1] * pixels_error_to_yaw_rate_error_scale;
-            }
-            else
-            {
-                Command_now.Reference_State.yaw_rate_ref = 0;
-            }
         }
-        ss << "\nnow      vel >> x_vel: " << curr_vel[0] << " y_vel: " << curr_vel[1] << " z_vel: " << curr_vel[2];
-        ss << "\ncommand  vel >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2] << " max_vel: " << max_vel;
+        ss << "\nnow      vel >> x_vel: " << curr_vel[0] << " y_vel: " << curr_vel[1] << " z_vel: " << curr_vel[2] << " hight: " << curr_pos[2];
+        ss << "\ncommand  vel >> x_vel: " << comm[0] << " y_vel: " << comm[1] << " z_vel: " << comm[2] << " yaw_rate: " << Command_now.Reference_State.yaw_rate_ref << " max_vel: " << max_vel;
         for (int i = 0; i < 3; i++)
         {
             Command_now.Reference_State.velocity_ref[i] = comm[i] == 0 ? 0 : (comm[i] / std::abs(comm[i])) * std::fmin(std::abs(comm[i]), max_vel);

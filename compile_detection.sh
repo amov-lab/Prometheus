@@ -2,6 +2,7 @@
 catkin_make --source Modules/common/msgs --build build/msgs
 # compile object_detection
 catkin_make --source Modules/object_detection --build build/object_detection
+catkin_make --source Modules/object_circlex_detection --build build/object_circlex_detection
 
 if [ ! -f "Modules/object_detection_landing/CMakeLists.txt" ]; then
   # submodule object_detection_landing not exist, skip it
