@@ -473,13 +473,25 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
             // 仅支持PX4_ORIGIN模式
             if(controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
             {
-                // 【XYZ_POS】XYZ惯性系速度控制
-                pos_des << 0.0, 0.0, 0.0;
-                vel_des[0] = uav_command.velocity_ref[0];
-                vel_des[1] = uav_command.velocity_ref[1];
-                vel_des[2] = uav_command.velocity_ref[2];
-                acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
+                if(uav_command.Yaw_Rate_Mode)
+                {
+                    pos_des << 0.0, 0.0, 0.0;
+                    vel_des[0] = uav_command.velocity_ref[0];
+                    vel_des[1] = uav_command.velocity_ref[1];
+                    vel_des[2] = uav_command.velocity_ref[2];
+                    acc_des << 0.0, 0.0, 0.0;
+                    yaw_rate_des = uav_command.yaw_rate_ref;
+                }else
+                {
+                    // 【XYZ_POS】XYZ惯性系速度控制
+                    pos_des << 0.0, 0.0, 0.0;
+                    vel_des[0] = uav_command.velocity_ref[0];
+                    vel_des[1] = uav_command.velocity_ref[1];
+                    vel_des[2] = uav_command.velocity_ref[2];
+                    acc_des << 0.0, 0.0, 0.0;
+                    yaw_des = uav_command.yaw_ref;
+                }
+                
             }else
             {
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
@@ -515,20 +527,38 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
             // 仅支持PX4_ORIGIN模式
             if(controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
             {
-                // 【XYZ_VEL_BODY】XYZ速度转换为惯性系，偏航角固定
-                float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};         
-                float d_vel_enu[2];                   
-                rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
-                uav_command.velocity_ref[0] = d_vel_enu[0];
-                uav_command.velocity_ref[1] = d_vel_enu[1];
-                pos_des[0] = 0.0;
-                pos_des[1] = 0.0;
-                pos_des[2] = 0.0;
-                vel_des[0] = uav_command.velocity_ref[0];
-                vel_des[1] = uav_command.velocity_ref[1];
-                vel_des[2] = uav_command.velocity_ref[2];
-                acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
+                if(uav_command.Yaw_Rate_Mode)
+                {
+                    float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};         
+                    float d_vel_enu[2];                   
+                    rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
+                    uav_command.velocity_ref[0] = d_vel_enu[0];
+                    uav_command.velocity_ref[1] = d_vel_enu[1];
+                    pos_des[0] = 0.0;
+                    pos_des[1] = 0.0;
+                    pos_des[2] = 0.0;
+                    vel_des[0] = uav_command.velocity_ref[0];
+                    vel_des[1] = uav_command.velocity_ref[1];
+                    vel_des[2] = uav_command.velocity_ref[2];
+                    acc_des << 0.0, 0.0, 0.0;
+                    yaw_rate_des = uav_command.yaw_rate_ref;
+                }else
+                {
+                    // 【XYZ_VEL_BODY】XYZ速度转换为惯性系，偏航角固定
+                    float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};         
+                    float d_vel_enu[2];                   
+                    rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
+                    uav_command.velocity_ref[0] = d_vel_enu[0];
+                    uav_command.velocity_ref[1] = d_vel_enu[1];
+                    pos_des[0] = 0.0;
+                    pos_des[1] = 0.0;
+                    pos_des[2] = 0.0;
+                    vel_des[0] = uav_command.velocity_ref[0];
+                    vel_des[1] = uav_command.velocity_ref[1];
+                    vel_des[2] = uav_command.velocity_ref[2];
+                    acc_des << 0.0, 0.0, 0.0;
+                    yaw_des = uav_command.yaw_ref;
+                }
             }else
             {
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
@@ -642,11 +672,26 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             }else if( uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL ||
                       uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL_BODY)
             {
-                send_vel_setpoint(vel_des, yaw_des);
+                if(uav_command.Yaw_Rate_Mode)
+                {
+                    send_vel_setpoint_yaw_rate(vel_des, yaw_rate_des);
+                }else
+                {
+                    send_vel_setpoint(vel_des, yaw_des);
+                }
+                // send_vel_setpoint(vel_des, yaw_des);
+                // send_vel_setpoint(vel_des, yaw_rate_des);
             }else if( uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS ||
                       uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY)
             {
-                send_vel_xy_pos_z_setpoint(pos_des, vel_des, yaw_des);
+                if(uav_command.Yaw_Rate_Mode)
+                {
+                    send_vel_xy_pos_z_setpoint_yaw_rate(pos_des, vel_des, yaw_rate_des);
+                }else
+                {
+                    send_vel_xy_pos_z_setpoint(vel_des,vel_des, yaw_des);
+                }
+                // send_vel_xy_pos_z_setpoint(pos_des, vel_des, yaw_des);
             }else if(uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
             {
                 send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
@@ -965,6 +1010,23 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d& vel_sp, float yaw_
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
+//发送速度期望值至飞控（输入：期望vxvyvz,期望yaw_rate）
+void UAV_controller::send_vel_setpoint_yaw_rate(const Eigen::Vector3d& vel_sp, float yaw_rate_sp)
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    pos_setpoint.type_mask = 0b010111000111;
+
+    pos_setpoint.coordinate_frame = 1;
+
+    pos_setpoint.velocity.x = vel_sp[0];
+    pos_setpoint.velocity.y = vel_sp[1];
+    pos_setpoint.velocity.z = vel_sp[2];
+
+    pos_setpoint.yaw_rate = yaw_rate_sp;
+
+    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+}
 
 void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d& pos_sp, const Eigen::Vector3d& vel_sp, float yaw_sp)
 {
@@ -981,6 +1043,25 @@ void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d& pos_sp, c
     pos_setpoint.position.z = pos_sp[2];
 
     pos_setpoint.yaw = yaw_sp;
+
+    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+}
+
+void UAV_controller::send_vel_xy_pos_z_setpoint_yaw_rate(const Eigen::Vector3d& pos_sp, const Eigen::Vector3d& vel_sp, float yaw_rate_sp)
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+
+    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+    pos_setpoint.type_mask = 0b010111000011;   // 010 111 000 011  vx vy vz z + yaw_rate
+
+    pos_setpoint.coordinate_frame = 1;
+
+    pos_setpoint.velocity.x = vel_sp[0];
+    pos_setpoint.velocity.y = vel_sp[1];
+    pos_setpoint.velocity.z = 0.0;
+    pos_setpoint.position.z = pos_sp[2];
+
+    pos_setpoint.yaw_rate = yaw_rate_sp;
 
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
