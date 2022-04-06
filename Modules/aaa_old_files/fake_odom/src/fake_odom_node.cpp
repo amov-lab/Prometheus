@@ -31,6 +31,9 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "fake_odom_node");
     ros::NodeHandle nh("~");
+    // fake_odom 主要是取代PX4在环仿真+Gazebo，
+    // 数据流：规划模块(如A*) --- (规划指令,/pro) ---> uav_cotrol 
+    // 直接订阅来自uav_control
 
     nh.param("fake_odom/swarm_num_uav", swarm_num_uav, 8);
     nh.param("fake_odom/swarm_num_ugv", swarm_num_ugv, 8);

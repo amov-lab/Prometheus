@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include "quadrotor_msgs/PositionCommand.h"
 #include "quadrotor_msgs/PolynomialTrajectory.h"
-#include "traj_utils/polynomial_traj.h"
+#include "mini_snap_traj_utils/polynomial_traj.h"
 #include <geometry_msgs/PoseArray.h>
 
 ros::Publisher pose_cmd_pub;
