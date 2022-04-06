@@ -1,0 +1,59 @@
+<launch>
+  <arg name="uav_id" default="1"/>
+  <arg name="map_size_x" default="50.0"/>
+  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_size_z" default="5.0"/>
+  <arg name="odom_topic" default="odom" />
+
+  <!-- main algorithm params -->
+  <include file="$(find prometheus_drl)/launch/advanced_param.xml">
+    <!-- 无人机编号 -->
+    <arg name="uav_id" value="$(arg uav_id)"/>
+    <!-- 地图尺寸 -->
+    <arg name="map_size_x_" value="$(arg map_size_x)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z)"/>
+    <!-- 里程计话题 -->
+    <arg name="odometry_topic" value="$(arg odom_topic)"/>
+    <!-- camera pose: transform of camera frame in the world frame -->
+    <!-- depth topic: depth image, 640x480 by default -->
+    <!-- don't set cloud_topic if you already set these ones! -->
+    <arg name="camera_pose_topic" value="pcl_render_node/camera_pose"/>
+    <arg name="depth_topic" value="pcl_render_node/depth"/>
+
+    <!-- topic of point cloud measurement, such as from LIDAR  -->
+    <!-- don't set camera pose and depth, if you already set this one! -->
+    <!-- rviz sim -->
+    <arg name="cloud_topic" value="map_generator/local_cloud"/>
+
+    <!-- intrinsic params of the depth camera -->
+    <arg name="cx" value="321.04638671875"/>
+    <arg name="cy" value="243.44969177246094"/>
+    <arg name="fx" value="387.229248046875"/>
+    <arg name="fy" value="387.229248046875"/>
+
+    <!-- maximum velocity and acceleration the drone will reach -->
+    <!-- 最大速度及加速度 -->
+    <!-- 此处的速度要和控制器的参数对应上 -->
+    <arg name="max_vel" value="1.0" />
+    <arg name="max_acc" value="0.5" />
+
+    <!--always set to 1.5 times grater than sensing horizen-->
+    <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
+    <arg name="planning_horizon" value="7.5" /> 
+    <!-- ？ -->
+    <arg name="use_distinctive_trajs" value="true" />
+
+    <!-- 1: use 2D Nav Goal to select goal  -->
+    <!-- 2: use global waypoints below  -->
+    <arg name="flight_type" value="1" />
+  </include>
+
+  <!-- trajectory server -->
+  <node pkg="ego_planner" name="uav$(arg uav_id)_traj_server" type="traj_server" output="screen">
+    <remap from="position_cmd" to="/uav$(arg uav_id)/ego/traj_cmd"/>
+    <remap from="~planning/bspline" to="/uav$(arg uav_id)/planning/bspline"/>
+
+    <param name="traj_server/time_forward" value="1.0" type="double"/>
+  </node>
+</launch>
