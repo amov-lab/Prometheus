@@ -121,6 +121,7 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     //【定时器】打印调试
     debug_timer = nh.createTimer(ros::Duration(2.0), &UAV_controller::debug_cb, this);
 
+    //集群控制中EXEC_STATE全程为COMMAND_CONTROL,因此初始化直接赋值为COMMAND_CONTROL
     if(swarm)
     {
         exec_state = EXEC_STATE::COMMAND_CONTROL;
@@ -246,7 +247,7 @@ void UAV_controller::mainloop()
             break;
         
         case EXEC_STATE::COMMAND_CONTROL:
-        
+            //集群控制中全程维持该状态,并不做状态切换处理
             if(swarm)
             {
                 break;
@@ -407,6 +408,7 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
     get_valid_command = true;
     get_cmd_time = ros::Time::now();        // 时间戳
     mavros_msgs::SetMode mode_cmd;
+    // 增加统一的uav_cmd有效性 检查机制
     
     if(uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Init_Pos_Hover)
     {

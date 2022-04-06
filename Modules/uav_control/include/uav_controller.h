@@ -108,7 +108,7 @@ public:
     int controller_flag;
     bool enable_external_control;
     bool sim_mode;
-    bool swarm;
+    bool swarm;         //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
     bool flag_printf; // 是否打印
     bool quick_land;
     float Takeoff_height; // 默认起飞高度

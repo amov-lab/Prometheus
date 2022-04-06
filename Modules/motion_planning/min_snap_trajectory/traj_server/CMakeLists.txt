@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   quadrotor_msgs
-  traj_utils
+  mini_snap_traj_utils
 )
 
 ## System dependencies are found with CMake's conventions

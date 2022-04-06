@@ -1,7 +1,7 @@
 <launch>
     <!-- 生成随机地图，并发布全局、局部点云 -->
     <node pkg="prometheus_simulator_utils" name="map_generator" type="map_generator" output="screen">
-        <param name="swarm_num" value="10" type="int"/>
+        <param name="swarm_num" value="1" type="int"/>
         <param name="map_generator/map_flag" value="0" type="int"/>
         <param name="map_generator/x_size" value="20.0" type="double"/>
         <param name="map_generator/y_size" value="30.0" type="double"/>
@@ -10,18 +10,13 @@
         <param name="map_generator/sensing_range" value="10.0" type="double"/>
         <param name="map_generator/sensing_horizon" value="5.0" type="double"/>
         <param name="map_generator/sensing_rate" value="10.0" type="double"/>
-
         <param name="map_generator/obs_min_dist" value="2.0" type="double"/>
-
         <param name="map_generator/cylinder_num" value="20" type="double"/>
         <param name="map_generator/cylinder_radius" value="0.4" type="double"/>
         <param name="map_generator/cylinder_height" value="3.0" type="double"/>
-
         <param name="map_generator/cuboid_num" value="20" type="double"/>
         <param name="map_generator/cuboid_size" value="0.4" type="double"/>
         <param name="map_generator/cuboid_height" value="1.0" type="double"/>
-
-
         <param name="uav_init_x" value="0.0" type="double"/>
         <param name="uav_init_y" value="0.0" type="double"/>
     </node>
