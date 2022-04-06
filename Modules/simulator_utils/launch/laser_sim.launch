@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+      <arg name="odom_topic" value="your_odom_topic" />
+      <arg name="global_map_topic" value="your_global_pcl2_topic" />
+      
+      <node pkg="laser_simulator" type="laser_sim_node" name="laser_simulator" output="screen">
+            <param name="sensing_horizon" value="10.0" />
+            <param name="sensing_rate" value="10.0"/>
+            <param name="pc_resolution" value="0.05"/>
+            <param name="use_resolution_filter" value="true"/>
+
+            <param name="hrz_laser_line_num" value="360"/>
+            <param name="vtc_laser_line_num" value="16"/>
+            <param name="vtc_laser_range_dgr" value="30.0"/>
+
+            <remap from="~global_map" to="$(arg global_map_topic)"/>
+            <remap from="~odometry" to="$(arg odom_topic)"/>
+      </node>
+</launch>

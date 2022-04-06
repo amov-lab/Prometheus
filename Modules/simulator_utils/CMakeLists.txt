@@ -55,6 +55,11 @@ target_link_libraries(map_generator
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES})
 
+add_executable(laser_sim_node map_generator/laser_sim_node.cpp)
+
+target_link_libraries(laser_sim_node
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES})
 
 ##    RVIZ可视化   ##
 add_library(plan_visual rviz_visualization/plan_visual.cpp)
