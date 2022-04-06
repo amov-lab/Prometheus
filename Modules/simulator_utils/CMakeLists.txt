@@ -31,13 +31,15 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/ode
   ../common/include
 )
 
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
-# add_library(Quadrotor_dynamics src/Quadrotor_dynamics.cpp)
+##     智能体模拟    ##
+add_library(Quadrotor_dynamics quadrotor_dynamics/quadrotor_dynamics.cpp)
 add_library(fake_ugv fake_odom/fake_ugv.cpp)
 add_library(fake_uav fake_odom/fake_uav.cpp)
 
@@ -47,10 +49,19 @@ target_link_libraries(fake_odom_node ${catkin_LIBRARIES})
 target_link_libraries(fake_odom_node fake_ugv)
 target_link_libraries(fake_odom_node fake_uav)
 
+##     地图生成    ##
 add_executable (map_generator map_generator/map_generator.cpp )
 target_link_libraries(map_generator
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES})
+
+
+##    RVIZ可视化   ##
+add_library(plan_visual rviz_visualization/plan_visual.cpp)
+target_link_libraries(plan_visual ${catkin_LIBRARIES})
+
+add_executable(min_snap_visual rviz_visualization/min_snap_visual.cpp)
+target_link_libraries(min_snap_visual plan_visual)
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

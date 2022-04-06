@@ -1,5 +1,5 @@
 #include <iostream>
-#include <traj_utils/polynomial_traj.h>
+#include <mini_snap_traj_utils/polynomial_traj.h>
 
 PolynomialTraj PolynomialTraj::minSnapTraj(const Eigen::MatrixXd &Pos, const Eigen::Vector3d &start_vel,
                                            const Eigen::Vector3d &end_vel, const Eigen::Vector3d &start_acc,

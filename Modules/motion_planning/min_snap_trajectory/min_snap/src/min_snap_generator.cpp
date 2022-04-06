@@ -109,10 +109,14 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "min_snap_generator");
     ros::NodeHandle nh("~");
     ros::Rate rate(10);
-
+    
+    // 【订阅】里程计（此处注意话题名称替换）
     odom_sub = nh.subscribe("/odom_topic", 10, odom_goal_cb);
+    // 【订阅】RVIZ目标点
     rviz_goal_sub = nh.subscribe("/rviz_goal", 10, rviz_goal_cb);
+    // 【发布】目标点，用于目标点显示
     goal_list_pub = nh.advertise<geometry_msgs::PoseArray>("/goal_list", 10);
+    // 发布多项式轨迹
     poly_coef_pub = nh.advertise<quadrotor_msgs::PolynomialTrajectory>("/poly_coefs", 10);
 
     poly_pub_topic.num_order = 7;
