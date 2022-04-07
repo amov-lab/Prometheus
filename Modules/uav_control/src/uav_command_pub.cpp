@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     ros::ServiceClient px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav"+std::to_string(uav_id) + "/mavros/cmd/arming");
 
     //【发布】虚拟遥控器指令
-    ros::Publisher rc_pub = nh.advertise<mavros_msgs::RCIn>("/uav"+std::to_string(uav_id)+ "/mavros/rc/in", 1);
+    // ros::Publisher rc_pub = nh.advertise<mavros_msgs::RCIn>("/uav"+std::to_string(uav_id)+ "/mavros/rc/in", 1);
 
     //【发布】UAVCommand
     ros::Publisher uav_command_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav"+std::to_string(uav_id)+ "/prometheus/command", 1);
@@ -71,6 +71,7 @@ int main(int argc, char **argv)
     agent_command.att_ref[1] = 0.0;
     agent_command.att_ref[2] = 0.0;
     agent_command.att_ref[3] = 0.0;
+    agent_command.Yaw_Rate_Mode = false;
     agent_command.yaw_ref = 0.0;
     agent_command.yaw_rate_ref = 0.0;
     agent_command.Command_ID = 0;
@@ -82,11 +83,17 @@ int main(int argc, char **argv)
     while(ros::ok())
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please choose the CMD: 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land， 5 for Trajectory..."<<endl;
+        cout << "Please choose the CMD: 0 for Takeoff, 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land， 5 for Trajectory, 6 for Move(XYZ_VEL_YAW_RATE_BODY)..."<<endl;
         cin >> CMD;
 
         switch (CMD)
         {
+        case 0:
+            agent_command.header.stamp = ros::Time::now();
+            agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+            uav_command_pub.publish(agent_command);
+            break;
+
         case 1:
                         
             cout << "Move in ENU frame, Pls input the desired position and yaw angle"<<endl;
@@ -133,7 +140,8 @@ int main(int argc, char **argv)
             agent_command.position_ref[0] = state_desired[0];
             agent_command.position_ref[1] = state_desired[1];
             agent_command.position_ref[2] = state_desired[2];
-            agent_command.yaw_ref = state_desired[3];
+            agent_command.Yaw_Rate_Mode = true;
+            agent_command.yaw_rate_ref = state_desired[3];
             agent_command.Command_ID = agent_command.Command_ID + 1;
             uav_command_pub.publish(agent_command);
 
@@ -196,6 +204,34 @@ int main(int argc, char **argv)
                 ros::Duration(0.01).sleep();
             } 
             break;
+        case 6:
+            
+            cout << "Move in BODY frame, Pls input the desired vel and yaw rate"<<endl;
+            cout << "desired state: --- x [m/s] "<<endl;
+            cin >> state_desired[0];
+            cout << "desired state: --- y [m/s]"<<endl;
+            cin >> state_desired[1];
+            cout << "desired state: --- z [m/s]"<<endl;
+            cin >> state_desired[2];
+            cout << "desired state: --- yaw_rate [deg/s]:"<<endl;
+            cin >> state_desired[3];
+            // state_desired[3] = state_desired[3]/180.0*M_PI;
+
+            agent_command.header.stamp = ros::Time::now();
+            agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            agent_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL_BODY;
+            agent_command.velocity_ref[0] = state_desired[0];
+            agent_command.velocity_ref[1] = state_desired[1];
+            agent_command.velocity_ref[2] = state_desired[2];
+            agent_command.Yaw_Rate_Mode = true;
+            agent_command.yaw_rate_ref = state_desired[3];
+            agent_command.Command_ID = agent_command.Command_ID + 1;
+            uav_command_pub.publish(agent_command);
+
+            cout << "vel_des [X Y Z] : " << state_desired[0] << " [ m/s ] "<< state_desired[1] <<" [ m/s ] "<< state_desired[2] <<" [ m ] "<< endl;
+            cout << "yaw_rate_des : " << state_desired[3] <<" [ deg/s ] "<< endl;
+            break;
+        
         }
 
         ros::Duration(0.5).sleep();

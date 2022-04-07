@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     //【定时器】打印定时器
     ros::Timer printf_timer = nh.createTimer(ros::Duration(2.0), printf_cb); 
 
-    nh.param("waypoint_num", waypoint_num, 1);
+    nh.param("waypoint_num", waypoint_num, 5);
     
     cout <<"Total waypoint number: [ " << waypoint_num << " ]"<< endl;
 
