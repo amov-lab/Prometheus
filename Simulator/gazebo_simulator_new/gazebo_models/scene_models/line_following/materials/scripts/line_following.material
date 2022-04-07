@@ -1,0 +1,15 @@
+material Cube/line_following
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture line_following.png
+      }
+    }
+  }
+}
+  
