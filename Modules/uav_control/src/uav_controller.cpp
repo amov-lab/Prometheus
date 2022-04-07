@@ -949,7 +949,8 @@ void UAV_controller::enable_manual_mode()
         ROS_INFO_STREAM_ONCE ("\033[1;32m---->Switch to MANUAL mode!....\033[0m");
     }else
     {
-        cout << GREEN << node_name << " Already in MANUAL mode!"<< TAIL<<endl;
+        // cout << GREEN << node_name << " Already in MANUAL mode!"<< TAIL<<endl;
+        ROS_INFO_STREAM_ONCE ("\033[1;32m---->Already in MANUAL mode!....\033[0m");
     }
 }
 

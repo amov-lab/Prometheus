@@ -53,15 +53,15 @@ void matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr& msg)
         {
             matlab_control_mode = MATLAB_CMD_Y::POS_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  POS_CTRL_MODE" << TAIL<<endl;
-        }else if(matlab_setting_cmd.x == MATLAB_CMD_Y::VEL_CTRL_MODE)
+        }else if(matlab_setting_cmd.y == MATLAB_CMD_Y::VEL_CTRL_MODE)
         {
             matlab_control_mode = MATLAB_CMD_Y::VEL_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  VEL_CTRL_MODE" << TAIL<<endl;
-        }else if(matlab_setting_cmd.x == MATLAB_CMD_Y::ACC_CTRL_MODE)
+        }else if(matlab_setting_cmd.y == MATLAB_CMD_Y::ACC_CTRL_MODE)
         {
             matlab_control_mode = MATLAB_CMD_Y::ACC_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  ACC_CTRL_MODE" << TAIL<<endl;
-        }else if(matlab_setting_cmd.x == MATLAB_CMD_Y::ATT_CTRL_MODE)
+        }else if(matlab_setting_cmd.y == MATLAB_CMD_Y::ATT_CTRL_MODE)
         {
             matlab_control_mode = MATLAB_CMD_Y::ATT_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  ATT_CTRL_MODE" << TAIL<<endl;

@@ -1,0 +1,15 @@
+material Cube/logo_ground
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture logo_ground.png
+      }
+    }
+  }
+}
+  

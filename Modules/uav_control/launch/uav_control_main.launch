@@ -6,7 +6,7 @@
 	<arg name="uav_id" default="1"/>
     <arg name="sim_mode" default="false"/>
     <arg name="control/controller_flag" default="0"/>
-    <arg name="control/enable_external_control" default="false"/>
+    <arg name="control/enable_external_control" default="true"/>
     <arg name="control/Takeoff_height" default="2.5"/>
     <arg name="control/Disarm_height" default="0.2"/>
     <arg name="control/Land_speed" default="0.2"/>
