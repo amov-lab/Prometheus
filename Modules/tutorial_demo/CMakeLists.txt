@@ -60,14 +60,17 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
-add_executable(autonomous_landing autonomous_landing/autonomous_landing.cpp)
-target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
+# add_executable(autonomous_landing autonomous_landing/autonomous_landing.cpp)
+# target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
 
 add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
 target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
 
 add_executable(object_tracking object_tracking/object_tracking.cpp)
 target_link_libraries(object_tracking ${catkin_LIBRARIES})
+
+add_executable(takeoff takeoff/takeoff.cpp)
+target_link_libraries(takeoff ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

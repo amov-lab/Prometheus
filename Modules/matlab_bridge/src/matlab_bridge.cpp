@@ -16,12 +16,14 @@ void matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr& msg)
         {
             matlab_setting_result.x = MATLAB_RESULT_X::SUCCESS;       
             ready_for_matlab_check = true;
-            cout << GREEN  << "Send matlab_setting_result: SUCCESS" << TAIL<<endl;
+            ROS_INFO_STREAM_ONCE ("\033[1;32m---->Send matlab_setting_result: SUCCESS....\033[0m");
+            // cout << GREEN  << "Send matlab_setting_result: SUCCESS" << TAIL<<endl;
         }else
         {
             matlab_setting_result.x = MATLAB_RESULT_X::REJECT;
             ready_for_matlab_check = false;
-            cout << GREEN  << "Send matlab_setting_result: REJECT" << TAIL<<endl;
+            ROS_INFO_STREAM_ONCE ("\033[1;32m---->Send matlab_setting_result: REJECT....\033[0m");
+            // cout << GREEN  << "Send matlab_setting_result: REJECT" << TAIL<<endl;
         }
         matlab_setting_result_pub.publish(matlab_setting_result);
     }else if(matlab_setting_cmd.x == MATLAB_CMD_X::TAKEOFF)
@@ -51,15 +53,15 @@ void matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr& msg)
         {
             matlab_control_mode = MATLAB_CMD_Y::POS_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  POS_CTRL_MODE" << TAIL<<endl;
-        }else if(matlab_setting_cmd.x == MATLAB_CMD_Y::VEL_CTRL_MODE)
+        }else if(matlab_setting_cmd.y == MATLAB_CMD_Y::VEL_CTRL_MODE)
         {
             matlab_control_mode = MATLAB_CMD_Y::VEL_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  VEL_CTRL_MODE" << TAIL<<endl;
-        }else if(matlab_setting_cmd.x == MATLAB_CMD_Y::ACC_CTRL_MODE)
+        }else if(matlab_setting_cmd.y == MATLAB_CMD_Y::ACC_CTRL_MODE)
         {
             matlab_control_mode = MATLAB_CMD_Y::ACC_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  ACC_CTRL_MODE" << TAIL<<endl;
-        }else if(matlab_setting_cmd.x == MATLAB_CMD_Y::ATT_CTRL_MODE)
+        }else if(matlab_setting_cmd.y == MATLAB_CMD_Y::ATT_CTRL_MODE)
         {
             matlab_control_mode = MATLAB_CMD_Y::ATT_CTRL_MODE;
             cout << GREEN  << "Get matlab_setting_cmd:  ATT_CTRL_MODE" << TAIL<<endl;
@@ -79,13 +81,15 @@ void matlab_cmd_cb(const geometry_msgs::Pose::ConstPtr& msg)
     // 
     if(!ready_for_matlab_check)
     {
-        cout << RED  << "uav not ready, pls check uav state first!" << TAIL<<endl;
+        ROS_INFO_STREAM_ONCE ("\033[1;32m---->uav not ready, pls check uav state first!....\033[0m");
+        // cout << RED  << "uav not ready, pls check uav state first!" << TAIL<<endl;
         return;
     }
 
     if(!ready_for_matlab_cmd)
     {
-        cout << RED  << "not in MATLAB_CMD!" << TAIL<<endl;
+        ROS_INFO_STREAM_ONCE ("\033[1;32m---->not in MATLAB_CMD!....\033[0m");
+        // cout << RED  << "not in MATLAB_CMD!" << TAIL<<endl;
         return;
     }
 

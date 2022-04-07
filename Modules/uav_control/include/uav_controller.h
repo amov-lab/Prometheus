@@ -126,6 +126,7 @@ public:
     Eigen::Vector3d vel_des;
     Eigen::Vector3d acc_des;
     double yaw_des;
+    double yaw_rate_des;
     Eigen::Vector3d throttle_sp;
 
     // 辅助点
@@ -168,7 +169,9 @@ private:
     void send_idle_cmd();
     void send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_sp);
     void send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_sp);
+    void send_vel_setpoint_yaw_rate(const Eigen::Vector3d &vel_sp, float yaw_rate_sp);
     void send_vel_xy_pos_z_setpoint(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_sp);
+    void send_vel_xy_pos_z_setpoint_yaw_rate(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_rate_sp);
     void send_pos_vel_xyz_setpoint(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_sp);
     void send_acc_xyz_setpoint(const Eigen::Vector3d &accel_sp, float yaw_sp);
     void send_attitude_setpoint(Eigen::Vector4d &u_att);
