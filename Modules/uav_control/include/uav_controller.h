@@ -15,6 +15,7 @@
 #include <mavros_msgs/CommandHome.h>
 
 #include <prometheus_msgs/UAVState.h>
+#include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
@@ -47,6 +48,7 @@ public:
     // 订阅话题
     ros::Subscriber uav_cmd_sub;
     ros::Subscriber uav_state_sub;
+    ros::Subscriber uav_setup_sub;
     ros::Subscriber px4_position_target_sub;
     ros::Subscriber px4_attitude_target_sub;
     ros::Subscriber px4_rc_sub;
@@ -71,6 +73,7 @@ public:
     prometheus_msgs::UAVState uav_state;      // 无人机状态
     prometheus_msgs::UAVState uav_state_last; // 无人机状态
     prometheus_msgs::UAVControlState uav_control_state;
+    prometheus_msgs::UAVSetup uav_setup;
     RC_Input rc_input;
     // bool arming_res = true;
 
@@ -111,7 +114,7 @@ public:
     int controller_flag;
     bool enable_external_control;
     bool sim_mode;
-    bool swarm;       //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
+    bool only_command_mode;       //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
     bool flag_printf; // 是否打印
     bool quick_land;
     float Takeoff_height; // 默认起飞高度
@@ -162,6 +165,7 @@ public:
 private:
     void uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg);
     void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg);
+    void uav_setup_cb(const prometheus_msgs::UAVSetup::ConstPtr &msg);
     void px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg);
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);

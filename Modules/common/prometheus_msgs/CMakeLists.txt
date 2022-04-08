@@ -55,6 +55,7 @@ add_message_files(
   MultiAgentState.msg
   UAVCommand.msg
   UAVControlState.msg
+  UAVSetup.msg
   AgentCommandUGV.msg
   AgentCommandMAN.msg
   MultiUAVState.msg
