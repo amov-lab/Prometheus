@@ -8,22 +8,32 @@
 #include <prometheus_msgs/UAVState.h>
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/RCIn.h>
+#include <prometheus_msgs/UAVSetup.h>
+#include <prometheus_msgs/UAVControlState.h>
 
 #include "controller_test.h"
 
 using namespace std;
 // 获取无人机当前信息
 prometheus_msgs::UAVState uav_state;
+
+prometheus_msgs::UAVControlState uav_control_state;
 // 发布的指令
 prometheus_msgs::UAVCommand agent_command;
 
 // 发布指点飞行
 ros::Publisher uav_command_pub;
 
-void agent_state_cb(const prometheus_msgs::UAVState::ConstPtr& msg)
+void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr& msg)
 {
     uav_state = *msg;
 }
+
+void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg)
+{
+    uav_control_state = *msg;
+}
+
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 int main(int argc, char **argv)
 {
@@ -36,13 +46,13 @@ int main(int argc, char **argv)
     nh.param("sim_mode", sim_mode, true);
 
     //【订阅】状态信息
-    ros::Subscriber agent_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav"+std::to_string(uav_id)+"/prometheus/state", 1, agent_state_cb);
+    ros::Subscriber uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav"+std::to_string(uav_id)+"/prometheus/state", 1, uav_state_cb);
+    
+    //【订阅】无人机控制信息
+    ros::Subscriber uav_contorl_state_sub = nh.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 1, uav_control_state_cb);
 
-    // 【服务】解锁/上锁
-    ros::ServiceClient px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav"+std::to_string(uav_id) + "/mavros/cmd/arming");
-
-    //【发布】虚拟遥控器指令
-    // ros::Publisher rc_pub = nh.advertise<mavros_msgs::RCIn>("/uav"+std::to_string(uav_id)+ "/mavros/rc/in", 1);
+    //【发布】mavros接口调用指令(-> uav_control.cpp)
+    ros::Publisher uav_setup_pub = nh.advertise<prometheus_msgs::UAVSetup>("/uav" + std::to_string(uav_id) + "/prometheus/setup", 1);
 
     //【发布】UAVCommand
     ros::Publisher uav_command_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav"+std::to_string(uav_id)+ "/prometheus/command", 1);
@@ -80,20 +90,65 @@ int main(int argc, char **argv)
     float time_trajectory = 0.0;
     int start_flag = 0;
     
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
+    cout << "Please enter 1 to disarm and takeoff the drone ..."<<endl;
+    cin >> CMD;
+
+    // 跳过遥控器逻辑，直接进入COMMAND模式
+    prometheus_msgs::UAVSetup uav_setup;
+    while(ros::ok())
+    {
+        ros::spinOnce();
+
+        if(!uav_state.armed)
+        {
+            uav_setup.cmd = prometheus_msgs::UAVSetup::ARMING;
+            uav_setup.arming = true;
+            uav_setup_pub.publish(uav_setup);
+            cout << "Arming ..."<<endl;
+            sleep(1.0);
+        }
+
+        ros::spinOnce();
+
+        if(uav_state.armed)
+        {
+            agent_command.header.stamp = ros::Time::now();
+            agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            agent_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+            agent_command.position_ref[0] = 0.0;
+            agent_command.position_ref[1] = 0.0;
+            agent_command.position_ref[2] = 1.0;
+            agent_command.yaw_ref = 0.0;
+            agent_command.Command_ID = agent_command.Command_ID + 1;
+            uav_command_pub.publish(agent_command);
+            cout << "TAKEOFF ..."<<endl;
+
+            if(uav_state.mode != "OFFBOARD")
+            {
+                uav_setup.cmd = prometheus_msgs::UAVSetup::SET_PX4_MODE;
+                uav_setup.px4_mode = "OFFBOARD";
+                uav_setup_pub.publish(uav_setup);
+                cout << "Enable OFFBOARD mode ..."<<endl;
+                sleep(1.0);
+            }
+            sleep(1.0);
+        }
+        
+        if(uav_state.position[2] > 0.8)
+        {
+            break;
+        }
+    }
+
     while(ros::ok())
     {
         cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please choose the CMD: 0 for Takeoff, 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land， 5 for Trajectory, 6 for Move(XYZ_VEL_YAW_RATE_BODY)..."<<endl;
+        cout << "Please choose the CMD: 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land， 5 for Trajectory, 6 for Move(XYZ_VEL_YAW_RATE_BODY)..."<<endl;
         cin >> CMD;
 
         switch (CMD)
         {
-        case 0:
-            agent_command.header.stamp = ros::Time::now();
-            agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-            uav_command_pub.publish(agent_command);
-            break;
-
         case 1:
                         
             cout << "Move in ENU frame, Pls input the desired position and yaw angle"<<endl;
