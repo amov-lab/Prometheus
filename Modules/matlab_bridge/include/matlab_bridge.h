@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#define MATLAB_TIMEOUT 0.2
+#define MATLAB_TIMEOUT 0.5
 #define UAV_STATE_TIMEOUT 0.1
 #define RETURN_INIT_POS_TIMEOUT 60
 #define LAND_TIMEOUT 300
@@ -187,6 +187,13 @@ bool check_for_uav_state()
 
 void matlab_safety_check(const ros::TimerEvent &e)
 {
+    if(uav_ready)
+    {
+        // 心跳包
+        matlab_setting_result.x = MATLAB_RESULT_X::HEARTBEAT;
+        matlab_setting_result_pub.publish(matlab_setting_result);
+    }
+
     if (!ready_for_matlab_cmd)
     {
         return;
@@ -203,7 +210,7 @@ void matlab_safety_check(const ros::TimerEvent &e)
         return;
     }
 
-    bool uav_ready = check_for_uav_state();
+    uav_ready = check_for_uav_state();
 
     if (!uav_ready)
     {
@@ -213,6 +220,7 @@ void matlab_safety_check(const ros::TimerEvent &e)
         uav_command_pub.publish(uav_command);
         return;
     }
+
 
     double delta_time_matlab_cmd = (time_now - last_matlab_cmd_time).toSec();
 
@@ -262,29 +270,34 @@ void printf_msgs(const ros::TimerEvent &e)
     cout.setf(ios::showpoint);
     // 强制显示符号
     cout.setf(ios::showpos);
-
-    cout << GREEN << "Matlab Bridge State: " << TAIL << endl;
-    
+    cout << GREEN << "--------------> Matlab Bridge <------------- " << TAIL << endl;    
     if(uav_ready)
     {
-        cout << GREEN << "[ UAV Ready ] " << TAIL << endl;
+        cout << GREEN << "[ UAV Ready ]   " << TAIL;
     }
     else
     {
-        cout << RED << "[ UAV Not Ready ] " << TAIL << endl;
-        cout << RED  << "Please check uav state first!" << TAIL<<endl;
+        cout << RED   << "[ UAV Not Rdy ]   " << TAIL;
     }
     
     if(ready_for_matlab_cmd)
     {
-        cout << GREEN << "[ Ready for Matlab CMD ] " << TAIL << endl;
+        cout << GREEN << "[ Matlab CMD Ready ]   " << TAIL;
     }
     else
     {
-        cout << RED << "[ Not Ready for Matlab CMD ] " << TAIL << endl;
+        cout << RED   << "[ Matlab CMD Not Rdy ]   " << TAIL;
     }
 
-    cout << GREEN << "Matlab Setting Cmd INFO: " << TAIL << endl;
+    if(cmd_timeout)
+    {
+        cout << RED   << "[ TIMEOUT ]   " << TAIL << endl;
+    }else
+    {
+        cout << GREEN << "[  GOOD   ]   " << TAIL << endl;
+    }
+    
+
     if (matlab_setting_cmd.x == MATLAB_CMD_X::CHECK)
     {
         cout << GREEN << "Setting Cmd: [ CHECK ] " << TAIL << endl;
@@ -312,22 +325,22 @@ void printf_msgs(const ros::TimerEvent &e)
 
     if(ready_for_matlab_cmd)
     {
-        cout << GREEN << "Matlab Control Cmd INFO: " << TAIL << endl;
         if (matlab_control_mode == MATLAB_CMD_Y::POS_CTRL_MODE)
         {
-            cout << GREEN << "Command: [ Move in XYZ_POS ] " << TAIL << endl;
+
+            cout << GREEN << "Matlab CMD: [ POS_CTRL_MODE ] " << TAIL << endl;
             cout << GREEN << "Pos_ref [X Y Z] : " << matlab_cmd.position.x << " [ m ] " << matlab_cmd.position.y << " [ m ] " << matlab_cmd.position.z << " [ m ] " << TAIL << endl;
             cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
         }
         else if (matlab_control_mode == MATLAB_CMD_Y::VEL_CTRL_MODE)
         {
-            cout << GREEN << "Command: [ Move in XYZ_VEL ] " << TAIL << endl;
+            cout << GREEN << "Matlab CMD: [ VEL_CTRL_MODE ] " << TAIL << endl;
             cout << GREEN << "Vel_ref [X Y Z] : " << matlab_cmd.position.x << " [m/s] " << matlab_cmd.position.y << " [m/s] " << matlab_cmd.position.z << " [m/s] " << TAIL << endl;
             cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
         }
         else if (matlab_control_mode == MATLAB_CMD_Y::ACC_CTRL_MODE)
         {
-            cout << GREEN << "Command: [ Move in XYZ_ATT ] " << TAIL << endl;
+            cout << GREEN << "Matlab CMD: [ ACC_CTRL_MODE ] " << TAIL << endl;
             cout << GREEN << "Acc_ref [X Y Z] : " << matlab_cmd.position.x << " [m/s^2] " << matlab_cmd.position.y << " [m/s^2] " << matlab_cmd.position.z << " [m/s^2] " << TAIL << endl;
             cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
 
@@ -336,9 +349,9 @@ void printf_msgs(const ros::TimerEvent &e)
         }
         else if (matlab_control_mode == MATLAB_CMD_Y::ATT_CTRL_MODE)
         {
-            cout << GREEN << "Command: [ Move in XYZ_ATT ] " << TAIL << endl;
-            cout << GREEN << "Att_ref [X Y Z] : " << uav_command.att_ref[0] * 180 / M_PI << " [deg] " << uav_command.att_ref[1] * 180 / M_PI << " [deg] " << uav_command.att_ref[2] * 180 / M_PI << " [deg] " << TAIL << endl;
-            cout << GREEN << "Thrust_ref[0-1] : " << uav_command.att_ref[3] << TAIL << endl;
+            // cout << GREEN << "Matlab CMD: [ ATT_CTRL_MODE ] " << TAIL << endl;
+            // cout << GREEN << "Att_ref [X Y Z] : " << uav_command.att_ref[0] * 180 / M_PI << " [deg] " << uav_command.att_ref[1] * 180 / M_PI << " [deg] " << uav_command.att_ref[2] * 180 / M_PI << " [deg] " << TAIL << endl;
+            // cout << GREEN << "Thrust_ref[0-1] : " << uav_command.att_ref[3] << TAIL << endl;
         }
     }
 }
