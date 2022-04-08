@@ -171,7 +171,7 @@ int main(int argc, char **argv)
     // 【参数】无人机质量（需要根据无人机实际情况进行设置）
     nh.param<float>("controller/quad_mass", ctrl_param.quad_mass, 1.0f);
     // 【参数】悬停油门（需要根据无人机实际情况进行设置）
-    nh.param<float>("controller/hov_percent", ctrl_param.hov_percent, 0.5f);
+    nh.param<float>("controller/hov_percent", ctrl_param.hov_percent, 0.47f);
     // 【参数】最大倾斜角度（如果需要进行大角度机动，此处建议调大）
     nh.param<float>("controller/tilt_angle_max", ctrl_param.tilt_angle_max, 10.0f);
     // 【参数】重力常数
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
     ros::Timer timer_matlab_safety_check = nh.createTimer(ros::Duration(0.1), matlab_safety_check);
 
     //【定时器】打印定时器
-    ros::Timer timer_printf = nh.createTimer(ros::Duration(0.1), printf_msgs);
+    ros::Timer timer_printf = nh.createTimer(ros::Duration(5.0), printf_msgs);
 
     cout << GREEN << "matlab bridge init!" << TAIL << endl;
 
