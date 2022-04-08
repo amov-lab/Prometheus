@@ -5,7 +5,7 @@ uint8 uav_id
 
 ## 无人机状态
 uint8 state
-# enum agent状态枚举
+## enum 状态枚举
 uint8 unknown=0
 uint8 ready=1
 uint8 dead=2
@@ -14,7 +14,7 @@ uint8 lost=3
 ## 无人机定位来源
 uint8 location_source
 
-# enum agent定位来源枚举
+## 定位来源枚举
 uint8 mocap=0
 uint8 t265=1
 uint8 gazebo=2
