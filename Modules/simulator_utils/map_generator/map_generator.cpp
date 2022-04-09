@@ -1,82 +1,93 @@
-#include <ros/ros.h>
-#include <ros/console.h>
-#include <math.h>
-#include <iostream>
-#include <Eigen/Eigen>
-#include <random>
-#include <tf/transform_broadcaster.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl_conversions/pcl_conversions.h>
+#include "map_generator.h"
 
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Vector3.h>
-#include <nav_msgs/Odometry.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <prometheus_msgs/UAVState.h>
+//  主函数
+void Map_Generator::init(ros::NodeHandle &nh)
+{
+  // 【参数】集群数量
+  nh.param("swarm_num", swarm_num, 0);
+  // 【参数】地图尺寸、分辨率
+  nh.param("map_generator/x_size", map_size_x, 10.0);
+  nh.param("map_generator/y_size", map_size_y, 10.0);
+  nh.param("map_generator/z_size", map_size_z, 5.0);
+  nh.param("map_generator/resolution", map_resolution, 0.2);
+  // 【参数】传感器感知半径与感知频率
+  nh.param("map_generator/sensing_range", sensing_range, 10.0);
+  nh.param("map_generator/sensing_horizon", sensing_horizon, 5.0);
+  nh.param("map_generator/sensing_rate", sensing_rate, 10.0);
+  // 【参数】障碍物最小距离
+  nh.param("map_generator/obs_min_dist", obs_min_dist, 1.0);
+  // 【参数】障碍物数量 - 圆柱
+  nh.param("map_generator/cylinder_num", cylinder_num, 30);
+  // 【参数】障碍物参数 - 圆柱
+  nh.param("map_generator/cylinder_radius", cylinder_radius, 0.2);
+  nh.param("map_generator/cylinder_height", cylinder_height, 3.0);
+  // 【参数】障碍物数量 - 立方体
+  nh.param("map_generator/cuboid_num", cuboid_num, 10);
+  // 【参数】障碍物参数 - 立方体
+  nh.param("map_generator/cuboid_size", cuboid_size, 0.3);
+  nh.param("map_generator/cuboid_height", cuboid_height, 0.3);
+  // 【参数】障碍物参数 - 墙
+  nh.param("map_generator/wall_length", wall_length, 10.0);
+  nh.param("map_generator/wall_height", wall_height, 2.0);
+  nh.param("map_generator/line_height", line_height, 2.0);
+  // 【参数】初始位置
+  nh.param("uav_init_x", uav_init_x, 0.0);
+  nh.param("uav_init_y", uav_init_y, 0.0);
 
-#include "printf_utils.h"
+  // 地图坐标范围 [map_x_min,  map_x_max] - [map_y_min, map_y_max]
+  map_x_min = -map_size_x / 2.0;
+  map_x_max = +map_size_x / 2.0;
+  map_y_min = -map_size_y / 2.0;
+  map_y_max = +map_size_y / 2.0;
+  map_z_limit = map_size_z;
 
-using namespace std;
-using namespace Eigen;
+  cout << GREEN << "Map INFO:" << TAIL << endl;
+  cout << GREEN << "X:  [" << map_x_min << "," << map_x_max << "]" << TAIL << endl;
+  cout << GREEN << "Y:  [" << map_y_min << "," << map_y_max << "]" << TAIL << endl;
+  cout << GREEN << "Z:  [ 0,"<< map_z_limit  << "]" << TAIL << endl;
 
-const int MAX_SWRAM_NUM = 41;
+  if ((cylinder_num + cuboid_num) > map_size_x * 8)
+  {
+    cout << RED << "[map_generator] The map can't put all the obstacles, remove some." << TAIL << endl;
+    cylinder_num = map_size_x * 4;
+    cuboid_num = map_size_x * 4;
+  }
 
-// 节点功能：生成随机地图，并模拟无人机检测，模拟得到局部地图与全局地图
+  for (int i = 1; i <= swarm_num; i++)
+  {
+    uav_id[i] = i;
+    // 【订阅】里程计数据
+    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/odom", 1, boost::bind(&Map_Generator::uav_odom_cb,this, _1, uav_id[i]));
+    // 【发布】模拟的局部点云信息
+    local_map_pub[i] = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(i) + "/map_generator/local_cloud", 1);
+    // 【定时器】发布局部点云定时器
+    pub_local_map_timer[i] = nh.createTimer(ros::Duration(1.0 / sensing_rate), boost::bind(&Map_Generator::pub_local_map_cb,this, _1, uav_id[i]));
+  }
 
-int swarm_num;                                     // 集群数量
-int uav_id[MAX_SWRAM_NUM];                         // 编号
-int map_flag;                                      // 地图编号
-double map_size_x, map_size_y, map_size_z;         // 地图尺寸
-double map_x_min, map_x_max, map_y_min, map_y_max; // 地图xy范围
-double map_z_limit;
-double map_resolution;              // 地图分辨率
-double sensing_range, sensing_rate; // 传感器感知半径与频率
-double sensing_horizon;
+  // 【发布】全局点云地图
+  global_map_pub = nh.advertise<sensor_msgs::PointCloud2>("/map_generator/global_cloud", 1);
+  // 【定时器】发布全局点云定时器
+  pub_global_map_timer = nh.createTimer(ros::Duration(10.0 / sensing_rate), &Map_Generator::pub_global_map_cb,this);
 
-double obs_min_dist;                     // 障碍物最小间距
-int cylinder_num;                        // 圆柱体数量
-double cylinder_radius, cylinder_height; // 圆柱体参数
-int cuboid_num;                          // 立方体数量
-double cuboid_size, cuboid_height;       // 立方体参数
-double wall_length, wall_height;         // 墙参数
-double line_height;
-// 初始状态量
-bool global_map_ok = false;
-bool uav_odom_ok[MAX_SWRAM_NUM] = {false};
-// 无人机初始位置
-double uav_init_x, uav_init_y;
-nav_msgs::Odometry uav_odom[MAX_SWRAM_NUM];
+  ros::Duration(1.0).sleep();
+  
+  //  随机函数初始化
+  unsigned int seed = rd();
+  // unsigned int seed = 2433201515;
+  cout << "seed=" << seed << endl;
+  eng.seed(seed);
+}
 
-ros::Subscriber uav_odom_sub[MAX_SWRAM_NUM];
-ros::Publisher local_map_pub[MAX_SWRAM_NUM];
-ros::Timer pub_local_map_timer[MAX_SWRAM_NUM];
-ros::Publisher global_map_pub;
-ros::Timer pub_global_map_timer;
-
-pcl::PointCloud<pcl::PointXYZ> global_map_pcl; // 全局点云地图 - pcl格式
-sensor_msgs::PointCloud2 global_map_ros;       // 全局点云地图 - ros_msg格式
-pcl::PointCloud<pcl::PointXYZ> local_map_pcl;  // 局部点云地图 - pcl格式
-sensor_msgs::PointCloud2 local_map_ros;        // 局部点云地图 - ros_msg格式
-
-random_device rd;
-default_random_engine eng(rd());
-uniform_real_distribution<double> rand_x;
-uniform_real_distribution<double> rand_y;
-
-pcl::KdTreeFLANN<pcl::PointXYZ> kdtreeLocalMap;
-vector<int> pointIdxRadiusSearch;
-vector<float> pointRadiusSquaredDistance;
 
 // 生成圆柱体
 // 圆柱体半径：cylinder_radius
 // 圆柱体高度：cylinder_height
-void generate_cylinder(double x, double y)
+void Map_Generator::generate_cylinder(double x, double y)
 {
   // 必须在地图范围内
   if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
   {
+    cout << RED << "generate_cylinder wrong." << TAIL << endl;
     return;
   }
 
@@ -105,11 +116,12 @@ void generate_cylinder(double x, double y)
 // 生成长方体
 // 长方体长宽：cuboid_height
 // 长方体高度：cuboid_height
-void generate_cuboid(double x, double y)
+void Map_Generator::generate_cuboid(double x, double y)
 {
   // 必须在地图范围内
   if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
   {
+    cout << RED << "generate_cuboid wrong." << TAIL << endl;
     return;
   }
 
@@ -143,11 +155,12 @@ void generate_cuboid(double x, double y)
 // 生成横墙，即与X轴平行的墙
 // 横墙长度：wall_length
 // 横墙高度：wall_height
-void generate_row_wall(double x, double y)
+void Map_Generator::generate_row_wall(double x, double y)
 {
   // 必须在地图范围内
   if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
   {
+    cout << RED << "generate_row_wall wrong." << TAIL << endl;
     return;
   }
 
@@ -171,11 +184,12 @@ void generate_row_wall(double x, double y)
 // 生成竖墙，即与Y轴平行的墙
 // 横墙长度：wall_length
 // 横墙高度：wall_height
-void generate_column_wall(double x, double y)
+void Map_Generator::generate_column_wall(double x, double y)
 {
   // 必须在地图范围内
   if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
   {
+    cout << RED << "generate_column_wall wrong." << TAIL << endl;
     return;
   }
 
@@ -199,11 +213,12 @@ void generate_column_wall(double x, double y)
 
 // 生成一根竖直的线
 // 长度：line_height
-void generate_line(double x, double y)
+void Map_Generator::generate_line(double x, double y)
 {
   // 必须在地图范围内
   if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
   {
+    cout << RED << "generate_line wrong." << TAIL << endl;
     return;
   }
 
@@ -222,7 +237,7 @@ void generate_line(double x, double y)
   }
 }
 
-void GenerateBorder()
+void Map_Generator::GenerateBorder()
 {
   wall_height = 0.1;
 
@@ -236,7 +251,7 @@ void GenerateBorder()
   cout << GREEN << "[map_generator] Finished generate border." << TAIL << endl;
 }
 
-void GenerateMap1()
+void Map_Generator::GenerateMap1()
 {
   generate_cylinder(1.0, 1.0);
 
@@ -249,6 +264,8 @@ void GenerateMap1()
   generate_line(0.0, 0.0);
 
   global_map_pcl.width = global_map_pcl.points.size();
+
+  
   global_map_pcl.height = 1;
   global_map_pcl.is_dense = true;
 
@@ -256,10 +273,10 @@ void GenerateMap1()
 
   global_map_ok = true;
 
-  cout << GREEN << "[map_generator] Finished generate map 1." << TAIL << endl;
+  cout << GREEN << "[map_generator] Finished generate map 1. Map points:" << global_map_pcl.width<< TAIL << endl;
 }
 
-void GenerateRandomMap()
+void Map_Generator::GenerateRandomMap()
 {
   // 待存入全局点云的点
   pcl::PointXYZ pt_random;
@@ -330,17 +347,17 @@ void GenerateRandomMap()
   kdtreeLocalMap.setInputCloud(global_map_pcl.makeShared());
   global_map_ok = true;
 
-  cout << GREEN << "[map_generator] Finished generate random map." << TAIL << endl;
+  cout << GREEN << "[map_generator] Finished generate random map. Map points:" << global_map_pcl.width<< TAIL << endl;
 }
 
-void uav_odom_cb(const nav_msgs::Odometry::ConstPtr &odom, int uav_id)
+void Map_Generator::uav_odom_cb(const nav_msgs::Odometry::ConstPtr &odom, int uav_id)
 {
   uav_odom_ok[uav_id] = true;
 
   uav_odom[uav_id] = *odom;
 }
 
-void pub_global_map_cb(const ros::TimerEvent &event)
+void Map_Generator::pub_global_map_cb(const ros::TimerEvent &event)
 {
   if (global_map_ok)
   {
@@ -354,7 +371,7 @@ void pub_global_map_cb(const ros::TimerEvent &event)
   }
 }
 
-void pub_local_map_cb(const ros::TimerEvent &event, int uav_id)
+void Map_Generator::pub_local_map_cb(const ros::TimerEvent &event, int uav_id)
 {
   if (!global_map_ok || !uav_odom_ok[uav_id])
   {
@@ -414,104 +431,4 @@ void pub_local_map_cb(const ros::TimerEvent &event, int uav_id)
   local_map_pub[uav_id].publish(local_map_ros);
 }
 
-//  主函数
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "map_generator");
-  ros::NodeHandle nh("~");
 
-  // 【参数】集群数量
-  nh.param("swarm_num", swarm_num, 0);
-  // 【参数】0代表随机生成地图，1使用1号地图，2使用2号地图
-  nh.param("map_generator/map_flag", map_flag, 5);
-  // 【参数】地图尺寸、分辨率
-  nh.param("map_generator/x_size", map_size_x, 10.0);
-  nh.param("map_generator/y_size", map_size_y, 10.0);
-  nh.param("map_generator/z_size", map_size_z, 5.0);
-  nh.param("map_generator/resolution", map_resolution, 0.2);
-  // 【参数】传感器感知半径与感知频率
-  nh.param("map_generator/sensing_range", sensing_range, 10.0);
-  nh.param("map_generator/sensing_horizon", sensing_horizon, 5.0);
-  nh.param("map_generator/sensing_rate", sensing_rate, 10.0);
-  // 【参数】障碍物最小距离
-  nh.param("map_generator/obs_min_dist", obs_min_dist, 1.0);
-  // 【参数】障碍物数量 - 圆柱
-  nh.param("map_generator/cylinder_num", cylinder_num, 30);
-  // 【参数】障碍物参数 - 圆柱
-  nh.param("map_generator/cylinder_radius", cylinder_radius, 0.2);
-  nh.param("map_generator/cylinder_height", cylinder_height, 3.0);
-  // 【参数】障碍物数量 - 立方体
-  nh.param("map_generator/cuboid_num", cuboid_num, 10);
-  // 【参数】障碍物参数 - 立方体
-  nh.param("map_generator/cuboid_size", cuboid_size, 0.3);
-  nh.param("map_generator/cuboid_height", cuboid_height, 0.3);
-  // 【参数】障碍物参数 - 墙
-  nh.param("map_generator/wall_length", wall_length, 10.0);
-  nh.param("map_generator/wall_height", wall_height, 2.0);
-  nh.param("map_generator/line_height", line_height, 2.0);
-  // 【参数】初始位置
-  nh.param("uav_init_x", uav_init_x, 0.0);
-  nh.param("uav_init_y", uav_init_y, 0.0);
-
-  // 地图坐标范围 [map_x_min,  map_x_max] - [map_y_min, map_y_max]
-  map_x_min = -map_size_x / 2.0;
-  map_x_max = +map_size_x / 2.0;
-  map_y_min = -map_size_y / 2.0;
-  map_y_max = +map_size_y / 2.0;
-  map_z_limit = map_size_z;
-
-  if ((cylinder_num + cuboid_num) > map_size_x * 8)
-  {
-    cout << RED << "[map_generator] The map can't put all the obstacles, remove some." << TAIL << endl;
-    cylinder_num = map_size_x * 4;
-    cuboid_num = map_size_x * 4;
-  }
-
-  for (int i = 1; i <= swarm_num; i++)
-  {
-    uav_id[i] = i;
-    // 【订阅】里程计数据
-    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/odom", 1, boost::bind(&uav_odom_cb, _1, uav_id[i]));
-    // 【发布】模拟的局部点云信息
-    local_map_pub[i] = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(i) + "/map_generator/local_cloud", 1);
-    // 【定时器】发布局部点云定时器
-    pub_local_map_timer[i] = nh.createTimer(ros::Duration(1.0 / sensing_rate), boost::bind(&pub_local_map_cb, _1, uav_id[i]));
-  }
-
-  // 【发布】全局点云地图
-  global_map_pub = nh.advertise<sensor_msgs::PointCloud2>("/map_generator/global_cloud", 1);
-  // 【定时器】发布全局点云定时器
-  pub_global_map_timer = nh.createTimer(ros::Duration(10.0 / sensing_rate), pub_global_map_cb);
-
-  ros::Duration(1.0).sleep();
-
-  //  随机函数初始化
-  unsigned int seed = rd();
-  // unsigned int seed = 2433201515;
-  cout << "seed=" << seed << endl;
-  eng.seed(seed);
-
-  // 生成边界
-  GenerateBorder();
-
-  if (map_flag == 0)
-  {
-    GenerateRandomMap();
-  }
-  else if (map_flag == 1)
-  {
-    GenerateMap1();
-  }
-  else
-  {
-    cout << RED << "[map_generator] wrong map_flag." << TAIL << endl;
-  }
-
-  ros::Rate loop_rate(100.0);
-
-  while (ros::ok())
-  {
-    ros::spinOnce();
-    loop_rate.sleep();
-  }
-}

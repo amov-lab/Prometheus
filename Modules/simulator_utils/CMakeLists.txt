@@ -44,16 +44,19 @@ add_library(fake_ugv fake_odom/fake_ugv.cpp)
 add_library(fake_uav fake_odom/fake_uav.cpp)
 
 add_executable(fake_odom_node fake_odom/fake_odom_node.cpp)
-add_dependencies(fake_odom_node prometheus_fake_odom_gencpp)
+add_dependencies(fake_odom_node prometheus_simulator_utils_gencpp)
 target_link_libraries(fake_odom_node ${catkin_LIBRARIES})
 target_link_libraries(fake_odom_node fake_ugv)
 target_link_libraries(fake_odom_node fake_uav)
 
 ##     地图生成    ##
-add_executable (map_generator map_generator/map_generator.cpp )
-target_link_libraries(map_generator
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES})
+add_library(map_generator map_generator/map_generator.cpp)
+
+add_executable(map_generator_node map_generator/map_generator_node.cpp)
+add_dependencies(map_generator_node prometheus_simulator_utils_gencpp)
+target_link_libraries(map_generator_node ${catkin_LIBRARIES})
+target_link_libraries(map_generator_node ${PCL_LIBRARIES})
+target_link_libraries(map_generator_node map_generator)
 
 add_executable(laser_sim_node map_generator/laser_sim_node.cpp)
 
