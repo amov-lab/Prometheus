@@ -89,7 +89,7 @@ class UAV_estimator
             FAKE_ODOM = 3,
             GPS = 4,
             RTK = 5,
-            uwb = 6
+            UWB = 6
         };
 
         // 基本变量
