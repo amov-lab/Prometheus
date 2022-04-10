@@ -51,18 +51,18 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         fake_odom_sub = nh.subscribe<nav_msgs::Odometry>("/uav"+std::to_string(uav_id)+"/prometheus/fake_odom", 10, &UAV_estimator::fake_odom_cb, this);
     }else if(location_source == LOC_SOURCE::GPS)
     {
-        // 【订阅】GPS相关状态量
+        // 【订阅】GPS状态，来自mavros
         gps_status_sub = nh.subscribe<mavros_msgs::GPSRAW>("/uav"+std::to_string(uav_id)+"/mavros/gpsstatus/gps1/raw", 10, &UAV_estimator::gps_status_cb, this);
     }else
     {
         cout << YELLOW << node_name << ": wrong location_source param, no external location information input!"<< TAIL << endl;
     }
-    
-    // 【发布】无人机位置和偏航角，传输至PX4_EKF2模块用于位置姿态估计 坐标系 ENU系 
-    px4_vision_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/uav"+std::to_string(uav_id)+ "/mavros/vision_pose/pose", 1);
 
     // 【发布】无人机状态合集,包括位置\速度\姿态\模式等,供上层节点使用
     uav_state_pub = nh.advertise<prometheus_msgs::UAVState>("/uav"+std::to_string(uav_id)+ "/prometheus/state", 1);
+
+    // 【发布】无人机位置和偏航角，传输至PX4_EKF2模块用于位置姿态估计 坐标系 ENU系 
+    px4_vision_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/uav"+std::to_string(uav_id)+ "/mavros/vision_pose/pose", 1);
 
     // 【发布】无人机里程计,主要用于RVIZ显示
     uav_odom_pub = nh.advertise<nav_msgs::Odometry>("/uav"+std::to_string(uav_id)+ "/prometheus/odom", 1);
