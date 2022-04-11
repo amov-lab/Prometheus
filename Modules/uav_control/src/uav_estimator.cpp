@@ -4,8 +4,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
 {
     // 【参数】编号
     nh.param<int>("uav_id", uav_id, 1);
-    // 【参数】定位源： 0 for mocap, 1 for t265, 2 for gazebo, 3 for fake_odom, 4 for GPS
-    nh.param<int>("control/location_source", location_source, LOC_SOURCE::GPS);
+    // 【参数】定位源, 定义见UAVState.msg
+    nh.param<int>("control/location_source", location_source, prometheus_msgs::UAVState::gps);
 
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);
@@ -22,39 +22,40 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【订阅】无人机电池状态 - 来自飞控
     px4_battery_sub = nh.subscribe<sensor_msgs::BatteryState>("/uav"+std::to_string(uav_id)+ "/mavros/battery", 1, &UAV_estimator::px4_battery_cb, this);
 
-    // 【订阅】无人机当前位置 坐标系:ENU系 （此处注意，所有状态量在飞控中均为NED系，但在ros中mavros将其转换为ENU系处理。所以，在ROS中，所有和mavros交互的量都为ENU系）
+    // 【订阅】无人机当前位置 坐标系:ENU系  - 来自飞控
+    // 【备注】所有状态量在飞控中均为NED系，但在ros中mavros将其转换为ENU系处理。所以，在ROS中，所有和mavros交互的量都为ENU系
     px4_position_sub = nh.subscribe<geometry_msgs::PoseStamped>("/uav"+std::to_string(uav_id)+ "/mavros/local_position/pose", 1, &UAV_estimator::px4_pos_cb, this);
 
-    // 【订阅】无人机当前速度 坐标系:ENU系
+    // 【订阅】无人机当前速度 坐标系:ENU系 - 来自飞控
     px4_velocity_sub = nh.subscribe<geometry_msgs::TwistStamped>("/uav"+std::to_string(uav_id)+ "/mavros/local_position/velocity_local", 1, &UAV_estimator::px4_vel_cb, this);
 
-    // 【订阅】无人机当前经纬度
-    px4_global_position_sub = nh.subscribe<sensor_msgs::NavSatFix>("/uav"+std::to_string(uav_id)+ "/mavros/global_position/global", 1, &UAV_estimator::px4_global_pos_cb, this);
-
-    // 【订阅】无人机当前欧拉角 坐标系:ENU系
+    // 【订阅】无人机当前欧拉角 坐标系:ENU系 - 来自飞控
     px4_attitude_sub = nh.subscribe<sensor_msgs::Imu>("/uav"+std::to_string(uav_id)+ "/mavros/imu/data", 1, &UAV_estimator::px4_att_cb, this); 
 
-    if(location_source == LOC_SOURCE::MOCAP)
+    if(location_source == prometheus_msgs::UAVState::mocap)
     {
         // 【订阅】mocap估计位置
         mocap_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/uav"+std::to_string(uav_id)+ "/pose", 1, &UAV_estimator::mocap_cb, this);
-    }else if(location_source == LOC_SOURCE::T265)
+    }else if(location_source == prometheus_msgs::UAVState::t265)
     {
         // 【订阅】T265估计位置
-    }else if(location_source == LOC_SOURCE::GAZEBO)
+    }else if(location_source == prometheus_msgs::UAVState::gazebo)
     {
         // 【订阅】gazebo仿真真值
         gazebo_sub = nh.subscribe<nav_msgs::Odometry>("/uav"+std::to_string(uav_id)+ "/prometheus/ground_truth", 1, &UAV_estimator::gazebo_cb, this);
-    }else if(location_source == LOC_SOURCE::FAKE_ODOM)
+    }else if(location_source == prometheus_msgs::UAVState::fake_odom)
     {
         // 【订阅】fake odom
         fake_odom_sub = nh.subscribe<nav_msgs::Odometry>("/uav"+std::to_string(uav_id)+"/prometheus/fake_odom", 10, &UAV_estimator::fake_odom_cb, this);
-    }else if(location_source == LOC_SOURCE::GPS)
+    }else if(location_source == prometheus_msgs::UAVState::gps || location_source == prometheus_msgs::UAVState::rtk)
     {
-        // 【订阅】GPS状态，来自mavros
+        // 【订阅】GPS状态，来自飞控
         gps_status_sub = nh.subscribe<mavros_msgs::GPSRAW>("/uav"+std::to_string(uav_id)+"/mavros/gpsstatus/gps1/raw", 10, &UAV_estimator::gps_status_cb, this);
+        // 【订阅】无人机当前经纬度，来自飞控
+        px4_global_position_sub = nh.subscribe<sensor_msgs::NavSatFix>("/uav"+std::to_string(uav_id)+ "/mavros/global_position/global", 1, &UAV_estimator::px4_global_pos_cb, this);
     }else
     {
+        // uwb? todo
         cout << YELLOW << node_name << ": wrong location_source param, no external location information input!"<< TAIL << endl;
     }
 
@@ -73,7 +74,10 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【发布】无人机位置(带图标),用于RVIZ显示
     uav_mesh_pub = nh.advertise<visualization_msgs::Marker>("/uav"+std::to_string(uav_id)+ "/prometheus/uav_mesh", 1);
 
-    if(location_source == LOC_SOURCE::MOCAP || location_source == LOC_SOURCE::T265 || location_source == LOC_SOURCE::GAZEBO)
+    //【发布】运行状态信息(-> 通信节点 -> 地面站)
+    ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
+
+    if(location_source == prometheus_msgs::UAVState::mocap || location_source == prometheus_msgs::UAVState::t265 || location_source == prometheus_msgs::UAVState::gazebo)
     {
         // 【定时器】当需要使用外部定位设备时，需要定时发送vision信息至飞控,并保证一定频率
         // 此处是否可以检查PX4参数设置？
@@ -83,6 +87,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【定时器】定时发布 uav_state, uav_odom 保证50Hz以上
     timer_uav_state_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_uav_state, this);
 
+    // 【定时器】定时检查无人机状态(连接状态、定位状态)
+    timer_check_uav_state = nh.createTimer(ros::Duration(0.5), &UAV_estimator::timercb_check_uav_state, this);
+
     // 【定时器】定时发布 rviz显示,保证1Hz以上
     timer_rviz_pub = nh.createTimer(ros::Duration(0.2), &UAV_estimator::timercb_rviz, this);    
 
@@ -91,12 +98,16 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.state = prometheus_msgs::UAVState::ready;
     uav_state.connected = false;
     uav_state.armed = false;
-    uav_state.location_source = location_source;
     uav_state.mode = "";
+    uav_state.location_source = location_source;
     uav_state.odom_valid = false;
+    uav_state.gps_status = prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS;
     uav_state.position[0] = 0.0;
     uav_state.position[1] = 0.0;
     uav_state.position[2] = 0.0;
+    uav_state.latitude = 0.0;       // 此处处置设置为阿木实验室经纬度，todo
+    uav_state.longitude = 0.0;
+    uav_state.altitude = 0.0;
     uav_state.velocity[0] = 0.0;
     uav_state.velocity[1] = 0.0;
     uav_state.velocity[2] = 0.0;
@@ -112,6 +123,11 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.attitude_rate[2] = 0.0;
     uav_state.battery_state = 0.0;
     uav_state.battery_percetage = 0.0;
+
+    text_info.header.stamp = ros::Time::now();
+    text_info.MessageType = prometheus_msgs::TextInfo::INFO;
+    text_info.Message =  node_name +  " init.";
+    ground_station_info_pub.publish(text_info);
 }
 
 void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -123,12 +139,6 @@ void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
     uav_state_update = true;
 }
 
-void UAV_estimator::px4_battery_cb(const sensor_msgs::BatteryState::ConstPtr &msg)
-{
-    uav_state.battery_state = msg->voltage;
-    uav_state.battery_percetage = msg->percentage;
-}
-
 void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     uav_state.position[0] = msg->pose.position.x;
@@ -138,9 +148,9 @@ void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 void UAV_estimator::px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
 {
-    uav_state.global_position[0] = msg->latitude;
-    uav_state.global_position[1] = msg->longitude;
-    uav_state.global_position[2] = msg->altitude;
+    uav_state.latitude = msg->latitude;
+    uav_state.longitude = msg->longitude;
+    uav_state.altitude = msg->altitude;
 }
 
 void UAV_estimator::px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
@@ -166,6 +176,12 @@ void UAV_estimator::px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg)
     uav_state.attitude_rate[2] = msg->angular_velocity.z;
 }
 
+void UAV_estimator::px4_battery_cb(const sensor_msgs::BatteryState::ConstPtr &msg)
+{
+    uav_state.battery_state = msg->voltage;
+    uav_state.battery_percetage = msg->percentage;
+}
+
 void UAV_estimator::gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg)
 {
     uav_state.gps_status = msg->fix_type;
@@ -173,22 +189,12 @@ void UAV_estimator::gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg)
 
 void UAV_estimator::mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    if(location_source != LOC_SOURCE::MOCAP)
-    {
-        return;
-    }
-
     mocap_pose = *msg;
     get_mocap_stamp = ros::Time::now();
 }
 
 void UAV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
-{
-    if(location_source != LOC_SOURCE::GAZEBO)
-    {
-        return;
-    }
-    
+{   
     gazebo_pose.header = msg->header;
     gazebo_pose.pose = msg->pose.pose;
     get_gazebo_stamp = ros::Time::now();
@@ -196,11 +202,6 @@ void UAV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
 
 void UAV_estimator::fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
-    if(location_source != LOC_SOURCE::FAKE_ODOM)
-    {
-        return;
-    }
-
     // uav_state 直接赋值
     uav_state.connected = true;
     uav_state.armed = true;
@@ -227,11 +228,6 @@ void UAV_estimator::fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
 
 void UAV_estimator::t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
-    if(location_source != LOC_SOURCE::T265)
-    {
-        return;
-    }
-
     t265_pose.header = msg->header;
     t265_pose.pose = msg->pose.pose;
     get_t265_stamp = ros::Time::now();
@@ -239,18 +235,18 @@ void UAV_estimator::t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
 
 void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
 {
-    if(location_source == LOC_SOURCE::FAKE_ODOM || location_source == LOC_SOURCE::GPS)
+    if(location_source == prometheus_msgs::UAVState::fake_odom || location_source == prometheus_msgs::UAVState::gps)
     {
         return;
     }
 
-    if(location_source == LOC_SOURCE::GAZEBO)
+    if(location_source == prometheus_msgs::UAVState::gazebo)
     {
         vision_pose = gazebo_pose;
-    }else if(location_source == LOC_SOURCE::MOCAP)
+    }else if(location_source == prometheus_msgs::UAVState::mocap)
     {
         vision_pose = mocap_pose;
-    }else if(location_source == LOC_SOURCE::T265)
+    }else if(location_source == prometheus_msgs::UAVState::t265)
     {
         vision_pose = t265_pose;
     }else
@@ -274,37 +270,6 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     px4_vision_pose_pub.publish(vision_pose);
 }
 
-/**
- * @brief 检查无人机状态，包括无人机与PX4连接状态、是否有本地位置数据
- * 是否解锁状态？是否处于offboard模式状态？在此处有点鸡肋
- * 
- * @return int 
- */
-int UAV_estimator::check_uav_state()
-{
-    ros::Time time_now = ros::Time::now();
-
-    if(!uav_state.connected)
-    {
-        cout << RED << node_name << "--->  PX4 Unconnected ! " << TAIL <<endl; 
-        return 0;
-    }
-
-    // if(!uav_state.armed)
-    // {
-    //     cout << YELLOW << node_name << "--->  PX4 Armed ! " << TAIL <<endl; 
-    //     return 0;
-    // }
-
-    // if(uav_state.mode != "OFFBOARD")
-    // {
-    //     cout << YELLOW << node_name << "--->  PX4 not in OFFBOARD mode ! " << TAIL <<endl; 
-    //     return 0;
-    // }
-
-    return 9;
-}
-
 int UAV_estimator::check_uav_odom()
 {
     ros::Time time_now = ros::Time::now();
@@ -312,13 +277,13 @@ int UAV_estimator::check_uav_odom()
     // odom失效可能原因1：外部定位数据接收超时
     // odom失效可能原因2：无人机合速度大于3米每秒，认为定位模块失效
     // odom失效可能原因3：无人机位置与外部定位设备原始值相差过多
-    if(location_source == LOC_SOURCE::GAZEBO && (time_now - get_gazebo_stamp).toSec() > GAZEBO_TIMEOUT)
+    if(location_source == prometheus_msgs::UAVState::gazebo && (time_now - get_gazebo_stamp).toSec() > GAZEBO_TIMEOUT)
     {
         return 1;
-    }else if(location_source == LOC_SOURCE::MOCAP && (time_now - get_mocap_stamp).toSec() > MOCAP_TIMEOUT)
+    }else if(location_source == prometheus_msgs::UAVState::mocap && (time_now - get_mocap_stamp).toSec() > MOCAP_TIMEOUT)
     {
         return 1;
-    }else if(location_source == LOC_SOURCE::T265 && (time_now - get_t265_stamp).toSec() > T265_TIMEOUT)
+    }else if(location_source == prometheus_msgs::UAVState::t265 && (time_now - get_t265_stamp).toSec() > T265_TIMEOUT)
     {
         return 1;
     }
@@ -339,35 +304,29 @@ int UAV_estimator::check_uav_odom()
     return 9;
 }
 
-void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
+void UAV_estimator::timercb_check_uav_state(const ros::TimerEvent &e)
 {
-    if(!uav_state_update)
+    // 1，检查无人机与PX4连接状态
+    // 2， 检查定位状态
+    // 检查无人机状态: 连接状态、上锁状态、模式状态
+    if(!uav_state.connected)
     {
-        return;
+        cout << RED << node_name << "--->  PX4 Unconnected ! " << TAIL <<endl; 
     }
 
-    static int printf_count = 0;
-    printf_count++;
 
+    // 发布无人机状态前进行常规检查
     int odom_state = check_uav_odom();
 
-    if(printf_count == 1)
+    if(odom_state == 1)
     {
-        // 检查无人机状态: 连接状态、上锁状态、模式状态
-        check_uav_state();
-        if(odom_state == 1)
-        {
-            cout << RED << node_name << "--->  Odom invalid: Get Vision Pose Timeout! " << TAIL <<endl; 
-        }else if(odom_state == 2)
-        {
-            cout << RED << node_name << "--->  Odom invalid: Velocity too large! " << TAIL <<endl; 
-        }else if(odom_state == 3)
-        {
-            cout << RED << node_name << "--->  Odom invalid: vision_pose_error! " << TAIL <<endl; 
-        }
-    }else if(printf_count > 100)
+        cout << RED << node_name << "--->  Odom invalid: Get Vision Pose Timeout! " << TAIL <<endl; 
+    }else if(odom_state == 2)
     {
-        printf_count = 0;
+        cout << RED << node_name << "--->  Odom invalid: Velocity too large! " << TAIL <<endl; 
+    }else if(odom_state == 3)
+    {
+        cout << RED << node_name << "--->  Odom invalid: vision_pose_error! " << TAIL <<endl; 
     }
 
     if(odom_state == 9)
@@ -376,6 +335,43 @@ void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
     }else
     {
         uav_state.odom_valid = false;
+    }
+
+    //无人机GPS定位状态检测
+    if(uav_state.location_source == prometheus_msgs::UAVState::gps || uav_state.location_source ==prometheus_msgs::UAVState::rtk)
+    {
+        // 为什么要发提示消息，地面站直接显示GPS状态不就行了吗？
+        // 这个没必要发送单独的文字提示消息
+        switch(uav_state.gps_status)
+        {
+            case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS:
+                cout << RED << node_name << "--->  No GPS connected ! " << TAIL <<endl; 
+                break;
+            
+            case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_FIX:
+                break;
+            
+            case prometheus_msgs::UAVState::GPS_FIX_TYPE_2D_FIX:
+                break;
+
+            case prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX:
+                break;
+
+            case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR:
+                break;
+
+            case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FIXEDR:
+                break;
+        }
+    }
+
+}
+
+void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
+{
+    if(!uav_state_update)
+    {
+        return;
     }
 
     uav_state.header.stamp = ros::Time::now();
@@ -478,19 +474,19 @@ void UAV_estimator::printf_param()
 {
     cout <<">>>>>>>>>>>>>>>> UAV_estimator Param <<<<<<<<<<<<<<<<" <<endl;
 
-    if(location_source == LOC_SOURCE::GAZEBO)
+    if(location_source == prometheus_msgs::UAVState::gazebo)
     {
         cout << "location_source: [GAZEBO] "<<endl;
-    }else if(location_source == LOC_SOURCE::MOCAP)
+    }else if(location_source == prometheus_msgs::UAVState::mocap)
     {
         cout << "location_source: [MOCAP] "<<endl;
-    }else if(location_source == LOC_SOURCE::T265)
+    }else if(location_source == prometheus_msgs::UAVState::t265)
     {
         cout << "location_source: [T265] "<<endl;
-    }else if(location_source == LOC_SOURCE::FAKE_ODOM)
+    }else if(location_source == prometheus_msgs::UAVState::fake_odom)
     {
         cout << "location_source: [FAKE_ODOM] "<<endl;
-    }else if(location_source == LOC_SOURCE::GPS)
+    }else if(location_source == prometheus_msgs::UAVState::gps)
     {
         cout << "location_source: [GPS] "<<endl;
     }else
@@ -499,3 +495,69 @@ void UAV_estimator::printf_param()
     }
 }
 
+    // 怎么考虑无人机试飞的初始化问题？
+    // 连接上PX4是一个状态
+    // odom来源一切正常是一个状态
+    // 具备起飞条件是另一个状态
+    // 能否解锁（用户自行检查 还是我们代检查？）
+    // 打印不能解锁飞控的报错
+    // 打印不能呢个切入定点模式的报错
+    // 能够切入定点模式
+    
+//    //确认无人机是否能切入定点模式并解锁(遥控器是否会导致无人机起飞)
+//     this->mavros_interface_.type = prometheus_msgs::MavrosInterface::SET_MODE;
+//     this->mavros_interface_.mode = "POSCTL";
+//     this->mavros_interface_pub_.publish(this->mavros_interface_);
+//     bool loop_flag = true;
+//     int count = 0;
+//     while (loop_flag)
+//     {
+//         ros::spinOnce();
+//         if (this->uav_state_.mode == "POSCTL")
+//         {
+//             loop_flag = false;
+//         }
+//         count++;
+//         if (count >= setmode_timeout_ * 10)
+//         {
+//             loop_flag = false;
+//             this->station_feedback_.MessageType = prometheus_msgs::StationFeedback::ERROR;
+//             this->station_feedback_.Message = "UAV[" + std::to_string(this->agent_id_) + "] init failed, cannot set to [POSCTL] mode";
+//             sendStationFeedback();
+//             this->swarm_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Ready;
+//             return false;
+//         }
+//         usleep(100000);
+//     }
+
+//     this->mavros_interface_.type = prometheus_msgs::MavrosInterface::ARMING;
+//     this->mavros_interface_.arming = true;
+//     this->mavros_interface_pub_.publish(this->mavros_interface_);
+//     loop_flag = true;
+//     //计数器
+//     count = 0;
+
+//     while (loop_flag)
+//     {
+//         ros::spinOnce();
+//         if (this->uav_state_.armed)
+//         {
+//             loop_flag = false;
+//             this->mavros_interface_.type = prometheus_msgs::MavrosInterface::ARMING;
+//             this->mavros_interface_.arming = false;
+//             this->mavros_interface_pub_.publish(this->mavros_interface_);
+//             //是否考虑上锁指令发出后无法上锁的情况?
+//         }
+//         count++;
+//         //以10hz来考虑,每秒计数器将增加10
+//         if (count >= setmode_timeout_ * 10)
+//         {
+//             loop_flag = false;
+//             this->station_feedback_.MessageType = prometheus_msgs::StationFeedback::ERROR;
+//             this->station_feedback_.Message = "UAV[" + std::to_string(this->agent_id_) + "] init failed, cannot be armed";
+//             sendStationFeedback();
+//             this->swarm_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Ready;
+//             return false;
+//         }
+//         usleep(100000);
+//     }
