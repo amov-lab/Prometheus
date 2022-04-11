@@ -13,3 +13,8 @@ git submodule foreach git pull
 
 
 此时还需要父仓库指向新的游离分支，直接commit 提交即可。
+
+
+## token问题
+
+git remote set-url origin https://<your_token>@github.com/amov-lab/Prometheus.git
