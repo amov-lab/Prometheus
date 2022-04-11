@@ -112,6 +112,9 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     uav_control_state_pub = 
         nh.advertise<prometheus_msgs::UAVControlState>("/uav"+std::to_string(uav_id) +  "/prometheus/control_state", 10);
 
+    //【发布】运行状态信息(-> 通信节点 -> 地面站)
+    ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
+
     // 【服务】解锁/上锁
     px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav"+std::to_string(uav_id) + "/mavros/cmd/arming");
 
@@ -153,6 +156,11 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     u_att.setZero();
 
     rc_input.setup(only_command_mode);
+
+    text_info.header.stamp = ros::Time::now();
+    text_info.MessageType = prometheus_msgs::TextInfo::INFO;
+    text_info.Message =  node_name +  " init.";
+    ground_station_info_pub.publish(text_info);
 }
 
 // bool UAV_controller::arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res)
