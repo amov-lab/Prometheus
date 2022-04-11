@@ -54,11 +54,14 @@ add_message_files(
   AgentStateMAN.msg
   MultiAgentState.msg
   UAVCommand.msg
+  UAVControlState.msg
+  UAVSetup.msg
   AgentCommandUGV.msg
   AgentCommandMAN.msg
   MultiUAVState.msg
   HomePoint.msg
   OffsetPose.msg
+  TextInfo.msg
 )
 
 add_action_files(

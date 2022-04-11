@@ -1,8 +1,8 @@
 <launch>
     <!-- 生成随机地图，并发布全局、局部点云 -->
-    <node pkg="prometheus_simulator_utils" name="map_generator" type="map_generator" output="screen">
+    <node pkg="prometheus_simulator_utils" name="map_generator_node" type="map_generator_node" output="screen">
+        <param name="map_flag" value="2" type="int"/>
         <param name="swarm_num" value="1" type="int"/>
-        <param name="map_generator/map_flag" value="0" type="int"/>
         <param name="map_generator/x_size" value="20.0" type="double"/>
         <param name="map_generator/y_size" value="30.0" type="double"/>
         <param name="map_generator/z_size" value="5.0" type="double"/>

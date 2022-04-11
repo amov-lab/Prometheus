@@ -5,16 +5,21 @@ uint8 uav_id
 
 ## 无人机状态
 uint8 state
-# enum agent状态枚举
+## 无人机状态枚举
 uint8 unknown=0
 uint8 ready=1
 uint8 dead=2
 uint8 lost=3
 
+## 机载电脑是否连接上飞控，true已连接，false则不是
+bool connected
+## 是否解锁，true为已解锁，false则不是
+bool armed
+## PX4飞控当前飞行模式  int8
+string mode
 ## 无人机定位来源
 uint8 location_source
-
-# enum agent定位来源枚举
+## 定位来源枚举
 uint8 mocap=0
 uint8 t265=1
 uint8 gazebo=2
@@ -23,24 +28,40 @@ uint8 gps = 4
 uint8 rtk = 5
 uint8 uwb = 6
 
-## GPS状态,变量对应状态可参考mavros_msgs/GPSRAW中的fix_type
-uint8 gps_status
-
-## PX4飞控当前飞行模式  int8
-string mode
-## 机载电脑是否连接上飞控，true已连接，false则不是
-bool connected
-## 是否解锁，true为已解锁，false则不是
-bool armed
-## odom失效
+## odom标志位
 bool odom_valid
 
-## 无人机状态量：位置、速度、姿态
-float32[3] global_position
+## GPS状态,变量对应状态可参考mavros_msgs/GPSRAW中的fix_type
+uint8 gps_status
+## GPS状态枚举
+uint8 GPS_FIX_TYPE_NO_GPS=0
+uint8 GPS_FIX_TYPE_NO_FIX=1
+uint8 GPS_FIX_TYPE_2D_FIX=2
+uint8 GPS_FIX_TYPE_3D_FIX=3
+uint8 GPS_FIX_TYPE_DGPS=4
+uint8 GPS_FIX_TYPE_RTK_FLOATR=5
+uint8 GPS_FIX_TYPE_RTK_FIXEDR=6
+uint8 GPS_FIX_TYPE_STATIC=7
+uint8 GPS_FIX_TYPE_PPP=8
+
+## 无人机位置、速度、姿态
 float32[3] position                 ## [m]
+## 无人机经度、纬度、高度
+float32 latitude                       
+float32 longitude
+float32 altitude
+## 无人机速度、姿态
 float32[3] velocity                 ## [m/s]
+## 无人机姿态（欧拉角、四元数）
 float32[3] attitude                 ## [rad]
 geometry_msgs/Quaternion attitude_q ## 四元数
+## 无人机姿态角速度
 float32[3] attitude_rate            ## [rad/s]
-float32 battery_state               ## 电池状态   
-float32 battery_percetage         
+## 无人机电池状态
+float32 battery_state                  
+float32 battery_percetage     
+
+
+
+
+    
