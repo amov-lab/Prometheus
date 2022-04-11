@@ -5,8 +5,7 @@ uint8 cmd
 uint8 ARMING = 0
 uint8 SET_PX4_MODE = 1
 uint8 REBOOT_PX4 = 2
-uint8 SET_HOME = 3
-uint8 SET_CONTROL_MODE = 4
+uint8 SET_CONTROL_MODE = 3
 
 bool arming
 
@@ -14,5 +13,3 @@ bool arming
 string px4_mode
 
 string control_mode
-
-HomePoint home_point

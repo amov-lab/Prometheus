@@ -19,7 +19,6 @@
 #include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
-#include <prometheus_msgs/MavrosInterface.h>
 #include <prometheus_msgs/HomePoint.h>
 #include <prometheus_msgs/TextInfo.h>
 
@@ -172,7 +171,6 @@ private:
     void px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg);
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
-    void mavros_interface_cb(const prometheus_msgs::MavrosInterface::ConstPtr &msg);
     void debug_cb(const ros::TimerEvent &e);
 
     int check_failsafe();
@@ -195,7 +193,6 @@ private:
     void enable_emergency_func();
     void reboot_PX4();
     void set_mode_func(string mode);
-    void set_home_func(prometheus_msgs::HomePoint home_point);
 
     void send_pos_cmd_to_px4_original_controller();
     void send_att_cmd_to_px4_attitude_controller();
