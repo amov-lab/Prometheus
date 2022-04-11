@@ -8,42 +8,44 @@
 #include <prometheus_msgs/UAVState.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
+#include <prometheus_msgs/UAVControlState.h>
 #include "geometry_utils.h"
 #include "printf_utils.h"
 
 using namespace std;
 
-#define MATLAB_TIMEOUT 0.2
+#define MATLAB_TIMEOUT 0.5
 #define UAV_STATE_TIMEOUT 0.1
 #define RETURN_INIT_POS_TIMEOUT 60
 #define LAND_TIMEOUT 300
 
 enum MATLAB_CMD_X
 {
-    CHECK = 1,      // 起飞前检查
+    CHECK = 1, // 起飞前检查
     TAKEOFF = 2,
     LAND = 3,
     HOLD = 4,
-    MATLAB_CMD = 5  // 指令控制
+    MATLAB_CMD = 5 // 指令控制
 };
 
 enum MATLAB_CMD_Y
 {
-    POS_CTRL_MODE = 1,  // 位置点控制
-    VEL_CTRL_MODE = 2,  // 速度控制
-    ACC_CTRL_MODE = 3,  // 加速度控制
-    ATT_CTRL_MODE = 4   // 姿态控制
+    POS_CTRL_MODE = 1, // 位置点控制
+    VEL_CTRL_MODE = 2, // 速度控制
+    ACC_CTRL_MODE = 3, // 加速度控制
+    ATT_CTRL_MODE = 4  // 姿态控制
 };
 
 enum MATLAB_RESULT_X
 {
     REJECT = 1,
-    SUCCESS = 2
+    SUCCESS = 2,
+    HEARTBEAT = 3
 };
 
 int uav_id;
 int matlab_control_mode;
-bool ready_for_matlab_check;
+bool uav_ready;
 bool ready_for_matlab_cmd;
 geometry_msgs::Pose matlab_cmd;
 ros::Time last_matlab_cmd_time;
@@ -53,6 +55,7 @@ ros::Time get_uav_state_stamp;
 geometry_msgs::Point matlab_setting_result;
 prometheus_msgs::UAVCommand uav_command;
 prometheus_msgs::UAVState uav_state;
+prometheus_msgs::UAVControlState uav_control_state;
 
 bool cmd_timeout{false};
 
@@ -69,39 +72,39 @@ struct Ctrl_Param_Matlab
 
 Ctrl_Param_Matlab ctrl_param;
 
-Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d & acc_cmd, double yaw_cmd)
+Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d &acc_cmd, double yaw_cmd)
 {
     Eigen::Vector4d att_cmd;
-	// 期望力 = 质量*控制量 + 重力抵消 + 期望加速度*质量*Ka
+    // 期望力 = 质量*控制量 + 重力抵消 + 期望加速度*质量*Ka
     // F_des是基于模型的位置控制器计算得到的三轴期望推力（惯性系），量纲为牛
     // att_cmd是用于PX4的姿态控制输入，att_cmd 前三位是roll pitch yaw， 第四位为油门值[0-1]
     Eigen::Vector3d F_des;
-	F_des = acc_cmd * ctrl_param.quad_mass + ctrl_param.quad_mass * ctrl_param.g;
-    
-	// 如果向上推力小于重力的一半
-	// 或者向上推力大于重力的两倍
-	if (F_des(2) < 0.5 * ctrl_param.quad_mass * ctrl_param.g(2))
-	{
-		F_des = F_des / F_des(2) * (0.5 * ctrl_param.quad_mass * ctrl_param.g(2));
-	}
-	else if (F_des(2) > 2 * ctrl_param.quad_mass * ctrl_param.g(2))
-	{
-		F_des = F_des / F_des(2) * (2 * ctrl_param.quad_mass * ctrl_param.g(2));
-	}
+    F_des = acc_cmd * ctrl_param.quad_mass + ctrl_param.quad_mass * ctrl_param.g;
 
-	// 角度限制幅度
-	if (std::fabs(F_des(0)/F_des(2)) > std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max)))
-	{
-		// ROS_INFO("pitch too tilt");
-		F_des(0) = F_des(0)/std::fabs(F_des(0)) * F_des(2) * std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max));
-	}
+    // 如果向上推力小于重力的一半
+    // 或者向上推力大于重力的两倍
+    if (F_des(2) < 0.5 * ctrl_param.quad_mass * ctrl_param.g(2))
+    {
+        F_des = F_des / F_des(2) * (0.5 * ctrl_param.quad_mass * ctrl_param.g(2));
+    }
+    else if (F_des(2) > 2 * ctrl_param.quad_mass * ctrl_param.g(2))
+    {
+        F_des = F_des / F_des(2) * (2 * ctrl_param.quad_mass * ctrl_param.g(2));
+    }
 
-	// 角度限制幅度
-	if (std::fabs(F_des(1)/F_des(2)) > std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max)))
-	{
-		// ROS_INFO("roll too tilt");
-		F_des(1) = F_des(1)/std::fabs(F_des(1)) * F_des(2) * std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max));	
-	}
+    // 角度限制幅度
+    if (std::fabs(F_des(0) / F_des(2)) > std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max)))
+    {
+        ROS_INFO("pitch too tilt");
+        F_des(0) = F_des(0) / std::fabs(F_des(0)) * F_des(2) * std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max));
+    }
+
+    // 角度限制幅度
+    if (std::fabs(F_des(1) / F_des(2)) > std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max)))
+    {
+        ROS_INFO("roll too tilt");
+        F_des(1) = F_des(1) / std::fabs(F_des(1)) * F_des(2) * std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max));
+    }
 
     // F_des是位于ENU坐标系的,F_c是FLU
     double current_yaw = (double)uav_state.attitude[2];
@@ -112,9 +115,9 @@ Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d & acc_cmd, double yaw_cmd)
     double fz = F_c(2);
 
     // 期望roll, pitch
-    att_cmd(0)  = std::atan2(-fy, fz);
-    att_cmd(1)  = std::atan2( fx, fz);
-    att_cmd(2)  = yaw_cmd;
+    att_cmd(0) = std::atan2(-fy, fz);
+    att_cmd(1) = std::atan2(fx, fz);
+    att_cmd(2) = yaw_cmd;
 
     Eigen::Quaterniond uav_quat;
     uav_quat = Eigen::Quaterniond(uav_state.attitude_q.w, uav_state.attitude_q.x, uav_state.attitude_q.y, uav_state.attitude_q.z);
@@ -132,13 +135,13 @@ Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d & acc_cmd, double yaw_cmd)
     // 这里相当于认为油门是线性的,满足某种比例关系,即认为某个重量 = 悬停油门
     att_cmd(3) = u1 / full_thrust;
 
-    if(att_cmd(3) < 0.1)
+    if (att_cmd(3) < 0.1)
     {
         att_cmd(3) = 0.1;
         ROS_INFO("throttle too low");
     }
 
-    if(att_cmd(3) > 1.0)
+    if (att_cmd(3) > 1.0)
     {
         att_cmd(3) = 1.0;
         ROS_INFO("throttle too high");
@@ -149,94 +152,108 @@ Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d & acc_cmd, double yaw_cmd)
 
 bool check_for_uav_state()
 {
-    if(!uav_state.connected)
+    if (!uav_state.connected)
     {
-        cout << RED  << "check_for_uav_state: not connected!" << TAIL<<endl;
+        cout << RED << "check_for_uav_state: not connected!" << TAIL << endl;
         return false;
     }
 
-    if(!uav_state.armed)
+    if (!uav_state.armed)
     {
-        cout << RED << "check_for_uav_state: Disarm the drone first!"<< TAIL << endl;
+        cout << RED << "check_for_uav_state: Disarm the drone first!" << TAIL << endl;
         return false;
     }
 
-    if(uav_state.mode != "OFFBOARD")
+    if (uav_state.mode != "OFFBOARD")
     {
-        cout << RED  << "check_for_uav_state: not in offboard mode!" << TAIL<<endl;
+        cout << RED << "check_for_uav_state: not in offboard mode!" << TAIL << endl;
         return false;
     }
 
-    if(!uav_state.odom_valid)
+    if (!uav_state.odom_valid)
     {
-        cout << RED  << "check_for_uav_state: odom invalid!" << TAIL<<endl;
+        cout << RED << "check_for_uav_state: odom invalid!" << TAIL << endl;
+        return false;
+    }
+
+    if(uav_control_state.control_state == prometheus_msgs::UAVControlState::COMMAND_CONTROL)
+    {
+        cout << RED << "check_for_uav_state: Not in COMMAND_CONTROL mode!" << TAIL << endl;
         return false;
     }
 
     return true;
 }
 
-
 void matlab_safety_check(const ros::TimerEvent &e)
 {
-    if(!ready_for_matlab_cmd)
+    if(uav_ready)
+    {
+        // 心跳包
+        matlab_setting_result.x = MATLAB_RESULT_X::HEARTBEAT;
+        matlab_setting_result_pub.publish(matlab_setting_result);
+    }
+
+    if (!ready_for_matlab_cmd)
     {
         return;
     }
 
     ros::Time time_now = ros::Time::now();
     // 接收uav_state超时，降落
-    if((time_now - get_uav_state_stamp).toSec() > UAV_STATE_TIMEOUT)
+    if ((time_now - get_uav_state_stamp).toSec() > UAV_STATE_TIMEOUT)
     {
-        cout << RED  << "check_for_uav_state: uav state timeout, land!" << TAIL<<endl;
+        cout << RED << "check_for_uav_state: uav state timeout, land!" << TAIL << endl;
         uav_command.header.stamp = ros::Time::now();
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
         uav_command_pub.publish(uav_command);
         return;
     }
 
-    bool uav_ready = check_for_uav_state();
+    uav_ready = check_for_uav_state();
 
-    if(!uav_ready)
+    if (!uav_ready)
     {
-        cout << RED  << "uav_state error, LAND now!" << TAIL<<endl;
+        cout << RED << "uav_state error, LAND now!" << TAIL << endl;
         uav_command.header.stamp = ros::Time::now();
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
         uav_command_pub.publish(uav_command);
         return;
     }
+
 
     double delta_time_matlab_cmd = (time_now - last_matlab_cmd_time).toSec();
 
     // 接收指令超时（网络状态较差会导致），原地悬停等待
-    if(delta_time_matlab_cmd > MATLAB_TIMEOUT)
+    if (delta_time_matlab_cmd > MATLAB_TIMEOUT)
     {
-        if(!cmd_timeout)
+        if (!cmd_timeout)
         {
-            cout << RED  << "MATLAB_TIMEOUT!" << TAIL<<endl;
+            cout << RED << "MATLAB_TIMEOUT!" << TAIL << endl;
             uav_command.header.stamp = ros::Time::now();
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
             uav_command_pub.publish(uav_command);
-        }else
+        }
+        else
         {
             // 接收指令超时，降落
-            if(delta_time_matlab_cmd > LAND_TIMEOUT)
+            if (delta_time_matlab_cmd > LAND_TIMEOUT)
             {
-                cout << RED  << "MATLAB_TIMEOUT, LAND now!" << TAIL<<endl;
+                cout << RED << "MATLAB_TIMEOUT, LAND now!" << TAIL << endl;
                 uav_command.header.stamp = ros::Time::now();
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
                 uav_command_pub.publish(uav_command);
             }
             // 接收指令超时，返回起始点
-            else if(delta_time_matlab_cmd > RETURN_INIT_POS_TIMEOUT)
+            else if (delta_time_matlab_cmd > RETURN_INIT_POS_TIMEOUT)
             {
-                cout << RED  << "MATLAB_TIMEOUT，RETURN Init Pos!" << TAIL<<endl;
+                cout << RED << "MATLAB_TIMEOUT，RETURN Init Pos!" << TAIL << endl;
                 uav_command.header.stamp = ros::Time::now();
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
                 uav_command_pub.publish(uav_command);
             }
         }
-        
+
         cmd_timeout = true;
     }
 }
@@ -246,31 +263,95 @@ void printf_msgs(const ros::TimerEvent &e)
     //固定的浮点显示
     cout.setf(ios::fixed);
     //setprecision(n) 设显示小数精度为n位
-    cout<<setprecision(2);
+    cout << setprecision(2);
     //左对齐
     cout.setf(ios::left);
     // 强制显示小数点
     cout.setf(ios::showpoint);
     // 强制显示符号
     cout.setf(ios::showpos);
-
-    if(matlab_setting_cmd.x == MATLAB_CMD_X::MATLAB_CMD)
+    cout << GREEN << "--------------> Matlab Bridge <------------- " << TAIL << endl;    
+    if(uav_ready)
     {
-        if(matlab_control_mode == MATLAB_CMD_Y::POS_CTRL_MODE)
+        cout << GREEN << "[ UAV Ready ]   " << TAIL;
+    }
+    else
+    {
+        cout << RED   << "[ UAV Not Rdy ]   " << TAIL;
+    }
+    
+    if(ready_for_matlab_cmd)
+    {
+        cout << GREEN << "[ Matlab CMD Ready ]   " << TAIL;
+    }
+    else
+    {
+        cout << RED   << "[ Matlab CMD Not Rdy ]   " << TAIL;
+    }
+
+    if(cmd_timeout)
+    {
+        cout << RED   << "[ TIMEOUT ]   " << TAIL << endl;
+    }else
+    {
+        cout << GREEN << "[  GOOD   ]   " << TAIL << endl;
+    }
+    
+
+    if (matlab_setting_cmd.x == MATLAB_CMD_X::CHECK)
+    {
+        cout << GREEN << "Setting Cmd: [ CHECK ] " << TAIL << endl;
+        if (uav_ready)
         {
-            cout << GREEN  << "Command: [ Move in XYZ_POS ] " << TAIL<<endl;
-            cout << GREEN  << "Pos_ref [X Y Z] : " << uav_command.position_ref[0] << " [ m ] "<< uav_command.position_ref[1]<<" [ m ] "<< uav_command.position_ref[2]<<" [ m ] "<< TAIL<<endl;
-            cout << GREEN  << "Yaw_ref : "  << uav_command.yaw_ref* 180/M_PI << " [deg] " << TAIL<<endl;
-        }else if(matlab_control_mode == MATLAB_CMD_Y::VEL_CTRL_MODE)
+            cout << GREEN  << "Setting Result: SUCCESS" << TAIL<<endl;            
+        }
+        else
         {
-            cout << GREEN  << "Command: [ Move in XYZ_VEL ] " << TAIL<<endl;
-            cout << GREEN  << "Vel_ref [X Y Z] : " << uav_command.velocity_ref[0] << " [m/s] "<< uav_command.velocity_ref[1]<<" [m/s] "<< uav_command.velocity_ref[2]<<" [m/s] "<< TAIL<<endl;
-            cout << GREEN  << "Yaw_ref : "  << uav_command.yaw_ref* 180/M_PI << " [deg] " << TAIL<<endl;
-        }else if(matlab_control_mode == MATLAB_CMD_Y::ATT_CTRL_MODE)
+            cout << RED  << "Setting Result: REJECT" << TAIL<<endl;            
+        }
+    }else if (matlab_setting_cmd.x == MATLAB_CMD_X::TAKEOFF)
+    {
+        cout << GREEN << "Setting Cmd: [ TAKEOFF ] " << TAIL << endl;
+    }else if (matlab_setting_cmd.x == MATLAB_CMD_X::LAND)
+    {
+        cout << GREEN << "Setting Cmd: [ LAND ] " << TAIL << endl;
+    }else if (matlab_setting_cmd.x == MATLAB_CMD_X::HOLD)
+    {
+        cout << GREEN << "Setting Cmd: [ HOLD ] " << TAIL << endl;
+    }else if (matlab_setting_cmd.x == MATLAB_CMD_X::MATLAB_CMD)
+    {
+        cout << GREEN << "Setting Cmd: [ MATLAB_CMD ] " << TAIL << endl;
+    }
+
+    if(ready_for_matlab_cmd)
+    {
+        if (matlab_control_mode == MATLAB_CMD_Y::POS_CTRL_MODE)
         {
-            cout << GREEN  << "Command: [ Move in XYZ_ATT ] " << TAIL<<endl;
-            cout << GREEN  << "Att_ref [X Y Z] : " << uav_command.att_ref[0] * 180/M_PI<< " [deg] "<< uav_command.att_ref[1]* 180/M_PI<<" [deg] "<< uav_command.att_ref[2]* 180/M_PI<<" [deg] "<< TAIL<<endl;
-            cout << GREEN  << "Thrust_ref[0-1] : " << uav_command.att_ref[3] << TAIL<<endl;
+
+            cout << GREEN << "Matlab CMD: [ POS_CTRL_MODE ] " << TAIL << endl;
+            cout << GREEN << "Pos_ref [X Y Z] : " << matlab_cmd.position.x << " [ m ] " << matlab_cmd.position.y << " [ m ] " << matlab_cmd.position.z << " [ m ] " << TAIL << endl;
+            cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
+        }
+        else if (matlab_control_mode == MATLAB_CMD_Y::VEL_CTRL_MODE)
+        {
+            cout << GREEN << "Matlab CMD: [ VEL_CTRL_MODE ] " << TAIL << endl;
+            cout << GREEN << "Vel_ref [X Y Z] : " << matlab_cmd.position.x << " [m/s] " << matlab_cmd.position.y << " [m/s] " << matlab_cmd.position.z << " [m/s] " << TAIL << endl;
+            cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
+        }
+        else if (matlab_control_mode == MATLAB_CMD_Y::ACC_CTRL_MODE)
+        {
+            cout << GREEN << "Matlab CMD: [ ACC_CTRL_MODE ] " << TAIL << endl;
+            cout << GREEN << "Acc_ref [X Y Z] : " << matlab_cmd.position.x << " [m/s^2] " << matlab_cmd.position.y << " [m/s^2] " << matlab_cmd.position.z << " [m/s^2] " << TAIL << endl;
+            cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
+
+            cout << GREEN << "Att_ref [X Y Z] : " << uav_command.att_ref[0] * 180 / M_PI << " [deg] " << uav_command.att_ref[1] * 180 / M_PI << " [deg] " << uav_command.att_ref[2] * 180 / M_PI << " [deg] " << TAIL << endl;
+            cout << GREEN << "Thrust_ref[0-1] : " << uav_command.att_ref[3] << TAIL << endl;
+        }
+        else if (matlab_control_mode == MATLAB_CMD_Y::ATT_CTRL_MODE)
+        {
+            // cout << GREEN << "Matlab CMD: [ ATT_CTRL_MODE ] " << TAIL << endl;
+            // cout << GREEN << "Att_ref [X Y Z] : " << uav_command.att_ref[0] * 180 / M_PI << " [deg] " << uav_command.att_ref[1] * 180 / M_PI << " [deg] " << uav_command.att_ref[2] * 180 / M_PI << " [deg] " << TAIL << endl;
+            // cout << GREEN << "Thrust_ref[0-1] : " << uav_command.att_ref[3] << TAIL << endl;
         }
     }
 }

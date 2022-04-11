@@ -8,8 +8,9 @@ class RC_Input
 {
     public:
         RC_Input();
-        void handle_rc_data(mavros_msgs::RCInConstPtr pMsg);
-        
+        void handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode);
+        void setup(bool only_command_mode);
+
         double ch[4];           // 1-4通道数值: roll pitch yaw thrust 
         double channel_5;       // 通道5（三段） - 切换HOVER_CONTROL
         double channel_6;       // 通道6（三段） - 切换COMMAND_CONTROL
@@ -64,7 +65,15 @@ RC_Input::RC_Input()
   toggle_land = false;
 }
 
-void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg)
+void RC_Input::setup(bool only_command_mode)
+{
+    in_command_control = true;
+    enter_command_control = true;
+    in_hover_control = true;
+    enter_hover_control = false;
+}
+
+void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode)
 {
     msg = *pMsg;
     rcv_stamp = ros::Time::now();
@@ -168,6 +177,15 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg)
     last_channel_6 = channel_6;
     last_channel_7 = channel_7;
     last_channel_8 = channel_8;
+
+    // 特殊测试情况
+    if(only_command_mode)
+    {
+        in_command_control = true;
+        enter_command_control = true;
+        in_hover_control = true;
+        enter_hover_control = false;
+    }
 }
 
 void RC_Input::check_validity()
