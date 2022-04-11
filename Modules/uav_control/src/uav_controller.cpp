@@ -10,8 +10,8 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     node_name = "[uav_controller_uav" + std::to_string(uav_id) + "]";
     // 【参数】是否仿真模式
     nh.param<bool>("sim_mode", sim_mode, true);
-    // 【参数】是否为集群
-    nh.param<bool>("swarm", swarm, false);
+    // 【参数】仅COMMAND_CONTROL模式（用于集群和测试）
+    nh.param<bool>("only_command_mode", only_command_mode, false);
     // 【参数】控制器标志位,具体说明见CONTOLLER_FLAG说明
     nh.param<int>("control/controller_flag", controller_flag, 0);
     // 【参数】使用外部控制器的控制指令，直接发送至PX4，这种方式依赖外部控制器的稳定性，需要小心！
@@ -96,12 +96,24 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
                                                         1,
                                                         &UAV_controller::mavros_interface_cb, this);
 
+    //【订阅】无人机设置指令
+    uav_setup_sub = 
+        nh.subscribe<prometheus_msgs::UAVSetup>("/uav"+std::to_string(uav_id) + "/prometheus/setup",
+                                                        1,
+                                                        &UAV_controller::uav_setup_cb, this);
     // 【发布】位置/速度/加速度期望值 坐标系 ENU系
     px4_setpoint_raw_local_pub = nh.advertise<mavros_msgs::PositionTarget>("/uav"+std::to_string(uav_id) + "/mavros/setpoint_raw/local", 10);
  
     // 【发布】姿态期望值 
     px4_setpoint_raw_attitude_pub = 
         nh.advertise<mavros_msgs::AttitudeTarget>("/uav"+std::to_string(uav_id) +  "/mavros/setpoint_raw/attitude", 10);
+
+    // 【发布】控制状态（监控用） 
+    uav_control_state_pub = 
+        nh.advertise<prometheus_msgs::UAVControlState>("/uav"+std::to_string(uav_id) +  "/prometheus/control_state", 10);
+
+    //【发布】运行状态信息(-> 通信节点 -> 地面站)
+    ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
     // 【服务】解锁/上锁
     px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav"+std::to_string(uav_id) + "/mavros/cmd/arming");
@@ -119,16 +131,16 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     px4_set_home_client = nh.serviceClient<mavros_msgs::CommandHome>("/uav"+std::to_string(uav_id) + "/mavros/cmd/set_home");
 
     //【定时器】打印调试
-    debug_timer = nh.createTimer(ros::Duration(2.0), &UAV_controller::debug_cb, this);
+    debug_timer = nh.createTimer(ros::Duration(5.0), &UAV_controller::debug_cb, this);
 
     //集群控制中EXEC_STATE全程为COMMAND_CONTROL,因此初始化直接赋值为COMMAND_CONTROL
-    if(swarm)
+    if(only_command_mode)
     {
-        exec_state = EXEC_STATE::COMMAND_CONTROL;
+        control_state = CONTROL_STATE::COMMAND_CONTROL;
     }
     else
     {
-        exec_state = EXEC_STATE::MANUAL_CONTROL;
+        control_state = CONTROL_STATE::MANUAL_CONTROL;
     }
 
     // 初始化命令
@@ -137,12 +149,18 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     uav_command.position_ref[1]     = 0;
     uav_command.position_ref[2]     = 0;
     uav_command.yaw_ref             = 0;
-    quick_land = false;
-        
-    u_att.setZero();
+    quick_land = false; 
 
     uav_pos.setZero();
     uav_vel.setZero();
+    u_att.setZero();
+
+    rc_input.setup(only_command_mode);
+
+    text_info.header.stamp = ros::Time::now();
+    text_info.MessageType = prometheus_msgs::TextInfo::INFO;
+    text_info.Message =  node_name +  " init.";
+    ground_station_info_pub.publish(text_info);
 }
 
 // bool UAV_controller::arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res)
@@ -154,7 +172,7 @@ void UAV_controller::mainloop()
 {
     // 安全检查 - 包括地理围栏、定位有效性检查
     // MANUAL_CONTROL模式中不需要进行安全检查
-    if(exec_state != EXEC_STATE::MANUAL_CONTROL)
+    if(control_state != CONTROL_STATE::MANUAL_CONTROL)
     {
         int safety_flag = check_failsafe();
         
@@ -166,22 +184,22 @@ void UAV_controller::mainloop()
         else if(safety_flag == 1)
         {
             // 超出geofence，原地降落
-            exec_state = EXEC_STATE::LAND_CONTROL;
+            control_state = CONTROL_STATE::LAND_CONTROL;
         }
         else if(safety_flag == 2)
         {
             // 检测到odom失效，快速降落
             quick_land = true;
-            exec_state = EXEC_STATE::LAND_CONTROL;
+            control_state = CONTROL_STATE::LAND_CONTROL;
         }
     }
 
     // 记录当前时间
     ros::Time now_time = ros::Time::now();
 
-	switch (exec_state)
+	switch (control_state)
 	{
-        case EXEC_STATE::MANUAL_CONTROL:
+        case CONTROL_STATE::MANUAL_CONTROL:
         
             if (rc_input.enter_hover_control)
             {
@@ -194,7 +212,7 @@ void UAV_controller::mainloop()
                 }
 
                 // 切换至HOVER_CONTROL，必须使用当前odom赋值悬停位置，这两句话必须放在一起使用
-                exec_state = HOVER_CONTROL;
+                control_state = HOVER_CONTROL;
                 set_hover_pose_with_odom();
                 
                 enable_offboard_mode();
@@ -218,20 +236,20 @@ void UAV_controller::mainloop()
             // yaw_des = Hover_yaw;
             break;
         
-        case EXEC_STATE::HOVER_CONTROL:
+        case CONTROL_STATE::HOVER_CONTROL:
         
             // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
             if (!rc_input.in_hover_control || rc_input.toggle_land)
             {
                 // quick_land = true;
                 // 推出成为LAND模式，还是手动模式（那能控的住吗？）
-                exec_state = EXEC_STATE::LAND_CONTROL;
-                cout << RED << node_name << "----> RC input wrong, swtich to land control mode!"<< TAIL << endl;
+                control_state = CONTROL_STATE::LAND_CONTROL;
+                cout << RED << node_name << "----> HOVER_CONTROL:RC input wrong or swtich to land control mode!"<< TAIL << endl;
                 break;
             }else if (rc_input.enter_command_control)
             {
                 // 切换至COMMAND_CONTROL判断
-                exec_state = EXEC_STATE::COMMAND_CONTROL;
+                control_state = CONTROL_STATE::COMMAND_CONTROL;
                 cout << GREEN << node_name << " HOVER_CONTROL --> COMMAND_CONTROL"<< TAIL << endl;
                 break;
             }else
@@ -246,24 +264,19 @@ void UAV_controller::mainloop()
 
             break;
         
-        case EXEC_STATE::COMMAND_CONTROL:
-            //集群控制中全程维持该状态,并不做状态切换处理
-            if(swarm)
-            {
-                break;
-            }
+        case CONTROL_STATE::COMMAND_CONTROL:
 
-            // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
+            // 检查是否满足维持在COMMAND_CONTROL的条件，不满足则自动退出
             if (!rc_input.in_hover_control || rc_input.toggle_land)
             {
                 // 推出成为LAND模式，还是手动模式（那能控的住吗？）
                 // quick_land = true;
-                exec_state = EXEC_STATE::LAND_CONTROL;
-                cout << RED << node_name << "----> RC input wrong, swtich to land control mode!"<< TAIL << endl;
+                control_state = CONTROL_STATE::LAND_CONTROL;
+                cout << RED << node_name << "----> COMMAND_CONTROL:RC input wrong or swtich to land control mode!"<< TAIL << endl;
                 break;
             }else if (!rc_input.in_command_control)
             {
-                exec_state = EXEC_STATE::HOVER_CONTROL;
+                control_state = CONTROL_STATE::HOVER_CONTROL;
                 set_hover_pose_with_odom();
                 cout << GREEN << node_name << " COMMAND_CONTROL --> HOVER_CONTROL"<< TAIL << endl;
                 break;
@@ -274,7 +287,7 @@ void UAV_controller::mainloop()
             break;
 
         // 当前位置原地降落，降落后会自动上锁，且切换为mannual模式
-        case EXEC_STATE::LAND_CONTROL:
+        case CONTROL_STATE::LAND_CONTROL:
         
             // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
             if(quick_land)
@@ -282,7 +295,7 @@ void UAV_controller::mainloop()
                 Land_speed = 1.0;
             }
 
-            if (last_exec_state = EXEC_STATE::LAND_CONTROL)
+            if (last_control_state = CONTROL_STATE::LAND_CONTROL)
             {
                 pos_des[0] = uav_pos[0];
                 pos_des[1] = uav_pos[1];
@@ -303,16 +316,16 @@ void UAV_controller::mainloop()
 
                 if(!uav_state.armed)
                 {
-                    exec_state = EXEC_STATE::MANUAL_CONTROL;
+                    control_state = CONTROL_STATE::MANUAL_CONTROL;
                 }    
             }
             ROS_INFO_STREAM_ONCE ("\033[1;32m---->Landed!....\033[0m");
             break;
     }
 
-    last_exec_state = exec_state;
+    last_control_state = control_state;
     // MANUAL_CONTROL不需要调用控制器，直接返回
-    if(exec_state == EXEC_STATE::MANUAL_CONTROL)
+    if(control_state == CONTROL_STATE::MANUAL_CONTROL)
     {
         return;
     }
@@ -373,6 +386,13 @@ void UAV_controller::mainloop()
         // 发送控制指令到PX4
         send_attitude_setpoint(u_att);
     }
+
+
+    // 发布控制状态
+    uav_control_state.uav_id = uav_id;
+    uav_control_state.control_state = control_state;
+    uav_control_state.controller_flag = controller_flag;
+    uav_control_state_pub.publish(uav_control_state);
 }
 
 void UAV_controller::set_hover_pose_with_odom()
@@ -432,7 +452,7 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
     }else if(uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Land)
     {
         //【Land】 降落，直接使用LAND_CONTROL
-        exec_state = EXEC_STATE::LAND_CONTROL;
+        control_state = CONTROL_STATE::LAND_CONTROL;
     }else if(uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Move)
     {
         //【Move】 移动，移动子模式的区别详见UAVCommand.msg中的说明
@@ -638,13 +658,13 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr& msg
 void UAV_controller::send_pos_cmd_to_px4_original_controller()
 {
     // HOVER_CONTROL
-    if(exec_state == EXEC_STATE::HOVER_CONTROL)
+    if(control_state == CONTROL_STATE::HOVER_CONTROL)
     {
         send_pos_setpoint(pos_des, yaw_des);
         return;
     }
 
-    if(exec_state == EXEC_STATE::LAND_CONTROL)
+    if(control_state == CONTROL_STATE::LAND_CONTROL)
     {
         // if(quick_land)
         // {
@@ -657,7 +677,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
         return;
     }
 
-    if(exec_state == EXEC_STATE::COMMAND_CONTROL)
+    if(control_state == CONTROL_STATE::COMMAND_CONTROL)
     {
         if( uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Init_Pos_Hover ||
             uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover )
@@ -739,7 +759,7 @@ void UAV_controller::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr& msg
 void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr& msg)
 {
     // 调用外部函数对遥控器数据进行处理，具体见rc_data.h
-    rc_input.handle_rc_data(msg);
+    rc_input.handle_rc_data(msg, only_command_mode);
 }
 
 void UAV_controller::px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr& msg)
@@ -786,6 +806,26 @@ int UAV_controller::check_failsafe()
     }
 }
 
+void UAV_controller::uav_setup_cb(const prometheus_msgs::UAVSetup::ConstPtr &msg)
+{
+    if(msg->cmd == prometheus_msgs::UAVSetup::ARMING)
+    {
+        arm_disarm_func(msg->arming);
+    }else if(msg->cmd == prometheus_msgs::UAVSetup::SET_PX4_MODE)
+    {
+        set_mode_func(msg->px4_mode);
+    }else if(msg->cmd == prometheus_msgs::UAVSetup::REBOOT_PX4)
+    {
+        reboot_PX4();
+    }else if(msg->cmd == prometheus_msgs::UAVSetup::SET_HOME)
+    {
+        set_home_func(msg->home_point);
+    }else if(msg->cmd == prometheus_msgs::UAVSetup::SET_CONTROL_MODE)
+    {
+        // todo
+    }
+}
+
 void UAV_controller::mavros_interface_cb(const prometheus_msgs::MavrosInterface::ConstPtr &msg)
 {
     if(msg->type == prometheus_msgs::MavrosInterface::ARMING)
@@ -813,6 +853,8 @@ void UAV_controller::set_mode_func(string mode)
     mavros_msgs::SetMode mode_cmd;
     mode_cmd.request.custom_mode = mode;
     px4_set_mode_client.call(mode_cmd);
+
+    cout << GREEN << node_name << "set px4 mode to " << mode << TAIL <<endl;
 }
 
 void UAV_controller::set_home_func(prometheus_msgs::HomePoint home_point)
@@ -1190,28 +1232,28 @@ void UAV_controller::debug_cb(const ros::TimerEvent &e)
     cout << GREEN  << "UAV_vel [X Y Z] : " << uav_vel[0] << " [m/s] "<< uav_vel[1]<<" [m/s] "<<uav_vel[2]<<" [m/s] "<< TAIL <<endl;
     cout << GREEN  << "UAV_att [R P Y] : " << uav_state.attitude[0] * 180/M_PI <<" [deg] "<<uav_state.attitude[1] * 180/M_PI << " [deg] "<< uav_state.attitude[2] * 180/M_PI<<" [deg] "<< TAIL<<endl;
 
-    // 打印 exec_state
-    switch(exec_state)
+    // 打印 control_state
+    switch(control_state)
     {
-        case EXEC_STATE::MANUAL_CONTROL:
-            cout << GREEN  << "EXEC_STATE: [ MANUAL_CONTROL ] " << TAIL<<endl;
+        case CONTROL_STATE::MANUAL_CONTROL:
+            cout << GREEN  << "CONTROL_STATE: [ MANUAL_CONTROL ] " << TAIL<<endl;
             break;
 
-        case EXEC_STATE::HOVER_CONTROL:
-            cout << GREEN  << "EXEC_STATE: [ HOVER_CONTROL ] " << TAIL<<endl;
+        case CONTROL_STATE::HOVER_CONTROL:
+            cout << GREEN  << "CONTROL_STATE: [ HOVER_CONTROL ] " << TAIL<<endl;
             cout << GREEN  << "Hover_Pos [X Y Z] : " << Hover_position[0] << " [ m ] "<< Hover_position[1]<<" [ m ] "<< Hover_position[2]<<" [ m ] "<< TAIL<<endl;
             break;
 
-        case EXEC_STATE::COMMAND_CONTROL:
-            cout << GREEN  << "EXEC_STATE: [ COMMAND_CONTROL ] " << TAIL<<endl;
+        case CONTROL_STATE::COMMAND_CONTROL:
+            cout << GREEN  << "CONTROL_STATE: [ COMMAND_CONTROL ] " << TAIL<<endl;
             break;
-        case EXEC_STATE::LAND_CONTROL:
+        case CONTROL_STATE::LAND_CONTROL:
             if(quick_land)
             {
-                cout << GREEN  << "EXEC_STATE: [ LAND_CONTROL ] - quick land mode " << TAIL<<endl;
+                cout << GREEN  << "CONTROL_STATE: [ LAND_CONTROL ] - quick land mode " << TAIL<<endl;
             }else
             {
-                cout << GREEN  << "EXEC_STATE: [ LAND_CONTROL ] " << TAIL<<endl;
+                cout << GREEN  << "CONTROL_STATE: [ LAND_CONTROL ] " << TAIL<<endl;
             }
             break;
     }

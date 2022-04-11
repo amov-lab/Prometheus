@@ -15,10 +15,13 @@
 #include <mavros_msgs/CommandHome.h>
 
 #include <prometheus_msgs/UAVState.h>
+#include <prometheus_msgs/UAVSetup.h>
+#include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/MavrosInterface.h>
 #include <prometheus_msgs/HomePoint.h>
+#include <prometheus_msgs/TextInfo.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -46,6 +49,7 @@ public:
     // 订阅话题
     ros::Subscriber uav_cmd_sub;
     ros::Subscriber uav_state_sub;
+    ros::Subscriber uav_setup_sub;
     ros::Subscriber px4_position_target_sub;
     ros::Subscriber px4_attitude_target_sub;
     ros::Subscriber px4_rc_sub;
@@ -53,6 +57,8 @@ public:
     // 发布话题
     ros::Publisher px4_setpoint_raw_local_pub;
     ros::Publisher px4_setpoint_raw_attitude_pub;
+    ros::Publisher uav_control_state_pub;
+    ros::Publisher ground_station_info_pub;
     // 服务
     ros::ServiceClient px4_arming_client;
     ros::ServiceClient px4_set_mode_client;
@@ -68,6 +74,9 @@ public:
     bool get_valid_command{false};
     prometheus_msgs::UAVState uav_state;      // 无人机状态
     prometheus_msgs::UAVState uav_state_last; // 无人机状态
+    prometheus_msgs::UAVControlState uav_control_state;
+    prometheus_msgs::UAVSetup uav_setup;
+    prometheus_msgs::TextInfo text_info;
     RC_Input rc_input;
     // bool arming_res = true;
 
@@ -91,15 +100,15 @@ public:
     geo_fence uav_geo_fence;
 
     // 执行状态
-    enum EXEC_STATE
+    enum CONTROL_STATE
     {
-        MANUAL_CONTROL,  // 手动定点控制
-        HOVER_CONTROL,   // 悬停状态
-        COMMAND_CONTROL, // 指令控制
-        LAND_CONTROL     // 降落
+        MANUAL_CONTROL = 0,  // 手动定点控制
+        HOVER_CONTROL = 1,   // 悬停状态
+        COMMAND_CONTROL = 2, // 指令控制
+        LAND_CONTROL = 3     // 降落
     };
-    EXEC_STATE exec_state;
-    EXEC_STATE last_exec_state;
+    CONTROL_STATE control_state;
+    CONTROL_STATE last_control_state;
 
     // 基本变量
     int uav_id;      // 无人机编号
@@ -108,7 +117,7 @@ public:
     int controller_flag;
     bool enable_external_control;
     bool sim_mode;
-    bool swarm;         //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
+    bool only_command_mode;       //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
     bool flag_printf; // 是否打印
     bool quick_land;
     float Takeoff_height; // 默认起飞高度
@@ -116,8 +125,8 @@ public:
     float Land_speed;     // 降落速度
 
     // 无人机状态量
-    Eigen::Vector3d uav_pos;  // 无人机位置
-    Eigen::Vector3d uav_vel;  // 无人机速度
+    Eigen::Vector3d uav_pos;     // 无人机位置
+    Eigen::Vector3d uav_vel;     // 无人机速度
     Eigen::Quaterniond uav_quat; // 无人机四元数
     double uav_yaw;
 
@@ -159,6 +168,7 @@ public:
 private:
     void uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg);
     void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg);
+    void uav_setup_cb(const prometheus_msgs::UAVSetup::ConstPtr &msg);
     void px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg);
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
