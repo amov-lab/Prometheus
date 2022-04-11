@@ -90,11 +90,6 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
                                                         1,
                                                         &UAV_controller::px4_rc_cb, this);
 
-    //【订阅】提供mavros相关借口
-    mavros_interface_sub = 
-        nh.subscribe<prometheus_msgs::MavrosInterface>("/uav"+std::to_string(uav_id) + "/prometheus/mavros_interface",
-                                                        1,
-                                                        &UAV_controller::mavros_interface_cb, this);
 
     //【订阅】无人机设置指令
     uav_setup_sub = 
@@ -817,34 +812,9 @@ void UAV_controller::uav_setup_cb(const prometheus_msgs::UAVSetup::ConstPtr &msg
     }else if(msg->cmd == prometheus_msgs::UAVSetup::REBOOT_PX4)
     {
         reboot_PX4();
-    }else if(msg->cmd == prometheus_msgs::UAVSetup::SET_HOME)
-    {
-        set_home_func(msg->home_point);
     }else if(msg->cmd == prometheus_msgs::UAVSetup::SET_CONTROL_MODE)
     {
         // todo
-    }
-}
-
-void UAV_controller::mavros_interface_cb(const prometheus_msgs::MavrosInterface::ConstPtr &msg)
-{
-    if(msg->type == prometheus_msgs::MavrosInterface::ARMING)
-    {
-        arm_disarm_func(msg->arming);
-    }
-
-    if(msg->type == prometheus_msgs::MavrosInterface::SET_MODE)
-    {
-        set_mode_func(msg->mode);
-    }
-    
-    if(msg->type == prometheus_msgs::MavrosInterface::REBOOT_PX4)
-    {
-        reboot_PX4();
-    }
-    if(msg->type == prometheus_msgs::MavrosInterface::SET_HOME)
-    {
-        set_home_func(msg->home_point);
     }
 }
 
@@ -855,17 +825,6 @@ void UAV_controller::set_mode_func(string mode)
     px4_set_mode_client.call(mode_cmd);
 
     cout << GREEN << node_name << "set px4 mode to " << mode << TAIL <<endl;
-}
-
-void UAV_controller::set_home_func(prometheus_msgs::HomePoint home_point)
-{
-    mavros_msgs::CommandHome home_cmd;
-    home_cmd.request.current_gps = home_point.current_gps;
-    home_cmd.request.yaw = home_point.yaw;
-    home_cmd.request.latitude = home_point.latitude;
-    home_cmd.request.longitude = home_point.longitude;
-    home_cmd.request.altitude = home_point.altitude;
-    px4_set_home_client.call(home_cmd);
 }
 
 /***

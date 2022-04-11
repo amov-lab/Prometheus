@@ -29,14 +29,13 @@ add_message_files(
   AttitudeReference.msg
   DroneState.msg
   ControlOutput.msg
-  MavrosInterface.msg
   Message.msg
   LogMessage.msg
   LogMessageControl.msg
   LogMessagePlanning.msg
   LogMessageDetection.msg
   SwarmCommand.msg
-  Formation.msg
+  FormationAssign.msg
   ArucoInfo.msg
   MultiArucoInfo.msg
   IndoorSearch.msg
@@ -59,7 +58,6 @@ add_message_files(
   AgentCommandUGV.msg
   AgentCommandMAN.msg
   MultiUAVState.msg
-  HomePoint.msg
   OffsetPose.msg
   TextInfo.msg
 )
