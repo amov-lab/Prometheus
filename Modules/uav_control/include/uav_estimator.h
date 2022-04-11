@@ -10,6 +10,7 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/AgentStateUGV.h>
 #include <prometheus_msgs/AgentStateMAN.h>
+#include <prometheus_msgs/TextInfo.h>
 
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/GPSRAW.h>
@@ -63,15 +64,18 @@ class UAV_estimator
         ros::Publisher uav_trajectory_pub;
         ros::Publisher uav_mesh_pub;
         ros::Publisher gps_status_pub;
+        ros::Publisher ground_station_info_pub;
         // 定时器
         ros::Timer timer_px4_vision_pub;
         ros::Timer timer_uav_state_pub;
+        ros::Timer timer_check_uav_state;
         ros::Timer timer_rviz_pub;
 
         prometheus_msgs::UAVState uav_state;    // 无人机状态
         nav_msgs::Odometry uav_odom;                 // 无人机里程计
         std::vector<geometry_msgs::PoseStamped> odom_vector;    // 无人机轨迹容器,用于rviz显示
         geometry_msgs::PoseStamped vision_pose;        // vision_pose for px4
+        prometheus_msgs::TextInfo text_info;
 
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose
@@ -97,6 +101,7 @@ class UAV_estimator
         string uav_name;                // 无人机名字
         string node_name;
         int location_source;    
+        int last_gps_status;
         bool fake_odom;                 // Gazebo是否使用fake_odom
         bool uav_state_update{false};
         bool vision_pose_error{false};
@@ -118,7 +123,7 @@ class UAV_estimator
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);
         void timercb_rviz(const ros::TimerEvent &e);
-
+        void timercb_check_uav_state(const ros::TimerEvent &e);
         int check_uav_odom();
         int check_uav_state();
         void printf_param();

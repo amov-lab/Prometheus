@@ -61,6 +61,7 @@ add_message_files(
   MultiUAVState.msg
   HomePoint.msg
   OffsetPose.msg
+  TextInfo.msg
 )
 
 add_action_files(

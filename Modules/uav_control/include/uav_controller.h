@@ -21,6 +21,7 @@
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/MavrosInterface.h>
 #include <prometheus_msgs/HomePoint.h>
+#include <prometheus_msgs/TextInfo.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -57,6 +58,7 @@ public:
     ros::Publisher px4_setpoint_raw_local_pub;
     ros::Publisher px4_setpoint_raw_attitude_pub;
     ros::Publisher uav_control_state_pub;
+    ros::Publisher ground_station_info_pub;
     // 服务
     ros::ServiceClient px4_arming_client;
     ros::ServiceClient px4_set_mode_client;
@@ -74,6 +76,7 @@ public:
     prometheus_msgs::UAVState uav_state_last; // 无人机状态
     prometheus_msgs::UAVControlState uav_control_state;
     prometheus_msgs::UAVSetup uav_setup;
+    prometheus_msgs::TextInfo text_info;
     RC_Input rc_input;
     // bool arming_res = true;
 
