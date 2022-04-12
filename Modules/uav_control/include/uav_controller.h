@@ -19,7 +19,6 @@
 #include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
-#include <prometheus_msgs/HomePoint.h>
 #include <prometheus_msgs/TextInfo.h>
 
 #include <nav_msgs/Odometry.h>
