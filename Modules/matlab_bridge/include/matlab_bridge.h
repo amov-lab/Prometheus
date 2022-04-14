@@ -271,30 +271,33 @@ void printf_msgs(const ros::TimerEvent &e)
     // 强制显示符号
     cout.setf(ios::showpos);
     cout << GREEN << "--------------> Matlab Bridge <------------- " << TAIL << endl;    
+
+    cout << GREEN << "["<< uav_id <<"]  " << TAIL;
+
     if(uav_ready)
     {
-        cout << GREEN << "[ UAV Ready ]   " << TAIL;
+        cout << GREEN << "[ UAV Ready ]  " << TAIL;
     }
     else
     {
-        cout << RED   << "[ UAV Not Rdy ]   " << TAIL;
+        cout << RED   << "[ UAV Not Rdy ]  " << TAIL;
     }
     
     if(ready_for_matlab_cmd)
     {
-        cout << GREEN << "[ Matlab CMD Ready ]   " << TAIL;
+        cout << GREEN << "[ Matlab CMD Ready ]  " << TAIL;
     }
     else
     {
-        cout << RED   << "[ Matlab CMD Not Rdy ]   " << TAIL;
+        cout << RED   << "[ Matlab CMD Not Rdy ]  " << TAIL;
     }
 
     if(cmd_timeout)
     {
-        cout << RED   << "[ TIMEOUT ]   " << TAIL << endl;
+        cout << RED   << "[ TIMEOUT ]  " << TAIL << endl;
     }else
     {
-        cout << GREEN << "[  GOOD   ]   " << TAIL << endl;
+        cout << GREEN << "[  GOOD   ]  " << TAIL << endl;
     }
     
 
