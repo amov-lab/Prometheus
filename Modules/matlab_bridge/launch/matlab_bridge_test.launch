@@ -1,5 +1,0 @@
-<launch>
-	<node pkg="prometheus_matlab" type="matlab_bridge" name="matlab_bridge" output="screen">	
-	</node>	
-</launch>
-
