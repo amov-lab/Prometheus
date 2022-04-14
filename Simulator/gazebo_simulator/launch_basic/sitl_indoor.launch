@@ -1,7 +1,7 @@
 <launch>
 	<!-- 无人机ID -->
 	<arg name="uav_id" default="1"/>
-	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
 		<arg name="uav_id" value="$(arg uav_id)"/>
 		<arg name="sdf" value="$(find prometheus_gazebo)/amov_models/p450/p450.sdf"/>
 		<arg name="model" value="p450"/>
