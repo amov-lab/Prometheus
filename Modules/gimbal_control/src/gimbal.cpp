@@ -419,7 +419,7 @@ int main(int argc, char **argv)
     try
     {
         //串口设置
-        serial_Q10f.setPort("/dev/ttyUSB0");
+        serial_Q10f.setPort("/dev/right_down");
         serial_Q10f.setBaudrate(115200);
         serial::Timeout to = serial::Timeout::simpleTimeout(1000);
         serial_Q10f.setTimeout(to);
