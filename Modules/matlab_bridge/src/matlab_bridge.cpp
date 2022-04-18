@@ -9,7 +9,7 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
     // 【参数】悬停油门（需要根据无人机实际情况进行设置）
     nh.param<float>("controller/hov_percent", ctrl_param.hov_percent, 0.47f);
     // 【参数】最大倾斜角度（如果需要进行大角度机动，此处建议调大）
-    nh.param<float>("controller/tilt_angle_max", ctrl_param.tilt_angle_max, 10.0f);
+    nh.param<float>("controller/tilt_angle_max", ctrl_param.tilt_angle_max, 15.0f);
     // 【参数】重力常数
     ctrl_param.g << 0.0, 0.0, 9.8;
 
