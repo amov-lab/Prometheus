@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include <mavros_msgs/RCIn.h>
+#include "printf_utils.h"
 
 class RC_Input
 {
@@ -10,6 +11,7 @@ public:
     RC_Input(){};
     void init(bool only_command_mode);
     void handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode);
+    void printf_info();
 
     double ch[4];     // 1-4通道数值: roll pitch yaw thrust
     double channel_5; // 通道5（三段） - 切换HOVER_CONTROL
@@ -73,6 +75,36 @@ void RC_Input::init(bool only_command_mode)
         in_hover_control = false;
         enter_hover_control = false;
     }
+}
+
+void RC_Input::printf_info()
+{
+    cout << GREEN <<">>>>>>>>>>>>>>>>>> RC INFO  <<<<<<<<<<<<<<<<<<"<< TAIL  <<endl;
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    //setprecision(n) 设显示小数精度为n位
+    cout<<setprecision(2);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+
+    cout << GREEN  << "ch1 : " << ch[0] << TAIL <<endl;
+    cout << GREEN  << "ch2 : " << ch[1] << TAIL <<endl;
+    cout << GREEN  << "ch3 : " << ch[2] << TAIL <<endl;
+    cout << GREEN  << "ch4 : " << ch[3] << TAIL <<endl;
+    cout << GREEN  << "ch5 : " << channel_5 << "  last_ch5 : " << last_channel_5 << TAIL <<endl;
+    cout << GREEN  << "ch6 : " << channel_6 << "  last_ch6 : " << last_channel_6 << TAIL <<endl;
+    cout << GREEN  << "ch7 : " << channel_7 << "  last_ch7 : " << last_channel_7 << TAIL <<endl;
+    cout << GREEN  << "ch8 : " << channel_8 << "  last_ch8 : " << last_channel_8 << TAIL <<endl;
+    cout << GREEN  << "enter_hover_control : " << enter_hover_control << TAIL <<endl;
+    cout << GREEN  << "in_hover_control : " << in_hover_control << TAIL <<endl;
+    cout << GREEN  << "enter_command_control : " << enter_command_control << TAIL <<endl;
+    cout << GREEN  << "in_command_control : " << in_command_control << TAIL <<endl;
+    cout << GREEN  << "toggle_reboot : " << toggle_reboot << TAIL <<endl;
+    cout << GREEN  << "toggle_land : " << toggle_land << TAIL <<endl;
 }
 
 void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode)
