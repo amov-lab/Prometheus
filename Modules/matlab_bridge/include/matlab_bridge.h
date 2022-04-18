@@ -93,7 +93,7 @@ private:
     void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg);
     void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg);
     Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d &acc_cmd, double yaw_cmd);
-    bool check_for_uav_state();
+    int check_for_uav_state();
     void matlab_safety_check(const ros::TimerEvent &e);
     void printf_msgs(const ros::TimerEvent &e);
 };
