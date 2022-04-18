@@ -42,7 +42,7 @@ class RC_Input
         static constexpr double channel_5_threshold_value = 0.75;
         static constexpr double channel_6_threshold_value = 0.75;
         static constexpr double channel_7_threshold_value = 0.5;    // 0.5 0.75的区别是？
-        static constexpr double channel_8_threshold_value = 0.5;
+        static constexpr double channel_8_threshold_value = 0.75;   //8号通道为SWB档杆,存在三个档位,1000,1500,2000,设置为0.5会存在异常
         static constexpr double DEAD_ZONE = 0.1;                    // 死区
         
         void check_validity();
@@ -65,13 +65,13 @@ RC_Input::RC_Input()
   toggle_land = false;
 }
 
-void RC_Input::setup(bool only_command_mode)
+/*void RC_Input::setup(bool only_command_mode)
 {
     in_command_control = true;
     enter_command_control = true;
     in_hover_control = true;
     enter_hover_control = false;
-}
+}*/
 
 void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode)
 {
