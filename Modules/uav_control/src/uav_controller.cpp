@@ -150,7 +150,7 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     uav_vel.setZero();
     u_att.setZero();
 
-    rc_input.setup(only_command_mode);
+    //rc_input.setup(only_command_mode);
 
     text_info.header.stamp = ros::Time::now();
     text_info.MessageType = prometheus_msgs::TextInfo::INFO;
@@ -195,7 +195,7 @@ void UAV_controller::mainloop()
 	switch (control_state)
 	{
         case CONTROL_STATE::MANUAL_CONTROL:
-        
+
             if (rc_input.enter_hover_control)
             {
                 rc_input.enter_hover_control = false;
@@ -205,7 +205,7 @@ void UAV_controller::mainloop()
                     cout << RED << node_name << " Reject HOVER_CONTROL. Odom invalid! "<< TAIL << endl;
                     break;
                 }
-
+                
                 // 切换至HOVER_CONTROL，必须使用当前odom赋值悬停位置，这两句话必须放在一起使用
                 control_state = HOVER_CONTROL;
                 set_hover_pose_with_odom();
@@ -213,8 +213,7 @@ void UAV_controller::mainloop()
                 enable_offboard_mode();
                 cout << GREEN << node_name << " MANUAL_CONTROL --> HOVER_CONTROL"<< TAIL << endl;
                 break;
-            }
-            else if (rc_input.toggle_reboot)
+            }else if (rc_input.toggle_reboot)
             {
                 rc_input.toggle_reboot = false;
                 // 如果已经解锁，无法重启飞控
@@ -290,7 +289,7 @@ void UAV_controller::mainloop()
                 Land_speed = 1.0;
             }
 
-            if (last_control_state = CONTROL_STATE::LAND_CONTROL)
+            if (last_control_state == CONTROL_STATE::LAND_CONTROL)
             {
                 pos_des[0] = uav_pos[0];
                 pos_des[1] = uav_pos[1];
@@ -333,7 +332,6 @@ void UAV_controller::mainloop()
     {
         // 发送位置控制指令至PX4的原生位置环控制器
         send_pos_cmd_to_px4_original_controller();
-        return;
     }else if(controller_flag == CONTOLLER_FLAG::PID)
     {
         // 设定期望值
@@ -408,10 +406,11 @@ void UAV_controller::set_hover_pose_with_rc()
     double max_manual_vel = 1.0;
 
     // 悬停位置 = 前一个悬停位置 + 遥控器数值[-1,1] * 0.01(如果主程序中设定是100Hz的话)
+    // 使用FS-I6S遥控器默认配置时,1通道(roll)以及4通道(yaw)摇杆反向,所以需改为相反的数据
 	Hover_position(0) += rc_input.ch[1] * max_manual_vel * delta_t;
-	Hover_position(1) += rc_input.ch[0] * max_manual_vel * delta_t;
+	Hover_position(1) -= rc_input.ch[0] * max_manual_vel * delta_t;
 	Hover_position(2) += rc_input.ch[2] * max_manual_vel * delta_t;
-	Hover_yaw += rc_input.ch[3] * max_manual_vel * delta_t;
+	Hover_yaw -= rc_input.ch[3] * max_manual_vel * delta_t;
 
     // 高度限制
 	if ( Hover_position(2) < 0.2 ) Hover_position(2) = 0.2;
