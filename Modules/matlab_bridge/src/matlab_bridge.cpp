@@ -203,6 +203,7 @@ int main(int argc, char **argv)
 
     cout << GREEN << "matlab bridge init!" << TAIL << endl;
 
+    // 集群情况下，紧急躲避，按照123的飞机序号进行躲避
     while (ros::ok())
     {
         ros::spinOnce();
