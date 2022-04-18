@@ -12,7 +12,8 @@
     <!-- 启动 uav_control_main -->
     <arg name="sim_mode" default="false"/>
     <arg name="control/controller_flag" default="0"/>
-    <arg name="control/enable_external_control" default="false"/> <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
+    <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
+    <arg name="control/enable_external_control" default="true"/> 
     <arg name="control/Takeoff_height" default="1"/>
     <arg name="control/Disarm_height" default="0.2"/>
     <arg name="control/Land_speed" default="0.2"/>
