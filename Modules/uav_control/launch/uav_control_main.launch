@@ -10,7 +10,7 @@
     <arg name="control/Takeoff_height" default="2.5"/>
     <arg name="control/Disarm_height" default="0.2"/>
     <arg name="control/Land_speed" default="0.2"/>
-    <arg name="control/flag_printf" default="false"/>
+    <arg name="control/flag_printf" default="true"/>
     <arg name="geo_fence/x_min" default="-100"/>
     <arg name="geo_fence/x_max" default="100"/>
     <arg name="geo_fence/y_min" default="-100"/>

@@ -42,12 +42,5 @@
 		<param name="control/hov_percent" value="0.5" />
         <param name="control/tilt_angle_max" value="10.0" />
     </node>	
-
-    <!-- 启动虚拟摇杆代码,包括了joy_node和joystick_translator.py-->
-    <node pkg="prometheus_gazebo" type="joy" name="joy" output="screen">
-	</node>
-
-    <node pkg="prometheus_uav_control" type="joystick_translator.py" name="joy_translator" output="screen">
-	</node>
 </launch>
 
