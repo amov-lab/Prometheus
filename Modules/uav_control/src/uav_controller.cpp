@@ -150,7 +150,7 @@ UAV_controller::UAV_controller(ros::NodeHandle& nh)
     uav_vel.setZero();
     u_att.setZero();
 
-    //rc_input.setup(only_command_mode);
+    rc_input.init(only_command_mode);
 
     text_info.header.stamp = ros::Time::now();
     text_info.MessageType = prometheus_msgs::TextInfo::INFO;
@@ -1186,6 +1186,8 @@ void UAV_controller::debug_cb(const ros::TimerEvent &e)
 
     cout << "[ " << uav_state.mode<<" ] " << TAIL <<endl;
 
+    cout << GREEN << "Battery Voltage   : " << uav_state.battery_state<<" [V] " << TAIL <<endl;
+    cout << GREEN << "Battery Percentage: " << uav_state.battery_percetage<<" % " << TAIL <<endl;
     cout << GREEN  << "UAV_pos [X Y Z] : " << uav_pos[0] << " [ m ] "<< uav_pos[1]<<" [ m ] "<<uav_pos[2]<<" [ m ] "<< TAIL <<endl;
     cout << GREEN  << "UAV_vel [X Y Z] : " << uav_vel[0] << " [m/s] "<< uav_vel[1]<<" [m/s] "<<uav_vel[2]<<" [m/s] "<< TAIL <<endl;
     cout << GREEN  << "UAV_att [R P Y] : " << uav_state.attitude[0] * 180/M_PI <<" [deg] "<<uav_state.attitude[1] * 180/M_PI << " [deg] "<< uav_state.attitude[2] * 180/M_PI<<" [deg] "<< TAIL<<endl;

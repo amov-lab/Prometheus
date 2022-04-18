@@ -6,72 +6,74 @@
 
 class RC_Input
 {
-    public:
-        RC_Input();
-        void handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode);
-        void setup(bool only_command_mode);
+public:
+    RC_Input(){};
+    void init(bool only_command_mode);
+    void handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode);
 
-        double ch[4];           // 1-4通道数值: roll pitch yaw thrust 
-        double channel_5;       // 通道5（三段） - 切换HOVER_CONTROL
-        double channel_6;       // 通道6（三段） - 切换COMMAND_CONTROL
-        double channel_7;       // 通道7（二段） - 切换LAND_CONTROL
-        double channel_8;       // 通道8（二段） - 重启飞控
-        double channel_9;       // 通道9（二段） - 解锁
-        double last_channel_5;
-        double last_channel_6;
-        double last_channel_7;
-        double last_channel_8;
-        bool have_init_channel_5{false};
-        bool have_init_channel_6{false};
-        bool have_init_channel_7{false};
-        bool have_init_channel_8{false};
+    double ch[4];     // 1-4通道数值: roll pitch yaw thrust
+    double channel_5; // 通道5（三段） - 切换HOVER_CONTROL
+    double channel_6; // 通道6（三段） - 切换COMMAND_CONTROL
+    double channel_7; // 通道7（二段） - 切换LAND_CONTROL
+    double channel_8; // 通道8（二段） - 重启飞控
+    double channel_9; // 通道9（二段） - 解锁
+    double last_channel_5;
+    double last_channel_6;
+    double last_channel_7;
+    double last_channel_8;
+    bool have_init_channel_5{false};
+    bool have_init_channel_6{false};
+    bool have_init_channel_7{false};
+    bool have_init_channel_8{false};
 
-        mavros_msgs::RCIn msg;
-        ros::Time rcv_stamp;            // 收到遥控器消息的时间
-        
-        bool enter_hover_control;
-        bool in_hover_control;
-        bool enter_command_control;
-        bool in_command_control;
-        
-        bool toggle_reboot;
-        bool toggle_land;
+    mavros_msgs::RCIn msg;
+    ros::Time rcv_stamp; // 收到遥控器消息的时间
 
-    private:
+    bool enter_hover_control;
+    bool in_hover_control;
+    bool enter_command_control;
+    bool in_command_control;
 
-        static constexpr double channel_5_threshold_value = 0.75;
-        static constexpr double channel_6_threshold_value = 0.75;
-        static constexpr double channel_7_threshold_value = 0.5;    // 0.5 0.75的区别是？
-        static constexpr double channel_8_threshold_value = 0.75;   //8号通道为SWB档杆,存在三个档位,1000,1500,2000,设置为0.5会存在异常
-        static constexpr double DEAD_ZONE = 0.1;                    // 死区
-        
-        void check_validity();
+    bool toggle_reboot;
+    bool toggle_land;
+
+private:
+    static constexpr double channel_5_threshold_value = 0.75;   //　仅用三段开关的最上和最下两个
+    static constexpr double channel_6_threshold_value = 0.5;
+    static constexpr double channel_7_threshold_value = 0.5;  
+    static constexpr double channel_8_threshold_value = 0.75; // 8号通道为SWB档杆,存在三个档位,1000,1500,2000,设置为0.5会存在异常
+    static constexpr double DEAD_ZONE = 0.1;                  // 死区
+
+    void check_validity();
 };
 
-RC_Input::RC_Input()
+void RC_Input::init(bool only_command_mode)
 {
-  rcv_stamp = ros::Time(0);
+    rcv_stamp = ros::Time(0);
 
-  last_channel_5 = -1.0;
-  last_channel_6 = -1.0;
-  last_channel_7 = -1.0;
-  last_channel_8 = -1.0;
+    last_channel_5 = -1.0;
+    last_channel_6 = -1.0;
+    last_channel_7 = -1.0;
+    last_channel_8 = -1.0;
 
-  in_command_control = false;
-  enter_command_control = false;
-  in_hover_control = false;
-  enter_hover_control = false;
-  toggle_reboot = false;
-  toggle_land = false;
+    toggle_reboot = false;
+    toggle_land = false;
+
+    if (only_command_mode)
+    {
+        in_command_control = true;
+        enter_command_control = true;
+        in_hover_control = true;
+        enter_hover_control = false;
+    }
+    else
+    {
+        in_command_control = false;
+        enter_command_control = false;
+        in_hover_control = false;
+        enter_hover_control = false;
+    }
 }
-
-/*void RC_Input::setup(bool only_command_mode)
-{
-    in_command_control = true;
-    enter_command_control = true;
-    in_hover_control = true;
-    enter_hover_control = false;
-}*/
 
 void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode)
 {
@@ -142,7 +144,7 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
     {
         if (last_channel_6 < channel_6_threshold_value && channel_6 > channel_6_threshold_value)
             enter_command_control = true;
-        else 
+        else
             enter_command_control = false;
 
         if (channel_6 > channel_6_threshold_value)
@@ -178,8 +180,8 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
     last_channel_7 = channel_7;
     last_channel_8 = channel_8;
 
-    // 特殊测试情况
-    if(only_command_mode)
+    // only_command_mode模式下，维持遥控器在command_control模式，无法进行模式切换（但是可以触发降落和重启命令）
+    if (only_command_mode)
     {
         in_command_control = true;
         enter_command_control = true;
@@ -190,9 +192,9 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
 
 void RC_Input::check_validity()
 {
-    if (channel_5 >= -1.1 && channel_5 <= 1.1 && 
-        channel_6 >= -1.1 && channel_6 <= 1.1 && 
-        channel_7 >= -1.1 && channel_7 <= 1.1 && 
+    if (channel_5 >= -1.1 && channel_5 <= 1.1 &&
+        channel_6 >= -1.1 && channel_6 <= 1.1 &&
+        channel_7 >= -1.1 && channel_7 <= 1.1 &&
         channel_8 >= -1.1 && channel_8 <= 1.1)
     {
         // pass

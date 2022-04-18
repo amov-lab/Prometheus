@@ -52,9 +52,13 @@ include_directories(
 ##      声明可执行cpp文件     ##
 ###############################
 
-add_executable(matlab_bridge src/matlab_bridge.cpp)
-add_dependencies(matlab_bridge prometheus_matlab_gencpp)
-target_link_libraries(matlab_bridge ${catkin_LIBRARIES})
+add_library(matlab_bridge src/matlab_bridge.cpp)
+
+add_executable(matlab_bridge_main src/matlab_bridge_node.cpp)
+add_dependencies(matlab_bridge_main prometheus_matlab_gencpp)
+target_link_libraries(matlab_bridge_main ${catkin_LIBRARIES})
+target_link_libraries(matlab_bridge_main matlab_bridge)
+
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
