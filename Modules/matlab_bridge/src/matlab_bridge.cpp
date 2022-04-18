@@ -53,7 +53,7 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
     timer_printf = nh.createTimer(ros::Duration(5.0), &Matlab_Bridge::printf_msgs, this);
 
     uav_checked = false;
-    uav_ready = false;
+    uav_ready = 1;
     cmd_timeout = false;
     get_matlab_control_cmd = false;
 
@@ -171,11 +171,12 @@ void Matlab_Bridge::matlab_safety_check(const ros::TimerEvent &e)
         return;
     }
 
-    if (uav_ready)
+    if (uav_ready == 0)
     {
         // 心跳包,正常情况下20Hz
         matlab_setting_result.x = MATLAB_RESULT_X::HEARTBEAT;
         matlab_setting_result.y = uav_state.battery_state;
+        matlab_setting_result.z = 1;
         matlab_setting_result_pub.publish(matlab_setting_result);
     }
     else
@@ -250,7 +251,7 @@ void Matlab_Bridge::matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr &
 
     if (matlab_setting_cmd.x == MATLAB_CMD_X::CHECK)
     {
-        if (check_for_uav_state())
+        if (check_for_uav_state() == 0)
         {
             matlab_setting_result.x = MATLAB_RESULT_X::SUCCESS;
             matlab_setting_result_pub.publish(matlab_setting_result);
@@ -375,39 +376,39 @@ Eigen::Vector4d Matlab_Bridge::acc_cmd_to_att_cmd(Eigen::Vector3d &acc_cmd, doub
     return att_cmd;
 }
 
-bool Matlab_Bridge::check_for_uav_state()
+int Matlab_Bridge::check_for_uav_state()
 {
     if (!uav_state.connected)
     {
         // cout << RED << "check_for_uav_state: not connected!" << TAIL << endl;
-        return false;
+        return 1;
     }
 
     if (!uav_state.armed)
     {
         // cout << RED << "check_for_uav_state: Disarm the drone first!" << TAIL << endl;
-        return false;
+        return 2;
     }
 
     if (uav_state.mode != "OFFBOARD")
     {
         // cout << RED << "check_for_uav_state: not in offboard mode!" << TAIL << endl;
-        return false;
+        return 3;
     }
 
     if (!uav_state.odom_valid)
     {
         // cout << RED << "check_for_uav_state: odom invalid!" << TAIL << endl;
-        return false;
+        return 4;
     }
 
     if (uav_control_state.control_state != prometheus_msgs::UAVControlState::COMMAND_CONTROL)
     {
         // cout << RED << "check_for_uav_state: Not in COMMAND_CONTROL mode!" << TAIL << endl;
-        return false;
+        return 5;
     }
 
-    return true;
+    return 0;
 }
 
 void Matlab_Bridge::printf_msgs(const ros::TimerEvent &e)
@@ -424,15 +425,15 @@ void Matlab_Bridge::printf_msgs(const ros::TimerEvent &e)
     cout.setf(ios::showpos);
     cout << GREEN << "--------------> Matlab Bridge <------------- " << TAIL << endl;
 
-    cout << GREEN << "[" << uav_id << "]  " << TAIL;
+    cout << GREEN << "[ ID: " << uav_id << "]  " << TAIL;
 
-    if(uav_ready)
+    if(uav_ready == 0)
     {
         cout << GREEN << "[ UAV Ready ]  " << TAIL;
     }
     else
     {
-        cout << RED << "[ Not Ready ]  " << TAIL;
+        cout << RED << "[ Not Ready for ERROR "<< uav_ready <<" ]  " << TAIL;
     }
 
     if(uav_checked)
@@ -482,19 +483,19 @@ void Matlab_Bridge::printf_msgs(const ros::TimerEvent &e)
 
             cout << GREEN << "Matlab CMD: [ POS_CTRL_MODE ] " << TAIL << endl;
             cout << GREEN << "Pos_ref [X Y Z] : " << matlab_cmd.position.x << " [ m ] " << matlab_cmd.position.y << " [ m ] " << matlab_cmd.position.z << " [ m ] " << TAIL << endl;
-            cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
+            cout << GREEN << "Yaw_ref         : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
         }
         else if (matlab_control_mode == MATLAB_CMD_Y::VEL_CTRL_MODE)
         {
             cout << GREEN << "Matlab CMD: [ VEL_CTRL_MODE ] " << TAIL << endl;
             cout << GREEN << "Vel_ref [X Y Z] : " << matlab_cmd.position.x << " [m/s] " << matlab_cmd.position.y << " [m/s] " << matlab_cmd.position.z << " [m/s] " << TAIL << endl;
-            cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
+            cout << GREEN << "Yaw_ref         : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
         }
         else if (matlab_control_mode == MATLAB_CMD_Y::ACC_CTRL_MODE)
         {
             cout << GREEN << "Matlab CMD: [ ACC_CTRL_MODE ] " << TAIL << endl;
             cout << GREEN << "Acc_ref [X Y Z] : " << matlab_cmd.position.x << " [m/s^2] " << matlab_cmd.position.y << " [m/s^2] " << matlab_cmd.position.z << " [m/s^2] " << TAIL << endl;
-            cout << GREEN << "Yaw_ref : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
+            cout << GREEN << "Yaw_ref         : " << matlab_cmd.orientation.w * 180 / M_PI << " [deg] " << TAIL << endl;
 
             cout << GREEN << "Att_ref [X Y Z] : " << uav_command.att_ref[0] * 180 / M_PI << " [deg] " << uav_command.att_ref[1] * 180 / M_PI << " [deg] " << uav_command.att_ref[2] * 180 / M_PI << " [deg] " << TAIL << endl;
             cout << GREEN << "Thrust_ref[0-1] : " << uav_command.att_ref[3] << TAIL << endl;

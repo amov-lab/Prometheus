@@ -22,7 +22,6 @@ plugin_blacklist:
 - odometry
 - vibration
 - odom
-- setpoint_attitude
 - setpoint_position
 - setpoint_accel
 - setpoint_velocity
