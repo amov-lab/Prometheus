@@ -1,23 +1,30 @@
 <launch>
 	<arg name="uav_id" default="1"/>
+
+	<!-- 启动Matlab bridge -->
+	<node pkg="prometheus_matlab" type="matlab_bridge_main" name="matlab_bridge_$(arg uav_id)" output="screen">	
+		<param name="uav_id" value="$(arg uav_id)" />
+		<param name="control/quad_mass" value="1.0" />
+		<param name="control/hov_percent" value="0.5" />
+        <param name="control/tilt_angle_max" value="10.0" />
+    </node>	
+
+    <!-- 启动 uav_control_main -->
     <arg name="sim_mode" default="false"/>
     <arg name="control/controller_flag" default="0"/>
-    <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
-    <arg name="control/enable_external_control" default="false"/>
+    <arg name="control/enable_external_control" default="false"/> <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
     <arg name="control/Takeoff_height" default="1"/>
     <arg name="control/Disarm_height" default="0.2"/>
     <arg name="control/Land_speed" default="0.2"/>
-    <arg name="control/flag_printf" default="false"/>
+    <arg name="control/flag_printf" default="true"/>
     <arg name="geo_fence/x_min" default="-100"/>
     <arg name="geo_fence/x_max" default="100"/>
     <arg name="geo_fence/y_min" default="-100"/>
     <arg name="geo_fence/y_max" default="100"/>
     <arg name="geo_fence/z_min" default="-100"/>
     <arg name="geo_fence/z_max" default="100"/>
-    <!-- GPS = 4 -->
     <arg name="control/location_source" default="4"/>
-    
-	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav_id)" output="screen">
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav_id)" output="screen" launch-prefix="gnome-terminal --tab --">
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
 		<param name="control/location_source" value="$(arg control/location_source)" />
 		<param name="uav_id" value="$(arg uav_id)" />
@@ -34,14 +41,6 @@
         <param name="geo_fence/z_min" value="$(arg geo_fence/z_min)" />
         <param name="geo_fence/z_max" value="$(arg geo_fence/z_max)" />
 	</node>
-
-	<!-- 启动Matlab bridge -->
-	<node pkg="prometheus_matlab" type="matlab_bridge" name="matlab_bridge_$(arg uav_id)" output="screen">	
-		<param name="uav_id" value="$(arg uav_id)" />
-		<param name="control/quad_mass" value="1.0" />
-		<param name="control/hov_percent" value="0.5" />
-        <param name="control/tilt_angle_max" value="10.0" />
-    </node>	
 
     <!-- 启动虚拟摇杆代码,包括了joy_node和joystick_translator.py-->
     <node pkg="prometheus_gazebo" type="joy" name="joy" output="screen">
