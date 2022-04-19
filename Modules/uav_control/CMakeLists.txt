@@ -69,6 +69,9 @@ add_executable(rc_test utils/rc_test.cpp)
 add_dependencies(rc_test prometheus_uav_control_gencpp)
 target_link_libraries(rc_test ${catkin_LIBRARIES})
 
+add_executable(joy_node utils/joy_node.cpp)
+target_link_libraries(joy_node ${catkin_LIBRARIES})
+
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
