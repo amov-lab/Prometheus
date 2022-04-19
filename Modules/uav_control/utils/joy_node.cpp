@@ -46,7 +46,10 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <sensor_msgs/JoyFeedbackArray.h>
+#include <mavros_msgs/OverrideRCIn.h>
 
+
+#define neutral_speed 1500
 
 int closedir_cb(DIR *dir)
 {
@@ -67,12 +70,14 @@ private:
   std::string joy_dev_;
   std::string joy_dev_name_;
   std::string joy_dev_ff_;
+  int uav_id_;
   double deadzone_;
   double autorepeat_rate_;    // in Hz.  0 for no repeat.
   double coalesce_interval_;  // Defaults to 100 Hz rate limit.
   int event_count_;
   int pub_count_;
   ros::Publisher pub_;
+  ros::Publisher pub_mavros_rc;
   double lastDiagTime_;
 
   int ff_fd_;
@@ -82,6 +87,13 @@ private:
   diagnostic_updater::Updater diagnostic_;
 
   typedef std::unique_ptr<DIR, decltype(&closedir)> dir_ptr;
+
+  float convert_joy_units(float data)
+  {
+    // This takes the float value from -1.0 to 1.0 and converts it to a value between 1000 and 2000
+    return int((data * 500) + neutral_speed);
+  }
+
 
   /// \brief Publishes diagnostics and status
   void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
@@ -304,16 +316,21 @@ public:
 
     // Parameters
     ros::NodeHandle nh_param("~");
-    pub_ = nh_.advertise<sensor_msgs::Joy>("joy", 1);
-    ros::Subscriber sub = nh_.subscribe("joy/set_feedback", 10, &Joystick::set_feedback, this);
+
     nh_param.param<std::string>("dev", joy_dev_, "/dev/input/js0");
     nh_param.param<std::string>("dev_ff", joy_dev_ff_, "/dev/input/event0");
     nh_param.param<std::string>("dev_name", joy_dev_name_, "");
+    nh_param.param<int>("uav_id", uav_id_, 1);
     nh_param.param<double>("deadzone", deadzone_, 0.05);
     nh_param.param<double>("autorepeat_rate", autorepeat_rate_, 0);
     nh_param.param<double>("coalesce_interval", coalesce_interval_, 0.001);
     nh_param.param<bool>("default_trig_val", default_trig_val_, false);
     nh_param.param<bool>("sticky_buttons", sticky_buttons_, false);
+    std::string agent_name = "/uav" + std::to_string(uav_id_);
+    pub_ = nh_.advertise<sensor_msgs::Joy>(agent_name + "/joy", 1);
+    pub_mavros_rc = nh_.advertise<mavros_msgs::OverrideRCIn>(agent_name + "/mavros/rc/override", 1);
+    // 不清楚作用，人工屏蔽
+    ros::Subscriber sub = nh_.subscribe("joy/set_feedback", 10, &Joystick::set_feedback, this);
 
     // Checks on parameters
     if (!joy_dev_name_.empty())
@@ -439,7 +456,8 @@ public:
 
         if (write(ff_fd_, &ie, sizeof(ie)) == -1)
         {
-          ROS_WARN("Couldn't set gain on joystick force feedback: %s", strerror(errno));
+          // 不清楚含义，人工屏蔽该警告
+          // ROS_WARN("Couldn't set gain on joystick force feedback: %s", strerror(errno));
         }
 
         memset(&joy_effect_, 0, sizeof(joy_effect_));
@@ -627,6 +645,60 @@ public:
           joy_msg.header.stamp = ros::Time().now();
           joy_msg.header.frame_id = joy_dev_.c_str();
           pub_.publish(joy_msg);
+
+          // add mavros override pub
+          // 本节点是触发式发布，这个逻辑和PX4中接收遥控器不一致，需要修改吗 todo
+          mavros_msgs::OverrideRCIn mavros_rc;
+          mavros_rc.channels[0] = convert_joy_units(joy_msg.axes[0] * -1);
+          mavros_rc.channels[1] = convert_joy_units(joy_msg.axes[1] * -1);
+          mavros_rc.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
+          mavros_rc.channels[3] = convert_joy_units(joy_msg.axes[3] * -1);
+          
+          if (joy_msg.buttons[0] > 0)
+          {
+              mavros_rc.channels[6] = neutral_speed - 500;
+          }else
+          {
+              mavros_rc.channels[6] = neutral_speed + 500;
+          }
+
+          if (joy_msg.buttons[5] > 0)
+          {
+              mavros_rc.channels[5] = neutral_speed + 500;
+          }else
+          {
+              mavros_rc.channels[5] = neutral_speed - 500;
+          }
+
+          if (joy_msg.buttons[2] > 0)
+          {
+              mavros_rc.channels[7] = neutral_speed - 500;
+          }else
+          {
+            if (joy_msg.buttons[1] > 0)
+            {
+                mavros_rc.channels[7] = neutral_speed + 500;
+            }else
+            {
+                mavros_rc.channels[7] = neutral_speed;
+            }
+          }
+
+          if (joy_msg.buttons[4] > 0)
+          {
+              mavros_rc.channels[4] = neutral_speed - 500;
+          }else
+          {
+            if (joy_msg.buttons[3] > 0)
+            {
+                mavros_rc.channels[4] = neutral_speed + 500;
+            }else
+            {
+                mavros_rc.channels[4] = neutral_speed;
+            }
+          }
+
+          pub_mavros_rc.publish(mavros_rc);
 
           publish_now = false;
           tv_set = false;

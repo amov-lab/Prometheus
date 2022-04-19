@@ -63,8 +63,8 @@ def joy_callback(data):
 def init_joy_control():
     global pubRC
     rospy.init_node('joy_translator', anonymous=True)
-    rospy.Subscriber("/joy", Joy, joy_callback)
-    pubRC = rospy.Publisher('uav1/mavros/rc/override', rc, queue_size=10)
+    rospy.Subscriber("/uav1/joy", Joy, joy_callback)
+    pubRC = rospy.Publisher('/uav2/mavros/rc/override', rc, queue_size=10)
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         rate.sleep()
