@@ -1,4 +1,4 @@
-2. submodule 更新
+### submodule 更新
 
 若项目中包含.gitmodules, 进入到git项目根目录下，输入命令, .gitmodules中的所有项目都会进行更新:
 

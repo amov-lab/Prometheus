@@ -39,13 +39,10 @@
 	</node>
 
     <!-- 启动虚拟摇杆代码,包括了joy_node和joystick_translator.py-->
-    <node pkg="prometheus_gazebo" type="joy" name="joy" output="screen">
+    <node pkg="prometheus_uav_control" type="joy_node" name="joy_node" output="screen">
 	</node>
 
-    <node pkg="prometheus_uav_control" type="joystick_translator.py" name="joy_translator" output="screen">
+    <node pkg="prometheus_uav_control" type="joy_translator.py" name="joy_translator" output="screen">
 	</node>
-
-
-
 </launch>
 
