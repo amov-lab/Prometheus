@@ -6,7 +6,7 @@
 	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/1045_p450 中的修改内容 -->
 	<env name="PX4_SIM_MODEL" value="p450" />
 	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
-	<!-- ekf2_gps 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
+	<!-- ekf2 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
 	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/rcS 中的修改内容 -->
     <env name="PX4_ESTIMATOR" value="ekf2_vision" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
@@ -47,7 +47,7 @@
 	<arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450/p450.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p450/p450.sdf"/>
 	<arg name="model" default="p450"/>
 	<node name="$(anon vehicle_spawn)" pkg="gazebo_ros" type="spawn_model" output="screen" 
 		args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)">
