@@ -4,10 +4,12 @@
     包括了uav_estimator.cpp和uav_controller.cpp
      -->
 	<arg name="uav_id" default="1"/>
-    <arg name="sim_mode" default="false"/>
+    <arg name="sim_mode" default="true"/>
+    <arg name="init_px4_mode" default="0"/>
+    <arg name="only_command_mode" default="true"/>
     <arg name="control/controller_flag" default="0"/>
-    <arg name="control/enable_external_control" default="true"/>
-    <arg name="control/Takeoff_height" default="2.5"/>
+    <arg name="control/enable_external_control" default="false"/>
+    <arg name="control/Takeoff_height" default="2.0"/>
     <arg name="control/Disarm_height" default="0.2"/>
     <arg name="control/Land_speed" default="0.2"/>
     <arg name="control/flag_printf" default="true"/>
@@ -24,7 +26,9 @@
 		<!-- 定位数据输入源 0 for vicon， 1 for 激光SLAM, 2 for gazebo ground truth, 3 for T265 -->
 		<param name="control/location_source" value="$(arg control/location_source)" />
 		<param name="uav_id" value="$(arg uav_id)" />
-        <param name="only_command_mode" value="true" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+        <param name="init_px4_mode" value="$(arg init_px4_mode)" />
+        <param name="only_command_mode" value="$(arg only_command_mode)" />
 		<param name="control/controller_flag" value="$(arg control/controller_flag)" />
 		<param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
         <param name="control/Takeoff_height" value="$(arg control/Takeoff_height)" />
