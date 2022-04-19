@@ -100,10 +100,11 @@ public:
     // 执行状态
     enum CONTROL_STATE
     {
-        MANUAL_CONTROL = 0,  // 手动定点控制
-        HOVER_CONTROL = 1,   // 悬停状态
-        COMMAND_CONTROL = 2, // 指令控制
-        LAND_CONTROL = 3     // 降落
+        INIT = 0,            // 初始模式      
+        MANUAL_CONTROL = 1,  // 手动定点控制
+        HOVER_CONTROL = 2,   // 悬停状态
+        COMMAND_CONTROL = 3, // 指令控制
+        LAND_CONTROL = 4     // 降落
     };
     CONTROL_STATE control_state;
     CONTROL_STATE last_control_state;
@@ -115,6 +116,7 @@ public:
     int controller_flag;
     bool enable_external_control;
     bool sim_mode;
+    int init_px4_mode;
     bool only_command_mode;       //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
     bool flag_printf; // 是否打印
     bool quick_land;
@@ -182,19 +184,16 @@ private:
     void send_pos_vel_xyz_setpoint(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_sp);
     void send_acc_xyz_setpoint(const Eigen::Vector3d &accel_sp, float yaw_sp);
     void send_attitude_setpoint(Eigen::Vector4d &u_att);
-
+    Eigen::Vector4d get_cmd_from_controller();
+    void set_px4_mode_func(string mode);
     void printf_param();
     void set_hover_pose_with_odom();
     void set_hover_pose_with_rc();
-    void enable_offboard_mode();
-    void enable_manual_mode();
     void arm_disarm_func(bool on_or_off);
     void enable_emergency_func();
     void reboot_PX4();
-    void set_mode_func(string mode);
 
     void send_pos_cmd_to_px4_original_controller();
-    void send_att_cmd_to_px4_attitude_controller();
     void rotation_yaw(double yaw_angle, float body_frame[2], float enu_frame[2]);
 
     // bool arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res);
