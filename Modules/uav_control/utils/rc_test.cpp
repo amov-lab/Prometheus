@@ -31,6 +31,6 @@ int main(int argc, char **argv)
     {
         ros::spinOnce();
         rc_input.printf_info();
-        ros::Duration(0.05).sleep();
+        ros::Duration(5.0).sleep();
     }
 }
