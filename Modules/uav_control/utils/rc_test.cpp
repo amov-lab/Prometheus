@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 
     //【订阅】PX4遥控器数据
     ros::Subscriber px4_rc_sub =
-        nh.subscribe<mavros_msgs::RCIn>("/uav" + std::to_string(uav_id) + "/mavros/rc/in",
+        nh.subscribe<mavros_msgs::RCIn>("/uav" + std::to_string(uav_id) + "/prometheus/fake_rc_in",
                                         1,
                                         px4_rc_cb);
 
@@ -31,6 +31,6 @@ int main(int argc, char **argv)
     {
         ros::spinOnce();
         rc_input.printf_info();
-        ros::Duration(5.0).sleep();
+        ros::Duration(1.0).sleep();
     }
 }

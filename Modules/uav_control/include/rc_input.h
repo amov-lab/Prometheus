@@ -31,20 +31,26 @@ public:
     mavros_msgs::RCIn msg;
     ros::Time rcv_stamp; // 收到遥控器消息的时间
 
+    bool enter_manual_control;
+    bool in_manual_control;
     bool enter_hover_control;
     bool in_hover_control;
     bool enter_command_control;
     bool in_command_control;
 
+    bool toggle_arm, toggle_disarm;
+    bool toggle_kill;
     bool toggle_reboot;
     bool toggle_land;
 
 private:
-    static constexpr double channel_5_threshold_value = 0.75;   //　仅用三段开关的最上和最下两个
-    static constexpr double channel_6_threshold_value = 0.5;
-    static constexpr double channel_7_threshold_value = 0.5;  
-    static constexpr double channel_8_threshold_value = 0.75; // 8号通道为SWB档杆,存在三个档位,1000,1500,2000,设置为0.5会存在异常
-    static constexpr double DEAD_ZONE = 0.1;                  // 死区
+    static constexpr double channel_5_threshold_value = 0.5;
+    static constexpr double channel_6_threshold_value_1 = 0.25;
+    static constexpr double channel_6_threshold_value_2 = 0.75;
+    static constexpr double channel_7_threshold_value_1 = 0.25;
+    static constexpr double channel_7_threshold_value_2 = 0.75;
+    static constexpr double channel_8_threshold_value = 0.5;
+    static constexpr double DEAD_ZONE = 0.05;                 // 死区
 
     void check_validity();
 };
@@ -58,11 +64,17 @@ void RC_Input::init(bool only_command_mode)
     last_channel_7 = -1.0;
     last_channel_8 = -1.0;
 
+    toggle_arm = false;
+    toggle_disarm = false;
+    toggle_kill = false;
     toggle_reboot = false;
     toggle_land = false;
 
+    // todo
     if (only_command_mode)
     {
+        enter_manual_control = false;
+        in_manual_control = false;
         in_command_control = true;
         enter_command_control = true;
         in_hover_control = true;
@@ -70,6 +82,8 @@ void RC_Input::init(bool only_command_mode)
     }
     else
     {
+        enter_manual_control = false;
+        in_manual_control = false;
         in_command_control = false;
         enter_command_control = false;
         in_hover_control = false;
@@ -79,11 +93,11 @@ void RC_Input::init(bool only_command_mode)
 
 void RC_Input::printf_info()
 {
-    cout << GREEN <<">>>>>>>>>>>>>>>>>> RC INFO  <<<<<<<<<<<<<<<<<<"<< TAIL  <<endl;
+    cout << GREEN << ">>>>>>>>>>>>>>>>>> RC INFO  <<<<<<<<<<<<<<<<<<" << TAIL << endl;
     //固定的浮点显示
     cout.setf(ios::fixed);
-    //setprecision(n) 设显示小数精度为n位
-    cout<<setprecision(2);
+    // setprecision(n) 设显示小数精度为n位
+    cout << setprecision(2);
     //左对齐
     cout.setf(ios::left);
     // 强制显示小数点
@@ -91,26 +105,40 @@ void RC_Input::printf_info()
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    cout << GREEN  << "ch1 : " << ch[0] << TAIL <<endl;
-    cout << GREEN  << "ch2 : " << ch[1] << TAIL <<endl;
-    cout << GREEN  << "ch3 : " << ch[2] << TAIL <<endl;
-    cout << GREEN  << "ch4 : " << ch[3] << TAIL <<endl;
-    cout << GREEN  << "ch5 : " << channel_5 << "  last_ch5 : " << last_channel_5 << TAIL <<endl;
-    cout << GREEN  << "ch6 : " << channel_6 << "  last_ch6 : " << last_channel_6 << TAIL <<endl;
-    cout << GREEN  << "ch7 : " << channel_7 << "  last_ch7 : " << last_channel_7 << TAIL <<endl;
-    cout << GREEN  << "ch8 : " << channel_8 << "  last_ch8 : " << last_channel_8 << TAIL <<endl;
-    cout << GREEN  << "enter_hover_control : " << enter_hover_control << TAIL <<endl;
-    cout << GREEN  << "in_hover_control : " << in_hover_control << TAIL <<endl;
-    cout << GREEN  << "enter_command_control : " << enter_command_control << TAIL <<endl;
-    cout << GREEN  << "in_command_control : " << in_command_control << TAIL <<endl;
-    cout << GREEN  << "toggle_reboot : " << toggle_reboot << TAIL <<endl;
-    cout << GREEN  << "toggle_land : " << toggle_land << TAIL <<endl;
+    cout << GREEN << "ch1 : " << ch[0] << TAIL << endl;
+    cout << GREEN << "ch2 : " << ch[1] << TAIL << endl;
+    cout << GREEN << "ch3 : " << ch[2] << TAIL << endl;
+    cout << GREEN << "ch4 : " << ch[3] << TAIL << endl;
+    cout << GREEN << "ch5 : " << channel_5 << "  last_ch5 : " << last_channel_5 << TAIL << endl;
+    cout << GREEN << "ch6 : " << channel_6 << "  last_ch6 : " << last_channel_6 << TAIL << endl;
+    cout << GREEN << "ch7 : " << channel_7 << "  last_ch7 : " << last_channel_7 << TAIL << endl;
+    cout << GREEN << "ch8 : " << channel_8 << "  last_ch8 : " << last_channel_8 << TAIL << endl;
+    cout << GREEN << "toggle_arm : " << toggle_arm << TAIL << endl;
+    cout << GREEN << "toggle_disarm : " << toggle_disarm << TAIL << endl;
+    cout << GREEN << "toggle_kill : " << toggle_kill << TAIL << endl;
+    cout << GREEN << "toggle_land : " << toggle_land << TAIL << endl;
+    cout << GREEN << "toggle_reboot : " << toggle_reboot << TAIL << endl;
+    cout << GREEN << "enter_manual_control : " << enter_manual_control << TAIL << endl;
+    cout << GREEN << "in_manual_control : " << in_manual_control << TAIL << endl;
+    cout << GREEN << "enter_hover_control : " << enter_hover_control << TAIL << endl;
+    cout << GREEN << "in_hover_control : " << in_hover_control << TAIL << endl;
+    cout << GREEN << "enter_command_control : " << enter_command_control << TAIL << endl;
+    cout << GREEN << "in_command_control : " << in_command_control << TAIL << endl; 
 }
 
 void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode)
 {
     msg = *pMsg;
     rcv_stamp = ros::Time::now();
+
+    if( msg.channels[0]< 1100 && msg.channels[1]<1100 && msg.channels[2]< 1100 && msg.channels[3]>1900)
+    {
+        toggle_reboot = true;
+        return;
+    }else
+    {
+        toggle_reboot = false;
+    }
 
     // 1-4通道数值
     for (int i = 0; i < 4; i++)
@@ -125,7 +153,7 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
             ch[i] = 0.0;
     }
 
-    // 5通道，映射至[0,1]区间？
+    // 5通道，映射至[0,1]区间
     channel_5 = ((double)msg.channels[4] - 1000.0) / 1000.0;
     // 6通道，映射至[0,1]区间
     channel_6 = ((double)msg.channels[5] - 1000.0) / 1000.0;
@@ -159,53 +187,60 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
         last_channel_8 = channel_8;
     }
 
-    // 判断通道5 - 上一时刻小于threshold_value，本时刻大于threshold_value，则判断进行一次切换
+    // 判断通道5 - channel_5_threshold_value （0.5）
     if (last_channel_5 < channel_5_threshold_value && channel_5 > channel_5_threshold_value)
-        enter_hover_control = true;
-    else
+    {
+        // 由上往下拨一次
+        toggle_arm = true;
+        toggle_disarm = false;
+    }
+    else if (last_channel_5 > channel_5_threshold_value && channel_5 < channel_5_threshold_value)
+    {
+        // 由下往上拨一次
+        toggle_arm = false;
+        toggle_disarm = true;
+    }else
+    {
+        toggle_arm = false;
+        toggle_disarm = false;
+    }
+
+    // 判断通道6 - channel_6_threshold_value_1 （0.25） channel_6_threshold_value_2 （0.75）
+    if (channel_6 <= channel_6_threshold_value_1)
+    {
+        enter_manual_control = true;
         enter_hover_control = false;
-
-    // 本时刻大于threshold_value，则认定当前在该模式（即必须将摇杆保持在该状态，不能随意切换）
-    if (channel_5 > channel_5_threshold_value)
-        in_hover_control = true;
-    else
-        in_hover_control = false;
-
-    // 判断通道6 - 必须先进入hover_control，才能判断是否进入command_control
-    if (in_hover_control)
+        enter_command_control = false;
+    }
+    else if (channel_6 > channel_6_threshold_value_1 && channel_6 < channel_6_threshold_value_2)
     {
-        if (last_channel_6 < channel_6_threshold_value && channel_6 > channel_6_threshold_value)
-            enter_command_control = true;
-        else
-            enter_command_control = false;
-
-        if (channel_6 > channel_6_threshold_value)
-            in_command_control = true;
-        else
-            in_command_control = false;
+        enter_manual_control = false;
+        enter_hover_control = true;
+        enter_command_control = false;
+    }else if (channel_6 >= channel_6_threshold_value_2)
+    {
+        enter_manual_control = false;
+        enter_hover_control = false;   
+        enter_command_control = true;
     }
 
-    // 判断通道7 - 必须hover_control或者command_control，才可自动降落
-    if (in_hover_control || in_command_control)
+    // 判断通道7 - channel_7_threshold_value_1 （0.25） channel_7_threshold_value_1 （0.75）
+    if (last_channel_7 < channel_7_threshold_value_1 && channel_7 > channel_6_threshold_value_1)
     {
-        if (last_channel_7 < channel_7_threshold_value && channel_7 > channel_7_threshold_value)
-            toggle_land = true;
-        else
-            toggle_land = false;
+        toggle_kill = true;
+    }else
+    {
+        toggle_kill = false;
     }
-    else
+
+    // 判断通道8 - channel_8_threshold_value （0.5） 
+    if (last_channel_8 < channel_8_threshold_value && channel_8 > channel_8_threshold_value)
+    {
+        toggle_land = true;
+    }else
+    {
         toggle_land = false;
-
-    // 判断通道8 - 必须非hover_control、非command_control，才可重启
-    if (!in_hover_control && !in_command_control)
-    {
-        if (last_channel_8 < channel_8_threshold_value && channel_8 > channel_8_threshold_value)
-            toggle_reboot = true;
-        else
-            toggle_reboot = false;
     }
-    else
-        toggle_reboot = false;
 
     last_channel_5 = channel_5;
     last_channel_6 = channel_6;
