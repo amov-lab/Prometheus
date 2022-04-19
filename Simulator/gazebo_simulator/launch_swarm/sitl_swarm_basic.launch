@@ -5,7 +5,7 @@
 	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/1014 solo 中的修改内容 -->
 	<env name="PX4_SIM_MODEL" value="p450" />
 	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
-	<!-- ekf2_gps 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
+	<!-- ekf2 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
 	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/rcS 中的修改内容 -->
     <env name="PX4_ESTIMATOR" value="ekf2" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
@@ -14,7 +14,7 @@
 	<!-- 无人机ID号 -->
 	<arg name="uav_id" default="1"/>
 	<!-- 指定sdf文件及模型名字 -->
-	<arg name="sdf" default="$(find prometheus_gazebo)/amov_models/p450/p450.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p450/p450.sdf"/>
 	<arg name="model" default="uav1"/>
 	<!-- 初始位置，Yaw为偏航角 -->
 	<arg name="uav_init_x" default="0.0"/>

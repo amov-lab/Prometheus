@@ -1,5 +1,5 @@
-#### uav_control
-
+#### 无人机仿真手册
+- 切换Prometheus_PX4分支
 - 环境变量配置
 
 ```shell
@@ -10,6 +10,7 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/sysu/Prometheus/Simulator/gaze
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/sysu/Prometheus/Simulator/gazebo_simulator/gazebo_models/ugv_models
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/sysu/Prometheus/Simulator/gazebo_simulator/gazebo_models/sensor_models
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/sysu/Prometheus/Simulator/gazebo_simulator/gazebo_models/scene_models
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/sysu/Prometheus/Simulator/gazebo_simulator/gazebo_models/texture
 
 ## Promehteus_PX4
 source /home/sysu/prometheus_px4/Tools/setup_gazebo.bash /home/sysu/prometheus_px4 /home/sysu/prometheus_px4/build/amovlab_sitl_default
@@ -17,8 +18,14 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/sysu/prometheus_px4
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/sysu/prometheus_px4/Tools/sitl_gazebo
 ```
 
+ 
 
 
-- 遥控器指令测试
+- 启动仿真(GPS定位模式)
 roslaunch prometheus_gazebo sitl_outdoor.launch
-roslaunch prometheus_uav_control rc_test.launch 
+roslaunch prometheus_uav_control uav_control_main.launch 
+
+
+- 启动仿真(模拟室内定位模式)
+roslaunch prometheus_gazebo sitl_indoor.launch
+roslaunch prometheus_uav_control uav_control_main.launch 

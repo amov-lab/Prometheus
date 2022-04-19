@@ -186,25 +186,6 @@ fake_gps:
     rate_limit: 10.0      # TF rate
   gps_rate: 5.0           # GPS data publishing rate
 
-# landing_target
-landing_target:
-  listen_lt: false
-  mav_frame: "LOCAL_NED"
-  land_target_type: "VISION_FIDUCIAL"
-  image:
-    width: 640            # [pixels]
-    height: 480
-  camera:
-    fov_x: 2.0071286398   # default: 115 [degrees]
-    fov_y: 2.0071286398
-  tf:
-    send: true
-    listen: false
-    frame_id: "landing_target"
-    child_frame_id: "camera_center"
-    rate_limit: 10.0
-  target_size: {x:  0.3, y:  0.3}
-
 # mocap_pose_estimate
 mocap:
   # select mocap source

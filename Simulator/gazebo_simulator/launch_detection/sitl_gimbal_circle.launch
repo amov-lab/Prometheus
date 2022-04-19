@@ -4,7 +4,7 @@
 	<!-- 模型选择 -->
 	<env name="PX4_SIM_MODEL" value="typhoon_h480" />
 	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
-	<!-- ekf2_gps 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
+	<!-- ekf2 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
 	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/rcS 中的修改内容 -->
     <env name="PX4_ESTIMATOR" value="ekf2_vision" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
