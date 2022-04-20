@@ -250,10 +250,7 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
     // only_command_mode模式下，维持遥控器在command_control模式，无法进行模式切换（但是可以触发降落和重启命令）
     if (only_command_mode)
     {
-        in_command_control = true;
         enter_command_control = true;
-        in_hover_control = true;
-        enter_hover_control = false;
     }
 }
 
