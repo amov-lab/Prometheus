@@ -151,8 +151,12 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
     uav_command.position_ref[0] = 0;
     uav_command.position_ref[1] = 0;
-    uav_command.position_ref[2] = 0.5;
+    uav_command.position_ref[2] = 0.0;
     uav_command.yaw_ref = 0;
+
+    pos_des << 0.0, 0.0, 0.0;
+    vel_des << 0.0, 0.0, 0.0;
+    acc_des << 0.0, 0.0, 0.0;
     quick_land = false;
 
     uav_pos.setZero();
@@ -238,6 +242,7 @@ void UAV_controller::mainloop()
     case CONTROL_STATE::COMMAND_CONTROL:
 
         // COMMAND_CONTROL的期望值赋值在uav_cmd_cb()回调函数中
+        set_command_des();
         break;
 
     // 当前位置原地降落，降落后会自动上锁，且切换为mannual模式
@@ -261,16 +266,20 @@ void UAV_controller::mainloop()
 
         // 当无人机位置低于指定高度时，自动上锁
         // 需要考虑万一高度数据不准确时，从高处自由落体
-        if (uav_state.position[2] < Disarm_height)
+        if (uav_pos[2] < Disarm_height)
         {
             // 此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
             set_px4_mode_func("MANUAL");
             // 进入急停
             enable_emergency_func();
 
-            if (!uav_state.armed)
+            if(!uav_state.armed)
             {
                 control_state = CONTROL_STATE::INIT;
+                if (only_command_mode)
+                {
+                    control_state = CONTROL_STATE::COMMAND_CONTROL;
+                }
             }
         }
         break;
@@ -376,8 +385,8 @@ void UAV_controller::set_hover_pose_with_rc()
     double delta_t = (now - last_set_hover_pose_time).toSec();
     last_set_hover_pose_time = now;
 
-    double max_vel_xy  = 1.5;
-    double max_vel_z   = 1.3;
+    double max_vel_xy = 1.5;
+    double max_vel_z = 1.3;
     double max_vel_yaw = 1.5;
 
     // 悬停位置 = 前一个悬停位置 + 遥控器数值[-1,1] * 0.01(如果主程序中设定是100Hz的话)
@@ -392,13 +401,8 @@ void UAV_controller::set_hover_pose_with_rc()
         Hover_position(2) = 0.2;
 }
 
-void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
+void UAV_controller::set_command_des()
 {
-    uav_command = *msg;
-    get_valid_command = true;
-    get_cmd_time = ros::Time::now(); // 时间戳
-    // 增加统一的uav_cmd有效性 检查机制
-
     if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Init_Pos_Hover)
     {
         //【Init_Pos_Hover】 移动到指定起飞位置
@@ -639,6 +643,14 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg
     // 记录上一时刻命令
     uav_command_last = uav_command;
 }
+ 
+
+void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
+{
+    uav_command = *msg;
+    get_valid_command = true;
+    get_cmd_time = ros::Time::now(); // 时间戳
+}
 
 void UAV_controller::send_pos_cmd_to_px4_original_controller()
 {
@@ -841,7 +853,7 @@ int UAV_controller::check_failsafe()
 
     if (uav_state.position[0] < uav_geo_fence.x_min || uav_state.position[0] > uav_geo_fence.x_max ||
         uav_state.position[1] < uav_geo_fence.y_min || uav_state.position[1] > uav_geo_fence.y_max ||
-        uav_state.position[2] < uav_geo_fence.z_min || uav_state.position[2] > uav_geo_fence.z_max)
+        uav_pos[2]  < uav_geo_fence.z_min || uav_pos[2]  > uav_geo_fence.z_max)
     {
         cout << RED << uav_name << ":----> Failsafe: Out of the geo fence, swtich to land control mode！" << TAIL << endl;
         return 1;

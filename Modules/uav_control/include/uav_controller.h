@@ -173,6 +173,7 @@ private:
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
     void debug_cb(const ros::TimerEvent &e);
+    void set_command_des();
 
     int check_failsafe();
     void send_idle_cmd();

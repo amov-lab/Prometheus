@@ -312,8 +312,10 @@ void UAV_estimator::timercb_check_uav_state(const ros::TimerEvent &e)
     if(!uav_state.connected)
     {
         cout << RED << node_name << "--->  PX4 Unconnected ! " << TAIL <<endl; 
+        return;
     }
 
+    // 没有收到定位数据也return（根据定位模式判断）
 
     // 发布无人机状态前进行常规检查
     int odom_state = check_uav_odom();

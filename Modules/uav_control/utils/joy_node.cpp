@@ -47,6 +47,7 @@
 #include <sensor_msgs/Joy.h>
 #include <sensor_msgs/JoyFeedbackArray.h>
 #include <mavros_msgs/RCIn.h>
+#include <mavros_msgs/OverrideRCIn.h>
 
 #define RC_MIN 1000
 #define RC_MID 1500
@@ -78,9 +79,12 @@ private:
   int event_count_;
   int pub_count_;
   ros::Publisher pub_;
-  ros::Publisher pub_mavros_rc;
-  mavros_msgs::RCIn mavros_rc;
   double lastDiagTime_;
+
+  ros::Publisher pub_fake_rc_in;
+  mavros_msgs::RCIn fake_rc_in;
+  ros::Publisher pub_rc_override;
+  mavros_msgs::OverrideRCIn rc_override;
 
   int ff_fd_;
   struct ff_effect joy_effect_;
@@ -330,7 +334,9 @@ public:
     nh_param.param<bool>("sticky_buttons", sticky_buttons_, false);
     std::string agent_name = "/uav" + std::to_string(uav_id_);
     pub_ = nh_.advertise<sensor_msgs::Joy>(agent_name + "/joy", 1);
-    pub_mavros_rc = nh_.advertise<mavros_msgs::RCIn>(agent_name + "/prometheus/fake_rc_in", 1);
+    pub_fake_rc_in = nh_.advertise<mavros_msgs::RCIn>(agent_name + "/prometheus/fake_rc_in", 1);
+    pub_rc_override = nh_.advertise<mavros_msgs::OverrideRCIn>(agent_name + "/mavros/rc/override", 1);
+
     // 不清楚作用，人工屏蔽
     ros::Subscriber sub = nh_.subscribe("joy/set_feedback", 10, &Joystick::set_feedback, this);
 
@@ -401,15 +407,24 @@ public:
     lastDiagTime_ = ros::Time::now().toSec();
 
     // Mavros话题初始化
-    mavros_rc.channels.resize(8);
-    mavros_rc.channels[0] = RC_MID;
-    mavros_rc.channels[1] = RC_MID;
-    mavros_rc.channels[2] = RC_MIN;
-    mavros_rc.channels[3] = RC_MID;
-    mavros_rc.channels[4] = RC_MIN;
-    mavros_rc.channels[5] = RC_MIN;
-    mavros_rc.channels[6] = RC_MIN;
-    mavros_rc.channels[7] = RC_MIN;
+    fake_rc_in.channels.resize(8);
+    fake_rc_in.channels[0] = RC_MID;
+    fake_rc_in.channels[1] = RC_MID;
+    fake_rc_in.channels[2] = RC_MIN;
+    fake_rc_in.channels[3] = RC_MID;
+    fake_rc_in.channels[4] = RC_MIN;
+    fake_rc_in.channels[5] = RC_MIN;
+    fake_rc_in.channels[6] = RC_MIN;
+    fake_rc_in.channels[7] = RC_MIN;
+
+    rc_override.channels[0] = RC_MID;
+    rc_override.channels[1] = RC_MID;
+    rc_override.channels[2] = RC_MIN;
+    rc_override.channels[3] = RC_MID;
+    rc_override.channels[4] = RC_MIN;
+    rc_override.channels[5] = RC_MIN;
+    rc_override.channels[6] = RC_MIN;
+    rc_override.channels[7] = RC_MIN;
 
     // Big while loop opens, publishes
     while (nh_.ok())
@@ -659,25 +674,25 @@ public:
           joy_msg.header.frame_id = joy_dev_.c_str();
           pub_.publish(joy_msg);
 
-          // add mavros override pub
+          // add fake_rc_in
           // joy_msg.axes[0]对应右摇杆（左右），最左mavros_rc.channels[0] = 1967，最右mavros_rc.channels[0] = 1037
-          mavros_rc.channels[0] = convert_joy_units(joy_msg.axes[0]);
+          fake_rc_in.channels[0] = convert_joy_units(joy_msg.axes[0]);
           // joy_msg.axes[1]对应右摇杆（上下），最上mavros_rc.channels[1] = 1962，最右mavros_rc.channels[1] = 1032
-          mavros_rc.channels[1] = convert_joy_units(joy_msg.axes[1] * -1);
+          fake_rc_in.channels[1] = convert_joy_units(joy_msg.axes[1] * -1);
           // joy_msg.axes[2]对应左摇杆（上下），最上mavros_rc.channels[2] = 1962，最右mavros_rc.channels[2] = 1032
-          mavros_rc.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
+          fake_rc_in.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
           // joy_msg.axes[3]对应左摇杆（左右），最左mavros_rc.channels[3] = 1967，最右mavros_rc.channels[3] = 1037
-          mavros_rc.channels[3] = convert_joy_units(joy_msg.axes[3]);
+          fake_rc_in.channels[3] = convert_joy_units(joy_msg.axes[3]);
           
           // joy_msg.buttons[0]对应SWA两段开关
           // 初始位置：joy_msg.buttons[0] = 1
           // 往下拨：joy_msg.buttons[0] = 0
           if (joy_msg.buttons[0] > 0)
           {
-              mavros_rc.channels[4] = RC_MIN;
+              fake_rc_in.channels[4] = RC_MIN;
           }else
           {
-              mavros_rc.channels[4] = RC_MAX;
+              fake_rc_in.channels[4] = RC_MAX;
           }
 
           // joy_msg.buttons[1]、joy_msg.buttons[2]对应SWB三段开关
@@ -686,15 +701,15 @@ public:
           // 往下拨2次：joy_msg.buttons[1] = 1，joy_msg.buttons[2] = 0
           if (joy_msg.buttons[2] > 0)
           {
-              mavros_rc.channels[5] = RC_MIN;
+              fake_rc_in.channels[5] = RC_MIN;
           }else
           {
             if (joy_msg.buttons[1] > 0)
             {
-                mavros_rc.channels[5] = RC_MAX;
+                fake_rc_in.channels[5] = RC_MAX;
             }else
             {
-                mavros_rc.channels[5] = RC_MID;
+                fake_rc_in.channels[5] = RC_MID;
             }
           }
 
@@ -704,15 +719,15 @@ public:
           // 往下拨2次：joy_msg.buttons[3] = 1，joy_msg.buttons[4] = 0
           if (joy_msg.buttons[4] > 0)
           {
-              mavros_rc.channels[6] = RC_MIN;
+              fake_rc_in.channels[6] = RC_MIN;
           }else
           {
             if (joy_msg.buttons[3] > 0)
             {
-                mavros_rc.channels[6] = RC_MAX;
+                fake_rc_in.channels[6] = RC_MAX;
             }else
             {
-                mavros_rc.channels[6] = RC_MID;
+                fake_rc_in.channels[6] = RC_MID;
             }
           }
 
@@ -721,11 +736,82 @@ public:
           // 往下拨：joy_msg.buttons[5] = 1
           if (joy_msg.buttons[5] > 0)
           {
-              mavros_rc.channels[7] = RC_MAX;
+              fake_rc_in.channels[7] = RC_MAX;
           }else
           {
-              mavros_rc.channels[7] = RC_MIN;
+              fake_rc_in.channels[7] = RC_MIN;
           }
+
+              // add override
+              // joy_msg.axes[0]对应右摇杆（左右），最左mavros_rc.channels[0] = 1967，最右mavros_rc.channels[0] = 1037
+              rc_override.channels[0] = convert_joy_units(joy_msg.axes[0]);
+              // joy_msg.axes[1]对应右摇杆（上下），最上mavros_rc.channels[1] = 1962，最右mavros_rc.channels[1] = 1032
+              rc_override.channels[1] = convert_joy_units(joy_msg.axes[1] * -1);
+              // joy_msg.axes[2]对应左摇杆（上下），最上mavros_rc.channels[2] = 1962，最右mavros_rc.channels[2] = 1032
+              rc_override.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
+              // joy_msg.axes[3]对应左摇杆（左右），最左mavros_rc.channels[3] = 1967，最右mavros_rc.channels[3] = 1037
+              rc_override.channels[3] = convert_joy_units(joy_msg.axes[3]);
+              
+              // joy_msg.buttons[0]对应SWA两段开关
+              // 初始位置：joy_msg.buttons[0] = 1
+              // 往下拨：joy_msg.buttons[0] = 0
+              if (joy_msg.buttons[0] > 0)
+              {
+                  rc_override.channels[4] = RC_MIN;
+              }else
+              {
+                  rc_override.channels[4] = RC_MAX;
+              }
+
+              // joy_msg.buttons[1]、joy_msg.buttons[2]对应SWB三段开关
+              // 初始位置：joy_msg.buttons[1] = 0，joy_msg.buttons[2] = 1
+              // 往下拨1次：joy_msg.buttons[1] = 0，joy_msg.buttons[2] = 0
+              // 往下拨2次：joy_msg.buttons[1] = 1，joy_msg.buttons[2] = 0
+              if (joy_msg.buttons[2] > 0)
+              {
+                  rc_override.channels[5] = RC_MIN;
+              }else
+              {
+                if (joy_msg.buttons[1] > 0)
+                {
+                    rc_override.channels[5] = RC_MAX;
+                }else
+                {
+                    rc_override.channels[5] = RC_MID;
+                }
+              }
+
+              // joy_msg.buttons[3]、joy_msg.buttons[4]对应SWC三段开关
+              // 初始位置：joy_msg.buttons[3] = 0，joy_msg.buttons[4] = 1
+              // 往下拨1次：joy_msg.buttons[3] = 0，joy_msg.buttons[4] = 0
+              // 往下拨2次：joy_msg.buttons[3] = 1，joy_msg.buttons[4] = 0
+              if (joy_msg.buttons[4] > 0)
+              {
+                  rc_override.channels[6] = RC_MIN;
+              }else
+              {
+                if (joy_msg.buttons[3] > 0)
+                {
+                    rc_override.channels[6] = RC_MAX;
+                }else
+                {
+                    rc_override.channels[6] = RC_MID;
+                }
+              }
+
+              // joy_msg.buttons[5]对应SWD两段开关
+              // 初始位置：joy_msg.buttons[5] = 0
+              // 往下拨：joy_msg.buttons[5] = 1
+              if (joy_msg.buttons[5] > 0)
+              {
+                  rc_override.channels[7] = RC_MAX;
+              }else
+              {
+                  rc_override.channels[7] = RC_MIN;
+              }
+
+
+
 
           publish_now = false;
           tv_set = false;
@@ -734,8 +820,9 @@ public:
           pub_count_++;
         }
 
-        // always pub mavros_rc 没有遥控器输入时，1Hz发布
-        pub_mavros_rc.publish(mavros_rc);
+        // always pub fake_rc_in 没有遥控器输入时，1Hz发布
+        pub_fake_rc_in.publish(fake_rc_in);
+        pub_rc_override.publish(rc_override);
 
         // If an axis event occurred, start a timer to combine with other
         // events.
