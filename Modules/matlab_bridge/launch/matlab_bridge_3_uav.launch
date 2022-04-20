@@ -3,6 +3,8 @@
     <arg name="uav2_id" default="2"/>
     <arg name="uav3_id" default="3"/>
 
+    <!-- 启动三台飞机的模型，需要swarm模块配合 -->
+
     <!-- uav1 -->
     <include file="$(find prometheus_matlab)/launch/matlab_bridge_swarm_basic.launch">
         <arg name="uav_id" value="$(arg uav1_id)" />

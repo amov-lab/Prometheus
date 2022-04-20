@@ -4,6 +4,8 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
 {
     // 【参数】编号
     nh.param<int>("uav_id", uav_id, 1);
+    // 【参数】no rc mode
+    nh.param<bool>("no_rc", no_rc, false);
     // 【参数】无人机质量（需要根据无人机实际情况进行设置）
     nh.param<float>("controller/quad_mass", ctrl_param.quad_mass, 1.0f);
     // 【参数】悬停油门（需要根据无人机实际情况进行设置）
@@ -45,6 +47,11 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
     //【发布】发布控制指令 -> uav_controller.cpp
     uav_command_pub =
         nh.advertise<prometheus_msgs::UAVCommand>(agent_name + "/prometheus/command", 10);
+
+    //【发布】mavros接口调用指令(-> uav_control.cpp)
+    uav_setup_pub = 
+        nh.advertise<prometheus_msgs::UAVSetup>(agent_name + "/prometheus/setup", 1);
+
 
     //【定时器】安全检查定时器
     timer_matlab_safety_check = nh.createTimer(ros::Duration(0.05), &Matlab_Bridge::matlab_safety_check, this);
@@ -384,27 +391,36 @@ int Matlab_Bridge::check_for_uav_state()
         return 1;
     }
 
-    if (!uav_state.armed)
-    {
-        // cout << RED << "check_for_uav_state: Disarm the drone first!" << TAIL << endl;
-        return 2;
-    }
-
-    if (uav_state.mode != "OFFBOARD")
-    {
-        // cout << RED << "check_for_uav_state: not in offboard mode!" << TAIL << endl;
-        return 3;
-    }
-
     if (!uav_state.odom_valid)
     {
         // cout << RED << "check_for_uav_state: odom invalid!" << TAIL << endl;
-        return 4;
+        return 2;
     }
 
     if (uav_control_state.control_state != prometheus_msgs::UAVControlState::COMMAND_CONTROL)
     {
         // cout << RED << "check_for_uav_state: Not in COMMAND_CONTROL mode!" << TAIL << endl;
+        return 3;
+    }
+
+    if (!uav_state.armed)
+    {
+        if(no_rc)
+        {
+            uav_setup.cmd = prometheus_msgs::UAVSetup::ARMING;
+            uav_setup.arming = true;
+            uav_setup_pub.publish(uav_setup);
+        }
+        // cout << RED << "check_for_uav_state: Disarm the drone first!" << TAIL << endl;
+        return 4;
+    }
+
+    if (uav_state.mode != "OFFBOARD")
+    {
+        uav_setup.cmd = prometheus_msgs::UAVSetup::SET_PX4_MODE;
+        uav_setup.px4_mode = "OFFBOARD";
+        uav_setup_pub.publish(uav_setup);
+        // cout << RED << "check_for_uav_state: not in offboard mode!" << TAIL << endl;
         return 5;
     }
 

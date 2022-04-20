@@ -11,6 +11,7 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
 #include <prometheus_msgs/UAVControlState.h>
+#include <prometheus_msgs/UAVSetup.h>
 #include "geometry_utils.h"
 #include "printf_utils.h"
 
@@ -29,9 +30,10 @@ public:
 
 private:
     int uav_id;
+    bool no_rc;
     string agent_name;
     int matlab_control_mode;
-    bool uav_ready;
+    int uav_ready;
     bool uav_checked;
     bool get_matlab_control_cmd;
     geometry_msgs::Pose matlab_cmd;
@@ -43,7 +45,7 @@ private:
     prometheus_msgs::UAVCommand uav_command;
     prometheus_msgs::UAVState uav_state;
     prometheus_msgs::UAVControlState uav_control_state;
-
+    prometheus_msgs::UAVSetup uav_setup;
     bool cmd_timeout{false};
 
     ros::Subscriber matlab_setting_cmd_sub;
@@ -53,6 +55,7 @@ private:
     
     ros::Publisher matlab_setting_result_pub;
     ros::Publisher uav_command_pub;
+    ros::Publisher uav_setup_pub;
 
     ros::Timer timer_matlab_safety_check;
     ros::Timer timer_printf;
