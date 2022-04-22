@@ -68,7 +68,6 @@ class UAV_estimator
         // 定时器
         ros::Timer timer_px4_vision_pub;
         ros::Timer timer_uav_state_pub;
-        ros::Timer timer_check_uav_state;
         ros::Timer timer_rviz_pub;
 
         prometheus_msgs::UAVState uav_state;    // 无人机状态
@@ -80,31 +79,26 @@ class UAV_estimator
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose
         geometry_msgs::PoseStamped t265_pose;          // gazebo pose
+        int odom_state,last_odom_state{9};
         
         ros::Time get_mocap_stamp{0};
         ros::Time get_gazebo_stamp{0};
         ros::Time get_t265_stamp{0};
-
-        enum LOC_SOURCE
-        {
-            MOCAP = 0,
-            T265 = 1,
-            GAZEBO = 2,
-            FAKE_ODOM = 3,
-            GPS = 4,
-            RTK = 5,
-            UWB = 6
-        };
 
         // 基本变量
         int uav_id;                   // 无人机编号
         string uav_name;                // 无人机名字
         string node_name;
         int location_source;    
+        float maximum_safe_vel_xy;
+        float maximum_safe_vel_z;
+        float maximum_vel_error_for_vision;
         int last_gps_status;
         bool fake_odom;                 // Gazebo是否使用fake_odom
         bool uav_state_update{false};
         bool vision_pose_error{false};
+
+        void printf_uav_state();
 
     private:
 
@@ -123,11 +117,11 @@ class UAV_estimator
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);
         void timercb_rviz(const ros::TimerEvent &e);
-        void timercb_check_uav_state(const ros::TimerEvent &e);
+        void check_uav_state();
         int check_uav_odom();
-        int check_uav_state();
+        
+        void printf_gps_status();
         void printf_param();
-
 };
 
 

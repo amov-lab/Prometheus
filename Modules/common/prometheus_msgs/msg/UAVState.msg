@@ -20,13 +20,13 @@ string mode
 ## 无人机定位来源
 uint8 location_source
 ## 定位来源枚举
-uint8 mocap=0
-uint8 t265=1
-uint8 gazebo=2
-uint8 fake_odom=3
-uint8 gps = 4
-uint8 rtk = 5
-uint8 uwb = 6
+uint8 MOCAP=0
+uint8 T265=1
+uint8 GAZEBO=2
+uint8 FAKE_ODOM=3
+uint8 GPS = 4
+uint8 RTK = 5
+uint8 UWB = 6
 
 ## odom标志位
 bool odom_valid
@@ -58,8 +58,8 @@ geometry_msgs/Quaternion attitude_q ## 四元数
 ## 无人机姿态角速度
 float32[3] attitude_rate            ## [rad/s]
 ## 无人机电池状态
-float32 battery_state                  
-float32 battery_percetage     
+float32 battery_state               ## [V]
+float32 battery_percetage           ## [0-1]
 
 
 
