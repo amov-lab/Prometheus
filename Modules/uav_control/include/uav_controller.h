@@ -35,7 +35,6 @@
 using namespace std;
 
 // 宏定义
-#define NUM_POINT 2 // 打印小数点
 #define CMD_TIMEOUT 0.1
 
 class UAV_controller
@@ -118,7 +117,6 @@ public:
     bool sim_mode;
     int init_px4_mode;
     bool only_command_mode;       //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
-    bool flag_printf; // 是否打印
     bool quick_land;
     float Takeoff_height; // 默认起飞高度
     float Disarm_height;  // 自动上锁高度
@@ -164,6 +162,7 @@ public:
     Eigen::Vector3d px4_rates_target;
     // PX4中的推力设定值（用于验证控制指令是否正确发送）
     float px4_thrust_target;
+    void printf_control_state();
 
 private:
     void uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg);
@@ -172,7 +171,7 @@ private:
     void px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg);
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
-    void debug_cb(const ros::TimerEvent &e);
+    
     void set_command_des();
 
     int check_failsafe();

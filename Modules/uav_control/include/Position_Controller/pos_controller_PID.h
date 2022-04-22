@@ -73,47 +73,47 @@ void pos_controller_PID::init(ros::NodeHandle& nh)
     ctrl_param.Kvi.setZero();
     ctrl_param.Ka.setZero();
     // 【参数】无人机质量
-    nh.param<float>("controller/quad_mass" , ctrl_param.quad_mass, 1.0f);
+    nh.param<float>("pid_gain/quad_mass" , ctrl_param.quad_mass, 1.0f);
     // 【参数】悬停油门
-    nh.param<float>("controller/hov_percent" , ctrl_param.hov_percent, 0.5f);
+    nh.param<float>("pid_gain/hov_percent" , ctrl_param.hov_percent, 0.5f);
     // 【参数】XYZ积分上限
-    nh.param<float>("controller/pxy_int_max"  , ctrl_param.int_max[0], 0.5);
-    nh.param<float>("controller/pxy_int_max"  , ctrl_param.int_max[1], 0.5);
-    nh.param<float>("controller/pz_int_max"   , ctrl_param.int_max[2], 0.5);
+    nh.param<float>("pid_gain/pxy_int_max"  , ctrl_param.int_max[0], 0.5);
+    nh.param<float>("pid_gain/pxy_int_max"  , ctrl_param.int_max[1], 0.5);
+    nh.param<float>("pid_gain/pz_int_max"   , ctrl_param.int_max[2], 0.5);
     ctrl_param.tilt_angle_max = 10.0;
     ctrl_param.g << 0.0, 0.0, 9.8;
     ctrl_param_hover = ctrl_param;
     ctrl_param_track = ctrl_param;
 
     // 【参数】定点控制参数
-    nh.param<double>("hover_gain/Kp_xy", ctrl_param_hover.Kp(0,0), 2.0f);
-    nh.param<double>("hover_gain/Kp_xy", ctrl_param_hover.Kp(1,1), 2.0f);
-    nh.param<double>("hover_gain/Kp_z" , ctrl_param_hover.Kp(2,2), 2.0f);
-    nh.param<double>("hover_gain/Kv_xy", ctrl_param_hover.Kv(0,0), 2.0f);
-    nh.param<double>("hover_gain/Kv_xy", ctrl_param_hover.Kv(1,1), 2.0f);
-    nh.param<double>("hover_gain/Kv_z" , ctrl_param_hover.Kv(2,2), 2.0f);
-    nh.param<double>("hover_gain/Kvi_xy", ctrl_param_hover.Kvi(0,0), 0.3f);
-    nh.param<double>("hover_gain/Kvi_xy", ctrl_param_hover.Kvi(1,1), 0.3f);
-    nh.param<double>("hover_gain/Kvi_z" , ctrl_param_hover.Kvi(2,2), 0.3f);
-    nh.param<double>("hover_gain/Ka_xy", ctrl_param_hover.Ka(0,0), 1.0f);
-    nh.param<double>("hover_gain/Ka_xy", ctrl_param_hover.Ka(1,1), 1.0f);
-    nh.param<double>("hover_gain/Ka_z" , ctrl_param_hover.Ka(2,2), 1.0f);
-    nh.param<float>("hover_gain/tilt_angle_max" , ctrl_param_hover.tilt_angle_max, 10.0f);
+    nh.param<double>("pid_gain/hover_gain/Kp_xy", ctrl_param_hover.Kp(0,0), 2.0f);
+    nh.param<double>("pid_gain/hover_gain/Kp_xy", ctrl_param_hover.Kp(1,1), 2.0f);
+    nh.param<double>("pid_gain/hover_gain/Kp_z" , ctrl_param_hover.Kp(2,2), 2.0f);
+    nh.param<double>("pid_gain/hover_gain/Kv_xy", ctrl_param_hover.Kv(0,0), 2.0f);
+    nh.param<double>("pid_gain/hover_gain/Kv_xy", ctrl_param_hover.Kv(1,1), 2.0f);
+    nh.param<double>("pid_gain/hover_gain/Kv_z" , ctrl_param_hover.Kv(2,2), 2.0f);
+    nh.param<double>("pid_gain/hover_gain/Kvi_xy", ctrl_param_hover.Kvi(0,0), 0.3f);
+    nh.param<double>("pid_gain/hover_gain/Kvi_xy", ctrl_param_hover.Kvi(1,1), 0.3f);
+    nh.param<double>("pid_gain/hover_gain/Kvi_z" , ctrl_param_hover.Kvi(2,2), 0.3f);
+    nh.param<double>("pid_gain/hover_gain/Ka_xy", ctrl_param_hover.Ka(0,0), 1.0f);
+    nh.param<double>("pid_gain/hover_gain/Ka_xy", ctrl_param_hover.Ka(1,1), 1.0f);
+    nh.param<double>("pid_gain/hover_gain/Ka_z" , ctrl_param_hover.Ka(2,2), 1.0f);
+    nh.param<float>("pid_gain/hover_gain/tilt_angle_max" , ctrl_param_hover.tilt_angle_max, 10.0f);
 
     // 【参数】轨迹追踪参数
-    nh.param<double>("track_gain/Kp_xy", ctrl_param_track.Kp(0,0), 3.0f);
-    nh.param<double>("track_gain/Kp_xy", ctrl_param_track.Kp(1,1), 3.0f);
-    nh.param<double>("track_gain/Kp_z" , ctrl_param_track.Kp(2,2), 3.0f);
-    nh.param<double>("track_gain/Kv_xy", ctrl_param_track.Kv(0,0), 3.0f);
-    nh.param<double>("track_gain/Kv_xy", ctrl_param_track.Kv(1,1), 3.0f);
-    nh.param<double>("track_gain/Kv_z" , ctrl_param_track.Kv(2,2), 3.0f);
-    nh.param<double>("track_gain/Kvi_xy", ctrl_param_track.Kvi(0,0), 0.1f);
-    nh.param<double>("track_gain/Kvi_xy", ctrl_param_track.Kvi(1,1), 0.1f);
-    nh.param<double>("track_gain/Kvi_z" , ctrl_param_track.Kvi(2,2), 0.1f);
-    nh.param<double>("track_gain/Ka_xy", ctrl_param_track.Ka(0,0), 1.0f);
-    nh.param<double>("track_gain/Ka_xy", ctrl_param_track.Ka(1,1), 1.0f);
-    nh.param<double>("track_gain/Ka_z" , ctrl_param_track.Ka(2,2), 1.0f);
-    nh.param<float>("track_gain/tilt_angle_max" , ctrl_param_track.tilt_angle_max, 20.0f);
+    nh.param<double>("pid_gain/track_gain/Kp_xy", ctrl_param_track.Kp(0,0), 3.0f);
+    nh.param<double>("pid_gain/track_gain/Kp_xy", ctrl_param_track.Kp(1,1), 3.0f);
+    nh.param<double>("pid_gain/track_gain/Kp_z" , ctrl_param_track.Kp(2,2), 3.0f);
+    nh.param<double>("pid_gain/track_gain/Kv_xy", ctrl_param_track.Kv(0,0), 3.0f);
+    nh.param<double>("pid_gain/track_gain/Kv_xy", ctrl_param_track.Kv(1,1), 3.0f);
+    nh.param<double>("pid_gain/track_gain/Kv_z" , ctrl_param_track.Kv(2,2), 3.0f);
+    nh.param<double>("pid_gain/track_gain/Kvi_xy", ctrl_param_track.Kvi(0,0), 0.1f);
+    nh.param<double>("pid_gain/track_gain/Kvi_xy", ctrl_param_track.Kvi(1,1), 0.1f);
+    nh.param<double>("pid_gain/track_gain/Kvi_z" , ctrl_param_track.Kvi(2,2), 0.1f);
+    nh.param<double>("pid_gain/track_gain/Ka_xy", ctrl_param_track.Ka(0,0), 1.0f);
+    nh.param<double>("pid_gain/track_gain/Ka_xy", ctrl_param_track.Ka(1,1), 1.0f);
+    nh.param<double>("pid_gain/track_gain/Ka_z" , ctrl_param_track.Ka(2,2), 1.0f);
+    nh.param<float>("pid_gain/track_gain/tilt_angle_max" , ctrl_param_track.tilt_angle_max, 20.0f);
 
     printf_param();
 }
