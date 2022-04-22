@@ -4,6 +4,8 @@
 #include <string>
 using namespace std;
 
+#define NUM_POINT 2 // 打印小数点
+
 #define RED "\033[0;1;31m"
 #define GREEN "\033[0;1;32m"
 #define YELLOW "\033[0;1;33m"

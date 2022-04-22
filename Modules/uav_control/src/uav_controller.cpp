@@ -23,9 +23,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     // 【参数】降落时自动上锁高度
     nh.param<float>("control/Disarm_height", Disarm_height, 0.2);
     // 【参数】降落速度
-    nh.param<float>("control/Land_speed", Land_speed, 0.2);
-    // 【参数】是否打印消息
-    nh.param<bool>("control/flag_printf", flag_printf, false);
+    nh.param<float>("control/Land_speed", Land_speed, 0.2);    
     // 【参数】地理围栏
     nh.param<float>("geo_fence/x_min", uav_geo_fence.x_min, -100.0);
     nh.param<float>("geo_fence/x_max", uav_geo_fence.x_max, 100.0);
@@ -133,9 +131,6 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
 
     // 【服务】重启PX4飞控
     px4_reboot_client = nh.serviceClient<mavros_msgs::CommandLong>("/uav" + std::to_string(uav_id) + "/mavros/cmd/command");
-
-    //【定时器】打印调试
-    debug_timer = nh.createTimer(ros::Duration(5.0), &UAV_controller::debug_cb, this);
 
     //集群控制中EXEC_STATE全程为COMMAND_CONTROL,因此初始化直接赋值为COMMAND_CONTROL
     if (only_command_mode)
@@ -1081,14 +1076,10 @@ void UAV_controller::rotation_yaw(double yaw_angle, float body_frame[2], float e
     enu_frame[1] = body_frame[0] * sin(yaw_angle) + body_frame[1] * cos(yaw_angle);
 }
 
-void UAV_controller::debug_cb(const ros::TimerEvent &e)
+void UAV_controller::printf_control_state()
 {
-    if (!flag_printf)
-    {
-        return;
-    }
-
     cout << GREEN << ">>>>>>>>>>>>>>>>>> UAV [" << uav_id << "] Controller  <<<<<<<<<<<<<<<<<<" << TAIL << endl;
+
     //固定的浮点显示
     cout.setf(ios::fixed);
     // setprecision(n) 设显示小数精度为n位
@@ -1099,33 +1090,6 @@ void UAV_controller::debug_cb(const ros::TimerEvent &e)
     cout.setf(ios::showpoint);
     // 强制显示符号
     cout.setf(ios::showpos);
-
-    // 打印 无人机状态
-    if (uav_state.connected == true)
-    {
-        cout << GREEN << "PX4 State:  [ Connected ] ";
-    }
-    else
-    {
-        cout << RED << "PX4 State:[ Unconnected ] ";
-    }
-    //是否上锁
-    if (uav_state.armed == true)
-    {
-        cout << "[ Armed ] ";
-    }
-    else
-    {
-        cout << RED << "[ DisArmed ] ";
-    }
-
-    cout << "[ " << uav_state.mode << " ] " << TAIL << endl;
-
-    cout << GREEN << "Battery Voltage : " << uav_state.battery_state << " [V] " << TAIL << endl;
-    cout << GREEN << "Battery Percent : " << uav_state.battery_percetage << TAIL << endl;
-    cout << GREEN << "UAV_pos [X Y Z] : " << uav_pos[0] << " [ m ] " << uav_pos[1] << " [ m ] " << uav_pos[2] << " [ m ] " << TAIL << endl;
-    cout << GREEN << "UAV_vel [X Y Z] : " << uav_vel[0] << " [m/s] " << uav_vel[1] << " [m/s] " << uav_vel[2] << " [m/s] " << TAIL << endl;
-    cout << GREEN << "UAV_att [R P Y] : " << uav_state.attitude[0] * 180 / M_PI << " [deg] " << uav_state.attitude[1] * 180 / M_PI << " [deg] " << uav_state.attitude[2] * 180 / M_PI << " [deg] " << TAIL << endl;
 
     // 打印 control_state
     switch (control_state)
