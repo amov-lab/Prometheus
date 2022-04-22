@@ -48,6 +48,7 @@
 #include <sensor_msgs/JoyFeedbackArray.h>
 #include <mavros_msgs/RCIn.h>
 #include <mavros_msgs/OverrideRCIn.h>
+#include <mavros_msgs/ManualControl.h>
 
 #define RC_MIN 1000
 #define RC_MID 1500
@@ -85,6 +86,8 @@ private:
   mavros_msgs::RCIn fake_rc_in;
   ros::Publisher pub_rc_override;
   mavros_msgs::OverrideRCIn rc_override;
+  ros::Publisher pub_manual_control;
+  mavros_msgs::ManualControl manual_control;
 
   int ff_fd_;
   struct ff_effect joy_effect_;
@@ -336,6 +339,9 @@ public:
     pub_ = nh_.advertise<sensor_msgs::Joy>(agent_name + "/joy", 1);
     pub_fake_rc_in = nh_.advertise<mavros_msgs::RCIn>(agent_name + "/prometheus/fake_rc_in", 1);
     pub_rc_override = nh_.advertise<mavros_msgs::OverrideRCIn>(agent_name + "/mavros/rc/override", 1);
+    pub_manual_control = nh_.advertise<mavros_msgs::ManualControl>(agent_name + "/mavros/manual_control/send", 1);
+
+
 
     // 不清楚作用，人工屏蔽
     ros::Subscriber sub = nh_.subscribe("joy/set_feedback", 10, &Joystick::set_feedback, this);
@@ -425,6 +431,11 @@ public:
     rc_override.channels[5] = RC_MIN;
     rc_override.channels[6] = RC_MIN;
     rc_override.channels[7] = RC_MIN;
+
+    manual_control.x = 0.0;
+    manual_control.y = 0.0;
+    manual_control.z = 0.0;
+    manual_control.r = 0.0;
 
     // Big while loop opens, publishes
     while (nh_.ok())
@@ -810,9 +821,11 @@ public:
                   rc_override.channels[7] = RC_MIN;
               }
 
-
-
-
+              // add manual_control
+              manual_control.x = 0.0;
+              manual_control.y = 0.0;
+              manual_control.z = joy_msg.axes[2] * -1000;
+              manual_control.r = 0.0;
           publish_now = false;
           tv_set = false;
           publication_pending = false;
@@ -822,7 +835,8 @@ public:
 
         // always pub fake_rc_in 没有遥控器输入时，1Hz发布
         pub_fake_rc_in.publish(fake_rc_in);
-        pub_rc_override.publish(rc_override);
+        // pub_rc_override.publish(rc_override);
+        // pub_manual_control.publish(manual_control);
 
         // If an axis event occurred, start a timer to combine with other
         // events.
