@@ -1,5 +1,4 @@
-<?xml version='1.0'?>
-<sdf version='1.6'>
+<sdf version='1.5'>
   <model name='p450'>
     <!-- p450 body -->
     <link name='base_link'>
@@ -17,10 +16,10 @@
         </inertia>
       </inertial>
       <collision name='base_link_inertia_collision'>
-        <pose>0 0 -0.04 0 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.32 0.32 0.25</size>
+						<size>0.30 0.30 0.09</size>
           </box>
         </geometry>
         <surface>
@@ -88,7 +87,7 @@
       </axis>
     </joint>
     <link name='rotor_0'>
-			<pose>0.147 -0.145 0.075 0 0 0</pose>
+			<pose>0.1465 -0.147 0.151 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -154,7 +153,7 @@
       </axis>
     </joint>
     <link name='rotor_1'>
-			<pose>-0.147 0.145 0.075 0 0 0</pose>
+			<pose>-0.1465 0.147 0.151 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -220,7 +219,7 @@
       </axis>
     </joint>
     <link name='rotor_2'>
-			<pose>0.147 0.145 0.075 0 0 0</pose>
+			<pose>0.1465 0.147 0.151 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -286,7 +285,7 @@
       </axis>
     </joint>
     <link name='rotor_3'>
-			<pose>-0.147 -0.145 0.075 0 0 0</pose>
+			<pose>-0.1465 -0.147 0.151 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -353,7 +352,7 @@
     </joint>
     <include>
       <uri>model://gps</uri>
-      <pose>0.1 0 0 0 0 0</pose>
+      <pose>0.0 0 0.1 0 0 0</pose>
       <name>gps</name>
     </include>
     <joint name='gps_joint' type='fixed'>
@@ -515,18 +514,6 @@
       <accelerometerRandomWalk>0.006</accelerometerRandomWalk>
       <accelerometerBiasCorrelationTime>300.0</accelerometerBiasCorrelationTime>
       <accelerometerTurnOnBiasSigma>0.196</accelerometerTurnOnBiasSigma>
-    </plugin>
-    <!-- plugins: libgazebo_ros_p3d -->
-    <!-- 发布真值,模拟vicon系统 -->
-    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
-      <alwaysOn>true</alwaysOn>
-      <updateRate>50.0</updateRate>
-      <bodyName>base_link</bodyName>
-      <topicName>/uav1/prometheus/ground_truth</topicName>
-      <gaussianNoise>0.00</gaussianNoise>
-      <frameName>world</frameName>
-      <xyzOffsets>0 0 0</xyzOffsets>
-      <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>
   </model>
 </sdf>
