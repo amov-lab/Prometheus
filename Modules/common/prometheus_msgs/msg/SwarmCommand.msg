@@ -46,3 +46,6 @@ float32 target_area_y_max          ## [m]
 
 ## 攻击控制参考量 
 float32[3] attack_target_pos          ## [m]
+
+#队形位置
+geometry_msgs/Point[] formation_poses
