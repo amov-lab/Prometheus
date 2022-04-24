@@ -112,9 +112,10 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.position[0] = 0.0;
     uav_state.position[1] = 0.0;
     uav_state.position[2] = 0.0;
-    uav_state.latitude = 0.0; // 此处处置设置为阿木实验室经纬度，todo
-    uav_state.longitude = 0.0;
-    uav_state.altitude = 0.0;
+    //该经纬度设置为阿木实验室附近测试场地(小花园)的经纬度
+    uav_state.latitude = 30.7852600; // 此处处置设置为阿木实验室经纬度，todo
+    uav_state.longitude = 103.8610300;
+    uav_state.altitude = 100.0;
     uav_state.velocity[0] = 0.0;
     uav_state.velocity[1] = 0.0;
     uav_state.velocity[2] = 0.0;
@@ -261,6 +262,12 @@ void UAV_estimator::check_uav_state()
     else if (odom_state == 3 && last_odom_state != 3)
     {
         cout << RED << node_name << "--->  Odom invalid: vision_pose_error! " << TAIL << endl;
+    }else if (odom_state == 4 && last_odom_state != 4)
+    {
+        cout << RED << node_name << "--->  Odom invalid: GPS/RTK location error! " << TAIL << endl;
+    }else if (odom_state == 5 && last_odom_state != 5)
+    {
+        cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
     }
 
     if (odom_state == 9)
@@ -306,6 +313,30 @@ int UAV_estimator::check_uav_odom()
     }
 
     // GPS,RTK,UWB 这些需要做什么检查确认吗，todo
+    // odom失效可能原因4:GPS定位模块数据异常,无法获取定位数据
+    if(location_source == prometheus_msgs::UAVState::GPS)
+    {
+        if(uav_state.gps_status != prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
+        {
+            return 4;
+        }
+    }
+
+    if(location_source == prometheus_msgs::UAVState::RTK)
+    {
+        if(uav_state.gps_status < prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
+        {
+            return 4;
+        }
+        // odom失效可能原因5:RTK定位精度较差(非odom失效状态)
+        else if(uav_state.gps_status <= prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR)
+        {
+            return 5;
+        }
+    }
+    //UWB todo
+
+
     return 9;
 }
 
@@ -536,28 +567,52 @@ void UAV_estimator::printf_uav_state()
 void UAV_estimator::printf_gps_status()
 {
     // 确认一下，哪些是红色，哪些是绿色，todo...
-    switch (uav_state.gps_status)
+    if(location_source == prometheus_msgs::UAVState::GPS)
     {
-    case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS:
-        cout << RED  << " [GPS_FIX_TYPE_NO_GPS] " << TAIL << endl;
-        break;
-    case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_FIX:
-        cout << RED  << " [GPS_FIX_TYPE_NO_FIX] " << TAIL << endl;
-        break;
-    case prometheus_msgs::UAVState::GPS_FIX_TYPE_2D_FIX:
-        cout << RED  << " [GPS_FIX_TYPE_2D_FIX] " << TAIL << endl;
-        break;
-    case prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX:
-        cout << GREEN  << " [GPS_FIX_TYPE_3D_FIX] " << TAIL << endl;
-        break;
-    case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR:
-        cout << GREEN  << " [GPS_FIX_TYPE_RTK_FLOATR] " << TAIL << endl;
-        break;
-    case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FIXEDR:
-        cout << GREEN  << " [GPS_FIX_TYPE_RTK_FIXEDR] " << TAIL << endl;
-        break;
+        switch (uav_state.gps_status)
+        {
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS:
+            cout << RED  << " [GPS_FIX_TYPE_NO_GPS] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_FIX:
+            cout << RED  << " [GPS_FIX_TYPE_NO_FIX] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_2D_FIX:
+            cout << YELLOW  << " [GPS_FIX_TYPE_2D_FIX] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX:
+            cout << GREEN  << " [GPS_FIX_TYPE_3D_FIX] " << TAIL << endl;
+            break;
+        }
     }
-
+    if(location_source == prometheus_msgs::UAVState::RTK)
+    {
+        switch (uav_state.gps_status)
+        {
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS:
+            cout << RED  << " [GPS_FIX_TYPE_NO_GPS] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_FIX:
+            cout << RED  << " [GPS_FIX_TYPE_NO_FIX] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_2D_FIX:
+            cout << RED  << " [GPS_FIX_TYPE_2D_FIX] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX:
+            cout << YELLOW  << " [GPS_FIX_TYPE_3D_FIX] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_DGPS:
+            cout << YELLOW  << " [GPS_FIX_TYPE_DGPS] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR:
+            cout << YELLOW  << " [GPS_FIX_TYPE_RTK_FLOATR] " << TAIL << endl;
+            break;
+        case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FIXEDR:
+            cout << GREEN  << " [GPS_FIX_TYPE_RTK_FIXEDR] " << TAIL << endl;
+            break;
+        }
+    }
+    
     // 确定下单位，todo
     cout << GREEN << "GPS [lat lon alt] : " << uav_state.latitude << " [ deg ] " << uav_state.longitude << " [ deg ] " << uav_state.altitude << " [ m ] " << TAIL << endl;
 }
