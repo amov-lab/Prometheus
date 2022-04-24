@@ -5,13 +5,12 @@ plugin_blacklist:
 - 3dr_radio
 - cam_imu_sync
 - distance_sensor
-# - fake_gps
+- fake_gps
 - hil
 - landing_target
 - mocap_pose_estimate
 - mount_control
 - obstacle_distance
-# - rc_io
 - vfr_hud
 - waypoint
 - wind_estimation
@@ -25,7 +24,6 @@ plugin_blacklist:
 - setpoint_position
 - setpoint_accel
 - setpoint_velocity
-- altitude
 - esc_status
 - ftp
 - log_transfer
@@ -34,5 +32,22 @@ plugin_blacklist:
 - rangefinder
 - setpoint_trajectory
 - trajectory
-plugin_whitelist: []
-#- 'sys_*'
+- play_tune
+- sys_time
+plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_whitelist中，也会启动
+- sys_status
+- vision_speed_estimate
+- vision_pose_estimate
+- rc_io
+- altitude
+- command
+- global_position
+- gps_rtk
+- gps_status
+- home_position
+- imu
+- local_position
+- param
+- setpoint_attitude
+- setpoint_raw
+- manual_control
