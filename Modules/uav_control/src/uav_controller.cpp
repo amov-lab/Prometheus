@@ -787,7 +787,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
     }
 
     // 上锁，条件: 1、已解锁，2、位于manual模式？
-    if (rc_input.toggle_arm && uav_state.armed)
+    if (rc_input.toggle_disarm && uav_state.armed)
     {
         rc_input.toggle_arm = false;
         arm_disarm_func(false);
