@@ -61,7 +61,6 @@ int closedir_cb(DIR *dir)
   return 0;
 }
 
-
 /// \brief Opens, reads from and publishes joystick events
 class Joystick
 {
@@ -73,16 +72,16 @@ private:
   std::string joy_dev_;
   std::string joy_dev_name_;
   std::string joy_dev_ff_;
-  int uav_id_;
+  int agent_num;
   double deadzone_;
-  double autorepeat_rate_;    // in Hz.  0 for no repeat.
-  double coalesce_interval_;  // Defaults to 100 Hz rate limit.
+  double autorepeat_rate_;   // in Hz.  0 for no repeat.
+  double coalesce_interval_; // Defaults to 100 Hz rate limit.
   int event_count_;
   int pub_count_;
   ros::Publisher pub_;
   double lastDiagTime_;
 
-  ros::Publisher pub_fake_rc_in;
+  ros::Publisher pub_fake_rc_in[100];
   mavros_msgs::RCIn fake_rc_in;
   ros::Publisher pub_rc_override;
   mavros_msgs::OverrideRCIn rc_override;
@@ -103,9 +102,8 @@ private:
     return int((data * 500) + RC_MID);
   }
 
-
   /// \brief Publishes diagnostics and status
-  void diagnostics(diagnostic_updater::DiagnosticStatusWrapper& stat)
+  void diagnostics(diagnostic_updater::DiagnosticStatusWrapper &stat)
   {
     double now = ros::Time::now().toSec();
     double interval = now - lastDiagTime_;
@@ -137,9 +135,9 @@ private:
   /*! \brief Returns the device path of the first joystick that matches joy_name.
    *         If no match is found, an empty string is returned.
    */
-  std::string get_dev_by_joy_name(const std::string& joy_name)
+  std::string get_dev_by_joy_name(const std::string &joy_name)
   {
-    const char path[] = "/dev/input";  // no trailing / here
+    const char path[] = "/dev/input"; // no trailing / here
     struct dirent *entry;
     struct stat stat_buf;
 
@@ -153,7 +151,7 @@ private:
     while ((entry = readdir(dev_dir.get())) != nullptr)
     {
       // filter entries
-      if (strncmp(entry->d_name, "js", 2) != 0)  // skip device if it's not a joystick
+      if (strncmp(entry->d_name, "js", 2) != 0) // skip device if it's not a joystick
       {
         continue;
       }
@@ -162,7 +160,7 @@ private:
       {
         continue;
       }
-      if (!S_ISCHR(stat_buf.st_mode))  // input devices are character devices, skip other
+      if (!S_ISCHR(stat_buf.st_mode)) // input devices are character devices, skip other
       {
         continue;
       }
@@ -197,9 +195,9 @@ private:
    *         returns empty string.
    * \param joy_dev A nonempty path to the joy device we search force feedback for.
    */
-  std::string get_ff_dev(const std::string& joy_dev)
+  std::string get_ff_dev(const std::string &joy_dev)
   {
-    const char path[] = "/dev/input/by-id";  // no trailing / here
+    const char path[] = "/dev/input/by-id"; // no trailing / here
     struct dirent *entry;
 
     // the selected joy can be a symlink, but we want the canonical /dev/input/jsX
@@ -227,7 +225,7 @@ private:
     {
       res = strstr(entry->d_name, "-joystick");
       // filter entries
-      if (res == nullptr)  // skip device if it's not a joystick
+      if (res == nullptr) // skip device if it's not a joystick
       {
         continue;
       }
@@ -263,7 +261,7 @@ private:
     while ((entry = readdir(dev_dir.get())) != nullptr)
     {
       res = strstr(entry->d_name, "-event-joystick");
-      if (res == nullptr)  // skip device if it's not an event joystick
+      if (res == nullptr) // skip device if it's not an event joystick
       {
         continue;
       }
@@ -282,31 +280,32 @@ private:
 
 public:
   Joystick() : nh_(), diagnostic_(), ff_fd_(-1)
-  {}
+  {
+  }
 
-  void set_feedback(const sensor_msgs::JoyFeedbackArray::ConstPtr& msg)
+  void set_feedback(const sensor_msgs::JoyFeedbackArray::ConstPtr &msg)
   {
     if (ff_fd_ == -1)
     {
-      return;  // we arent ready yet
+      return; // we arent ready yet
     }
 
     size_t size = msg->array.size();
     for (size_t i = 0; i < size; i++)
     {
       // process each feedback
-      if (msg->array[i].type == 1 && ff_fd_ != -1)  // TYPE_RUMBLE
+      if (msg->array[i].type == 1 && ff_fd_ != -1) // TYPE_RUMBLE
       {
         // if id is zero, thats low freq, 1 is high
-        joy_effect_.direction = 0;  // down
+        joy_effect_.direction = 0; // down
         joy_effect_.type = FF_RUMBLE;
         if (msg->array[i].id == 0)
         {
-          joy_effect_.u.rumble.strong_magnitude = (static_cast<float>(0xFFFFU))*msg->array[i].intensity;
+          joy_effect_.u.rumble.strong_magnitude = (static_cast<float>(0xFFFFU)) * msg->array[i].intensity;
         }
         else
         {
-          joy_effect_.u.rumble.weak_magnitude = (static_cast<float>(0xFFFFU))*msg->array[i].intensity;
+          joy_effect_.u.rumble.weak_magnitude = (static_cast<float>(0xFFFFU)) * msg->array[i].intensity;
         }
 
         joy_effect_.replay.length = 1000;
@@ -329,19 +328,22 @@ public:
     nh_param.param<std::string>("dev", joy_dev_, "/dev/input/js0");
     nh_param.param<std::string>("dev_ff", joy_dev_ff_, "/dev/input/event0");
     nh_param.param<std::string>("dev_name", joy_dev_name_, "");
-    nh_param.param<int>("uav_id", uav_id_, 1);
+    nh_param.param<int>("agent_num", agent_num, 1);
     nh_param.param<double>("deadzone", deadzone_, 0.05);
     nh_param.param<double>("autorepeat_rate", autorepeat_rate_, 0);
     nh_param.param<double>("coalesce_interval", coalesce_interval_, 0.001);
     nh_param.param<bool>("default_trig_val", default_trig_val_, false);
     nh_param.param<bool>("sticky_buttons", sticky_buttons_, false);
-    std::string agent_name = "/uav" + std::to_string(uav_id_);
+    std::string agent_name = "/uav1";
     pub_ = nh_.advertise<sensor_msgs::Joy>(agent_name + "/joy", 1);
-    pub_fake_rc_in = nh_.advertise<mavros_msgs::RCIn>(agent_name + "/prometheus/fake_rc_in", 1);
-    pub_rc_override = nh_.advertise<mavros_msgs::OverrideRCIn>(agent_name + "/mavros/rc/override", 1);
-    pub_manual_control = nh_.advertise<mavros_msgs::ManualControl>(agent_name + "/mavros/manual_control/send", 1);
+    for (size_t i = 1; i <= agent_num; i++)
+    {
+      agent_name = "/uav" + std::to_string(i);
+      pub_fake_rc_in[i] = nh_.advertise<mavros_msgs::RCIn>(agent_name + "/prometheus/fake_rc_in", 1);
+    }
 
-
+    // pub_rc_override = nh_.advertise<mavros_msgs::OverrideRCIn>(agent_name + "/mavros/rc/override", 1);
+    // pub_manual_control = nh_.advertise<mavros_msgs::ManualControl>(agent_name + "/mavros/manual_control/send", 1);
 
     // 不清楚作用，人工屏蔽
     ros::Subscriber sub = nh_.subscribe("joy/set_feedback", 10, &Joystick::set_feedback, this);
@@ -349,29 +351,30 @@ public:
     // Checks on parameters
     if (!joy_dev_name_.empty())
     {
-        std::string joy_dev_path = get_dev_by_joy_name(joy_dev_name_);
-        if (joy_dev_path.empty())
-        {
-          ROS_ERROR("Couldn't find a joystick with name %s. Falling back to default device.", joy_dev_name_.c_str());
-        }
-        else
-        {
-          ROS_INFO("Using %s as joystick device.", joy_dev_path.c_str());
-          joy_dev_ = joy_dev_path;
-        }
+      std::string joy_dev_path = get_dev_by_joy_name(joy_dev_name_);
+      if (joy_dev_path.empty())
+      {
+        ROS_ERROR("Couldn't find a joystick with name %s. Falling back to default device.", joy_dev_name_.c_str());
+      }
+      else
+      {
+        ROS_INFO("Using %s as joystick device.", joy_dev_path.c_str());
+        joy_dev_ = joy_dev_path;
+      }
     }
 
     if (autorepeat_rate_ > 1 / coalesce_interval_)
     {
       ROS_WARN("joy_node: autorepeat_rate (%f Hz) > 1/coalesce_interval (%f Hz) "
-        "does not make sense. Timing behavior is not well defined.", autorepeat_rate_, 1/coalesce_interval_);
+               "does not make sense. Timing behavior is not well defined.",
+               autorepeat_rate_, 1 / coalesce_interval_);
     }
 
     if (deadzone_ >= 1)
     {
       ROS_WARN("joy_node: deadzone greater than 1 was requested. The semantics of deadzone have changed. "
-        "It is now related to the range [-1:1] instead of [-32767:32767]. For now I am dividing your deadzone "
-        "by 32767, but this behavior is deprecated so you need to update your launch file.");
+               "It is now related to the range [-1:1] instead of [-32767:32767]. For now I am dividing your deadzone "
+               "by 32767, but this behavior is deprecated so you need to update your launch file.");
       deadzone_ /= 32767;
     }
 
@@ -486,8 +489,8 @@ public:
         ff_fd_ = open(dev_ff.c_str(), O_RDWR);
 
         /* Set the gain of the device*/
-        int gain = 100;           /* between 0 and 100 */
-        struct input_event ie;      /* structure used to communicate with the driver */
+        int gain = 100;        /* between 0 and 100 */
+        struct input_event ie; /* structure used to communicate with the driver */
 
         ie.type = EV_FF;
         ie.code = FF_GAIN;
@@ -501,7 +504,7 @@ public:
 
         memset(&joy_effect_, 0, sizeof(joy_effect_));
         joy_effect_.id = -1;
-        joy_effect_.direction = 0;  // down
+        joy_effect_.direction = 0; // down
         joy_effect_.type = FF_RUMBLE;
         joy_effect_.u.rumble.strong_magnitude = 0;
         joy_effect_.u.rumble.weak_magnitude = 0;
@@ -526,8 +529,8 @@ public:
       bool publication_pending = false;
       tv.tv_sec = 1;
       tv.tv_usec = 0;
-      sensor_msgs::Joy joy_msg;  // Here because we want to reset it on device close.
-      double val;  // Temporary variable to hold event values
+      sensor_msgs::Joy joy_msg; // Here because we want to reset it on device close.
+      double val;               // Temporary variable to hold event values
       while (nh_.ok())
       {
         ros::spinOnce();
@@ -537,7 +540,7 @@ public:
         FD_ZERO(&set);
         FD_SET(joy_fd, &set);
 
-        int select_out = select(joy_fd+1, &set, nullptr, nullptr, &tv);
+        int select_out = select(joy_fd + 1, &set, nullptr, nullptr, &tv);
         if (select_out == -1)
         {
           tv.tv_sec = 0;
@@ -552,9 +555,9 @@ public:
           start.type = EV_FF;
           start.code = joy_effect_.id;
           start.value = 1;
-          if (write(ff_fd_, (const void*) &start, sizeof(start)) == -1)
+          if (write(ff_fd_, (const void *)&start, sizeof(start)) == -1)
           {
-            break;  // fd closed
+            break; // fd closed
           }
 
           // upload the effect
@@ -569,7 +572,7 @@ public:
         {
           if (read(joy_fd, &event, sizeof(js_event)) == -1 && errno != EAGAIN)
           {
-            break;  // Joystick is probably closed. Definitely occurs.
+            break; // Joystick is probably closed. Definitely occurs.
           }
 
           joy_msg.header.stamp = ros::Time().now();
@@ -581,7 +584,7 @@ public:
             if (event.number >= joy_msg.buttons.size())
             {
               size_t old_size = joy_msg.buttons.size();
-              joy_msg.buttons.resize(event.number+1);
+              joy_msg.buttons.resize(event.number + 1);
               for (size_t i = old_size; i < joy_msg.buttons.size(); i++)
               {
                 joy_msg.buttons[i] = 0.0;
@@ -615,7 +618,7 @@ public:
             if (event.number >= joy_msg.axes.size())
             {
               size_t old_size = joy_msg.axes.size();
-              joy_msg.axes.resize(event.number+1);
+              joy_msg.axes.resize(event.number + 1);
               for (size_t i = old_size; i < joy_msg.axes.size(); i++)
               {
                 joy_msg.axes[i] = 0.0;
@@ -664,13 +667,14 @@ public:
               publish_soon = true;
               break;
             }
-            default:
-              ROS_WARN("joy_node: Unknown event type. Please file a ticket. "
-                "time=%u, value=%d, type=%Xh, number=%d", event.time, event.value, event.type, event.number);
-              break;
+          default:
+            ROS_WARN("joy_node: Unknown event type. Please file a ticket. "
+                     "time=%u, value=%d, type=%Xh, number=%d",
+                     event.time, event.value, event.type, event.number);
+            break;
           }
         }
-        else if (tv_set)  // Assume that the timer has expired.
+        else if (tv_set) // Assume that the timer has expired.
         {
           joy_msg.header.stamp = ros::Time().now();
           publish_now = true;
@@ -694,16 +698,17 @@ public:
           fake_rc_in.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
           // joy_msg.axes[3]对应左摇杆（左右），最左mavros_rc.channels[3] = 1967，最右mavros_rc.channels[3] = 1037
           fake_rc_in.channels[3] = convert_joy_units(joy_msg.axes[3]);
-          
+
           // joy_msg.buttons[0]对应SWA两段开关
           // 初始位置：joy_msg.buttons[0] = 1
           // 往下拨：joy_msg.buttons[0] = 0
           if (joy_msg.buttons[0] > 0)
           {
-              fake_rc_in.channels[4] = RC_MIN;
-          }else
+            fake_rc_in.channels[4] = RC_MIN;
+          }
+          else
           {
-              fake_rc_in.channels[4] = RC_MAX;
+            fake_rc_in.channels[4] = RC_MAX;
           }
 
           // joy_msg.buttons[1]、joy_msg.buttons[2]对应SWB三段开关
@@ -712,15 +717,17 @@ public:
           // 往下拨2次：joy_msg.buttons[1] = 1，joy_msg.buttons[2] = 0
           if (joy_msg.buttons[2] > 0)
           {
-              fake_rc_in.channels[5] = RC_MIN;
-          }else
+            fake_rc_in.channels[5] = RC_MIN;
+          }
+          else
           {
             if (joy_msg.buttons[1] > 0)
             {
-                fake_rc_in.channels[5] = RC_MAX;
-            }else
+              fake_rc_in.channels[5] = RC_MAX;
+            }
+            else
             {
-                fake_rc_in.channels[5] = RC_MID;
+              fake_rc_in.channels[5] = RC_MID;
             }
           }
 
@@ -730,15 +737,17 @@ public:
           // 往下拨2次：joy_msg.buttons[3] = 1，joy_msg.buttons[4] = 0
           if (joy_msg.buttons[4] > 0)
           {
-              fake_rc_in.channels[6] = RC_MIN;
-          }else
+            fake_rc_in.channels[6] = RC_MIN;
+          }
+          else
           {
             if (joy_msg.buttons[3] > 0)
             {
-                fake_rc_in.channels[6] = RC_MAX;
-            }else
+              fake_rc_in.channels[6] = RC_MAX;
+            }
+            else
             {
-                fake_rc_in.channels[6] = RC_MID;
+              fake_rc_in.channels[6] = RC_MID;
             }
           }
 
@@ -747,85 +756,92 @@ public:
           // 往下拨：joy_msg.buttons[5] = 1
           if (joy_msg.buttons[5] > 0)
           {
-              fake_rc_in.channels[7] = RC_MAX;
-          }else
+            fake_rc_in.channels[7] = RC_MAX;
+          }
+          else
           {
-              fake_rc_in.channels[7] = RC_MIN;
+            fake_rc_in.channels[7] = RC_MIN;
           }
 
-              // add override
-              // joy_msg.axes[0]对应右摇杆（左右），最左mavros_rc.channels[0] = 1967，最右mavros_rc.channels[0] = 1037
-              rc_override.channels[0] = convert_joy_units(joy_msg.axes[0]);
-              // joy_msg.axes[1]对应右摇杆（上下），最上mavros_rc.channels[1] = 1962，最右mavros_rc.channels[1] = 1032
-              rc_override.channels[1] = convert_joy_units(joy_msg.axes[1] * -1);
-              // joy_msg.axes[2]对应左摇杆（上下），最上mavros_rc.channels[2] = 1962，最右mavros_rc.channels[2] = 1032
-              rc_override.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
-              // joy_msg.axes[3]对应左摇杆（左右），最左mavros_rc.channels[3] = 1967，最右mavros_rc.channels[3] = 1037
-              rc_override.channels[3] = convert_joy_units(joy_msg.axes[3]);
-              
-              // joy_msg.buttons[0]对应SWA两段开关
-              // 初始位置：joy_msg.buttons[0] = 1
-              // 往下拨：joy_msg.buttons[0] = 0
-              if (joy_msg.buttons[0] > 0)
-              {
-                  rc_override.channels[4] = RC_MIN;
-              }else
-              {
-                  rc_override.channels[4] = RC_MAX;
-              }
+          // add override
+          // joy_msg.axes[0]对应右摇杆（左右），最左mavros_rc.channels[0] = 1967，最右mavros_rc.channels[0] = 1037
+          rc_override.channels[0] = convert_joy_units(joy_msg.axes[0]);
+          // joy_msg.axes[1]对应右摇杆（上下），最上mavros_rc.channels[1] = 1962，最右mavros_rc.channels[1] = 1032
+          rc_override.channels[1] = convert_joy_units(joy_msg.axes[1] * -1);
+          // joy_msg.axes[2]对应左摇杆（上下），最上mavros_rc.channels[2] = 1962，最右mavros_rc.channels[2] = 1032
+          rc_override.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
+          // joy_msg.axes[3]对应左摇杆（左右），最左mavros_rc.channels[3] = 1967，最右mavros_rc.channels[3] = 1037
+          rc_override.channels[3] = convert_joy_units(joy_msg.axes[3]);
 
-              // joy_msg.buttons[1]、joy_msg.buttons[2]对应SWB三段开关
-              // 初始位置：joy_msg.buttons[1] = 0，joy_msg.buttons[2] = 1
-              // 往下拨1次：joy_msg.buttons[1] = 0，joy_msg.buttons[2] = 0
-              // 往下拨2次：joy_msg.buttons[1] = 1，joy_msg.buttons[2] = 0
-              if (joy_msg.buttons[2] > 0)
-              {
-                  rc_override.channels[5] = RC_MIN;
-              }else
-              {
-                if (joy_msg.buttons[1] > 0)
-                {
-                    rc_override.channels[5] = RC_MAX;
-                }else
-                {
-                    rc_override.channels[5] = RC_MID;
-                }
-              }
+          // joy_msg.buttons[0]对应SWA两段开关
+          // 初始位置：joy_msg.buttons[0] = 1
+          // 往下拨：joy_msg.buttons[0] = 0
+          if (joy_msg.buttons[0] > 0)
+          {
+            rc_override.channels[4] = RC_MIN;
+          }
+          else
+          {
+            rc_override.channels[4] = RC_MAX;
+          }
 
-              // joy_msg.buttons[3]、joy_msg.buttons[4]对应SWC三段开关
-              // 初始位置：joy_msg.buttons[3] = 0，joy_msg.buttons[4] = 1
-              // 往下拨1次：joy_msg.buttons[3] = 0，joy_msg.buttons[4] = 0
-              // 往下拨2次：joy_msg.buttons[3] = 1，joy_msg.buttons[4] = 0
-              if (joy_msg.buttons[4] > 0)
-              {
-                  rc_override.channels[6] = RC_MIN;
-              }else
-              {
-                if (joy_msg.buttons[3] > 0)
-                {
-                    rc_override.channels[6] = RC_MAX;
-                }else
-                {
-                    rc_override.channels[6] = RC_MID;
-                }
-              }
+          // joy_msg.buttons[1]、joy_msg.buttons[2]对应SWB三段开关
+          // 初始位置：joy_msg.buttons[1] = 0，joy_msg.buttons[2] = 1
+          // 往下拨1次：joy_msg.buttons[1] = 0，joy_msg.buttons[2] = 0
+          // 往下拨2次：joy_msg.buttons[1] = 1，joy_msg.buttons[2] = 0
+          if (joy_msg.buttons[2] > 0)
+          {
+            rc_override.channels[5] = RC_MIN;
+          }
+          else
+          {
+            if (joy_msg.buttons[1] > 0)
+            {
+              rc_override.channels[5] = RC_MAX;
+            }
+            else
+            {
+              rc_override.channels[5] = RC_MID;
+            }
+          }
 
-              // joy_msg.buttons[5]对应SWD两段开关
-              // 初始位置：joy_msg.buttons[5] = 0
-              // 往下拨：joy_msg.buttons[5] = 1
-              if (joy_msg.buttons[5] > 0)
-              {
-                  rc_override.channels[7] = RC_MAX;
-              }else
-              {
-                  rc_override.channels[7] = RC_MIN;
-              }
+          // joy_msg.buttons[3]、joy_msg.buttons[4]对应SWC三段开关
+          // 初始位置：joy_msg.buttons[3] = 0，joy_msg.buttons[4] = 1
+          // 往下拨1次：joy_msg.buttons[3] = 0，joy_msg.buttons[4] = 0
+          // 往下拨2次：joy_msg.buttons[3] = 1，joy_msg.buttons[4] = 0
+          if (joy_msg.buttons[4] > 0)
+          {
+            rc_override.channels[6] = RC_MIN;
+          }
+          else
+          {
+            if (joy_msg.buttons[3] > 0)
+            {
+              rc_override.channels[6] = RC_MAX;
+            }
+            else
+            {
+              rc_override.channels[6] = RC_MID;
+            }
+          }
 
-              // add manual_control
-              manual_control.x = 0.0;
-              manual_control.y = 0.0;
-              manual_control.z = joy_msg.axes[2] * -1000;
-              manual_control.r = 0.0;
+          // joy_msg.buttons[5]对应SWD两段开关
+          // 初始位置：joy_msg.buttons[5] = 0
+          // 往下拨：joy_msg.buttons[5] = 1
+          if (joy_msg.buttons[5] > 0)
+          {
+            rc_override.channels[7] = RC_MAX;
+          }
+          else
+          {
+            rc_override.channels[7] = RC_MIN;
+          }
+
+          // add manual_control
+          manual_control.x = 0.0;
+          manual_control.y = 0.0;
+          manual_control.z = joy_msg.axes[2] * -1000;
+          manual_control.r = 0.0;
           publish_now = false;
           tv_set = false;
           publication_pending = false;
@@ -834,7 +850,12 @@ public:
         }
 
         // always pub fake_rc_in 没有遥控器输入时，1Hz发布
-        pub_fake_rc_in.publish(fake_rc_in);
+        for (size_t i = 1; i <= agent_num; i++)
+        {
+          // 即使是多个飞机,也只是发布同样的遥控器指令,仅仅是为了仿真方便
+          pub_fake_rc_in[i].publish(fake_rc_in);
+        }
+
         // pub_rc_override.publish(rc_override);
         // pub_manual_control.publish(manual_control);
 
@@ -863,7 +884,7 @@ public:
         }
 
         diagnostic_.update();
-      }  // End of joystick open loop.
+      } // End of joystick open loop.
 
       close(ff_fd_);
       close(joy_fd);

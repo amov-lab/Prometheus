@@ -112,8 +112,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.position[0] = 0.0;
     uav_state.position[1] = 0.0;
     uav_state.position[2] = 0.0;
-    //该经纬度设置为阿木实验室附近测试场地(小花园)的经纬度
-    uav_state.latitude = 30.7852600; // 此处处置设置为阿木实验室经纬度，todo
+    //该经纬度为阿木实验室测试场地(小花园)的经纬度
+    uav_state.latitude = 30.7852600; 
     uav_state.longitude = 103.8610300;
     uav_state.altitude = 100.0;
     uav_state.velocity[0] = 0.0;
