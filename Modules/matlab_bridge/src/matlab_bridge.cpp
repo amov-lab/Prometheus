@@ -186,12 +186,16 @@ void Matlab_Bridge::matlab_safety_check(const ros::TimerEvent &e)
         matlab_setting_result.z = 1;
         matlab_setting_result_pub.publish(matlab_setting_result);
     }
-    else
+    else 
     {
-        cout << RED << "uav_state error, LAND now!" << TAIL << endl;
-        uav_command.header.stamp = ros::Time::now();
-        uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
-        uav_command_pub.publish(uav_command);
+        // 只要飞机没有上锁,持续发布降落指令
+        if(uav_state.armed)
+        {
+            cout << RED << "uav_state error, LAND now!" << TAIL << endl;
+            uav_command.header.stamp = ros::Time::now();
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
+            uav_command_pub.publish(uav_command);
+        }
         return;
     }
 
@@ -371,13 +375,13 @@ Eigen::Vector4d Matlab_Bridge::acc_cmd_to_att_cmd(Eigen::Vector3d &acc_cmd, doub
     if (att_cmd(3) < 0.1)
     {
         att_cmd(3) = 0.1;
-        ROS_INFO("throttle too low");
+        // ROS_INFO("throttle too low");
     }
 
     if (att_cmd(3) > 1.0)
     {
         att_cmd(3) = 1.0;
-        ROS_INFO("throttle too high");
+        // ROS_INFO("throttle too high");
     }
 
     return att_cmd;

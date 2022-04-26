@@ -36,6 +36,7 @@ private:
     int uav_ready;
     bool uav_checked;
     bool get_matlab_control_cmd;
+    string check_info;
     geometry_msgs::Pose matlab_cmd;
     ros::Time last_matlab_cmd_time;
     geometry_msgs::Point matlab_setting_cmd;
