@@ -19,6 +19,11 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/sysu/prometheus_px4
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/sysu/prometheus_px4/Tools/sitl_gazebo
 ```
 
+- PX4编译
+- make distclean
+- make amovlab_p450_default gazebo_px4 
+
+
 Gazebo仿真环境和功能写成单独的launch启动脚本
 - Gazebo仿真环境启动脚本负责启动gazebo,生成无人机及相关模型,启动PX4 sitl,mavros
   - 此时所有无人机能够输出mavros状态,并可以接收mavros指令 
