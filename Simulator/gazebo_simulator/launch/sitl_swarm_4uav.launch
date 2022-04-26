@@ -1,0 +1,184 @@
+<launch>
+
+    <!--三机编队中每架无人机的编号,名字-->
+    <arg name="uav1_agent_id" default="1"/>
+    <arg name="uav2_agent_id" default="2"/>
+    <arg name="uav3_agent_id" default="3"/>
+    <arg name="uav4_agent_id" default="4"/>
+    <arg name="uav1_name"     default="uav1"/>
+    <arg name="uav2_name"     default="uav2"/>
+    <arg name="uav3_name"     default="uav3"/>
+    <arg name="uav4_name"     default="uav4"/>
+    
+    <!--三机编队中每架无人机的模型文件路径-->
+    <arg name="uav1_sdf_path" default="$(find prometheus_gazebo)/amov_models/Multisolo/uav1/uav1.sdf"/>
+    <arg name="uav2_sdf_path" default="$(find prometheus_gazebo)/amov_models/Multisolo/uav2/uav2.sdf"/>
+    <arg name="uav3_sdf_path" default="$(find prometheus_gazebo)/amov_models/Multisolo/uav3/uav3.sdf"/>
+    <arg name="uav4_sdf_path" default="$(find prometheus_gazebo)/amov_models/Multisolo/uav4/uav4.sdf"/>
+    
+    <!--三机编队中每架无人机的ros控制节点:swarm,uav_control-->
+    <arg name="uav1_swarm_node_name"   default="swarm_control_uav1"/>
+    <arg name="uav2_swarm_node_name"   default="swarm_control_uav2"/>
+    <arg name="uav3_swarm_node_name"   default="swarm_control_uav3"/>
+    <arg name="uav4_swarm_node_name"   default="swarm_control_uav4"/>
+    <arg name="uav1_control_node_name" default="uav_control_uav1"/>
+    <arg name="uav2_control_node_name" default="uav_control_uav2"/>
+    <arg name="uav3_control_node_name" default="uav_control_uav3"/>
+    <arg name="uav4_control_node_name" default="uav_control_uav4"/>
+    
+    <!--三机编队中每架无人机的初始位置-->
+    <arg name="uav1_init_x" default="0"/>
+    <arg name="uav1_init_y" default="3"/>
+    <arg name="uav2_init_x" default="0"/>
+    <arg name="uav2_init_y" default="1"/>
+    <arg name="uav3_init_x" default="0"/>
+    <arg name="uav3_init_y" default="-1"/>
+    <arg name="uav4_init_x" default="0"/>
+    <arg name="uav4_init_y" default="-3"/>
+
+    <!--集群通用相关参数-->
+    <arg name="takeoff_height"   default="5.0"/>
+    <arg name="setmode_timeout"  default="2"/>
+    <arg name="sim_mode"         default="false"/>
+    <arg name="swarm"            default="true"/>
+    <arg name="stop_mode"        default="2"/>
+
+    <arg name="control/Disarm_height" default="0.2"/>
+    <arg name="control/Land_speed" default="0.2"/>
+    <arg name="control/location_source" default="4"/>
+    <arg name="geo_fence/x_min" default="-100"/>
+    <arg name="geo_fence/x_max" default="100"/>
+    <arg name="geo_fence/y_min" default="-100"/>
+    <arg name="geo_fence/y_max" default="100"/>
+    <arg name="geo_fence/z_min" default="-5"/>
+    <arg name="geo_fence/z_max" default="100"/>
+
+    <include file="$(find prometheus_mission)/launch/sitl_swarm_basic.launch">
+        <arg name="agent_id"          default="$(arg uav1_agent_id)"/>
+        <arg name="uav_name"          default="$(arg uav1_name)"/>
+        <arg name="sdf_path"          default="$(arg uav1_sdf_path)"/>
+        <arg name="uav_init_x"        default="$(arg uav1_init_x)"/>
+        <arg name="uav_init_y"        default="$(arg uav1_init_y)"/>
+        <arg name="swarm_node_name"   default="$(arg uav1_swarm_node_name)"/>
+        <arg name="control_node_name" default="$(arg uav1_control_node_name)"/>
+        
+        <arg name="sim_mode"          default="$(arg sim_mode)"/>
+        <arg name="swarm"             default="$(arg swarm)"/>
+        <arg name="stop_mode"         default="$(arg stop_mode)"/>
+        <arg name="takeoff_height"    default="$(arg takeoff_height)"/>
+        <arg name="setmode_timeout"   default="$(arg setmode_timeout)"/>
+
+        <arg name="control/Disarm_height"   default="$(arg control/Disarm_height)"/>
+        <arg name="control/Land_speed"      default="$(arg control/Land_speed)"/>
+        <arg name="control/location_source" default="$(arg control/location_source)"/>
+
+        <arg name="geo_fence/x_min" default="$(arg geo_fence/x_min)"/>
+        <arg name="geo_fence/x_max" default="$(arg geo_fence/x_max)"/>
+        <arg name="geo_fence/y_min" default="$(arg geo_fence/y_min)"/>
+        <arg name="geo_fence/y_max" default="$(arg geo_fence/y_max)"/>
+        <arg name="geo_fence/z_min" default="$(arg geo_fence/z_min)"/>
+        <arg name="geo_fence/z_max" default="$(arg geo_fence/z_max)"/>
+    </include>
+
+    <include file="$(find prometheus_mission)/launch/sitl_swarm_basic.launch">
+        <arg name="agent_id"          default="$(arg uav2_agent_id)"/>
+        <arg name="uav_name"          default="$(arg uav2_name)"/>
+        <arg name="sdf_path"          default="$(arg uav2_sdf_path)"/>
+        <arg name="uav_init_x"        default="$(arg uav2_init_x)"/>
+        <arg name="uav_init_y"        default="$(arg uav2_init_y)"/>
+        <arg name="swarm_node_name"   default="$(arg uav2_swarm_node_name)"/>
+        <arg name="control_node_name" default="$(arg uav2_control_node_name)"/>
+        
+        <arg name="sim_mode"          default="$(arg sim_mode)"/>
+        <arg name="swarm"             default="$(arg swarm)"/>
+        <arg name="stop_mode"         default="$(arg stop_mode)"/>
+        <arg name="takeoff_height"    default="$(arg takeoff_height)"/>
+        <arg name="setmode_timeout"   default="$(arg setmode_timeout)"/>
+
+        <arg name="control/Disarm_height"   default="$(arg control/Disarm_height)"/>
+        <arg name="control/Land_speed"      default="$(arg control/Land_speed)"/>
+        <arg name="control/location_source" default="$(arg control/location_source)"/>
+
+        <arg name="geo_fence/x_min" default="$(arg geo_fence/x_min)"/>
+        <arg name="geo_fence/x_max" default="$(arg geo_fence/x_max)"/>
+        <arg name="geo_fence/y_min" default="$(arg geo_fence/y_min)"/>
+        <arg name="geo_fence/y_max" default="$(arg geo_fence/y_max)"/>
+        <arg name="geo_fence/z_min" default="$(arg geo_fence/z_min)"/>
+        <arg name="geo_fence/z_max" default="$(arg geo_fence/z_max)"/>
+    </include>
+
+    <include file="$(find prometheus_mission)/launch/sitl_swarm_basic.launch">
+        <arg name="agent_id"          default="$(arg uav3_agent_id)"/>
+        <arg name="uav_name"          default="$(arg uav3_name)"/>
+        <arg name="sdf_path"          default="$(arg uav3_sdf_path)"/>
+        <arg name="uav_init_x"        default="$(arg uav3_init_x)"/>
+        <arg name="uav_init_y"        default="$(arg uav3_init_y)"/>
+        <arg name="swarm_node_name"   default="$(arg uav3_swarm_node_name)"/>
+        <arg name="control_node_name" default="$(arg uav3_control_node_name)"/>
+        
+        <arg name="sim_mode"          default="$(arg sim_mode)"/>
+        <arg name="swarm"             default="$(arg swarm)"/>
+        <arg name="stop_mode"         default="$(arg stop_mode)"/>
+        <arg name="takeoff_height"    default="$(arg takeoff_height)"/>
+        <arg name="setmode_timeout"   default="$(arg setmode_timeout)"/>
+
+        <arg name="control/Disarm_height"   default="$(arg control/Disarm_height)"/>
+        <arg name="control/Land_speed"      default="$(arg control/Land_speed)"/>
+        <arg name="control/location_source" default="$(arg control/location_source)"/>
+
+        <arg name="geo_fence/x_min" default="$(arg geo_fence/x_min)"/>
+        <arg name="geo_fence/x_max" default="$(arg geo_fence/x_max)"/>
+        <arg name="geo_fence/y_min" default="$(arg geo_fence/y_min)"/>
+        <arg name="geo_fence/y_max" default="$(arg geo_fence/y_max)"/>
+        <arg name="geo_fence/z_min" default="$(arg geo_fence/z_min)"/>
+        <arg name="geo_fence/z_max" default="$(arg geo_fence/z_max)"/>
+    </include>
+
+    <include file="$(find prometheus_mission)/launch/sitl_swarm_basic.launch">
+        <arg name="agent_id"          default="$(arg uav4_agent_id)"/>
+        <arg name="uav_name"          default="$(arg uav4_name)"/>
+        <arg name="sdf_path"          default="$(arg uav4_sdf_path)"/>
+        <arg name="uav_init_x"        default="$(arg uav4_init_x)"/>
+        <arg name="uav_init_y"        default="$(arg uav4_init_y)"/>
+        <arg name="swarm_node_name"   default="$(arg uav4_swarm_node_name)"/>
+        <arg name="control_node_name" default="$(arg uav4_control_node_name)"/>
+        
+        <arg name="sim_mode"          default="$(arg sim_mode)"/>
+        <arg name="swarm"             default="$(arg swarm)"/>
+        <arg name="stop_mode"         default="$(arg stop_mode)"/>
+        <arg name="takeoff_height"    default="$(arg takeoff_height)"/>
+        <arg name="setmode_timeout"   default="$(arg setmode_timeout)"/>
+
+        <arg name="control/Disarm_height"   default="$(arg control/Disarm_height)"/>
+        <arg name="control/Land_speed"      default="$(arg control/Land_speed)"/>
+        <arg name="control/location_source" default="$(arg control/location_source)"/>
+
+        <arg name="geo_fence/x_min" default="$(arg geo_fence/x_min)"/>
+        <arg name="geo_fence/x_max" default="$(arg geo_fence/x_max)"/>
+        <arg name="geo_fence/y_min" default="$(arg geo_fence/y_min)"/>
+        <arg name="geo_fence/y_max" default="$(arg geo_fence/y_max)"/>
+        <arg name="geo_fence/z_min" default="$(arg geo_fence/z_min)"/>
+        <arg name="geo_fence/z_max" default="$(arg geo_fence/z_max)"/>
+    </include>
+
+    <!--Gazebo-->
+	<!-- Gazebo configs -->
+    <arg name="gui"            default="true"/>
+    <arg name="debug"          default="false"/>
+    <arg name="verbose"        default="false"/>
+    <arg name="paused"         default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+	<arg name="world"          default="$(find prometheus_gazebo)/worlds/prometheus_empty.world"/>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui"            value="$(arg gui)"/>
+        <arg name="debug"          value="$(arg debug)"/>
+        <arg name="verbose"        value="$(arg verbose)"/>
+        <arg name="paused"         value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+        <arg name="world_name"     value="$(arg world)"/>
+    </include>
+
+</launch>
+
+

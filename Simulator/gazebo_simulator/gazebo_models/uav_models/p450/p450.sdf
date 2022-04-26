@@ -1,4 +1,5 @@
-<sdf version='1.5'>
+<?xml version='1.0'?>
+<sdf version='1.6'>
   <model name='p450'>
     <!-- p450 body -->
     <link name='base_link'>
@@ -515,5 +516,18 @@
       <accelerometerBiasCorrelationTime>300.0</accelerometerBiasCorrelationTime>
       <accelerometerTurnOnBiasSigma>0.196</accelerometerTurnOnBiasSigma>
     </plugin>
+
+    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>50.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <!-- 默认是1号机 -->
+      <topicName>/uav1/prometheus/ground_truth</topicName>
+      <gaussianNoise>0.00</gaussianNoise>
+      <frameName>world</frameName>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
+    </plugin>
+
   </model>
 </sdf>
