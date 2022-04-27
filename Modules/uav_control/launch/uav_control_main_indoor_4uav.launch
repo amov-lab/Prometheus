@@ -6,12 +6,15 @@
     <arg name="uav4_id" default="4"/>
     <arg name="sim_mode" default="true"/>
     <arg name="flag_printf" default="true"/>
+    <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
+    <arg name="control/enable_external_control" default="false"/> 
 
     <!-- 1号飞机 -->
 	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav1_id)" output="screen">
 		<param name="uav_id" value="$(arg uav1_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />
 		<param name="flag_printf" value="$(arg flag_printf)" />
+        <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
 	</node>
 
@@ -20,6 +23,7 @@
 		<param name="uav_id" value="$(arg uav2_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />
         <param name="flag_printf" value="$(arg flag_printf)" />
+        <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
 	</node>
 
@@ -28,6 +32,7 @@
 		<param name="uav_id" value="$(arg uav3_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />
         <param name="flag_printf" value="$(arg flag_printf)" />
+        <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
 	</node>
 
@@ -36,6 +41,7 @@
 		<param name="uav_id" value="$(arg uav4_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />
         <param name="flag_printf" value="$(arg flag_printf)" />
+        <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
 	</node>
 
