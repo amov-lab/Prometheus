@@ -4,6 +4,8 @@
     <arg name="init_px4_mode" default="0"/>
     <arg name="only_command_mode" default="false"/>
     <arg name="flag_printf" default="true"/>
+    <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
+    <arg name="control/enable_external_control" default="false"/> 
 
     <!-- 启动Prometheus代码, run the uav_control_node.cpp
     包括了uav_estimator.cpp和uav_controller.cpp
@@ -14,6 +16,7 @@
         <param name="init_px4_mode" value="$(arg init_px4_mode)" />
         <param name="only_command_mode" value="$(arg only_command_mode)" />
 		<param name="flag_printf" value="$(arg flag_printf)" />
+        <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
 	</node>
 
