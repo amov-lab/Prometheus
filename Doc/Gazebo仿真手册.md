@@ -21,7 +21,7 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/sysu/prometheus_px4/Tools/sitl_g
 
 - PX4编译
 - make distclean
-- make amovlab_p450_default gazebo_px4 
+- make amovlab_sitl_default gazebo_p450 
 
 
 Gazebo仿真环境和功能写成单独的launch启动脚本
