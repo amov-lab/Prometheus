@@ -88,13 +88,16 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
                                                   &UAV_controller::px4_att_target_cb, this);
 
     //【订阅】PX4遥控器数据
-    string rc_in_topic_name = "/uav" + std::to_string(uav_id) + "/mavros/rc/in";
+    string rc_topic_name;
     if (sim_mode)
     {
-        rc_in_topic_name = "/uav" + std::to_string(uav_id) + "/prometheus/fake_rc_in";
+        rc_topic_name = "/uav" + std::to_string(uav_id) + "/prometheus/fake_rc_in";
+    }else
+    {
+        rc_topic_name = "/uav" + std::to_string(uav_id) + "/mavros/rc/in";
     }
     px4_rc_sub =
-        nh.subscribe<mavros_msgs::RCIn>(rc_in_topic_name,
+        nh.subscribe<mavros_msgs::RCIn>(rc_topic_name,
                                         1,
                                         &UAV_controller::px4_rc_cb, this);
 
