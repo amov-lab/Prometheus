@@ -21,363 +21,173 @@
 // 1, 多个sdf的编写,端口如何与px4对应
 // 2, uav_control中相关的集群接口
 // 3, ...
-#include "swarm_control.h"
 
-SwarmControl::SwarmControl(ros::NodeHandle &nh)
+#include <ros/ros.h>
+#include <Eigen/Eigen>
+#include <prometheus_msgs/UAVCommand.h>
+#include <prometheus_msgs/UAVSetup.h>
+#include <prometheus_msgs/GpsData.h>
+
+// 输入参数：　阵型，阵型基本尺寸，集群数量
+// 所有的阵型和数量必须提前预设!!
+// swarm_shape: 0代表一字队形,1代表三角队形
+Eigen::MatrixXf getFormationSeparation(int swarm_shape, float swarm_size, int swarm_num_uav)
 {
-    // 【参数】编号，从1开始编号
-    nh.param<int>("agent_id", this->agent_id_, 1);
-    nh.param<float>("takeoff_height", this->takeoff_height_, 1.0);
-    nh.param<float>("setmode_timeout", this->setmode_timeout_, 2.0);
-    //无人机集群控制模式切换为stop,无人机相应的模式;1: LAND 2: RETURN
-    nh.param<int>("stop_mode", this->stop_mode_,1);
+    //矩阵大小为　swarm_num_uav＊4 , 对应x,y,z,yaw四个自由度的分离量
+    Eigen::MatrixXf seperation(swarm_num_uav,4); 
 
-    this->node_name_ = "[swarm_control_uav_" + std::to_string(this->agent_id_) + "]";
+    //判断是否为奇数,位操作符&,如果为奇数,则2的0次方一定为1,那么奇数&1就等于1,偶数&1就等于0
+    if((swarm_num_uav & 1) == 1)
+    {
+        int diff_ont_column_odd_value = (swarm_num_uav - 1) / 2;
+        int diff_triangle_odd_value = (swarm_num_uav - 1) / 2;
+        switch(swarm_shape)
+        {
+            //一字队形
+            case 0:
+                for(int i = 0; i < swarm_num_uav; i++)
+                {
+                    seperation(i,0) = 0.0;
+                    seperation(i,1) = i - diff_ont_column_odd_value;
+                    seperation(i,2) = 0.0;
+                }
+                break;
 
-    //【订阅】本机状态信息（来自本机估计节点）
-    this->uav_state_sub_ = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(this->agent_id_) + "/prometheus/state",
-                                                                   1,
-                                                                   &SwarmControl::uavStateCb, this);
+            //三角队形
+            case 1:
+                for(int i = 0; i <=diff_triangle_odd_value; i++)
+                {
+                    seperation(i,0) = i;
+                    seperation(i,1) = i - diff_triangle_odd_value;
+                    seperation(i,2) = 0.0;
+                    
+                    seperation(swarm_num_uav - 1 - i,0) = i;
+                    seperation(swarm_num_uav - 1 - i,1) = diff_triangle_odd_value - i;
+                    seperation(swarm_num_uav - 1 - i,2) = 0.0; 
+                }
+                break;
+        }    
+    }
+    else
+    {
+        float diff_one_column_even_value = swarm_num_uav / 2.0 - 0.5;
+        int diff_triangle_even_value = swarm_num_uav / 2;
+        switch (swarm_shape)
+        {
+            //一字队形
+            case 0:
+                for(int i = 0; i < swarm_num_uav; i++)
+                {
+                    seperation(i,0) = 0.0;
+                    seperation(i,1) = i - diff_one_column_even_value;
+                    seperation(i,2) = 0.0;
+                }
+                break;
 
-    //【订阅】集群控制指令(来自地面站 -> 通信节点)
-    this->swarm_command_sub_ = nh.subscribe<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command",
-                                                                           1,
-                                                                           &SwarmControl::swarmCommandCb, this);
+            //三角队形
+            case 1:
+                for(int i = 0; i < diff_triangle_even_value; i++)
+                {
+                    seperation(i,0) = i;
+                    seperation(i,1) = i + 1 - diff_triangle_even_value;
+                    seperation(i,2) = 0.0;
 
-    //【发布】底层控制指令(-> uav_control.cpp)
-    this->uav_cmd_pub_ = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(this->agent_id_) + "/prometheus/command", 1);
+                    if(i+1 == diff_triangle_even_value)
+                    {
+                        seperation(swarm_num_uav - 1 - i,0) = 0; 
+                    }
+                    else
+                    {
+                        seperation(swarm_num_uav - 1 - i,0) = i;
+                    }
+                    seperation(swarm_num_uav - 1 - i,1) = diff_triangle_even_value - i - 1;
+                    seperation(swarm_num_uav - 1 - i,2) = 0.0;
+                }
+                break;
+        }
+    }
+    
+    for(int i = 0 ; i < swarm_num_uav ; i++)
+    {
+        for(int j = 0 ; j < 2; j++)
+        {
+            seperation(i,j) *= swarm_size;
+        }
+    }
 
-    //【发布】mavros接口调用指令(-> uav_control.cpp)
-    this->mavros_interface_pub_ = nh.advertise<prometheus_msgs::MavrosInterface>("/uav" + std::to_string(this->agent_id_) + "/prometheus/mavros_interface", 1);
-
-    //【定时器】打印调试
-    this->debug_timer_ = nh.createTimer(ros::Duration(10.0), &SwarmControl::debugCb, this);
-
-    this->vel_ctrl_param_.APF_R = 1.3; // 不能大于阵型间隔，不然无法收敛
-    this->vel_ctrl_param_.APF_r = 0.4;
-    this->vel_ctrl_param_.k_aij = 0.1;
-    this->vel_ctrl_param_.k_p = 1.5;
-    this->vel_ctrl_param_.k_gamma = 1.5;
-
-    this->last_process_time_ = ros::Time::now();
-    this->mainloop_rate_ = 10.0;
-
-    this->swarm_command_.header.stamp = ros::Time::now();
-    this->swarm_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Ready;
-    this->swarm_command_.swarm_size = 1.0;
-    this->swarm_command_.swarm_shape = prometheus_msgs::SwarmCommand::One_column;
-    this->swarm_command_.target_area_x_min = 0.0;
-    this->swarm_command_.target_area_y_min = 0.0;
-    this->swarm_command_.target_area_x_max = 0.0;
-    this->swarm_command_.target_area_y_max = 0.0;
-    this->swarm_command_.attack_target_pos[0] = 0.0;
-    this->swarm_command_.attack_target_pos[1] = 0.0;
-    this->swarm_command_.attack_target_pos[2] = 0.0;
-
-    printfParam();
-
-    //固定的浮点显示
-    cout.setf(ios::fixed);
-    //setprecision(n) 设显示小数精度为n位
-    cout << setprecision(SWARM_CONTROL_BOSHEN97_NUM_POINT);
-    //左对齐
-    cout.setf(ios::left);
-    // 强制显示小数点
-    cout.setf(ios::showpoint);
-    // 强制显示符号
-    cout.setf(ios::showpos);
-
-    cout << GREEN << this->node_name_ << " init! " << TAIL << endl;
+    return seperation;
 }
 
-void SwarmControl::mainLoop()
+int main(int argc, char** argv)
 {
-    ros::Time now_time = ros::Time::now();
-    // 本函数的实际执行频率，mainloop_rate = 100，即100Hz
-    if ((now_time - this->last_process_time_).toSec() < (1.0 / this->mainloop_rate_))
+    ros::init(argc, argv, "formation_control");
+    ros::NodeHandle n("~");
+    int agent_num;
+    int formation_size;
+    n.param<int>("agent_num", agent_num, 3);
+    n.param<int>("formation_size", formation_size, 1);
+    
+    int formation_shape;
+    Eigen::Vector3d leader_pos;
+    Eigen::MatrixXf separation = getFormationSeparation(0, formation_size, agent_num);
+
+    prometheus_msgs::GpsData origin_gps;
+    origin_gps.latitude = 30.7852600;
+    origin_gps.longitude = 103.8610300;
+    origin_gps.altitude = 100.0;
+
+    ros::Publisher uav_command_pub[agent_num];
+    ros::Publisher set_local_pose_offset_pub[agent_num];
+
+    for(int i=0; i<agent_num; i++)
     {
-        return;
+        uav_command_pub[i] = n.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(i+1) + "/prometheus/command", 10);
+        set_local_pose_offset_pub[i] = n.advertise<prometheus_msgs::GpsData>("/uav" + std::to_string(i+1) + "/prometheus/set_local_offset_pose", 10);
     }
-    this->last_process_time_ = now_time;
-    switch (this->swarm_command_.Swarm_CMD)
+
+    std::cout << "Please input 1 to continue" << std::endl;
+    int start_flag;
+    std::cin >>start_flag;
+
+    for(int i=0; i<agent_num; i++)
     {
+        set_local_pose_offset_pub[i].publish(origin_gps);
+    }
 
-    // 【Ready】 准备
-    case prometheus_msgs::SwarmCommand::Ready:
-
-        break;
-
-    // 【Init】 初始化
-    case prometheus_msgs::SwarmCommand::Init:
-
-        // check UAV state, todo...
-        // 检查解锁状态、GPS状态、模式状态等等
-        // 打印提示消息
-        
-        break;
-    // 【Start】 起飞
-    case prometheus_msgs::SwarmCommand::Start:
-
-        if(this->swarm_command_last_.Swarm_CMD == this->swarm_command_.Swarm_CMD)
+    while(ros::ok())
+    {     
+        int control_command;
+        std::cout << "Please input control command: 0 for XYZ_POS, 1 for One_Column, 2 for Triangle" << std::endl;
+        std::cin >> control_command;
+        if(control_command == 0)
         {
-            break;
-        }
+            std::cout << "Please input X [m]:" << std::endl;
+            std::cin >> leader_pos[0];
 
-        this->uav_command_.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-        this->uav_command_.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
-        this->uav_command_.position_ref[0] = 0;
-        this->uav_command_.position_ref[1] = 0;
-        this->uav_command_.position_ref[2] = this->takeoff_height_; 
-        this->uav_cmd_pub_.publish(this->uav_command_);
-        sleep(1);
-        this->mavros_interface_.type = prometheus_msgs::MavrosInterface::SET_MODE;
-        this->mavros_interface_.mode = "OFFBOARD";
-        this->mavros_interface_pub_.publish(this->mavros_interface_);
-        sleep(1);
-        this->mavros_interface_.type = prometheus_msgs::MavrosInterface::ARMING;
-        this->mavros_interface_.arming = true;
-        this->mavros_interface_pub_.publish(this->mavros_interface_);
-        sleep(2);
+            std::cout << "Please input Y [m]:" << std::endl;
+            std::cin >> leader_pos[1];
 
-        break;
-
-    // 【Hold】 悬停
-    case prometheus_msgs::SwarmCommand::Hold:
-
-        this->uav_command_.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
-        this->uav_cmd_pub_.publish(this->uav_command_);
-
-        break;
-
-    // 【Stop】 降落,停止
-    case prometheus_msgs::SwarmCommand::Stop:
-
-        if(this->swarm_command_last_.Swarm_CMD == this->swarm_command_.Swarm_CMD)
+            std::cout << "Please input Z [m]:" << std::endl;
+            std::cin >> leader_pos[2];
+        }else if(control_command == 1)
         {
-            break;
-        }
-
-        if(this->stop_mode_ == 1)
+            separation = getFormationSeparation(0, formation_size, agent_num);
+        }else if(control_command == 2)
         {
-            this->mavros_interface_.type = prometheus_msgs::MavrosInterface::SET_MODE;
-            this->mavros_interface_.mode = "AUTO.LAND";
-            this->mavros_interface_pub_.publish(this->mavros_interface_);
-        }
-        else if(this->stop_mode_ == 2)
+            separation = getFormationSeparation(1, formation_size, agent_num);
+        }   
+
+        for(int i=0; i<agent_num; i++)
         {
-            this->mavros_interface_.type = prometheus_msgs::MavrosInterface::SET_MODE;
-            this->mavros_interface_.mode = "AUTO.RTL";
-            this->mavros_interface_pub_.publish(this->mavros_interface_);
+            prometheus_msgs::UAVCommand uav_command;
+            uav_command.header.stamp = ros::Time::now();
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+            uav_command.position_ref[0] = leader_pos[0] + separation(i,0);
+            uav_command.position_ref[1] = leader_pos[1] + separation(i,1);
+            uav_command.position_ref[2] = leader_pos[2] + separation(i,2);
+
+            uav_command_pub[i].publish(uav_command); 
         }
-        
-        break;
-
-    // 【Formation】 班组跟随，无人机无人车以编队飞行，或者直接跟随离它最近的士兵
-    // 需要士兵位置信息（或者使用视觉信息跟随）
-    case prometheus_msgs::SwarmCommand::Formation:
-
-        //阵型（位置控制）
-        formationWithPositionControl();
-
-        //阵型（速度控制）
-        //formation_with_velocity_control();
-
-        break;
-
-    // 【Follow】 班组跟随，无人机无人车以编队飞行，或者直接跟随离它最近的士兵
-    // 需要士兵位置信息（或者使用视觉信息跟随）
-    case prometheus_msgs::SwarmCommand::Follow:
-        // todo ...
-        break;
-
-    // 【Search】 对目标区域进行搜索
-    case prometheus_msgs::SwarmCommand::Search:
-        // todo ...
-        break;
-
-    // 【Attack】 对目标位置进行打击
-    case prometheus_msgs::SwarmCommand::Attack:
-        // todo ...
-        break;
     }
-    this->swarm_command_last_ = this->swarm_command_;
-}
-
-void SwarmControl::swarmCommandCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg)
-{
-    this->swarm_command_ = *msg;
-
-    // 指令预处理
-    switch (this->swarm_command_.Swarm_CMD)
-    {
-    // 【Init】 准备
-    case prometheus_msgs::SwarmCommand::Ready:
-        this->mainloop_rate_ = 10.0;
-        break;
-    // 【Init】 准备
-    case prometheus_msgs::SwarmCommand::Init:
-        this->mainloop_rate_ = 10.0;
-        break;
-    // 【Start】 起飞
-    case prometheus_msgs::SwarmCommand::Start:
-        this->mainloop_rate_ = 10.0;
-        break;
-
-    // 【Hold】 悬停
-    case prometheus_msgs::SwarmCommand::Hold:
-        this->mainloop_rate_ = 10.0;
-        break;
-
-    // 【Stop】 降落,停止
-    case prometheus_msgs::SwarmCommand::Stop:
-        this->mainloop_rate_ = 10.0;
-        break;
-
-    // 【Formation】
-    // 确定阵型量，follow_in_formation将发布agent指令
-    case prometheus_msgs::SwarmCommand::Formation:
-        this->mainloop_rate_ = 20.0;
-        // 虚拟领队位置
-        this->virtual_leader_pos_[0] = this->swarm_command_.leader_pos[0];
-        this->virtual_leader_pos_[1] = this->swarm_command_.leader_pos[1];
-        this->virtual_leader_pos_[2] = this->swarm_command_.leader_pos[2];
-        this->virtual_leader_vel_[0] = this->swarm_command_.leader_vel[0];
-        this->virtual_leader_vel_[1] = this->swarm_command_.leader_vel[1];
-
-        //队形切换
-        this->formation_separation_ = FormationUtils::getFormationSeparation(this->swarm_command_.swarm_shape, this->swarm_command_.swarm_size, this->swarm_command_.swarm_num);
-
-    }
-}
-
-void SwarmControl::uavStateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
-{
-    this->uav_state_ = *msg;
-    this->uav_pos_ = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
-    this->uav_vel_ = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
-}
-
-/*void SwarmControl::formationWithVelocityControl()
-{
-    　//平面阵型，xy控制速度，z轴高度定高
-    　//一阶积分器分布式编队控制算法，可追踪时变轨迹，此处采用双向环的拓扑结构，且仅部分无人机可收到地面站发来的虚拟领队消息
-    　//参考文献：Multi-Vehicle consensus with a time-varying reference state 公式(11) - (12)
-    　//目前该算法有一定控制偏差，可能是由于参数选取不是最佳导致的
-
-    float yita = 1 / ((float)this->uav_num_ * this->vel_ctrl_param_.k_aij + this->vel_ctrl_param_.k_p);
-
-    Eigen::Vector2d vel_des;
-
-    //收敛项
-    vel_des[0] = yita * this->vel_ctrl_param_.k_p * (this->virtual_leader_vel_[0] - this->vel_ctrl_param_.k_gamma * (this->uav_pos_[0] - this->virtual_leader_pos_[0] - this->formation_separation_(this->agent_id_ - 1, 0)));
-    vel_des[1] = yita * this->vel_ctrl_param_.k_p * (this->virtual_leader_vel_[1] - this->vel_ctrl_param_.k_gamma * (this->uav_pos_[1] - this->virtual_leader_pos_[1] - this->formation_separation_(this->agent_id_ - 1, 1)));
-
-    //协同项
-    for (int i = 1; i <= this->uav_num_; i++)
-    {
-        if (i == this->agent_id_)
-        {
-            continue;
-        }
-
-        vel_des[0] += -yita * this->vel_ctrl_param_.k_aij * (this->all_uav_vel_[i][0] - this->vel_ctrl_param_.k_gamma * ((this->uav_pos_[0] - this->all_uav_pos_[i][0]) - (this->formation_separation_(this->agent_id_ - 1, 0) - this->formation_separation_(i - 1, 0))));
-        vel_des[1] += -yita * this->vel_ctrl_param_.k_aij * (this->all_uav_vel_[i][1] - this->vel_ctrl_param_.k_gamma * ((this->uav_pos_[1] - this->all_uav_pos_[i][1]) - (this->formation_separation_(this->agent_id_ - 1, 1) - this->formation_separation_(i - 1, 1))));
-    }
-
-    Eigen::Vector3d dv;
-    //计算APF项（APF还是只能作为一个局部策略）
-    for (int i = 1; i <= this->uav_num_; i++)
-    {
-        if (i == this->agent_id_)
-        {
-            continue;
-        }
-
-        float distance = (this->uav_pos_ - this->all_uav_vel_[i]).norm();
-
-        if (distance > this->vel_ctrl_param_.APF_R)
-        {
-            dv.setZero();
-        }
-        else if (distance > this->vel_ctrl_param_.APF_r)
-        {
-            dv = 4 * (this->vel_ctrl_param_.APF_R * this->vel_ctrl_param_.APF_R - this->vel_ctrl_param_.APF_r * this->vel_ctrl_param_.APF_r) * (distance * distance - this->vel_ctrl_param_.APF_R * this->vel_ctrl_param_.APF_R) / pow(distance * distance - this->vel_ctrl_param_.APF_r * this->vel_ctrl_param_.APF_r, 3) * (this->uav_pos_ - this->all_uav_vel_[i]);
-        }
-        else
-        {
-            dv.setZero();
-        }
-
-        vel_des[0] -= 0.2 * dv[0];
-        vel_des[1] -= 0.2 * dv[1];
-    }
-
-    this->uav_command_.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-    this->uav_command_.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS;
-    this->uav_command_.velocity_ref[0] = vel_des[0];
-    this->uav_command_.velocity_ref[1] = vel_des[1];
-    this->uav_command_.position_ref[2] = 0.0 + this->formation_separation_(this->agent_id_ - 1, 2);
-    this->uav_command_.yaw_ref = 0.0;
-    this->uav_cmd_pub_.publish(this->uav_command_);
-}*/
-
-void SwarmControl::formationWithPositionControl()
-{
-    this->uav_command_.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-    this->uav_command_.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
-    this->uav_command_.position_ref[0] = this->virtual_leader_pos_[0] + this->formation_separation_(this->agent_id_ - 1, 0);
-    this->uav_command_.position_ref[1] = this->virtual_leader_pos_[1] + this->formation_separation_(this->agent_id_ - 1, 1);
-    this->uav_command_.position_ref[2] = this->virtual_leader_pos_[2] + this->formation_separation_(this->agent_id_ - 1, 2);
-    this->uav_command_.yaw_ref = 0.0;
-    this->uav_cmd_pub_.publish(this->uav_command_);
-}
-
-void SwarmControl::debugCb(const ros::TimerEvent &e)
-{
-    cout << GREEN << ">>>>>>>>>>>>>>>>>>>>>>>> Swarm Control Node  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << TAIL << endl;
-
-    cout << GREEN << "[ UAV ]"
-         << "agent_id : " << this->agent_id_ << TAIL << endl;
-    cout << GREEN << "uav_pos [X Y Z] : " << this->uav_state_.position[0] << " [ m ] " << this->uav_state_.position[1] << " [ m ] " << this->uav_state_.position[2] << " [ m ] " << TAIL << endl;
-    cout << GREEN << "uav_pos [X Y Z] : " << this->uav_state_.velocity[0] << " [m/s] " << this->uav_state_.velocity[1] << " [m/s] " << this->uav_state_.velocity[2] << " [m/s] " << TAIL << endl;
-
-    if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Init)
-    {
-        cout << GREEN << "SwarmCommand : [ Init ]" << TAIL << endl;
-    }
-    else if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Start)
-    {
-        cout << GREEN << "SwarmCommand : [ Start ]" << TAIL << endl;
-    }
-    else if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Hold)
-    {
-        cout << GREEN << "SwarmCommand : [ Hold ]" << TAIL << endl;
-    }
-    else if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Stop)
-    {
-        cout << GREEN << "SwarmCommand : [ Stop ]" << TAIL << endl;
-    }
-    else if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Formation)
-    {
-        cout << GREEN << "SwarmCommand : [ Formation ]" << TAIL << endl;
-    }
-    else if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Follow)
-    {
-        cout << GREEN << "SwarmCommand : [ Follow ]" << TAIL << endl;
-    }
-    else if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Search)
-    {
-        cout << GREEN << "SwarmCommand : [ Search ]" << TAIL << endl;
-    }
-    else if (this->swarm_command_.Swarm_CMD == prometheus_msgs::SwarmCommand::Attack)
-    {
-        cout << GREEN << "SwarmCommand : [ Attack ]" << TAIL << endl;
-    }
-}
-
-void SwarmControl::printfParam()
-{
-    cout << ">>>>>>>>>>>>>>>> Swarm Control Param <<<<<<<<<<<<<<<<" << endl;
-
-    cout << "agent_id   : " << this->agent_id_ << endl;
 }
