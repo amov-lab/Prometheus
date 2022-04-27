@@ -103,6 +103,12 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
         nh.subscribe<prometheus_msgs::UAVSetup>("/uav" + std::to_string(uav_id) + "/prometheus/setup",
                                                 1,
                                                 &UAV_controller::uav_setup_cb, this);
+
+    offset_pose_sub = 
+        nh.subscribe<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose",
+                                                1,
+                                                &UAV_controller::offset_pose_cb, this);
+
     // 【发布】位置/速度/加速度期望值 坐标系 ENU系
     px4_setpoint_raw_local_pub = nh.advertise<mavros_msgs::PositionTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/local", 10);
 
@@ -430,8 +436,8 @@ void UAV_controller::set_command_des()
         if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS)
         {
             // 【XYZ_POS】XYZ惯性系定点控制
-            pos_des[0] = uav_command.position_ref[0];
-            pos_des[1] = uav_command.position_ref[1];
+            pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+            pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
             pos_des[2] = uav_command.position_ref[2];
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
@@ -510,8 +516,8 @@ void UAV_controller::set_command_des()
                 uav_command.position_ref[0] = uav_pos[0] + d_pos_enu[0];
                 uav_command.position_ref[1] = uav_pos[1] + d_pos_enu[1];
                 uav_command.position_ref[2] = uav_pos[2] + uav_command.position_ref[2];
-                pos_des[0] = uav_command.position_ref[0];
-                pos_des[1] = uav_command.position_ref[1];
+                pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+                pos_des[1] = uav_command.position_ref[1] - offset_pose.x;
                 pos_des[2] = uav_command.position_ref[2];
                 vel_des << 0.0, 0.0, 0.0;
                 acc_des << 0.0, 0.0, 0.0;
@@ -1273,6 +1279,11 @@ void UAV_controller::px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstP
     px4_rates_target = Eigen::Vector3d(msg->body_rate.x, msg->body_rate.y, msg->body_rate.z);
 
     px4_thrust_target = msg->thrust;
+}
+
+void UAV_controller::offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg)
+{
+    offset_pose = *msg;
 }
 
 /***
