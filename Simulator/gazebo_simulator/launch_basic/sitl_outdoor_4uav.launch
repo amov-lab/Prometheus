@@ -1,0 +1,84 @@
+<launch>
+	<!-- 启动Gazebo -->
+	<!-- Gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/prometheus_empty.world"/>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+
+    <!--无人机编号,名字-->
+    <arg name="uav1_id" default="1"/>
+    <arg name="uav2_id" default="2"/>
+    <arg name="uav3_id" default="3"/>
+    <arg name="uav4_id" default="4"/>
+    <arg name="uav1_name"     default="uav1"/>
+    <arg name="uav2_name"     default="uav2"/>
+    <arg name="uav3_name"     default="uav3"/>
+    <arg name="uav4_name"     default="uav4"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="1.5"/>
+    <arg name="uav1_init_y" default="0.0"/>
+    <arg name="uav2_init_x" default="0.5"/>
+    <arg name="uav2_init_y" default="0.0"/>
+    <arg name="uav3_init_x" default="-0.5"/>
+    <arg name="uav3_init_y" default="0.0"/>
+    <arg name="uav4_init_x" default="-1.5"/>
+    <arg name="uav4_init_y" default="0.0"/>
+
+	<!-- 1号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/multi_p450/p450_uav$(arg uav1_id)/p450_uav$(arg uav1_id).sdf"/>
+		<arg name="model" value="p450_uav$(arg uav1_id)"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- 2号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+		<arg name="uav_id" value="$(arg uav2_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/multi_p450/p450_uav$(arg uav2_id)/p450_uav$(arg uav2_id).sdf"/>
+		<arg name="model" value="p450_uav$(arg uav2_id)"/>
+		<arg name="uav_init_x" value="$(arg uav2_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav2_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- 3号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+		<arg name="uav_id" value="$(arg uav3_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/multi_p450/p450_uav$(arg uav3_id)/p450_uav$(arg uav3_id).sdf"/>
+		<arg name="model" value="p450_uav$(arg uav3_id)"/>
+		<arg name="uav_init_x" value="$(arg uav3_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav3_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- 4号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+		<arg name="uav_id" value="$(arg uav4_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/multi_p450/p450_uav$(arg uav4_id)/p450_uav$(arg uav4_id).sdf"/>
+		<arg name="model" value="p450_uav$(arg uav4_id)"/>
+		<arg name="uav_init_x" value="$(arg uav4_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav4_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+</launch>
+

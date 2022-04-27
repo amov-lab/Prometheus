@@ -20,6 +20,7 @@
 #include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/TextInfo.h>
+#include <prometheus_msgs/OffsetPose.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -51,6 +52,7 @@ public:
     ros::Subscriber px4_attitude_target_sub;
     ros::Subscriber px4_rc_sub;
     ros::Subscriber mavros_interface_sub;
+    ros::Subscriber offset_pose_sub;
     // 发布话题
     ros::Publisher px4_setpoint_raw_local_pub;
     ros::Publisher px4_setpoint_raw_attitude_pub;
@@ -74,6 +76,7 @@ public:
     prometheus_msgs::UAVControlState uav_control_state;
     prometheus_msgs::UAVSetup uav_setup;
     prometheus_msgs::TextInfo text_info;
+    prometheus_msgs::OffsetPose offset_pose;
     RC_Input rc_input;
     // bool arming_res = true;
 
@@ -171,6 +174,7 @@ private:
     void px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg);
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
+    void offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg);
     
     void set_command_des();
 
