@@ -6,11 +6,15 @@
 #include <iostream>
 #include <bitset>
 #include <Eigen/Eigen>
+#include <mavros/frame_tf.h>
+#include <GeographicLib/Geocentric.hpp>
 
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/AgentStateUGV.h>
 #include <prometheus_msgs/AgentStateMAN.h>
 #include <prometheus_msgs/TextInfo.h>
+#include <prometheus_msgs/OffsetPose.h>
+#include <prometheus_msgs/GpsData.h>
 
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/GPSRAW.h>
@@ -32,6 +36,7 @@
 #include "math_utils.h"
 #include "message_utils.h"
 #include "printf_utils.h"
+
 
 using namespace std;
 
@@ -57,6 +62,7 @@ class UAV_estimator
         ros::Subscriber gazebo_sub;
         ros::Subscriber fake_odom_sub;
         ros::Subscriber gps_status_sub;
+        ros::Subscriber set_local_pose_offset_sub;
         // 发布话题
         ros::Publisher px4_vision_pose_pub;
         ros::Publisher uav_state_pub;
@@ -65,6 +71,7 @@ class UAV_estimator
         ros::Publisher uav_mesh_pub;
         ros::Publisher gps_status_pub;
         ros::Publisher ground_station_info_pub;
+        ros::Publisher local_pose_offset_pub;
         // 定时器
         ros::Timer timer_px4_vision_pub;
         ros::Timer timer_uav_state_pub;
@@ -75,6 +82,7 @@ class UAV_estimator
         std::vector<geometry_msgs::PoseStamped> odom_vector;    // 无人机轨迹容器,用于rviz显示
         geometry_msgs::PoseStamped vision_pose;        // vision_pose for px4
         prometheus_msgs::TextInfo text_info;
+        prometheus_msgs::OffsetPose offset_pose;
 
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose
@@ -113,6 +121,7 @@ class UAV_estimator
         void px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
         void px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg);
         void gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg);
+        void set_local_pose_offset_cb(const prometheus_msgs::GpsData::ConstPtr& msg);
 
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);

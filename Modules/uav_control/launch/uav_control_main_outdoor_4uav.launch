@@ -1,0 +1,57 @@
+<launch>
+    <!--无人机编号,名字-->
+    <arg name="uav1_id" default="1"/>
+    <arg name="uav2_id" default="2"/>
+    <arg name="uav3_id" default="3"/>
+    <arg name="uav4_id" default="4"/>
+    <arg name="sim_mode" default="true"/>
+    <arg name="init_px4_mode" default="0"/>
+    <arg name="only_command_mode" default="false"/>
+    <arg name="flag_printf" default="true"/>
+
+    <!-- 1号飞机 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav1_id)" output="screen">
+		<param name="uav_id" value="$(arg uav1_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+        <param name="init_px4_mode" value="$(arg init_px4_mode)" />
+        <param name="only_command_mode" value="$(arg only_command_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+	</node>
+
+    <!-- 2号飞机 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav2_id)" output="screen">
+		<param name="uav_id" value="$(arg uav2_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+        <param name="init_px4_mode" value="$(arg init_px4_mode)" />
+        <param name="only_command_mode" value="$(arg only_command_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+	</node>
+
+    <!-- 3号飞机 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav3_id)" output="screen">
+		<param name="uav_id" value="$(arg uav3_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+        <param name="init_px4_mode" value="$(arg init_px4_mode)" />
+        <param name="only_command_mode" value="$(arg only_command_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+	</node>
+
+    <!-- 4号飞机 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav4_id)" output="screen">
+		<param name="uav_id" value="$(arg uav4_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+        <param name="init_px4_mode" value="$(arg init_px4_mode)" />
+        <param name="only_command_mode" value="$(arg only_command_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+	</node>
+
+    <!-- 启动虚拟摇杆驱动 -->
+    <node pkg="prometheus_uav_control" type="joy_node" name="joy_node" output="screen">
+        <param name="agent_num" value="4" />
+	</node>
+</launch>
+

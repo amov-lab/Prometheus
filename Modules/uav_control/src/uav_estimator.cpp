@@ -33,6 +33,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【订阅】无人机当前欧拉角 坐标系:ENU系 - 来自飞控
     px4_attitude_sub = nh.subscribe<sensor_msgs::Imu>(uav_name + "/mavros/imu/data", 1, &UAV_estimator::px4_att_cb, this);
 
+    // 【订阅】设置ENU坐标系下无人机的位置偏移量  坐标系:ENU系 - 来自地面站/终端窗口
+    set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GpsData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
+
     // 根据设定的定位来源订阅不同的定位数据
     if (location_source == prometheus_msgs::UAVState::MOCAP)
     {
@@ -86,6 +89,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
 
     // 【发布】运行状态信息(-> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
+
+    // 【发布】ENU坐标系下的位置偏移量
+    local_pose_offset_pub = nh.advertise<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose", 1);
 
     if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO)
     {
@@ -154,8 +160,8 @@ void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
 
 void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    uav_state.position[0] = msg->pose.position.x;
-    uav_state.position[1] = msg->pose.position.y;
+    uav_state.position[0] = msg->pose.position.x + offset_pose.x;
+    uav_state.position[1] = msg->pose.position.y + offset_pose.y;
     uav_state.position[2] = msg->pose.position.z;
 }
 
@@ -227,8 +233,8 @@ void UAV_estimator::fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
     uav_state.armed = true;
     uav_state.odom_valid = true;
     uav_state.mode = "OFFBOARD";
-    uav_state.position[0] = msg->pose.pose.position.x;
-    uav_state.position[1] = msg->pose.pose.position.y;
+    uav_state.position[0] = msg->pose.pose.position.x + offset_pose.x;
+    uav_state.position[1] = msg->pose.pose.position.y + offset_pose.y;
     uav_state.position[2] = msg->pose.pose.position.z;
     uav_state.velocity[0] = msg->twist.twist.linear.x;
     uav_state.velocity[1] = msg->twist.twist.linear.y;
@@ -657,6 +663,37 @@ void UAV_estimator::printf_param()
     {
         cout << "location_source: [UNKNOW] " << endl;
     }
+}
+
+void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GpsData::ConstPtr& msg)
+{
+    GeographicLib::Geocentric earth(GeographicLib::Constants::WGS84_a(), GeographicLib::Constants::WGS84_f());
+    Eigen::Vector3d origin_gps;
+    Eigen::Vector3d origin_ecef;
+    Eigen::Vector3d current_uav_gps;
+    Eigen::Vector3d current_uav_ecef;
+    Eigen::Vector3d ecef_offset;
+    Eigen::Vector3d enu_offset;
+
+    origin_gps[0] = msg->latitude;
+    origin_gps[1] = msg->longitude;
+    origin_gps[2] = msg->altitude;
+
+    current_uav_gps[0] = uav_state.latitude;
+    current_uav_gps[1] = uav_state.longitude;
+    current_uav_gps[2] = uav_state.altitude;
+
+    earth.Forward(origin_gps[0], origin_gps[1], origin_gps[2], origin_ecef[0], origin_ecef[1], origin_ecef[2]);
+    earth.Forward(current_uav_gps[0], current_uav_gps[1], current_uav_gps[2], current_uav_ecef[0], current_uav_ecef[1], current_uav_ecef[2]);
+
+    ecef_offset = current_uav_ecef - origin_ecef;
+    enu_offset = mavros::ftf::transform_frame_ecef_enu(ecef_offset, origin_gps);
+
+    offset_pose.uav_id = uav_id;
+    offset_pose.x = enu_offset[0];
+    offset_pose.y = enu_offset[1];
+
+    local_pose_offset_pub.publish(offset_pose);
 }
 
 // 怎么考虑无人机试飞的初始化问题？

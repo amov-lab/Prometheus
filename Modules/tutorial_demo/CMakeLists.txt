@@ -71,6 +71,9 @@ target_link_libraries(object_tracking ${catkin_LIBRARIES})
 
 add_executable(takeoff takeoff/takeoff.cpp)
 target_link_libraries(takeoff ${catkin_LIBRARIES})
+
+add_executable(formation_control formation_control/formation_control.cpp)
+target_link_libraries(formation_control ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
