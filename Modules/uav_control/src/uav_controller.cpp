@@ -129,9 +129,6 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     // 【服务】解锁/上锁
     px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav" + std::to_string(uav_id) + "/mavros/cmd/arming");
 
-    // 【服务】设定home点
-    px4_set_home_client = nh.serviceClient<mavros_msgs::CommandHome>("/uav" + std::to_string(uav_id) + "/mavros/cmd/set_home");
-
     // 【服务】修改系统模式
     px4_set_mode_client = nh.serviceClient<mavros_msgs::SetMode>("/uav" + std::to_string(uav_id) + "/mavros/set_mode");
 
@@ -726,11 +723,21 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             {
                 // 此处为使用外部发布的姿态期望值
                 send_attitude_setpoint(u_att);
+            }else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
+            {
+                // send_global_setpoint();
             }
         }
         return;
     }
 }
+
+// void UAV_controller::send_global_setpoint()
+// {
+//     // 直接从uav_command读取数据
+//     // 新建一个publish,发布
+//     // xx.publish()
+// }
 
 void UAV_controller::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
 {
@@ -857,7 +864,7 @@ int UAV_controller::check_failsafe()
 
     if (uav_state.position[0] < uav_geo_fence.x_min || uav_state.position[0] > uav_geo_fence.x_max ||
         uav_state.position[1] < uav_geo_fence.y_min || uav_state.position[1] > uav_geo_fence.y_max ||
-        uav_pos[2]  < uav_geo_fence.z_min || uav_pos[2]  > uav_geo_fence.z_max)
+        uav_state.position[2]  < uav_geo_fence.z_min || uav_state.position[2]  > uav_geo_fence.z_max)
     {
         cout << RED << uav_name << ":----> Failsafe: Out of the geo fence, swtich to land control mode！" << TAIL << endl;
         return 1;

@@ -53,11 +53,11 @@
 		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
 		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
 		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
-			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_solo_$(arg ID) $(arg px4_command_arg1)">
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_amov_$(arg ID) $(arg px4_command_arg1)">
 		</node>
 
 		<!-- 启动Gazebo模型 -->
-		<node name="solo_$(arg ID)_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+		<node name="$(arg model)_$(arg ID)_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
 			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg uav_init_x) -y $(arg uav_init_y) -z $(arg uav_init_z) -Y $(arg uav_init_yaw)">
 		</node>
 
@@ -67,8 +67,8 @@
 			<param name="gcs_url" value="" />
 			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
 			<param name="target_component_id" value="1" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config.yaml" />
-			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_config_indoor.yaml" />
+			<rosparam command="load" file="$(find prometheus_gazebo)/config/mavros_config/px4_pluginlists_indoor.yaml" />
 		</node>
     </group>
 </launch>
