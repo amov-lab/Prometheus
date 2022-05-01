@@ -5,13 +5,12 @@ plugin_blacklist:
 - 3dr_radio
 - cam_imu_sync
 - distance_sensor
-# - fake_gps
+- fake_gps
 - hil
 - landing_target
 - mocap_pose_estimate
 - mount_control
 - obstacle_distance
-# - rc_io
 - vfr_hud
 - waypoint
 - wind_estimation
@@ -35,4 +34,6 @@ plugin_blacklist:
 - setpoint_trajectory
 - trajectory
 plugin_whitelist: []
-#- 'sys_*'
+- gps_status
+- setpoint_raw
+- rc_io

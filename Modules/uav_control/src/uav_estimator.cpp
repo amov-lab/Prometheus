@@ -33,9 +33,6 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【订阅】无人机当前欧拉角 坐标系:ENU系 - 来自飞控
     px4_attitude_sub = nh.subscribe<sensor_msgs::Imu>(uav_name + "/mavros/imu/data", 1, &UAV_estimator::px4_att_cb, this);
 
-    // 【订阅】设置ENU坐标系下无人机的位置偏移量  坐标系:ENU系 - 来自地面站/终端窗口
-    set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GpsData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
-
     // 根据设定的定位来源订阅不同的定位数据
     if (location_source == prometheus_msgs::UAVState::MOCAP)
     {
@@ -62,6 +59,10 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         gps_status_sub = nh.subscribe<mavros_msgs::GPSRAW>(uav_name + "/mavros/gpsstatus/gps1/raw", 10, &UAV_estimator::gps_status_cb, this);
         // 【订阅】无人机当前经纬度，来自飞控
         px4_global_position_sub = nh.subscribe<sensor_msgs::NavSatFix>(uav_name + "/mavros/global_position/global", 1, &UAV_estimator::px4_global_pos_cb, this);
+        // 【订阅】设置ENU坐标系下无人机的位置偏移量  坐标系:ENU系 - 来自地面站/终端窗口
+        set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GpsData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
+        // 【发布】ENU坐标系下的位置偏移量
+        local_pose_offset_pub = nh.advertise<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose", 1);
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
@@ -90,13 +91,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【发布】运行状态信息(-> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
-    // 【发布】ENU坐标系下的位置偏移量
-    local_pose_offset_pub = nh.advertise<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose", 1);
-
     if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO)
     {
         // 【定时器】当需要使用外部定位设备时，需要定时发送vision信息至飞控,并保证一定频率
-        // 此处是否可以检查PX4参数设置？
         timer_px4_vision_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_vision_pose, this);
     }
 
@@ -695,70 +692,3 @@ void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GpsData::Con
 
     local_pose_offset_pub.publish(offset_pose);
 }
-
-// 怎么考虑无人机试飞的初始化问题？
-// 连接上PX4是一个状态
-// odom来源一切正常是一个状态
-// 具备起飞条件是另一个状态
-// 能否解锁（用户自行检查 还是我们代检查？）
-// 打印不能解锁飞控的报错
-// 打印不能呢个切入定点模式的报错
-// 能够切入定点模式
-
-//    //确认无人机是否能切入定点模式并解锁(遥控器是否会导致无人机起飞)
-//     this->mavros_interface_.type = prometheus_msgs::MavrosInterface::SET_MODE;
-//     this->mavros_interface_.mode = "POSCTL";
-//     this->mavros_interface_pub_.publish(this->mavros_interface_);
-//     bool loop_flag = true;
-//     int count = 0;
-//     while (loop_flag)
-//     {
-//         ros::spinOnce();
-//         if (this->uav_state_.mode == "POSCTL")
-//         {
-//             loop_flag = false;
-//         }
-//         count++;
-//         if (count >= setmode_timeout_ * 10)
-//         {
-//             loop_flag = false;
-//             this->station_feedback_.MessageType = prometheus_msgs::StationFeedback::ERROR;
-//             this->station_feedback_.Message = "UAV[" + std::to_string(this->agent_id_) + "] init failed, cannot set to [POSCTL] mode";
-//             sendStationFeedback();
-//             this->swarm_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Ready;
-//             return false;
-//         }
-//         usleep(100000);
-//     }
-
-//     this->mavros_interface_.type = prometheus_msgs::MavrosInterface::ARMING;
-//     this->mavros_interface_.arming = true;
-//     this->mavros_interface_pub_.publish(this->mavros_interface_);
-//     loop_flag = true;
-//     //计数器
-//     count = 0;
-
-//     while (loop_flag)
-//     {
-//         ros::spinOnce();
-//         if (this->uav_state_.armed)
-//         {
-//             loop_flag = false;
-//             this->mavros_interface_.type = prometheus_msgs::MavrosInterface::ARMING;
-//             this->mavros_interface_.arming = false;
-//             this->mavros_interface_pub_.publish(this->mavros_interface_);
-//             //是否考虑上锁指令发出后无法上锁的情况?
-//         }
-//         count++;
-//         //以10hz来考虑,每秒计数器将增加10
-//         if (count >= setmode_timeout_ * 10)
-//         {
-//             loop_flag = false;
-//             this->station_feedback_.MessageType = prometheus_msgs::StationFeedback::ERROR;
-//             this->station_feedback_.Message = "UAV[" + std::to_string(this->agent_id_) + "] init failed, cannot be armed";
-//             sendStationFeedback();
-//             this->swarm_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Ready;
-//             return false;
-//         }
-//         usleep(100000);
-//     }
