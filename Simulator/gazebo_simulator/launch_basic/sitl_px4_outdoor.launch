@@ -1,8 +1,8 @@
 <launch>
-	<!-- 启动PX4中的SITL功能 -->
+	<!-- 启动 PX4 SITL -->
 	<!-- 这里的环境变量将传递到rcS启动脚本中-->
 	<!-- 模型选择 -->
-	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/1014 solo 中的修改内容 -->
+	<!-- 参看 ~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/airframes/1045_p450中的修改内容 -->
 	<env name="PX4_SIM_MODEL" value="p450" />
 	<!-- 估计器参数选择 可选ekf2_vision和ekf2_gps-->
 	<!-- ekf2 使用GPS作为定位来源， ekf2_vision 使用外部输入（gazebo真值、slam等）作为定位来源-->
