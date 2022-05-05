@@ -1,0 +1,28 @@
+<launch>
+	<!-- 无人机ID -->
+	<arg name="uav_id" default="1"/>
+  <!-- 启动PX4 SITL -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+		<arg name="uav_id" value="$(arg uav_id)"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450/p450.sdf"/>
+		<arg name="model" value="p450"/>
+	</include>
+
+	<!-- Gazebo 配置 -->
+  <arg name="gui" default="true"/>
+  <arg name="debug" default="false"/>
+  <arg name="verbose" default="false"/>
+  <arg name="paused" default="false"/>
+  <arg name="respawn_gazebo" default="false"/>
+  <arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/prometheus_empty.world"/>
+  <!-- 启动Gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="gui" value="$(arg gui)"/>
+      <arg name="debug" value="$(arg debug)"/>
+      <arg name="verbose" value="$(arg verbose)"/>
+      <arg name="paused" value="$(arg paused)"/>
+      <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+      <arg name="world_name" value="$(arg world)"/>
+  </include>
+</launch>
+
