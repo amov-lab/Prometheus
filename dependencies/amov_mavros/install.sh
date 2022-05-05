@@ -12,7 +12,7 @@ wstool merge -t src $SHELL_FOLDER/mavros.rosinstall &&\
 wstool update -t src -j$(nproc) &&\
 rosdep install --from-paths src --ignore-src -y &&\
 
-./src/mavros/mavros/scripts/install_geographiclib_datasets.sh &&\
+sudo ./src/mavros/mavros/scripts/install_geographiclib_datasets.sh &&\
 
 catkin build &&\
 source $HOME/prometheus_mavros/devel/setup.bash &&\
