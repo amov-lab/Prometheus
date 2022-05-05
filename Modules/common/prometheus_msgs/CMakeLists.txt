@@ -59,6 +59,7 @@ add_message_files(
   MultiUAVState.msg
   OffsetPose.msg
   TextInfo.msg
+  GpsData.msg
 )
 
 add_action_files(

@@ -20,6 +20,7 @@ uint8 XYZ_VEL_BODY = 4          ### 机体系速度控制
 uint8 XY_VEL_Z_POS_BODY = 5     ### 机体系定高速度控制
 uint8 TRAJECTORY = 6            ### 轨迹追踪控制
 uint8 XYZ_ATT = 7               ### 姿态控制（来自外部控制器）
+uint8 LAT_LON_ALT = 8           ### 绝对坐标系下的经纬度
 
 ## 控制参考量
 float32[3] position_ref                ## [m]
@@ -29,7 +30,9 @@ float32 yaw_ref                             ## [rad]
 bool Yaw_Rate_Mode                      ## True 代表控制偏航角速率
 float32 yaw_rate_ref                  ## [rad/s]
 float32[4] att_ref       ## [rad] + [0-1]
-
+float64 latitude        ## 无人机经度、纬度、高度                 
+float64 longitude       ## 无人机经度、纬度、高度
+float64 altitude        ## 无人机经度、纬度、高度
 
 ## 控制命令的编号 防止接收到错误命令， 编号应该逐次递加
 uint32 Command_ID
