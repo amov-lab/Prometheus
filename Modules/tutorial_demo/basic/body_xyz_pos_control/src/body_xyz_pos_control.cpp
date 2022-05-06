@@ -1,3 +1,10 @@
+/******************************************************************************
+*例程简介: 讲解如何调用uav_control的接口实现无人机ENU坐标系下的位置控制
+*
+*效果说明: 无人机首先起飞移动到第一个目标位置点,然后移动到第二个目标位置,悬停30秒后降落
+*
+*备注:该例程仅支持Prometheus仿真,真机测试需要熟练掌握相关接口的定义后以及真机适配修改后使用
+******************************************************************************/
 #include <ros/ros.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/UAVSetup.h>
@@ -7,7 +14,7 @@
 int main(int argc, char** argv)
 {
     //ROS初始化,设定节点名
-    ros::init(argc , argv, "takeoff_land");
+    ros::init(argc , argv, "body_xyz_pos_control");
     //创建句柄
     ros::NodeHandle n;
     //创建无人机控制命令发布者
@@ -21,7 +28,7 @@ int main(int argc, char** argv)
     
     int start_flag;
 
-    std::cout << "Please input 1 to start takeoff & land demo" << std::endl;
+    std::cout << "Please input 1 to start BODY XYZ_POS control demo" << std::endl;
     std::cin >> start_flag;
 
     if(start_flag != 1)
@@ -61,7 +68,48 @@ int main(int argc, char** argv)
 
     ROS_INFO("UAV Takeoff");
     /****************************起飞*******************************/
-    
+
+    //等待5秒
+    sleep(5);
+
+    /****************************body_xyz_pos_control*******************************/
+    //时间戳
+    uav_command.header.stamp = ros::Time::now();
+    //坐标系
+    uav_command.header.frame_id = "BODY";
+    //Move模式
+    uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+    //Move_mode
+    uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
+    //无人机将会以当前位置移动
+    uav_command.position_ref[0] = 1.0;
+    uav_command.position_ref[1] = 0.0;
+    uav_command.position_ref[2] = 1.0;
+    uav_command.yaw_ref = 0.0;
+    //发布的命令ID加1
+    uav_command.Command_ID += 1;
+    //发布降落命令
+    uav_command_pub.publish(uav_command);
+    ROS_INFO("UAV Move");
+
+    //等待5秒,让无人机移动到目标位置
+    sleep(5);
+
+    //我们再次发布该命令,在ENU坐标系下发布相同控制命令,无人机目标位置是不变的
+    //而在机体坐标系下坐标位置原点为无人机所在位置
+    //因此无人机移动后发布相同指令目标位置也会有区别
+    uav_command.position_ref[0] = 1.0;
+    uav_command.position_ref[1] = 0.0;
+    uav_command.position_ref[2] = 1.0;
+    uav_command.yaw_ref = 0.0;
+    //发布的命令ID加1
+    uav_command.Command_ID += 1;
+    //发布降落命令
+    uav_command_pub.publish(uav_command);
+    ROS_INFO("UAV Move");
+
+    /****************************body_xyz_pos_control*******************************/
+
     //等待30秒
     sleep(30);
 
