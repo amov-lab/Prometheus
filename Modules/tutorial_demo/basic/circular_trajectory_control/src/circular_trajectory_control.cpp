@@ -1,3 +1,13 @@
+/******************************************************************************
+*例程简介: 讲解如何调用uav_control的接口实现无人机ENU坐标系下的XY速度Z位置控制以及
+*         轨迹控制
+*
+*效果说明: 无人机起飞后开始按照圆的轨迹飞行,飞行结束后悬停30秒,然后降落
+*
+*备注:该例程仅支持Prometheus仿真,真机测试需要熟练掌握相关接口的定义后以及真机适配修改后使用
+******************************************************************************/
+
+
 #include <ros/ros.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/UAVSetup.h>
@@ -7,7 +17,7 @@
 int main(int argc, char** argv)
 {
     //ROS初始化,设定节点名
-    ros::init(argc , argv, "takeoff_land");
+    ros::init(argc , argv, "circular_trajectory_control");
     //创建句柄
     ros::NodeHandle n;
     //创建无人机控制命令发布者
@@ -21,7 +31,7 @@ int main(int argc, char** argv)
     
     int start_flag;
 
-    std::cout << "Please input 1 to start takeoff & land demo" << std::endl;
+    std::cout << "Please input 1 to start circular_trajectory_control demo" << std::endl;
     std::cin >> start_flag;
 
     if(start_flag != 1)
@@ -61,7 +71,6 @@ int main(int argc, char** argv)
 
     ROS_INFO("UAV Takeoff");
     /****************************起飞*******************************/
-    
     //等待30秒
     sleep(30);
 
