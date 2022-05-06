@@ -1,8 +1,0 @@
-<launch>
-
-    <node pkg="prometheus_demo" type="formation_control" name="formation_control" output="screen">
-        <param name="agent_num" value="4"/>
-        <param name="formation_size" value="3"/>
-    </node>
-
-</launch>
