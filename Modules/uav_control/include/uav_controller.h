@@ -10,6 +10,7 @@
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/AttitudeTarget.h>
+#include <mavros_msgs/GlobalPositionTarget.h>
 #include <mavros_msgs/RCIn.h>
 #include <mavros_msgs/CommandLong.h>
 #include <mavros_msgs/CommandHome.h>
@@ -55,6 +56,7 @@ public:
     ros::Subscriber offset_pose_sub;
     // 发布话题
     ros::Publisher px4_setpoint_raw_local_pub;
+    ros::Publisher px4_setpoint_raw_global_pub;
     ros::Publisher px4_setpoint_raw_attitude_pub;
     ros::Publisher uav_control_state_pub;
     ros::Publisher ground_station_info_pub;
@@ -133,6 +135,7 @@ public:
 
     // 目标设定值
     Eigen::Vector3d pos_des;
+    Eigen::Vector3d global_pos_des;
     Eigen::Vector3d vel_des;
     Eigen::Vector3d acc_des;
     double yaw_des;
@@ -188,6 +191,7 @@ private:
     void send_pos_vel_xyz_setpoint(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_sp);
     void send_acc_xyz_setpoint(const Eigen::Vector3d &accel_sp, float yaw_sp);
     void send_attitude_setpoint(Eigen::Vector4d &u_att);
+    void send_global_setpoint(const Eigen::Vector3d &global_pos_sp, float yaw_sp);
     Eigen::Vector4d get_cmd_from_controller();
     void set_px4_mode_func(string mode);
     void printf_param();
