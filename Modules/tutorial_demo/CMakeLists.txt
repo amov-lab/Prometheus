@@ -63,17 +63,29 @@ include_directories(
 # add_executable(autonomous_landing autonomous_landing/autonomous_landing.cpp)
 # target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
 
-add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
-target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
+#add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
+#target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
 
-add_executable(object_tracking object_tracking/object_tracking.cpp)
-target_link_libraries(object_tracking ${catkin_LIBRARIES})
+#add_executable(object_tracking object_tracking/object_tracking.cpp)
+#target_link_libraries(object_tracking ${catkin_LIBRARIES})
 
-add_executable(takeoff takeoff/takeoff.cpp)
-target_link_libraries(takeoff ${catkin_LIBRARIES})
+#add_executable(takeoff takeoff/takeoff.cpp)
+#target_link_libraries(takeoff ${catkin_LIBRARIES})
 
-add_executable(formation_control formation_control/formation_control.cpp)
-target_link_libraries(formation_control ${catkin_LIBRARIES})
+#add_executable(formation_control formation_control/formation_control.cpp)
+#target_link_libraries(formation_control ${catkin_LIBRARIES})
+
+add_executable(takeoff_land basic/takeoff_land/src/takeoff_land.cpp)
+target_link_libraries(takeoff_land ${catkin_LIBRARIES})
+
+add_executable(global_pos_control basic/global_pos_control/src/global_pos_control.cpp)
+target_link_libraries(global_pos_control ${catkin_LIBRARIES})
+
+add_executable(enu_xyz_pos_control basic/enu_xyz_pos_control/src/enu_xyz_pos_control.cpp)
+target_link_libraries(enu_xyz_pos_control ${catkin_LIBRARIES})
+
+add_executable(body_xyz_pos_control basic/body_xyz_pos_control/src/body_xyz_pos_control.cpp)
+target_link_libraries(body_xyz_pos_control ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
