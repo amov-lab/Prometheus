@@ -837,6 +837,8 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         }
         // 切换至HOVER_CONTROL
         control_state = CONTROL_STATE::HOVER_CONTROL;
+        // 初始化默认的command
+        uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
         // 进入HOVER_CONTROL，需启动OFFBOARD模式
         set_px4_mode_func("OFFBOARD");
         // 进入HOVER_CONTROL，需设置初始悬停点
