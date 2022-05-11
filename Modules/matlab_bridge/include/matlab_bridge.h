@@ -89,7 +89,8 @@ private:
     {
         REJECT = 1,
         SUCCESS = 2,
-        HEARTBEAT = 3
+        HEARTBEAT = 3,  // 正在正常运行matlab_cmd程序
+        MANUAL = 4
     };
 
     void matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr &msg);

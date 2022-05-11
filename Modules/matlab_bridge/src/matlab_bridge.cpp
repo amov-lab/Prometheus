@@ -185,6 +185,12 @@ void Matlab_Bridge::matlab_safety_check(const ros::TimerEvent &e)
         matlab_setting_result.y = uav_state.battery_state;
         matlab_setting_result.z = 1;
         matlab_setting_result_pub.publish(matlab_setting_result);
+    }else if(uav_ready == 5)
+    {
+        matlab_setting_result.x = MATLAB_RESULT_X::MANUAL;
+        matlab_setting_result.y = uav_state.battery_state;
+        matlab_setting_result.z = 1;
+        matlab_setting_result_pub.publish(matlab_setting_result);
     }
     else 
     {
@@ -401,12 +407,6 @@ int Matlab_Bridge::check_for_uav_state()
         return 2;
     }
 
-    if (uav_control_state.control_state != prometheus_msgs::UAVControlState::COMMAND_CONTROL)
-    {
-        // cout << RED << "check_for_uav_state: Not in COMMAND_CONTROL mode!" << TAIL << endl;
-        return 3;
-    }
-
     if (!uav_state.armed)
     {
         if(no_rc)
@@ -416,7 +416,7 @@ int Matlab_Bridge::check_for_uav_state()
             uav_setup_pub.publish(uav_setup);
         }
         // cout << RED << "check_for_uav_state: Disarm the drone first!" << TAIL << endl;
-        return 4;
+        return 3;
     }
 
     if (uav_state.mode != "OFFBOARD")
@@ -425,6 +425,12 @@ int Matlab_Bridge::check_for_uav_state()
         uav_setup.px4_mode = "OFFBOARD";
         uav_setup_pub.publish(uav_setup);
         // cout << RED << "check_for_uav_state: not in offboard mode!" << TAIL << endl;
+        return 4;
+    }
+
+    if (uav_control_state.control_state != prometheus_msgs::UAVControlState::COMMAND_CONTROL)
+    {
+        // cout << RED << "check_for_uav_state: Not in COMMAND_CONTROL mode!" << TAIL << endl;
         return 5;
     }
 
