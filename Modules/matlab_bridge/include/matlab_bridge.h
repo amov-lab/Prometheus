@@ -6,6 +6,7 @@
 #include <iostream>
 
 // topic 头文件
+#include <std_msgs/String.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/UAVState.h>
 #include <geometry_msgs/Pose.h>
@@ -30,23 +31,20 @@ public:
 
 private:
     int uav_id;
-    bool no_rc;
     string agent_name;
     int matlab_control_mode;
-    int uav_ready;
-    bool uav_checked;
     bool get_matlab_control_cmd;
-    string check_info;
     geometry_msgs::Pose matlab_cmd;
-    ros::Time last_matlab_cmd_time;
+    ros::Time last_matlab_cmd_time{0};
+    ros::Time last_matlab_setting_cmd_time{0};
+    ros::Time get_uav_state_stamp{0};
     geometry_msgs::Point matlab_setting_cmd;
-    ros::Time last_matlab_setting_cmd_time;
-    ros::Time get_uav_state_stamp;
     geometry_msgs::Point matlab_setting_result;
     prometheus_msgs::UAVCommand uav_command;
     prometheus_msgs::UAVState uav_state;
     prometheus_msgs::UAVControlState uav_control_state;
     prometheus_msgs::UAVSetup uav_setup;
+    std_msgs::String text;
     bool cmd_timeout{false};
 
     ros::Subscriber matlab_setting_cmd_sub;
@@ -57,9 +55,10 @@ private:
     ros::Publisher matlab_setting_result_pub;
     ros::Publisher uav_command_pub;
     ros::Publisher uav_setup_pub;
+    ros::Publisher text_pub;
 
-    ros::Timer timer_matlab_safety_check;
     ros::Timer timer_printf;
+    ros::Timer timer_matlab_setting_result_pub;
     struct Ctrl_Param_Matlab
     {
         float quad_mass;
@@ -68,14 +67,7 @@ private:
         Eigen::Vector3d g;
     };
     Ctrl_Param_Matlab ctrl_param;
-
-    enum MATLAB_CMD_Y
-    {
-        POS_CTRL_MODE = 1, // 位置点控制
-        VEL_CTRL_MODE = 2, // 速度控制
-        ACC_CTRL_MODE = 3, // 加速度控制
-        ATT_CTRL_MODE = 4  // 姿态控制
-    };
+    
     enum MATLAB_CMD_X
     {
         CHECK = 1, // 起飞前检查
@@ -85,12 +77,12 @@ private:
         MATLAB_CMD = 5 // 指令控制
     };
 
-    enum MATLAB_RESULT_X
+    enum MATLAB_CMD_Y
     {
-        REJECT = 1,
-        SUCCESS = 2,
-        HEARTBEAT = 3,  // 正在正常运行matlab_cmd程序
-        MANUAL = 4
+        POS_CTRL_MODE = 1, // 位置点控制
+        VEL_CTRL_MODE = 2, // 速度控制
+        ACC_CTRL_MODE = 3, // 加速度控制
+        ATT_CTRL_MODE = 4  // 姿态控制
     };
 
     void matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr &msg);
@@ -98,8 +90,8 @@ private:
     void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg);
     void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg);
     Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d &acc_cmd, double yaw_cmd);
-    int check_for_uav_state();
-    void matlab_safety_check(const ros::TimerEvent &e);
+    bool matlab_control_cmd_safety_check();
+    void matlab_setting_result_pub_cb(const ros::TimerEvent &e);
     void printf_msgs(const ros::TimerEvent &e);
 };
 
