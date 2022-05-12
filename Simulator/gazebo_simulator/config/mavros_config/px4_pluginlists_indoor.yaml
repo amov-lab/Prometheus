@@ -23,6 +23,7 @@ plugin_blacklist:
 - esc_status
 - esc_telemetry
 - fake_gps
+- home_position
 - gimbal_control
 - gps_input
 - landing_target
@@ -31,7 +32,6 @@ plugin_blacklist:
 - mocap_pose_estimate
 - mount_control
 - obstacle_distance
-- odom
 - onboard_computer_status
 - play_tune
 - px4flow
@@ -39,8 +39,6 @@ plugin_blacklist:
 - trajectory
 - tunnel
 - vibration
-- vision_speed_estimate
-- vision_pose_estimate
 - wheel_odometry
 - gps_rtk
 - gps_status
@@ -63,4 +61,6 @@ plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_w
 
 # extras
 - distance_sensor
-- home_position
+- odom
+- vision_pose_estimate
+- vision_speed_estimate
