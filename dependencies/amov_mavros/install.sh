@@ -17,7 +17,7 @@ sudo ./src/mavros/mavros/scripts/install_geographiclib_datasets.sh &&\
 catkin build &&\
 source $HOME/prometheus_mavros/devel/setup.bash &&\
 
-source_command="source $HOME/prometheus_mavros/devel/setup.bash"
+source_command="export ROS_PACKAGE_PATH=${HOME}/prometheus_mavros:$ROS_PACKAGE_PATH"
 if [ `grep -c "$source_command" ~/.bashrc` -eq '0' ];then
     echo $source_command >> ~/.bashrc
 fi
