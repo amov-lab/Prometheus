@@ -1,11 +1,9 @@
 <launch>
 	<arg name="uav_id" default="1"/>
-    <arg name="no_rc" default="false"/>
 
 	<!-- 启动Matlab bridge -->
 	<node pkg="prometheus_matlab" type="matlab_bridge_main" name="matlab_bridge_$(arg uav_id)" output="screen">	
 		<param name="uav_id" value="$(arg uav_id)" />
-        <param name="no_rc" value="$(arg no_rc)" />
 		<param name="control/quad_mass" value="1.0" />
 		<param name="control/hov_percent" value="0.5" />
         <param name="control/tilt_angle_max" value="10.0" />

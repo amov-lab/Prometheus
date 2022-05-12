@@ -4,8 +4,6 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
 {
     // 【参数】编号
     nh.param<int>("uav_id", uav_id, 1);
-    // 【参数】no rc mode
-    nh.param<bool>("no_rc", no_rc, false);
     // 【参数】无人机质量（需要根据无人机实际情况进行设置）
     nh.param<float>("controller/quad_mass", ctrl_param.quad_mass, 1.0f);
     // 【参数】悬停油门（需要根据无人机实际情况进行设置）
@@ -52,29 +50,33 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
     uav_setup_pub = 
         nh.advertise<prometheus_msgs::UAVSetup>(agent_name + "/prometheus/setup", 1);
 
+    //【发布】发布文字消息 -> matlab节点
+    text_pub =
+        nh.advertise<std_msgs::String>(agent_name + "/prometheus/matlab_text", 1);
 
-    //【定时器】安全检查定时器
-    timer_matlab_safety_check = nh.createTimer(ros::Duration(0.05), &Matlab_Bridge::matlab_safety_check, this);
+    //【定时器】matlab_setting_result_pub 发布定时器
+    timer_matlab_setting_result_pub = nh.createTimer(ros::Duration(0.05), &Matlab_Bridge::matlab_setting_result_pub_cb, this);
 
     //【定时器】打印定时器
     timer_printf = nh.createTimer(ros::Duration(5.0), &Matlab_Bridge::printf_msgs, this);
 
-    uav_checked = false;
-    uav_ready = 1;
     cmd_timeout = false;
-    get_matlab_control_cmd = false;
+
+    matlab_setting_result.x = 0;
+    matlab_setting_result.y = 0;
+    matlab_setting_result.z = 0;
 
     cout << GREEN << "matlab bridge init!" << TAIL << endl;
+
+    text.data = "matlab bridge init.";
+    text_pub.publish(text);
 }
 
 void Matlab_Bridge::mainloop()
 {
-    // 等待无人机check指令
-    if (!uav_checked)
-    {
-        return;
-    }
-
+    // 没收到matlab指令时，没有任何操作
+    // 收到matlab指令后，如果control_cmd超时，则会有对应的处理机制
+    
     if (matlab_setting_cmd.x == MATLAB_CMD_X::TAKEOFF)
     {
         // 本接口暂不开放
@@ -87,10 +89,6 @@ void Matlab_Bridge::mainloop()
         uav_command.header.stamp = ros::Time::now();
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
         uav_command_pub.publish(uav_command);
-        if (!uav_state.armed)
-        {
-            uav_checked = false;
-        }
     }
     else if (matlab_setting_cmd.x == MATLAB_CMD_X::HOLD)
     {
@@ -98,8 +96,14 @@ void Matlab_Bridge::mainloop()
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
         uav_command_pub.publish(uav_command);
     }
-    else if (matlab_setting_cmd.x == MATLAB_CMD_X::MATLAB_CMD && get_matlab_control_cmd)
+    else if (matlab_setting_cmd.x == MATLAB_CMD_X::MATLAB_CMD)
     {
+        // 检查matlab_control_cmd是否有存在延迟
+        if(!matlab_control_cmd_safety_check())
+        {
+            return;
+        }
+
         if (matlab_setting_cmd.y == MATLAB_CMD_Y::POS_CTRL_MODE)
         {
             matlab_control_mode = MATLAB_CMD_Y::POS_CTRL_MODE;
@@ -162,76 +166,18 @@ void Matlab_Bridge::mainloop()
     }
 }
 
-void Matlab_Bridge::matlab_safety_check(const ros::TimerEvent &e)
+bool Matlab_Bridge::matlab_control_cmd_safety_check()
 {
-    // 检查无人机是否具备matlab控制基本条件，包括：
-    // 1、PX4连接状态
-    // 2、是否解锁
-    // 3、是否处于OFFBOARD模式
-    // 4、odom是否有效
-    // 5、uav_control是否处于COMMAND_CONTROL模式
-    uav_ready = check_for_uav_state();
-
-    // 无人机进入matlab控制后才会进入后续处理
-    if (!uav_checked)
-    {
-        return;
-    }
-
-    if (uav_ready == 0)
-    {
-        // 心跳包,正常情况下20Hz
-        matlab_setting_result.x = MATLAB_RESULT_X::HEARTBEAT;
-        matlab_setting_result.y = uav_state.battery_state;
-        matlab_setting_result.z = 1;
-        matlab_setting_result_pub.publish(matlab_setting_result);
-    }else if(uav_ready == 5)
-    {
-        matlab_setting_result.x = MATLAB_RESULT_X::MANUAL;
-        matlab_setting_result.y = uav_state.battery_state;
-        matlab_setting_result.z = 1;
-        matlab_setting_result_pub.publish(matlab_setting_result);
-    }
-    else 
-    {
-        // 只要飞机没有上锁,持续发布降落指令
-        if(uav_state.armed)
-        {
-            cout << RED << "uav_state error, LAND now!" << TAIL << endl;
-            uav_command.header.stamp = ros::Time::now();
-            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
-            uav_command_pub.publish(uav_command);
-        }
-        return;
-    }
-
-    ros::Time time_now = ros::Time::now();
-
-    // 接收uav_state超时，降落
-    if ((time_now - get_uav_state_stamp).toSec() > UAV_STATE_TIMEOUT)
-    {
-        cout << RED << "check_for_uav_state: uav state timeout, land!" << TAIL << endl;
-        uav_command.header.stamp = ros::Time::now();
-        uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
-        uav_command_pub.publish(uav_command);
-        return;
-    }
-
-    if(!get_matlab_control_cmd)
-    {
-        cout << RED << "wait for matlab control cmd!" << TAIL << endl;
-        return;
-    }
-
-    double delta_time_matlab_cmd = (time_now - last_matlab_cmd_time).toSec();
-
-    // 接收指令超时（网络状态较差会导致），原地悬停等待
+    // 接收指令超时（网络状态较差会导致）
+    // 原地悬停等待（MATLAB_CMD_TIMEOUT）-> 返回起始点（RETURN_INIT_POS_TIMEOUT）-> 降落（LAND_TIMEOUT）
+    double delta_time_matlab_cmd = (ros::Time::now() - last_matlab_cmd_time).toSec();
     if (delta_time_matlab_cmd > MATLAB_CMD_TIMEOUT)
     {
+        // 第一次进入 - 悬停
         if (!cmd_timeout)
         {
-            cout << RED << "MATLAB_CMD_TIMEOUT!" << TAIL << endl;
-            get_matlab_control_cmd = false;
+            // cout << RED << "MATLAB_CMD_TIMEOUT!" << TAIL << endl;
+            text.data = "MATLAB_CMD_TIMEOUT!";
             uav_command.header.stamp = ros::Time::now();
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
             uav_command_pub.publish(uav_command);
@@ -241,7 +187,8 @@ void Matlab_Bridge::matlab_safety_check(const ros::TimerEvent &e)
             // 接收指令超时，降落
             if (delta_time_matlab_cmd > LAND_TIMEOUT)
             {
-                cout << RED << "MATLAB TIMEOUT, LAND now!" << TAIL << endl;
+                // cout << RED << "MATLAB TIMEOUT, LAND now!" << TAIL << endl;
+                text.data = "MATLAB TIMEOUT, LAND now!";
                 uav_command.header.stamp = ros::Time::now();
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
                 uav_command_pub.publish(uav_command);
@@ -249,52 +196,86 @@ void Matlab_Bridge::matlab_safety_check(const ros::TimerEvent &e)
             // 接收指令超时，返回起始点
             else if (delta_time_matlab_cmd > RETURN_INIT_POS_TIMEOUT)
             {
-                cout << RED << "MATLAB TIMEOUT, RETURN Init Pos!" << TAIL << endl;
+                // cout << RED << "MATLAB TIMEOUT, RETURN Init Pos!" << TAIL << endl;
+                text.data = "MATLAB TIMEOUT, RETURN Init Pos!";
                 uav_command.header.stamp = ros::Time::now();
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
                 uav_command_pub.publish(uav_command);
             }
         }
-
+        // 打印延迟
+        static int printf_num = 0;
+        if(printf_num > 50)
+        {
+            printf_num = 0;
+            cout << RED << text.data << TAIL << endl;
+        }else
+        {
+            printf_num++;
+        }
         cmd_timeout = true;
+        return false;
     }
+
+    return true;
+}
+
+void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
+{
+    // 0b 000000
+    // bit1: connected or not
+    // bit2: odom_valid or not
+    // bit3: armed or not
+    // bit4: OFFBOARD or not
+    // bit5 & 6: OTHER(00) MANUAL(01) or COMMAND_MODE(10)
+    // 4、^ 按位异或运算。
+    
+    // 根据uav_state对matlab_setting_result进行赋值
+    matlab_setting_result.x = 0;                        // 无人机状态量
+    matlab_setting_result.y = uav_state.battery_state;  // 电池电压
+    matlab_setting_result.z = 1;                        // 电池百分比
+    if (uav_control_state.control_state == prometheus_msgs::UAVControlState::HOVER_CONTROL)
+    {
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b010000;
+    }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::COMMAND_CONTROL)
+    {
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b100000;
+    }else
+    {
+        matlab_setting_result.x = 0;
+    }
+
+    if (uav_state.connected)
+    {
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b000001;
+    }
+
+    if (uav_state.odom_valid)
+    {
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b000010;
+    }
+
+    if (uav_state.armed)
+    {
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b000100;
+    }
+
+    if (uav_state.mode == "OFFBOARD")
+    {
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b001000;
+    }
+    matlab_setting_result_pub.publish(matlab_setting_result);
 }
 
 void Matlab_Bridge::matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr &msg)
 {
     matlab_setting_cmd = *msg;
     last_matlab_setting_cmd_time = ros::Time::now();
-
-
-    if (matlab_setting_cmd.x == MATLAB_CMD_X::CHECK)
-    {
-        if (check_for_uav_state() == 0)
-        {
-            matlab_setting_result.x = MATLAB_RESULT_X::SUCCESS;
-            matlab_setting_result_pub.publish(matlab_setting_result);
-            if(!uav_checked)
-            {
-                uav_checked = true;
-                cout << GREEN << "UAV check success!" << TAIL << endl;  
-            }
-        }
-        else
-        {
-            matlab_setting_result.x = MATLAB_RESULT_X::REJECT;
-            matlab_setting_result_pub.publish(matlab_setting_result);
-            if(!uav_checked)
-            {
-                uav_checked = false;
-                cout << RED << "UAV check fail!" << TAIL << endl; 
-            }
-        }
-    }
 }
 
 void Matlab_Bridge::matlab_cmd_cb(const geometry_msgs::Pose::ConstPtr &msg)
 {
     matlab_cmd = *msg;
-    get_matlab_control_cmd = true;
     last_matlab_cmd_time = ros::Time::now();
 
     if (cmd_timeout)
@@ -393,50 +374,6 @@ Eigen::Vector4d Matlab_Bridge::acc_cmd_to_att_cmd(Eigen::Vector3d &acc_cmd, doub
     return att_cmd;
 }
 
-int Matlab_Bridge::check_for_uav_state()
-{
-    if (!uav_state.connected)
-    {
-        // cout << RED << "check_for_uav_state: not connected!" << TAIL << endl;
-        return 1;
-    }
-
-    if (!uav_state.odom_valid)
-    {
-        // cout << RED << "check_for_uav_state: odom invalid!" << TAIL << endl;
-        return 2;
-    }
-
-    if (!uav_state.armed)
-    {
-        if(no_rc)
-        {
-            uav_setup.cmd = prometheus_msgs::UAVSetup::ARMING;
-            uav_setup.arming = true;
-            uav_setup_pub.publish(uav_setup);
-        }
-        // cout << RED << "check_for_uav_state: Disarm the drone first!" << TAIL << endl;
-        return 3;
-    }
-
-    if (uav_state.mode != "OFFBOARD")
-    {
-        uav_setup.cmd = prometheus_msgs::UAVSetup::SET_PX4_MODE;
-        uav_setup.px4_mode = "OFFBOARD";
-        uav_setup_pub.publish(uav_setup);
-        // cout << RED << "check_for_uav_state: not in offboard mode!" << TAIL << endl;
-        return 4;
-    }
-
-    if (uav_control_state.control_state != prometheus_msgs::UAVControlState::COMMAND_CONTROL)
-    {
-        // cout << RED << "check_for_uav_state: Not in COMMAND_CONTROL mode!" << TAIL << endl;
-        return 5;
-    }
-
-    return 0;
-}
-
 void Matlab_Bridge::printf_msgs(const ros::TimerEvent &e)
 {
     //固定的浮点显示
@@ -453,24 +390,7 @@ void Matlab_Bridge::printf_msgs(const ros::TimerEvent &e)
 
     cout << GREEN << "[ ID: " << uav_id << "]  " << TAIL;
 
-    if(uav_ready == 0)
-    {
-        cout << GREEN << "[ UAV Ready ]  " << TAIL;
-    }
-    else
-    {
-        cout << RED << "[ Not Ready for ERROR "<< uav_ready <<" ]  " << TAIL;
-    }
-
-    if(uav_checked)
-    {
-        cout << GREEN << "[ UAV CHECKED ]  " << TAIL;
-    }
-    else
-    {
-        cout << RED << "[ NOT CHECKED ]  " << TAIL << endl;
-        return;
-    }
+    cout << GREEN << "uav_state: " << matlab_setting_result.x << "  " << TAIL << endl;
 
     if(cmd_timeout)
     {
@@ -502,7 +422,7 @@ void Matlab_Bridge::printf_msgs(const ros::TimerEvent &e)
         cout << GREEN << "Setting Cmd: [ MATLAB_CMD ] " << TAIL << endl;
     }
 
-    if (uav_checked)
+    if (matlab_setting_cmd.x == MATLAB_CMD_X::MATLAB_CMD)
     {
         if (matlab_control_mode == MATLAB_CMD_Y::POS_CTRL_MODE)
         {
