@@ -1,9 +1,9 @@
 - git:
     local-name: mavlink
-    uri: https://gitee.com/amovlab/mavlink-gbp-release.git
+    uri: https://gitee.com/amovlab1/mavlink-gbp-release.git
     version: release/kinetic/mavlink/2021.3.3-1
 
 - git:
     local-name: mavros
-    uri: https://gitee.com/amovlab/prometheus-mavros.git
+    uri: https://gitee.com/amovlab1/prometheus-mavros.git
     version: amov_1.12.1
