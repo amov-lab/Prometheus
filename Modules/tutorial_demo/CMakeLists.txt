@@ -86,6 +86,12 @@ target_link_libraries(enu_xyz_pos_control ${catkin_LIBRARIES})
 
 add_executable(body_xyz_pos_control basic/body_xyz_pos_control/src/body_xyz_pos_control.cpp)
 target_link_libraries(body_xyz_pos_control ${catkin_LIBRARIES})
+
+add_executable(circular_trajectory_control basic/circular_trajectory_control/src/circular_trajectory_control.cpp)
+target_link_libraries(circular_trajectory_control ${catkin_LIBRARIES})
+
+add_executable(formation_control advanced/formation_control/src/formation_control.cpp)
+target_link_libraries(formation_control ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
