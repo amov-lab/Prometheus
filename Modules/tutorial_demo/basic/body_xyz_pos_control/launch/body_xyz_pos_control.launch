@@ -1,0 +1,6 @@
+<launch>
+
+    <node pkg="prometheus_demo" type="body_xyz_pos_control" name="body_xyz_pos_control" output="screen">
+    </node>
+
+</launch>

@@ -1,0 +1,6 @@
+<launch>
+
+    <node pkg="prometheus_demo" type="circular_trajectory_control" name="circular_trajectory_control" output="screen">
+    </node>
+
+</launch>

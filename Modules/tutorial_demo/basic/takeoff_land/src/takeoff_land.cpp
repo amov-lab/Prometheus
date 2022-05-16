@@ -51,6 +51,17 @@ int main(int argc, char** argv)
     //声明起飞高度变量
     float takeoff_height;
 
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    // setprecision(n) 设显示小数精度为2位
+    cout << setprecision(2);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
+
     //打印demo相关信息
     cout << GREEN << " [takeoff & land] tutorial_demo start " << TAIL << endl;
     sleep(1);
