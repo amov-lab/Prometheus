@@ -51,7 +51,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  autonomous_landing
+  advanced/autonomous_landing/include
   ${catkin_INCLUDE_DIRS}
   ../common/include
 )
@@ -92,6 +92,9 @@ target_link_libraries(circular_trajectory_control ${catkin_LIBRARIES})
 
 add_executable(formation_control advanced/formation_control/src/formation_control.cpp)
 target_link_libraries(formation_control ${catkin_LIBRARIES})
+
+add_executable(autonomous_landing advanced/autonomous_landing/src/autonomous_landing.cpp)
+target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
