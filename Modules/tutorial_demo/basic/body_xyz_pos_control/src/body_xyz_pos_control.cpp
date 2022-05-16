@@ -51,6 +51,17 @@ int main(int argc, char** argv)
     ros::Rate r(1);
     //创建命令发布标志位,命令发布则为true;初始化为false
     bool cmd_pub_flag = false;
+
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    // setprecision(n) 设显示小数精度为2位
+    cout << setprecision(2);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
     
     //打印demo相关信息
     cout << GREEN << " [ENU XYZ position control] tutorial_demo start " << TAIL << endl;
