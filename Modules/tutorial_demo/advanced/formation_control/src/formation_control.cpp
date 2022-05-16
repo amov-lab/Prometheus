@@ -1,32 +1,19 @@
-
-// 要求:
-// 1,不用写成类,用普通的ros文件 main函数写就行
-// 2,配套的是P450,outdoor(GPS),目前可考虑仅支持仿真,不考虑真实情况
-// 3,根据agent_num参数来确定发布多少个话题(位置控制 XYZ_POS): "/uav" + std::to_string(this->agent_id_) + "/prometheus/command"
-// 4,简易阵型即可,可以使用我们之前写好的支持任意个飞机的阵型h文件
-// 5,在本程序中可以尝试加入等待避障或者相关简易避障策略
-// 6,本程序和 swarm_command这个自定义消息无关
-
-// 大致效果
-// roslaunch prometheus_gazebo sitl_outdoor_4uav.launch
-// roslaunch prometheus_uav_control uav_control_main_outdoor_4uav.launch
-
-// roslaunch prometheus_demo formation_control.launch
-
-// 确定启动程序没问题,遥控器一键解锁,一键切换至hover_control,遥控器正常1控多
-// 切换至command_control,飞机悬停等待本程序的指令
-// 飞机可以切换3个左右阵型,实现机动
-// 降落
-// 本程序相关教学:
-// 1, 多个sdf的编写,端口如何与px4对应
-// 2, uav_control中相关的集群接口
-// 3, ...
+/******************************************************************************
+*例程简介: 无人机集群控制,包含无人机集群的模式控制/位置控制/队形变换/一字队形/三角队形
+*
+*效果说明: -
+*
+*备注:该例程仅支持Prometheus仿真,真机测试需要熟练掌握相关接口的定义后以及真机适配修改后使用
+******************************************************************************/
 
 #include <ros/ros.h>
 #include <Eigen/Eigen>
 #include <prometheus_msgs/UAVCommand.h>
+#include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/GpsData.h>
+
+prometheus_msgs::GpsData origin_gps;
 
 // 输入参数：　阵型，阵型基本尺寸，集群数量
 // 所有的阵型和数量必须提前预设!!
@@ -118,6 +105,13 @@ Eigen::MatrixXf getFormationSeparation(int swarm_shape, float swarm_size, int sw
     return seperation;
 }
 
+void uav1_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
+{
+    origin_gps.latitude  = msg->latitude;
+    origin_gps.longitude = msg->longitude;
+    origin_gps.altitude  = msg->altitude;
+}
+
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "formation_control");
@@ -126,18 +120,14 @@ int main(int argc, char** argv)
     int formation_size;
     n.param<int>("agent_num", agent_num, 3);
     n.param<int>("formation_size", formation_size, 1);
-    
+
     int formation_shape;
     Eigen::Vector3d leader_pos;
     Eigen::MatrixXf separation = getFormationSeparation(0, formation_size, agent_num);
 
-    prometheus_msgs::GpsData origin_gps;
-    origin_gps.latitude = 30.7852600;
-    origin_gps.longitude = 103.8610300;
-    origin_gps.altitude = 100.0;
-
     ros::Publisher uav_command_pub[agent_num];
     ros::Publisher set_local_pose_offset_pub[agent_num];
+    ros::Subscriber uav1_state_sub = n.subscribe<prometheus_msgs::UAVState>("/uav1/prometheus/state", 1, uav1_state_cb);
 
     for(int i=0; i<agent_num; i++)
     {
@@ -145,10 +135,11 @@ int main(int argc, char** argv)
         set_local_pose_offset_pub[i] = n.advertise<prometheus_msgs::GpsData>("/uav" + std::to_string(i+1) + "/prometheus/set_local_offset_pose", 10);
     }
 
+    //此处做一个阻塞确保无人机全部正常启动后,能够将无人机原点坐标系统一到1号无人机所在位置
     std::cout << "Please input 1 to continue" << std::endl;
     int start_flag;
     std::cin >>start_flag;
-
+    ros::spinOnce();
     for(int i=0; i<agent_num; i++)
     {
         set_local_pose_offset_pub[i].publish(origin_gps);
