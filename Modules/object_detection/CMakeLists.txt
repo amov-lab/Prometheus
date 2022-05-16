@@ -358,6 +358,11 @@ add_executable(aruco_navigation_switch
 )
 target_link_libraries(aruco_navigation_switch ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
+add_executable(markers_landpad_det
+    cpp_nodes/markers_landpad_det.cpp
+)
+target_link_libraries(markers_landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+
 if(CATKIN_ENABLE_TESTING)
   # Download yolov3-tiny.weights
   set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_ros/yolo_network_config/weights")
