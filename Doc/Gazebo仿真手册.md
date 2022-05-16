@@ -35,11 +35,11 @@ roslaunch prometheus_gazebo sitl_outdoor_1uav.launch
 roslaunch prometheus_uav_control uav_control_main_outdoor.launch 
 
 - 启动仿真(模拟室内定位模式)
-roslaunch prometheus_gazebo sitl_indoor.launch
+roslaunch prometheus_gazebo sitl_indoor_1uav.launch
 roslaunch prometheus_uav_control uav_control_main_indoor.launch 
 
 - 启动仿真(GPS定位模式) - 无遥控器
-roslaunch prometheus_gazebo sitl_outdoor.launch
+roslaunch prometheus_gazebo sitl_outdoor_1uav.launch
 roslaunch prometheus_uav_control uav_control_main_no_rc.launch 
 
 
