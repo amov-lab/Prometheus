@@ -79,6 +79,17 @@ int main(int argc, char** argv)
     ros::Rate r(1);
     //创建命令发布标志位,命令发布则为true;初始化为false
     bool cmd_pub_flag = false;
+
+    //固定的浮点显示
+    cout.setf(ios::fixed);
+    // setprecision(n) 设显示小数精度为2位
+    cout << setprecision(2);
+    //左对齐
+    cout.setf(ios::left);
+    // 强制显示小数点
+    cout.setf(ios::showpoint);
+    // 强制显示符号
+    cout.setf(ios::showpos);
     
     //打印demo相关信息
     cout << GREEN << " [circular trajectory control] tutorial_demo start " << TAIL << endl;
@@ -88,11 +99,15 @@ int main(int argc, char** argv)
     cout << GREEN << " Please use the RC SWA to armed, and the SWB to switch the drone to [COMMAND_CONTROL] mode  " << TAIL << endl;
 
     //设定飞行时间为20S,控制频率为18HZ,半径为2米
-    circular_time = 20;
-    control_rate = 18;
+    circular_time = 40;
+    control_rate = 20;
     radius = 2;
 
     get_circular_property(circular_time, control_rate, radius);
+
+    bool circular_success = false;
+    int count = 0;
+    ros::Rate rate(control_rate);
 
     Eigen::Vector3d target_pos = {radius, 0.0, 2.0};
 
@@ -147,63 +162,61 @@ int main(int argc, char** argv)
             }
             else
             {
-                bool circular_success = false;
-                int count = 0;
-                ros::Rate rate(control_rate);
-                while(!circular_success)
+                //时间戳
+                uav_command.header.stamp = ros::Time::now();
+                //坐标系
+                uav_command.header.frame_id = "ENU";
+                //Move模式
+                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+                //Move_mode
+                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL;
+                //无人机按照圆形轨迹飞行
+                uav_command.velocity_ref[0] = -velocity*sin(count*angle_increment);
+                uav_command.velocity_ref[1] = velocity*cos(count*angle_increment);
+                uav_command.velocity_ref[2] = 0;
+                //发布的命令ID加1
+                uav_command.Command_ID += 1;
+                //发布降落命令
+                uav_command_pub.publish(uav_command);
+                //计数器
+                if(count == control_rate*circular_time)
                 {
+                    circular_success = true;
+                }
+                count++;
+                cout << GREEN << " Vx: " << uav_command.velocity_ref[0] << TAIL << endl;
+                cout << GREEN << " Vy: " << uav_command.velocity_ref[1] << TAIL << endl;
+            
+                if(circular_success)
+                {
+                    cout << GREEN << " UAV circular trajectory completed and landed after 30 seconds" << TAIL << endl;
                     //时间戳
                     uav_command.header.stamp = ros::Time::now();
                     //坐标系
                     uav_command.header.frame_id = "ENU";
-                    //Move模式
-                    uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                    //Move_mode
-                    uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL;
-                    //无人机按照圆形轨迹飞行
-                    uav_command.velocity_ref[0] = -velocity*sin(count*angle_increment);
-                    uav_command.velocity_ref[1] = velocity*cos(count*angle_increment);
-                    uav_command.velocity_ref[2] = 0;
+                    //Land降落,从当前位置降落至地面并自动上锁
+                    uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
                     //发布的命令ID加1
                     uav_command.Command_ID += 1;
                     //发布降落命令
                     uav_command_pub.publish(uav_command);
-                    if(count == control_rate*circular_time)
-                    {
-                        circular_success = true;
-                    }
-                    rate.sleep();
-                    count++;
-                    cout << GREEN << " VX is " << uav_command.velocity_ref[0] << TAIL << endl;
-                    cout << GREEN << " VY is " << uav_command.velocity_ref[1] << TAIL << endl;
+                    sleep(30);
+                    //时间戳
+                    uav_command.header.stamp = ros::Time::now();
+                    //坐标系
+                    uav_command.header.frame_id = "ENU";
+                    //Land降落,从当前位置降落至地面并自动上锁
+                    uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
+                    //发布的命令ID加1
+                    uav_command.Command_ID += 1;
+                    //发布降落命令
+                    uav_command_pub.publish(uav_command);
+                    //打印降落相关信息
+                    cout << GREEN << " UAV Land" << TAIL << endl;
+                    cout << GREEN << " [circular trajectory control] tutorial_demo completed" << TAIL << endl;
+                    //任务结束,关闭该节点
+                    ros::shutdown();
                 }
-                cout << GREEN << " UAV circular trajectory over and landed after 30 seconds" << TAIL << endl;
-                //时间戳
-                uav_command.header.stamp = ros::Time::now();
-                //坐标系
-                uav_command.header.frame_id = "ENU";
-                //Land降落,从当前位置降落至地面并自动上锁
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
-                //发布的命令ID加1
-                uav_command.Command_ID += 1;
-                //发布降落命令
-                uav_command_pub.publish(uav_command);
-                sleep(30);
-                //时间戳
-                uav_command.header.stamp = ros::Time::now();
-                //坐标系
-                uav_command.header.frame_id = "ENU";
-                //Land降落,从当前位置降落至地面并自动上锁
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
-                //发布的命令ID加1
-                uav_command.Command_ID += 1;
-                //发布降落命令
-                uav_command_pub.publish(uav_command);
-                //打印降落相关信息
-                cout << GREEN << " UAV Land" << TAIL << endl;
-                cout << GREEN << " [circular trajectory control] tutorial_demo completed" << TAIL << endl;
-                //任务结束,关闭该节点
-                ros::shutdown();
             }
         }
         else
@@ -212,14 +225,18 @@ int main(int argc, char** argv)
             if(cmd_pub_flag)
             {
                 cout << RED << " Unknown error! [ENU XYZ position control] tutorial_demo aborted" << TAIL << endl;
+                r.sleep();
+                continue;
             }
             //命令未发布,等待无人机进入[COMMAND_CONTROL]状态
             else
             {
                 cout << YELLOW << " Wait for UAV to enter [COMMAND_CONTROL] MODE " << TAIL << endl;
+                r.sleep();
+                continue;
             }
         }
-        r.sleep();
+        rate.sleep();
     }
     return 0;
 }
