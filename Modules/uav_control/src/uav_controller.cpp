@@ -439,9 +439,18 @@ void UAV_controller::set_command_des()
         if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS)
         {
             // 【XYZ_POS】XYZ惯性系定点控制
-            pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
-            pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
-            pos_des[2] = uav_command.position_ref[2];
+            if(uav_state.location_source == prometheus_msg::UAVState::GPS || uav_state.location_source == prometheus_msg::UAVState::RTK)
+            {
+                pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+                pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
+                pos_des[2] = uav_command.position_ref[2];
+            }
+            else
+            {
+                pos_des[0] = uav_command.position_ref[0];
+                pos_des[1] = uav_command.position_ref[1];
+                pos_des[2] = uav_command.position_ref[2];
+            }
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
             yaw_des = uav_command.yaw_ref;
@@ -519,9 +528,18 @@ void UAV_controller::set_command_des()
                 uav_command.position_ref[0] = uav_pos[0] + d_pos_enu[0];
                 uav_command.position_ref[1] = uav_pos[1] + d_pos_enu[1];
                 uav_command.position_ref[2] = uav_pos[2] + uav_command.position_ref[2];
-                pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
-                pos_des[1] = uav_command.position_ref[1] - offset_pose.x;
-                pos_des[2] = uav_command.position_ref[2];
+                if(uav_state.location_source == prometheus_msg::UAVState::GPS || uav_state.location_source == prometheus_msg::UAVState::RTK)
+                {
+                    pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+                    pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
+                    pos_des[2] = uav_command.position_ref[2];
+                }
+                else
+                {
+                    pos_des[0] = uav_command.position_ref[0];
+                    pos_des[1] = uav_command.position_ref[1];
+                    pos_des[2] = uav_command.position_ref[2];
+                }
                 vel_des << 0.0, 0.0, 0.0;
                 acc_des << 0.0, 0.0, 0.0;
                 yaw_des = uav_command.yaw_ref;
