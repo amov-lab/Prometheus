@@ -6,7 +6,6 @@ plugin_blacklist:
 - nav_controller_output
 - rallypoint
 - setpoint_accel
-- setpoint_attitude
 - setpoint_position
 - setpoint_trajectory
 - setpoint_velocity
@@ -54,6 +53,7 @@ plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_w
 - rc_io
 - safety_area
 - setpoint_raw
+- setpoint_attitude
 - sys_status
 - sys_time
 - waypoint

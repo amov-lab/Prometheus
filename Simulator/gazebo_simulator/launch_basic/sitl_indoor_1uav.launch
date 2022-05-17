@@ -4,7 +4,7 @@
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
 		<arg name="uav_id" value="$(arg uav_id)"/>
 		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p230/p230.sdf"/>
-		<arg name="model" value="p450"/>
+		<arg name="model" value="p230"/>
 	</include>
 
 	<!-- 启动Gazebo -->
