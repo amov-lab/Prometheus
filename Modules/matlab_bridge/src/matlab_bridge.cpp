@@ -227,7 +227,8 @@ void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
     // bit2: odom_valid or not
     // bit3: armed or not
     // bit4: OFFBOARD or not
-    // bit5 & 6: OTHER(00) MANUAL(01) or COMMAND_MODE(10)
+    // bit5 & 6 & 7: OTHER(000) MANUAL(001) COMMAND_MODE(010) or LAND_CONTROL(011)
+    // bit8: always 1
     // 4、^ 按位异或运算。
     
     // 根据uav_state对matlab_setting_result进行赋值
@@ -236,10 +237,13 @@ void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
     matlab_setting_result.z = 1;                        // 电池百分比
     if (uav_control_state.control_state == prometheus_msgs::UAVControlState::HOVER_CONTROL)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b010000;
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10010000;
     }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::COMMAND_CONTROL)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b100000;
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10100000;
+    }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::LAND_CONTROL)
+    {
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10110000;
     }else
     {
         matlab_setting_result.x = 0;
@@ -247,22 +251,22 @@ void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
 
     if (uav_state.connected)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b000001;
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10000001;
     }
 
     if (uav_state.odom_valid)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b000010;
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10000010;
     }
 
     if (uav_state.armed)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b000100;
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10000100;
     }
 
     if (uav_state.mode == "OFFBOARD")
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b001000;
+        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10001000;
     }
     matlab_setting_result_pub.publish(matlab_setting_result);
 }
