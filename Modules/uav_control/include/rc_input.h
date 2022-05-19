@@ -44,7 +44,8 @@ public:
     bool toggle_land;
 
 private:
-    static constexpr double channel_5_threshold_value = 0.5;
+    static constexpr double channel_5_threshold_value1 = 0.25;
+    static constexpr double channel_5_threshold_value2 = 0.75;
     static constexpr double channel_6_threshold_value_1 = 0.25;
     static constexpr double channel_6_threshold_value_2 = 0.75;
     static constexpr double channel_7_threshold_value_1 = 0.25;
@@ -188,13 +189,13 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
     }
 
     // 判断通道5 - channel_5_threshold_value （0.5）
-    if (last_channel_5 < channel_5_threshold_value && channel_5 > channel_5_threshold_value)
+    if (last_channel_5 < channel_5_threshold_value2 && channel_5 > channel_5_threshold_value2)
     {
         // 由上往下拨一次
         toggle_arm = true;
         toggle_disarm = false;
     }
-    else if (last_channel_5 > channel_5_threshold_value && channel_5 < channel_5_threshold_value)
+    else if (last_channel_5 > channel_5_threshold_value1 && channel_5 < channel_5_threshold_value1)
     {
         // 由下往上拨一次
         toggle_arm = false;
