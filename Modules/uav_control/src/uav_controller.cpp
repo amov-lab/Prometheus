@@ -260,6 +260,10 @@ void UAV_controller::mainloop()
 
         if (last_control_state == CONTROL_STATE::LAND_CONTROL)
         {
+            if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
+            {
+                set_px4_mode_func("AUTO.LAND");
+            }
             pos_des[0] = uav_pos[0];
             pos_des[1] = uav_pos[1];
             pos_des[2] = Takeoff_position[2]; // 高度设定为初始起飞时的高度
@@ -395,9 +399,9 @@ void UAV_controller::set_hover_pose_with_rc()
 
     // 悬停位置 = 前一个悬停位置 + 遥控器数值[-1,1] * 0.01(如果主程序中设定是100Hz的话)
     Hover_position(0) += rc_input.ch[1] * max_vel_xy * delta_t;
-    Hover_position(1) += rc_input.ch[0] * max_vel_xy * delta_t;
+    Hover_position(1) += -rc_input.ch[0] * max_vel_xy * delta_t;
     Hover_position(2) += rc_input.ch[2] * max_vel_z * delta_t;
-    Hover_yaw += rc_input.ch[3] * max_vel_yaw * delta_t;
+    Hover_yaw += -rc_input.ch[3] * max_vel_yaw * delta_t;
     // 因为这是一个积分系统，所以即使停杆了，无人机也还会继续移动一段距离
 
     // 高度限制
