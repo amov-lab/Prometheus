@@ -315,7 +315,6 @@ int main(int argc, char **argv)
     // 旋转向量，转移向量
     cv::Mat rvec(rv), tvec(tv);
     // cv::VideoCapture capture(0);
-    // TODO: last_az, last_ax, last_ay 是什么
     float last_x(0), last_y(0), last_z(0), last_yaw(0), last_az(0), last_ay(0), last_ax(0), last_qx(0), last_qy(0), last_qz(0), last_qw(0);
     // 切换标志位，是否检测
     bool switch_state = is_suspanded;
@@ -484,7 +483,7 @@ int main(int argc, char **argv)
                 }
 
                 cv::Mat rotation_matrix;
-                // 旋转向量 -> 旋转矩阵
+                // 相机姿态: 旋转向量 -> 旋转矩阵
                 cv::Rodrigues(rvecs[0], rotation_matrix);
                 Eigen::Matrix3d rotation_matrix_eigen;
                 cv::cv2eigen(rotation_matrix, rotation_matrix_eigen);
@@ -546,9 +545,7 @@ int main(int argc, char **argv)
 
                 rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
                 // cv::invert(rotation_matrix, rotation_matrix);
-                // rotation_matrix 二维码到姿态
-                // TODO: id_8_t 含义?
-                // 相机坐标系下到二维码位置
+                // rotation_matrix 相机坐标系下的目标的姿态
                 cv::Mat id_8_t = rotation_matrix * id_to8_t_mat + vec_t_mat;
                 // cout << id_8_t << endl;
 
@@ -577,28 +574,19 @@ int main(int argc, char **argv)
                 float thetay = atan2(-1 * r31, sqrt(r32 * r32 + r33 * r33)) / CV_PI * 180;
                 float thetax = atan2(r32, r33) / CV_PI * 180;
 
-                // C2W代表 相机坐标系转换到世界坐标系  W2C代表 世界坐标系转换到相机坐标系 Theta为欧拉角
-                // TODO: 世界 ? 机体坐标系
+                // C2W代表 相机坐标系转换到世界坐标系姿态变化   W2C代表 世界坐标系转换到相机坐标系 Theta为欧拉角
                 cv::Point3f Theta_C2W;      // 相机 -> 世界
                 cv::Point3f Theta_W2C;      // 世界 -> 相机
                 cv::Point3f Position_OcInW; // 相机坐标系下到位置
 
-                // 相机 -> 世界
                 Theta_C2W.z = thetaz;
                 Theta_C2W.y = thetay;
                 Theta_C2W.x = thetax;
 
-                // 世界 -> 相机
                 Theta_W2C.x = -1 * thetax;
                 Theta_W2C.y = -1 * thetay;
                 Theta_W2C.z = -1 * thetaz;
 
-                // 相机坐标系下的位置
-                Position_OcInW.x = id_8_t.at<float>(0);
-                Position_OcInW.y = id_8_t.at<float>(1);
-                Position_OcInW.z = id_8_t.at<float>(2);
-
-                // TODO: 看不懂
                 Eigen::Vector3d eulerVec;
                 eulerVec(0) = (Theta_C2W.z) / 180 * CV_PI;
                 double A1_yaw = eulerVec(0);
@@ -607,6 +595,7 @@ int main(int argc, char **argv)
                 pose_now.header.stamp = ros::Time::now();
                 pose_now.detected = true;
                 pose_now.frame = 0;
+                // 目标点位置
                 pose_now.position[0] = o_tx;
                 pose_now.position[1] = o_ty;
                 pose_now.position[2] = o_tz;
@@ -620,6 +609,7 @@ int main(int argc, char **argv)
                 // 视线角，球体坐标系
                 pose_now.sight_angle[0] = atan(o_tx / o_tz);
                 pose_now.sight_angle[1] = atan(o_ty / o_tz);
+                // 偏航角误差
                 pose_now.yaw_error = A1_yaw;
 
                 last_x = pose_now.position[0];
