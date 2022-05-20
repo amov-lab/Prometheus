@@ -1,10 +1,10 @@
 <launch>
-	<include file="/home/onx/Code/Prometheus/Simulator/gazebo_simulator/launch_basic/sitl_outdoor_1uav.launch">
-		<arg name="world" default="/home/onx/Code/Prometheus/Simulator/gazebo_simulator/gazebo_worlds/detection_worlds/landing_pad.world" />
-		<arg name="sdf" value="/home/onx/Code/Prometheus/Simulator/gazebo_simulator/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf"/>
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/landing_pad.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf"/>
 	</include>
 
-	<include file="/home/onx/Code/Prometheus/Modules/uav_control/launch/uav_control_main_outdoor.launch" />
+	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch" />
 
 	<!-- run the landpad_det.cpp -->
     <node pkg="prometheus_detection" type="markers_landpad_det" name="landpad_det" output="screen">
@@ -39,5 +39,4 @@
 		<param name="target_vel_x" value="0.0" />
 		<param name="target_vel_y" value="0.0" />
 	</node>
-
 </launch>

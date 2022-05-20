@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import os
 path = sys.path[0]
 path = path + '/../../src/siam_rpn_lib/'
 print(path)
 sys.path.append(path)
+sys.path.append("/home/onx/Code/Prometheus/devel/lib/python2.7/dist-packages")
 import rospy
 import cv2
 import torch
@@ -15,17 +16,24 @@ from geometry_msgs.msg import Pose
 from net import SiamRPNvot
 from run_SiamRPN import SiamRPN_init, SiamRPN_track
 from utils import get_axis_aligned_bbox, cxy_wh_2_rect
-import yaml
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
+from threading import Lock
 from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
 import math
 
+
+image_lock = Lock()
 
 camera_matrix = np.zeros((3, 3), np.float32)
 distortion_coefficients = np.zeros((5,), np.float32)
 kcf_tracker_h = 1.0
 
 rospy.init_node('siamrpn_tracker', anonymous=True)
-pub = rospy.Publisher('/prometheus/object_detection/siamrpn_tracker', DetectionInfo, queue_size=10)
 
 
 '''
@@ -61,7 +69,7 @@ def draw_circle(event, x, y, flags, param):
 
 
 def draw_circle(event, x, y, flags, param):
-    global x1, y1, x2, y2, drawing, init, flag, iamge, start
+    global x1, y1, x2, y2, drawing, init, flag, g_image, start
 
     if 1:
         if event == cv2.EVENT_LBUTTONDOWN and flag == 1:
@@ -87,7 +95,7 @@ def draw_circle(event, x, y, flags, param):
                 x1, x2, y1, y2 = -1, -1, -1, -1
         if drawing is True:
             x2, y2 = x, y
-            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.rectangle(g_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     if event == cv2.EVENT_MBUTTONDOWN:
         flag = 1
@@ -96,15 +104,16 @@ def draw_circle(event, x, y, flags, param):
 
 
 def callback(data):
-    global image, getim
+    global g_image, getim
     bridge = CvBridge()
     cv_image = bridge.imgmsg_to_cv2(data, "bgr8")
-    image = cv_image   
+    with image_lock:
+        g_image = cv_image   
     getim = True
 
 
-def showImage(subscriber, camera_matrix, kcf_tracker_h):
-    global x1, y1, x2, y2, drawing, init, flag, image, getim, start
+def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
+    global x1, y1, x2, y2, drawing, init, flag, g_image, getim, start
 
     flag=1
     init = False
@@ -126,6 +135,7 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h):
     print('ready for starting!')
 
     rospy.Subscriber(subscriber, Image, callback)
+    pub = rospy.Publisher("/uav" + str(uav_id) + '/prometheus/object_detection/siamrpn_tracker', DetectionInfo, queue_size=10)
 
     cv2.namedWindow('image')
     cv2.setMouseCallback('image', draw_circle)
@@ -137,6 +147,8 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h):
             d_info = DetectionInfo()
             d_info.frame = 0
             ## ! 
+            with image_lock:
+                image = g_image.copy()
 
             if start is False and init is True:
                 target_pos = np.array([int((x1+x2)/2), int((y1+y2)/2)])
@@ -185,18 +197,20 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h):
             ## ! 
             pub.publish(d_info)
             cv2.imshow('image', image)
-            cv2.waitKey(1)
+            cv2.waitKey(10)
 
         rate.sleep()
 
 if __name__ == '__main__':
-    subscriber = rospy.get_param('~camera_topic', '/prometheus/camera/rgb/image_raw')
-    config = rospy.get_param('~camera_info', 'camera_param.yaml')
+    subscriber = rospy.get_param('~camera_topic', '/prometheus/sensor/monocular_front/image_raw')
+    config = rospy.get_param('~camera_info', '/home/onx/Code/Prometheus/Simulator/gazebo_simulator/config/camera_config/camera_param_gazebo_monocular.yaml')
+    uav_id = rospy.get_param('~uav_id', 1)
 
     yaml_config_fn = config
     print('Input config file: {}'.format(config))
 
-    yaml_config = yaml.load(open(yaml_config_fn))
+    # yaml_config = yaml.load(open(yaml_config_fn))
+    yaml_config = load(open(yaml_config_fn), Loader=Loader)
 
     camera_matrix[0,0] = yaml_config['fx']
     camera_matrix[1,1] = yaml_config['fy']
@@ -215,4 +229,4 @@ if __name__ == '__main__':
     kcf_tracker_h = yaml_config['kcf_tracker_h']
     print(kcf_tracker_h)
 
-    showImage(subscriber, camera_matrix, kcf_tracker_h)
+    showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id)

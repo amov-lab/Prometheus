@@ -3,7 +3,7 @@
  * Author: Jario
  * Update Time: 2020.12.05
  *
-***************************************************************************************************************************/
+ ***************************************************************************************************************************/
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d.hpp>
@@ -16,13 +16,14 @@
 using namespace std;
 using namespace cv;
 
-namespace {
-const char* about =
+namespace
+{
+    const char *about =
         "Calibration using a ChArUco board\n"
         "  To capture a frame for calibration, press 'c',\n"
         "  If input comes from video, press any key for next frame\n"
         "  To finish capturing, press 'ESC' key and calibration starts.\n";
-const char* keys  =
+    const char *keys =
         "{w        |       | Number of squares in X direction }"
         "{h        |       | Number of squares in Y direction }"
         "{sl       |       | Square side length (in meters) }"
@@ -50,9 +51,10 @@ const char* keys  =
 
 /**
  */
-static bool readDetectorParameters(string filename, Ptr<aruco::DetectorParameters> &params) {
+static bool readDetectorParameters(string filename, Ptr<aruco::DetectorParameters> &params)
+{
     FileStorage fs(filename, FileStorage::READ);
-    if(!fs.isOpened())
+    if (!fs.isOpened())
         return false;
     fs["adaptiveThreshWinSizeMin"] >> params->adaptiveThreshWinSizeMin;
     fs["adaptiveThreshWinSizeMax"] >> params->adaptiveThreshWinSizeMax;
@@ -77,14 +79,13 @@ static bool readDetectorParameters(string filename, Ptr<aruco::DetectorParameter
     return true;
 }
 
-
-
 /**
  */
 static bool saveCameraParams(const string &filename, Size imageSize, float aspectRatio, int flags,
-                             const Mat &cameraMatrix, const Mat &distCoeffs, double totalAvgErr) {
+                             const Mat &cameraMatrix, const Mat &distCoeffs, double totalAvgErr)
+{
     FileStorage fs(filename, FileStorage::WRITE);
-    if(!fs.isOpened())
+    if (!fs.isOpened())
         return false;
 
     time_t tt;
@@ -98,9 +99,11 @@ static bool saveCameraParams(const string &filename, Size imageSize, float aspec
     fs << "image_width" << imageSize.width;
     fs << "image_height" << imageSize.height;
 
-    if(flags & CALIB_FIX_ASPECT_RATIO) fs << "aspectRatio" << aspectRatio;
+    if (flags & CALIB_FIX_ASPECT_RATIO)
+        fs << "aspectRatio" << aspectRatio;
 
-    if(flags != 0) {
+    if (flags != 0)
+    {
         sprintf(buf, "flags: %s%s%s%s",
                 flags & CALIB_USE_INTRINSIC_GUESS ? "+use_intrinsic_guess" : "",
                 flags & CALIB_FIX_ASPECT_RATIO ? "+fix_aspectRatio" : "",
@@ -118,23 +121,23 @@ static bool saveCameraParams(const string &filename, Size imageSize, float aspec
     return true;
 }
 
-
-std::string gstreamer_pipeline (int capture_width, int capture_height, int display_width, int display_height, int framerate, int flip_method) {
+std::string gstreamer_pipeline(int capture_width, int capture_height, int display_width, int display_height, int framerate, int flip_method)
+{
     return "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)" + std::to_string(capture_width) + ", height=(int)" +
            std::to_string(capture_height) + ", format=(string)NV12, framerate=(fraction)" + std::to_string(framerate) +
            "/1 ! nvvidconv flip-method=" + std::to_string(flip_method) + " ! video/x-raw, width=(int)" + std::to_string(display_width) + ", height=(int)" +
            std::to_string(display_height) + ", format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
 }
 
-
-
 /**
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     CommandLineParser parser(argc, argv, keys);
     parser.about(about);
 
-    if(argc < 7) {
+    if (argc < 7)
+    {
         parser.printMessage();
         return 0;
     }
@@ -150,17 +153,22 @@ int main(int argc, char *argv[]) {
 
     int calibrationFlags = 0;
     float aspectRatio = 1;
-    if(parser.has("a")) {
+    if (parser.has("a"))
+    {
         calibrationFlags |= CALIB_FIX_ASPECT_RATIO;
         aspectRatio = parser.get<float>("a");
     }
-    if(parser.get<bool>("zt")) calibrationFlags |= CALIB_ZERO_TANGENT_DIST;
-    if(parser.get<bool>("pc")) calibrationFlags |= CALIB_FIX_PRINCIPAL_POINT;
+    if (parser.get<bool>("zt"))
+        calibrationFlags |= CALIB_ZERO_TANGENT_DIST;
+    if (parser.get<bool>("pc"))
+        calibrationFlags |= CALIB_FIX_PRINCIPAL_POINT;
 
     Ptr<aruco::DetectorParameters> detectorParams = aruco::DetectorParameters::create();
-    if(parser.has("dp")) {
+    if (parser.has("dp"))
+    {
         bool readOk = readDetectorParameters(parser.get<string>("dp"), detectorParams);
-        if(!readOk) {
+        if (!readOk)
+        {
             cerr << "Invalid detector parameters file" << endl;
             return 0;
         }
@@ -168,48 +176,68 @@ int main(int argc, char *argv[]) {
 
     bool refindStrategy = parser.get<bool>("rs");
 
+    int capture_width = 1280;
+    int capture_height = 720;
+    int display_width = 1280;
+    int display_height = 720;
+    int framerate = 30;
+    int flip_method = 0;
 
-    int capture_width = 1280 ;
-    int capture_height = 720 ;
-    int display_width = 1280 ;
-    int display_height = 720 ;
-    int framerate = 30 ;
-    int flip_method = 0 ;
-
-
-if(parser.has("cw")) { capture_width = parser.get<int>("cw"); }
-if(parser.has("ch")) { capture_height = parser.get<int>("ch"); }
-if(parser.has("dw")) { display_width = parser.get<int>("dw"); }
-if(parser.has("dh")) { display_height = parser.get<int>("dh"); }
-if(parser.has("fr")) { framerate = parser.get<int>("fr"); }
-if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
-
+    if (parser.has("cw"))
+    {
+        capture_width = parser.get<int>("cw");
+    }
+    if (parser.has("ch"))
+    {
+        capture_height = parser.get<int>("ch");
+    }
+    if (parser.has("dw"))
+    {
+        display_width = parser.get<int>("dw");
+    }
+    if (parser.has("dh"))
+    {
+        display_height = parser.get<int>("dh");
+    }
+    if (parser.has("fr"))
+    {
+        framerate = parser.get<int>("fr");
+    }
+    if (parser.has("fm"))
+    {
+        flip_method = parser.get<int>("fm");
+    }
 
     std::string pipeline = gstreamer_pipeline(capture_width,
-	capture_height,
-	display_width,
-	display_height,
-	framerate,
-	flip_method);
+                                              capture_height,
+                                              display_width,
+                                              display_height,
+                                              framerate,
+                                              flip_method);
 
     int camId = parser.get<int>("ci");
     String video;
 
-    if(parser.has("v")) {
+    if (parser.has("v"))
+    {
         video = parser.get<String>("v");
     }
 
-    if(!parser.check()) {
+    if (!parser.check())
+    {
         parser.printErrors();
         return 0;
     }
 
     VideoCapture inputVideo;
     int waitTime;
-    if(!video.empty()) {
+    if (!video.empty())
+    {
         inputVideo.open(video);
         waitTime = 0;
-    } else {
+    }
+    else
+    {
         if (camId == 99)
             inputVideo.open(pipeline, cv::CAP_GSTREAMER);
         else
@@ -222,39 +250,42 @@ if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
 
     // create charuco board object
     Ptr<aruco::CharucoBoard> charucoboard =
-            aruco::CharucoBoard::create(squaresX, squaresY, squareLength, markerLength, dictionary);
+        aruco::CharucoBoard::create(squaresX, squaresY, squareLength, markerLength, dictionary);
     Ptr<aruco::Board> board = charucoboard.staticCast<aruco::Board>();
 
     // collect data from each frame
-    vector< vector< vector< Point2f > > > allCorners;
-    vector< vector< int > > allIds;
-    vector< Mat > allImgs;
+    vector<vector<vector<Point2f>>> allCorners;
+    vector<vector<int>> allIds;
+    vector<Mat> allImgs;
     Size imgSize;
 
-    while(inputVideo.grab()) {
+    while (inputVideo.grab())
+    {
         Mat image, imageCopy;
         inputVideo.retrieve(image);
 
-        vector< int > ids;
-        vector< vector< Point2f > > corners, rejected;
+        vector<int> ids;
+        vector<vector<Point2f>> corners, rejected;
 
         // detect markers
         aruco::detectMarkers(image, dictionary, corners, ids, detectorParams, rejected);
 
         // refind strategy to detect more markers
-        if(refindStrategy) aruco::refineDetectedMarkers(image, board, corners, ids, rejected);
+        if (refindStrategy)
+            aruco::refineDetectedMarkers(image, board, corners, ids, rejected);
 
         // interpolate charuco corners
         Mat currentCharucoCorners, currentCharucoIds;
-        if(ids.size() > 0)
+        if (ids.size() > 0)
             aruco::interpolateCornersCharuco(corners, ids, image, charucoboard, currentCharucoCorners,
                                              currentCharucoIds);
 
         // draw results
         image.copyTo(imageCopy);
-        if(ids.size() > 0) aruco::drawDetectedMarkers(imageCopy, corners);
+        if (ids.size() > 0)
+            aruco::drawDetectedMarkers(imageCopy, corners);
 
-        if(currentCharucoCorners.total() > 0)
+        if (currentCharucoCorners.total() > 0)
             aruco::drawDetectedCornersCharuco(imageCopy, currentCharucoCorners, currentCharucoIds);
 
         putText(imageCopy, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
@@ -262,8 +293,10 @@ if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
 
         imshow("out", imageCopy);
         char key = (char)waitKey(waitTime);
-        if(key == 27) break;
-        if(key == 'c' && ids.size() > 0) {
+        if (key == 27)
+            break;
+        if (key == 'c' && ids.size() > 0)
+        {
             cout << "Frame captured" << endl;
             allCorners.push_back(corners);
             allIds.push_back(ids);
@@ -272,28 +305,32 @@ if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
         }
     }
 
-    if(allIds.size() < 1) {
+    if (allIds.size() < 1)
+    {
         cerr << "Not enough captures for calibration" << endl;
         return 0;
     }
 
     Mat cameraMatrix, distCoeffs;
-    vector< Mat > rvecs, tvecs;
+    vector<Mat> rvecs, tvecs;
     double repError;
 
-    if(calibrationFlags & CALIB_FIX_ASPECT_RATIO) {
+    if (calibrationFlags & CALIB_FIX_ASPECT_RATIO)
+    {
         cameraMatrix = Mat::eye(3, 3, CV_64F);
-        cameraMatrix.at< double >(0, 0) = aspectRatio;
+        cameraMatrix.at<double>(0, 0) = aspectRatio;
     }
 
     // prepare data for calibration
-    vector< vector< Point2f > > allCornersConcatenated;
-    vector< int > allIdsConcatenated;
-    vector< int > markerCounterPerFrame;
+    vector<vector<Point2f>> allCornersConcatenated;
+    vector<int> allIdsConcatenated;
+    vector<int> markerCounterPerFrame;
     markerCounterPerFrame.reserve(allCorners.size());
-    for(unsigned int i = 0; i < allCorners.size(); i++) {
+    for (unsigned int i = 0; i < allCorners.size(); i++)
+    {
         markerCounterPerFrame.push_back((int)allCorners[i].size());
-        for(unsigned int j = 0; j < allCorners[i].size(); j++) {
+        for (unsigned int j = 0; j < allCorners[i].size(); j++)
+        {
             allCornersConcatenated.push_back(allCorners[i][j]);
             allIdsConcatenated.push_back(allIds[i][j]);
         }
@@ -307,13 +344,14 @@ if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
 
     // prepare data for charuco calibration
     int nFrames = (int)allCorners.size();
-    vector< Mat > allCharucoCorners;
-    vector< Mat > allCharucoIds;
-    vector< Mat > filteredImages;
+    vector<Mat> allCharucoCorners;
+    vector<Mat> allCharucoIds;
+    vector<Mat> filteredImages;
     allCharucoCorners.reserve(nFrames);
     allCharucoIds.reserve(nFrames);
 
-    for(int i = 0; i < nFrames; i++) {
+    for (int i = 0; i < nFrames; i++)
+    {
         // interpolate using camera parameters
         Mat currentCharucoCorners, currentCharucoIds;
         aruco::interpolateCornersCharuco(allCorners[i], allIds[i], allImgs[i], charucoboard,
@@ -325,7 +363,8 @@ if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
         filteredImages.push_back(allImgs[i]);
     }
 
-    if(allCharucoCorners.size() < 4) {
+    if (allCharucoCorners.size() < 4)
+    {
         cerr << "Not enough corners for calibration" << endl;
         return 0;
     }
@@ -335,9 +374,10 @@ if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
         aruco::calibrateCameraCharuco(allCharucoCorners, allCharucoIds, charucoboard, imgSize,
                                       cameraMatrix, distCoeffs, rvecs, tvecs, calibrationFlags);
 
-    bool saveOk =  saveCameraParams(outputFile, imgSize, aspectRatio, calibrationFlags,
-                                    cameraMatrix, distCoeffs, repError);
-    if(!saveOk) {
+    bool saveOk = saveCameraParams(outputFile, imgSize, aspectRatio, calibrationFlags,
+                                   cameraMatrix, distCoeffs, repError);
+    if (!saveOk)
+    {
         cerr << "Cannot save output file" << endl;
         return 0;
     }
@@ -347,20 +387,25 @@ if(parser.has("fm")) { flip_method = parser.get<int>("fm"); }
     cout << "Calibration saved to " << outputFile << endl;
 
     // show interpolated charuco corners for debugging
-    if(showChessboardCorners) {
-        for(unsigned int frame = 0; frame < filteredImages.size(); frame++) {
+    if (showChessboardCorners)
+    {
+        for (unsigned int frame = 0; frame < filteredImages.size(); frame++)
+        {
             Mat imageCopy = filteredImages[frame].clone();
-            if(allIds[frame].size() > 0) {
+            if (allIds[frame].size() > 0)
+            {
 
-                if(allCharucoCorners[frame].total() > 0) {
-                    aruco::drawDetectedCornersCharuco( imageCopy, allCharucoCorners[frame],
-                                                       allCharucoIds[frame]);
+                if (allCharucoCorners[frame].total() > 0)
+                {
+                    aruco::drawDetectedCornersCharuco(imageCopy, allCharucoCorners[frame],
+                                                      allCharucoIds[frame]);
                 }
             }
 
             imshow("out", imageCopy);
             char key = (char)waitKey(0);
-            if(key == 27) break;
+            if (key == 27)
+                break;
         }
     }
 
