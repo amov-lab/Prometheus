@@ -44,8 +44,8 @@ public:
     bool toggle_land;
 
 private:
-    static constexpr double channel_5_threshold_value1 = 0.25;
-    static constexpr double channel_5_threshold_value2 = 0.75;
+    static constexpr double channel_5_threshold_value_1 = 0.25;
+    static constexpr double channel_5_threshold_value_2 = 0.75;
     static constexpr double channel_6_threshold_value_1 = 0.25;
     static constexpr double channel_6_threshold_value_2 = 0.75;
     static constexpr double channel_7_threshold_value_1 = 0.25;
@@ -188,14 +188,15 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
         last_channel_8 = channel_8;
     }
 
-    // 判断通道5 - channel_5_threshold_value （0.5）
-    if (last_channel_5 < channel_5_threshold_value2 && channel_5 > channel_5_threshold_value2)
+    // 判断通道5 - channel_5_threshold_value_1 （0.25） channel_5_threshold_value_2 (0.75)
+    // 目前真机中会出现处于中间位置会存在1500的输出值,相当于三段档杆,因此逻辑处理不能以两段档杆来处理
+    if (last_channel_5 < channel_5_threshold_value_2 && channel_5 > channel_5_threshold_value_2)
     {
         // 由上往下拨一次
         toggle_arm = true;
         toggle_disarm = false;
     }
-    else if (last_channel_5 > channel_5_threshold_value1 && channel_5 < channel_5_threshold_value1)
+    else if (last_channel_5 > channel_5_threshold_value_1 && channel_5 < channel_5_threshold_value_1)
     {
         // 由下往上拨一次
         toggle_arm = false;
@@ -234,7 +235,8 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
         toggle_kill = false;
     }
 
-    // 判断通道8 - channel_8_threshold_value （0.5） 
+    // 判断通道8 - channel_8_threshold_value （0.75） 
+    // 目前真机中会出现处于中间位置会存在1500的输出值,阈值设置为0.5会出现异常
     if (last_channel_8 < channel_8_threshold_value && channel_8 > channel_8_threshold_value)
     {
         toggle_land = true;
