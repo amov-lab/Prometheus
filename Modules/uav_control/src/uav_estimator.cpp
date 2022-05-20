@@ -273,7 +273,7 @@ void UAV_estimator::check_uav_state()
         cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
     }
 
-    if (odom_state == 9)
+    if (odom_state == 9 || odom_state == 5)
     {
         uav_state.odom_valid = true;
     }
@@ -331,14 +331,13 @@ int UAV_estimator::check_uav_odom()
         {
             return 4;
         }
-        // odom失效可能原因5:RTK定位精度较差(非odom失效状态)
+        // odom数据可信度降低可能原因1:RTK定位精度未达到FIXED状态(非odom失效状态)
         else if(uav_state.gps_status <= prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR)
         {
-            return 9;
+            return 5;
         }
     }
     //UWB todo
-
 
     return 9;
 }

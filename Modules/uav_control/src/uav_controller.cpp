@@ -10,8 +10,6 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     node_name = "[uav_controller_uav" + std::to_string(uav_id) + "]";
     // 【参数】是否仿真模式
     nh.param<bool>("sim_mode", sim_mode, true);
-    // 【参数】初始PX4模式,0代表位置定点模式，1代表自稳模式
-    nh.param<int>("init_px4_mode", init_px4_mode, 0);
     // 【参数】仅COMMAND_CONTROL模式（用于集群和测试）
     nh.param<bool>("only_command_mode", only_command_mode, false);
     // 【参数】控制器标志位,具体说明见CONTOLLER_FLAG说明
@@ -212,17 +210,10 @@ void UAV_controller::mainloop()
 
     case CONTROL_STATE::MANUAL_CONTROL:
 
-        // init_px4_mode必须设置为0或者1！！！
         // 检查无人机是否位于定点模式，否则切换至定点模式
-        if (init_px4_mode == 0 && uav_state.mode != "POSCTL")
+        if (uav_state.mode != "POSCTL")
         {
             set_px4_mode_func("POSCTL");
-        }
-
-        // 检查无人机是否位于自稳模式，
-        if (init_px4_mode == 1 && uav_state.mode != "STABILIZED")
-        {
-            set_px4_mode_func("STABILIZED");
         }
 
         break;
@@ -252,6 +243,20 @@ void UAV_controller::mainloop()
     // 当前位置原地降落，降落后会自动上锁，且切换为mannual模式
     case CONTROL_STATE::LAND_CONTROL:
 
+        if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
+        {
+            set_px4_mode_func("AUTO.LAND");
+            if (only_command_mode)
+            {
+                control_state = CONTROL_STATE::COMMAND_CONTROL;
+            }
+            else
+            {
+                control_state = CONTROL_STATE::INIT;
+            }
+		    break;
+        }
+
         // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
         if (quick_land)
         {
@@ -260,11 +265,6 @@ void UAV_controller::mainloop()
 
         if (last_control_state == CONTROL_STATE::LAND_CONTROL)
         {
-            if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
-            {
-                set_px4_mode_func("AUTO.LAND");
-		break;
-            }
             pos_des[0] = uav_pos[0];
             pos_des[1] = uav_pos[1];
             pos_des[2] = Takeoff_position[2]; // 高度设定为初始起飞时的高度
@@ -744,7 +744,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 }
                 else
                 {
-                    send_vel_xy_pos_z_setpoint(vel_des, vel_des, yaw_des);
+                    send_vel_xy_pos_z_setpoint(pos_des, vel_des, yaw_des);
                 }
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
