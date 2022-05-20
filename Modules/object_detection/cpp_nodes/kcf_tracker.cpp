@@ -303,8 +303,7 @@ int main(int argc, char **argv)
             pose_now.header.stamp = ros::Time::now();
             pose_now.detected = true;
             pose_now.frame = 0;
-            // TODO: 乘个 fy 是个什么意思? 焦距？  f/dy
-            // TODO: 这样计算出到距离， 跟倾斜角度有关?
+            // TODO: 这样计算出到距离，跟倾斜是否跟倾斜角度有关? 不用考虑外参吗?
             double depth = kcf_tracker_h / result.height * fy;
             double cx = result.x + result.width / 2 - frame.cols / 2;
             double cy = result.y + result.height / 2 - frame.rows / 2;
