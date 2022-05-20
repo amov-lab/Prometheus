@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     sleep(1);
     cout << GREEN << " Please use the RC SWA to armed, and the SWB to switch the drone to [COMMAND_CONTROL] mode  " << TAIL << endl;
 
-    //设定飞行时间为20S,控制频率为18HZ,半径为2米
+    //设定飞行时间为40S,控制频率为20HZ,半径为2米
     circular_time = 40;
     control_rate = 20;
     radius = 2;
@@ -169,11 +169,12 @@ int main(int argc, char** argv)
                 //Move模式
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
                 //Move_mode
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL;
+                uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS;
                 //无人机按照圆形轨迹飞行
                 uav_command.velocity_ref[0] = -velocity*sin(count*angle_increment);
                 uav_command.velocity_ref[1] = velocity*cos(count*angle_increment);
                 uav_command.velocity_ref[2] = 0;
+                uav_command.position_ref[2] = target_pos[2];
                 //发布的命令ID加1
                 uav_command.Command_ID += 1;
                 //发布降落命令
