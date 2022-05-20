@@ -95,6 +95,9 @@ target_link_libraries(formation_control ${catkin_LIBRARIES})
 
 add_executable(autonomous_landing advanced/autonomous_landing/src/autonomous_landing.cpp)
 target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
+
+add_executable(siamrpn_track advanced/siamrpn_track/src/siamrpn_track.cpp)
+target_link_libraries(siamrpn_track ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
