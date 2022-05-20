@@ -263,6 +263,7 @@ void UAV_controller::mainloop()
             if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
             {
                 set_px4_mode_func("AUTO.LAND");
+		break;
             }
             pos_des[0] = uav_pos[0];
             pos_des[1] = uav_pos[1];
@@ -1397,7 +1398,7 @@ void UAV_controller::arm_disarm_func(bool on_or_off)
         }
         else
         {
-            cout << RED << node_name << "vehicle arming, success!" << TAIL << endl;
+            cout << RED << node_name << "vehicle arming, fail!" << TAIL << endl;
         }
     }
     else
