@@ -691,13 +691,13 @@ public:
 
           // add fake_rc_in
           // joy_msg.axes[0]对应右摇杆（左右），最左mavros_rc.channels[0] = 1967，最右mavros_rc.channels[0] = 1037
-          fake_rc_in.channels[0] = convert_joy_units(joy_msg.axes[0]);
+          fake_rc_in.channels[0] = convert_joy_units(joy_msg.axes[0] * -1);
           // joy_msg.axes[1]对应右摇杆（上下），最上mavros_rc.channels[1] = 1962，最右mavros_rc.channels[1] = 1032
           fake_rc_in.channels[1] = convert_joy_units(joy_msg.axes[1] * -1);
           // joy_msg.axes[2]对应左摇杆（上下），最上mavros_rc.channels[2] = 1962，最右mavros_rc.channels[2] = 1032
           fake_rc_in.channels[2] = convert_joy_units(joy_msg.axes[2] * -1);
           // joy_msg.axes[3]对应左摇杆（左右），最左mavros_rc.channels[3] = 1967，最右mavros_rc.channels[3] = 1037
-          fake_rc_in.channels[3] = convert_joy_units(joy_msg.axes[3]);
+          fake_rc_in.channels[3] = convert_joy_units(joy_msg.axes[3] * -1);
 
           // joy_msg.buttons[0]对应SWA两段开关
           // 初始位置：joy_msg.buttons[0] = 1
