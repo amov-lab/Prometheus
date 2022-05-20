@@ -361,8 +361,9 @@ int main(int argc, char **argv)
     {
         cam2drn_tvecs[0] = 0.;
         cam2drn_tvecs[1] = 0.;
-        cam2drn_tvecs[2] = 0.05;
-        // TODO: 0 乘2是什么含义，为什么不是 1 = 1.57...
+        cam2drn_tvecs[2] = -0.1;
+        // <pose>0 0 -0.1 0 1.5707963 0</pose>
+        // TODO: [0] 乘2是什么含义，为什么不是 [1] = 1.57...
         cam2drn_rvecs1[0] = 1.5707963 * 2.;
         cam2drn_rvecs1[1] = 0.;
         cam2drn_rvecs1[2] = 0.;
@@ -404,7 +405,7 @@ int main(int argc, char **argv)
         aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(dictionaryId));
     Ptr<aruco::DetectorParameters> detectorParams = aruco::DetectorParameters::create();
 
-    // TODO: mt 含义
+    // TODO: mt 含义，变量含义
     std::vector<float> collected_mtx, collected_mty, collected_mtz;
     std::vector<float> collected_mqx, collected_mqy, collected_mqz, collected_mqw;
     float mtx_calib, mty_calib, mtz_calib, mqx_calib, mqy_calib, mqz_calib, mqw_calib;
@@ -466,7 +467,6 @@ int main(int argc, char **argv)
                     q.normalize();
 
                     // 相机坐标下
-                    // TODO: pose 检测不同到二维码，位置，姿态不同, 不区分二维码id, 不会乱?
                     geometry_msgs::PoseStamped pose;
                     pose.header.frame_id = "camera";
                     pose.pose.position.x = tvecs[i][0];
@@ -476,6 +476,7 @@ int main(int argc, char **argv)
                     pose.pose.orientation.y = q.y();
                     pose.pose.orientation.z = q.z();
                     pose.pose.orientation.w = q.w();
+                    // TODO: pose 检测不同到二维码，位置，姿态不同, 不区分二维码id, 不会乱? 不应该发布
                     pose_pub.publish(pose);
 
                     if (3 == run_state) // 使用UAVstate信息进行全局位置估计
@@ -504,11 +505,13 @@ int main(int argc, char **argv)
                         tf::StampedTransform trans_aruco2world = tf::StampedTransform(aruco2world, ros::Time(pose.header.stamp), "world", obj_str);
                         br.sendTransform(trans_aruco2world);
 
+                        // 二维码位置
                         vector<float> collected_ax, collected_ay, collected_az;
                         int collected_id = ids2coll_id[ids[i]];
 
-                        // 计算world原点
-                        // aruco_pos 越大大不会暴？
+                        // 估算world原点
+                        // vector<vector<Vec3d>> aruco_pos(9);
+                        // TODO: aruco_pos 只有加没有减 越来越大不会暴内存？
                         aruco_pos[collected_id - 1].push_back(Vec3d(aruco2world.getOrigin().x(), aruco2world.getOrigin().y(), aruco2world.getOrigin().z()));
                         for (Vec3d v : aruco_pos[collected_id - 1])
                         {
@@ -546,7 +549,7 @@ int main(int argc, char **argv)
                     }
 
 
-                    // TODO: 看不懂, 有没有图案
+                    // TODO: 看不懂, 不知道实际图案是什么样子，在此之后代码就看不懂了
                     if (1 == run_state)
                     {
                         if (ids[i] >= 0 && ids[i] <= 16)
