@@ -50,7 +50,7 @@ private:
     static constexpr double channel_6_threshold_value_2 = 0.75;
     static constexpr double channel_7_threshold_value_1 = 0.25;
     static constexpr double channel_7_threshold_value_2 = 0.75;
-    static constexpr double channel_8_threshold_value = 0.5;
+    static constexpr double channel_8_threshold_value = 0.75;
     static constexpr double DEAD_ZONE = 0.05;                 // 死区
 
     void check_validity();

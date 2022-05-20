@@ -334,7 +334,7 @@ int UAV_estimator::check_uav_odom()
         // odom失效可能原因5:RTK定位精度较差(非odom失效状态)
         else if(uav_state.gps_status <= prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR)
         {
-            return 5;
+            return 9;
         }
     }
     //UWB todo
