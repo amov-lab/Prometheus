@@ -15,7 +15,7 @@ namespace GlobalPlannerNS
         nh.param("global_planner/time_per_path", time_per_path, 1.0);
         // 【参数】重规划频率
         nh.param("global_planner/replan_time", replan_time, 2.0);
-        // 【参数】选择地图更新方式：　0代表全局点云，１代表局部点云，２代表激光雷达scan数据
+        // 【参数】选择地图更新方式：　0代表全局点云，1代表局部点云，2代表激光雷达scan数据
         nh.param("global_planner/map_input_source", map_input_source, 0);
         // 【参数】是否为仿真模式
         nh.param("global_planner/sim_mode", sim_mode, false);
@@ -26,7 +26,7 @@ namespace GlobalPlannerNS
                                                             &GlobalPlanner::goal_cb, this);
 
         //【订阅】无人机状态信息
-        uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/drone_state",
+        uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/state",
                                                                 1,
                                                                 &GlobalPlanner::uav_state_cb, this);
 
@@ -55,9 +55,8 @@ namespace GlobalPlannerNS
         // 【定时器】安全检测
         // safety_timer = nh.createTimer(ros::Duration(2.0), &GlobalPlanner::safety_cb, this);
         // 【定时器】规划器算法执行周期
-        mainloop_timer = nh.createTimer(ros::Duration(1.5), &GlobalPlanner::mainloop_cb, this);
+        mainloop_timer = nh.createTimer(ros::Duration(1.0), &GlobalPlanner::mainloop_cb, this);
         // 【定时器】路径追踪循环，快速移动场景应当适当提高执行频率
-        // time_per_path
         track_path_timer = nh.createTimer(ros::Duration(time_per_path), &GlobalPlanner::track_path_cb, this);
 
         // 【初始化】Astar算法
@@ -129,7 +128,7 @@ namespace GlobalPlannerNS
     void GlobalPlanner::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
     {
         uav_state = *msg;
-        odom_ready = true;
+        
         if (uav_state.connected == true && uav_state.armed == true)
         {
             drone_ready = true;
@@ -137,6 +136,14 @@ namespace GlobalPlannerNS
         else
         {
             drone_ready = false;
+        }
+
+        if(uav_state.odom_valid)
+        {
+            odom_ready = true;
+        }else
+        {
+            odom_ready = false;
         }
 
         uav_odom.header = uav_state.header;
@@ -215,22 +222,18 @@ namespace GlobalPlannerNS
         }
 
         is_new_path = false;
-
         // 抵达终点
         if (cur_id == Num_total_wp - 1)
         {
             uav_command.header.stamp = ros::Time::now();
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-            uav_command.Command_ID = uav_command.Command_ID + 1;
-
             uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+            uav_command.Command_ID = uav_command.Command_ID + 1;
             uav_command.position_ref[0] = goal_pos[0];
             uav_command.position_ref[1] = goal_pos[1];
             uav_command.position_ref[2] = goal_pos[2];
-
             uav_command.yaw_ref = desired_yaw;
             uav_cmd_pub.publish(uav_command);
-
             cout << GREEN << NODE_NAME << "Reach the goal! " << TAIL << endl;
             // 停止执行
             path_ok = false;
@@ -241,11 +244,11 @@ namespace GlobalPlannerNS
 
         // 计算距离开始追踪轨迹时间
         tra_running_time = get_time_in_sec(tra_start_time);
-
         int i = cur_id;
 
         cout << "Moving to Waypoint: [ " << cur_id << " / " << Num_total_wp << " ] " << endl;
-        cout << "Moving to Waypoint:" << path_cmd.poses[i].pose.position.x << " [m] "
+        cout << "Moving to Waypoint: " 
+             << path_cmd.poses[i].pose.position.x << " [m] "
              << path_cmd.poses[i].pose.position.y << " [m] "
              << path_cmd.poses[i].pose.position.z << " [m] " << endl;
         // 控制方式如果是走航点，则需要对无人机进行限速，保证无人机的平滑移动
@@ -253,9 +256,8 @@ namespace GlobalPlannerNS
 
         uav_command.header.stamp = ros::Time::now();
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-        uav_command.Command_ID = uav_command.Command_ID + 1;
-
         uav_command.Move_mode = prometheus_msgs::UAVCommand::TRAJECTORY;
+        uav_command.Command_ID = uav_command.Command_ID + 1;
         uav_command.position_ref[0] = path_cmd.poses[i].pose.position.x;
         uav_command.position_ref[1] = path_cmd.poses[i].pose.position.y;
         uav_command.position_ref[2] = path_cmd.poses[i].pose.position.z;
@@ -263,9 +265,7 @@ namespace GlobalPlannerNS
         uav_command.velocity_ref[1] = (path_cmd.poses[i].pose.position.y - uav_state.position[1]) / time_per_path;
         uav_command.velocity_ref[2] = (path_cmd.poses[i].pose.position.z - uav_state.position[2]) / time_per_path;
         uav_command.yaw_ref = desired_yaw;
-
         uav_cmd_pub.publish(uav_command);
-
         cur_id = cur_id + 1;
     }
 
@@ -282,13 +282,13 @@ namespace GlobalPlannerNS
             // 此处改为根据循环时间计算的数值
             if (exec_num == 10)
             {
-                if (!odom_ready)
-                {
-                    cout << YELLOW << NODE_NAME << "Need Odom." << TAIL << endl;
-                }
-                else if (!drone_ready)
+                if (!drone_ready)
                 {
                     cout << YELLOW << NODE_NAME << "Drone is not ready." << TAIL << endl;
+                }
+                else if (!odom_ready)
+                {
+                    cout << YELLOW << NODE_NAME << "Need Odom." << TAIL << endl;
                 }
                 else if (!sensor_ready)
                 {
@@ -317,7 +317,6 @@ namespace GlobalPlannerNS
                 if (exec_num == 10)
                 {
                     cout << YELLOW << NODE_NAME << "Waiting for a new goal." << TAIL << endl;
-
                     exec_num = 0;
                 }
             }
@@ -336,10 +335,7 @@ namespace GlobalPlannerNS
             // 重置规划器
             Astar_ptr->reset();
             // 使用规划器执行搜索，返回搜索结果
-
             int astar_state;
-
-            // Astar algorithm
             astar_state = Astar_ptr->search(start_pos, goal_pos);
 
             // 未寻找到路径

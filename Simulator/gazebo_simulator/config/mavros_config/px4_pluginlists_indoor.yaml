@@ -47,6 +47,7 @@ plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_w
 - altitude
 - command
 - imu
+- geofence 
 - local_position
 - manual_control
 - param
