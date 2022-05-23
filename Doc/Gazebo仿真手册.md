@@ -17,12 +17,16 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/sysu/Prometheus/Simulator/gaze
 source /home/sysu/prometheus_px4/Tools/setup_gazebo.bash /home/sysu/prometheus_px4 /home/sysu/prometheus_px4/build/amovlab_sitl_default
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/sysu/prometheus_px4
 export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/sysu/prometheus_px4/Tools/sitl_gazebo
+
+## Promehteus_PX4
+source /home/qi/prometheus_px4/Tools/setup_gazebo.bash /home/qi/prometheus_px4 /home/qi/prometheus_px4/build/amovlab_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/qi/prometheus_px4
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/qi/prometheus_px4/Tools/sitl_gazebo
 ```
 
 - PX4编译
 - make distclean
 - make amovlab_sitl_default gazebo_p450 
-
 
 Gazebo仿真环境和功能写成单独的launch启动脚本
 - Gazebo仿真环境启动脚本负责启动gazebo,生成无人机及相关模型,启动PX4 sitl,mavros
