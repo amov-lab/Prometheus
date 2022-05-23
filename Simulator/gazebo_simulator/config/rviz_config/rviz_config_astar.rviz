@@ -3,9 +3,13 @@ Panels:
     Help Height: 138
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
-      Splitter Ratio: 0.5617647171020508
-    Tree Height: 1389
+      Expanded:
+        - /Global Options1
+        - /无人机状态1
+        - /激光雷达数据1/Status1
+        - /全局点云1
+      Splitter Ratio: 0.3301662802696228
+    Tree Height: 1080
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -22,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: 全局点云
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -52,27 +56,21 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        3Dlidar_link:
-          Value: false
         All Enabled: false
         base_link:
           Value: false
         base_link_frd:
           Value: false
-        lidar_link:
-          Value: false
         map:
           Value: false
         map_ned:
           Value: false
-        map_slam:
-          Value: true
         odom:
           Value: false
         odom_ned:
           Value: false
-        realsense_camera_link:
-          Value: false
+        uav1/lidar_link:
+          Value: true
         world:
           Value: true
       Marker Scale: 1
@@ -83,19 +81,10 @@ Visualization Manager:
       Tree:
         world:
           base_link:
-            3Dlidar_link:
-              {}
             base_link_frd:
               {}
-            lidar_link:
-              {}
-            realsense_camera_link:
-              {}
-          map:
-            map_ned:
-              {}
-            map_slam:
-              {}
+          uav1/lidar_link:
+            {}
       Update Interval: 0
       Value: true
     - Class: rviz/Group
@@ -112,7 +101,7 @@ Visualization Manager:
           Shaft Length: 1
           Shaft Radius: 0.05000000074505806
           Shape: Axes
-          Topic: /mavros/local_position/pose
+          Topic: /uav1/mavros/local_position/pose
           Unreliable: false
           Value: true
         - Alpha: 1
@@ -135,24 +124,9 @@ Visualization Manager:
           Radius: 0.029999999329447746
           Shaft Diameter: 0.10000000149011612
           Shaft Length: 0.10000000149011612
-          Topic: /prometheus/drone_trajectory
+          Topic: /uav1/prometheus/trajectory
           Unreliable: false
           Value: true
-        - Alpha: 1
-          Axes Length: 0.5
-          Axes Radius: 0.15000000596046448
-          Class: rviz/Pose
-          Color: 255; 25; 0
-          Enabled: false
-          Head Length: 0.30000001192092896
-          Head Radius: 0.10000000149011612
-          Name: Reference_Pose
-          Shaft Length: 1
-          Shaft Radius: 0.05000000074505806
-          Shape: Axes
-          Topic: /prometheus/control/ref_pose_rviz
-          Unreliable: false
-          Value: false
       Enabled: true
       Name: 无人机状态
     - Alpha: 1
@@ -185,52 +159,6 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
-    - Class: rviz/Group
-      Displays:
-        - Class: octomap_rviz_plugin/OccupancyGrid
-          Enabled: true
-          Max. Height Display: 3.4028234663852886e+38
-          Max. Octree Depth: 16
-          Min. Height Display: -3.4028234663852886e+38
-          Name: OccupancyGrid
-          Octomap Topic: /octomap_full
-          Queue Size: 5
-          Value: true
-          Voxel Alpha: 1
-          Voxel Coloring: Z-Axis
-          Voxel Rendering: Occupied Voxels
-        - Alpha: 1
-          Autocompute Intensity Bounds: true
-          Autocompute Value Bounds:
-            Max Value: 10
-            Min Value: -10
-            Value: true
-          Axis: Z
-          Channel Name: intensity
-          Class: rviz/PointCloud2
-          Color: 255; 255; 255
-          Color Transformer: FlatColor
-          Decay Time: 0
-          Enabled: true
-          Invert Rainbow: false
-          Max Color: 255; 255; 255
-          Max Intensity: 0
-          Min Color: 0; 0; 0
-          Min Intensity: 0
-          Name: PointCloud2
-          Position Transformer: XYZ
-          Queue Size: 10
-          Selectable: true
-          Size (Pixels): 3
-          Size (m): 0.019999999552965164
-          Style: Flat Squares
-          Topic: /octomap_point_cloud_centers
-          Unreliable: false
-          Use Fixed Frame: true
-          Use rainbow: true
-          Value: true
-      Enabled: true
-      Name: Octomap建图结果
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -243,7 +171,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -256,11 +184,11 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /prometheus/planning/global_pcl
+      Topic: /uav1/prometheus/planning/global_pcl
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -273,7 +201,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -286,11 +214,11 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Flat Squares
-      Topic: /prometheus/planning/global_inflate_pcl
+      Topic: /uav1/prometheus/planning/global_inflate_pcl
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -311,7 +239,7 @@ Visualization Manager:
       Radius: 0.029999999329447746
       Shaft Diameter: 0.10000000149011612
       Shaft Length: 0.10000000149011612
-      Topic: /prometheus/global_planning/path_cmd
+      Topic: /uav1/prometheus/global_planning/path_cmd
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -393,33 +321,33 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 51.87722396850586
+      Distance: 33.3601188659668
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.9045044779777527
-        Y: -0.8653466105461121
-        Z: -11.355198860168457
+        X: -1.9892866611480713
+        Y: 6.528412342071533
+        Z: -7.5153045654296875
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2897965908050537
+      Pitch: 0.6697971820831299
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.898822784423828
+      Yaw: 5.2488274574279785
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1895
+  Height: 1531
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000024600000665fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b000000b000fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000006e000006650000018200fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007300000002500000012f000000b000fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000342fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000003420000013200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000005afc0100000002fb0000000800540069006d00650100000000000007800000057100fffffffb0000000800540069006d006501000000000000045000000000000000000000052e0000066500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000034c0000051afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000008700fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000570000051a0000012800fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007300000002500000012f0000008700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000342fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000342000000ef00fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000005afc0100000002fb0000000800540069006d00650100000000000007800000037400fffffffb0000000800540069006d006501000000000000045000000000000000000000042b0000051a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -429,5 +357,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 0
-  Y: 55
+  X: 5630
+  Y: 372
