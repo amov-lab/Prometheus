@@ -506,6 +506,7 @@ int main(int argc, char **argv)
                 vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
                 // cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
                 // cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
+                // TODO: id_to8_t 是个什么含义？
                 std::vector<double> id_to8_t(3);
 
                 if (19 == markerids[tt] || 43 == markerids[tt])
