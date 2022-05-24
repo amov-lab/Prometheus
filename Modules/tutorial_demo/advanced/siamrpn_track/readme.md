@@ -1,9 +1,7 @@
-** 仅仅适用于x86主机的仿真环境 **
-
 # Dependencies
 
-- python3: _此demo不支持python2_
-- pytorch, py_cuda... 等相关python3包
+- python3: 此demo不支持python2
+- pytorch
 
 # 配置 Melodic cv_bridge 支持 python3
 > https://blog.actorsfit.com/a?ID=01750-a3d568ec-ce66-4961-9573-0f9bba2561f8
@@ -52,17 +50,8 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/onx/Code/prometheus_px4/Tools/si
 ....
 ```
 
-# 安装 python3 依赖
-
-1. [安装conda](https://docs.conda.io/en/latest/miniconda.html)
-
-```bash
-conda env create -f conda_env.yml
-```
-
 # 使用
 
 ```bash
-conda activate python3
 roslaunch prometheus_demo siamrpn_track.launch
 ```
