@@ -18,8 +18,8 @@ namespace GlobalPlannerNS
   void Astar::init(ros::NodeHandle &nh)
   {
     // 【参数】2d参数
-    nh.param("global_planner/is_2D", is_2D, 0);                // 1代表2D平面规划及搜索,0代表3D
-    nh.param("global_planner/2D_fly_height", fly_height, 1.5); // 2D规划时,定高高度
+    nh.param("global_planner/is_2D", is_2D, true);                // 1代表2D平面规划及搜索,0代表3D
+    nh.param("global_planner/fly_height", fly_height, 1.0); // 2D规划时,定高高度
     // 【参数】规划搜索相关参数
     nh.param("astar/lambda_heu", lambda_heu_, 2.0);         // 加速引导参数
     nh.param("astar/lambda_cost", lambda_cost_, 300.0);     // 参数
@@ -153,7 +153,7 @@ namespace GlobalPlannerNS
             d_pos << dx, dy, dz;
 
             // 对于2d情况，不扩展z轴
-            if (is_2D == 1)
+            if (is_2D)
             {
               d_pos(2) = 0.0;
             }

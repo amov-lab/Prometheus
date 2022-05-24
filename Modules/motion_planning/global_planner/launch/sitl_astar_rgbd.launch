@@ -15,7 +15,6 @@
       <arg name="z" value="$(arg z)"/>
     </include>
 
-
     <!-- 启动octomap_server建图 -->
     <include file="$(find prometheus_gazebo)/launch_basic/depth_proc.launch"></include>
     <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
@@ -27,6 +26,7 @@
         <!-- 局部点云输入 (PointCloud2) -->
         <remap from="cloud_in" to="/realsense_plugin/camera/local_pointclouds" />
     </node>
+
     <!-- 启动全局规划算法 -->
     <arg name="topic_of_global_pcl" default="/octomap_point_cloud_centers"/>
     <node pkg="prometheus_global_planner" name="global_planner_main" type="global_planner_main" output="screen" launch-prefix="gnome-terminal --">

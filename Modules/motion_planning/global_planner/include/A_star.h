@@ -125,7 +125,7 @@ namespace GlobalPlannerNS
     int max_search_num;
     // tie breaker
     double tie_breaker_;
-    int is_2D;
+    bool is_2D;
     double fly_height;
 
     // 目标点
