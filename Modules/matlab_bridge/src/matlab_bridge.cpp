@@ -232,7 +232,7 @@ void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
     // 4、^ 按位异或运算。
     
     // 根据uav_state对matlab_setting_result进行赋值
-    matlab_setting_result.x = 0;                        // 无人机状态量
+    matlab_setting_result.x = 0b10000000;;              // 无人机状态量
     matlab_setting_result.y = uav_state.battery_state;  // 电池电压
     matlab_setting_result.z = 1;                        // 电池百分比
     if (uav_control_state.control_state == prometheus_msgs::UAVControlState::HOVER_CONTROL)
@@ -246,7 +246,7 @@ void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
         matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10110000;
     }else
     {
-        matlab_setting_result.x = 0;
+        matlab_setting_result.x = 0b10000000;
     }
 
     if (uav_state.connected)
