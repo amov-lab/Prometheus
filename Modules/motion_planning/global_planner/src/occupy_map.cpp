@@ -7,14 +7,14 @@ namespace GlobalPlannerNS
     {
         // 【参数】编号，从1开始编号
         nh.param("uav_id", uav_id, 0);
-        // 【参数】2D规划时,定高高度
-        nh.param("global_planner/fly_height", fly_height, 1.0);
         // 【参数】仿真模式
         nh.param("global_planner/sim_mode", sim_mode, true);
+        // 【参数】2D规划时,定高高度
+        nh.param("global_planner/fly_height", fly_height, 1.0);
         // 集群数量
-        nh.param("case2_uav/swarm_num_uav", swarm_num_uav, 1);
-        nh.param("case2_uav/odom_inflate", odom_inflate_, 0.6);
-        nh.param("case2_uav/cost_inflate", cost_inflate, 5);
+        nh.param("global_planner/swarm_num_uav", swarm_num_uav, 1);
+        nh.param("global_planner/odom_inflate", odom_inflate_, 0.6);
+        nh.param("global_planner/cost_inflate", cost_inflate, 5);
         // 【参数】地图原点
         nh.param("map/origin_x", origin_(0), -5.0);
         nh.param("map/origin_y", origin_(1), -5.0);
@@ -33,16 +33,16 @@ namespace GlobalPlannerNS
         nh.param("map/inflate", inflate_, 0.3);
 
         uav_name = "/uav" + std::to_string(uav_id);
-        // 发布 地图rviz显示
+        // 【发布】全局点云地图
         global_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(uav_name + "/prometheus/planning/global_pcl", 1);
-        // 发布膨胀后的点云
+        // 【发布】膨胀后的全局点云地图
         inflate_pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(uav_name + "/prometheus/planning/global_inflate_pcl", 1);
-
-        // 主循环执行定时器
+        // 【定时器】地图发布定时器
         pcl_pub = nh.createTimer(ros::Duration(0.2), &Occupy_map::pub_pcl_cb, this);
 
-        // 全局地图点云指针
+        // 全局地图点云指针（环境）
         global_point_cloud_map.reset(new pcl::PointCloud<pcl::PointXYZ>);
+        // 全局地图点云指针（其他无人机）
         global_uav_pcl.reset(new pcl::PointCloud<pcl::PointXYZ>);
         // 膨胀点云指针
         cloud_inflate_vis_.reset(new pcl::PointCloud<pcl::PointXYZ>);
@@ -125,16 +125,6 @@ namespace GlobalPlannerNS
             }
 
         cost_index = 0;
-        // for(int x = -cost_inflate; x <= cost_inflate; x++)
-        //     for(int y = -cost_inflate; y <= cost_inflate; y++)
-        //     {
-        //         int tmp_dis = x*x + y*y;
-        //         if(tmp_dis <= cost_inflate*cost_inflate)
-        //         {
-        //             enum_p_cost[cost_index++] << x*resolution_, y*resolution_, tmp_dis;
-        //         }
-
-        //     }
         for (int x = -ifn - cost_inflate; x <= ifn + cost_inflate; x++)
             for (int y = -ifn - cost_inflate; y <= ifn + cost_inflate;)
             {
@@ -148,7 +138,7 @@ namespace GlobalPlannerNS
                 else
                     y += 2 * ifn + 2 * cost_inflate;
             }
-        printf("cost map %d %d\n", cost_inflate, cost_index);
+        // printf("cost map : %d %d\n", cost_inflate, cost_index);
 
         for (int i = 0; i < numdist_x; i++) //x边界
         {
@@ -183,7 +173,6 @@ namespace GlobalPlannerNS
         }
 
         get_gpcl = true;
-        has_global_point = true;
         pcl::fromROSMsg(*global_point, *input_point_cloud);
         global_point_cloud_map = input_point_cloud;
         inflate_point_cloud();
@@ -194,8 +183,6 @@ namespace GlobalPlannerNS
     {
         // 由sensor_msgs::PointCloud2 转为 pcl::PointCloud<pcl::PointXYZ>
         pcl::fromROSMsg(*local_point, *input_point_cloud);
-
-        has_global_point = true;
 
         if (sim_mode)
         {
@@ -244,6 +231,7 @@ namespace GlobalPlannerNS
         if (sim_mode)
         {
             // to do
+            // 目前仿真模式中不支持2d lidar的输入（直接使用局部点云即可）
         }
         else
         {
@@ -297,13 +285,6 @@ namespace GlobalPlannerNS
                 }
             }
 
-            // remove outlier
-            // sor.setInputCloud(transformed_cloud);
-            // sor.setMeanK(20); // kNN neighbor
-            // sor.setStddevMulThresh(1.0); // threshold
-            // sor.setNegative(false);
-            // sor.filter(*transformed_cloud);
-
             // downsample
             vg.setInputCloud(transformed_cloud);
             vg.setLeafSize(0.2f, 0.2f, 0.2f); // 下采样叶子节点大小（3D容器）
@@ -316,32 +297,15 @@ namespace GlobalPlannerNS
             f_roll = roll;
             f_pitch = pitch;
             f_yaw = yaw;
-            // global map flag
-            has_global_point = true;
-
             inflate_point_cloud();
         }
-        else
-        {
-            has_global_point = false;
-        }
+
     }
 
     // function: update global uav occupy grid (10Hz, defined by fsm)
     void Occupy_map::uav_pcl_update(Eigen::Vector3d *input_uav_odom, bool *get_uav_odom)
     {
-
-        // cout << BLUE << "11111 " << TAIL <<endl;
         Eigen::Vector3d p3d_inf;
-
-        // reset uav occupy grid with last uav pcl (same as normal occupy map)
-        // for(int i = 0; i < global_uav_pcl->points.size(); i++)
-        // {
-        //     p3d_inf(0) = global_uav_pcl->points[i].x;
-        //     p3d_inf(1) = global_uav_pcl->points[i].y;
-        //     p3d_inf(2) = global_uav_pcl->points[i].z;
-        //     this->setOccupancy(p3d_inf, 0); // reset to 0
-        // }
 
         // update global uav occupy grid with input uav odom
         pcl::PointXYZ pt;
@@ -360,7 +324,7 @@ namespace GlobalPlannerNS
                     pt.x = input_uav_odom[i][0] + enum_p_uav[j](0);
                     pt.y = input_uav_odom[i][1] + enum_p_uav[j](1);
                     pt.z = input_uav_odom[i][2] + enum_p_uav[j](2);
-
+                    //　在global_uav_pcl中添加膨胀点
                     global_uav_pcl->points.push_back(pt);
                 }
         }
@@ -373,17 +337,9 @@ namespace GlobalPlannerNS
     // Astar规划路径时，采用的是此处膨胀后的点云（setOccupancy只在本函数中使用）
     void Occupy_map::inflate_point_cloud(void)
     {
-
-        // cout << BLUE << "22222 " << TAIL <<endl;
-
-        if (!has_global_point)
-        {
-            return;
-        }
-
         if (get_gpcl)
         {
-            // occupancy_buffer_清零，不需要清0
+            // occupancy_buffer_清零
             fill(occupancy_buffer_.begin(), occupancy_buffer_.end(), 0.0);
             fill(cost_map_.begin(), cost_map_.end(), 0.0);
         }
@@ -409,7 +365,8 @@ namespace GlobalPlannerNS
 
         pcl::PointXYZ pt_inf;
         Eigen::Vector3d p3d, p3d_inf, p3d_cost;
-
+        
+        //　无人机占据地图更新
         for (int i = 0; i < global_uav_pcl->points.size(); i++)
         {
             p3d_inf(0) = global_uav_pcl->points[i].x;
@@ -418,7 +375,7 @@ namespace GlobalPlannerNS
             this->setOccupancy(p3d_inf, 1); // set to 1
         }
 
-        // 遍历全局点云中的所有点
+        // 遍历环境全局点云中的所有点
         for (size_t i = 0; i < latest_global_cloud_.points.size(); ++i)
         {
             // 取出第i个点
@@ -460,20 +417,11 @@ namespace GlobalPlannerNS
                 cloud_inflate_vis_->push_back(pt_inf);
                 // 设置膨胀后的点被占据（不管他之前是否被占据）
                 this->setOccupancy(p3d_inf, 1);
-
-                // cost map update
-                // for(int j = 0; j < cost_index; j++)
-                // {
-                //     p3d_cost(0) = p3d_inf(0) + enum_p_cost[j](0);
-                //     p3d_cost(1) = p3d_inf(1) + enum_p_cost[j](1);
-                //     p3d_cost(2) = p3d_inf(2);
-                //     this->updateCostMap(p3d_cost,1.0/enum_p_cost[j](2));
-                // }
             }
         }
 
         *cloud_inflate_vis_ += *global_uav_pcl;
-        // 加上border,仅用作显示作用
+        // 加上border,仅用作显示作用（没有占据信息）
         if (show_border)
         {
             *cloud_inflate_vis_ += border;
@@ -488,10 +436,6 @@ namespace GlobalPlannerNS
             // 膨胀地图效率与地图大小有关
             cout << YELLOW << "Occupy map: inflate global point take " << (ros::Time::now() - time_start).toSec() << " [s]. " << TAIL << endl;
             exec_num = 0;
-        }
-        else if (get_gpcl)
-        {
-            // cout << YELLOW << "Occupy map: inflate global point take " << (ros::Time::now()-time_start).toSec() <<" [s]. " << TAIL <<endl;
         }
     }
 

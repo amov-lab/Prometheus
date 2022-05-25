@@ -333,14 +333,11 @@ namespace GlobalPlannerNS
             return;
         }
         sensor_ready = true;
-        static int update_num = 0;
-        update_num++;
-        // 因为全局点云一般较大，限制更新频率
-        if (update_num == 5)
+        // 因为全局点云一般较大，只更新一次
+        if (!Astar_ptr->Occupy_map_ptr->get_gpcl)
         {
             // 对Astar中的地图进行更新
             Astar_ptr->Occupy_map_ptr->map_update_gpcl(msg);
-            update_num = 0;
         }
     }
 
@@ -365,8 +362,15 @@ namespace GlobalPlannerNS
             return;
         }
         sensor_ready = true;
+
+        // to test
+        // 参考网页:http://wiki.ros.org/laser_geometry
+        // sensor_msgs::LaserScan 转为 sensor_msgs::PointCloud2 格式
+        sensor_msgs::PointCloud2Ptr input_laser_scan_ptr;
+        projector_.projectLaser(*msg, *input_laser_scan_ptr);
+
         // 对Astar中的地图进行更新（laser+odom）并对地图进行膨胀
-        Astar_ptr->Occupy_map_ptr->map_update_laser(msg, uav_odom);
+        Astar_ptr->Occupy_map_ptr->map_update_lpcl(input_laser_scan_ptr, uav_odom);
     }
 
     void GlobalPlanner::track_path_cb(const ros::TimerEvent &e)
