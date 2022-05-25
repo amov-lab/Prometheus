@@ -80,7 +80,6 @@ namespace GlobalPlannerNS
         int swarm_num_uav; // 集群数量
         string uav_name;   // 无人机名字
         int uav_id;        // 无人机编号
-        bool has_global_point;
         bool get_gpcl, get_lpcl, get_laser;
         Eigen::Vector3d enum_p[100], enum_p_uav[1000], enum_p_cost[1000];
         int ifn;
