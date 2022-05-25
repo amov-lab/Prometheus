@@ -296,6 +296,12 @@ void UAV_controller::mainloop()
 
     last_control_state = control_state;
 
+    // 发布控制器状态
+    uav_control_state.uav_id = uav_id;
+    uav_control_state.control_state = control_state;
+    uav_control_state.controller_flag = controller_flag;
+    uav_control_state_pub.publish(uav_control_state);
+
     // INIT和MANUAL_CONTROL不需要调用控制器，直接返回
     if (control_state == CONTROL_STATE::INIT || control_state == CONTROL_STATE::MANUAL_CONTROL)
     {
@@ -320,12 +326,6 @@ void UAV_controller::mainloop()
         // 发送姿态控制指令至PX4的原生姿态环控制器
         send_attitude_setpoint(u_att);
     }
-
-    // 发布控制器状态
-    uav_control_state.uav_id = uav_id;
-    uav_control_state.control_state = control_state;
-    uav_control_state.controller_flag = controller_flag;
-    uav_control_state_pub.publish(uav_control_state);
 }
 
 Eigen::Vector4d UAV_controller::get_cmd_from_controller()
