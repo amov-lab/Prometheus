@@ -13,7 +13,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
-
+#include <laser_geometry/laser_geometry.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/UAVControlState.h>
@@ -60,6 +60,9 @@ namespace GlobalPlannerNS
         ros::Timer safety_timer;
         // A星规划器
         Astar::Ptr Astar_ptr;
+
+        // laserscan2pointcloud2 投影器
+        laser_geometry::LaserProjection projector_;
 
         prometheus_msgs::UAVState uav_state;      // 无人机状态
         prometheus_msgs::UAVControlState uav_control_state;
