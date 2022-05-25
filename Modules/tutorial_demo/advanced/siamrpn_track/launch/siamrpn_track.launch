@@ -37,7 +37,7 @@
 		<!-- 起飞点 -->
 		<param name="start_point_x" value="0" />
 		<param name="start_point_y" value="0" />
-		<param name="start_point_z" value="1" />
+		<param name="start_point_z" value="3" />
 		
 	</node>
 </launch>
