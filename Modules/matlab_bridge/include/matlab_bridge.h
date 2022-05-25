@@ -39,7 +39,7 @@ private:
     ros::Time last_matlab_setting_cmd_time{0};
     ros::Time get_uav_state_stamp{0};
     geometry_msgs::Point matlab_setting_cmd;
-    geometry_msgs::Point matlab_setting_result;
+    geometry_msgs::Point matlab_drone_status;
     prometheus_msgs::UAVCommand uav_command;
     prometheus_msgs::UAVState uav_state;
     prometheus_msgs::UAVControlState uav_control_state;
@@ -52,13 +52,13 @@ private:
     ros::Subscriber uav_state_sub;
     ros::Subscriber uav_contorl_state_sub;
     
-    ros::Publisher matlab_setting_result_pub;
+    ros::Publisher matlab_drone_status_pub;
     ros::Publisher uav_command_pub;
     ros::Publisher uav_setup_pub;
     ros::Publisher text_pub;
 
     ros::Timer timer_printf;
-    ros::Timer timer_matlab_setting_result_pub;
+    ros::Timer timer_matlab_drone_status_pub;
     struct Ctrl_Param_Matlab
     {
         float quad_mass;
@@ -91,7 +91,7 @@ private:
     void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg);
     Eigen::Vector4d acc_cmd_to_att_cmd(Eigen::Vector3d &acc_cmd, double yaw_cmd);
     bool matlab_control_cmd_safety_check();
-    void matlab_setting_result_pub_cb(const ros::TimerEvent &e);
+    void matlab_drone_status_pub_cb(const ros::TimerEvent &e);
     void printf_msgs(const ros::TimerEvent &e);
 };
 

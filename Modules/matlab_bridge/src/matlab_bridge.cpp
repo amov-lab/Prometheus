@@ -39,8 +39,8 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
                                                        &Matlab_Bridge::uav_control_state_cb, this);
 
     //【发布】发布matlab配置结果 -> matlab节点
-    matlab_setting_result_pub =
-        nh.advertise<geometry_msgs::Point>(agent_name + "/prometheus/matlab_setting_result", 10);
+    matlab_drone_status_pub =
+        nh.advertise<geometry_msgs::Point>(agent_name + "/prometheus/matlab_drone_status", 10);
 
     //【发布】发布控制指令 -> uav_controller.cpp
     uav_command_pub =
@@ -54,17 +54,17 @@ Matlab_Bridge::Matlab_Bridge(ros::NodeHandle &nh)
     text_pub =
         nh.advertise<std_msgs::String>(agent_name + "/prometheus/matlab_text", 1);
 
-    //【定时器】matlab_setting_result_pub 发布定时器
-    timer_matlab_setting_result_pub = nh.createTimer(ros::Duration(0.05), &Matlab_Bridge::matlab_setting_result_pub_cb, this);
+    //【定时器】matlab_drone_status_pub 发布定时器
+    timer_matlab_drone_status_pub = nh.createTimer(ros::Duration(0.05), &Matlab_Bridge::matlab_drone_status_pub_cb, this);
 
     //【定时器】打印定时器
     timer_printf = nh.createTimer(ros::Duration(5.0), &Matlab_Bridge::printf_msgs, this);
 
     cmd_timeout = false;
 
-    matlab_setting_result.x = 0;
-    matlab_setting_result.y = 0;
-    matlab_setting_result.z = 0;
+    matlab_drone_status.x = 0;
+    matlab_drone_status.y = 0;
+    matlab_drone_status.z = 0;
 
     cout << GREEN << "matlab bridge init!" << TAIL << endl;
 
@@ -220,7 +220,7 @@ bool Matlab_Bridge::matlab_control_cmd_safety_check()
     return true;
 }
 
-void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
+void Matlab_Bridge::matlab_drone_status_pub_cb(const ros::TimerEvent &e)
 {
     // 0b 000000
     // bit1: connected or not
@@ -231,44 +231,47 @@ void Matlab_Bridge::matlab_setting_result_pub_cb(const ros::TimerEvent &e)
     // bit8: always 1
     // 4、^ 按位异或运算。
     
-    // 根据uav_state对matlab_setting_result进行赋值
-    matlab_setting_result.x = 0;                        // 无人机状态量
-    matlab_setting_result.y = uav_state.battery_state;  // 电池电压
-    matlab_setting_result.z = 1;                        // 电池百分比
+    // 根据uav_state对matlab_drone_status进行赋值
+    matlab_drone_status.x = 0b00000000;;              // 无人机状态量
+    matlab_drone_status.y = uav_state.battery_state;  // 电池电压
+    matlab_drone_status.z = 1;                        // 电池百分比
     if (uav_control_state.control_state == prometheus_msgs::UAVControlState::HOVER_CONTROL)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10010000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00010000;
     }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::COMMAND_CONTROL)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10100000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00100000;
     }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::LAND_CONTROL)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10110000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00110000;
     }else
     {
-        matlab_setting_result.x = 0;
+        matlab_drone_status.x = 0b00000000;
     }
 
     if (uav_state.connected)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10000001;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00000001;
     }
 
     if (uav_state.odom_valid)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10000010;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00000010;
     }
 
     if (uav_state.armed)
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10000100;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00000100;
     }
 
     if (uav_state.mode == "OFFBOARD")
     {
-        matlab_setting_result.x = (int)matlab_setting_result.x ^ 0b10001000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00001000;
     }
-    matlab_setting_result_pub.publish(matlab_setting_result);
+
+    matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b10000000;
+    
+    matlab_drone_status_pub.publish(matlab_drone_status);
 }
 
 void Matlab_Bridge::matlab_setting_cmd_cb(const geometry_msgs::Point::ConstPtr &msg)
@@ -394,7 +397,7 @@ void Matlab_Bridge::printf_msgs(const ros::TimerEvent &e)
 
     cout << GREEN << "[ ID: " << uav_id << "]  " << TAIL;
 
-    cout << GREEN << "uav_state: " << matlab_setting_result.x << "  " << TAIL << endl;
+    cout << GREEN << "uav_state: " << matlab_drone_status.x << "  " << TAIL << endl;
 
     if(cmd_timeout)
     {
