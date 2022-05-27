@@ -18,8 +18,7 @@
 
 using namespace std;
 
-namespace GlobalPlannerNS
-{
+
 
 #define IN_CLOSE_SET 'a'
 #define IN_OPEN_SET 'b'
@@ -177,6 +176,6 @@ namespace GlobalPlannerNS
     typedef std::shared_ptr<Astar> Ptr;
   };
 
-} // namespace GlobalPlannerNS
+
 
 #endif
