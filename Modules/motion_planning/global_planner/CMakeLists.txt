@@ -32,15 +32,26 @@ include_directories(
      )
 link_directories(${PCL_LIBRARY_DIRS})
 
+add_library(occupy_map src/occupy_map.cpp)
+target_link_libraries(occupy_map ${PCL_LIBRARIES})
+add_library(A_star src/A_star.cpp)
+target_link_libraries(A_star occupy_map)
+add_library(global_planner src/global_planner.cpp)
+target_link_libraries(global_planner A_star)
 
-add_executable(global_planner_main
-	src/global_planner_node.cpp
-	src/global_planner.cpp
-	src/A_star.cpp
-	src/occupy_map.cpp
-	)
+add_executable(global_planner_main src/global_planner_node.cpp)
+add_dependencies(global_planner_main prometheus_global_planner_gencpp)
+target_link_libraries(global_planner_main ${catkin_LIBRARIES})
+target_link_libraries(global_planner_main ${PCL_LIBRARIES})
+target_link_libraries(global_planner_main global_planner)
 
-target_link_libraries(global_planner_main
-       ${catkin_LIBRARIES}
-	   ${PCL_LIBRARIES}
-	)
+## Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
+
+## Mark other files for installation (e.g. launch and bag files, etc.)
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+)

@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     Obs_Map.global_map_pcl.is_dense = true;
     Obs_Map.kdtreeLocalMap.setInputCloud(Obs_Map.global_map_pcl.makeShared());
     Obs_Map.global_map_ok = true;
-    cout << GREEN << "[map_generator] Finished generate map [ "<< map_name <<" ]. Map points:" << Obs_Map.global_map_pcl.width<< TAIL << endl;
+    cout << GREEN << "[map_generator] Finished generate map [ " << map_name << " ]. Map points:" << Obs_Map.global_map_pcl.width << TAIL << endl;
   }
   else if (map_name == "motion_planning")
   {
@@ -97,11 +97,11 @@ int main(int argc, char **argv)
     Obs_Map.global_map_pcl.is_dense = true;
     Obs_Map.kdtreeLocalMap.setInputCloud(Obs_Map.global_map_pcl.makeShared());
     Obs_Map.global_map_ok = true;
-    cout << GREEN << "[map_generator] Finished generate map [ "<< map_name <<" ]. Map points:" << Obs_Map.global_map_pcl.width<< TAIL << endl;
+    cout << GREEN << "[map_generator] Finished generate map [ " << map_name << " ]. Map points:" << Obs_Map.global_map_pcl.width << TAIL << endl;
   }
   else
   {
-    cout << RED << "[map_generator] wrong map_name." << TAIL << endl;
+    cout << RED << "[map_generator] wrong map_name:   [ " << map_name << " ]"<< TAIL << endl;
   }
 
   ros::spin();
