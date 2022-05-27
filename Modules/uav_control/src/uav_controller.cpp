@@ -149,6 +149,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
         control_state = CONTROL_STATE::INIT;
     }
 
+    uav_control_state.failsafe = false;
+
     // 初始化命令
     uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
     uav_command.position_ref[0] = 0;
@@ -189,12 +191,14 @@ void UAV_controller::mainloop()
         else if (safety_flag == 1)
         {
             // 超出geofence，原地降落
+            uav_control_state.failsafe = true;
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
         else if (safety_flag == 2)
         {
             // 检测到odom失效，快速降落
             quick_land = true;
+            uav_control_state.failsafe = true;
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
     }
