@@ -35,6 +35,7 @@
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/ArucoInfo.h>
+#include <prometheus_msgs/MultiArucoInfo.h>
 #include <prometheus_msgs/IndoorSearch.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -46,6 +47,8 @@
 
 #include <Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
+#include <deque>
+#include "printf_utils.h"
 
 // #include "message_utils.h"
 
@@ -65,9 +68,8 @@ ros::Publisher pose_pub;
 image_transport::Publisher aruco_pub;
 //【发布】融合DroneState的二维码全局位置
 ros::Publisher indoor_search_pub;
+ros::Publisher arucos_pose_pub;
 
-// 使用cout打印消息
-bool local_print = true;
 // 无人机状态量
 prometheus_msgs::UAVState _drone_state;
 
@@ -81,8 +83,8 @@ boost::shared_mutex mutex_image_status;
 
 // 运行状态
 // 0: 正常检测Aruco码，输出位姿
-// 1: 世界坐标系标定，标定后，检测结果被转换到世界坐标系下
-// 2: 世界坐标系标定，标定后，run_state会自动变为2，在世界坐标系下输出tf位置
+// 1: 世界坐标系标定，标定后, 变成2
+// 2: 相机坐标系，二维码到位姿，map中心到位姿
 // 3: 使用UAVState信息进行全局位置估计
 int run_state(0);
 
@@ -99,8 +101,7 @@ void switchCallback(const std_msgs::String::ConstPtr &msg)
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
 {
-    if (local_print)
-        ROS_DEBUG("[ArucoDetector] USB image received.");
+    ROS_DEBUG("[ArucoDetector] USB image received.");
 
     cv_bridge::CvImagePtr cam_image;
 
@@ -111,8 +112,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
     }
     catch (cv_bridge::Exception &e)
     {
-        if (local_print)
-            ROS_ERROR("cv_bridge exception: %s", e.what());
+        ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
 
@@ -167,101 +167,187 @@ float _vector_stdev(std::vector<float> &x)
     return stdev;
 }
 
-inline void readParams(ros::NodeHandle &nh, std::string &camera_topic, std::string &camera_params_yaml, std::string &output_topic, int &dictionaryId, float &targetMarkerLength, float &calibMarkerLength, float &calibSquareLength, int &run_state_init, int &uav_id)
+inline void readParams(ros::NodeHandle &nh, std::string &camera_params_yaml, std::string &camera_topic, std::string &output_topic, int &dictionaryId, float &targetMarkerLength, float &calibMarkerLength, float &calibSquareLength, int &run_state_init, int &uav_id)
 {
     if (nh.getParam("camera_topic", camera_topic))
     {
-        if (local_print)
-            ROS_INFO("camera_topic is %s", camera_topic.c_str());
+        ROS_INFO("camera_topic is %s", camera_topic.c_str());
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter camera_topic");
+        ROS_WARN("didn't find parameter camera_topic");
     }
     if (nh.getParam("camera_parameters", camera_params_yaml))
     {
-        if (local_print)
-            ROS_INFO("camera_parameters is %s", camera_params_yaml.c_str());
+        ROS_INFO("camera_parameters is %s", camera_params_yaml.c_str());
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find camera_parameters");
+        ROS_WARN("didn't find camera_parameters");
     }
     if (nh.getParam("output_topic", output_topic))
     {
-        if (local_print)
-            ROS_INFO("output_topic is %s", output_topic.c_str());
+        ROS_INFO("output_topic is %s", output_topic.c_str());
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter output_topic");
+        ROS_WARN("didn't find parameter output_topic");
     }
 
     if (nh.getParam("dictionary_type", dictionaryId))
     {
-        if (local_print)
-            ROS_INFO("dictionary_type is %d", dictionaryId);
+        ROS_INFO("dictionary_type is %d", dictionaryId);
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter dictionary_type");
+        ROS_WARN("didn't find parameter dictionary_type");
     }
     if (nh.getParam("target_marker_length", targetMarkerLength))
     {
-        if (local_print)
-            ROS_INFO("target_marker_length is %f", targetMarkerLength);
+        ROS_INFO("target_marker_length is %f", targetMarkerLength);
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter target_marker_length");
+        ROS_WARN("didn't find parameter target_marker_length");
     }
     if (nh.getParam("calib_marker_length", calibMarkerLength))
     {
-        if (local_print)
-            ROS_INFO("calib_marker_length is %f", calibMarkerLength);
+        ROS_INFO("calib_marker_length is %f", calibMarkerLength);
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter calib_marker_length");
+        ROS_WARN("didn't find parameter calib_marker_length");
     }
     if (nh.getParam("calib_square_length", calibSquareLength))
     {
-        if (local_print)
-            ROS_INFO("calib_square_length is %f", calibSquareLength);
+        ROS_INFO("calib_square_length is %f", calibSquareLength);
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter calib_square_length");
+        ROS_WARN("didn't find parameter calib_square_length");
     }
     if (nh.getParam("run_state", run_state_init))
     {
-        if (local_print)
-            ROS_INFO("run_state is %d", run_state_init);
+        ROS_INFO("run_state is %d", run_state_init);
         run_state = run_state_init;
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter run_state");
+        ROS_WARN("didn't find parameter run_state");
     }
 
     if (nh.getParam("uav_id", uav_id))
     {
-        if (local_print)
-            ROS_INFO("uav_id is %d", uav_id);
+        ROS_INFO("uav_id is %d", uav_id);
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter uav_id");
+        ROS_WARN("didn't find parameter uav_id");
     }
+}
+inline bool fill_value_from_id(double id_to8_t[3], int id, float squareLength)
+{
+    if (id == 0)
+    {
+        id_to8_t[0] = squareLength;
+        id_to8_t[1] = -squareLength * 3;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 1)
+    {
+        id_to8_t[0] = -squareLength;
+        id_to8_t[1] = -squareLength * 3;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 2)
+    {
+        id_to8_t[0] = squareLength * 2;
+        id_to8_t[1] = -squareLength * 2;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 3)
+    {
+        id_to8_t[0] = 0.;
+        id_to8_t[1] = -squareLength * 2;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 4)
+    {
+        id_to8_t[0] = -squareLength * 2;
+        id_to8_t[1] = -squareLength * 2;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 5)
+    {
+        id_to8_t[0] = squareLength;
+        id_to8_t[1] = -squareLength;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 6)
+    {
+        id_to8_t[0] = -squareLength;
+        id_to8_t[1] = -squareLength;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 7)
+    {
+        id_to8_t[0] = squareLength * 2;
+        id_to8_t[1] = 0.;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 8)
+    {
+        return false;
+    }
+    else if (id == 9)
+    {
+        id_to8_t[0] = -squareLength * 2;
+        id_to8_t[1] = 0.;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 10)
+    {
+        id_to8_t[0] = squareLength;
+        id_to8_t[1] = squareLength;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 11)
+    {
+        id_to8_t[0] = -squareLength;
+        id_to8_t[1] = squareLength;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 12)
+    {
+        id_to8_t[0] = squareLength * 2;
+        id_to8_t[1] = squareLength * 2;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 13)
+    {
+        id_to8_t[0] = 0.;
+        id_to8_t[1] = squareLength * 2;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 14)
+    {
+        id_to8_t[0] = -squareLength * 2;
+        id_to8_t[1] = squareLength * 2;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 15)
+    {
+        id_to8_t[0] = squareLength;
+        id_to8_t[1] = squareLength * 3;
+        id_to8_t[2] = 0.;
+    }
+    else if (id == 16)
+    {
+        id_to8_t[0] = -squareLength;
+        id_to8_t[1] = squareLength * 3;
+        id_to8_t[2] = 0.;
+    }
+    return true;
 }
 
 int main(int argc, char **argv)
@@ -270,20 +356,21 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
     // 更新频率为60HZ
-    ros::Rate loop_rate(60);
+    ros::Rate loop_rate(30);
 
     std::string camera_topic = "/prometheus/camera/rgb/image_raw";
-    std::string camera_params_yaml;
+    std::string camera_params_yaml = "Simulator/gazebo_simulator/config/camera_config/gimbal_camera.yaml";
     std::string output_topic = "/prometheus/camera/rgb/image_aruco_det";
 
     int dictionaryId(2);
     float targetMarkerLength(0.0207);
-    float calibMarkerLength(0.0207);
+    float calibMarkerLength(0.0207 * 18);
     float calibSquareLength(0.0345); // Square side length (in meters)
     int run_state_init;
     int uav_id(1);
 
-    readParams(nh, camera_topic, camera_params_yaml, output_topic, dictionaryId, targetMarkerLength, calibMarkerLength, calibSquareLength, run_state_init, uav_id);
+    // 读取配置
+    readParams(nh, camera_params_yaml, camera_topic, output_topic, dictionaryId, targetMarkerLength, calibMarkerLength, calibSquareLength, run_state_init, uav_id);
 
     // 用于二维码id到vectionid到转化
     map<int, int> ids2coll_id = {
@@ -306,64 +393,65 @@ int main(int argc, char **argv)
 
     //【发布】检测得到的位置与姿态信息
     pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/uav" + std::to_string(uav_id) + "/prometheus/object_detection/aruco_det_v2", 1);
+
     //【发布】检测结果图像
     aruco_pub = it.advertise(output_topic.c_str(), 1);
+
+    std::string ros_path = ros::package::getPath("prometheus_detection");
+    ROS_INFO("DETECTION_PATH: %s", ros_path.c_str());
+
+    cv::Mat camMatrix, distCoeffs;
+    bool readOk = readCameraParameters(camera_params_yaml.c_str(), camMatrix, distCoeffs);
+    if (!readOk)
+    {
+        PCOUT(0, RED, "Invalid camera file");
+        return 0;
+    }
+
+    cout << "[camMatrix]:" << endl;
+    cout << camMatrix << endl;
+    cout << "[distCoeffs]:" << endl;
+    cout << distCoeffs << endl;
 
     if (3 == run_state)
     {
         //【发布】融合DroneState的二维码全局位置
         indoor_search_pub = nh.advertise<prometheus_msgs::IndoorSearch>("/uav" + std::to_string(uav_id) + "/prometheus/indoor_search/detection_result", 1);
     }
-
-    std::string ros_path = ros::package::getPath("prometheus_detection");
-    if (local_print)
-        ROS_INFO("DETECTION_PATH: %s", ros_path.c_str());
-
-    cv::Mat camMatrix, distCoeffs;
-    bool readOk = readCameraParameters(camera_params_yaml.c_str(), camMatrix, distCoeffs);
-    if (!readOk)
+    if (0 == run_state)
     {
-        cerr << "Invalid camera file" << endl;
-        return 0;
-    }
-
-    if (local_print)
-    {
-        cout << "[camMatrix]:" << endl;
-        cout << camMatrix << endl;
-        cout << "[distCoeffs]:" << endl;
-        cout << distCoeffs << endl;
+        //【发布】检测到的所有二维码信息
+        arucos_pose_pub = nh.advertise<prometheus_msgs::MultiArucoInfo>("/uav" + std::to_string(uav_id) + "/prometheus/object_detection/arucos_det", 10);
     }
 
     // <pose>0 0 -0.1 0 1.5707963 0</pose>
-    // TODO: cam2drn 含义, 1, 2 是什么
+    // cam2drn 相机到无人机
     Vec3d cam2drn_tvecs, cam2drn_rvecs1, cam2drn_rvecs2;
     cv::Mat cam2drn_rmat1, cam2drn_rmat2;
     Eigen::Matrix3d cam2drn_rmat_eigen;
     Eigen::Quaterniond cam2drn_q;
 
     prometheus_msgs::IndoorSearch _indoor_search_msg;
-    map<int, prometheus_msgs::ArucoInfo &> id3aruc = {
-        {1, _indoor_search_msg.Aruco1},
-        {2, _indoor_search_msg.Aruco2},
-        {3, _indoor_search_msg.Aruco3},
-        {4, _indoor_search_msg.Aruco4},
-        {5, _indoor_search_msg.Aruco5},
-        {6, _indoor_search_msg.Aruco6},
-        {7, _indoor_search_msg.Aruco7},
-        {8, _indoor_search_msg.Aruco8},
-        {9, _indoor_search_msg.Aruco9}};
-    vector<vector<Vec3d>> aruco_pos(9);
+    map<int, prometheus_msgs::ArucoInfo *> id3aruc = {
+        {1, &_indoor_search_msg.Aruco1},
+        {2, &_indoor_search_msg.Aruco2},
+        {3, &_indoor_search_msg.Aruco3},
+        {4, &_indoor_search_msg.Aruco4},
+        {5, &_indoor_search_msg.Aruco5},
+        {6, &_indoor_search_msg.Aruco6},
+        {7, &_indoor_search_msg.Aruco7},
+        {8, &_indoor_search_msg.Aruco8},
+        {9, &_indoor_search_msg.Aruco9}};
+    vector<deque<Vec3d>> aruco_pos(9);
 
     // 初始化
-    // TODO: 数字写前面到 是什么含义?
     if (3 == run_state)
     {
         cam2drn_tvecs[0] = 0.;
         cam2drn_tvecs[1] = 0.;
         cam2drn_tvecs[2] = -0.1;
         // <pose>0 0 -0.1 0 1.5707963 0</pose>
-        // TODO: [0] 乘2是什么含义，为什么不是 [1] = 1.57...
+        // TODO: 根据实际结构调整
         cam2drn_rvecs1[0] = 1.5707963 * 2.;
         cam2drn_rvecs1[1] = 0.;
         cam2drn_rvecs1[2] = 0.;
@@ -405,7 +493,7 @@ int main(int argc, char **argv)
         aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(dictionaryId));
     Ptr<aruco::DetectorParameters> detectorParams = aruco::DetectorParameters::create();
 
-    // TODO: mt 含义，变量含义
+    // mtx 平均值
     std::vector<float> collected_mtx, collected_mty, collected_mtz;
     std::vector<float> collected_mqx, collected_mqy, collected_mqz, collected_mqw;
     float mtx_calib, mty_calib, mtz_calib, mqx_calib, mqy_calib, mqz_calib, mqw_calib;
@@ -416,8 +504,7 @@ int main(int argc, char **argv)
     {
         while (!getImageStatus() && ros::ok())
         {
-            if (local_print)
-                cout << "Waiting for image." << endl;
+            PCOUT(-1, WHITE, "Waiting for image...");
             std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
         }
@@ -432,6 +519,7 @@ int main(int argc, char **argv)
             vector<int> ids;
             vector<vector<Point2f>> corners, rejected;
             vector<Vec3d> rvecs, tvecs;
+            vector<prometheus_msgs::ArucoInfo> multi_aruco;
 
             float markerLength = targetMarkerLength;
             float squareLength = calibSquareLength;
@@ -466,7 +554,7 @@ int main(int argc, char **argv)
                     Eigen::Quaterniond q = Eigen::Quaterniond(rotation_matrix_eigen);
                     q.normalize();
 
-                    // 相机坐标下
+                    // 相机坐标下，目标到位置姿态
                     geometry_msgs::PoseStamped pose;
                     pose.header.frame_id = "camera";
                     pose.pose.position.x = tvecs[i][0];
@@ -476,11 +564,11 @@ int main(int argc, char **argv)
                     pose.pose.orientation.y = q.y();
                     pose.pose.orientation.z = q.z();
                     pose.pose.orientation.w = q.w();
-                    // TODO: pose 检测不同到二维码，位置，姿态不同, 不区分二维码id, 不会乱? 不应该发布
-                    pose_pub.publish(pose);
+                    // pose_pub.publish(pose);
 
                     if (3 == run_state) // 使用UAVstate信息进行全局位置估计
                     {
+                        // 发布世界坐标系，无人机，相机，二维码到tf树
                         static tf::TransformBroadcaster br;
                         tf::Transform aruco2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
                         char obj_str[16];
@@ -501,6 +589,7 @@ int main(int argc, char **argv)
                         // br.sendTransform(trans_drone2world);
 
                         tf::Transform aruco2world;
+                        // 二维码 -> 相机 -> 无人机 -> 世界 ==> 世界坐标系下二维码位置
                         aruco2world = drone2world * camera2drone * aruco2camera;
                         tf::StampedTransform trans_aruco2world = tf::StampedTransform(aruco2world, ros::Time(pose.header.stamp), "world", obj_str);
                         br.sendTransform(trans_aruco2world);
@@ -509,10 +598,15 @@ int main(int argc, char **argv)
                         vector<float> collected_ax, collected_ay, collected_az;
                         int collected_id = ids2coll_id[ids[i]];
 
-                        // 估算world原点
-                        // vector<vector<Vec3d>> aruco_pos(9);
-                        // TODO: aruco_pos 只有加没有减 越来越大不会暴内存？
+                        // 存储每个二维码在世界坐标系的坐标信息，用于后面计算平均值
                         aruco_pos[collected_id - 1].push_back(Vec3d(aruco2world.getOrigin().x(), aruco2world.getOrigin().y(), aruco2world.getOrigin().z()));
+
+                        // 存储过去60秒的数据，用于取平均值，估计二维码世界坐标系下的位置
+                        if (aruco_pos[collected_id - 1].size() > 60 * 60)
+                        {
+                            aruco_pos[collected_id - 1].pop_front();
+                        }
+
                         for (Vec3d v : aruco_pos[collected_id - 1])
                         {
                             collected_ax.push_back(v[0]);
@@ -534,7 +628,8 @@ int main(int argc, char **argv)
                             aruco_info.position[0] = ax_mean;
                             aruco_info.position[1] = ay_mean;
                             aruco_info.position[2] = az_mean;
-                            id3aruc[collected_id] = aruco_info;
+                            // 改变指针所指的地址值
+                            *(id3aruc[collected_id]) = aruco_info;
                         }
                     }
 
@@ -548,69 +643,24 @@ int main(int argc, char **argv)
                         br.sendTransform(trans_world2camera);
                     }
 
-
-                    // TODO: 看不懂, 不知道实际图案是什么样子，在此之后代码就看不懂了
+                    // 标定运行模式
                     if (1 == run_state)
                     {
                         if (ids[i] >= 0 && ids[i] <= 16)
                         {
+                            // vect_t 相机下二维码到位置
                             std::vector<double> vec_t{tvecs[i][0], tvecs[i][1], tvecs[i][2]};
                             cv::Mat vec_t_mat{vec_t};
                             vec_t_mat = vec_t_mat;
                             vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
                             // cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
                             // cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
-                            std::vector<double> id_to8_t(3);
-                            if (ids[i] == 0)
+                            // std::vector<double> id_to8_t(3);
+                            double id_to8_t[3];
+                            // 根据检测到ID，转化为对于到对应到坐标，加入vector中用于计算平均值
+                            if (!fill_value_from_id(id_to8_t, ids[i], squareLength))
                             {
-                                id_to8_t[0] = squareLength;
-                                id_to8_t[1] = -squareLength * 3;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 1)
-                            {
-                                id_to8_t[0] = -squareLength;
-                                id_to8_t[1] = -squareLength * 3;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 2)
-                            {
-                                id_to8_t[0] = squareLength * 2;
-                                id_to8_t[1] = -squareLength * 2;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 3)
-                            {
-                                id_to8_t[0] = 0.;
-                                id_to8_t[1] = -squareLength * 2;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 4)
-                            {
-                                id_to8_t[0] = -squareLength * 2;
-                                id_to8_t[1] = -squareLength * 2;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 5)
-                            {
-                                id_to8_t[0] = squareLength;
-                                id_to8_t[1] = -squareLength;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 6)
-                            {
-                                id_to8_t[0] = -squareLength;
-                                id_to8_t[1] = -squareLength;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 7)
-                            {
-                                id_to8_t[0] = squareLength * 2;
-                                id_to8_t[1] = 0.;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 8)
-                            {
+                                // 如果识别到是中心的二维码
                                 collected_tx.push_back(tvecs[i][0]);
                                 collected_ty.push_back(tvecs[i][1]);
                                 collected_tz.push_back(tvecs[i][2]);
@@ -621,59 +671,14 @@ int main(int argc, char **argv)
                                 collected_qw.push_back(q.w());
                                 continue;
                             }
-                            else if (ids[i] == 9)
-                            {
-                                id_to8_t[0] = -squareLength * 2;
-                                id_to8_t[1] = 0.;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 10)
-                            {
-                                id_to8_t[0] = squareLength;
-                                id_to8_t[1] = squareLength;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 11)
-                            {
-                                id_to8_t[0] = -squareLength;
-                                id_to8_t[1] = squareLength;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 12)
-                            {
-                                id_to8_t[0] = squareLength * 2;
-                                id_to8_t[1] = squareLength * 2;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 13)
-                            {
-                                id_to8_t[0] = 0.;
-                                id_to8_t[1] = squareLength * 2;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 14)
-                            {
-                                id_to8_t[0] = -squareLength * 2;
-                                id_to8_t[1] = squareLength * 2;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 15)
-                            {
-                                id_to8_t[0] = squareLength;
-                                id_to8_t[1] = squareLength * 3;
-                                id_to8_t[2] = 0.;
-                            }
-                            else if (ids[i] == 16)
-                            {
-                                id_to8_t[0] = -squareLength;
-                                id_to8_t[1] = squareLength * 3;
-                                id_to8_t[2] = 0.;
-                            }
-                            cv::Mat id_to8_t_mat{id_to8_t};
-                            id_to8_t_mat.convertTo(id_to8_t_mat, CV_32FC1);
+
+                            cv::Mat id_to8_t_mat = cv::Mat(3, 1, CV_32FC1, id_to8_t);
 
                             rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
                             // cv::invert(rotation_matrix, rotation_matrix);
+                            // rotation 二维码姿态
+                            // rotation_matrix * id_to8_t_mat: 计算标定板子原点，在当前二维码下到坐标
+                            // id_8_t 机体坐标系下，到标定版中点的坐标
                             cv::Mat id_8_t = rotation_matrix * id_to8_t_mat + vec_t_mat;
 
                             collected_tx.push_back(id_8_t.at<float>(0));
@@ -694,8 +699,27 @@ int main(int argc, char **argv)
                             // br.sendTransform(trans_world2camera);
                         }
                     }
+
+                    // 输出所有检测到的位姿态
+                    if (0 == run_state)
+                    {
+                        prometheus_msgs::ArucoInfo aruco_pose;
+                        aruco_pose.aruco_num = ids[i];
+                        aruco_pose.detected = true;
+                        aruco_pose.position[0] = tvecs[i][0];
+                        aruco_pose.position[1] = tvecs[i][1];
+                        aruco_pose.position[2] = tvecs[i][2];
+                        aruco_pose.orientation[0] = q.x();
+                        aruco_pose.orientation[1] = q.y();
+                        aruco_pose.orientation[2] = q.z();
+                        aruco_pose.orientation[3] = q.w();
+                        aruco_pose.sight_angle[0] = atan(tvecs[i][0] / tvecs[i][2]);
+                        aruco_pose.sight_angle[1] = atan(tvecs[i][1] / tvecs[i][2]);
+                        multi_aruco.push_back(aruco_pose);
+                    }
                 }
 
+                // 标定运行模式
                 if (1 == run_state && collected_tx.size() > 8)
                 {
                     float tx_sum = std::accumulate(std::begin(collected_tx), std::end(collected_tx), 0.0);
@@ -705,6 +729,7 @@ int main(int argc, char **argv)
                     float tz_sum = std::accumulate(std::begin(collected_tz), std::end(collected_tz), 0.0);
                     float tz_mean = tz_sum / collected_tz.size();
 
+                    // 相机下，整个标定板到姿态
                     float qx_sum = std::accumulate(std::begin(collected_qx), std::end(collected_qx), 0.0);
                     float qx_mean = qx_sum / collected_qx.size();
                     float qy_sum = std::accumulate(std::begin(collected_qy), std::end(collected_qy), 0.0);
@@ -719,6 +744,7 @@ int main(int argc, char **argv)
                     tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "calib-MEAN");
                     br.sendTransform(trans_world2camera);
 
+                    //记录单次得到的整个标定板的姿态，位置
                     collected_mtx.push_back(tx_mean);
                     collected_mty.push_back(ty_mean);
                     collected_mtz.push_back(tz_mean);
@@ -729,6 +755,14 @@ int main(int argc, char **argv)
                 }
             }
 
+            if (0 == run_state && multi_aruco.size() > 0)
+            {
+                prometheus_msgs::MultiArucoInfo multi_arucos;
+                multi_arucos.aruco_infos = multi_aruco;
+                arucos_pose_pub.publish(multi_arucos);
+            }
+
+            // 检测标定是否完成。 计算标准差是否低于标定阈值, 标定完成后变成词 2模式
             if (1 == run_state && collected_mtx.size() >= 10)
             {
 
@@ -770,6 +804,7 @@ int main(int argc, char **argv)
             {
                 static tf::TransformBroadcaster br;
                 tf::Transform world2camera = tf::Transform(tf::Quaternion(mqx_calib, mqy_calib, mqz_calib, mqw_calib), tf::Vector3(mtx_calib, mty_calib, mtz_calib));
+                // 发布地图到姿态，中心点
                 tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", "map");
                 br.sendTransform(trans_world2camera);
             }
