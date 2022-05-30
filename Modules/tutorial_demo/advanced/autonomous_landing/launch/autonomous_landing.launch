@@ -15,8 +15,6 @@
 	<!-- run the autonomous_landing.cpp -->
 	<node pkg="prometheus_demo" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
 		<param name="uav_id" value="1" />
-		<!-- 悬停模式 - 仅用于观察检测结果 -->
-		<param name="hold_mode" value="false" />
 		<!-- 是否使用降落板绝对高度 -->
 		<param name="use_pad_height" value="true" />
 		<param name="pad_height" value="0.01" />
@@ -34,9 +32,5 @@
 		<param name="kpz_land" value="0.08" />
 		<param name="arm_height_to_ground" value="0.4" />
 		<param name="arm_distance_to_pad" value="0.45" />
-		<!-- 目标是否移动及其速度 -->
-		<param name="moving_target" value="false" />
-		<param name="target_vel_x" value="0.0" />
-		<param name="target_vel_y" value="0.0" />
 	</node>
 </launch>

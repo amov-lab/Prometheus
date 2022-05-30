@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <chrono>
 #include <ctime>
 using namespace std;
@@ -32,7 +33,7 @@ public:
         //固定的浮点显示
         std::cout.setf(ios::fixed);
         // setprecision(n) 设显示小数精度为n位
-        std::cout << setprecision(2);
+        std::cout << std::setprecision(2);
         //左对齐
         std::cout.setf(ios::left);
         // 强制显示小数点
