@@ -13,7 +13,7 @@
     <model name='texture'>
       <static>true</static>
       <link name="prometheus_logo">
-        <pose frame=''> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
+        <pose> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
         <visual name="visual">
             <cast_shadows>false</cast_shadows>
             <geometry>
@@ -33,7 +33,7 @@
     <model name='landing_pad'>
       <include>
         <uri>model://landing_pad</uri>
-	      <pose> 2 2 0.01 0 0 -1.5707963 </pose>
+	      <pose> 2 2 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>
     <physics name='default_physics' default='0' type='ode'>
