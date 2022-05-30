@@ -6,33 +6,33 @@ void Map_Generator::init(ros::NodeHandle &nh)
   // 【参数】集群数量
   nh.param("swarm_num", swarm_num, 0);
   // 【参数】地图尺寸、分辨率
-  nh.param("map_generator/x_size", map_size_x, 10.0);
-  nh.param("map_generator/y_size", map_size_y, 10.0);
+  nh.param("map_generator/x_size", map_size_x, 30.0);
+  nh.param("map_generator/y_size", map_size_y, 30.0);
   nh.param("map_generator/z_size", map_size_z, 5.0);
-  nh.param("map_generator/resolution", map_resolution, 0.2);
+  nh.param("map_generator/resolution", map_resolution, 0.1);
   // 【参数】传感器感知半径与感知频率
   nh.param("map_generator/sensing_range", sensing_range, 10.0);
   nh.param("map_generator/sensing_horizon", sensing_horizon, 5.0);
   nh.param("map_generator/sensing_rate", sensing_rate, 10.0);
   // 【参数】障碍物最小距离
-  nh.param("map_generator/obs_min_dist", obs_min_dist, 1.0);
+  nh.param("map_generator/obs_min_dist", obs_min_dist, 2.0);
   // 【参数】障碍物数量 - 圆柱
-  nh.param("map_generator/cylinder_num", cylinder_num, 30);
+  nh.param("map_generator/cylinder_num", cylinder_num, 20);
   // 【参数】障碍物参数 - 圆柱
-  nh.param("map_generator/cylinder_radius", cylinder_radius, 0.2);
-  nh.param("map_generator/cylinder_height", cylinder_height, 3.0);
+  nh.param("map_generator/cylinder_radius", cylinder_radius, 0.25);
+  nh.param("map_generator/cylinder_height", cylinder_height, 2.0);
   // 【参数】障碍物数量 - 立方体
-  nh.param("map_generator/cuboid_num", cuboid_num, 10);
+  nh.param("map_generator/square_num", square_num, 10);
   // 【参数】障碍物参数 - 立方体
-  nh.param("map_generator/cuboid_size", cuboid_size, 0.3);
-  nh.param("map_generator/cuboid_height", cuboid_height, 0.3);
+  nh.param("map_generator/square_size", square_size, 0.5);
+  nh.param("map_generator/square_height", square_height, 2.0);
   // 【参数】障碍物参数 - 墙
   nh.param("map_generator/wall_length", wall_length, 10.0);
   nh.param("map_generator/wall_height", wall_height, 2.0);
   nh.param("map_generator/line_height", line_height, 2.0);
   // 【参数】初始位置
-  nh.param("uav_init_x", uav_init_x, 0.0);
-  nh.param("uav_init_y", uav_init_y, 0.0);
+  nh.param("uav_init_x", uav_init_x, -100.0);
+  nh.param("uav_init_y", uav_init_y, -100.0);
 
   // 地图坐标范围 [map_x_min,  map_x_max] - [map_y_min, map_y_max]
   map_x_min = -map_size_x / 2.0;
@@ -46,18 +46,18 @@ void Map_Generator::init(ros::NodeHandle &nh)
   cout << GREEN << "Y:  [" << map_y_min << "," << map_y_max << "]" << TAIL << endl;
   cout << GREEN << "Z:  [ 0,"<< map_z_limit  << "]" << TAIL << endl;
 
-  if ((cylinder_num + cuboid_num) > map_size_x * 8)
+  if ((cylinder_num + square_num) > map_size_x * 8)
   {
     cout << RED << "[map_generator] The map can't put all the obstacles, remove some." << TAIL << endl;
     cylinder_num = map_size_x * 4;
-    cuboid_num = map_size_x * 4;
+    square_num = map_size_x * 4;
   }
 
   for (int i = 1; i <= swarm_num; i++)
   {
     uav_id[i] = i;
     // 【订阅】里程计数据
-    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/odom", 1, boost::bind(&Map_Generator::uav_odom_cb,this, _1, uav_id[i]));
+    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/fake_odom", 1, boost::bind(&Map_Generator::uav_odom_cb,this, _1, uav_id[i]));
     // 【发布】模拟的局部点云信息
     local_map_pub[i] = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(i) + "/map_generator/local_cloud", 1);
     // 【定时器】发布局部点云定时器
@@ -114,14 +114,14 @@ void Map_Generator::generate_cylinder(double x, double y)
 }
 
 // 生成长方体
-// 长方体长宽：cuboid_height
-// 长方体高度：cuboid_height
-void Map_Generator::generate_cuboid(double x, double y)
+// 长方体长宽：square_height
+// 长方体高度：square_height
+void Map_Generator::generate_square(double x, double y)
 {
   // 必须在地图范围内
   if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
   {
-    cout << RED << "generate_cuboid wrong." << TAIL << endl;
+    cout << RED << "generate_square wrong." << TAIL << endl;
     return;
   }
 
@@ -129,9 +129,9 @@ void Map_Generator::generate_cuboid(double x, double y)
   x = floor(x / map_resolution) * map_resolution;
   y = floor(y / map_resolution) * map_resolution;
   // z = floor(z / map_resolution) * map_resolution + map_resolution / 2.0;
-  int widNum = ceil((cuboid_size / 2.0) / map_resolution);
-  int heiNum = ceil(cuboid_height / map_resolution);
-  int temp_wid = cuboid_size / 2.0 / map_resolution;
+  int widNum = ceil((square_size / 2.0) / map_resolution);
+  int heiNum = ceil(square_height / map_resolution);
+  int temp_wid = square_size / 2.0 / map_resolution;
   int flag = 0;
   if (widNum != temp_wid)
     flag = 1;
@@ -142,7 +142,7 @@ void Map_Generator::generate_cuboid(double x, double y)
         double temp_x = x + r * map_resolution + flag * 0.5 * map_resolution;
         double temp_y = y + s * map_resolution + flag * 0.5 * map_resolution;
         double temp_z = t * map_resolution;
-        if ((Eigen::Vector2d(temp_x, temp_y) - Eigen::Vector2d(x, y)).norm() <= cuboid_size / 2.0 * sqrt(2) + 1e-1)
+        if ((Eigen::Vector2d(temp_x, temp_y) - Eigen::Vector2d(x, y)).norm() <= square_size / 2.0 * sqrt(2) + 1e-1)
         {
           pt_random.x = temp_x;
           pt_random.y = temp_y;
@@ -255,7 +255,7 @@ void Map_Generator::GenerateMap1()
 {
   generate_cylinder(1.0, 1.0);
 
-  generate_cuboid(2.0, 2.0);
+  generate_square(2.0, 2.0);
 
   generate_row_wall(10.0, 10.0);
 
@@ -316,7 +316,7 @@ void Map_Generator::GenerateRandomMap()
   }
 
   // 生成长方体障碍物 
-  for (int i = 0; i < cuboid_num; ++i)
+  for (int i = 0; i < square_num; ++i)
   {
     double x, y, z;
     // 随机生成障碍物位置：[x,y]
@@ -338,7 +338,7 @@ void Map_Generator::GenerateRandomMap()
     // 将本次生成的障碍物位置推入容器
     obs_position.push_back(Eigen::Vector2d(x, y));
 
-    generate_cuboid(x, y);
+    generate_square(x, y);
   }
 
   global_map_pcl.width = global_map_pcl.points.size();

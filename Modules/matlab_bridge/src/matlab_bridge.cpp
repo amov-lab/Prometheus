@@ -228,48 +228,57 @@ void Matlab_Bridge::matlab_drone_status_pub_cb(const ros::TimerEvent &e)
     // bit3: armed or not
     // bit4: OFFBOARD or not
     // bit5 & 6 & 7: OTHER(000) MANUAL(001) COMMAND_MODE(010) or LAND_CONTROL(011)
-    // bit8: always 1
+    // bit8: failsafe
+    // bit9: 预留接口
+    // bit10: 预留接口
+    // bit11: 预留接口
+    // bit12: always 1
     // 4、^ 按位异或运算。
     
     // 根据uav_state对matlab_drone_status进行赋值
-    matlab_drone_status.x = 0b00000000;;              // 无人机状态量
+    matlab_drone_status.x = 0b000000000000;              // 无人机状态量
     matlab_drone_status.y = uav_state.battery_state;  // 电池电压
     matlab_drone_status.z = 1;                        // 电池百分比
+    if(uav_control_state.failsafe)
+    {
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000010000000;
+    }
+
     if (uav_control_state.control_state == prometheus_msgs::UAVControlState::HOVER_CONTROL)
     {
-        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00010000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000010000;
     }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::COMMAND_CONTROL)
     {
-        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00100000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000100000;
     }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::LAND_CONTROL)
     {
-        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00110000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000110000;
     }else
     {
-        matlab_drone_status.x = 0b00000000;
+        matlab_drone_status.x = 0b000000000000;
     }
 
     if (uav_state.connected)
     {
-        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00000001;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000000001;
     }
 
     if (uav_state.odom_valid)
     {
-        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00000010;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000000010;
     }
 
     if (uav_state.armed)
     {
-        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00000100;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000000100;
     }
 
     if (uav_state.mode == "OFFBOARD")
     {
-        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b00001000;
+        matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000001000;
     }
 
-    matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b10000000;
+    matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b100000000000;
     
     matlab_drone_status_pub.publish(matlab_drone_status);
 }

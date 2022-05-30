@@ -19,3 +19,7 @@ uint8 PX4_ORIGIN=0
 uint8 PID=1
 uint8 UDE=2
 uint8 NE=3
+
+# 无人机安全保护触发标志量
+
+bool failsafe
