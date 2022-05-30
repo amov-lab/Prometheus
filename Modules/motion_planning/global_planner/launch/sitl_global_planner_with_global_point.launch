@@ -1,0 +1,32 @@
+<launch>
+    <!-- 启动全局规划算法 -->
+    <node pkg="prometheus_global_planner" name="global_planner_main" type="global_planner_main" output="screen">
+        <!-- 参数 -->
+        <param name="uav_id" value="1"/>
+        <param name="global_planner/sim_mode" value="true"/>
+        <param name="global_planner/global_pcl_topic_name" value="/map_generator/global_cloud"/>
+        <!-- 地图输入模式 0代表全局点云，1代表局部点云，2代表激光雷达scan数据 -->
+        <param name="global_planner/map_input_source" value="0"/>
+        <!-- 无人机飞行高度，建议与起飞高度一致 -->
+        <param name="global_planner/fly_height" value="1.0"/>
+        <!-- 路径追踪频率 -->
+        <param name="global_planner/time_per_path" value="1.0"/>
+        <!-- Astar重规划频率 -->       
+        <param name="global_planner/replan_time" value="2.0"/>
+        <!-- 地图参数 -->
+        <param name="map/border" value="true"/>
+        <param name="map/queue_size" value="-1"/>
+        <!-- 分辨率 -->
+        <param name="map/resolution" value="0.2"/>
+        <!-- 障碍物膨胀距离,建议为飞机的轴距1.5倍 -->
+        <param name="map/inflate" value="0.4"/>
+        <!-- 地图范围 -->
+        <param name="map/origin_x" value="-15.0"/>
+        <param name="map/origin_y" value="-15.0"/>
+        <param name="map/origin_z" value="-0.5"/>
+        <param name="map/map_size_x" value="30.0"/>
+        <param name="map/map_size_y" value="30.0"/>
+        <param name="map/map_size_z" value="3.0"/>
+    </node>
+</launch>
+

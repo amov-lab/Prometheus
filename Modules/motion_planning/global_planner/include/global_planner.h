@@ -41,6 +41,7 @@ using namespace std;
         double time_per_path;
         double replan_time;
         bool consider_neighbour;
+        string global_pcl_topic_name, local_pcl_topic_name, scan_topic_name;
         
         // 订阅无人机状态、目标点、传感器数据（生成地图）
         ros::Subscriber goal_sub;
