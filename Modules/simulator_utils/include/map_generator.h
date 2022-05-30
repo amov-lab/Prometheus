@@ -17,7 +17,6 @@
 #include <geometry_msgs/Vector3.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <prometheus_msgs/UAVState.h>
 
 #include "printf_utils.h"
 
@@ -45,8 +44,8 @@ public:
     double obs_min_dist;                     // 障碍物最小间距
     int cylinder_num;                        // 圆柱体数量
     double cylinder_radius, cylinder_height; // 圆柱体参数
-    int cuboid_num;                          // 立方体数量
-    double cuboid_size, cuboid_height;       // 立方体参数
+    int square_num;                          // 立方体数量
+    double square_size, square_height;       // 立方体参数
     double wall_length, wall_height;         // 墙参数
     double line_height;
     // 初始状态量
@@ -65,7 +64,7 @@ public:
 
     // 基本形状生成函数
     void generate_cylinder(double x, double y);
-    void generate_cuboid(double x, double y);
+    void generate_square(double x, double y);
     void generate_row_wall(double x, double y);
     void generate_column_wall(double x, double y);
     void generate_line(double x, double y);

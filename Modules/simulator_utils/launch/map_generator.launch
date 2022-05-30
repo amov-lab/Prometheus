@@ -1,32 +1,26 @@
 <launch>
+    <!-- 仿真world -->
+    <arg name="gazebo_enable" default="true"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/drl_world_data_collection.world"/>
+    <!-- Rviz config -->
+    <arg name="rviz_enable" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_simulator_utils)/launch/map_generator.rviz"/>
+
     <!-- 生成随机地图，并发布全局、局部点云 -->
     <node pkg="prometheus_simulator_utils" name="map_generator_node" type="map_generator_node" output="screen">
-        <param name="map_flag" value="2" type="int"/>
         <param name="swarm_num" value="1" type="int"/>
-        <param name="map_generator/x_size" value="20.0" type="double"/>
-        <param name="map_generator/y_size" value="30.0" type="double"/>
-        <param name="map_generator/z_size" value="5.0" type="double"/>
-        <param name="map_generator/resolution" value="0.1" type="double"/>
-        <param name="map_generator/sensing_range" value="10.0" type="double"/>
-        <param name="map_generator/sensing_horizon" value="5.0" type="double"/>
-        <param name="map_generator/sensing_rate" value="10.0" type="double"/>
-        <param name="map_generator/obs_min_dist" value="2.0" type="double"/>
-        <param name="map_generator/cylinder_num" value="20" type="double"/>
-        <param name="map_generator/cylinder_radius" value="0.4" type="double"/>
-        <param name="map_generator/cylinder_height" value="3.0" type="double"/>
-        <param name="map_generator/cuboid_num" value="20" type="double"/>
-        <param name="map_generator/cuboid_size" value="0.4" type="double"/>
-        <param name="map_generator/cuboid_height" value="1.0" type="double"/>
-        <param name="uav_init_x" value="0.0" type="double"/>
-        <param name="uav_init_y" value="0.0" type="double"/>
+        <param name="map_name" value="motion_planning" type="string"/>
     </node>
 
-    <!-- Rviz config -->
-    <arg name="visualization" default="true"/>
-    <arg name="rivz_config" default="$(find prometheus_simulator_utils)/launch/map_generator.rviz"/>
-    <!-- 启动Rviz-->
-	<group if="$(arg visualization)">
+    <!-- 启动Gazebo -->
+    <group if="$(arg gazebo_enable)">
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(arg world)"/>
+        </include>
+    </group>
+
+	<!-- 启动Rviz-->
+	<group if="$(arg rviz_enable)">
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
     </group>
 </launch>
-
