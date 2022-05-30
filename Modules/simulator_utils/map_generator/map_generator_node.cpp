@@ -42,9 +42,9 @@ int main(int argc, char **argv)
     Obs_Map.global_map_ok = true;
     cout << GREEN << "[map_generator] Finished generate map [ " << map_name << " ]. Map points:" << Obs_Map.global_map_pcl.width << TAIL << endl;
   }
-  else if (map_name == "motion_planning")
+  else if (map_name == "planning_test")
   {
-    // 对应 motion_planning.world
+    // 对应 planning_test.world
     // 第一排
     for (int t = -8; t <= 8; t = t + 2)
     {

@@ -46,18 +46,11 @@ void Map_Generator::init(ros::NodeHandle &nh)
   cout << GREEN << "Y:  [" << map_y_min << "," << map_y_max << "]" << TAIL << endl;
   cout << GREEN << "Z:  [ 0,"<< map_z_limit  << "]" << TAIL << endl;
 
-  if ((cylinder_num + square_num) > map_size_x * 8)
-  {
-    cout << RED << "[map_generator] The map can't put all the obstacles, remove some." << TAIL << endl;
-    cylinder_num = map_size_x * 4;
-    square_num = map_size_x * 4;
-  }
-
   for (int i = 1; i <= swarm_num; i++)
   {
     uav_id[i] = i;
     // 【订阅】里程计数据
-    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/fake_odom", 1, boost::bind(&Map_Generator::uav_odom_cb,this, _1, uav_id[i]));
+    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/fake_odom", 1, boost::bind(&Map_Generator::uav_odom_cb,this, _1, uav_id[i]));
     // 【发布】模拟的局部点云信息
     local_map_pub[i] = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(i) + "/map_generator/local_cloud", 1);
     // 【定时器】发布局部点云定时器
@@ -278,6 +271,13 @@ void Map_Generator::GenerateMap1()
 
 void Map_Generator::GenerateRandomMap()
 {
+  if ((cylinder_num + square_num) > map_size_x * 8)
+  {
+    cout << RED << "[map_generator] The map can't put all the obstacles, remove some." << TAIL << endl;
+    cylinder_num = map_size_x * 4;
+    square_num = map_size_x * 4;
+  }
+
   // 待存入全局点云的点
   pcl::PointXYZ pt_random;
   // 障碍物位置容器

@@ -55,63 +55,28 @@
     <!-- 装饰 -->
     <model name='texture'>
       <static>true</static>
-      <link name="lawn_ground">
-        <pose>0.0 0.0 -0.01 0 0 0</pose>
-        <visual name="visual">
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <box>
-              <size>50 50 0.04</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>model://lawn_plane/materials/scripts</uri>
-              <uri>model://lawn_plane/materials/textures</uri>
-              <name>vrc/lawn</name>
-            </script>
-          </material>
-        </visual>
-      </link>
       <!-- LOGO -->
-      <link name="sysu_logo">
-        <pose>-0.0 4.0 0.01 0 0 0</pose>
+      <link name="prometheus_logo">
+        <pose frame=''> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
         <visual name="visual">
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <box>
-              <size>1.0 5.0 0.01</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>model://texture_drl/texture.material</uri>
-              <name>ssse_logo</name>
-            </script>
-          </material>
-        </visual>
-      </link>
-      <!-- LOGO 2 -->
-      <link name="sysu_logo2">
-        <pose>-0.0 -4.0 0.01 0 0 0</pose>
-        <visual name="visual">
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <box>
-              <size>1.0 5.0 0.01</size>
-            </box>
-          </geometry>
-          <material>
-            <script>
-              <uri>model://texture_drl/texture.material</uri>
-              <name>ssse_logo</name>
-            </script>
-          </material>
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>30.0 30.0 0.01</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://prometheus_texture/texture.material</uri>
+                <name>prometheus_logo2</name>
+              </script>
+            </material>
         </visual>
       </link>
     </model>
     <!-- 装饰结束 -->
 
+    <!-- 障碍物 -->
     <model name='cylinder1_a'>
       <include>
         <uri>model://obs_cylinder</uri>
@@ -692,14 +657,12 @@
       </include>
     </model>
 
-    <model name='drl_uav_1'>
+    <model name='fake_p230_1'>
       <include>
-        <uri>model://drl_uav_1</uri>
+        <uri>model://fake_p230_1</uri>
         <pose>0.0 0.0 0.0 0 0 0</pose>
       </include>
     </model>
+
     </world>
 </sdf>
-
-
-
