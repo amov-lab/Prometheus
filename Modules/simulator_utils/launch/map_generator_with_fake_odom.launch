@@ -14,21 +14,21 @@
 	<!-- 参数 -->
 	<arg name="swarm_num_uav" default="1"/>
     <arg name="swarm_num_ugv" default="0"/>
-	<arg name="fake_odom" default="true"/>
     <!-- 启动 fake_odom_node -->
 	<node pkg="prometheus_simulator_utils" type="fake_odom_node" name="fake_odom_node" output="screen">
 		<param name="fake_odom/swarm_num_uav" value="$(arg swarm_num_uav)"/>
 		<param name="fake_odom/swarm_num_ugv" value="$(arg swarm_num_ugv)"/>
-		<param name="fake_odom/manual_init_pos" value="false"/>
-		<param name="fake_odom/preset_init_pos_flag" value="1"/>
+		<param name="fake_odom/manual_init_pos" value="true"/>
+		<param name="fake_odom/uav1_init_x" value="-10.0"/>
+		<param name="fake_odom/uav1_init_y" value="0.0"/>
+		<param name="fake_odom/uav1_init_z" value="0.0"/>
+		<param name="fake_odom/uav1_init_yaw" value="0.0"/>
+		<param name="fake_odom/pub_gazebo_model_state" value="true"/>
 	</node>
 
 	<!-- uav_control_main -->
-	<arg name="input_source" default="3"/>
-	<!-- FAKE_ODOM = 3 -->
-	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_uav$(arg uav1_id)" output="screen">
-		<param name="uav_id" value="$(arg uav1_id)"/>
-		<param name="control/location_source" value="$(arg input_source)"/>
-        <!-- <rosparam command="load" file="$(find prometheus_gazebo)/launch_control_test/control_param_uav.yaml" /> -->
-	</node>
+    <include file="$(find prometheus_uav_control)/launch/uav_control_main_fake_odom.launch">
+    </include>
 </launch>
+
+
