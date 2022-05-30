@@ -31,7 +31,7 @@ int main(int argc, char **argv)
   {
     ROS_ERROR_STREAM_ONCE("Waiting for connect PX4!");
     ros::spinOnce();
-    ros::Duration(0.1).sleep();
+    ros::Duration(4).sleep();
   }
 
   ros::spinOnce();

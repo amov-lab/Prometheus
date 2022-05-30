@@ -1,11 +1,11 @@
 person,0.5,1.8
 bicycle
-car
+car,3,2
 motorcycle
 airplane
 bus
 train
-truck
+truck,3,2
 boat
 traffic_light
 fire_hydrant

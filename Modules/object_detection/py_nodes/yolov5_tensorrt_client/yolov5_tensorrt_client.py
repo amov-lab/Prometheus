@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import socket
 import rospy
 import math
 import os
 import cv2
+import time
 from geometry_msgs.msg import Pose, Point, Quaternion
 from std_msgs.msg import Float32MultiArray
 from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
@@ -51,8 +52,10 @@ def load_class_desc(dataset='coco'):
 
 
 pub_topic_name = rospy.get_param('~output_topic', '/prometheus/object_detection/yolov5_openvino_det')
+track_pub_topic_name = rospy.get_param('~pub_track_topic', '/prometheus/object_detection/siamrpn_tracker')
 object_names_txt = rospy.get_param('~object_names_txt', 'coco')
-config = rospy.get_param('~camera_parameters', 'camera_param.yaml')
+config = rospy.get_param('~camera_parameters', '/home/onx/Code/Prometheus/Simulator/gazebo_simulator/config/camera_config/gimbal_camera.yaml')
+uav_id = rospy.get_param('~uav_id', 1)
 cls_names, cls_ws, cls_hs = load_class_desc(object_names_txt)
 # print(pub_topic_name)
 # print(object_names_txt)
@@ -70,11 +73,23 @@ print(image_height)
 print(camera_matrix)
 print(distortion_coefficients)
 
-pub = rospy.Publisher(pub_topic_name, MultiDetectionInfo, queue_size=1)
+pub = rospy.Publisher("/uav" + str(uav_id) + pub_topic_name, MultiDetectionInfo, queue_size=1)
+track_pub = rospy.Publisher("/uav" + str(uav_id) + track_pub_topic_name, DetectionInfo, queue_size=1)
 rate = rospy.Rate(100)
 
+ip = '127.0.0.1'
+port = 9091
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(('127.0.0.1', 9091))
+while True:
+    try:
+        s.connect((ip, port))
+        break
+    except ConnectionRefusedError:
+        print("wait for connect ")
+        time.sleep(2)
+        continue
+
 last_fid = 0
 m_info = MultiDetectionInfo()
 m_info.num_objs = 0
@@ -121,6 +136,9 @@ while not rospy.is_shutdown():
                 
                 m_info.detection_infos.append(d_info)
                 m_info.num_objs += 1
+
+                if detect_track == 1:
+                    track_pub.publish(d_info)
                 for i in range(deted):
                     if i > 0:
                         data = s.recv(62)  # 35
@@ -150,7 +168,6 @@ while not rospy.is_shutdown():
                                 if cls_hs[cls] > 0:
                                     depth = (cls_hs[cls]*camera_matrix[1][1]) / (h*image_height)
                                     d_info.position = [math.tan(d_info.sight_angle[0])*depth, math.tan(d_info.sight_angle[1])*depth, depth]
-                
                                 m_info.detection_infos.append(d_info)
                                 m_info.num_objs += 1
 

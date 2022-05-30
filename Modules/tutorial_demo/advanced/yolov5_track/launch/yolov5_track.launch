@@ -31,8 +31,8 @@
 		<param name="camera_offset_z" value="0" />
 
 		<!-- 跟踪系数 -->
-		<param name="kpx_track" value="0.2" />
-		<param name="kpy_track" value="0.2" />
+		<param name="kpx_track" value="0.1" />
+		<param name="kpy_track" value="0.3" />
 		<param name="kpz_track" value="0.2" />
 
 		<!-- 起飞点 -->

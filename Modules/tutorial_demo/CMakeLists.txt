@@ -98,6 +98,9 @@ target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
 
 add_executable(siamrpn_track advanced/siamrpn_track/src/siamrpn_track.cpp)
 target_link_libraries(siamrpn_track ${catkin_LIBRARIES})
+
+add_executable(find_aruco_marker advanced/find_aruco_marker/src/main.cpp)
+target_link_libraries(find_aruco_marker ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
