@@ -1,7 +1,4 @@
 /***************************************************************************************************************************
- * landpad_det.cpp
- * Author: Jario
- * Update Time: 2020.1.12
  *
  * 说明: 降落目标识别程序，降落板的尺寸为60cmX60cm
  *      1. 【订阅】图像话题 (默认来自web_cam)
@@ -52,131 +49,48 @@
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/Message.h>
 
-#include "message_utils.h"
+#include "printf_utils.h"
 
 using namespace std;
 using namespace cv;
 
-double threshold_error = 0.4;
-
-//---------------------------variables---------------------------------------
-//------------ROS TOPIC---------
-//【订阅】无人机位置
-ros::Subscriber drone_pose_sub;
-//【订阅】小车位置
-ros::Subscriber vehicle_pose_sub;
-//【订阅】输入图像
+// 输入图像
 image_transport::Subscriber image_subscriber;
-//【订阅】输入开关量
+// 输入开关量
 ros::Subscriber switch_subscriber;
-//【发布】无人机和小车相对位置
+// 发布目标在相机下到位姿
 ros::Publisher position_pub;
-//【发布】识别后的图像
+// 发布识别后的图像
 image_transport::Publisher landpad_pub;
-//【发布】调试消息
-ros::Publisher message_pub;
-std::string msg_node_name;
 
 //-------------VISION-----------
 Mat img;
 prometheus_msgs::DetectionInfo pose_now;
 
-//-------------TIME-------------
-ros::Time begin_time;
-float photo_time;
 double calculation_time;
 
 // 相机话题中的图像同步相关变量
 int frame_width, frame_height;
-std_msgs::Header image_header;
 cv::Mat cam_image_copy;
 boost::shared_mutex mutex_image_callback;
 bool image_status = false;
 boost::shared_mutex mutex_image_status;
 
-// 无人机位姿message
-geometry_msgs::Pose pos_drone_optitrack;
-Eigen::Vector3d euler_drone_optitrack;
-Eigen::Quaterniond q_drone;
-// 小车位姿message
-geometry_msgs::Pose pos_vehicle_optitrack;
-Eigen::Vector3d euler_vehicle_optitrack;
-Eigen::Quaterniond q_vehicle;
-
-// 保存的上次观测的位置 用于cluster算法使用
-Eigen::Vector3d last_position;
-bool bool_last_position = false;
 // 接收消息，允许暂停检测
 bool is_suspanded = false;
-bool local_print = false;
-bool message_print = true;
-
-//-----------------利用Euler角进行三次旋转得到无人机相对目标的位置------------------
-void CodeRotateByZ(double x, double y, double thetaz, double &outx, double &outy)
-{
-    double x1 = x; // 将变量拷贝一次，保证&x == &outx这种情况下也能计算正确
-    double y1 = y;
-    double rz = thetaz * CV_PI / 180;
-    outx = cos(rz) * x1 - sin(rz) * y1;
-    outy = sin(rz) * x1 + cos(rz) * y1;
-}
-void CodeRotateByY(double x, double z, double thetay, double &outx, double &outz)
-{
-    double x1 = x;
-    double z1 = z;
-    double ry = thetay * CV_PI / 180;
-    outx = cos(ry) * x1 + sin(ry) * z1;
-    outz = cos(ry) * z1 - sin(ry) * x1;
-}
-void CodeRotateByX(double y, double z, double thetax, double &outy, double &outz)
-{
-    double y1 = y; // 将变量拷贝一次，保证&y == &y这种情况下也能计算正确
-    double z1 = z;
-    double rx = thetax * CV_PI / 180;
-    outy = cos(rx) * y1 - sin(rx) * z1;
-    outz = cos(rx) * z1 + sin(rx) * y1;
-}
-// 四元数转Euler
-// q0 q1 q2 q3
-// w x y z
-void quaternion_2_euler(Eigen::Quaterniond quat, Eigen::Vector3d &angle)
-{
-    angle(0) = atan2(2.0 * (quat.z() * quat.y() + quat.w() * quat.x()), 1.0 - 2.0 * (quat.x() * quat.x() + quat.y() * quat.y()));
-    angle(1) = asin(2.0 * (quat.y() * quat.w() - quat.z() * quat.x()));
-    // angle[2] = atan2(2.0 * (quat[3] * quat[0] + quat[1] * quat[2]), -1.0 + 2.0 * (quat[0] * quat[0] + quat[1] * quat[1]));
-    angle(2) = atan2(2.0 * (quat.z() * quat.w() + quat.x() * quat.y()), 1.0 - 2.0 * (quat.y() * quat.y() + quat.z() * quat.z()));
-}
-
-//--------------------------利用optitrack获取真值-------------------------------
-
-// 获取系统时间
-float get_dt(ros::Time last)
-{
-    ros::Time time_now = ros::Time::now();
-    float currTimeSec = time_now.sec - last.sec;
-    float currTimenSec = time_now.nsec / 1e9 - last.nsec / 1e9;
-    return (currTimeSec + currTimenSec);
-}
 
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
 void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
 {
-    if (local_print)
-        ROS_DEBUG("[LandpadDetector] USB image received.");
-
     cv_bridge::CvImagePtr cam_image;
 
     try
     {
         cam_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        image_header = msg->header;
     }
     catch (cv_bridge::Exception &e)
     {
-        if (local_print)
-            ROS_ERROR("cv_bridge exception: %s", e.what());
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::ERROR, msg_node_name, "cv_bridge exception");
+        PCOUT(0, RED, std::string("cv_bridge exception:") + e.what());
         return;
     }
 
@@ -209,47 +123,75 @@ void switchCallback(const std_msgs::Bool::ConstPtr &msg)
     // cout << is_suspanded << endl;
 }
 
+// 根据id，方法该二维码的边长，landpad的原点
+inline float idToPosition(int id, double id_to8_t[3], float landpad_det_len)
+{
+
+    float scale = 0;
+    constexpr float big = 0.666667;
+    constexpr float small = 0.133334;
+    switch (id)
+    {
+    case 19:
+    case 43:
+        scale = big;
+        id_to8_t[0] = 0.;
+        id_to8_t[1] = 0.;
+        id_to8_t[2] = 0.;
+        break;
+    case 1:
+        id_to8_t[0] = -(landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[1] = (landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[2] = 0.;
+        scale = small;
+        break;
+    case 2:
+        id_to8_t[0] = -(landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[1] = -(landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[2] = 0.;
+        scale = small;
+        break;
+    case 3:
+        id_to8_t[0] = (landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[1] = -(landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[2] = 0.;
+        scale = small;
+        break;
+    case 4:
+        id_to8_t[0] = (landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[1] = (landpad_det_len * big + landpad_det_len * small) / 2.;
+        id_to8_t[2] = 0.;
+        scale = small;
+        break;
+    }
+    return scale;
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "landpad_det");
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
 
-    // 发布调试消息
-    msg_node_name = "/prometheus/message/landpad_det";
-    message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
-
     std::string camera_topic, camera_info;
     if (nh.getParam("camera_topic", camera_topic))
     {
-        if (local_print)
-            ROS_INFO("camera_topic is %s", camera_topic.c_str());
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_topic is" + camera_topic);
+        PCOUT(0, GREEN, std::string("camera_topic is ") + camera_topic);
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter camera_topic");
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_topic");
         camera_topic = "/prometheus/camera/rgb/image_raw";
+        PCOUT(0, YELLOW, std::string("didn't find parameter camera_topic, and camera_topic set to") + camera_topic);
     }
 
     if (nh.getParam("camera_info", camera_info))
     {
-        if (local_print)
-            ROS_INFO("camera_info is %s", camera_info.c_str());
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_info is" + camera_info);
+        PCOUT(0, GREEN, std::string("camera_info is ") + camera_info);
     }
     else
     {
-        if (local_print)
-            ROS_WARN("didn't find parameter camera_info");
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_info");
         camera_info = "camera_param.yaml";
+        PCOUT(0, YELLOW, std::string("didn't find parameter camera_info, and camera_info set to") + camera_info);
     }
 
     position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10);
@@ -265,11 +207,6 @@ int main(int argc, char **argv)
     sensor_msgs::ImagePtr msg_ellipse;
 
     std::string ros_path = ros::package::getPath("prometheus_detection");
-
-    if (local_print)
-        cout << "DETECTION_PATH: " << ros_path << endl;
-    if (message_print)
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "DETECTION_PATH: " + ros_path);
 
     // 读取参数文档camera_param.yaml中的参数值；
     YAML::Node camera_config = YAML::LoadFile(camera_info);
@@ -321,39 +258,28 @@ int main(int argc, char **argv)
 
     // 节点运行频率： 20hz 【视觉端解算频率大概为20HZ】
     ros::Rate loopRate(20);
-    ros::Rate loopRate_1Hz(1);
     //----------------------------------------主循环------------------------------------
     // const auto wait_duration = std::chrono::milliseconds(2000);
     while (ros::ok())
     {
-        while (!getImageStatus() && ros::ok())
+        ros::spinOnce();
+        if (!getImageStatus() && ros::ok())
         {
-            if (local_print)
-                cout << "Waiting for image." << endl;
-            if (message_print)
-                pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Waiting for image.");
-
-            // std::this_thread::sleep_for(wait_duration);
-            ros::spinOnce();
-            loopRate_1Hz.sleep();
+            PCOUT(-1, WHITE, "Waiting for image");
+            continue;
         }
+        PCOUT(-1, GREEN, "RUNING ...");
 
         if (switch_state != is_suspanded)
         {
             switch_state = is_suspanded;
             if (!is_suspanded)
             {
-                if (local_print)
-                    cout << "Start Detection." << endl;
-                if (message_print)
-                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Start Detection.");
+                PCOUT(0, WHITE, "Start Detection");
             }
             else
             {
-                if (local_print)
-                    cout << "Stop Detection." << endl;
-                if (message_print)
-                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Stop Detection.");
+                PCOUT(0, WHITE, "Stop Detection");
             }
         }
 
@@ -375,113 +301,37 @@ int main(int argc, char **argv)
             Ptr<cv::aruco::DetectorParameters> parameters = cv::aruco::DetectorParameters::create();
             cv::aruco::detectMarkers(img, dictionary, markerCorners_deted, markerids_deted, parameters, rejectedCandidate);
 
-            // 如果检测到二维码
-            if (markerids_deted.size() > 0)
+            // 如果检测到二维码，按顺序进行检测
+            // 19中间最大， 43中间最小， 1左上角， 2右上角， 3左下角， 4右下角
+            int landpad_id[6]{19, 43, 1, 2, 3, 4};
+            for (auto i = std::begin(landpad_id); i != std::end(landpad_id); ++i)
             {
-                // 判断是否最大的二维码
-                for (int tt = 0; tt < markerids_deted.size(); tt++)
+                for (int ii = 0; ii < markerids_deted.size(); ++ii)
                 {
-                    if (19 == markerids_deted[tt])
+                    if (markerids_deted[ii] == *i)
                     {
-                        markerids.push_back(markerids_deted[tt]);
-                        markerCorners.push_back(markerCorners_deted[tt]);
+                        markerCorners.push_back(markerCorners_deted[ii]);
+                        markerids.push_back(*i);
+                        break;
                     }
                 }
-                // 中心最小到二维码
-                if (markerids.size() == 0)
-                {
-                    for (int tt = 0; tt < markerids_deted.size(); tt++)
-                    {
-                        if (43 == markerids_deted[tt])
-                        {
-                            markerids.push_back(markerids_deted[tt]);
-                            markerCorners.push_back(markerCorners_deted[tt]);
-                        }
-                    }
-                }
-                // 左上角二维码
-                if (markerids.size() == 0)
-                {
-                    for (int tt = 0; tt < markerids_deted.size(); tt++)
-                    {
-                        if (1 == markerids_deted[tt])
-                        {
-                            markerids.push_back(markerids_deted[tt]);
-                            markerCorners.push_back(markerCorners_deted[tt]);
-                        }
-                    }
-                }
-                // 右上角二维码
-                if (markerids.size() == 0)
-                {
-                    for (int tt = 0; tt < markerids_deted.size(); tt++)
-                    {
-                        if (2 == markerids_deted[tt])
-                        {
-                            markerids.push_back(markerids_deted[tt]);
-                            markerCorners.push_back(markerCorners_deted[tt]);
-                        }
-                    }
-                }
-                // 左下角二维码
-                if (markerids.size() == 0)
-                {
-                    for (int tt = 0; tt < markerids_deted.size(); tt++)
-                    {
-                        if (3 == markerids_deted[tt])
-                        {
-                            markerids.push_back(markerids_deted[tt]);
-                            markerCorners.push_back(markerCorners_deted[tt]);
-                        }
-                    }
-                }
-                // 右下角二维码
-                if (markerids.size() == 0)
-                {
-                    for (int tt = 0; tt < markerids_deted.size(); tt++)
-                    {
-                        if (4 == markerids_deted[tt])
-                        {
-                            markerids.push_back(markerids_deted[tt]);
-                            markerCorners.push_back(markerCorners_deted[tt]);
-                        }
-                    }
-                }
+                if (!markerids.empty())
+                    break;
             }
-
-            //-------------------多于一个目标被识别到，进入算法-----------------
-            if (markerids.size() > 0)
+            // 不同到id有着不同的大小参数
+            if (!markerids.empty())
             {
+                // 可视化
                 aruco::drawDetectedMarkers(img, markerCorners, markerids);
-                // 位置，四元数姿态
-                std::vector<float> collected_tx, collected_ty, collected_tz;
-                std::vector<float> collected_qx, collected_qy, collected_qz, collected_qw;
+                double id_to8_t[3];
+                float scale = idToPosition(markerids[0], id_to8_t, landpad_det_len);
+                // std::cout << markerids[0] << " >> " <<  id_to8_t[0] << " " <<  id_to8_t[1] << " " << id_to8_t[2] << std::endl;
 
-                int tt = 0;
-                // 旋转&转移向量
                 vector<Vec3d> rvecs, tvecs;
-                if (19 == markerids[tt])
-                {
-                    vector<vector<Point2f>> markerCornersONE;
-                    markerCornersONE.push_back(markerCorners[tt]);
-                    aruco::estimatePoseSingleMarkers(markerCornersONE, landpad_det_len * 0.666667, camera_matrix, distortion_coefficients, rvecs, tvecs);
-                    aruco::drawAxis(img, camera_matrix, distortion_coefficients, rvecs[0], tvecs[0], landpad_det_len * 0.666667 * 0.5f);
-                }
-                else if (43 == markerids[tt])
-                {
-                    vector<vector<Point2f>> markerCornersONE;
-                    markerCornersONE.push_back(markerCorners[tt]);
-                    aruco::estimatePoseSingleMarkers(markerCornersONE, landpad_det_len * 0.066667, camera_matrix, distortion_coefficients, rvecs, tvecs);
-                    aruco::drawAxis(img, camera_matrix, distortion_coefficients, rvecs[0], tvecs[0], landpad_det_len * 0.066667 * 0.5f);
-                }
-                else if (1 == markerids[tt] || 2 == markerids[tt] || 3 == markerids[tt] || 4 == markerids[tt])
-                {
-                    vector<vector<Point2f>> markerCornersONE;
-                    markerCornersONE.push_back(markerCorners[tt]);
-                    aruco::estimatePoseSingleMarkers(markerCornersONE, landpad_det_len * 0.133334, camera_matrix, distortion_coefficients, rvecs, tvecs);
-                    aruco::drawAxis(img, camera_matrix, distortion_coefficients, rvecs[0], tvecs[0], landpad_det_len * 0.133334 * 0.5f);
-                }
+                aruco::estimatePoseSingleMarkers(markerCorners, landpad_det_len * scale, camera_matrix, distortion_coefficients, rvecs, tvecs);
+                aruco::drawAxis(img, camera_matrix, distortion_coefficients, rvecs[0], tvecs[0], landpad_det_len * scale * 0.5f);
 
+                // 姿态
                 cv::Mat rotation_matrix;
                 // 相机姿态: 旋转向量 -> 旋转矩阵
                 cv::Rodrigues(rvecs[0], rotation_matrix);
@@ -490,73 +340,21 @@ int main(int argc, char **argv)
                 Eigen::Quaterniond q = Eigen::Quaterniond(rotation_matrix_eigen);
                 q.normalize(); //标准化
 
-                /*if (43 != markerids[tt] && 19 != markerids[tt]) {
-                    static tf::TransformBroadcaster br;
-                    tf::Transform world2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[0][0], tvecs[0][1], tvecs[0][2]));
-                    char obj_str[16];
-                    sprintf(obj_str, "object-%d", markerids[tt]);
-                    tf::StampedTransform trans_world2camera = tf::StampedTransform(world2camera, ros::Time(), "camera", obj_str);
-                    br.sendTransform(trans_world2camera);
-                }*/
-
-                // 位置向量
+                // 位置
                 std::vector<double> vec_t{tvecs[0][0], tvecs[0][1], tvecs[0][2]};
                 cv::Mat vec_t_mat{vec_t};
                 vec_t_mat = vec_t_mat;
                 vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
-                // cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
-                // cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
-                // TODO: id_to8_t 是个什么含义？
-                std::vector<double> id_to8_t(3);
 
-                if (19 == markerids[tt] || 43 == markerids[tt])
-                {
-                    id_to8_t[0] = 0.;
-                    id_to8_t[1] = 0.;
-                    id_to8_t[2] = 0.;
-                }
-                else if (1 == markerids[tt])
-                {
-                    id_to8_t[0] = -(landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[1] = (landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[2] = 0.;
-                }
-                else if (2 == markerids[tt])
-                {
-                    id_to8_t[0] = -(landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[1] = -(landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[2] = 0.;
-                }
-                else if (3 == markerids[tt])
-                {
-                    id_to8_t[0] = (landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[1] = -(landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[2] = 0.;
-                }
-                else if (4 == markerids[tt])
-                {
-                    id_to8_t[0] = (landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[1] = (landpad_det_len * 0.666667 + landpad_det_len * 0.133334) / 2.;
-                    id_to8_t[2] = 0.;
-                }
-
-                cv::Mat id_to8_t_mat{id_to8_t};
-                id_to8_t_mat.convertTo(id_to8_t_mat, CV_32FC1);
-
+                // 原点位置
+                cv::Mat id_to8_t_mat = cv::Mat(3, 1, CV_32FC1, id_to8_t);
                 rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
-                // cv::invert(rotation_matrix, rotation_matrix);
-                // rotation_matrix 相机坐标系下的目标的姿态
                 cv::Mat id_8_t = rotation_matrix * id_to8_t_mat + vec_t_mat;
-                // cout << id_8_t << endl;
+                // 整合数据发布
 
                 float o_tx = id_8_t.at<float>(0);
                 float o_ty = id_8_t.at<float>(1);
                 float o_tz = id_8_t.at<float>(2);
-
-                float o_qx = q.x();
-                float o_qy = q.y();
-                float o_qz = q.z();
-                float o_qw = q.w();
 
                 // 将解算的位置转化成旋转矩阵 并旋转计算无人机相对于目标的位置
                 float r11 = rotation_matrix.ptr<float>(0)[0];
@@ -577,7 +375,7 @@ int main(int argc, char **argv)
                 // C2W代表 相机坐标系转换到世界坐标系姿态变化   W2C代表 世界坐标系转换到相机坐标系 Theta为欧拉角
                 cv::Point3f Theta_C2W;      // 相机 -> 世界
                 cv::Point3f Theta_W2C;      // 世界 -> 相机
-                cv::Point3f Position_OcInW; // 相机坐标系下到位置
+                cv::Point3f Position_OcInW; // 相机坐标系下的位置
 
                 Theta_C2W.z = thetaz;
                 Theta_C2W.y = thetay;
@@ -602,16 +400,17 @@ int main(int argc, char **argv)
                 pose_now.attitude[0] = thetaz;
                 pose_now.attitude[1] = thetay;
                 pose_now.attitude[2] = thetax;
-                pose_now.attitude_q[0] = o_qx;
-                pose_now.attitude_q[1] = o_qy;
-                pose_now.attitude_q[2] = o_qz;
-                pose_now.attitude_q[3] = o_qw;
+                pose_now.attitude_q[0] = q.x();
+                pose_now.attitude_q[1] = q.y();
+                pose_now.attitude_q[2] = q.z();
+                pose_now.attitude_q[3] = q.w();
                 // 视线角，球体坐标系
                 pose_now.sight_angle[0] = atan(o_tx / o_tz);
                 pose_now.sight_angle[1] = atan(o_ty / o_tz);
                 // 偏航角误差
                 pose_now.yaw_error = A1_yaw;
 
+                // 记录历史值
                 last_x = pose_now.position[0];
                 last_y = pose_now.position[1];
                 last_z = pose_now.position[2];
@@ -624,6 +423,7 @@ int main(int argc, char **argv)
                 last_qw = pose_now.attitude_q[3];
                 last_yaw = pose_now.yaw_error;
             }
+            // 找不到就使用历史值
             else
             {
                 pose_now.header.stamp = ros::Time::now();
@@ -649,46 +449,12 @@ int main(int argc, char **argv)
             clock_t finish = clock();
             calculation_time = (finish - start) / 1000;
 
-            // 打印
-            // printf_result();
-
-            // 画出识别到的二维码
-            // cv::aruco::drawDetectedMarkers(img, markerCorners, markerids);
-
             msg_ellipse = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
             landpad_pub.publish(msg_ellipse);
         }
 
         // cv::imshow("test",img);
-        ros::spinOnce();
-        cv::waitKey(1);
+        // cv::waitKey(1);
         loopRate.sleep();
     }
-}
-
-void printf_result()
-{
-    // 固定的浮点显示
-    cout.setf(ios::fixed);
-    // setprecision(n) 设显示小数精度为n位
-    cout << setprecision(4);
-    // 左对齐
-    cout.setf(ios::left);
-    // 强制显示小数点
-    cout.setf(ios::showpoint);
-    // 强制显示符号
-    cout.setf(ios::showpos);
-
-    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>Landpad Detection<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-    if (pose_now.detected)
-    {
-        cout << "is_detected: ture" << endl;
-    }
-    else
-    {
-        cout << "is_detected: false" << endl;
-    }
-    cout << "pos_target: [X Y Z] : " << pose_now.position[0] << " [m] " << pose_now.position[1] << " [m] " << pose_now.position[2] << " [m] " << endl;
-    cout << "pos_target: [Yaw] :   " << pose_now.yaw_error / 3.1415926 * 180 << " [du] " << endl;
-    cout << "calculation_time =    " << time << " [ms] " << endl;
 }
