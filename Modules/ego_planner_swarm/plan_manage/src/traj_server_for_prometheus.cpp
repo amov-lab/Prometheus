@@ -1,3 +1,4 @@
+#include <ros/ros.h>
 #include "bspline_opt/uniform_bspline.h"
 #include "nav_msgs/Odometry.h"
 #include "traj_utils/Bspline.h"
@@ -5,7 +6,8 @@
 #include <prometheus_msgs/UAVCommand.h>
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
-#include <ros/ros.h>
+
+#include "geometry_utils.h"
 
 // 无人机编号
 int uav_id;
@@ -42,12 +44,12 @@ int main(int argc, char **argv)
   // 无人机编号 1号无人机则为1
   nh.param("uav_id", uav_id, 0);
   nh.param("control_flag", control_flag, 0);
-  nh.param("traj_server/time_forward", time_forward_, -1.0);
+  nh.param("traj_server/time_forward", time_forward_, 1.0);
   nh.param("traj_server/last_yaw", last_yaw_, 0.0);
   string uav_name = "/uav" + std::to_string(uav_id);
 
   // [订阅] EGO规划结果
-  ros::Subscriber bspline_sub = nh.subscribe("planning/bspline", 10, bsplineCallback);
+  ros::Subscriber bspline_sub = nh.subscribe(uav_name +"/planning/bspline", 10, bsplineCallback);
 
   // [发布] EGO规划结果
   pos_cmd_pub = nh.advertise<quadrotor_msgs::PositionCommand>(uav_name + "/position_cmd", 50);
@@ -103,7 +105,7 @@ void pub_prometheus_command(quadrotor_msgs::PositionCommand ego_traj_cmd)
   uav_command.acceleration_ref[0] = ego_traj_cmd.acceleration.x;
   uav_command.acceleration_ref[1] = ego_traj_cmd.acceleration.y;
   uav_command.acceleration_ref[2] = ego_traj_cmd.acceleration.z;
-  uav_command.yaw_ref = uav_utils::normalize_angle(ego_traj_cmd.yaw);
+  uav_command.yaw_ref = geometry_utils::normalize_angle(ego_traj_cmd.yaw);
   // uav_command.yaw_rate_ref         = ego_traj_cmd.yaw_dot;
 
   uav_cmd_pub.publish(uav_command);

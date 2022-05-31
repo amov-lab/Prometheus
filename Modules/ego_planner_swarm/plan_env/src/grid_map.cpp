@@ -9,13 +9,15 @@ void GridMap::initMap(ros::NodeHandle &nh)
 
   /* get parameter */
   int uav_id;
-  double x_size, y_size, z_size;
+  double x_size, y_size, z_size, x_origin, y_origin;
   // 分辨率
   node_.param("grid_map/uav_id", uav_id, 1);
   node_.param("grid_map/resolution", mp_.resolution_, -1.0);
   node_.param("grid_map/map_size_x", x_size, -1.0);
   node_.param("grid_map/map_size_y", y_size, -1.0);
   node_.param("grid_map/map_size_z", z_size, -1.0);
+  node_.param("grid_map/map_origin_x", x_origin, -1.0);
+  node_.param("grid_map/map_origin_y", y_origin, -1.0);
   node_.param("grid_map/local_update_range_x", mp_.local_update_range_(0), -1.0);
   node_.param("grid_map/local_update_range_y", mp_.local_update_range_(1), -1.0);
   node_.param("grid_map/local_update_range_z", mp_.local_update_range_(2), -1.0);
@@ -67,18 +69,8 @@ void GridMap::initMap(ros::NodeHandle &nh)
 
   mp_.resolution_inv_ = 1 / mp_.resolution_;
   //todo: different map origin
-  if(uav_id==1)
-  {
-    mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
-  }
-  else if(uav_id==2)
-  {
-    mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
-  }
-  else
-  {
-    mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
-  }
+  if(x_origin < -1.0+1e-2 && x_origin > -1.0-1e-2) mp_.map_origin_ = Eigen::Vector3d(-x_size / 2.0, -y_size / 2.0, mp_.ground_height_);
+  else mp_.map_origin_ = Eigen::Vector3d(x_origin, y_origin, mp_.ground_height_);
   mp_.map_size_ = Eigen::Vector3d(x_size, y_size, z_size);
 
   //logit(x) (log((x) / (1 - (x))))
@@ -196,11 +188,6 @@ void GridMap::resetBuffer(Eigen::Vector3d min_pos, Eigen::Vector3d max_pos)
 {
 
   Eigen::Vector3i min_id, max_id;
-  posToIndex(min_pos, min_id);
-  posToIndex(max_pos, max_id);
-
-  boundIndex(min_id);
-  boundIndex(max_id);
 
   /* reset occ and dist buffer */
   for (int x = min_id(0); x <= max_id(0); ++x)
