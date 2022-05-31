@@ -181,7 +181,8 @@ void Occupy_map::map_update_lpcl(const sensor_msgs::PointCloud2ConstPtr &local_p
 {
     // 由sensor_msgs::PointCloud2 转为 pcl::PointCloud<pcl::PointXYZ>
     pcl::fromROSMsg(*local_point, *input_point_cloud);
-
+    
+    // 仿真中的点云为全局点云,无需tf变换
     if (sim_mode)
     {
         if (queue_size <= 0) // without slide windows
@@ -213,6 +214,7 @@ void Occupy_map::map_update_lpcl(const sensor_msgs::PointCloud2ConstPtr &local_p
     }
     else
     {
+        // 实际中的点云需要先进行tf变换
         local_map_merge_odom(odom);
     }
 }
@@ -226,15 +228,7 @@ void Occupy_map::map_update_laser(const sensor_msgs::LaserScanConstPtr &local_po
     // 再由sensor_msgs::PointCloud2 转为 pcl::PointCloud<pcl::PointXYZ>
     pcl::fromROSMsg(input_laser_scan, *input_point_cloud);
 
-    if (sim_mode)
-    {
-        // to do
-        // 目前仿真模式中不支持2d lidar的输入（直接使用局部点云即可）
-    }
-    else
-    {
-        local_map_merge_odom(odom);
-    }
+    local_map_merge_odom(odom);
 }
 
 // 工具函数：合并局部地图 - 输入：odom以及局部点云
