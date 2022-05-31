@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='p230'>
+  <model name='p230_planning'>
     <!-- p230 body -->
     <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
@@ -101,23 +101,6 @@
           <izz>0.000274004</izz>
         </inertia>
       </inertial>
-      <collision name='rotor_0_collision'>
-        <pose>0 0 0 0 0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.005</length>
-            <radius>0.06</radius>
-          </cylinder>
-        </geometry>
-        <surface>
-          <contact>
-            <ode/>
-          </contact>
-          <friction>
-            <ode/>
-          </friction>
-        </surface>
-      </collision>
       <visual name='rotor_0_visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -167,23 +150,6 @@
           <izz>0.000274004</izz>
         </inertia>
       </inertial>
-      <collision name='rotor_1_collision'>
-        <pose>0 0 0 0 0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.005</length>
-            <radius>0.06</radius>
-          </cylinder>
-        </geometry>
-        <surface>
-          <contact>
-            <ode/>
-          </contact>
-          <friction>
-            <ode/>
-          </friction>
-        </surface>
-      </collision>
       <visual name='rotor_1_visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -233,23 +199,6 @@
           <izz>0.000274004</izz>
         </inertia>
       </inertial>
-      <collision name='rotor_2_collision'>
-        <pose>0 0 0 0 0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.005</length>
-            <radius>0.06</radius>
-          </cylinder>
-        </geometry>
-        <surface>
-          <contact>
-            <ode/>
-          </contact>
-          <friction>
-            <ode/>
-          </friction>
-        </surface>
-      </collision>
       <visual name='rotor_2_visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -299,23 +248,6 @@
           <izz>0.000274004</izz>
         </inertia>
       </inertial>
-      <collision name='rotor_3_collision'>
-        <pose>0 0 0 0 0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.005</length>
-            <radius>0.06</radius>
-          </cylinder>
-        </geometry>
-        <surface>
-          <contact>
-            <ode/>
-          </contact>
-          <friction>
-            <ode/>
-          </friction>
-        </surface>
-      </collision>
       <visual name='rotor_3_visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -530,13 +462,67 @@
     </plugin>
 
     <!-- 激光雷达 -->
-    <include>
-      <uri>model://hokuyo_ust_20lx</uri>
-      <pose>0 0 0.3 0 0 0</pose>
-    </include>
+    <link name="lidar_link">
+      <pose>0 0 0.4 0 0.0 0</pose>
+      <!-- 物理参数设置 -->
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>4.15e-6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.407e-6</iyy>
+          <iyz>0</iyz>
+          <izz>2.407e-6</izz>
+        </inertia>
+      </inertial>
+      <!-- 显示参数设置 -->
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.03</size>
+          </box>
+        </geometry>
+      </visual>
+      <!-- 传感器参数设置 -->
+      <sensor name="2Dlaser" type="ray">
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <!-- UST-20LX 视场为270度 -->
+              <min_angle>-3.14</min_angle>
+              <max_angle>3.14</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.06</min>
+            <max>5</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.000</stddev>
+          </noise>
+        </ray>
+        <plugin name="laser" filename="libRayPlugin.so" />
+        <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
+          <topicName>/uav1/scan</topicName>
+          <frameName>/uav1/lidar_link</frameName>
+        </plugin>
+        <always_on>1</always_on>
+        <!-- 更新频率 -->
+        <update_rate>20</update_rate>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+
     <joint name="2Dlidar_joint" type="fixed">
-      <child>hokuyo_ust_20lx::link</child>
-      <parent>p450::base_link</parent>
+      <child>lidar_link</child>
+      <parent>base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
@@ -545,5 +531,7 @@
         </limit>
       </axis>
     </joint>
+
+
   </model>
 </sdf>

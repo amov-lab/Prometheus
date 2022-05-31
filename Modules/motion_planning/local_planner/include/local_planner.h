@@ -16,9 +16,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
-
+#include <visualization_msgs/Marker.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVCommand.h>
+#include <prometheus_msgs/UAVControlState.h>
 
 #include "apf.h"
 #include "vfh.h"
@@ -37,17 +38,18 @@ using namespace std;
         // 参数
         int uav_id;
         int algorithm_mode;
-        int lidar_model;
+        int map_input_source;
         double max_planning_vel;
         double fly_height;
         double safe_distance;
         bool sim_mode;
         bool map_groundtruth;
+        string local_pcl_topic_name;
 
         // 订阅无人机状态、目标点、传感器数据（生成地图）
         ros::Subscriber goal_sub;
         ros::Subscriber uav_state_sub;
-
+        ros::Subscriber uav_control_state_sub;
         ros::Subscriber local_point_cloud_sub;
 
         // 发布控制指令
@@ -60,16 +62,11 @@ using namespace std;
         local_planner_alg::Ptr local_alg_ptr;
 
         prometheus_msgs::UAVState uav_state;      // 无人机状态
+        prometheus_msgs::UAVControlState uav_control_state;
         nav_msgs::Odometry uav_odom;
-        Eigen::Vector3d uav_pos;  // 无人机位置
-        Eigen::Vector3d uav_vel;  // 无人机速度
-        Eigen::Quaterniond uav_quat; // 无人机四元数
-        double uav_yaw;
-
         prometheus_msgs::UAVCommand uav_command; 
 
         double distance_to_goal;
-
         // 规划器状态
         bool odom_ready;
         bool drone_ready;
@@ -79,13 +76,16 @@ using namespace std;
         bool path_ok;
 
         // 规划初始状态及终端状态
-        Eigen::Vector3d start_pos, start_vel, start_acc, goal_pos, goal_vel;
+        Eigen::Vector3d uav_pos;  // 无人机位置
+        Eigen::Vector3d uav_vel;  // 无人机速度
+        Eigen::Quaterniond uav_quat; // 无人机四元数
+        double uav_yaw;
+        // 规划终端状态
+        Eigen::Vector3d goal_pos, goal_vel;
 
         int planner_state;
         Eigen::Vector3d desired_vel;
         float desired_yaw;
-
-        geometry_msgs::Point vel_rviz;
 
         // 五种状态机
         enum EXEC_STATE
@@ -102,11 +102,13 @@ using namespace std;
         pcl::PointCloud<pcl::PointXYZ> latest_local_pcl_;
 
         void goal_cb(const geometry_msgs::PoseStampedConstPtr &msg);
+        void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg);
         void uav_state_cb(const prometheus_msgs::UAVStateConstPtr &msg);
         void pcl_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
         void laserscan_cb(const sensor_msgs::LaserScanConstPtr &msg);
         void mainloop_cb(const ros::TimerEvent &e);
         void control_cb(const ros::TimerEvent &e);
+        void debug_info();
     };
 
 
