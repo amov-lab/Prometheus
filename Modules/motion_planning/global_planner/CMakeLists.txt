@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 	nav_msgs
 	pcl_ros
 	visualization_msgs
+	gazebo_msgs
 	prometheus_msgs
 )
 

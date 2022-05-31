@@ -84,11 +84,8 @@ int main(int argc, char **argv)
 
     sleep(0.5);
 
-    if(pub_gazebo_model_state)
-    {
-        gazebo_model_state_pub = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
-        ros::Timer gazebo_pub_timer = nh.createTimer(ros::Duration(0.1), gazebo_pub_cb);
-    }
+    gazebo_model_state_pub = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
+    ros::Timer gazebo_pub_timer = nh.createTimer(ros::Duration(0.1), gazebo_pub_cb);
 
     node_name = "[fake_odom_node]"; 
     cout << GREEN << node_name << " init! "<< TAIL << endl;
@@ -100,6 +97,11 @@ int main(int argc, char **argv)
 
 void gazebo_pub_cb(const ros::TimerEvent &e)
 {
+    if(!pub_gazebo_model_state)
+    {
+        return;
+    }
+
     for(int i = 0; i<swarm_num_uav; i++)
     {
         model_state = uav_agent[i].get_model_state();
