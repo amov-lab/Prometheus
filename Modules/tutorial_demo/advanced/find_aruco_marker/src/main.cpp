@@ -115,12 +115,6 @@ int main(int argc, char **argv)
     // 订阅视觉反馈
     ros::Subscriber visual_feedback_sub = n.subscribe<prometheus_msgs::MultiArucoInfo>(visual_feedback_topic_name, 20, visualFeedbackCallback);
 
-    //打印demo相关信息
-    cout << GREEN << " [circular trajectory control] tutorial_demo start " << TAIL << endl;
-    sleep(1);
-    cout << GREEN << " Level: [Basic] " << TAIL << endl;
-    sleep(1);
-    cout << GREEN << " Please use the RC SWA to armed, and the SWB to switch the drone to [COMMAND_CONTROL] mode  " << TAIL << endl;
 
     circular_time = 30;
     control_rate = 60;

@@ -1,0 +1,22 @@
+<launch>
+    <include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
+        <arg name="world" value="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/aruco_6X6_250.world" />
+        <arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf" />
+    </include>
+
+    <include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch" />
+
+    <!-- run the landpad_det.cpp -->
+    <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen" launch-prefix="gnome-terminal \-\-">
+        <param name="uav_id" type="int" value="1" />
+        <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
+        <param name="camera_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
+        <param name="run_state" type="string" value="0" />
+        <param name="dictionary_type" type="int" value="10" />
+    </node>
+
+    <node pkg="prometheus_demo" type="find_aruco_marker" name="find_aruco_marker" output="screen" launch-prefix="gnome-terminal \-\-">
+        <param name="uav_id" type="int" value="1" />
+        <param name="visual_feedback_topic_name" type="string" value="/uav1/prometheus/object_detection/arucos_det" />
+    </node>
+</launch>

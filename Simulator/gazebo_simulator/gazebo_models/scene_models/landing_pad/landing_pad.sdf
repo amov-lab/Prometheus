@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 <sdf version="1.6">
   <model name="landing_pad">
     <pose>0 0 0.01 0 0 0</pose>
@@ -31,13 +31,13 @@
         <material>
           <script>
             <uri>model://landing_pad/materials/scripts</uri>
-	          <uri>model://landing_pad/materials/textures</uri>
+            <uri>model://landing_pad/materials/textures</uri>
             <name>Cube/landing_pad</name>
           </script>
         </material>
       </visual>
     </link>
-
+    <!-- NOTE: 发布gazebo中的位姿信息 -->
     <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
       <alwaysOn>true</alwaysOn>
       <updateRate>30.0</updateRate>
