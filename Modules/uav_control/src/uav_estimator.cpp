@@ -101,7 +101,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     timer_uav_state_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_uav_state, this);
 
     // 【定时器】定时发布 rviz显示,保证1Hz以上
-    timer_rviz_pub = nh.createTimer(ros::Duration(0.2), &UAV_estimator::timercb_rviz, this);
+    timer_rviz_pub = nh.createTimer(ros::Duration(0.05), &UAV_estimator::timercb_rviz, this);
 
     // 变量初始化
     uav_state.uav_id = uav_id;

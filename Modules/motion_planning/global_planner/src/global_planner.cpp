@@ -19,7 +19,7 @@ GlobalPlanner::GlobalPlanner(ros::NodeHandle &nh)
     nh.param("global_planner/replan_time", replan_time, 2.0);
 
     //【订阅】目标点
-    goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/uav" + std::to_string(uav_id) + "/prometheus/global_planning/goal",
+    goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/uav" + std::to_string(uav_id) + "/prometheus/motion_planning/goal",
                                                         1,
                                                         &GlobalPlanner::goal_cb, this);
 
@@ -28,7 +28,7 @@ GlobalPlanner::GlobalPlanner(ros::NodeHandle &nh)
                                                             1,
                                                             &GlobalPlanner::uav_state_cb, this);
 
-    uav_control_state_sub = nh.subscribe<prometheus_msgs::UAVControlState>("/uav1/prometheus/control_state",
+    uav_control_state_sub = nh.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state",
                                                                            1,
                                                                            &GlobalPlanner::uav_control_state_cb, this);
 
@@ -56,7 +56,7 @@ GlobalPlanner::GlobalPlanner(ros::NodeHandle &nh)
     // 【发布】控制指令
     uav_cmd_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command", 1);
     // 【发布】发布路径用于显示
-    path_cmd_pub = nh.advertise<nav_msgs::Path>("/uav" + std::to_string(uav_id) + "/prometheus/global_planning/path_cmd", 1);
+    path_cmd_pub = nh.advertise<nav_msgs::Path>("/uav" + std::to_string(uav_id) + "/prometheus/global_planner/path_cmd", 1);
     // 【定时器】安全检测
     // safety_timer = nh.createTimer(ros::Duration(2.0), &GlobalPlanner::safety_cb, this);
     // 【定时器】主循环
