@@ -1,8 +1,4 @@
 /***************************************************************************************************************************
- * aruco_det_v2.cpp
- * Author: Jario
- * Update Time: 2020.12.11
- *
  * 说明: 单个二维码识别程序，可识别的二维码在Prometheus/Modules/object_detection/config/aruco_images文件夹中
  *      视野里只允许存在一个二维码 且二维码的字典类型要对应
  *      默认二维码的边长为0.2m
@@ -509,6 +505,7 @@ int main(int argc, char **argv)
             ros::spinOnce();
         }
 
+        PCOUT(-1, GREEN, "RUNING...");
         {
             boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
             frame = cam_image_copy.clone();
