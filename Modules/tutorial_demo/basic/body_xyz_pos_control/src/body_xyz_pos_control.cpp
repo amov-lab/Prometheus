@@ -62,6 +62,11 @@ int main(int argc, char** argv)
     cout.setf(ios::showpoint);
     // 强制显示符号
     cout.setf(ios::showpos);
+
+    //声明起飞高度变量
+    float takeoff_height;
+    //获取起飞高度参数
+    ros::param::get("/uav_control_main_1/control/Takeoff_height", takeoff_height);
     
     //打印demo相关信息
     cout << GREEN << " [ENU XYZ position control] tutorial_demo start " << TAIL << endl;
@@ -80,6 +85,12 @@ int main(int argc, char** argv)
             //检测控制命令是否发布,没有发布则进行命令的发布
             if(!cmd_pub_flag)
             {
+                //检测无人机是否到达预设起飞高度
+                if(fabs(uav_state.position[2] - takeoff_height) >= 0.3)
+                {
+                    continue;
+                }
+                cout << GREEN << " UAV takeoff success" << TAIL << endl;
                 //时间戳
                 uav_command.header.stamp = ros::Time::now();
                 //坐标系
@@ -102,6 +113,11 @@ int main(int argc, char** argv)
 
                 //打印无人机控制命令发布信息
                 cout << GREEN << " [XYZ_POS_BODY] command publish " << TAIL << endl;
+
+                //因机体坐标系下的位置控制坐标系会以无人机当前位置为坐标原点,因此实际发布的位置目标点会加上当前位置数据
+                target_pos[0] += uav_state.position[0];
+                target_pos[1] += uav_state.position[1];
+                target_pos[2] += uav_state.position[2];
             }
             else
             {
