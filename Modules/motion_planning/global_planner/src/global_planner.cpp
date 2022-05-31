@@ -50,7 +50,7 @@ GlobalPlanner::GlobalPlanner(ros::NodeHandle &nh)
     {
         nh.getParam("global_planner/scan_topic_name", scan_topic_name);
         cout << GREEN << "Laser scan mode, subscirbe to " << uav_name << scan_topic_name << TAIL << endl;
-        laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>("/uav" + scan_topic_name, 1, &GlobalPlanner::laser_cb, this);
+        laserscan_sub = nh.subscribe<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + scan_topic_name, 1, &GlobalPlanner::laser_cb, this);
     }
 
     // 【发布】控制指令
@@ -363,15 +363,8 @@ void GlobalPlanner::laser_cb(const sensor_msgs::LaserScanConstPtr &msg)
         return;
     }
     sensor_ready = true;
-
-    // to test
-    // 参考网页:http://wiki.ros.org/laser_geometry
-    // sensor_msgs::LaserScan 转为 sensor_msgs::PointCloud2 格式
-    sensor_msgs::PointCloud2Ptr input_laser_scan_ptr;
-    projector_.projectLaser(*msg, *input_laser_scan_ptr);
-
     // 对Astar中的地图进行更新（laser+odom）并对地图进行膨胀
-    Astar_ptr->Occupy_map_ptr->map_update_lpcl(input_laser_scan_ptr, uav_odom);
+    Astar_ptr->Occupy_map_ptr->map_update_laser(msg, uav_odom);
 }
 
 void GlobalPlanner::track_path_cb(const ros::TimerEvent &e)
