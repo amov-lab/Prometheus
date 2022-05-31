@@ -416,7 +416,6 @@ void GlobalPlanner::track_path_cb(const ros::TimerEvent &e)
     uav_command.Command_ID = uav_command.Command_ID + 1;
 
     uav_command.Move_mode = prometheus_msgs::UAVCommand::TRAJECTORY;
-    uav_command.Command_ID = uav_command.Command_ID + 1;
     uav_command.position_ref[0] = path_cmd.poses[cur_id].pose.position.x;
     uav_command.position_ref[1] = path_cmd.poses[cur_id].pose.position.y;
     uav_command.position_ref[2] = path_cmd.poses[cur_id].pose.position.z;
