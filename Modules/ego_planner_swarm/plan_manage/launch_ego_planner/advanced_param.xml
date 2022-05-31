@@ -2,6 +2,9 @@
   <arg name="map_size_x_"/>
   <arg name="map_size_y_"/>
   <arg name="map_size_z_"/>
+  <arg name="map_origin_x_"/>
+  <arg name="map_origin_y_"/>
+  <arg name="ground_height"/>
 
   <arg name="odometry_topic"/>
   <arg name="camera_pose_topic"/>
@@ -39,7 +42,6 @@
 
   <arg name="uav_id"/>
 
-
   <!-- main node -->
   <node pkg="ego_planner" name="uav$(arg uav_id)_ego_planner_node" type="ego_planner_node" output="screen">
     <remap from="~odom_world" to="/uav$(arg uav_id)/$(arg odometry_topic)"/>
@@ -73,6 +75,8 @@
     <param name="grid_map/map_size_x"   value="$(arg map_size_x_)" /> 
     <param name="grid_map/map_size_y"   value="$(arg map_size_y_)" /> 
     <param name="grid_map/map_size_z"   value="$(arg map_size_z_)" /> 
+    <param name="grid_map/map_origin_x"   value="$(arg map_origin_x_)" /> 
+    <param name="grid_map/map_origin_y"   value="$(arg map_origin_y_)" /> 
     <!-- 地图更新距离 -->
     <param name="grid_map/local_update_range_x"  value="5.5" /> 
     <param name="grid_map/local_update_range_y"  value="5.5" /> 
@@ -80,7 +84,8 @@
     <!-- 膨胀距离 -->
     <param name="grid_map/obstacles_inflation"     value="0.3" /> 
     <param name="grid_map/local_map_margin" value="10"/>
-    <param name="grid_map/ground_height"        value="-0.01"/>
+    <!-- ground_height -->
+    <param name="grid_map/ground_height"        value="$(arg ground_height)"/>
     <!-- camera parameter -->
     <param name="grid_map/cx" value="$(arg cx)"/>
     <param name="grid_map/cy" value="$(arg cy)"/>

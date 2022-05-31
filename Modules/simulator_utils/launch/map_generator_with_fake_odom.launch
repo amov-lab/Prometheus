@@ -1,30 +1,46 @@
 <launch>
-	<!-- 无人机ID -->
-	<arg name="uav1_id" default="1"/>
-	
-	<!-- 无人机初始位置 -->
-	<arg name="uav1_init_x" default="0.0"/>
-    <arg name="uav1_init_y" default="0.0"/>
+    <!-- Gazebo config -->
+    <arg name="gazebo_enable" default="true"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/planning_test.world"/>
+    <!-- 启动Gazebo -->
+    <group if="$(arg gazebo_enable)">
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(arg world)"/>
+        </include>
+    </group>
 
-    <!-- map_generator -->
-    <include file="$(find prometheus_simulator_utils)/launch/map_generator.launch">
-    </include>
+    <!-- Rviz config -->
+    <arg name="rviz_enable" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_simulator_utils)/launch/map_generator.rviz"/>
+	<!-- 启动Rviz-->
+	<group if="$(arg rviz_enable)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
 
-    <!-- 1号飞机 FAKE ODOM -->
-	<!-- 参数 -->
+	<!-- 集群数量 -->
 	<arg name="swarm_num_uav" default="1"/>
-    <arg name="swarm_num_ugv" default="0"/>
+    <!-- 地图 -->
+    <arg name="map_name" default="planning_test"/>
+    <!-- map_generator_node: 生成随机地图，并发布全局、局部点云 -->
+    <node pkg="prometheus_simulator_utils" name="map_generator_node" type="map_generator_node" launch-prefix="gnome-terminal --tab --">
+        <param name="swarm_num" value="$(arg swarm_num_uav)"/>
+        <param name="map_name" 	value="$(arg map_name)" />  
+    </node>
+
+	<arg name="fake_odom" default="true"/>
     <!-- 启动 fake_odom_node -->
-	<node pkg="prometheus_simulator_utils" type="fake_odom_node" name="fake_odom_node" output="screen">
-		<param name="fake_odom/swarm_num_uav" value="$(arg swarm_num_uav)"/>
-		<param name="fake_odom/swarm_num_ugv" value="$(arg swarm_num_ugv)"/>
-		<param name="fake_odom/manual_init_pos" value="true"/>
-		<param name="fake_odom/uav1_init_x" value="-10.0"/>
-		<param name="fake_odom/uav1_init_y" value="0.0"/>
-		<param name="fake_odom/uav1_init_z" value="0.0"/>
-		<param name="fake_odom/uav1_init_yaw" value="0.0"/>
-		<param name="fake_odom/pub_gazebo_model_state" value="true"/>
-	</node>
+    <group if="$(arg fake_odom)"> 
+        <node pkg="prometheus_simulator_utils" type="fake_odom_node" name="fake_odom_node" output="screen" launch-prefix="gnome-terminal --tab --">
+			<param name="fake_odom/swarm_num_uav" 			value="$(arg swarm_num_uav)"/>
+			<param name="fake_odom/swarm_num_ugv" 			value="0"/>
+			<param name="fake_odom/manual_init_pos" 		value="true"/>
+			<param name="fake_odom/uav1_init_x" 			value="-10.0"/>
+			<param name="fake_odom/uav1_init_y" 			value="0.0"/>
+			<param name="fake_odom/uav1_init_z" 			value="0.0"/>
+			<param name="fake_odom/uav1_init_yaw" 			value="0.0"/>
+			<param name="fake_odom/pub_gazebo_model_state" 	value="true"/>
+        </node>
+    </group>
 
 	<!-- uav_control_main -->
     <include file="$(find prometheus_uav_control)/launch/uav_control_main_fake_odom.launch">
