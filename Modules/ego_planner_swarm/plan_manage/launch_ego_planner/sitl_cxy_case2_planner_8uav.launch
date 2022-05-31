@@ -1,0 +1,81 @@
+ <launch>
+	<!-- 无人机集群数量 -->
+	<arg name="swarm_num_uav" default="8"/>
+	<!-- 无人机ID -->
+	<arg name="uav1_id" default="1"/>
+	<arg name="uav2_id" default="2"/>
+	<arg name="uav3_id" default="3"/>
+	<arg name="uav4_id" default="4"/>
+	<arg name="uav5_id" default="5"/>
+	<arg name="uav6_id" default="6"/>
+	<arg name="uav7_id" default="7"/>
+	<arg name="uav8_id" default="8"/>
+
+    <arg name="map_size_x" default="50.0"/>
+    <arg name="map_size_y" default="50.0"/>
+    <arg name="map_size_z" default=" 3.0"/>
+
+    <!-- 1号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav1_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+
+    <!-- 2号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav2_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+
+    <!-- 3号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav3_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+
+    <!-- 4号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav4_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+
+    <!-- 5号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav5_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+
+    <!-- 6号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav6_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+
+    <!-- 7号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav7_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+
+    <!-- 8号飞机 -->
+    <include file="$(find prometheus_gazebo)/launch_cxy_case2/sitl_cxy_case2_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav8_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+    </include>
+ </launch> 
