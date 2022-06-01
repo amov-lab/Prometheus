@@ -9,16 +9,31 @@
     <include>
       <uri>model://ground_plane</uri>
     </include>
-    <model name='logo_ground'>
-      <include>
-        <uri>model://logo_ground</uri>
-	      <pose> 0 0 0.01 0 0 0</pose>
-      </include>
+    <!-- 装饰 -->
+    <model name='texture'>
+      <static>true</static>
+      <link name="prometheus_logo">
+        <pose> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>10.0 10.0 0.01</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://prometheus_texture/texture.material</uri>
+                <name>prometheus_logo2</name>
+              </script>
+            </material>
+        </visual>
+      </link>
     </model>
     <model name='landing_pad'>
       <include>
         <uri>model://landing_pad</uri>
-	      <pose> 2 2 0.01 0 0 -1.5707963 </pose>
+	      <pose> 2 2 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>
     <physics name='default_physics' default='0' type='ode'>

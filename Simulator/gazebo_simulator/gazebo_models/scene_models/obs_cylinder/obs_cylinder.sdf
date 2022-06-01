@@ -1,0 +1,46 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='obs_cylinder'>
+    <link name='link'>
+      <inertial>
+        <mass>1</mass>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+      </inertial>
+      <self_collide>0</self_collide>
+      <enable_wind>0</enable_wind>
+      <kinematic>0</kinematic>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <gravity>1</gravity>
+      <visual name='visual'>
+        <geometry>
+          <cylinder>
+            <radius>0.25</radius>
+            <length>2.0</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Grey</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <transparency>0</transparency>
+        <cast_shadows>1</cast_shadows>
+      </visual>
+      <collision name='collision'>
+        <laser_retro>0</laser_retro>
+        <max_contacts>10</max_contacts>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.25</radius>
+            <length>2.0</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+    <static>1</static>
+    <allow_auto_disable>1</allow_auto_disable>
+  </model>
+</sdf>

@@ -48,8 +48,6 @@ int main(int argc, char** argv)
     ros::Rate r(1);
     //创建命令发布标志位,命令发布则为true;初始化为false
     bool cmd_pub_flag = false;
-    //声明起飞高度变量
-    float takeoff_height;
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -61,6 +59,12 @@ int main(int argc, char** argv)
     cout.setf(ios::showpoint);
     // 强制显示符号
     cout.setf(ios::showpos);
+
+    //声明起飞高度变量
+    float takeoff_height;
+
+    //获取起飞高度参数
+    ros::param::get("/uav_control_main_1/control/Takeoff_height", takeoff_height);
 
     //打印demo相关信息
     cout << GREEN << " [takeoff & land] tutorial_demo start " << TAIL << endl;
@@ -91,9 +95,6 @@ int main(int argc, char** argv)
                 uav_command_pub.publish(uav_command);
                 //命令发布标志位置为true
                 cmd_pub_flag = true;
-                //获取起飞高度参数
-                ros::param::get("/uav_control_main_1/control/Takeoff_height", takeoff_height);
-
                 //打印无人机起飞相关信息
                 cout << GREEN << " [Init_Pos_Hover] command publish " << TAIL << endl;
                 cout << GREEN << " UAV takeoff " << TAIL << endl;

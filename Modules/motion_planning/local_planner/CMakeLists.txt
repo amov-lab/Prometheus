@@ -35,14 +35,16 @@ include_directories(
 link_directories(${PCL_LIBRARY_DIRS})
 
 
-add_executable(local_planner_main 
-	src/local_planner_node.cpp
-	src/local_planner.cpp
-       src/apf.cpp
-       src/vfh.cpp      
-	)
 
-target_link_libraries(local_planner_main
-       ${catkin_LIBRARIES}
-       ${PCL_LIBRARIES}
-	)
+add_library(vfh src/vfh.cpp)
+target_link_libraries(vfh ${PCL_LIBRARIES})
+add_library(apf src/apf.cpp)
+target_link_libraries(apf ${PCL_LIBRARIES})
+add_library(local_planner src/local_planner.cpp)
+target_link_libraries(local_planner vfh)
+target_link_libraries(local_planner apf)
+
+add_executable(local_planner_main src/local_planner_node.cpp)
+add_dependencies(local_planner_main prometheus_local_planner_gencpp)
+target_link_libraries(local_planner_main ${catkin_LIBRARIES})
+target_link_libraries(local_planner_main local_planner)

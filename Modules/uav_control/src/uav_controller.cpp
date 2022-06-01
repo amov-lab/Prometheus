@@ -10,8 +10,6 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     node_name = "[uav_controller_uav" + std::to_string(uav_id) + "]";
     // 【参数】是否仿真模式
     nh.param<bool>("sim_mode", sim_mode, true);
-    // 【参数】初始PX4模式,0代表位置定点模式，1代表自稳模式
-    nh.param<int>("init_px4_mode", init_px4_mode, 0);
     // 【参数】仅COMMAND_CONTROL模式（用于集群和测试）
     nh.param<bool>("only_command_mode", only_command_mode, false);
     // 【参数】控制器标志位,具体说明见CONTOLLER_FLAG说明
@@ -151,6 +149,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
         control_state = CONTROL_STATE::INIT;
     }
 
+    uav_control_state.failsafe = false;
+
     // 初始化命令
     uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
     uav_command.position_ref[0] = 0;
@@ -191,12 +191,14 @@ void UAV_controller::mainloop()
         else if (safety_flag == 1)
         {
             // 超出geofence，原地降落
+            uav_control_state.failsafe = true;
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
         else if (safety_flag == 2)
         {
             // 检测到odom失效，快速降落
             quick_land = true;
+            uav_control_state.failsafe = true;
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
     }
@@ -212,17 +214,10 @@ void UAV_controller::mainloop()
 
     case CONTROL_STATE::MANUAL_CONTROL:
 
-        // init_px4_mode必须设置为0或者1！！！
         // 检查无人机是否位于定点模式，否则切换至定点模式
-        if (init_px4_mode == 0 && uav_state.mode != "POSCTL")
+        if (uav_state.mode != "POSCTL")
         {
             set_px4_mode_func("POSCTL");
-        }
-
-        // 检查无人机是否位于自稳模式，
-        if (init_px4_mode == 1 && uav_state.mode != "STABILIZED")
-        {
-            set_px4_mode_func("STABILIZED");
         }
 
         break;
@@ -251,6 +246,20 @@ void UAV_controller::mainloop()
 
     // 当前位置原地降落，降落后会自动上锁，且切换为mannual模式
     case CONTROL_STATE::LAND_CONTROL:
+
+        if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
+        {
+            set_px4_mode_func("AUTO.LAND");
+            if (only_command_mode)
+            {
+                control_state = CONTROL_STATE::COMMAND_CONTROL;
+            }
+            else
+            {
+                control_state = CONTROL_STATE::INIT;
+            }
+		    break;
+        }
 
         // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
         if (quick_land)
@@ -291,6 +300,12 @@ void UAV_controller::mainloop()
 
     last_control_state = control_state;
 
+    // 发布控制器状态
+    uav_control_state.uav_id = uav_id;
+    uav_control_state.control_state = control_state;
+    uav_control_state.controller_flag = controller_flag;
+    uav_control_state_pub.publish(uav_control_state);
+
     // INIT和MANUAL_CONTROL不需要调用控制器，直接返回
     if (control_state == CONTROL_STATE::INIT || control_state == CONTROL_STATE::MANUAL_CONTROL)
     {
@@ -315,12 +330,6 @@ void UAV_controller::mainloop()
         // 发送姿态控制指令至PX4的原生姿态环控制器
         send_attitude_setpoint(u_att);
     }
-
-    // 发布控制器状态
-    uav_control_state.uav_id = uav_id;
-    uav_control_state.control_state = control_state;
-    uav_control_state.controller_flag = controller_flag;
-    uav_control_state_pub.publish(uav_control_state);
 }
 
 Eigen::Vector4d UAV_controller::get_cmd_from_controller()
@@ -395,9 +404,9 @@ void UAV_controller::set_hover_pose_with_rc()
 
     // 悬停位置 = 前一个悬停位置 + 遥控器数值[-1,1] * 0.01(如果主程序中设定是100Hz的话)
     Hover_position(0) += rc_input.ch[1] * max_vel_xy * delta_t;
-    Hover_position(1) += rc_input.ch[0] * max_vel_xy * delta_t;
+    Hover_position(1) += -rc_input.ch[0] * max_vel_xy * delta_t;
     Hover_position(2) += rc_input.ch[2] * max_vel_z * delta_t;
-    Hover_yaw += rc_input.ch[3] * max_vel_yaw * delta_t;
+    Hover_yaw += -rc_input.ch[3] * max_vel_yaw * delta_t;
     // 因为这是一个积分系统，所以即使停杆了，无人机也还会继续移动一段距离
 
     // 高度限制
@@ -739,7 +748,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 }
                 else
                 {
-                    send_vel_xy_pos_z_setpoint(vel_des, vel_des, yaw_des);
+                    send_vel_xy_pos_z_setpoint(pos_des, vel_des, yaw_des);
                 }
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
@@ -1393,7 +1402,7 @@ void UAV_controller::arm_disarm_func(bool on_or_off)
         }
         else
         {
-            cout << RED << node_name << "vehicle arming, success!" << TAIL << endl;
+            cout << RED << node_name << "vehicle arming, fail!" << TAIL << endl;
         }
     }
     else

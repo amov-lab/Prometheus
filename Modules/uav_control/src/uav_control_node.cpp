@@ -29,13 +29,12 @@ int main(int argc, char **argv)
   // 检查PX4连接状态
   while (ros::ok() && !uav_estimator.uav_state.connected)
   {
-    ROS_ERROR("Waiting for connect PX4!");
+    PCOUT(-1, RED, "Waiting for connect PX4!");
+    // ROS_ERROR_STREAM_ONCE("Waiting for connect PX4!");
     ros::spinOnce();
-    ros::Duration(4.0).sleep();
+    ros::Duration(4).sleep();
   }
 
-  ros::spinOnce();
-  ros::Duration(1.0).sleep();
   ros::spinOnce();
   ros::Duration(1.0).sleep();
 
