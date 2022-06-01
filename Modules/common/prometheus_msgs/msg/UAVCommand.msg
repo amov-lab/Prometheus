@@ -3,8 +3,8 @@ std_msgs/Header header
 ## 控制命令的模式 
 uint8 Agent_CMD
 # Agent_CMD 枚举
-uint8 Init_Pos_Hover=1 
-uint8 Current_Pos_Hover=2
+uint8 Init_Pos_Hover=1  # home点上方悬停
+uint8 Current_Pos_Hover=2 # 当前位置上方悬停
 uint8 Land=3
 uint8 Move=4
 uint8 User_Mode1=5
