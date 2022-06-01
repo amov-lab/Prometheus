@@ -25,10 +25,9 @@ prometheus_msgs::UAVControlState g_uavcontrol_state; //目标位置[机体系下
 Eigen::Vector3f pos_body_frame;
 Eigen::Vector3f pos_body_enu_frame;    //原点位于质心，x轴指向前方，y轴指向左，z轴指向上的坐标系
 float kpx_track, kpy_track, kpz_track; //控制参数 - 比例参数
-float start_point_x, start_point_y, start_point_z, start_yaw;
-bool is_detected = false;        // 是否检测到目标标志
-int num_count_vision_lost = 0;   //视觉丢失计数器
-int num_count_vision_regain = 0; //视觉丢失计数器
+bool is_detected = false;              // 是否检测到目标标志
+int num_count_vision_lost = 0;         //视觉丢失计数器
+int num_count_vision_regain = 0;       //视觉丢失计数器
 int g_uav_id;
 int Thres_vision = 0; //视觉丢失计数器阈值
 Eigen::Vector3f camera_offset;
@@ -111,12 +110,7 @@ int main(int argc, char **argv)
     nh.param<float>("kpy_track", kpy_track, 0.1);
     nh.param<float>("kpz_track", kpz_track, 0.1);
 
-    nh.param<float>("start_point_x", start_point_x, 0.0);
-    nh.param<float>("start_point_y", start_point_y, 0.0);
-    nh.param<float>("start_point_z", start_point_z, 2.0);
-
     nh.param<int>("uav_id", g_uav_id, 1);
-    nh.param<float>("start_yaw", start_yaw, 0.0);
 
     // 订阅视觉反馈
     ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/uav" + std::to_string(g_uav_id) + "/prometheus/object_detection/siamrpn_tracker", 10, vision_cb);
@@ -134,6 +128,8 @@ int main(int argc, char **argv)
     g_command_now.position_ref[1] = 0;
     g_command_now.position_ref[2] = 0;
 
+    bool is_inited = false;
+
     while (ros::ok())
     {
         // 执行回调获取数据
@@ -144,12 +140,6 @@ int main(int argc, char **argv)
             continue;
         }
 
-        g_command_now.header.stamp = ros::Time::now();
-        g_command_now.Command_ID = g_command_now.Command_ID + 1;
-
-        // 到目标的直线距离(估计值)
-        distance_to_setpoint = pos_body_frame.norm();
-
         if (!is_detected)
         {
             g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
@@ -157,6 +147,9 @@ int main(int argc, char **argv)
         }
         else
         {
+            // 到目标的直线距离(估计值)
+            distance_to_setpoint = pos_body_frame.norm();
+
             g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Move;
             // 使用全速度控制
             g_command_now.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL; // xy velocity z position
@@ -165,7 +158,7 @@ int main(int argc, char **argv)
             g_command_now.velocity_ref[0] = kpx_track * (pos_body_enu_frame[0] - tracking_delta[0]);
             g_command_now.velocity_ref[1] = kpy_track * (pos_body_enu_frame[1] - tracking_delta[1]);
             g_command_now.velocity_ref[2] = kpz_track * (tracking_delta[2] - g_UAVState.position[2]);
-            g_command_now.yaw_ref = start_yaw / 180 * 3.1415926;
+            g_command_now.yaw_ref = 0;
             std::string tmp = "[object_tracking]: Tracking the Target, distance_to_setpoint : " + std::to_string(distance_to_setpoint) + " [m] " + "\n velocity_x: " + std::to_string(g_command_now.velocity_ref[0]) + "  [m/s], velocity_y: " + std::to_string(g_command_now.velocity_ref[1]) + " [m/s], velocity_y: " + std::to_string(g_command_now.velocity_ref[2]) + " [m/s]";
             PCOUT(1, GREEN, tmp);
         }
@@ -173,6 +166,8 @@ int main(int argc, char **argv)
         // Publish
         g_command_now.header.stamp = ros::Time::now();
         g_command_now.Command_ID = g_command_now.Command_ID + 1;
+        if (g_command_now.Command_ID < 10)
+            g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
         command_pub.publish(g_command_now);
 
         rate.sleep();

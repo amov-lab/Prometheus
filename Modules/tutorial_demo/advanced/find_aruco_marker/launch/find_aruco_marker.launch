@@ -19,4 +19,6 @@
         <param name="uav_id" type="int" value="1" />
         <param name="visual_feedback_topic_name" type="string" value="/uav1/prometheus/object_detection/arucos_det" />
     </node>
+
+	<node pkg="rqt_image_view" type="rqt_image_view" name="rqt_image_view"></node>
 </launch>
