@@ -18,8 +18,7 @@
 
 using namespace std;
 
-namespace GlobalPlannerNS
-{
+
 
 #define IN_CLOSE_SET 'a'
 #define IN_OPEN_SET 'b'
@@ -125,7 +124,7 @@ namespace GlobalPlannerNS
     int max_search_num;
     // tie breaker
     double tie_breaker_;
-    int is_2D;
+    bool is_2D;
     double fly_height;
 
     // 目标点
@@ -177,6 +176,6 @@ namespace GlobalPlannerNS
     typedef std::shared_ptr<Astar> Ptr;
   };
 
-} // namespace GlobalPlannerNS
+
 
 #endif

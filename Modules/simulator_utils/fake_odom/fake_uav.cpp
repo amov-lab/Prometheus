@@ -4,8 +4,8 @@ void Fake_UAV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, doubl
 {
     agent_id = id;
     fake_mode = FAKE_MODE::POS_CONTROL_MODE;
-    model_name = "fake_uav_" + std::to_string(agent_id);
-    node_name = "fake_uav" + std::to_string(agent_id);
+    model_name = "fake_p230_" + std::to_string(agent_id);
+    node_name = "fake_p230_" + std::to_string(agent_id);
     get_pos_cmd = false;
     get_att_cmd = false;
     get_ego_cmd = false;
@@ -43,9 +43,9 @@ void Fake_UAV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, doubl
     // 参数初始化
     control_param.quad_mass = 1.0;
     control_param.gravity   = 9.8;
-    control_param.k_pos     = 1.5;
-    control_param.k_vel     = 1.5;
-    control_param.tilt_angle_max = 20.0;
+    control_param.k_pos     = 0.8;
+    control_param.k_vel     = 0.8;
+    control_param.tilt_angle_max = 25.0;
     control_param.hover_per = 0.5;
 
     if(fake_mode == FAKE_MODE::POS_CONTROL_MODE)
@@ -66,7 +66,7 @@ void Fake_UAV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, doubl
     fake_odom_pub_timer = nh.createTimer(ros::Duration(0.02), &Fake_UAV::fake_odom_pub_cb, this);
     // debug_timer = nh.createTimer(ros::Duration(0.1), &Fake_UAV::debug_cb, this);
 
-    cout << GREEN  << node_name << "---> Fake_UAV init sucess in position: " << init_pos[0] <<" [ m ] "<<init_pos[1] <<" [ m ] "<< TAIL <<endl;
+    cout << GREEN  << node_name << "---> Fake_UAV init sucess in position: " << init_pos[0] <<" [ m ] "<<init_pos[1] <<" [ m ] "<<init_pos[2] <<" [ m ] "<< TAIL <<endl;
 }
 
  // 得到期望位置/期望速度/期望加速度+期望偏航角 统一转化为期望三轴推力+期望偏航角

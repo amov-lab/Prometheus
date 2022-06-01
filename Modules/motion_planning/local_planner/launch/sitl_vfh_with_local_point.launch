@@ -1,0 +1,29 @@
+<launch>
+    <!-- 启动全局规划算法 -->
+    <node pkg="prometheus_local_planner" name="local_planner_main" type="local_planner_main" output="screen">
+        <!-- 参数 -->
+        <param name="uav_id" value="1"/>
+        <param name="local_planner/sim_mode" value="true"/>
+        <!-- 局部避障算法: 0为APF,1为VFH -->
+        <param name="local_planner/algorithm_mode" value="1"/>
+        <!-- 地图输入模式 0代表全局点云，1代表局部点云，2代表激光雷达scan数据 -->
+        <param name="local_planner/map_input_source" value="0"/>
+        <param name="local_planner/local_pcl_topic_name" value="/map_generator/local_cloud"/>
+        <!-- 无人机飞行高度，建议与起飞高度一致 -->
+        <param name="local_planner/fly_height" value="1.0"/>
+        <!-- 最大速度 -->
+        <param name="local_planner/max_planning_vel" value="0.5"/>
+        <!-- VFH参数 -->
+		<!-- 膨胀参数，一般设置为无人机的半径或更大 -->
+		<param name="vfh/inflate_distance" value="1.0" type="double"/>
+		<!-- 感知距离，只考虑感知距离内的障碍物 -->
+		<param name="vfh/sensor_max_range" value="6.0" type="double"/>  
+		<!-- weight -->
+		<param name="vfh/obstacle_weight" value="10.0" type="double"/>
+		<param name="vfh/goalWeight" value="0.1" type="double"/>
+		<param name="vfh/safe_distance" value="0.01" type="double"/>
+		<!-- 直方图个数 -->
+		<param name="vfh/h_res" value="360" type="int"/>
+    </node>
+</launch>
+

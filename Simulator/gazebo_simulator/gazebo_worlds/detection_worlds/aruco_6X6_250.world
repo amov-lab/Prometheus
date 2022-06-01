@@ -1,0 +1,424 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+   <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 100 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.9 0.9 0.9 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>0.2 0.2 -0.9</direction>
+    </light>
+
+    <!-- 装饰 -->
+    <model name='texture'>
+      <static>true</static>
+      <link name="prometheus_logo">
+        <pose frame=''> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>15.0 15.0 0.01</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://prometheus_texture/texture.material</uri>
+                <name>prometheus_logo2</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- 初始视角 -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>10.0 -11 22.0 0 1.0 1.55</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+    <!-- 地面 -->
+    <physics type='ode'>
+      <gravity>0 0 -9.8066</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>1000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1000.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+      <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
+    </physics>
+
+    <!-- 搜索目标：1-20 6X6_250 aruco -->
+    <!-- 对应的dictionary_type为10 -->
+    <model name='aruco'>
+      <static>true</static>
+      <link name="aruco_1">
+        <pose frame=''> 1.0 1.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_1</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_2">
+        <pose frame=''> 1.0 2.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_2</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_3">
+        <pose frame=''> 1.0 3.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_3</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_4">
+        <pose frame=''> 1.0 4.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_4</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_5">
+        <pose frame=''> 1.0 5.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_5</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_6">
+        <pose frame=''> 2.0 1.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_6</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_7">
+        <pose frame=''> 2.0 2.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_7</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_8">
+        <pose frame=''> 2.0 3.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_8</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_9">
+        <pose frame=''> 2.0 4.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_9</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_10">
+        <pose frame=''> 2.0 5.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_9</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_11">
+        <pose frame=''> 3.0 1.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_11</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_12">
+        <pose frame=''> 3.0 2.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_12</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_13">
+        <pose frame=''> 3.0 3.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_13</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_14">
+        <pose frame=''> 3.0 4.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_14</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_15">
+        <pose frame=''> 3.0 5.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_15</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_16">
+        <pose frame=''> 4.0 1.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_16</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_17">
+        <pose frame=''> 4.0 2.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_17</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_18">
+        <pose frame=''> 4.0 3.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_18</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_19">
+        <pose frame=''> 4.0 4.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_19</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+      <link name="aruco_20">
+        <pose frame=''> 4.0 5.0 0.01 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>0.5 0.5 0.02</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://texture_aruco/texture.material</uri>
+                <name>aruco_20</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+
+    </model>
+
+  </world>
+</sdf>
