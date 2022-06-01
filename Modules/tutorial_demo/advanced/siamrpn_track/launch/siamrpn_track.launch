@@ -25,7 +25,7 @@
 		<param name="tracking_delta_z" value="1" />
 
 		<!-- 相机相对于无人机偏移 -->
-		<param name="camera_offset_x" value="0.1" />
+		<param name="camera_offset_x" value="0.01" />
 		<param name="camera_offset_y" value="0" />
 		<param name="camera_offset_z" value="0" />
 
@@ -33,11 +33,6 @@
 		<param name="kpx_track" value="0.2" />
 		<param name="kpy_track" value="0.2" />
 		<param name="kpz_track" value="0.2" />
-
-		<!-- 起飞点 -->
-		<param name="start_point_x" value="0" />
-		<param name="start_point_y" value="0" />
-		<param name="start_point_z" value="3" />
 		
 	</node>
 </launch>
