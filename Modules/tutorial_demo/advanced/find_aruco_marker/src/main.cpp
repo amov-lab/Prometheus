@@ -56,6 +56,7 @@ void visualFeedbackCallback(const prometheus_msgs::MultiArucoInfo::ConstPtr &msg
         if (aruco.aruco_num != goto_id || !aruco.detected)
             continue;
         now_arucos_info = aruco;
+        // 相机坐标到机体坐标系x、y轴需要交换，并且方向相反。
         now_arucos_info.position[0] = -aruco.position[1];
         now_arucos_info.position[1] = -aruco.position[0];
         // <pose>0 0 0.05 0 1.5707963 0</pose>
@@ -115,11 +116,13 @@ int main(int argc, char **argv)
     // 订阅视觉反馈
     ros::Subscriber visual_feedback_sub = n.subscribe<prometheus_msgs::MultiArucoInfo>(visual_feedback_topic_name, 20, visualFeedbackCallback);
 
-
+    // 圆轨迹周期
     circular_time = 30;
     control_rate = 60;
+    // 圆轨迹半径
     radius = 5;
 
+    // 获取线速度line_velocity， 角速度angle_increment
     get_circular_property(circular_time, control_rate, radius);
 
     bool circular_success = false;
@@ -159,10 +162,10 @@ int main(int argc, char **argv)
 
         std::ostringstream info;
 
-        // 无人机到达预设位置
         uav_command.header.stamp = ros::Time::now();
         switch (run_status)
         {
+        // 无人机到达预设位置
         case WAITE_INIT_POS:
             //坐标系
             uav_command.header.frame_id = "ENU";
@@ -191,6 +194,7 @@ int main(int argc, char **argv)
                 }
             }
             break;
+        // 无人机绕圆飞行
         case CIRCULAR_SEARCH:
             //坐标系
             uav_command.header.frame_id = "ENU";
@@ -215,6 +219,7 @@ int main(int argc, char **argv)
                 loss_count = max_loss_count;
             }
             break;
+        // 前往二维码上方
         case TO_DESTINATION:
             if (!now_arucos_info.detected)
             {
@@ -227,7 +232,7 @@ int main(int argc, char **argv)
             uav_command.header.frame_id = "BODY";
             // Move模式
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-            // Move_mode
+            // 机体系下的速度控制
             uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY;
 
             uav_command.velocity_ref[0] = 0.5 * now_arucos_info.position[0];
