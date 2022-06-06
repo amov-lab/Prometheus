@@ -1,4 +1,7 @@
+# 多二维码识别自主降落
+![多二维码.gif](https://qiniu.md.amovlab.com/img/m/202206/20220606/1130165150895711620857856.gif)
 # 使用
+_多个二维码检测比较吃CPU资源，可能会导致卡顿_
 ```bash
 roslaunch prometheus_demo find_aruco_marker.launch
 ```

@@ -147,7 +147,7 @@ inline void topicSub(ros::NodeHandle &nh)
                                                                                                   { g_uavcontrol_state = *msg; });
 }
 
-static ros::Publisher g_vision_switch_pub, g_command_pub, g_message_pub;
+static ros::Publisher g_vision_switch_pub, g_command_pub;
 
 inline void topicAdv(ros::NodeHandle &nh)
 {
@@ -156,9 +156,6 @@ inline void topicAdv(ros::NodeHandle &nh)
 
     //【发布】发送给控制模块命令
     g_command_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(g_uav_id) + "/prometheus/command", 10);
-
-    // 【发布】用于地面站显示的提示消息
-    g_message_pub = nh.advertise<prometheus_msgs::Message>("/uav" + std::to_string(g_uav_id) + "/prometheus/message/main", 10);
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -252,6 +249,8 @@ int main(int argc, char **argv)
             {
                 g_command_now.velocity_ref[i] = g_kp_land[i] * g_landpad_det.pos_body_enu_frame[i];
             }
+            // 动态调节下降速度，水平速度越大，垂直速度越小
+            g_command_now.velocity_ref[2] = g_command_now.velocity_ref[2] / std::fmax(1., 10 * (g_command_now.velocity_ref[1] + g_command_now.velocity_ref[0]));
             // 移动过程中，不调节航向角
             g_command_now.yaw_ref = 0.0;
 
