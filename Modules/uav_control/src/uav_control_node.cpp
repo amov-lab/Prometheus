@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "uav_controller_node");
   ros::NodeHandle nh("~");
-  ros::Rate rate(100.0);
+  ros::Rate rate(200.0);
 
   signal(SIGINT, mySigintHandler);
   ros::Duration(1.0).sleep();

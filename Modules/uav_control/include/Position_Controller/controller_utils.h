@@ -16,7 +16,6 @@ struct Desired_State
     double yaw;
 };
 
-
 struct Current_State
 {
     Eigen::Vector3d pos;
@@ -24,7 +23,6 @@ struct Current_State
     Eigen::Quaterniond q;
     double yaw;
 };
-
 
 struct Ctrl_Param_PID
 {

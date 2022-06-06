@@ -239,9 +239,20 @@ void UAV_controller::mainloop()
         break;
 
     case CONTROL_STATE::COMMAND_CONTROL:
+       
+        // 发送控制指令 -> Mavros -> PX4
+        if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
+        {
+            // PX4_ORIGIN支持所有控制模式
+            set_command_des();
+        }
+        else
+        {
+            // 目前内置的位置环控制器,如PID,UDE,NE仅支持位置控制(XYZ_POS)及轨迹控制(TRAJECTORY)
+            // 如果收到其他指令,则会转到初始悬停点
+            set_command_des_for_pos_controller();
+        }
 
-        // COMMAND_CONTROL的期望值赋值在uav_cmd_cb()回调函数中
-        set_command_des();
         break;
 
     // 当前位置原地降落，降落后会自动上锁，且切换为mannual模式
@@ -326,6 +337,7 @@ void UAV_controller::mainloop()
     else
     {
         // 利用Prometheus中编写的控制程序解算姿态控制指令
+        // 目前内置的位置环控制器,如PID,UDE,NE仅支持位置控制(XYZ_POS,XYZ_POS_BODY)及轨迹控制(TRAJECTORY)
         Eigen::Vector4d u_att = get_cmd_from_controller();
         // 发送姿态控制指令至PX4的原生姿态环控制器
         send_attitude_setpoint(u_att);
@@ -348,7 +360,7 @@ Eigen::Vector4d UAV_controller::get_cmd_from_controller()
         // 设定当前值
         pos_controller_pid.set_current_state(uav_state);
         // 控制器更新
-        u_att_from_pos_controller = pos_controller_pid.update(100.0);
+        u_att_from_pos_controller = pos_controller_pid.update(200.0);
         return u_att_from_pos_controller;
     }
     else if (controller_flag == CONTOLLER_FLAG::UDE)
@@ -363,7 +375,8 @@ Eigen::Vector4d UAV_controller::get_cmd_from_controller()
         pos_controller_ude.set_desired_state(desired_state);
         // 设定当前值
         pos_controller_ude.set_current_state(uav_state);
-        u_att_from_pos_controller = pos_controller_ude.update(100.0);
+        // 控制器更新
+        u_att_from_pos_controller = pos_controller_ude.update(200.0);
         return u_att_from_pos_controller;
     }
     else if (controller_flag == CONTOLLER_FLAG::NE)
@@ -378,7 +391,8 @@ Eigen::Vector4d UAV_controller::get_cmd_from_controller()
         pos_controller_ne.set_desired_state(desired_state);
         // 设定当前值
         pos_controller_ne.set_current_state(uav_state);
-        u_att_from_pos_controller = pos_controller_ne.update(100.0);
+        // 控制器更新
+        u_att_from_pos_controller = pos_controller_ne.update(200.0);
         return u_att_from_pos_controller;
     }
 }
@@ -448,16 +462,13 @@ void UAV_controller::set_command_des()
         if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS)
         {
             // 【XYZ_POS】XYZ惯性系定点控制
+            pos_des[0] = uav_command.position_ref[0];
+            pos_des[1] = uav_command.position_ref[1];
+            pos_des[2] = uav_command.position_ref[2];
             if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
             {
                 pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
                 pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
-                pos_des[2] = uav_command.position_ref[2];
-            }
-            else
-            {
-                pos_des[0] = uav_command.position_ref[0];
-                pos_des[1] = uav_command.position_ref[1];
                 pos_des[2] = uav_command.position_ref[2];
             }
             vel_des << 0.0, 0.0, 0.0;
@@ -466,62 +477,30 @@ void UAV_controller::set_command_des()
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS)
         {
-            // XY_VEL_Z_POS仅支持PX4_ORIGIN模式
-            if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
-            {
-                // 【XYZ_POS】Z轴定高，XY速度控制
-                pos_des[0] = 0.0;
-                pos_des[1] = 0.0;
-                pos_des[2] = uav_command.position_ref[2];
-                vel_des[0] = uav_command.velocity_ref[0];
-                vel_des[1] = uav_command.velocity_ref[1];
-                vel_des[2] = 0.0;
-                acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
-            }
-            else
-            {
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                pos_des << Takeoff_position + Eigen::Vector3d(0, 0, Takeoff_height);
-                vel_des << 0.0, 0.0, 0.0;
-                acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
-                cout << RED << node_name << "Pls set controller_flag to PX4_ORIGIN, reset to Init_Pos_Hover!" << TAIL << endl;
-            }
+            // 【XYZ_POS】Z轴定高，XY速度控制
+            pos_des[0] = 0.0;
+            pos_des[1] = 0.0;
+            pos_des[2] = uav_command.position_ref[2];
+            vel_des[0] = uav_command.velocity_ref[0];
+            vel_des[1] = uav_command.velocity_ref[1];
+            vel_des[2] = 0.0;
+            acc_des << 0.0, 0.0, 0.0;
+            yaw_des = uav_command.yaw_ref;
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL)
         {
-            // 仅支持PX4_ORIGIN模式
-            if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
+            pos_des << 0.0, 0.0, 0.0;
+            vel_des[0] = uav_command.velocity_ref[0];
+            vel_des[1] = uav_command.velocity_ref[1];
+            vel_des[2] = uav_command.velocity_ref[2];
+            acc_des << 0.0, 0.0, 0.0;
+            if (uav_command.Yaw_Rate_Mode)
             {
-                if (uav_command.Yaw_Rate_Mode)
-                {
-                    pos_des << 0.0, 0.0, 0.0;
-                    vel_des[0] = uav_command.velocity_ref[0];
-                    vel_des[1] = uav_command.velocity_ref[1];
-                    vel_des[2] = uav_command.velocity_ref[2];
-                    acc_des << 0.0, 0.0, 0.0;
-                    yaw_rate_des = uav_command.yaw_rate_ref;
-                }
-                else
-                {
-                    // 【XYZ_POS】XYZ惯性系速度控制
-                    pos_des << 0.0, 0.0, 0.0;
-                    vel_des[0] = uav_command.velocity_ref[0];
-                    vel_des[1] = uav_command.velocity_ref[1];
-                    vel_des[2] = uav_command.velocity_ref[2];
-                    acc_des << 0.0, 0.0, 0.0;
-                    yaw_des = uav_command.yaw_ref;
-                }
+                yaw_rate_des = uav_command.yaw_rate_ref;
             }
             else
             {
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                pos_des << Takeoff_position + Eigen::Vector3d(0, 0, Takeoff_height);
-                vel_des << 0.0, 0.0, 0.0;
-                acc_des << 0.0, 0.0, 0.0;
                 yaw_des = uav_command.yaw_ref;
-                cout << RED << node_name << "Pls set controller_flag to PX4_ORIGIN, reset to Init_Pos_Hover!" << TAIL << endl;
             }
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS_BODY)
@@ -537,16 +516,13 @@ void UAV_controller::set_command_des()
                 uav_command.position_ref[0] = uav_pos[0] + d_pos_enu[0];
                 uav_command.position_ref[1] = uav_pos[1] + d_pos_enu[1];
                 uav_command.position_ref[2] = uav_pos[2] + uav_command.position_ref[2];
+                pos_des[0] = uav_command.position_ref[0];
+                pos_des[1] = uav_command.position_ref[1];
+                pos_des[2] = uav_command.position_ref[2];
                 if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
                 {
                     pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
                     pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
-                    pos_des[2] = uav_command.position_ref[2];
-                }
-                else
-                {
-                    pos_des[0] = uav_command.position_ref[0];
-                    pos_des[1] = uav_command.position_ref[1];
                     pos_des[2] = uav_command.position_ref[2];
                 }
                 vel_des << 0.0, 0.0, 0.0;
@@ -556,82 +532,43 @@ void UAV_controller::set_command_des()
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL_BODY)
         {
-            // 仅支持PX4_ORIGIN模式
-            if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
+            float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
+            float d_vel_enu[2];
+            rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
+            uav_command.velocity_ref[0] = d_vel_enu[0];
+            uav_command.velocity_ref[1] = d_vel_enu[1];
+            pos_des[0] = 0.0;
+            pos_des[1] = 0.0;
+            pos_des[2] = 0.0;
+            vel_des[0] = uav_command.velocity_ref[0];
+            vel_des[1] = uav_command.velocity_ref[1];
+            vel_des[2] = uav_command.velocity_ref[2];
+            acc_des << 0.0, 0.0, 0.0;
+            if (uav_command.Yaw_Rate_Mode)
             {
-                if (uav_command.Yaw_Rate_Mode)
-                {
-                    float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
-                    float d_vel_enu[2];
-                    rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
-                    uav_command.velocity_ref[0] = d_vel_enu[0];
-                    uav_command.velocity_ref[1] = d_vel_enu[1];
-                    pos_des[0] = 0.0;
-                    pos_des[1] = 0.0;
-                    pos_des[2] = 0.0;
-                    vel_des[0] = uav_command.velocity_ref[0];
-                    vel_des[1] = uav_command.velocity_ref[1];
-                    vel_des[2] = uav_command.velocity_ref[2];
-                    acc_des << 0.0, 0.0, 0.0;
-                    yaw_rate_des = uav_command.yaw_rate_ref;
-                }
-                else
-                {
-                    // 【XYZ_VEL_BODY】XYZ速度转换为惯性系，偏航角固定
-                    float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
-                    float d_vel_enu[2];
-                    rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
-                    uav_command.velocity_ref[0] = d_vel_enu[0];
-                    uav_command.velocity_ref[1] = d_vel_enu[1];
-                    pos_des[0] = 0.0;
-                    pos_des[1] = 0.0;
-                    pos_des[2] = 0.0;
-                    vel_des[0] = uav_command.velocity_ref[0];
-                    vel_des[1] = uav_command.velocity_ref[1];
-                    vel_des[2] = uav_command.velocity_ref[2];
-                    acc_des << 0.0, 0.0, 0.0;
-                    yaw_des = uav_command.yaw_ref;
-                }
+                yaw_rate_des = uav_command.yaw_rate_ref;
             }
             else
             {
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                pos_des << Takeoff_position + Eigen::Vector3d(0, 0, Takeoff_height);
-                vel_des << 0.0, 0.0, 0.0;
-                acc_des << 0.0, 0.0, 0.0;
                 yaw_des = uav_command.yaw_ref;
-                cout << RED << node_name << "Pls set controller_flag to PX4_ORIGIN, reset to Init_Pos_Hover!" << TAIL << endl;
             }
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY)
         {
-            // 仅支持PX4_ORIGIN模式
-            if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
-            {
-                // 【XY_VEL_Z_POS_BODY】Z轴定高，偏航角固定，XY速度转换为惯性系
-                float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
-                float d_vel_enu[2];
-                rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
-                uav_command.velocity_ref[0] = d_vel_enu[0];
-                uav_command.velocity_ref[1] = d_vel_enu[1];
-                pos_des[0] = 0.0;
-                pos_des[1] = 0.0;
-                pos_des[2] = uav_command.position_ref[2];
-                vel_des[0] = uav_command.velocity_ref[0];
-                vel_des[1] = uav_command.velocity_ref[1];
-                vel_des[2] = 0.0;
-                acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
-            }
-            else
-            {
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                pos_des << Takeoff_position + Eigen::Vector3d(0, 0, Takeoff_height);
-                vel_des << 0.0, 0.0, 0.0;
-                acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
-                cout << RED << node_name << "Pls set controller_flag to PX4_ORIGIN, reset to Init_Pos_Hover!" << TAIL << endl;
-            }
+            // 【XY_VEL_Z_POS_BODY】Z轴定高，偏航角固定，XY速度转换为惯性系
+            float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
+            float d_vel_enu[2];
+            rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
+            uav_command.velocity_ref[0] = d_vel_enu[0];
+            uav_command.velocity_ref[1] = d_vel_enu[1];
+            pos_des[0] = 0.0;
+            pos_des[1] = 0.0;
+            pos_des[2] = uav_command.position_ref[2];
+            vel_des[0] = uav_command.velocity_ref[0];
+            vel_des[1] = uav_command.velocity_ref[1];
+            vel_des[2] = 0.0;
+            acc_des << 0.0, 0.0, 0.0;
+            yaw_des = uav_command.yaw_ref;
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
         {
@@ -675,6 +612,74 @@ void UAV_controller::set_command_des()
             get_valid_command = false;
             cout << RED << node_name << "Wrong command!" << TAIL << endl;
         }
+    }
+
+    // 记录上一时刻命令
+    uav_command_last = uav_command;
+}
+
+void UAV_controller::set_command_des_for_pos_controller()
+{
+    if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Init_Pos_Hover)
+    {
+        //【Init_Pos_Hover】 移动到指定起飞位置
+        pos_des << Takeoff_position + Eigen::Vector3d(0, 0, Takeoff_height);
+        vel_des << 0.0, 0.0, 0.0;
+        acc_des << 0.0, 0.0, 0.0;
+        yaw_des = uav_command.yaw_ref;
+    }
+    else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Land)
+    {
+        //【Land】 降落，直接使用LAND_CONTROL
+        control_state = CONTROL_STATE::LAND_CONTROL;
+    }
+    else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Move)
+    {
+        //【Move】 移动，移动子模式的区别详见UAVCommand.msg中的说明
+        if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS)
+        {
+            pos_des[0] = uav_command.position_ref[0];
+            pos_des[1] = uav_command.position_ref[1];
+            pos_des[2] = uav_command.position_ref[2];
+            // 【XYZ_POS】XYZ惯性系定点控制
+            if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
+            {
+                pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+                pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
+                pos_des[2] = uav_command.position_ref[2];
+            }
+            vel_des << 0.0, 0.0, 0.0;
+            acc_des << 0.0, 0.0, 0.0;
+            yaw_des = uav_command.yaw_ref;
+        }
+        else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
+        {
+            // 【TRAJECTORY】轨迹控制，输入为期望位置、速度、加速度，其中速度和加速度可缺省（降级为定点控制）
+            for (int i = 0; i < 3; i++)
+            {
+                pos_des(i) = uav_command.position_ref[i];
+                vel_des(i) = uav_command.velocity_ref[i];
+                acc_des(i) = uav_command.acceleration_ref[i];
+            }
+            yaw_des = uav_command.yaw_ref;
+        }
+        else
+        {
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
+            cout << RED << node_name << "Pls set controller_flag to PX4_ORIGIN, reset to Current_Pos_Hover!" << TAIL << endl;
+        }
+    }else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover)
+    {
+        // 【Current_Pos_Hover】 悬停。当前位置悬停
+        if (uav_command_last.Agent_CMD != prometheus_msgs::UAVCommand::Current_Pos_Hover)
+        {
+            Hover_position = uav_pos;
+            Hover_yaw = uav_yaw;
+        }
+        pos_des << Hover_position;
+        vel_des << 0.0, 0.0, 0.0;
+        acc_des << 0.0, 0.0, 0.0;
+        yaw_des = Hover_yaw;
     }
 
     // 记录上一时刻命令
@@ -1201,12 +1206,15 @@ void UAV_controller::printf_control_state()
 
     case CONTOLLER_FLAG::PID:
         cout << GREEN << "Controller: [ PID ] " << TAIL << endl;
+        pos_controller_pid.printf_result();
         break;
     case CONTOLLER_FLAG::UDE:
         cout << GREEN << "Controller: [ UDE ] " << TAIL << endl;
+        pos_controller_ude.printf_result();
         break;
     case CONTOLLER_FLAG::NE:
         cout << GREEN << "Controller: [ NE ] " << TAIL << endl;
+        pos_controller_ne.printf_result();
         break;
     }
 
@@ -1323,14 +1331,19 @@ void UAV_controller::printf_control_state()
 
 void UAV_controller::printf_param()
 {
-    cout << ">>>>>>>>>>>>>>>> UAV controller Param <<<<<<<<<<<<<<<<" << endl;
-    cout << "controller_flag       : " << controller_flag << endl;
-    cout << "Takeoff_height   : " << Takeoff_height << " [m] " << endl;
-    cout << "Disarm_height    : " << Disarm_height << " [m] " << endl;
-    cout << "Land_speed       : " << Land_speed << " [m/s] " << endl;
-    cout << "geo_fence_x : " << uav_geo_fence.x_min << " [m]  to  " << uav_geo_fence.x_min << " [m]" << endl;
-    cout << "geo_fence_y : " << uav_geo_fence.y_min << " [m]  to  " << uav_geo_fence.y_max << " [m]" << endl;
-    cout << "geo_fence_z : " << uav_geo_fence.z_min << " [m]  to  " << uav_geo_fence.z_max << " [m]" << endl;
+    cout << GREEN << ">>>>>>>>>>>>>>>> UAV controller Param <<<<<<<<<<<<<<<<" << TAIL << endl;
+
+    cout << GREEN << "uav_id                         : " << uav_id << " " << TAIL << endl;
+    cout << GREEN << "sim_mode                       : " << sim_mode << " " << TAIL << endl;
+    cout << GREEN << "only_command_mode              : " << only_command_mode << " " << TAIL << endl;
+    cout << GREEN << "controller_flag                : " << controller_flag << TAIL << endl;
+    cout << GREEN << "enable_external_control        : " << enable_external_control << TAIL << endl;
+    cout << GREEN << "Takeoff_height                 : " << Takeoff_height << " [m] " << TAIL << endl;
+    cout << GREEN << "Disarm_height    : " << Disarm_height << " [m] " << TAIL << endl;
+    cout << GREEN << "Land_speed       : " << Land_speed << " [m/s] " << TAIL << endl;
+    cout << GREEN << "geo_fence_x : " << uav_geo_fence.x_min << " [m]  to  " << uav_geo_fence.x_min << " [m]" << TAIL << endl;
+    cout << GREEN << "geo_fence_y : " << uav_geo_fence.y_min << " [m]  to  " << uav_geo_fence.y_max << " [m]" << TAIL << endl;
+    cout << GREEN << "geo_fence_z : " << uav_geo_fence.z_min << " [m]  to  " << uav_geo_fence.z_max << " [m]" << TAIL << endl;
 }
 
 void UAV_controller::px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg)

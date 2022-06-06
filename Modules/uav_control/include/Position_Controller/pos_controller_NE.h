@@ -49,6 +49,8 @@ class pos_controller_NE
             current_state.yaw = geometry_utils::get_yaw_from_quaternion(current_state.q);
         }
 
+        void printf_param();
+        void printf_result();
         Eigen::Vector4d update(float controller_hz);
  
     private:
@@ -84,9 +86,6 @@ class pos_controller_NE
         
         Eigen::Vector3d F_des;
         Eigen::Vector4d u_att;                  // 期望姿态角（rad）+期望油门（0-1）
-
-        void printf_param();
-        void printf_result();
 };
 
 void pos_controller_NE::init(ros::NodeHandle& nh)
@@ -157,10 +156,6 @@ Eigen::Vector4d pos_controller_NE::update(float controller_hz)
     NoiseEstimator[1] = LPF_y.apply(current_state.vel[1], dt) + HPF_y.apply(pos_initial[1] - current_state.pos[1], dt);
     NoiseEstimator[2] = LPF_z.apply(current_state.vel[2], dt) + HPF_z.apply(pos_initial[2] - current_state.pos[2], dt);
 
-    // cout << "acc_des! "<< acc_des <<endl;
-    // cout << "pos_error! "<< pos_error <<endl;
-    // cout << "vel_error! "<< vel_error <<endl;
-
     u_l = desired_state.acc + ctrl_param.Kp * pos_error + ctrl_param.Kd * (vel_error + NoiseEstimator);
 
     //UDE term
@@ -191,8 +186,7 @@ Eigen::Vector4d pos_controller_NE::update(float controller_hz)
 
         if(abs(u_d[i]) > ctrl_param.int_max[i])
         {
-            // cout << "u_d saturation! " << " [0-1-2] "<< i <<endl;
-            // cout << "[u_d]: "<< u_d[i]<<" [u_d_max]: "<<ctrl_param.int_max[i]<<" [m/s] "<<endl;
+            PCOUT(2, YELLOW, "u_d saturation!");
             u_d[i] = (u_d[i] > 0) ? ctrl_param.int_max[i] : -ctrl_param.int_max[i];
         }
     }
@@ -207,26 +201,24 @@ Eigen::Vector4d pos_controller_NE::update(float controller_hz)
 	// 或者向上推力大于重力的两倍
 	if (F_des(2) < 0.5 * ctrl_param.quad_mass * ctrl_param.g(2))
 	{
-        // ROS_INFO("F_des too low");
 		F_des = F_des / F_des(2) * (0.5 * ctrl_param.quad_mass * ctrl_param.g(2));
 	}
 	else if (F_des(2) > 2 * ctrl_param.quad_mass * ctrl_param.g(2))
 	{
-        // ROS_INFO("F_des too high");
 		F_des = F_des / F_des(2) * (2 * ctrl_param.quad_mass * ctrl_param.g(2));
 	}
 
 	// 角度限制幅度
 	if (std::fabs(F_des(0)/F_des(2)) > std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max)))
 	{
-		// ROS_INFO("pitch too tilt");
+		PCOUT(2, YELLOW, "pitch too tilt");
 		F_des(0) = F_des(0)/std::fabs(F_des(0)) * F_des(2) * std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max));
 	}
 
 	// 角度限制幅度
 	if (std::fabs(F_des(1)/F_des(2)) > std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max)))
 	{
-		// ROS_INFO("roll too tilt");
+		PCOUT(2, YELLOW, "roll too tilt");
 		F_des(1) = F_des(1)/std::fabs(F_des(1)) * F_des(2) * std::tan(geometry_utils::toRad(ctrl_param.tilt_angle_max));	
 	}
 
@@ -258,13 +250,13 @@ Eigen::Vector4d pos_controller_NE::update(float controller_hz)
     if(u_att(3) < 0.1)
     {
         u_att(3) = 0.1;
-        ROS_INFO("throttle too low");
+        PCOUT(2, YELLOW, "throttle too low");
     }
 
     if(u_att(3) > 1.0)
     {
         u_att(3) = 1.0;
-        ROS_INFO("throttle too high");
+        PCOUT(2, YELLOW, "throttle too high");
     }
 
     return u_att;
@@ -272,8 +264,6 @@ Eigen::Vector4d pos_controller_NE::update(float controller_hz)
 
 void pos_controller_NE::printf_result()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>  NE Position Controller  <<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-
     //固定的浮点显示
     cout.setf(ios::fixed);
     //左对齐
@@ -284,17 +274,23 @@ void pos_controller_NE::printf_result()
     cout.setf(ios::showpos);
 
     cout<<setprecision(2);
-
-    cout << "NoiseEstimator [X Y Z] : " <<  ctrl_param.quad_mass * NoiseEstimator[0] << " [N] "<<ctrl_param.quad_mass  * NoiseEstimator[1]<<" [N] "<<ctrl_param.quad_mass  *NoiseEstimator[2]<<" [N] "<<endl;
-    cout << "output_LLF [X Y Z] : " << output_LLF[0] << " [N] "<< output_LLF[1]<<" [N] "<<output_LLF[2]<<" [N] "<<endl;
-    cout << "u_l [X Y Z] : " << u_l[0] << " [N] "<< u_l[1]<<" [N] "<<u_l[2]<<" [N] "<<endl;
-    cout << "int [X Y Z] : " << integral[0] << " [N] "<< integral[1]<<" [N] "<<integral[2]<<" [N] "<<endl;
-    cout << "u_d [X Y Z] : " << u_d[0] << " [N] "<< u_d[1]<<" [N] "<<u_d[2]<<" [N] "<<endl;
-    cout << "F_des [X Y Z]  : " << F_des[0] << " [N] "<< F_des[1]<<" [N] "<<F_des[2]<<" [N] "<<endl;
-    cout << "u_att [X Y Z]  : " << u_att[0] << " [rad] "<< u_att[1]<<" [rad] "<<u_att[2]<<" [rad] "<<endl;
-    cout << "u_throttle  : " << u_att[3] <<endl;
-    cout << "pos_error_mean : " << tracking_error.pos_error_mean <<" [m] "<<endl;
-    cout << "vel_error_mean : " << tracking_error.vel_error_mean <<" [m/s] "<<endl;
+    cout << BLUE << "----> NE Position Controller Debug Info      : " << TAIL << endl;
+    cout << BLUE << "----> pos_des         : " << desired_state.pos(0) << " [ m ] " << desired_state.pos(1) << " [ m ] " << desired_state.pos(2) << " [ m ] "<< TAIL << endl;
+    cout << BLUE << "----> vel_des         : " << desired_state.vel(0) << " [ m ] " << desired_state.vel(1) << " [ m ] " << desired_state.vel(2) << " [ m ] "<< TAIL << endl;
+    cout << BLUE << "----> acc_des         : " << desired_state.acc(0) << " [ m ] " << desired_state.acc(1) << " [ m ] " << desired_state.acc(2) << " [ m ] "<< TAIL << endl;
+    cout << BLUE << "----> pos_now         : " << current_state.pos(0) << " [ m ] " << current_state.pos(1) << " [ m ] " << current_state.pos(2) << " [ m ] "<< TAIL << endl;
+    cout << BLUE << "----> vel_now         : " << current_state.vel(0) << " [ m ] " << current_state.vel(1) << " [ m ] " << current_state.vel(2) << " [ m ] "<< TAIL << endl;
+    
+    cout << BLUE << "NoiseEstimator [X Y Z] : " <<  ctrl_param.quad_mass * NoiseEstimator[0] << " [N] "<<ctrl_param.quad_mass  * NoiseEstimator[1]<<" [N] "<<ctrl_param.quad_mass  *NoiseEstimator[2]<<" [N] "<< TAIL <<endl;
+    cout << BLUE << "output_LLF [X Y Z] : " << output_LLF[0] << " [N] "<< output_LLF[1]<<" [N] "<<output_LLF[2]<<" [N] "<< TAIL <<endl;
+    cout << BLUE << "u_l [X Y Z] : " << u_l[0] << " [N] "<< u_l[1]<<" [N] "<<u_l[2]<<" [N] "<< TAIL <<endl;
+    cout << BLUE << "int [X Y Z] : " << integral[0] << " [N] "<< integral[1]<<" [N] "<<integral[2]<<" [N] "<< TAIL <<endl;
+    cout << BLUE << "u_d [X Y Z] : " << u_d[0] << " [N] "<< u_d[1]<<" [N] "<<u_d[2]<<" [N] "<< TAIL <<endl;
+    cout << BLUE << "F_des [X Y Z]  : " << F_des[0] << " [N] "<< F_des[1]<<" [N] "<<F_des[2]<<" [N] "<< TAIL <<endl;
+    cout << BLUE << "u_att [X Y Z]  : " << u_att[0] << " [rad] "<< u_att[1]<<" [rad] "<<u_att[2]<<" [rad] "<< TAIL <<endl;
+    cout << BLUE << "u_throttle  : " << u_att[3] << TAIL <<endl;
+    cout << BLUE << "pos_error_mean : " << tracking_error.pos_error_mean <<" [m] "<< TAIL <<endl;
+    cout << BLUE << "vel_error_mean : " << tracking_error.vel_error_mean <<" [m/s] "<< TAIL <<endl;
 }
 
 // 【打印参数函数】
@@ -302,26 +298,24 @@ void pos_controller_NE::printf_param()
 {
     cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>NE Parameter <<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
 
-    cout << "ctrl_param.quad_mass   : "<< ctrl_param.quad_mass<<endl;
-    cout << "ctrl_param.hov_percent   : "<< ctrl_param.hov_percent<<endl;
-    cout << "pxy_int_max   : "<< ctrl_param.int_max[0]<<endl;
-    cout << "pz_int_max   : "<< ctrl_param.int_max[2]<<endl;
+    cout << GREEN << "ctrl_param.quad_mass   : "<< ctrl_param.quad_mass<< TAIL <<endl;
+    cout << GREEN << "ctrl_param.hov_percent   : "<< ctrl_param.hov_percent<< TAIL <<endl;
+    cout << GREEN << "pxy_int_max   : "<< ctrl_param.int_max[0]<< TAIL <<endl;
+    cout << GREEN << "pz_int_max   : "<< ctrl_param.int_max[2]<< TAIL <<endl;
 
-    cout << "ude_gain/Kp_xy   : "<< ctrl_param.Kp <<endl;
-    cout << "ude_gain/Kp_z    : "<< ctrl_param.Kp(2,2) <<endl;
-    cout << "ude_gain/Kd_xy   : "<< ctrl_param.Kd <<endl;
-    cout << "ude_gain/Kd_z    : "<< ctrl_param.Kd(2,2) <<endl;
-    cout << "ude_gain/T_ude   : "<< ctrl_param.T_ude <<endl;
-    cout << "ude_gain/T_ne   : "<< ctrl_param.T_ne <<endl;
-    cout << "ude_gain/tilt_angle_max    : "<< ctrl_param.tilt_angle_max <<endl;
+    cout << GREEN << "ne_gain/Kp_xy   : "<< ctrl_param.Kp<< TAIL <<endl;
+    cout << GREEN << "ne_gain/Kp_z    : "<< ctrl_param.Kp(2,2) << TAIL <<endl;
+    cout << GREEN << "ne_gain/Kd_xy   : "<< ctrl_param.Kd << TAIL <<endl;
+    cout << GREEN << "ne_gain/Kd_z    : "<< ctrl_param.Kd(2,2) << TAIL <<endl;
+    cout << GREEN << "ne_gain/T_ude   : "<< ctrl_param.T_ude << TAIL <<endl;
+    cout << GREEN << "ne_gain/T_ne   : "<< ctrl_param.T_ne << TAIL <<endl;
+    cout << GREEN << "ne_gain/tilt_angle_max    : "<< ctrl_param.tilt_angle_max << TAIL <<endl;
 
-    cout <<"Filter_LPFx : "<< LPF_x.get_Time_constant()<<" Filter_LPFy : "<< LPF_y.get_Time_constant()<<" Filter_LPFz : "<< LPF_z.get_Time_constant() << endl;
-    cout <<"Filter_HPFx : "<< HPF_x.get_Time_constant()<<" Filter_HPFy : "<< HPF_y.get_Time_constant()<<" Filter_HPFz : "<< HPF_z.get_Time_constant() << endl;
-    cout <<"Filter_LLFx : "<< LLF_x.get_Time_constant()<<" Filter_LLFy : "<< LLF_y.get_Time_constant()<<" Filter_LLFz : "<< LLF_z.get_Time_constant() << endl;
+    cout << GREEN <<"Filter_LPFx : "<< LPF_x.get_Time_constant()<<" Filter_LPFy : "<< LPF_y.get_Time_constant()<<" Filter_LPFz : "<< LPF_z.get_Time_constant() << TAIL << endl;
+    cout << GREEN <<"Filter_HPFx : "<< HPF_x.get_Time_constant()<<" Filter_HPFy : "<< HPF_y.get_Time_constant()<<" Filter_HPFz : "<< HPF_z.get_Time_constant() << TAIL << endl;
+    cout << GREEN <<"Filter_LLFx : "<< LLF_x.get_Time_constant()<<" Filter_LLFy : "<< LLF_y.get_Time_constant()<<" Filter_LLFz : "<< LLF_z.get_Time_constant() << TAIL << endl;
 
-    cout <<"kd_LLFx : "<< LLF_x.get_Kd() <<" kd_LLFy : "<< LLF_y.get_Kd() <<" kd_LLFz : "<< LLF_z.get_Kd() << endl;
-
-
+    cout << GREEN <<"kd_LLFx : "<< LLF_x.get_Kd() <<" kd_LLFy : "<< LLF_y.get_Kd() <<" kd_LLFz : "<< LLF_z.get_Kd() << TAIL << endl;
 }
 
 
