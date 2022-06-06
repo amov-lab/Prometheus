@@ -2,6 +2,8 @@
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
 		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/landing_pad.world" />
 		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf" />
+		<arg name="model" value="p450"/>
+		<arg name="uav_id" value="1"/>
 	</include>
 
 	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch" />
@@ -27,9 +29,9 @@
 		<!-- 追踪控制参数 -->
 		<param name="kpx_land" value="0.2" />
 		<param name="kpy_land" value="0.2" />
-		<param name="kpz_land" value="0.1" />
-		<param name="arm_height_to_ground" value="0.4" />
-		<param name="arm_distance_to_pad" value="0.3" />
+		<param name="kpz_land" value="0.2" />
+		<param name="arm_height_to_ground" value="0.3" />
+		<param name="arm_distance_to_pad" value="0.2" />
 	</node>
 
 	<node pkg="rqt_image_view" type="rqt_image_view" name="rqt_image_view"></node>
