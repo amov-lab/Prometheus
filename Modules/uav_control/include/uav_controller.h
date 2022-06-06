@@ -179,6 +179,7 @@ private:
     void offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg);
     
     void set_command_des();
+    void set_command_des_for_pos_controller();
 
     int check_failsafe();
     void send_idle_cmd();

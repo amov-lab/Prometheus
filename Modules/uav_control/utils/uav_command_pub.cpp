@@ -10,19 +10,17 @@
 #include <mavros_msgs/RCIn.h>
 #include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/UAVControlState.h>
+#include <nav_msgs/Path.h>
 
 #include "controller_test.h"
+#include "printf_utils.h"
 
 using namespace std;
-// 获取无人机当前信息
+#define TRA_WINDOW 2000
 prometheus_msgs::UAVState uav_state;
-
 prometheus_msgs::UAVControlState uav_control_state;
-// 发布的指令
 prometheus_msgs::UAVCommand agent_command;
-
-// 发布指点飞行
-ros::Publisher uav_command_pub;
+std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
 
 void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr& msg)
 {
@@ -45,26 +43,27 @@ int main(int argc, char **argv)
     nh.param("uav_id", uav_id, 1);
     nh.param("sim_mode", sim_mode, true);
 
+    string uav_name = "/uav"+std::to_string(uav_id);
+
     //【订阅】状态信息
-    ros::Subscriber uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav"+std::to_string(uav_id)+"/prometheus/state", 1, uav_state_cb);
+    ros::Subscriber uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>(uav_name + "/prometheus/state", 1, uav_state_cb);
     
     //【订阅】无人机控制信息
-    ros::Subscriber uav_contorl_state_sub = nh.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 1, uav_control_state_cb);
-
-    //【发布】mavros接口调用指令(-> uav_control.cpp)
-    ros::Publisher uav_setup_pub = nh.advertise<prometheus_msgs::UAVSetup>("/uav" + std::to_string(uav_id) + "/prometheus/setup", 1);
+    ros::Subscriber uav_contorl_state_sub = nh.subscribe<prometheus_msgs::UAVControlState>(uav_name + "/prometheus/control_state", 1, uav_control_state_cb);
+    
+    //【发布】UAVCommand
+    ros::Publisher ref_trajectory_pub = nh.advertise<nav_msgs::Path>(uav_name + "/prometheus/reference_trajectory", 10);
 
     //【发布】UAVCommand
-    ros::Publisher uav_command_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav"+std::to_string(uav_id)+ "/prometheus/command", 1);
+    ros::Publisher uav_command_pub = nh.advertise<prometheus_msgs::UAVCommand>(uav_name + "/prometheus/command", 1);
 
-    //用于控制器测试的类，功能例如：生成圆形轨迹，８字轨迹等
-    Controller_Test Controller_Test;    // 打印参数
+    //用于控制器测试的类，功能例如：生成圆形轨迹，8字轨迹等
+    Controller_Test Controller_Test;
     Controller_Test.printf_param();
 
     int CMD = 0;
     float state_desired[4];
 
-    // prometheus_msgs::UAVCommand agent_command;
     agent_command.header.stamp = ros::Time::now();
     agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
     agent_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
@@ -85,66 +84,20 @@ int main(int argc, char **argv)
     agent_command.yaw_ref = 0.0;
     agent_command.yaw_rate_ref = 0.0;
     agent_command.Command_ID = 0;
-    // 发布指令初始值
-    uav_command_pub.publish(agent_command);
+
     float time_trajectory = 0.0;
-    int start_flag = 0;
-    
-    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-    cout << "Please enter 1 to disarm and takeoff the drone ..."<<endl;
-    cin >> CMD;
 
-    // 跳过遥控器逻辑，直接进入COMMAND模式
-    prometheus_msgs::UAVSetup uav_setup;
     while(ros::ok())
     {
         ros::spinOnce();
 
-        if(!uav_state.armed)
+        if(uav_control_state.control_state != prometheus_msgs::UAVControlState::COMMAND_CONTROL)
         {
-            uav_setup.cmd = prometheus_msgs::UAVSetup::ARMING;
-            uav_setup.arming = true;
-            uav_setup_pub.publish(uav_setup);
-            cout << "Arming ..."<<endl;
-            sleep(1.0);
+            cout << YELLOW << "Please switch to COMMAND_CONTROL mode first"<< TAIL <<endl;
         }
 
-        ros::spinOnce();
-
-        if(uav_state.armed)
-        {
-            agent_command.header.stamp = ros::Time::now();
-            agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-            agent_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
-            agent_command.position_ref[0] = 0.0;
-            agent_command.position_ref[1] = 0.0;
-            agent_command.position_ref[2] = 1.0;
-            agent_command.yaw_ref = 0.0;
-            agent_command.Command_ID = agent_command.Command_ID + 1;
-            uav_command_pub.publish(agent_command);
-            cout << "TAKEOFF ..."<<endl;
-
-            if(uav_state.mode != "OFFBOARD")
-            {
-                uav_setup.cmd = prometheus_msgs::UAVSetup::SET_PX4_MODE;
-                uav_setup.px4_mode = "OFFBOARD";
-                uav_setup_pub.publish(uav_setup);
-                cout << "Enable OFFBOARD mode ..."<<endl;
-                sleep(1.0);
-            }
-            sleep(1.0);
-        }
-        
-        if(uav_state.position[2] > 0.8)
-        {
-            break;
-        }
-    }
-
-    while(ros::ok())
-    {
-        cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< endl;
-        cout << "Please choose the CMD: 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land， 5 for Trajectory, 6 for Move(XYZ_VEL_YAW_RATE_BODY)..."<<endl;
+        cout << GREEN << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>UAV Terminal Control<<<<<<<<<<<<<<<<<<<<<<<<< "<< TAIL << endl;
+        cout << GREEN << "Please choose the CMD: 1 for Move(XYZ_POS),2 for Move(XYZ_POS_BODY), 3 for Current_Pos_Hover, 4 for Land, 5 for Trajectory, 6 for Move(XYZ_VEL_YAW_RATE_BODY)..."<< TAIL <<endl;
         cin >> CMD;
 
         switch (CMD)
@@ -173,7 +126,7 @@ int main(int argc, char **argv)
             uav_command_pub.publish(agent_command);
 
             cout << "pos_des [X Y Z] : " << state_desired[0] << " [ m ] "<< state_desired[1] <<" [ m ] "<< state_desired[2] <<" [ m ] "<< endl;
-            cout << "yaw_des : " << state_desired[3]/M_PI*180.0 <<" [ deg ] " << start_flag << endl;
+            cout << "yaw_des : " << state_desired[3]/M_PI*180.0 <<" [ deg ] " << endl;
             break;
 
         case 2:
@@ -256,6 +209,26 @@ int main(int argc, char **argv)
                 time_trajectory = time_trajectory + 0.01;
                 cout << "Trajectory tracking: "<< time_trajectory << " / " << trajectory_total_time  << " [ s ]" <<endl;
 
+                geometry_msgs::PoseStamped reference_pose;
+
+                reference_pose.header.stamp = ros::Time::now();
+                reference_pose.header.frame_id = "world";
+
+                reference_pose.pose.position.x = agent_command.position_ref[0];
+                reference_pose.pose.position.y = agent_command.position_ref[1];
+                reference_pose.pose.position.z = agent_command.position_ref[2];
+
+                posehistory_vector_.insert(posehistory_vector_.begin(), reference_pose);
+                if(posehistory_vector_.size() > TRA_WINDOW){
+                    posehistory_vector_.pop_back();
+                }
+                
+                nav_msgs::Path reference_trajectory;
+                reference_trajectory.header.stamp = ros::Time::now();
+                reference_trajectory.header.frame_id = "world";
+                reference_trajectory.poses = posehistory_vector_;
+                ref_trajectory_pub.publish(reference_trajectory);
+                
                 ros::Duration(0.01).sleep();
             } 
             break;
@@ -270,7 +243,6 @@ int main(int argc, char **argv)
             cin >> state_desired[2];
             cout << "desired state: --- yaw_rate [deg/s]:"<<endl;
             cin >> state_desired[3];
-            // state_desired[3] = state_desired[3]/180.0*M_PI;
 
             agent_command.header.stamp = ros::Time::now();
             agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
@@ -279,7 +251,7 @@ int main(int argc, char **argv)
             agent_command.velocity_ref[1] = state_desired[1];
             agent_command.velocity_ref[2] = state_desired[2];
             agent_command.Yaw_Rate_Mode = true;
-            agent_command.yaw_rate_ref = state_desired[3];
+            agent_command.yaw_rate_ref = state_desired[3]/180.0*M_PI;
             agent_command.Command_ID = agent_command.Command_ID + 1;
             uav_command_pub.publish(agent_command);
 

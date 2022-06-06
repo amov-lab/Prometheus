@@ -621,43 +621,43 @@ void UAV_estimator::printf_gps_status()
 
 void UAV_estimator::printf_param()
 {
-    cout << ">>>>>>>>>>>>>>>> UAV_estimator Param <<<<<<<<<<<<<<<<" << endl;
-    cout << "uav_id : " << uav_id << " " << endl;
-    cout << "maximum_safe_vel_xy           : " << maximum_safe_vel_xy << " [m/s] " << endl;
-    cout << "maximum_safe_vel_z            : " << maximum_safe_vel_z << " [m/s] " << endl;
-    cout << "maximum_vel_error_for_vision  : " << maximum_vel_error_for_vision << " [m/s] " << endl;
+    cout << GREEN << ">>>>>>>>>>>>>>>> UAV estimator Param <<<<<<<<<<<<<<<<" << TAIL << endl;
+    cout << GREEN << "uav_id                        : " << uav_id << " " << TAIL << endl;
+    cout << GREEN << "maximum_safe_vel_xy           : " << maximum_safe_vel_xy << " [m/s] " << TAIL << endl;
+    cout << GREEN << "maximum_safe_vel_z            : " << maximum_safe_vel_z << " [m/s] " << TAIL << endl;
+    cout << GREEN << "maximum_vel_error_for_vision  : " << maximum_vel_error_for_vision << " [m/s] " << TAIL << endl;
 
     if (location_source == prometheus_msgs::UAVState::GAZEBO)
     {
-        cout << "location_source: [GAZEBO] " << endl;
+        cout << GREEN << "location_source: [GAZEBO] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::MOCAP)
     {
-        cout << "location_source: [MOCAP] " << endl;
+        cout << GREEN << "location_source: [MOCAP] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::T265)
     {
-        cout << "location_source: [T265] " << endl;
+        cout << GREEN << "location_source: [T265] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::FAKE_ODOM)
     {
-        cout << "location_source: [FAKE_ODOM] " << endl;
+        cout << GREEN << "location_source: [FAKE_ODOM] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::GPS)
     {
-        cout << "location_source: [GPS] " << endl;
+        cout << GREEN << "location_source: [GPS] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::RTK)
     {
-        cout << "location_source: [GPS] " << endl;
+        cout << GREEN << "location_source: [GPS] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
-        cout << "location_source: [GPS] " << endl;
+        cout << GREEN << "location_source: [GPS] " << TAIL << endl;
     }
     else
     {
-        cout << "location_source: [UNKNOW] " << endl;
+        cout << GREEN << "location_source: [UNKNOW] " << endl;
     }
 }
 
