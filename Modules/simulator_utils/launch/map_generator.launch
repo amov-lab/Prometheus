@@ -6,9 +6,10 @@
     <arg name="rviz_enable" default="true"/>
     <arg name="rivz_config" default="$(find prometheus_simulator_utils)/launch/map_generator.rviz"/>
 
-    <!-- 生成随机地图，并发布全局、局部点云 -->
+    <!-- map_generator_node:生成随机地图，并发布全局、局部点云 -->
+    <arg name="swarm_num" default="1"/>
     <node pkg="prometheus_simulator_utils" name="map_generator_node" type="map_generator_node" output="screen">
-        <param name="swarm_num" value="1" type="int"/>
+        <param name="swarm_num" value="$(arg swarm_num)"/>
         <param name="map_name" value="planning_test" type="string"/>
     </node>
 

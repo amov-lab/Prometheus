@@ -59,14 +59,6 @@ namespace ego_planner
     int target_type_; // 1 mannual select, 2 hard code
     double no_replan_thresh_, replan_thresh_;
     double waypoints_[10][3];
-    double waypoints_uav1[3][3] = { {1.7,0.7,1.3},   {1.7,-0.3,1.3},   {1,-1.7,1.4} };
-    double waypoints_uav2[3][3] = { {-0.5,0.4,1.3}, {-0.5,-0.9,1.3}, {-1,-1.7,1.4} };
-    double waypoints_uav3[3][3] = { {3.6,0.5,1.3},   {3.7,-0.5,1.3},  {3,-1.7,1.4} };
-    double waypoints_uav4[3][3] = { {-3.6,0.5,1.8},  {-3.7,-0.5,1.8}, {-3,-1.7,1.4} };
-    double waypoints_uav5[3][3] = { {0.5,-0.2,1.9},   {0.5,1.2,2.0},   {1,1.7,1.7} };
-    double waypoints_uav6[3][3] = { {-1.6,-1.0,1.8}, {-1.5,0.4,1.8}, {-1,1.7,1.4} };
-    double waypoints_uav7[3][3] = { {2.5,-0.5,1.8},  {2.5,0.5,1.8},   {3,1.7,1.4} };
-    double waypoints_uav8[3][3] = { {-2.5,-0.5,1.3}, {-2.5,0.5,1.3},  {-3,1.7,1.4} };
 
     int waypoint_num_, wp_id_;
     double planning_horizen_, planning_horizen_time_;

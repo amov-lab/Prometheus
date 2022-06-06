@@ -1,0 +1,79 @@
+ <launch>
+	<!-- 无人机集群数量 -->
+	<arg name="swarm_num_uav" default="4"/>
+	<!-- 无人机ID -->
+	<arg name="uav1_id" default="1"/>
+	<arg name="uav2_id" default="2"/>
+	<arg name="uav3_id" default="3"/>
+	<arg name="uav4_id" default="4"/>
+    <!-- 无人机初始偏航角 -->
+    <arg name="uav1_init_yaw" default="0.0"/>
+    <arg name="uav2_init_yaw" default="0.0"/>
+    <arg name="uav3_init_yaw" default="3.14"/>
+    <arg name="uav4_init_yaw" default="3.14"/>
+    <!-- 无人机预设目标点 -->
+    <arg name="uav1_target_x" default="10.0"/>
+    <arg name="uav1_target_y" default="10.0"/>
+    <arg name="uav1_target_z" default="2.0"/>
+    <arg name="uav2_target_x" default="10.0"/>
+    <arg name="uav2_target_y" default="5.0"/>
+    <arg name="uav2_target_z" default="2.0"/>
+    <arg name="uav3_target_x" default="10.0"/>
+    <arg name="uav3_target_y" default="-5.0"/>
+    <arg name="uav3_target_z" default="2.0"/>
+    <arg name="uav4_target_x" default="10.0"/>
+    <arg name="uav4_target_y" default="-10.0"/>
+    <arg name="uav4_target_z" default="2.0"/>
+    <!-- 地图尺寸 -->
+    <arg name="map_size_x" default="50.0"/>
+    <arg name="map_size_y" default="50.0"/>
+    <arg name="map_size_z" default=" 3.0"/>
+
+    <!-- 1号飞机 -->
+    <include file="$(find ego_planner)/launch_ego_planner/sitl_ego_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav1_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+        <arg name="yaw_init" value="$(arg uav1_init_yaw)"/>
+        <arg name="target_x" value="$(arg uav1_target_x)"/>
+        <arg name="target_y" value="$(arg uav1_target_y)"/>
+        <arg name="target_z" value="$(arg uav1_target_z)"/>
+    </include>
+
+    <!-- 2号飞机 -->
+    <include file="$(find ego_planner)/launch_ego_planner/sitl_ego_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav2_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+        <arg name="yaw_init" value="$(arg uav2_init_yaw)"/>
+        <arg name="target_x" value="$(arg uav2_target_x)"/>
+        <arg name="target_y" value="$(arg uav2_target_y)"/>
+        <arg name="target_z" value="$(arg uav2_target_z)"/>
+    </include>
+
+    <!-- 3号飞机 -->
+    <include file="$(find ego_planner)/launch_ego_planner/sitl_ego_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav3_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+        <arg name="yaw_init" value="$(arg uav3_init_yaw)"/>
+        <arg name="target_x" value="$(arg uav3_target_x)"/>
+        <arg name="target_y" value="$(arg uav3_target_y)"/>
+        <arg name="target_z" value="$(arg uav3_target_z)"/>
+    </include>
+
+    <!-- 4号飞机 -->
+    <include file="$(find ego_planner)/launch_ego_planner/sitl_ego_planner_basic.launch">
+        <arg name="uav_id" value="$(arg uav4_id)"/>
+        <arg name="map_size_x" value="$(arg map_size_x)"/>
+        <arg name="map_size_y" value="$(arg map_size_y)"/>
+        <arg name="map_size_z" value="$(arg map_size_z)"/>
+        <arg name="yaw_init" value="$(arg uav4_init_yaw)"/>
+        <arg name="target_x" value="$(arg uav4_target_x)"/>
+        <arg name="target_y" value="$(arg uav4_target_y)"/>
+        <arg name="target_z" value="$(arg uav4_target_z)"/>
+    </include>
+ </launch> 
