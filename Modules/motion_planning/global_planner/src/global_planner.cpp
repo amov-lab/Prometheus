@@ -62,7 +62,6 @@ GlobalPlanner::GlobalPlanner(ros::NodeHandle &nh)
     // 【定时器】主循环
     mainloop_timer = nh.createTimer(ros::Duration(1.0), &GlobalPlanner::mainloop_cb, this);
     // 【定时器】路径追踪循环，快速移动场景应当适当提高执行频率
-    // time_per_path
     track_path_timer = nh.createTimer(ros::Duration(time_per_path), &GlobalPlanner::track_path_cb, this);
 
     // 【初始化】Astar算法
@@ -147,7 +146,6 @@ void GlobalPlanner::debug_info()
     else if (exec_state == EXEC_STATE::TRACKING)
     {
         cout << GREEN << "[ TRACKING ] " << TAIL << endl;
-        distance_to_goal = (uav_pos - goal_pos).norm();
         cout << GREEN << "---->distance_to_goal:" << distance_to_goal << TAIL << endl;
     }
     else if (exec_state == EXEC_STATE::LANDING)
@@ -161,7 +159,7 @@ void GlobalPlanner::mainloop_cb(const ros::TimerEvent &e)
     static int exec_num = 0;
     exec_num++;
 
-    if (exec_num == 10)
+    if (exec_num == 5)
     {
         debug_info();
         exec_num = 0;
@@ -228,7 +226,7 @@ void GlobalPlanner::mainloop_cb(const ros::TimerEvent &e)
             Num_total_wp = path_cmd.poses.size();
             start_point_index = get_start_point_id();
             cur_id = start_point_index;
-            tra_start_time = ros::Time::now();
+            last_replan_time = ros::Time::now();
             exec_state = EXEC_STATE::TRACKING;
             path_cmd_pub.publish(path_cmd);
             cout << GREEN << NODE_NAME << " Get a new path!" << TAIL << endl;
@@ -237,12 +235,10 @@ void GlobalPlanner::mainloop_cb(const ros::TimerEvent &e)
         break;
 
     case EXEC_STATE::TRACKING:
-    {
-        // 本循环是1Hz,此处不是很精准
-        if (exec_num >= replan_time)
+    {   
+        if ( (ros::Time::now()-last_replan_time).toSec() >= replan_time)
         {
             exec_state = EXEC_STATE::PLANNING;
-            exec_num = 0;
         }
 
         break;
@@ -265,6 +261,7 @@ void GlobalPlanner::goal_cb(const geometry_msgs::PoseStampedConstPtr &msg)
     goal_pos << msg->pose.position.x, msg->pose.position.y, fly_height;
     goal_vel.setZero();
     goal_ready = true;
+    exec_state = EXEC_STATE::WAIT_GOAL;
 
     cout << GREEN << NODE_NAME << " Get a new goal point:" << goal_pos(0) << " [m] " << goal_pos(1) << " [m] " << goal_pos(2) << " [m] " << TAIL << endl;
 
@@ -307,7 +304,7 @@ void GlobalPlanner::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
 
     if (abs(fly_height - msg->position[2]) > 0.2)
     {
-        cout << YELLOW << NODE_NAME << "UAV is not in the desired height. " << TAIL << endl;
+        PCOUT(2, YELLOW, "UAV is not in the desired height.");
     }
 
     uav_odom.header = uav_state.header;
@@ -375,9 +372,9 @@ void GlobalPlanner::track_path_cb(const ros::TimerEvent &e)
     }
 
     is_new_path = false;
-
+    distance_to_goal = (uav_pos - goal_pos).norm();
     // 抵达终点
-    if (cur_id == Num_total_wp - 1)
+    if (cur_id == Num_total_wp - 1 || distance_to_goal < 0.2)
     {
         uav_command.header.stamp = ros::Time::now();
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
@@ -399,9 +396,6 @@ void GlobalPlanner::track_path_cb(const ros::TimerEvent &e)
         return;
     }
 
-    // 计算距离开始追踪轨迹时间
-    tra_running_time = (ros::Time::now() - tra_start_time).toSec();
-
     cout << "Moving to Waypoint: [ " << cur_id << " / " << Num_total_wp << " ] " << endl;
     cout << "Moving to Waypoint: "
          << path_cmd.poses[cur_id].pose.position.x << " [m] "
@@ -415,13 +409,13 @@ void GlobalPlanner::track_path_cb(const ros::TimerEvent &e)
     uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
     uav_command.Command_ID = uav_command.Command_ID + 1;
 
-    uav_command.Move_mode = prometheus_msgs::UAVCommand::TRAJECTORY;
+    uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
     uav_command.position_ref[0] = path_cmd.poses[cur_id].pose.position.x;
     uav_command.position_ref[1] = path_cmd.poses[cur_id].pose.position.y;
     uav_command.position_ref[2] = path_cmd.poses[cur_id].pose.position.z;
-    uav_command.velocity_ref[0] = (path_cmd.poses[cur_id].pose.position.x - uav_pos[0]) / time_per_path;
-    uav_command.velocity_ref[1] = (path_cmd.poses[cur_id].pose.position.y - uav_pos[1]) / time_per_path;
-    uav_command.velocity_ref[2] = (path_cmd.poses[cur_id].pose.position.z - uav_pos[2]) / time_per_path;
+    // uav_command.velocity_ref[0] = (path_cmd.poses[cur_id].pose.position.x - uav_pos[0]) / time_per_path;
+    // uav_command.velocity_ref[1] = (path_cmd.poses[cur_id].pose.position.y - uav_pos[1]) / time_per_path;
+    // uav_command.velocity_ref[2] = (path_cmd.poses[cur_id].pose.position.z - uav_pos[2]) / time_per_path;
     uav_command.yaw_ref = desired_yaw;
 
     uav_cmd_pub.publish(uav_command);
