@@ -8,11 +8,11 @@
         <!-- 地图输入模式 0代表全局点云，1代表局部点云，2代表激光雷达scan数据 -->
         <param name="global_planner/map_input_source" value="0"/>
         <!-- 无人机飞行高度，建议与起飞高度一致 -->
-        <param name="global_planner/fly_height" value="1.0"/>
+        <param name="global_planner/fly_height" value="1.5"/>
         <!-- 路径追踪频率 -->
-        <param name="global_planner/time_per_path" value="1.0"/>
+        <param name="global_planner/time_per_path" value="0.5"/>
         <!-- Astar重规划频率 -->       
-        <param name="global_planner/replan_time" value="2.0"/>
+        <param name="global_planner/replan_time" value="100.0"/>
         <!-- 地图参数 -->
         <param name="map/border" value="true"/>
         <param name="map/queue_size" value="-1"/>

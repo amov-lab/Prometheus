@@ -18,12 +18,12 @@
     </group>
 
 	<!-- 集群数量 -->
-	<arg name="swarm_num_uav" default="1"/>
+	<arg name="swarm_num" default="1"/>
     <!-- 地图 -->
     <arg name="map_name" default="planning_test"/>
     <!-- map_generator_node: 生成随机地图，并发布全局、局部点云 -->
     <node pkg="prometheus_simulator_utils" name="map_generator_node" type="map_generator_node" launch-prefix="gnome-terminal --tab --">
-        <param name="swarm_num" value="$(arg swarm_num_uav)"/>
+        <param name="swarm_num" value="$(arg swarm_num)"/>
         <param name="map_name" 	value="$(arg map_name)" />  
     </node>
 
@@ -31,7 +31,7 @@
     <!-- 启动 fake_odom_node -->
     <group if="$(arg fake_odom)"> 
         <node pkg="prometheus_simulator_utils" type="fake_odom_node" name="fake_odom_node" output="screen" launch-prefix="gnome-terminal --tab --">
-			<param name="fake_odom/swarm_num_uav" 			value="$(arg swarm_num_uav)"/>
+			<param name="fake_odom/swarm_num_uav" 			value="$(arg swarm_num)"/>
 			<param name="fake_odom/swarm_num_ugv" 			value="0"/>
 			<param name="fake_odom/manual_init_pos" 		value="true"/>
 			<param name="fake_odom/uav1_init_x" 			value="-10.0"/>

@@ -20,7 +20,7 @@ void Astar::init(ros::NodeHandle &nh)
   // 【参数】规划搜索相关参数
   nh.param("astar/lambda_heu", lambda_heu_, 2.0);         // 加速引导参数
   nh.param("astar/lambda_cost", lambda_cost_, 300.0);     // 参数
-  nh.param("astar/allocate_num", max_search_num, 100000); //最大搜索节点数
+  nh.param("astar/allocate_num", max_search_num, 500000); //最大搜索节点数
   nh.param("map/resolution", resolution_, 0.2);           // 地图分辨率
 
   tie_breaker_ = 1.0 + 1.0 / max_search_num;

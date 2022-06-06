@@ -90,8 +90,7 @@ using namespace std;
         int cur_id;
         float desired_yaw;
 
-        ros::Time tra_start_time;
-        float tra_running_time;
+        ros::Time last_replan_time;
 
         // 五种状态机
         enum EXEC_STATE
