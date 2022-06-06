@@ -352,7 +352,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
     // 更新频率为60HZ
-    ros::Rate loop_rate(30);
+    ros::Rate loop_rate(60);
 
     std::string camera_topic = "/prometheus/camera/rgb/image_raw";
     std::string camera_params_yaml = "Simulator/gazebo_simulator/config/camera_config/gimbal_camera.yaml";
@@ -697,7 +697,6 @@ int main(int argc, char **argv)
                         }
                     }
 
-                    // 输出所有检测到的位姿态
                     if (0 == run_state)
                     {
                         prometheus_msgs::ArucoInfo aruco_pose;
