@@ -1,3 +1,6 @@
+# 框选跟踪
+![siamrpn.gif](https://qiniu.md.amovlab.com/img/m/202206/20220606/1130575322852171291459584.gif)
+
 # [请根据`Modules/object_detection/readme.md`](../../../object_detection/readme.md)进行相应到依赖安装
 
 # 使用

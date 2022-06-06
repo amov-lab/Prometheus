@@ -143,6 +143,8 @@ int main(int argc, char **argv)
         CIRCULAR_SEARCH,
         // 到达指定二维码上方
         TO_DESTINATION,
+        // 降落
+        LAND,
     };
 
     STATUS run_status = WAITE_INIT_POS;
@@ -242,6 +244,24 @@ int main(int argc, char **argv)
                  << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
                  << std::endl;
             PCOUT(1, GREEN, info.str());
+            if (std::abs(uav_command.velocity_ref[0]) + std::abs(uav_command.velocity_ref[1]) < 0.04)
+                run_status = LAND;
+            break;
+        case LAND:
+            //坐标系
+            uav_command.header.frame_id = "BODY";
+            // Move模式
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            // 机体系下的速度控制
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL_BODY;
+            uav_command.velocity_ref[0] = 0.5 * now_arucos_info.position[0];
+            uav_command.velocity_ref[1] = 0.5 * now_arucos_info.position[1];
+            uav_command.velocity_ref[2] = 0.2 * now_arucos_info.position[2];
+            if (uav_state.position[2] < 0.4)
+            {
+                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
+            }
+            PCOUT(-1, GREEN, "LANDING...");
             break;
         }
         uav_command.Command_ID += 1;
