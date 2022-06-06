@@ -10,6 +10,7 @@ project(prometheus_demo)
 find_package(catkin REQUIRED COMPONENTS
   message_generation  
   roscpp
+  rospy
   geometry_msgs
   sensor_msgs
   mavros
