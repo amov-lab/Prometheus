@@ -8,11 +8,6 @@
   <arg name="ground_height" default="0.5"/>
   <arg name="odom_topic" default="prometheus/odom" />
   <arg name="yaw_init" default="0.0"/>
-  <arg name="flight_type" default="1"/>
-  <!-- 预设目标点 -->
-  <arg name="target_x" default="10.0"/>
-  <arg name="target_y" default="10.0"/>
-  <arg name="target_z" default="1.0"/>
 
   <!-- ego_planner 仿真 -->
   <include file="$(find ego_planner)/launch_ego_planner/advanced_param.xml">
@@ -46,16 +41,7 @@
     <arg name="use_distinctive_trajs" value="true" />
     <!-- 1: use 2D Nav Goal to select goal  -->
     <!-- 2: use global waypoints below  -->
-    <!-- 单机建议直接使用rviz指定目标点,多机情况请预设目标点 -->
     <arg name="flight_type" value="1" />
-    <!-- global waypoints -->
-    <!-- It generates a piecewise min-snap traj passing all waypoints -->
-    <arg name="point_num" value="1" />
-    <arg name="point0_x" value="$(arg target_x)" />
-    <arg name="point0_y" value="$(arg target_y)" />
-    <arg name="point0_z" value="$(arg target_z)" />
-    <!-- 仿真 -->
-    <arg name="realworld_experiment" value="false" />
   </include>
 
   <!-- trajectory server：由B样条生成轨迹 -->

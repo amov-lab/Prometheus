@@ -38,8 +38,6 @@ namespace ego_planner
       nh.param("fsm/waypoint" + to_string(i) + "_z", waypoints_[i][2], -1.0);
     }
 
-    waypoint_num_ = 3; // todo
-
     /* initialize main modules */
     // 显示类
     visualization_.reset(new PlanningVisualization(nh));
@@ -115,57 +113,9 @@ namespace ego_planner
     wps_.resize(waypoint_num_);
     for (int i = 0; i < waypoint_num_; i++)
     {
-      if(planner_manager_->pp_.drone_id == 1)
-      {
-        wps_[i](0) = waypoints_uav1[i][0];
-        wps_[i](1) = waypoints_uav1[i][1];
-        wps_[i](2) = waypoints_uav1[i][2];
-      }
-      else if(planner_manager_->pp_.drone_id == 2)
-      {
-        wps_[i](0) = waypoints_uav2[i][0];
-        wps_[i](1) = waypoints_uav2[i][1];
-        wps_[i](2) = waypoints_uav2[i][2];
-      }
-      else if(planner_manager_->pp_.drone_id == 3)
-      {
-        wps_[i](0) = waypoints_uav3[i][0];
-        wps_[i](1) = waypoints_uav3[i][1];
-        wps_[i](2) = waypoints_uav3[i][2];
-      }
-      else if(planner_manager_->pp_.drone_id == 4)
-      {
-        wps_[i](0) = waypoints_uav4[i][0];
-        wps_[i](1) = waypoints_uav4[i][1];
-        wps_[i](2) = waypoints_uav4[i][2];
-      }
-      else if(planner_manager_->pp_.drone_id == 5)
-      {
-        wps_[i](0) = waypoints_uav5[i][0];
-        wps_[i](1) = waypoints_uav5[i][1];
-        wps_[i](2) = waypoints_uav5[i][2];
-      }
-      else if(planner_manager_->pp_.drone_id == 6)
-      {
-        wps_[i](0) = waypoints_uav6[i][0];
-        wps_[i](1) = waypoints_uav6[i][1];
-        wps_[i](2) = waypoints_uav6[i][2];
-      }
-      else if(planner_manager_->pp_.drone_id == 7)
-      {
-        wps_[i](0) = waypoints_uav7[i][0];
-        wps_[i](1) = waypoints_uav7[i][1];
-        wps_[i](2) = waypoints_uav7[i][2];
-      }
-      else if(planner_manager_->pp_.drone_id == 8)
-      {
-        wps_[i](0) = waypoints_uav8[i][0];
-        wps_[i](1) = waypoints_uav8[i][1];
-        wps_[i](2) = waypoints_uav8[i][2];
-      }
-      // wps_[i](0) = waypoints_[i][0];
-      // wps_[i](1) = waypoints_[i][1];
-      // wps_[i](2) = waypoints_[i][2];
+      wps_[i](0) = waypoints_[i][0];
+      wps_[i](1) = waypoints_[i][1];
+      wps_[i](2) = waypoints_[i][2];
     }
 
     for (size_t i = 0; i < (size_t)waypoint_num_; i++)

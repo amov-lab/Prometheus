@@ -50,7 +50,7 @@ void Map_Generator::init(ros::NodeHandle &nh)
   {
     uav_id[i] = i;
     // 【订阅】里程计数据
-    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/fake_odom", 1, boost::bind(&Map_Generator::uav_odom_cb,this, _1, uav_id[i]));
+    uav_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/uav" + std::to_string(i) + "/prometheus/odom", 1, boost::bind(&Map_Generator::uav_odom_cb,this, _1, uav_id[i]));
     // 【发布】模拟的局部点云信息
     local_map_pub[i] = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(i) + "/map_generator/local_cloud", 1);
     // 【定时器】发布局部点云定时器

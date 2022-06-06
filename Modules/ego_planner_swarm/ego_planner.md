@@ -1,6 +1,12 @@
-## local_planner
+## EGO_planner_swarm
 
+map_generator
+- 局部点云
+- 全局点云
 
+uav_control
+- fake_odom
+- PX4
 
 #### 情况讨论
 
