@@ -1,0 +1,71 @@
+## parameter for uav_control
+
+control:
+  ## 控制器编号：0 for PX4_ORIGIN, 1 for PID, 2 for UDE, 3 for NE
+  controller_flag : 0
+  # 是否支持外部控制
+  enable_external_control : false
+  ## 起飞高度
+  Takeoff_height : 1.5
+  ## 降落速度
+  Land_speed : 0.2
+  ##　上锁高度
+  Disarm_height : 0.1
+  ## 定位源: 0 for MOCAP, 1 for T265, 2 for GAZEBO, 3 for FAKE_ODOM, 4 for GPS, 5 for RTK, 6 for UWB
+  location_source : 2
+  ## 最大安全速度
+  maximum_safe_vel_xy : 4.0
+  maximum_safe_vel_z : 3.0
+  ## 最大vision/px4速度误差
+  maximum_vel_error_for_vision : 1.0
+
+##　地理围栏
+geo_fence:
+  x_min: -100.0
+  x_max: 100.0
+  y_min: -100.0
+  y_max: 100.0
+  z_min: -0.5
+  z_max: 100.0
+
+
+# 位置环参数 for PID, 对应pos_controller_PID.h
+pid_gain:
+  quad_mass: 1.0
+  hov_percent: 0.47
+  pxy_int_max: 10.0
+  pz_int_max: 10.0
+  Kp_xy : 3.0
+  Kp_z : 3.0
+  Kv_xy : 3.0
+  Kv_z : 3.0
+  Kvi_xy : 0.3
+  Kvi_z : 0.3
+  tilt_angle_max: 20.0
+
+# 位置环参数 for UDE, 对应pos_controller_UDE.h
+ude_gain:
+  quad_mass: 1.0
+  hov_percent: 0.47
+  pxy_int_max: 10.0
+  pz_int_max: 10.0
+  Kp_xy : 0.5
+  Kp_z : 0.5
+  Kd_xy : 1.0
+  Kd_z : 1.0
+  T_ude : 1.0
+  tilt_angle_max : 20.0
+
+# 位置环参数 for NE, 对应pos_controller_NE.h
+ude_gain:
+  quad_mass: 1.0
+  hov_percent: 0.47
+  pxy_int_max: 10.0
+  pz_int_max: 10.0
+  Kp_xy : 0.5
+  Kp_z : 0.5
+  Kd_xy : 1.0
+  Kd_z : 1.0
+  T_ude : 1.0
+  T_ne: 1.0
+  tilt_angle_max : 20.0

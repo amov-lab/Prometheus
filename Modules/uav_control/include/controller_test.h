@@ -7,6 +7,7 @@
 #include <prometheus_msgs/UAVCommand.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h> 
+#include "printf_utils.h"
 
 using namespace std;
 
@@ -84,8 +85,8 @@ prometheus_msgs::UAVCommand Controller_Test::Circle_trajectory_generation(float 
     const float cos_angle = cos(angle);
     const float sin_angle = sin(angle);
 
-    // cout << "omega : " << omega  * 180/M_PI <<" [deg/s] " <<endl;
-    // cout << "angle : " << angle  * 180/M_PI <<" [deg] " <<endl;
+    // cout << GREEN <<  "omega : " << omega  * 180/M_PI <<" [deg/s] " << TAIL <<endl;
+    // cout << GREEN <<  "angle : " << angle  * 180/M_PI <<" [deg] " << TAIL <<endl;
 
     Circle_trajectory.position_ref[0] = circle_radius * cos_angle + circle_center[0];
     Circle_trajectory.position_ref[1] = circle_radius * sin_angle + circle_center[1];
@@ -235,17 +236,21 @@ prometheus_msgs::UAVCommand Controller_Test::Step_trajectory_generation(float ti
 // 【打印参数函数】
 void Controller_Test::printf_param()
 {
-    cout <<">>>>>>>>>>>>>>>>>>>>>>>>>Controller_Test Parameter <<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    cout <<"Circle Shape:  " <<endl;
-    cout <<"circle_center :  " << circle_center[0] <<" [m] "<< circle_center[1] <<" [m] "<< circle_center[2] <<" [m] "<<endl;
-    cout <<"circle_radius :  "<< circle_radius <<" [m] " <<"linear_vel : "<< linear_vel <<" [m/s] "<<"direction : "<< direction << endl;
+    cout << GREEN << ">>>>>>>>>>>>>>>>>>>>>>>>>Controller_Test Parameter <<<<<<<<<<<<<<<<<<<<<<" << TAIL <<endl;
+    cout << GREEN << "Circle Shape  :  " << TAIL <<endl;
+    cout << GREEN << "origin        :  " << circle_center[0] <<" [m] "<< circle_center[1] <<" [m] "<< circle_center[2] <<" [m] "<< TAIL <<endl;
+    cout << GREEN << "radius        :  " << circle_radius <<" [m] " << endl;
+    cout << GREEN << "linear_vel    :  " << linear_vel <<" [m/s] " << endl;
+    cout << GREEN << "direction     : "<< direction << endl;
 
-    cout <<"Eight Shape:  " <<endl;
-    cout <<"eight_origin_ :  "<< eight_origin_[0] <<" [m] "<< eight_origin_[1] <<" [m] "<< eight_origin_[2] <<" [m] "<<endl;
-    cout <<"eight_omega_ :  "<< eight_omega_  <<" [rad/s] " << "radial : "<< radial << endl;
+    cout << GREEN << "Eight Shape   :  " << TAIL <<endl;
+    cout << GREEN << "origin        :  " << eight_origin_[0] <<" [m] "<< eight_origin_[1] <<" [m] "<< eight_origin_[2] <<" [m] "<< TAIL <<endl;
+    cout << GREEN << "radial        :  " << radial  <<" [m] "<< endl;
+    cout << GREEN << "angular_vel   :  " << eight_omega_  <<" [rad/s] " << endl;
 
-    cout <<"Step:  " <<endl;
-    cout <<"step_length :  "<< step_length << " [m] step_interval : "<< step_interval << " [s] "<<endl;
+    cout << GREEN << "Step          :  " << TAIL <<endl;
+    cout << GREEN << "step_length   :  " << step_length << TAIL <<endl;
+    cout << GREEN << "step_interval :  " << step_interval << " [s] "<< TAIL <<endl;
 }
 
 

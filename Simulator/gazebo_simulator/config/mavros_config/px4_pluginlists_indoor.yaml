@@ -12,6 +12,9 @@ plugin_blacklist:
 - vfr_hud
 - wind_estimation
 - global_position
+- safety_area
+- waypoint
+- 3dr_radio
 
 # extras
 - adsb
@@ -42,6 +45,7 @@ plugin_blacklist:
 - gps_rtk
 - gps_status
 
+
 plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_whitelist中，也会启动
 # common
 - altitude
@@ -51,13 +55,10 @@ plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_w
 - manual_control
 - param
 - rc_io
-- safety_area
 - setpoint_raw
 - setpoint_attitude
 - sys_status
 - sys_time
-- waypoint
-- 3dr_radio
 
 # extras
 - distance_sensor

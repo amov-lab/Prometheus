@@ -1,0 +1,44 @@
+<launch>
+	<arg name="uav_id" default="1"/>
+    <!-- 控制器编号：0 for PX4_ORIGIN, 1 for PID, 2 for UDE, 3 for NE -->
+    <arg name="controller_flag" default="1"/>
+    <arg name="sim_mode" default="true"/>
+    <arg name="only_command_mode" default="false"/>
+    <arg name="flag_printf" default="true"/>
+    <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
+    <arg name="control/enable_external_control" default="true"/> 
+
+    <!-- 启动Prometheus代码, run the uav_control_node.cpp
+    包括了uav_estimator.cpp和uav_controller.cpp
+     -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav_id)" output="screen">
+		<param name="uav_id" value="$(arg uav_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+        <param name="only_command_mode" value="$(arg only_command_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+        <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
+        <param name="control/controller_flag" value="$(arg controller_flag)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch_controller_test/controller_params.yaml" />
+	</node>
+
+    <!-- 启动测试程序 -->
+	<node pkg="prometheus_uav_control" type="uav_command_pub" name="uav_command_pub_$(arg uav_id)" output="screen" launch-prefix="gnome-terminal --">
+		<param name="uav_id" value="$(arg uav_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch_controller_test/ref_trajectory.yaml" />
+	</node>
+
+    <!-- 启动虚拟摇杆驱动 -->
+    <node pkg="prometheus_uav_control" type="joy_node" name="joy_node" output="screen">
+	</node>
+
+    <!-- Rviz config -->
+    <arg name="rviz_enable" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_uav_control)/launch_controller_test/controller_test.rviz"/>
+	<!-- 启动Rviz-->
+	<group if="$(arg rviz_enable)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
+
+</launch>
+
