@@ -1,0 +1,33 @@
+ <launch>
+	<!-- 无人机集群数量 -->
+	<arg name="swarm_num_uav" default="4"/>
+    <!-- 无人机预设目标点 -->
+    <arg name="uav1_target_x" default="10.0"/>
+    <arg name="uav1_target_y" default="10.0"/>
+    <arg name="uav1_target_z" default="2.0"/>
+    <arg name="uav2_target_x" default="10.0"/>
+    <arg name="uav2_target_y" default="5.0"/>
+    <arg name="uav2_target_z" default="2.0"/>
+    <arg name="uav3_target_x" default="10.0"/>
+    <arg name="uav3_target_y" default="-5.0"/>
+    <arg name="uav3_target_z" default="2.0"/>
+    <arg name="uav4_target_x" default="10.0"/>
+    <arg name="uav4_target_y" default="-10.0"/>
+    <arg name="uav4_target_z" default="2.0"/>
+
+    <node pkg="ego_planner" name="ego_goal_pub" type="ego_goal_pub" output="screen">
+        <param name="swarm_num" value="$(arg swarm_num_uav)"/>
+        <param name="uav1/target_x" value="$(arg uav1_target_x)"/>
+        <param name="uav1/target_y" value="$(arg uav1_target_y)"/>
+        <param name="uav1/target_z" value="$(arg uav1_target_z)"/>
+        <param name="uav2/target_x" value="$(arg uav2_target_x)"/>
+        <param name="uav2/target_y" value="$(arg uav2_target_y)"/>
+        <param name="uav2/target_z" value="$(arg uav2_target_z)"/>
+        <param name="uav3/target_x" value="$(arg uav3_target_x)"/>
+        <param name="uav3/target_y" value="$(arg uav3_target_y)"/>
+        <param name="uav3/target_z" value="$(arg uav3_target_z)"/>
+        <param name="uav4/target_x" value="$(arg uav4_target_x)"/>
+        <param name="uav4/target_y" value="$(arg uav4_target_y)"/>
+        <param name="uav4/target_z" value="$(arg uav4_target_z)"/>
+    </node>
+ </launch> 

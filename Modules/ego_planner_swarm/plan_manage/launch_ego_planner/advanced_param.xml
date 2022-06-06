@@ -30,14 +30,9 @@
   <arg name="point2_x"/>
   <arg name="point2_y"/>
   <arg name="point2_z"/>
-  <arg name="point3_x"/>
-  <arg name="point3_y"/>
-  <arg name="point3_z"/>
-  <arg name="point4_x"/>
-  <arg name="point4_y"/>
-  <arg name="point4_z"/>
 
   <arg name="flight_type"/>
+  <arg name="realworld_experiment"/>
   <arg name="use_distinctive_trajs"/>
 
   <arg name="uav_id"/>
@@ -66,9 +61,19 @@
     <!-- 紧急停止时间 -->
     <param name="fsm/emergency_time" value="1.0" type="double"/>
     <!-- 仿真与实际标志位，实际中需要等待一个起始话题 -->
-    <param name="fsm/realworld_experiment" value="false"/>
+    <param name="fsm/realworld_experiment" value="$(arg realworld_experiment)"/>
     <param name="fsm/fail_safe" value="true"/>
-
+    <!-- 路径点 -->
+    <param name="fsm/waypoint_num" value="$(arg point_num)" type="int"/>
+    <param name="fsm/waypoint0_x" value="$(arg point0_x)" type="double"/>
+    <param name="fsm/waypoint0_y" value="$(arg point0_y)" type="double"/>
+    <param name="fsm/waypoint0_z" value="$(arg point0_z)" type="double"/>
+    <!-- <param name="fsm/waypoint1_x" value="$(arg point1_x)" type="double"/> -->
+    <!-- <param name="fsm/waypoint1_y" value="$(arg point1_y)" type="double"/> -->
+    <!-- <param name="fsm/waypoint1_z" value="$(arg point1_z)" type="double"/> -->
+    <!-- <param name="fsm/waypoint2_x" value="$(arg point2_x)" type="double"/> -->
+    <!-- <param name="fsm/waypoint2_y" value="$(arg point2_y)" type="double"/> -->
+    <!-- <param name="fsm/waypoint2_z" value="$(arg point2_z)" type="double"/> -->
     <!-- GridMap参数 -->
     <!-- 分辨率、地图尺寸 -->
     <param name="grid_map/resolution"      value="0.1" /> 

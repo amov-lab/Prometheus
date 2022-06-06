@@ -38,6 +38,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/../../uav_control/include
+  ${PROJECT_SOURCE_DIR}/../../common/include
 )
 
 
@@ -55,5 +56,8 @@ add_executable(traj_server src/traj_server.cpp)
 target_link_libraries(traj_server ${catkin_LIBRARIES})
 
 
-add_executable(traj_server_for_prometheus src/traj_server_for_prometheus.cpp)
+add_executable(traj_server_for_prometheus src_for_prometheus/traj_server_for_prometheus.cpp)
 target_link_libraries(traj_server_for_prometheus ${catkin_LIBRARIES})
+
+add_executable(ego_goal_pub src_for_prometheus/ego_goal_pub.cpp)
+target_link_libraries(ego_goal_pub ${catkin_LIBRARIES})
