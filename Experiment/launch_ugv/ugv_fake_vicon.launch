@@ -1,9 +1,0 @@
-<launch>
-	<arg name="ugv_id" default="1"/>
-
-	<!-- fake_vicon -->
-	<node pkg="prometheus_ugv_control" type="fake_vicon" name="fake_vicon" output="screen">
-		<param name="rigid_body_name" value="/ugv$(arg ugv_id)"/>
-	</node>
-
-</launch>

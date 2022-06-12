@@ -27,7 +27,8 @@ add_message_files(
   UAVSetup.msg
   TextInfo.msg
   Message.msg
-  
+  IndoorSearch.msg
+
   ArucoInfo.msg
   MultiArucoInfo.msg
   DetectionInfo.msg
