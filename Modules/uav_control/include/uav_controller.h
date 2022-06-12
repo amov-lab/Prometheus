@@ -35,9 +35,6 @@
 
 using namespace std;
 
-// 宏定义
-#define CMD_TIMEOUT 0.1
-
 class UAV_controller
 {
 public:
@@ -51,7 +48,6 @@ public:
     ros::Subscriber px4_position_target_sub;
     ros::Subscriber px4_attitude_target_sub;
     ros::Subscriber px4_rc_sub;
-    ros::Subscriber mavros_interface_sub;
     ros::Subscriber offset_pose_sub;
     // 发布话题
     ros::Publisher px4_setpoint_raw_local_pub;
@@ -64,14 +60,9 @@ public:
     ros::ServiceClient px4_set_mode_client;
     ros::ServiceClient px4_reboot_client;
     ros::ServiceClient px4_emergency_client;
-    ros::ServiceClient px4_set_home_client;
-    // 定时器
-    ros::Timer debug_timer;
 
-    ros::Time get_cmd_time{0};
     prometheus_msgs::UAVCommand uav_command;      // 指令
     prometheus_msgs::UAVCommand uav_command_last; // 上一时刻指令
-    bool get_valid_command{false};
     prometheus_msgs::UAVState uav_state;      // 无人机状态
     prometheus_msgs::UAVState uav_state_last; // 无人机状态
     prometheus_msgs::UAVControlState uav_control_state;
@@ -79,26 +70,15 @@ public:
     prometheus_msgs::TextInfo text_info;
     prometheus_msgs::OffsetPose offset_pose;
     RC_Input rc_input;
-    // bool arming_res = true;
 
-    enum CONTOLLER_FLAG
+    // 控制器
+    enum POS_CONTOLLER
     {
         PX4_ORIGIN = 0, // PX4原生的控制算法
         PID = 1,        // PID算法
         UDE = 2,        // UDE算法
         NE = 3          // NE算法
     };
-
-    struct geo_fence
-    {
-        float x_min;
-        float x_max;
-        float y_min;
-        float y_max;
-        float z_min;
-        float z_max;
-    };
-    geo_fence uav_geo_fence;
 
     // 执行状态
     enum CONTROL_STATE
@@ -111,12 +91,22 @@ public:
     };
     CONTROL_STATE control_state;
     CONTROL_STATE last_control_state;
+    struct geo_fence
+    {
+        float x_min;
+        float x_max;
+        float y_min;
+        float y_max;
+        float z_min;
+        float z_max;
+    };
+    geo_fence uav_geo_fence;
 
     // 基本变量
     int uav_id;      // 无人机编号
     string uav_name; // 无人机名字
     string node_name;
-    int controller_flag;
+    int pos_controller;
     bool enable_external_control;
     bool sim_mode;
     bool only_command_mode;       //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
@@ -136,9 +126,9 @@ public:
     Eigen::Vector3d global_pos_des;
     Eigen::Vector3d vel_des;
     Eigen::Vector3d acc_des;
+    Eigen::Vector4d u_att;      // 期望姿态角（rad）+期望油门（0-1）
     double yaw_des;
     double yaw_rate_des;
-    Eigen::Vector3d throttle_sp;
 
     // 辅助点
     Eigen::Vector3d Takeoff_position;
@@ -146,10 +136,6 @@ public:
     Eigen::Vector3d Hover_position;
     double Hover_yaw;
     ros::Time last_set_hover_pose_time;
-
-    // 无人机控制算法相关
-    Eigen::Quaterniond u_q_des; // 期望姿态角（四元数）
-    Eigen::Vector4d u_att;      // 期望姿态角（rad）+期望油门（0-1）
 
     pos_controller_PID pos_controller_pid;
     pos_controller_UDE pos_controller_ude;
@@ -166,6 +152,7 @@ public:
     Eigen::Vector3d px4_rates_target;
     // PX4中的推力设定值（用于验证控制指令是否正确发送）
     float px4_thrust_target;
+
     void printf_control_state();
 
 private:
@@ -182,6 +169,7 @@ private:
 
     int check_failsafe();
     void send_idle_cmd();
+    void send_pos_cmd_to_px4_original_controller();
     void send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_sp);
     void send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_sp);
     void send_vel_setpoint_yaw_rate(const Eigen::Vector3d &vel_sp, float yaw_rate_sp);
@@ -193,17 +181,13 @@ private:
     void send_global_setpoint(const Eigen::Vector3d &global_pos_sp, float yaw_sp);
     Eigen::Vector4d get_cmd_from_controller();
     void set_px4_mode_func(string mode);
+    void rotation_yaw(double yaw_angle, float body_frame[2], float enu_frame[2]);
     void printf_param();
     void set_hover_pose_with_odom();
     void set_hover_pose_with_rc();
     void arm_disarm_func(bool on_or_off);
     void enable_emergency_func();
     void reboot_PX4();
-
-    void send_pos_cmd_to_px4_original_controller();
-    void rotation_yaw(double yaw_angle, float body_frame[2], float enu_frame[2]);
-
-    // bool arming_cb(mavros_msgs::CommandBool::Request &req,mavros_msgs::CommandBool::Response &res);
 };
 
 #endif

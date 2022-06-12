@@ -2,7 +2,7 @@
 
 control:
   ## 控制器编号：0 for PX4_ORIGIN, 1 for PID, 2 for UDE, 3 for NE
-  controller_flag : 0
+  pos_controller : 0
   # 是否支持外部控制
   enable_external_control : false
   ## 起飞高度
@@ -15,7 +15,7 @@ control:
   location_source : 2
   ## 最大安全速度
   maximum_safe_vel_xy : 2.0
-  maximum_safe_vel_z : 1.5
+  maximum_safe_vel_z : 2.0
   ## 最大vision/px4速度误差
   maximum_vel_error_for_vision : 1.0
 

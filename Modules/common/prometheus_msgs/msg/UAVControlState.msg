@@ -13,7 +13,7 @@ uint8 COMMAND_CONTROL=3
 uint8 LAND_CONTROL=4
 
 ## 无人机控制器标志量
-uint8 controller_flag
+uint8 pos_controller
 ## 状态枚举
 uint8 PX4_ORIGIN=0
 uint8 PID=1
@@ -21,5 +21,4 @@ uint8 UDE=2
 uint8 NE=3
 
 # 无人机安全保护触发标志量
-
 bool failsafe
