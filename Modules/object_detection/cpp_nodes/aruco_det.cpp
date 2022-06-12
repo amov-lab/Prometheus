@@ -29,6 +29,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <prometheus_msgs/DetectionInfo.h>
+#include <prometheus_msgs/IndoorSearch.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/ArucoInfo.h>
 #include <prometheus_msgs/MultiArucoInfo.h>

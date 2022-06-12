@@ -1,3 +1,0 @@
-<launch>
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find min_snap)/launch/default.rviz" required="true" />
-</launch>

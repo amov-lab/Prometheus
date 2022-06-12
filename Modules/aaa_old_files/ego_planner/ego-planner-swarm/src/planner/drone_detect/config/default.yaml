@@ -1,5 +1,0 @@
-# debug_flag: true
-pixel_ratio: 0.1
-estimate/max_pose_error: 0.4
-estimate/drone_width: 0.5
-estimate/drone_height: 0.2
