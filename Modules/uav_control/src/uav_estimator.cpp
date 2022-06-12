@@ -60,7 +60,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         // 【订阅】无人机当前经纬度，来自飞控
         px4_global_position_sub = nh.subscribe<sensor_msgs::NavSatFix>(uav_name + "/mavros/global_position/global", 1, &UAV_estimator::px4_global_pos_cb, this);
         // 【订阅】设置ENU坐标系下无人机的位置偏移量  坐标系:ENU系 - 来自地面站/终端窗口
-        set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GpsData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
+        set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GPSData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
         // 【发布】ENU坐标系下的位置偏移量
         local_pose_offset_pub = nh.advertise<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose", 1);
     }
@@ -661,7 +661,7 @@ void UAV_estimator::printf_param()
     }
 }
 
-void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GpsData::ConstPtr& msg)
+void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::ConstPtr& msg)
 {
     GeographicLib::Geocentric earth(GeographicLib::Constants::WGS84_a(), GeographicLib::Constants::WGS84_f());
     Eigen::Vector3d origin_gps;

@@ -1,5 +1,6 @@
 plugin_blacklist:
 # common
+- altitude
 - actuator_control
 - ftp
 - hil
@@ -19,9 +20,10 @@ plugin_blacklist:
 # extras
 - adsb
 - cam_imu_sync
-- cammera
+- camera
 - companion_process_status
 - debug_value
+- odom
 - esc_status
 - esc_telemetry
 - fake_gps
@@ -48,7 +50,6 @@ plugin_blacklist:
 
 plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_whitelist中，也会启动
 # common
-- altitude
 - command
 - imu
 - local_position
@@ -62,6 +63,5 @@ plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_w
 
 # extras
 - distance_sensor
-- odom
 - vision_pose_estimate
 - vision_speed_estimate

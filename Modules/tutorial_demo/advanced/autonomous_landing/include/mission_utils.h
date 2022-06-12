@@ -16,12 +16,8 @@
 #include <math.h>
 
 //topic 头文件
-#include <prometheus_msgs/ControlCommand.h>
-#include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <prometheus_msgs/MultiDetectionInfo.h>
-#include <prometheus_msgs/AttitudeReference.h>
-#include <prometheus_msgs/Message.h>
 #include <mavros_msgs/ActuatorControl.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
