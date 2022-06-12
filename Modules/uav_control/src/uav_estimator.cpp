@@ -62,7 +62,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         // 【订阅】设置ENU坐标系下无人机的位置偏移量  坐标系:ENU系 - 来自地面站/终端窗口
         set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GPSData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
         // 【发布】ENU坐标系下的位置偏移量
-        local_pose_offset_pub = nh.advertise<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose", 1);
+        local_pose_offset_pub = nh.advertise<prometheus_msgs::OffsetPose>(uav_name + "/prometheus/offset_pose", 1);
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
@@ -151,7 +151,6 @@ void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
     uav_state.connected = msg->connected;
     uav_state.armed = msg->armed;
     uav_state.mode = msg->mode;
-
     uav_state_update = true;
 }
 

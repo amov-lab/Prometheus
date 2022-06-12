@@ -52,18 +52,18 @@ class UAV_estimator
         // 订阅话题
         ros::Subscriber px4_state_sub;
         ros::Subscriber px4_battery_sub;
-        ros::Subscriber px4_global_position_sub;
         ros::Subscriber px4_position_sub;
         ros::Subscriber px4_velocity_sub;
         ros::Subscriber px4_attitude_sub;
         ros::Subscriber mocap_sub;
         ros::Subscriber gazebo_sub;
         ros::Subscriber fake_odom_sub;
+        ros::Subscriber px4_global_position_sub;
         ros::Subscriber gps_status_sub;
         ros::Subscriber set_local_pose_offset_sub;
         // 发布话题
-        ros::Publisher px4_vision_pose_pub;
         ros::Publisher uav_state_pub;
+        ros::Publisher px4_vision_pose_pub;
         ros::Publisher uav_odom_pub;
         ros::Publisher uav_trajectory_pub;
         ros::Publisher uav_mesh_pub;

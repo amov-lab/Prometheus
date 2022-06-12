@@ -79,6 +79,9 @@ include_directories(
 add_executable(takeoff_land basic/takeoff_land/src/takeoff_land.cpp)
 target_link_libraries(takeoff_land ${catkin_LIBRARIES})
 
+add_executable(takeoff_land_no_rc basic/takeoff_land/src/takeoff_land_no_rc.cpp)
+target_link_libraries(takeoff_land_no_rc ${catkin_LIBRARIES})
+
 add_executable(global_pos_control basic/global_pos_control/src/global_pos_control.cpp)
 target_link_libraries(global_pos_control ${catkin_LIBRARIES})
 
