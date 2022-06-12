@@ -82,7 +82,7 @@ public:
                 break;
             }
             times = ++times % 4;
-            std::cout << color << "\r " << now_char << " " << msg << TAIL << std::endl;
+            std::cout << color << "\r " << now_char << " " << msg << TAIL << std::flush;
         }
         this->past_ts = now_ts;
     };

@@ -9,15 +9,11 @@
         </include>
     </group>
 
-    <!--无人机编号,名字-->
+    <!--无人机编号-->
     <arg name="uav1_id" default="1"/>
     <arg name="uav2_id" default="2"/>
     <arg name="uav3_id" default="3"/>
     <arg name="uav4_id" default="4"/>
-    <arg name="uav1_name"     default="uav1"/>
-    <arg name="uav2_name"     default="uav2"/>
-    <arg name="uav3_name"     default="uav3"/>
-    <arg name="uav4_name"     default="uav4"/>
 	<!-- 无人机初始位置 -->
 	<arg name="uav1_init_x" default="1.5"/>
     <arg name="uav1_init_y" default="0.0"/>
