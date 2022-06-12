@@ -10,11 +10,9 @@
 #include <GeographicLib/Geocentric.hpp>
 
 #include <prometheus_msgs/UAVState.h>
-#include <prometheus_msgs/AgentStateUGV.h>
-#include <prometheus_msgs/AgentStateMAN.h>
 #include <prometheus_msgs/TextInfo.h>
 #include <prometheus_msgs/OffsetPose.h>
-#include <prometheus_msgs/GpsData.h>
+#include <prometheus_msgs/GPSData.h>
 
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/GPSRAW.h>
@@ -121,7 +119,7 @@ class UAV_estimator
         void px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
         void px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg);
         void gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg);
-        void set_local_pose_offset_cb(const prometheus_msgs::GpsData::ConstPtr& msg);
+        void set_local_pose_offset_cb(const prometheus_msgs::GPSData::ConstPtr& msg);
 
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);

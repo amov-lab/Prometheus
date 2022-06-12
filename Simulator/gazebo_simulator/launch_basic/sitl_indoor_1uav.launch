@@ -8,7 +8,7 @@
             <arg name="world_name" value="$(arg world)"/>
         </include>
     </group>
-
+    
     <!--无人机编号-->
     <arg name="uav1_id" default="1"/>
 	<!-- 无人机初始位置 -->

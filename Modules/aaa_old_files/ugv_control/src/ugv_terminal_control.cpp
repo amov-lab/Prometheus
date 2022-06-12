@@ -6,7 +6,7 @@
 
 //topic 头文件
 #include <prometheus_msgs/UgvState.h>
-#include <prometheus_msgs/UgvCommand.h>
+#include <prometheus_msgs/UGVCommand.h>
 #include <geometry_msgs/PoseStamped.h>
 
 using namespace std;
@@ -15,7 +15,7 @@ using namespace std;
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>全 局 变 量<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 string ugv_name;
 int ugv_id;
-prometheus_msgs::UgvCommand ugv_cmd;
+prometheus_msgs::UGVCommand ugv_cmd;
 geometry_msgs::PoseStamped goal;
 ros::Publisher command_pub,goal_pub;
 float state_desired[3];
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     ugv_name = "/ugv" + std::to_string(ugv_id);
 
     // 【发布】控制指令
-    command_pub = nh.advertise<prometheus_msgs::UgvCommand>(ugv_name + "/prometheus/ugv_command", 10);
+    command_pub = nh.advertise<prometheus_msgs::UGVCommand>(ugv_name + "/prometheus/ugv_command", 10);
     //【发布】目标点
     goal_pub = nh.advertise<geometry_msgs::PoseStamped>(ugv_name + "/prometheus/case2/goal", 10);
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         cin >> start_flag;
         if (start_flag == 0)
         {
-            ugv_cmd.Mode = prometheus_msgs::UgvCommand::Hold;
+            ugv_cmd.Mode = prometheus_msgs::UGVCommand::Hold;
             command_pub.publish(ugv_cmd);
         }
         else if (start_flag == 1)
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
             cout << "desired state: --- angular_vel(body) [deg/s]"<<endl;
             cin >> state_desired[2];
 
-            ugv_cmd.Mode = prometheus_msgs::UgvCommand::Direct_Control;
+            ugv_cmd.Mode = prometheus_msgs::UGVCommand::Direct_Control;
             ugv_cmd.linear_vel[0] = state_desired[0];
             ugv_cmd.linear_vel[1] = state_desired[1];
             ugv_cmd.angular_vel = state_desired[2]/180.0*M_PI;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
             cout << "desired state: --- y [m]"<<endl;
             cin >> state_desired[1];
 
-            ugv_cmd.Mode = prometheus_msgs::UgvCommand::Point_Control;
+            ugv_cmd.Mode = prometheus_msgs::UGVCommand::Point_Control;
             ugv_cmd.position_ref[0] = state_desired[0];
             ugv_cmd.position_ref[1] = state_desired[1];
             ugv_cmd.yaw_ref = 0.0;

@@ -29,7 +29,7 @@
 	<!-- 端口号说明 -->
 	<!-- 仿真器端口号（用于飞控与Gazebo进行通讯）: SDF文件中的mavlink_tcp_port与rcS文件中的simulator_tcp_port应当一致，并随着无人机编号递增 -->
 	<!-- mavlink_tcp_port = simulator_tcp_port = 4560 + ID -->
-	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_local = 14557 + ID -->
+	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_local = 14580 + ID -->
 	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_remote = 14540 + ID -->
 	<!-- 备注：PX4 SITL原生最多只支持10架无人机仿真，具体原因见rcS启动文件-->
 
@@ -41,16 +41,16 @@
 		<arg name="interactive" default="true"/>
 		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
 		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
-		<node name="sitl_$(arg ID)" pkg="px4" type="px4" output="screen" 
+		<node name="sitl_$(arg uav_id)" pkg="px4" type="px4" output="screen" 
 			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_amov_$(arg ID) $(arg px4_command_arg1)">
 		</node>
 		<!-- 启动Gazebo模型 -->
-		<node name="$(arg model)_$(arg ID)_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+		<node name="$(arg model)_$(arg uav_id)_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
 			args="-sdf -file $(arg sdf) -model $(arg model) -x $(arg uav_init_x) -y $(arg uav_init_y) -z $(arg uav_init_z) -Y $(arg uav_init_yaw)">
 		</node>
 		<!-- 启动MAVROS -->
 		<arg name="udp_offboard_port_remote" value="$(eval 14540 + arg('ID'))"/>
-		<arg name="udp_offboard_port_local" value="$(eval 14557 + arg('ID'))"/>
+		<arg name="udp_offboard_port_local" value="$(eval 14580 + arg('ID'))"/>
 		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
 			<param name="fcu_url" value="udp://:$(arg udp_offboard_port_remote)@localhost:$(arg udp_offboard_port_local)"/>
 			<param name="gcs_url" value="" />
