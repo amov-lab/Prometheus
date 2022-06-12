@@ -17,12 +17,16 @@
 	<!-- 无人机初始位置 -->
 	<arg name="uav1_init_x" default="1.5"/>
     <arg name="uav1_init_y" default="0.0"/>
+	<arg name="uav1_init_yaw" default="0.0"/>
     <arg name="uav2_init_x" default="0.5"/>
     <arg name="uav2_init_y" default="0.0"/>
+	<arg name="uav2_init_yaw" default="0.0"/>
     <arg name="uav3_init_x" default="-0.5"/>
     <arg name="uav3_init_y" default="0.0"/>
+	<arg name="uav3_init_yaw" default="0.0"/>
     <arg name="uav4_init_x" default="-1.5"/>
     <arg name="uav4_init_y" default="0.0"/>
+	<arg name="uav4_init_yaw" default="0.0"/>
 
 	<!-- 1号无人机 -->
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
@@ -32,7 +36,7 @@
 		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
 		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
 		<arg name="uav_init_z" value="0.15"/>
-		<arg name="uav_init_yaw" value="0.0"/>
+		<arg name="uav_init_yaw" value="$(arg uav1_init_yaw)"/>
 	</include>
 
 	<!-- 2号无人机 -->
@@ -43,7 +47,7 @@
 		<arg name="uav_init_x" value="$(arg uav2_init_x)"/>
 		<arg name="uav_init_y" value="$(arg uav2_init_y)"/>
 		<arg name="uav_init_z" value="0.15"/>
-		<arg name="uav_init_yaw" value="0.0"/>
+		<arg name="uav_init_yaw" value="$(arg uav2_init_yaw)"/>
 	</include>
 
 	<!-- 3号无人机 -->
@@ -54,7 +58,7 @@
 		<arg name="uav_init_x" value="$(arg uav3_init_x)"/>
 		<arg name="uav_init_y" value="$(arg uav3_init_y)"/>
 		<arg name="uav_init_z" value="0.15"/>
-		<arg name="uav_init_yaw" value="0.0"/>
+		<arg name="uav_init_yaw" value="$(arg uav3_init_yaw)"/>
 	</include>
 
 	<!-- 4号无人机 -->
@@ -65,8 +69,7 @@
 		<arg name="uav_init_x" value="$(arg uav4_init_x)"/>
 		<arg name="uav_init_y" value="$(arg uav4_init_y)"/>
 		<arg name="uav_init_z" value="0.15"/>
-		<arg name="uav_init_yaw" value="0.0"/>
+		<arg name="uav_init_yaw" value="$(arg uav4_init_yaw)"/>
 	</include>
-
 </launch>
 

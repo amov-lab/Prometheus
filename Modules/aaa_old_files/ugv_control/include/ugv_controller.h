@@ -6,7 +6,7 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Twist.h>
 #include <prometheus_msgs/UgvState.h>
-#include <prometheus_msgs/UgvCommand.h>
+#include <prometheus_msgs/UGVCommand.h>
 
 #include "math_utils.h"
 #include "Smoother.h"
@@ -20,8 +20,8 @@
 int ugv_id;                                               // 无人车编号
 string ugv_name;                                // 无人车名字
 Eigen::Vector2f geo_fence_x,geo_fence_y;                           //Geigraphical fence 地理围栏
-prometheus_msgs::UgvCommand Command_Now;      // 无人车当前执行命令
-prometheus_msgs::UgvCommand Command_Last;       // 无人车上一条执行命令
+prometheus_msgs::UGVCommand Command_Now;      // 无人车当前执行命令
+prometheus_msgs::UGVCommand Command_Last;       // 无人车上一条执行命令
 prometheus_msgs::UgvState _UgvState;                             // 无人车状态
 Eigen::Vector3d pos_ugv;                      // 无人车位置
 Eigen::Vector3d vel_ugv;                      // 无人车速度
@@ -65,7 +65,7 @@ void init(ros::NodeHandle &nh)
     ugv_name = "/ugv" + std::to_string(ugv_id);
 
     // 初始化命令
-    Command_Now.Mode                = prometheus_msgs::UgvCommand::Hold;
+    Command_Now.Mode                = prometheus_msgs::UGVCommand::Hold;
     Command_Now.Command_ID          = 0;
     Command_Now.linear_vel[0]       = 0;
     Command_Now.linear_vel[1]       = 0;
@@ -84,7 +84,7 @@ void init(ros::NodeHandle &nh)
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void ugv_command_cb(const prometheus_msgs::UgvCommand::ConstPtr& msg)
+void ugv_command_cb(const prometheus_msgs::UGVCommand::ConstPtr& msg)
 {
     Command_Now = *msg;
     only_rotate = true; // vinson: should be set for initializing.

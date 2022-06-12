@@ -32,7 +32,6 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/ArucoInfo.h>
 #include <prometheus_msgs/MultiArucoInfo.h>
-#include <prometheus_msgs/IndoorSearch.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>

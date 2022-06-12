@@ -20,46 +20,25 @@ find_package(Boost REQUIRED COMPONENTS system)
 add_message_files(
   DIRECTORY msg
   FILES
+  UAVState.msg
+  MultiUAVState.msg
+  UAVCommand.msg
+  UAVControlState.msg
+  UAVSetup.msg
+  TextInfo.msg
+  Message.msg
+  
+  ArucoInfo.msg
+  MultiArucoInfo.msg
   DetectionInfo.msg
   MultiDetectionInfo.msg
   BoundingBox.msg
   BoundingBoxes.msg
-  ControlCommand.msg
-  PositionReference.msg
-  AttitudeReference.msg
-  DroneState.msg
-  ControlOutput.msg
-  Message.msg
-  LogMessage.msg
-  LogMessageControl.msg
-  LogMessagePlanning.msg
-  LogMessageDetection.msg
+
   SwarmCommand.msg
   FormationAssign.msg
-  ArucoInfo.msg
-  MultiArucoInfo.msg
-  IndoorSearch.msg
-  UgvState.msg
-  UgvCommand.msg
-  StationCommand.msg
-  Case2Result.msg
-  Case3Result.msg
-  Msg103.msg
-  Msg104.msg
-  ManCommand.msg
-  UAVState.msg
-  AgentStateUGV.msg
-  AgentStateMAN.msg
-  MultiAgentState.msg
-  UAVCommand.msg
-  UAVControlState.msg
-  UAVSetup.msg
-  AgentCommandUGV.msg
-  AgentCommandMAN.msg
-  MultiUAVState.msg
   OffsetPose.msg
-  TextInfo.msg
-  GpsData.msg
+  GPSData.msg
 )
 
 add_action_files(

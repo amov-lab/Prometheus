@@ -12,7 +12,7 @@
 #include <prometheus_msgs/DroneState.h>
 #include <prometheus_msgs/UgvState.h>
 #include <prometheus_msgs/SwarmCommand.h>
-#include <prometheus_msgs/UgvCommand.h>
+#include <prometheus_msgs/UGVCommand.h>
 #include <prometheus_msgs/StationCommand.h>
 #include <prometheus_msgs/Case2Result.h>
 #include <prometheus_msgs/Case3Result.h>
@@ -75,7 +75,7 @@ public:
             pub_msg_103 = &multicast_bridge::pub_ugv_msg_103;
             ugv_state_sub = nh.subscribe<prometheus_msgs::UgvState>("/"+robot_name+std::to_string(robot_id%rest)+"/prometheus/ugv_state",1,&multicast_bridge::ugv_state_cb,this);
             ugv_odom_sub = nh.subscribe<nav_msgs::Odometry>("/"+robot_name+std::to_string(robot_id%rest)+"/prometheus/ugv_odom",1,&multicast_bridge::ugv_odom_cb,this);  
-            ugv_cmd_pub = nh.advertise<prometheus_msgs::UgvCommand>("/"+robot_name+std::to_string(robot_id%rest)+"/prometheus/ugv_command",1); // publish(msg_101)
+            ugv_cmd_pub = nh.advertise<prometheus_msgs::UGVCommand>("/"+robot_name+std::to_string(robot_id%rest)+"/prometheus/ugv_command",1); // publish(msg_101)
             if(other_ugv_id != 0) other_ugv_odom_pub = nh.advertise<nav_msgs::Odometry>("/"+robot_name+std::to_string(other_ugv_id)+"/prometheus/ugv_odom",10);
             else ROS_ERROR("other_ugv_id is not set correctly, but node still working!");
         }
@@ -616,7 +616,7 @@ public:
 
     void pub_ugv_msg_101()
     {
-        ugv_cmd_msg_101.Mode = prometheus_msgs::UgvCommand::Point_Control;
+        ugv_cmd_msg_101.Mode = prometheus_msgs::UGVCommand::Point_Control;
         ugv_cmd_msg_101.position_ref[0] = des_x;
         ugv_cmd_msg_101.position_ref[1] = des_y;
         ugv_cmd_msg_101.yaw_ref = 0.0;
@@ -877,7 +877,7 @@ private:
 
     // msg
     prometheus_msgs::SwarmCommand uav_cmd_msg_101;
-    prometheus_msgs::UgvCommand ugv_cmd_msg_101;
+    prometheus_msgs::UGVCommand ugv_cmd_msg_101;
     prometheus_msgs::SwarmCommand uav_cmd_msg_102;
     prometheus_msgs::Msg103 msg_103;
     prometheus_msgs::Msg104 msg_104;

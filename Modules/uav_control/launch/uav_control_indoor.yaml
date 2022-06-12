@@ -14,8 +14,8 @@ control:
   ## 定位源: 0 for MOCAP, 1 for T265, 2 for GAZEBO, 3 for FAKE_ODOM, 4 for GPS, 5 for RTK, 6 for UWB
   location_source : 2
   ## 最大安全速度
-  maximum_safe_vel_xy : 4.0
-  maximum_safe_vel_z : 3.0
+  maximum_safe_vel_xy : 2.0
+  maximum_safe_vel_z : 1.5
   ## 最大vision/px4速度误差
   maximum_vel_error_for_vision : 1.0
 

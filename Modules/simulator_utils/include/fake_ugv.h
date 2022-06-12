@@ -3,8 +3,6 @@
 
 #include <ros/ros.h>
 
-#include <prometheus_msgs/UgvState.h>
-#include <prometheus_msgs/UgvCommand.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Quaternion.h>
 #include <nav_msgs/Odometry.h>

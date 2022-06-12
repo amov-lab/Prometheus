@@ -12,7 +12,7 @@ int main(int argc, char **argv)
     init(nh);
 
     //【订阅】无人车控制指令
-    command_sub = nh.subscribe<prometheus_msgs::UgvCommand>(ugv_name + "/prometheus/ugv_command", 2, ugv_command_cb);
+    command_sub = nh.subscribe<prometheus_msgs::UGVCommand>(ugv_name + "/prometheus/ugv_command", 2, ugv_command_cb);
     //【订阅】本机状态信息
     ugv_state_sub = nh.subscribe<prometheus_msgs::UgvState>(ugv_name + "/prometheus/ugv_state", 2, ugv_state_cb);
     //【发布】底层控制指令
@@ -33,13 +33,13 @@ int main(int argc, char **argv)
         // Check for geo fence: If ugv is out of the geo fence, it will hold now.
         if(check_failsafe() == 1)
         {
-            Command_Now.Mode = prometheus_msgs::UgvCommand::Hold;
+            Command_Now.Mode = prometheus_msgs::UGVCommand::Hold;
         }
 
         switch (Command_Now.Mode)
         {
         // 【Start】 
-        case prometheus_msgs::UgvCommand::Hold:
+        case prometheus_msgs::UGVCommand::Hold:
             
             cmd_vel.linear.x = 0.0;
             cmd_vel.linear.y = 0.0;
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
             cmd_pub.publish(cmd_vel);
             break;
 
-        case prometheus_msgs::UgvCommand::Direct_Control:
+        case prometheus_msgs::UGVCommand::Direct_Control:
 
             // 注: linear.x与linear.y控制的是无人车车体系下的线速度
             cmd_vel.linear.x = Command_Now.linear_vel[0];
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
             cmd_pub.publish(cmd_vel);
 
             break;
-        case prometheus_msgs::UgvCommand::Point_Control:
+        case prometheus_msgs::UGVCommand::Point_Control:
 
             cmd_vel.linear.x = k_p*(Command_Now.position_ref[0] - pos_ugv[0]);
             cmd_vel.linear.y = k_p*(Command_Now.position_ref[1] - pos_ugv[1]);
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
             break;
 
-        case prometheus_msgs::UgvCommand::Path_Control:
+        case prometheus_msgs::UGVCommand::Path_Control:
             // 空缺
             break;
 

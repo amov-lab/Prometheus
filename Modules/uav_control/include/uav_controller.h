@@ -18,7 +18,6 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/UAVControlState.h>
-#include <prometheus_msgs/MultiAgentState.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/TextInfo.h>
 #include <prometheus_msgs/OffsetPose.h>

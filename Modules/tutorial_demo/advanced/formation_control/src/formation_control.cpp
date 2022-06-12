@@ -11,9 +11,9 @@
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVSetup.h>
-#include <prometheus_msgs/GpsData.h>
+#include <prometheus_msgs/GPSData.h>
 
-prometheus_msgs::GpsData origin_gps;
+prometheus_msgs::GPSData origin_gps;
 
 // 输入参数：　阵型，阵型基本尺寸，集群数量
 // 所有的阵型和数量必须提前预设!!
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     for(int i=0; i<agent_num; i++)
     {
         uav_command_pub[i] = n.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(i+1) + "/prometheus/command", 10);
-        set_local_pose_offset_pub[i] = n.advertise<prometheus_msgs::GpsData>("/uav" + std::to_string(i+1) + "/prometheus/set_local_offset_pose", 10);
+        set_local_pose_offset_pub[i] = n.advertise<prometheus_msgs::GPSData>("/uav" + std::to_string(i+1) + "/prometheus/set_local_offset_pose", 10);
     }
 
     //此处做一个阻塞确保无人机全部正常启动后,能够将无人机原点坐标系统一到1号无人机所在位置

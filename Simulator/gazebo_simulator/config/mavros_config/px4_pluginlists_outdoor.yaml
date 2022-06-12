@@ -2,7 +2,9 @@ plugin_blacklist:
 # common
 - actuator_control
 - ftp
+- geofence
 - hil
+- manual_control
 - nav_controller_output
 - rallypoint
 - setpoint_accel
@@ -11,13 +13,14 @@ plugin_blacklist:
 - setpoint_trajectory
 - setpoint_velocity
 - vfr_hud
+- safety_area
 - wind_estimation
+- 3dr_radio
 
 # extras
 - adsb
 - cam_imu_sync
-- cammera
-- companion_process_status
+- camera
 - debug_value
 - esc_status
 - esc_telemetry
@@ -35,11 +38,8 @@ plugin_blacklist:
 - play_tune
 - px4flow
 - rangefinder
-# - tdr_radio ## no this plugin
-# - terrain ## no this plugin
 - trajectory
 - tunnel
-# - vfr_hud ## move to common
 - vibration
 - vision_speed_estimate
 - vision_pose_estimate
@@ -49,22 +49,19 @@ plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_w
 # common
 - altitude
 - command
-# - geofence ##no this plugin
 - global_position
 - home_position
 - imu
 - local_position
-- manual_control
 - param
 - rc_io
-- safety_area
 - setpoint_raw
 - sys_status
 - sys_time
 - waypoint
-- 3dr_radio
 
 # extras
+- companion_process_status
 - distance_sensor
 - gps_rtk
 - gps_status
