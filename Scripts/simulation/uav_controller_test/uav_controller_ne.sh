@@ -4,7 +4,7 @@
 # 启动PX4 SITL及Gazebo仿真环境
 roslaunch prometheus_gazebo sitl_indoor_1uav.launch & sleep 5s;
 # 启动无人机控制 - uav_control_main
-roslaunch prometheus_uav_control uav_control_main_controller_test.launch controller_flag:=3
+roslaunch prometheus_uav_control uav_control_main_controller_test.launch pos_controller:=3
 
 
 

@@ -1,6 +1,6 @@
 std_msgs/Header header
 
-## Setup类型（模拟遥控器）
+## 无人机Setup类型（可用于模拟遥控器）
 uint8 cmd
 uint8 ARMING = 0
 uint8 SET_PX4_MODE = 1
@@ -9,7 +9,9 @@ uint8 SET_CONTROL_MODE = 3
 
 bool arming
 
-## http://wiki.ros.org/mavros/CustomModes ,可参考该网址设置模式名,常用模式名:OFFBOARD,AUTO.LAND,AUTO.RTL,POSCTL
+## PX4模式名查询:http://wiki.ros.org/mavros/CustomModes
+## 常用模式名:OFFBOARD,AUTO.LAND,AUTO.RTL,POSCTL
 string px4_mode
 
-string control_mode
+## INIT,MANUAL_CONTROL,HOVER_CONTROL,COMMAND_CONTROL,LAND_CONTROL
+string control_state

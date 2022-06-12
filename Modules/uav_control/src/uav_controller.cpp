@@ -2,7 +2,7 @@
 
 UAV_controller::UAV_controller(ros::NodeHandle &nh)
 {
-    // 【参数】编号，从1开始编号
+    // 【参数】无人机编号，从1开始编号
     nh.param<int>("uav_id", uav_id, 1);
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);
@@ -10,10 +10,10 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     node_name = "[uav_controller_uav" + std::to_string(uav_id) + "]";
     // 【参数】是否仿真模式
     nh.param<bool>("sim_mode", sim_mode, true);
-    // 【参数】仅COMMAND_CONTROL模式（用于集群和测试）
+    // 【参数】仅COMMAND_CONTROL模式（用于集群和测试）(no rc mode,to do with swarm)
     nh.param<bool>("only_command_mode", only_command_mode, false);
     // 【参数】控制器标志位,具体说明见CONTOLLER_FLAG说明
-    nh.param<int>("control/controller_flag", controller_flag, 0);
+    nh.param<int>("control/pos_controller", pos_controller, 0);
     // 【参数】使用外部控制器的控制指令，直接发送至PX4，这种方式依赖外部控制器的稳定性，需要小心！
     nh.param<bool>("control/enable_external_control", enable_external_control, false);
     // 【参数】起飞高度
@@ -21,7 +21,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     // 【参数】降落时自动上锁高度
     nh.param<float>("control/Disarm_height", Disarm_height, 0.2);
     // 【参数】降落速度
-    nh.param<float>("control/Land_speed", Land_speed, 0.2);    
+    nh.param<float>("control/Land_speed", Land_speed, 0.2);
     // 【参数】地理围栏
     nh.param<float>("geo_fence/x_min", uav_geo_fence.x_min, -100.0);
     nh.param<float>("geo_fence/x_max", uav_geo_fence.x_max, 100.0);
@@ -34,23 +34,23 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     printf_param();
     cout << GREEN << node_name << " init! " << TAIL << endl;
 
-    if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
+    if (pos_controller == POS_CONTOLLER::PX4_ORIGIN)
     {
         cout << GREEN << node_name << " Using the PX4 original controller... " << TAIL << endl;
     }
-    else if (controller_flag == CONTOLLER_FLAG::PID)
+    else if (pos_controller == POS_CONTOLLER::PID)
     {
         // 【控制器】PID控制器初始化
         pos_controller_pid.init(nh);
         cout << YELLOW << node_name << " Using the PID controller... " << TAIL << endl;
     }
-    else if (controller_flag == CONTOLLER_FLAG::UDE)
+    else if (pos_controller == POS_CONTOLLER::UDE)
     {
         // 【控制器】UDE控制器初始化
         pos_controller_ude.init(nh);
         cout << YELLOW << node_name << " Using the UDE controller... " << TAIL << endl;
     }
-    else if (controller_flag == CONTOLLER_FLAG::NE)
+    else if (pos_controller == POS_CONTOLLER::NE)
     {
         // 【控制器】NE控制器初始化
         pos_controller_ne.init(nh);
@@ -58,20 +58,26 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     }
     else
     {
-        controller_flag = CONTOLLER_FLAG::PX4_ORIGIN;
-        cout << YELLOW << node_name << " wrong controller_flag param, reset to PX4_ORIGIN! " << TAIL << endl;
+        pos_controller = POS_CONTOLLER::PX4_ORIGIN;
+        cout << YELLOW << node_name << " wrong pos_controller param, reset to PX4_ORIGIN! " << TAIL << endl;
     }
 
-    //【订阅】控制指令
+    //【订阅】无人机控制指令(用于COMMAND_CONTROL模式)
     uav_cmd_sub =
         nh.subscribe<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command",
                                                   1,
                                                   &UAV_controller::uav_cmd_cb, this);
 
-    //【订阅】状态信息
+    //【订阅】无人机状态信息
     uav_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/state",
                                                             1,
                                                             &UAV_controller::uav_state_cb, this);
+
+    //【订阅】无人机设置指令
+    uav_setup_sub =
+        nh.subscribe<prometheus_msgs::UAVSetup>("/uav" + std::to_string(uav_id) + "/prometheus/setup",
+                                                1,
+                                                &UAV_controller::uav_setup_cb, this);
 
     //【订阅】PX4中无人机的位置/速度/加速度设定值 坐标系:ENU系
     px4_position_target_sub =
@@ -90,7 +96,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     if (sim_mode)
     {
         rc_topic_name = "/uav" + std::to_string(uav_id) + "/prometheus/fake_rc_in";
-    }else
+    }
+    else
     {
         rc_topic_name = "/uav" + std::to_string(uav_id) + "/mavros/rc/in";
     }
@@ -98,33 +105,29 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
         nh.subscribe<mavros_msgs::RCIn>(rc_topic_name,
                                         1,
                                         &UAV_controller::px4_rc_cb, this);
-
-    //【订阅】无人机设置指令
-    uav_setup_sub =
-        nh.subscribe<prometheus_msgs::UAVSetup>("/uav" + std::to_string(uav_id) + "/prometheus/setup",
-                                                1,
-                                                &UAV_controller::uav_setup_cb, this);
-
-    offset_pose_sub = 
+    //【订阅】GPS位置偏移数据(用于户外多机飞行)
+    offset_pose_sub =
         nh.subscribe<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose",
-                                                1,
-                                                &UAV_controller::offset_pose_cb, this);
+                                                  1,
+                                                  &UAV_controller::offset_pose_cb, this);
 
-    // 【发布】位置/速度/加速度期望值 坐标系 ENU系
-    px4_setpoint_raw_local_pub = nh.advertise<mavros_msgs::PositionTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/local", 10);
+    // 【发布】位置/速度/加速度期望值 坐标系:ENU系
+    px4_setpoint_raw_local_pub = 
+        nh.advertise<mavros_msgs::PositionTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/local", 1);
 
-    // 【发布】经纬度以及高度位置 坐标系 WGS84坐标系
-    px4_setpoint_raw_global_pub = nh.advertise<mavros_msgs::GlobalPositionTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/global", 10);
+    // 【发布】经纬度以及高度位置 坐标系:WGS84坐标系
+    px4_setpoint_raw_global_pub = 
+        nh.advertise<mavros_msgs::GlobalPositionTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/global", 1);
 
     // 【发布】姿态期望值
     px4_setpoint_raw_attitude_pub =
-        nh.advertise<mavros_msgs::AttitudeTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/attitude", 10);
+        nh.advertise<mavros_msgs::AttitudeTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/attitude", 1);
 
     // 【发布】控制状态（监控用）
     uav_control_state_pub =
-        nh.advertise<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 10);
+        nh.advertise<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 1);
 
-    //【发布】运行状态信息(-> 通信节点 -> 地面站)
+    //【发布】运行状态信息(本节点 -> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
     // 【服务】解锁/上锁
@@ -138,17 +141,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
 
     // 【服务】重启PX4飞控
     px4_reboot_client = nh.serviceClient<mavros_msgs::CommandLong>("/uav" + std::to_string(uav_id) + "/mavros/cmd/command");
-
-    //集群控制中EXEC_STATE全程为COMMAND_CONTROL,因此初始化直接赋值为COMMAND_CONTROL
-    if (only_command_mode)
-    {
-        control_state = CONTROL_STATE::COMMAND_CONTROL;
-    }
-    else
-    {
-        control_state = CONTROL_STATE::INIT;
-    }
-
+    
+    control_state = CONTROL_STATE::INIT;
     uav_control_state.failsafe = false;
 
     // 初始化命令
@@ -162,6 +156,9 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     vel_des << 0.0, 0.0, 0.0;
     acc_des << 0.0, 0.0, 0.0;
     quick_land = false;
+
+    offset_pose.x = 0.0;
+    offset_pose.y = 0.0;
 
     uav_pos.setZero();
     uav_vel.setZero();
@@ -177,10 +174,9 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
 
 void UAV_controller::mainloop()
 {
-    // 安全检查 - 包括地理围栏、定位有效性检查
-    // MANUAL_CONTROL模式中不需要进行安全检查
     if (control_state == CONTROL_STATE::HOVER_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL)
     {
+        // 安全检查 - 包括地理围栏、定位有效性检查
         int safety_flag = check_failsafe();
 
         if (safety_flag == -1)
@@ -201,15 +197,20 @@ void UAV_controller::mainloop()
             uav_control_state.failsafe = true;
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
-    }
 
-    // 记录当前时间
-    ros::Time now_time = ros::Time::now();
+        // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
+        if (uav_state.mode != "OFFBOARD")
+        {
+            // 进入HOVER_CONTROL，需启动OFFBOARD模式
+            set_px4_mode_func("OFFBOARD");
+        }
+    }
 
     switch (control_state)
     {
     case CONTROL_STATE::INIT:
 
+        // do nothing
         break;
 
     case CONTROL_STATE::MANUAL_CONTROL:
@@ -219,17 +220,9 @@ void UAV_controller::mainloop()
         {
             set_px4_mode_func("POSCTL");
         }
-
         break;
 
     case CONTROL_STATE::HOVER_CONTROL:
-
-        // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
-        if (uav_state.mode != "OFFBOARD")
-        {
-            // 进入HOVER_CONTROL，需启动OFFBOARD模式
-            set_px4_mode_func("OFFBOARD");
-        }
 
         set_hover_pose_with_rc();
         pos_des = Hover_position;
@@ -239,17 +232,17 @@ void UAV_controller::mainloop()
         break;
 
     case CONTROL_STATE::COMMAND_CONTROL:
-       
-        // 发送控制指令 -> Mavros -> PX4
-        if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
+
+        // 设置期望值
+        if (pos_controller == POS_CONTOLLER::PX4_ORIGIN)
         {
             // PX4_ORIGIN支持所有控制模式
             set_command_des();
         }
         else
         {
-            // 目前内置的位置环控制器,如PID,UDE,NE仅支持位置控制(XYZ_POS)及轨迹控制(TRAJECTORY)
-            // 如果收到其他指令,则会转到初始悬停点
+            // 注意：目前内置的位置环控制器,如PID,UDE,NE仅支持位置控制(XYZ_POS)及轨迹控制(TRAJECTORY)
+            // 如果收到不支持的指令,则会转到初始悬停点
             set_command_des_for_pos_controller();
         }
 
@@ -258,54 +251,45 @@ void UAV_controller::mainloop()
     // 当前位置原地降落，降落后会自动上锁，且切换为mannual模式
     case CONTROL_STATE::LAND_CONTROL:
 
-        if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
+        if (uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
         {
             set_px4_mode_func("AUTO.LAND");
+        }else
+        {
+            if (last_control_state != CONTROL_STATE::LAND_CONTROL)
+            {
+                // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
+                if (quick_land)
+                {
+                    Land_speed = 1.0;
+                }
+                pos_des[0] = uav_pos[0];
+                pos_des[1] = uav_pos[1];
+                pos_des[2] = Takeoff_position[2]; // 高度设定为初始起飞时的高度
+                vel_des << 0.0, 0.0, -Land_speed;
+                acc_des << 0.0, 0.0, 0.0;
+                yaw_des = uav_yaw;
+            }
+            // 当无人机位置低于指定高度时，自动上锁
+            // 需要考虑万一高度数据不准确时，从高处自由落体
+            if (uav_pos[2] < Disarm_height)
+            {
+                // 此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
+                set_px4_mode_func("MANUAL");
+                // 进入急停
+                enable_emergency_func();
+            }
+        }
+
+        if (!uav_state.armed && uav_pos[2] < Disarm_height)
+        {
+            control_state = CONTROL_STATE::INIT;
             if (only_command_mode)
             {
                 control_state = CONTROL_STATE::COMMAND_CONTROL;
             }
-            else
-            {
-                control_state = CONTROL_STATE::INIT;
-            }
-		    break;
         }
 
-        // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
-        if (quick_land)
-        {
-            Land_speed = 1.0;
-        }
-
-        if (last_control_state == CONTROL_STATE::LAND_CONTROL)
-        {
-            pos_des[0] = uav_pos[0];
-            pos_des[1] = uav_pos[1];
-            pos_des[2] = Takeoff_position[2]; // 高度设定为初始起飞时的高度
-            vel_des << 0.0, 0.0, -Land_speed;
-            acc_des << 0.0, 0.0, 0.0;
-            yaw_des = uav_yaw;
-        }
-
-        // 当无人机位置低于指定高度时，自动上锁
-        // 需要考虑万一高度数据不准确时，从高处自由落体
-        if (uav_pos[2] < Disarm_height)
-        {
-            // 此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
-            set_px4_mode_func("MANUAL");
-            // 进入急停
-            enable_emergency_func();
-
-            if(!uav_state.armed)
-            {
-                control_state = CONTROL_STATE::INIT;
-                if (only_command_mode)
-                {
-                    control_state = CONTROL_STATE::COMMAND_CONTROL;
-                }
-            }
-        }
         break;
     }
 
@@ -314,7 +298,7 @@ void UAV_controller::mainloop()
     // 发布控制器状态
     uav_control_state.uav_id = uav_id;
     uav_control_state.control_state = control_state;
-    uav_control_state.controller_flag = controller_flag;
+    uav_control_state.pos_controller = pos_controller;
     uav_control_state_pub.publish(uav_control_state);
 
     // INIT和MANUAL_CONTROL不需要调用控制器，直接返回
@@ -324,12 +308,13 @@ void UAV_controller::mainloop()
     }
 
     // 依据controller_flag调用不同位置环控制算法进行控制
-    // 此时需要满足两个条件:1，无人机有稳定准确的定位 2，无人机知道自己要去哪，即期望位置pos_des等
-    // 定位信息由uav_state_cb()函数获得
+    // 此时需要满足两个条件:
+    // 1, 无人机有稳定准确的定位,由uav_state_cb()函数获得 
+    // 2, 无人机知道自己要去哪，即期望位置pos_des等
     // HOVER_CONTROL和LAND_CONTROL的指令信息由程序根据当前状态计算得到，COMMAND_CONTROL的指令信息由uav_cmd_cb()函数获得
 
     // 发送控制指令 -> Mavros -> PX4
-    if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
+    if (pos_controller == POS_CONTOLLER::PX4_ORIGIN)
     {
         // 发送位置控制指令至PX4的原生位置环控制器
         send_pos_cmd_to_px4_original_controller();
@@ -337,7 +322,6 @@ void UAV_controller::mainloop()
     else
     {
         // 利用Prometheus中编写的控制程序解算姿态控制指令
-        // 目前内置的位置环控制器,如PID,UDE,NE仅支持位置控制(XYZ_POS,XYZ_POS_BODY)及轨迹控制(TRAJECTORY)
         Eigen::Vector4d u_att = get_cmd_from_controller();
         // 发送姿态控制指令至PX4的原生姿态环控制器
         send_attitude_setpoint(u_att);
@@ -346,53 +330,42 @@ void UAV_controller::mainloop()
 
 Eigen::Vector4d UAV_controller::get_cmd_from_controller()
 {
-    Eigen::Vector4d u_att_from_pos_controller;
-    if (controller_flag == CONTOLLER_FLAG::PID)
+    // 期望值
+    Desired_State desired_state;
+    desired_state.pos = pos_des;
+    desired_state.vel = vel_des;
+    desired_state.acc = acc_des;
+    desired_state.yaw = yaw_des;
+    desired_state.q = geometry_utils::yaw_to_quaternion(yaw_des);
+    // 计算
+    if (pos_controller == POS_CONTOLLER::PID)
     {
         // 设定期望值
-        Desired_State desired_state;
-        desired_state.pos = pos_des;
-        desired_state.vel = vel_des;
-        desired_state.acc = acc_des;
-        desired_state.yaw = yaw_des;
-        desired_state.q = geometry_utils::yaw_to_quaternion(yaw_des);
         pos_controller_pid.set_desired_state(desired_state);
         // 设定当前值
         pos_controller_pid.set_current_state(uav_state);
         // 控制器更新
-        u_att_from_pos_controller = pos_controller_pid.update(200.0);
+        Eigen::Vector4d u_att_from_pos_controller = pos_controller_pid.update(200.0);
         return u_att_from_pos_controller;
     }
-    else if (controller_flag == CONTOLLER_FLAG::UDE)
+    else if (pos_controller == POS_CONTOLLER::UDE)
     {
         // 设定期望值
-        Desired_State desired_state;
-        desired_state.pos = pos_des;
-        desired_state.vel = vel_des;
-        desired_state.acc = acc_des;
-        desired_state.yaw = yaw_des;
-        desired_state.q = geometry_utils::yaw_to_quaternion(yaw_des);
         pos_controller_ude.set_desired_state(desired_state);
         // 设定当前值
         pos_controller_ude.set_current_state(uav_state);
         // 控制器更新
-        u_att_from_pos_controller = pos_controller_ude.update(200.0);
+        Eigen::Vector4d u_att_from_pos_controller = pos_controller_ude.update(200.0);
         return u_att_from_pos_controller;
     }
-    else if (controller_flag == CONTOLLER_FLAG::NE)
+    else if (pos_controller == POS_CONTOLLER::NE)
     {
         // 设定期望值
-        Desired_State desired_state;
-        desired_state.pos = pos_des;
-        desired_state.vel = vel_des;
-        desired_state.acc = acc_des;
-        desired_state.yaw = yaw_des;
-        desired_state.q = geometry_utils::yaw_to_quaternion(yaw_des);
         pos_controller_ne.set_desired_state(desired_state);
         // 设定当前值
         pos_controller_ne.set_current_state(uav_state);
         // 控制器更新
-        u_att_from_pos_controller = pos_controller_ne.update(200.0);
+        Eigen::Vector4d u_att_from_pos_controller = pos_controller_ne.update(200.0);
         return u_att_from_pos_controller;
     }
 }
@@ -440,7 +413,7 @@ void UAV_controller::set_command_des()
     }
     else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover)
     {
-        // 【Current_Pos_Hover】 悬停。当前位置悬停
+        // 【Current_Pos_Hover】 当前位置悬停
         if (uav_command_last.Agent_CMD != prometheus_msgs::UAVCommand::Current_Pos_Hover)
         {
             Hover_position = uav_pos;
@@ -462,15 +435,9 @@ void UAV_controller::set_command_des()
         if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS)
         {
             // 【XYZ_POS】XYZ惯性系定点控制
-            pos_des[0] = uav_command.position_ref[0];
-            pos_des[1] = uav_command.position_ref[1];
+            pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+            pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
             pos_des[2] = uav_command.position_ref[2];
-            if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
-            {
-                pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
-                pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
-                pos_des[2] = uav_command.position_ref[2];
-            }
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
             yaw_des = uav_command.yaw_ref;
@@ -494,14 +461,8 @@ void UAV_controller::set_command_des()
             vel_des[1] = uav_command.velocity_ref[1];
             vel_des[2] = uav_command.velocity_ref[2];
             acc_des << 0.0, 0.0, 0.0;
-            if (uav_command.Yaw_Rate_Mode)
-            {
-                yaw_rate_des = uav_command.yaw_rate_ref;
-            }
-            else
-            {
-                yaw_des = uav_command.yaw_ref;
-            }
+            yaw_rate_des = uav_command.yaw_rate_ref;
+            yaw_des = uav_command.yaw_ref;
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS_BODY)
         {
@@ -516,15 +477,9 @@ void UAV_controller::set_command_des()
                 uav_command.position_ref[0] = uav_pos[0] + d_pos_enu[0];
                 uav_command.position_ref[1] = uav_pos[1] + d_pos_enu[1];
                 uav_command.position_ref[2] = uav_pos[2] + uav_command.position_ref[2];
-                pos_des[0] = uav_command.position_ref[0];
-                pos_des[1] = uav_command.position_ref[1];
+                pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+                pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
                 pos_des[2] = uav_command.position_ref[2];
-                if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
-                {
-                    pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
-                    pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
-                    pos_des[2] = uav_command.position_ref[2];
-                }
                 vel_des << 0.0, 0.0, 0.0;
                 acc_des << 0.0, 0.0, 0.0;
                 yaw_des = uav_command.yaw_ref;
@@ -544,14 +499,8 @@ void UAV_controller::set_command_des()
             vel_des[1] = uav_command.velocity_ref[1];
             vel_des[2] = uav_command.velocity_ref[2];
             acc_des << 0.0, 0.0, 0.0;
-            if (uav_command.Yaw_Rate_Mode)
-            {
-                yaw_rate_des = uav_command.yaw_rate_ref;
-            }
-            else
-            {
-                yaw_des = uav_command.yaw_ref;
-            }
+            yaw_rate_des = uav_command.yaw_rate_ref;
+            yaw_des = uav_command.yaw_ref;
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY)
         {
@@ -600,7 +549,8 @@ void UAV_controller::set_command_des()
                 yaw_des = uav_command.yaw_ref;
                 cout << RED << node_name << "Pls set enable_external_control to true, reset to Init_Pos_Hover!" << TAIL << endl;
             }
-        }else if(uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
+        }
+        else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
         {
             global_pos_des[0] = uav_command.latitude;
             global_pos_des[1] = uav_command.longitude;
@@ -609,7 +559,6 @@ void UAV_controller::set_command_des()
         }
         else
         {
-            get_valid_command = false;
             cout << RED << node_name << "Wrong command!" << TAIL << endl;
         }
     }
@@ -638,16 +587,9 @@ void UAV_controller::set_command_des_for_pos_controller()
         //【Move】 移动，移动子模式的区别详见UAVCommand.msg中的说明
         if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS)
         {
-            pos_des[0] = uav_command.position_ref[0];
-            pos_des[1] = uav_command.position_ref[1];
+            pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
+            pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
             pos_des[2] = uav_command.position_ref[2];
-            // 【XYZ_POS】XYZ惯性系定点控制
-            if(uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
-            {
-                pos_des[0] = uav_command.position_ref[0] - offset_pose.x;
-                pos_des[1] = uav_command.position_ref[1] - offset_pose.y;
-                pos_des[2] = uav_command.position_ref[2];
-            }
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
             yaw_des = uav_command.yaw_ref;
@@ -666,9 +608,10 @@ void UAV_controller::set_command_des_for_pos_controller()
         else
         {
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
-            cout << RED << node_name << "Pls set controller_flag to PX4_ORIGIN, reset to Current_Pos_Hover!" << TAIL << endl;
+            cout << RED << node_name << "Pls set pos_controller to PX4_ORIGIN, reset to Current_Pos_Hover!" << TAIL << endl;
         }
-    }else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover)
+    }
+    else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover)
     {
         // 【Current_Pos_Hover】 悬停。当前位置悬停
         if (uav_command_last.Agent_CMD != prometheus_msgs::UAVCommand::Current_Pos_Hover)
@@ -685,13 +628,10 @@ void UAV_controller::set_command_des_for_pos_controller()
     // 记录上一时刻命令
     uav_command_last = uav_command;
 }
- 
 
 void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
 {
     uav_command = *msg;
-    get_valid_command = true;
-    get_cmd_time = ros::Time::now(); // 时间戳
 }
 
 void UAV_controller::send_pos_cmd_to_px4_original_controller()
@@ -705,6 +645,13 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
 
     if (control_state == CONTROL_STATE::LAND_CONTROL)
     {
+        // 如果取消注释这一段，还是会弹跳
+        // if (uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
+        // {
+        //     // 使用AUTO.LAND模式降落，因此不需要发送
+        //     return;
+        // }
+
         if (quick_land)
         {
             // quick_land一般用于位置失效情况，因此直接使用速度控制
@@ -714,7 +661,6 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
         {
             send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
         }
-        // send_vel_setpoint(vel_des,yaw_des);
         return;
     }
 
@@ -764,7 +710,8 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             {
                 // 此处为使用外部发布的姿态期望值
                 send_attitude_setpoint(u_att);
-            }else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
+            }
+            else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
             {
                 send_global_setpoint(global_pos_des, yaw_des);
             }
@@ -802,7 +749,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
     // 调用外部函数对遥控器数据进行处理，具体见rc_data.h，此时rc_input中的状态已更新
     rc_input.handle_rc_data(msg, only_command_mode);
 
-    // 重启PX4飞控，条件: 1、无人机已上锁
+    // 重启PX4飞控，条件: 无人机已上锁
     if (rc_input.toggle_reboot && !uav_state.armed)
     {
         rc_input.toggle_reboot = false;
@@ -810,7 +757,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 紧急KILL，条件: 无条件
+    // 紧急KILL指令
     if (rc_input.toggle_kill)
     {
         rc_input.toggle_kill = false;
@@ -828,7 +775,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 解锁，条件: 1、已上锁
+    // 解锁，条件: 无人机已上锁
     if (rc_input.toggle_arm && !uav_state.armed)
     {
         rc_input.toggle_arm = false;
@@ -836,7 +783,8 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 上锁，条件: 1、已解锁，2、位于manual模式？
+    // 上锁，条件: 无人机已解锁
+    // PX4代码规定:无人机必须处于地面时才可以上锁
     if (rc_input.toggle_disarm && uav_state.armed)
     {
         rc_input.toggle_arm = false;
@@ -869,10 +817,8 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         }
         // 切换至HOVER_CONTROL
         control_state = CONTROL_STATE::HOVER_CONTROL;
-        // 初始化默认的command
+        // 初始化默认的UAVCommand
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-        // 进入HOVER_CONTROL，需启动OFFBOARD模式
-        set_px4_mode_func("OFFBOARD");
         // 进入HOVER_CONTROL，需设置初始悬停点
         set_hover_pose_with_odom();
         cout << GREEN << node_name << " Switch to HOVER_CONTROL" << TAIL << endl;
@@ -900,7 +846,7 @@ int UAV_controller::check_failsafe()
 
     if (uav_state.position[0] < uav_geo_fence.x_min || uav_state.position[0] > uav_geo_fence.x_max ||
         uav_state.position[1] < uav_geo_fence.y_min || uav_state.position[1] > uav_geo_fence.y_max ||
-        uav_state.position[2]  < uav_geo_fence.z_min || uav_state.position[2]  > uav_geo_fence.z_max)
+        uav_state.position[2] < uav_geo_fence.z_min || uav_state.position[2] > uav_geo_fence.z_max)
     {
         cout << RED << uav_name << ":----> Failsafe: Out of the geo fence, swtich to land control mode！" << TAIL << endl;
         return 1;
@@ -932,14 +878,18 @@ void UAV_controller::uav_setup_cb(const prometheus_msgs::UAVSetup::ConstPtr &msg
     }
     else if (msg->cmd == prometheus_msgs::UAVSetup::SET_CONTROL_MODE)
     {
-        // todo
+        // todo more test
+        if (msg->control_state == "COMMAND_CONTROL" && uav_state.armed)
+        {
+            cout << GREEN << node_name << " Switch to COMMAND_CONTROL by uav_setup cmd" << TAIL << endl;
+            control_state = CONTROL_STATE::COMMAND_CONTROL;
+        }
     }
 }
 
 void UAV_controller::send_idle_cmd()
 {
     mavros_msgs::PositionTarget pos_setpoint;
-
     //飞控如何接收该信号请见mavlink_receiver.cpp
     //飞控如何执行该指令请见FlightTaskOffboard.cpp
     pos_setpoint.type_mask = 0x4000;
@@ -953,8 +903,7 @@ void UAV_controller::send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_
     // Bitmask toindicate which dimensions should be ignored (1 means ignore,0 means not ignore; Bit 10 must set to 0)
     // Bit 1:x, bit 2:y, bit 3:z, bit 4:vx, bit 5:vy, bit 6:vz, bit 7:ax, bit 8:ay, bit 9:az, bit 10:is_force_sp, bit 11:yaw, bit 12:yaw_rate
     // Bit 10 should set to 0, means is not force sp
-    pos_setpoint.type_mask = 0b100111111000; // 100 111 111 000  xyz + yaw
-                                             // TEST
+    // pos_setpoint.type_mask = 0b100111111000; // 100 111 111 000  xyz + yaw
     pos_setpoint.type_mask = mavros_msgs::PositionTarget::IGNORE_VX |
                              mavros_msgs::PositionTarget::IGNORE_VY |
                              mavros_msgs::PositionTarget::IGNORE_VZ |
@@ -965,13 +914,10 @@ void UAV_controller::send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_
                              mavros_msgs::PositionTarget::IGNORE_YAW_RATE;
 
     pos_setpoint.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
-
     pos_setpoint.position.x = pos_sp[0];
     pos_setpoint.position.y = pos_sp[1];
     pos_setpoint.position.z = pos_sp[2];
-
     pos_setpoint.yaw = yaw_sp;
-
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
@@ -979,17 +925,12 @@ void UAV_controller::send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_
 void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_sp)
 {
     mavros_msgs::PositionTarget pos_setpoint;
-
     pos_setpoint.type_mask = 0b100111000111;
-
     pos_setpoint.coordinate_frame = 1;
-
     pos_setpoint.velocity.x = vel_sp[0];
     pos_setpoint.velocity.y = vel_sp[1];
     pos_setpoint.velocity.z = vel_sp[2];
-
     pos_setpoint.yaw = yaw_sp;
-
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
@@ -997,78 +938,57 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
 void UAV_controller::send_vel_setpoint_yaw_rate(const Eigen::Vector3d &vel_sp, float yaw_rate_sp)
 {
     mavros_msgs::PositionTarget pos_setpoint;
-
     pos_setpoint.type_mask = 0b010111000111;
-
     pos_setpoint.coordinate_frame = 1;
-
     pos_setpoint.velocity.x = vel_sp[0];
     pos_setpoint.velocity.y = vel_sp[1];
     pos_setpoint.velocity.z = vel_sp[2];
-
     pos_setpoint.yaw_rate = yaw_rate_sp;
-
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
 void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_sp)
 {
     mavros_msgs::PositionTarget pos_setpoint;
-
     // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
     pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
-
     pos_setpoint.coordinate_frame = 1;
-
     pos_setpoint.velocity.x = vel_sp[0];
     pos_setpoint.velocity.y = vel_sp[1];
     pos_setpoint.velocity.z = 0.0;
     pos_setpoint.position.z = pos_sp[2];
-
     pos_setpoint.yaw = yaw_sp;
-
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
 void UAV_controller::send_vel_xy_pos_z_setpoint_yaw_rate(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_rate_sp)
 {
     mavros_msgs::PositionTarget pos_setpoint;
-
     // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
     pos_setpoint.type_mask = 0b010111000011; // 010 111 000 011  vx vy vz z + yaw_rate
-
     pos_setpoint.coordinate_frame = 1;
-
     pos_setpoint.velocity.x = vel_sp[0];
     pos_setpoint.velocity.y = vel_sp[1];
     pos_setpoint.velocity.z = 0.0;
     pos_setpoint.position.z = pos_sp[2];
-
     pos_setpoint.yaw_rate = yaw_rate_sp;
-
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
 void UAV_controller::send_pos_vel_xyz_setpoint(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_sp)
 {
     mavros_msgs::PositionTarget pos_setpoint;
-
     // 速度作为前馈项， 参见FlightTaskOffboard.cpp
-    // 2. position setpoint + velocity setpoint (velocity used as feedforward)
     // 控制方法请见 PositionControl.cpp
     pos_setpoint.type_mask = 0b100111000000; // 100 111 000 000  vx vy　vz x y z+ yaw
-
     pos_setpoint.coordinate_frame = 1;
-
     pos_setpoint.position.x = pos_sp[0];
     pos_setpoint.position.y = pos_sp[1];
     pos_setpoint.position.z = pos_sp[2];
     pos_setpoint.velocity.x = vel_sp[0];
     pos_setpoint.velocity.y = vel_sp[1];
     pos_setpoint.velocity.z = vel_sp[2];
-
     pos_setpoint.yaw = yaw_sp;
-
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
@@ -1076,23 +996,13 @@ void UAV_controller::send_pos_vel_xyz_setpoint(const Eigen::Vector3d &pos_sp, co
 void UAV_controller::send_acc_xyz_setpoint(const Eigen::Vector3d &accel_sp, float yaw_sp)
 {
     mavros_msgs::PositionTarget pos_setpoint;
-
     pos_setpoint.type_mask = 0b100000111111;
-
     pos_setpoint.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
-
     pos_setpoint.acceleration_or_force.x = accel_sp[0];
     pos_setpoint.acceleration_or_force.y = accel_sp[1];
     pos_setpoint.acceleration_or_force.z = accel_sp[2];
-
     pos_setpoint.yaw = yaw_sp;
-
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
-
-    // 检查飞控是否收到控制量
-    // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
-    // cout << "Acc_target [X Y Z] : " << px4_acc_target[0] << " [m/s^2] "<< px4_acc_target[1]<<" [m/s^2] "<<px4_acc_target[2]<<" [m/s^2] "<<endl;
-    // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
 }
 
 // 发送角度期望值至飞控（输入: 期望角度-四元数,期望推力）
@@ -1108,26 +1018,19 @@ void UAV_controller::send_attitude_setpoint(Eigen::Vector4d &u_att)
 
     Eigen::Vector3d att_des;
     att_des << u_att(0), u_att(1), u_att(2);
-
     Eigen::Quaterniond q_des = quaternion_from_rpy(att_des);
-
     att_setpoint.orientation.x = q_des.x();
     att_setpoint.orientation.y = q_des.y();
     att_setpoint.orientation.z = q_des.z();
     att_setpoint.orientation.w = q_des.w();
     att_setpoint.thrust = u_att(3);
-
     px4_setpoint_raw_attitude_pub.publish(att_setpoint);
 }
 
 // 发送经纬度以及高度期望值至飞控(输入,期望lat/lon/alt,期望yaw)
 void UAV_controller::send_global_setpoint(const Eigen::Vector3d &global_pos_sp, float yaw_sp)
 {
-    //直接从uav_command读取数据
-    // 新建一个publish,发布
-    // xx.publish()
     mavros_msgs::GlobalPositionTarget global_setpoint;
-    
     //该话题支持三个坐标系:
     //FRAME_GLOBAL_INT 高度数据为海拔高度
     //FRAME_GLOBAL_REL_ALT 高度数据为相对起始位置的高度,HOME点的高度为0
@@ -1136,9 +1039,9 @@ void UAV_controller::send_global_setpoint(const Eigen::Vector3d &global_pos_sp, 
     //https://mavlink.io/en/messages/common.html#MAV_FRAME_GLOBAL_INT  坐标系的详细介绍
     global_setpoint.coordinate_frame = mavros_msgs::GlobalPositionTarget::FRAME_GLOBAL_REL_ALT;
     global_setpoint.type_mask = 0b100111111000;
-    global_setpoint.latitude  = global_pos_sp[0];
+    global_setpoint.latitude = global_pos_sp[0];
     global_setpoint.longitude = global_pos_sp[1];
-    global_setpoint.altitude  = global_pos_sp[2];
+    global_setpoint.altitude = global_pos_sp[2];
     global_setpoint.yaw = yaw_sp;
     px4_setpoint_raw_global_pub.publish(global_setpoint);
 }
@@ -1153,7 +1056,7 @@ void UAV_controller::rotation_yaw(double yaw_angle, float body_frame[2], float e
 
 void UAV_controller::printf_control_state()
 {
-    cout << GREEN << ">>>>>>>>>>>>>>>>>> UAV [" << uav_id << "] Controller  <<<<<<<<<<<<<<<<<<" << TAIL << endl;
+    cout << GREEN << ">>>>>>>>>>>>>>>>>>>> UAV [" << uav_id << "] Controller  <<<<<<<<<<<<<<<<<<" << TAIL << endl;
 
     //固定的浮点显示
     cout.setf(ios::fixed);
@@ -1198,22 +1101,22 @@ void UAV_controller::printf_control_state()
     }
 
     // 打印控制器选择信息
-    switch (controller_flag)
+    switch (pos_controller)
     {
-    case CONTOLLER_FLAG::PX4_ORIGIN:
-        cout << GREEN << "Controller: [ PX4_ORIGIN ] " << TAIL << endl;
+    case POS_CONTOLLER::PX4_ORIGIN:
+        cout << GREEN << "Controller  : [ PX4_ORIGIN ] " << TAIL << endl;
         break;
 
-    case CONTOLLER_FLAG::PID:
-        cout << GREEN << "Controller: [ PID ] " << TAIL << endl;
+    case POS_CONTOLLER::PID:
+        cout << GREEN << "Controller  : [ PID ] " << TAIL << endl;
         pos_controller_pid.printf_result();
         break;
-    case CONTOLLER_FLAG::UDE:
-        cout << GREEN << "Controller: [ UDE ] " << TAIL << endl;
+    case POS_CONTOLLER::UDE:
+        cout << GREEN << "Controller  : [ UDE ] " << TAIL << endl;
         pos_controller_ude.printf_result();
         break;
-    case CONTOLLER_FLAG::NE:
-        cout << GREEN << "Controller: [ NE ] " << TAIL << endl;
+    case POS_CONTOLLER::NE:
+        cout << GREEN << "Controller  : [ NE ] " << TAIL << endl;
         pos_controller_ne.printf_result();
         break;
     }
@@ -1291,7 +1194,7 @@ void UAV_controller::printf_control_state()
                 cout << GREEN << "Att_ref [X Y Z] : " << uav_command.att_ref[0] * 180 / M_PI << " [deg] " << uav_command.att_ref[1] * 180 / M_PI << " [deg] " << uav_command.att_ref[2] * 180 / M_PI << " [deg] " << TAIL << endl;
                 cout << GREEN << "Thrust_ref[0-1] : " << uav_command.att_ref[3] << TAIL << endl;
             }
-            else if(uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
+            else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
             {
                 cout << GREEN << "Command: [ Move in LAT_LON_ALT ] " << TAIL << endl;
                 cout << GREEN << "LAT : " << uav_command.latitude << " LON :  " << uav_command.longitude << " ALT : " << uav_command.altitude << TAIL << endl;
@@ -1306,7 +1209,7 @@ void UAV_controller::printf_control_state()
     }
 
     // 打印PX4回传信息用于验证
-    if (controller_flag == CONTOLLER_FLAG::PX4_ORIGIN)
+    if (pos_controller == POS_CONTOLLER::PX4_ORIGIN)
     {
         if (enable_external_control)
         {
@@ -1317,12 +1220,13 @@ void UAV_controller::printf_control_state()
         {
             cout << GREEN << "Pos_target [X Y Z] : " << px4_pos_target[0] << " [ m ] " << px4_pos_target[1] << " [ m ] " << px4_pos_target[2] << " [ m ] " << TAIL << endl;
             cout << GREEN << "Vel_target [X Y Z] : " << px4_vel_target[0] << " [m/s] " << px4_vel_target[1] << " [m/s] " << px4_vel_target[2] << " [m/s] " << TAIL << endl;
-            cout << GREEN << "Yaw_target : " << px4_att_target[2] * 180 / M_PI << " [deg] " << TAIL << endl;
+            cout << GREEN << "Yaw_target         : " << px4_att_target[2] * 180 / M_PI << " [deg] " << TAIL << endl;
+            cout << GREEN << "Thr_target [X Y Z] : " << px4_thrust_target << TAIL << endl;
         }
     }
-    else if (controller_flag == CONTOLLER_FLAG::PID ||
-             controller_flag == CONTOLLER_FLAG::UDE ||
-             controller_flag == CONTOLLER_FLAG::UDE)
+    else if (pos_controller == POS_CONTOLLER::PID ||
+             pos_controller == POS_CONTOLLER::UDE ||
+             pos_controller == POS_CONTOLLER::UDE)
     {
         cout << GREEN << "Att_target [X Y Z] : " << px4_att_target[0] * 180 / M_PI << " [deg] " << px4_att_target[1] * 180 / M_PI << " [deg] " << px4_att_target[2] * 180 / M_PI << " [deg] " << TAIL << endl;
         cout << GREEN << "Thr_target [X Y Z] : " << px4_thrust_target << TAIL << endl;
@@ -1333,14 +1237,14 @@ void UAV_controller::printf_param()
 {
     cout << GREEN << ">>>>>>>>>>>>>>>> UAV controller Param <<<<<<<<<<<<<<<<" << TAIL << endl;
 
-    cout << GREEN << "uav_id                         : " << uav_id << " " << TAIL << endl;
-    cout << GREEN << "sim_mode                       : " << sim_mode << " " << TAIL << endl;
-    cout << GREEN << "only_command_mode              : " << only_command_mode << " " << TAIL << endl;
-    cout << GREEN << "controller_flag                : " << controller_flag << TAIL << endl;
-    cout << GREEN << "enable_external_control        : " << enable_external_control << TAIL << endl;
-    cout << GREEN << "Takeoff_height                 : " << Takeoff_height << " [m] " << TAIL << endl;
-    cout << GREEN << "Disarm_height    : " << Disarm_height << " [m] " << TAIL << endl;
-    cout << GREEN << "Land_speed       : " << Land_speed << " [m/s] " << TAIL << endl;
+    cout << GREEN << "uav_id                    : " << uav_id << " " << TAIL << endl;
+    cout << GREEN << "sim_mode                  : " << sim_mode << " " << TAIL << endl;
+    cout << GREEN << "only_command_mode         : " << only_command_mode << " " << TAIL << endl;
+    cout << GREEN << "pos_controller            : " << pos_controller << TAIL << endl;
+    cout << GREEN << "enable_external_control   : " << enable_external_control << TAIL << endl;
+    cout << GREEN << "Takeoff_height            : " << Takeoff_height << " [m] " << TAIL << endl;
+    cout << GREEN << "Disarm_height             : " << Disarm_height << " [m] " << TAIL << endl;
+    cout << GREEN << "Land_speed                : " << Land_speed << " [m/s] " << TAIL << endl;
     cout << GREEN << "geo_fence_x : " << uav_geo_fence.x_min << " [m]  to  " << uav_geo_fence.x_min << " [m]" << TAIL << endl;
     cout << GREEN << "geo_fence_y : " << uav_geo_fence.y_min << " [m]  to  " << uav_geo_fence.y_max << " [m]" << TAIL << endl;
     cout << GREEN << "geo_fence_z : " << uav_geo_fence.z_min << " [m]  to  " << uav_geo_fence.z_max << " [m]" << TAIL << endl;
@@ -1356,17 +1260,20 @@ void UAV_controller::px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstP
 void UAV_controller::px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg)
 {
     Eigen::Quaterniond px4_q_target = Eigen::Quaterniond(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
-    // Transform the Quaternion to euler Angles
     px4_att_target = quaternion_to_euler(px4_q_target);
-
     px4_rates_target = Eigen::Vector3d(msg->body_rate.x, msg->body_rate.y, msg->body_rate.z);
-
     px4_thrust_target = msg->thrust;
 }
 
 void UAV_controller::offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg)
 {
-    offset_pose = *msg;
+    if (uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
+    {
+        offset_pose = *msg;
+    }else
+    {
+        cout << RED << node_name << " get offset_pose, but wrong location_source!" << TAIL << endl;
+    }
 }
 
 /***
@@ -1431,11 +1338,6 @@ void UAV_controller::set_px4_mode_func(string mode)
     px4_set_mode_client.call(mode_cmd);
 }
 
-/**
- * @brief 无人机紧急制动函数
- * https://mavlink.io/en/messages/common.html#MAV_CMD_COMPONENT_ARM_DISARM
- * @return ** void
- */
 void UAV_controller::enable_emergency_func()
 {
     mavros_msgs::CommandLong emergency_srv;
@@ -1449,9 +1351,8 @@ void UAV_controller::enable_emergency_func()
     emergency_srv.request.param5 = 0.0;
     emergency_srv.request.param6 = 0.0;
     emergency_srv.request.param7 = 0.0;
-
     px4_emergency_client.call(emergency_srv);
-    ROS_INFO_STREAM_ONCE("\033[1;32m---->force disarmed....\033[0m");
+    cout << YELLOW << node_name << "kill cmd: force disarmed" << TAIL << endl;
 }
 
 void UAV_controller::reboot_PX4()
@@ -1463,8 +1364,6 @@ void UAV_controller::reboot_PX4()
     reboot_srv.request.param1 = 1;    // Reboot autopilot
     reboot_srv.request.param2 = 0;    // Do nothing for onboard computer
     reboot_srv.request.confirmation = true;
-
     px4_reboot_client.call(reboot_srv);
-
     cout << GREEN << node_name << " Reboot PX4!" << TAIL << endl;
 }
