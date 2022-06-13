@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.5'>
-  <model name='fake_p230_1'>
+  <model name='fake_p230_5'>
     <static>1</static>
     <!-- Solo body -->
     <link name='base_link'>
@@ -173,25 +173,13 @@
       </axis>
     </joint>
 
-    <joint name="2Dlidar_joint" type="fixed">
-      <child>lidar_link</child>
-      <parent>base_link</parent>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <upper>0</upper>
-          <lower>0</lower>
-        </limit>
-      </axis>
-    </joint>
-
     <!-- plugins: libgazebo_ros_p3d -->
     <!-- 发布真值,模拟vicon系统 -->
     <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
       <alwaysOn>true</alwaysOn>
       <updateRate>50.0</updateRate>
       <bodyName>base_link</bodyName>
-      <topicName>/uav1/gazebo_truth/odom</topicName>
+      <topicName>/uav5/gazebo_truth/odom</topicName>
       <gaussianNoise>0.00</gaussianNoise>
       <frameName>world</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
