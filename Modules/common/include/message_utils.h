@@ -1,10 +1,3 @@
-/***************************************************************************************************************************
-* message_utils.h
-*
-* Author: Jario
-*
-* Update Time: 2020.4.29
-***************************************************************************************************************************/
 #ifndef PROMETHEUS_MESSAGE_UTILS_H
 #define PROMETHEUS_MESSAGE_UTILS_H
 
@@ -38,7 +31,6 @@ inline void printf_message(const prometheus_msgs::Message& message)
     {
         cout << "[ERROR]" << "["<< message.source_node << "]:" << message.content <<endl;
     }
-    
 }
 
 #endif

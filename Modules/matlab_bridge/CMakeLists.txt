@@ -44,7 +44,6 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ../common/include
-  ../uav_control/include
 )
 
 

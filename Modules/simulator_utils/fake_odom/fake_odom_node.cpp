@@ -32,18 +32,21 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "fake_odom_node");
     ros::NodeHandle nh("~");
-    // fake_odom 主要是取代PX4在环仿真+Gazebo，
-    // 订阅来自uav_control的底层控制指令，根据建立的无人机数学模型，计算并发布无人机状态数据，直接将动力学结果输出至RVIZ界面，完成快速简易仿真
-    // fake_odom还可以发布model_state 直接将结果显示在Gazebo中，实现实景仿真
+    // fake_odom 主要是取代 PX4 SITL,跳过PX4内部执行的环节，直接使用数值计算的方式模拟无人机模型的运动状态
+    // 输入: uav_control的底层控制指令,即/mavros/setpoint_raw/local 或 /mavros/setpoint_raw/attitude
+    // 输出: 模拟得到的无人机里程计,即/prometheus/fake_odom
+    // 输出: 发布model_state 直接将结果显示在Gazebo中，实现实景仿真
+
+    // fake_odom 仿真数据流:
     // 仿真器中包含了地图生成器，可以模拟传感器发布全局地图和局部地图信息，用于规划模块的输入
     // 用于规划算法仿真：地图模拟 ---> 规划模块(如A*) --- (规划指令,/prometheus/command) ---> 控制模块(即uav_cotrol) --- (底层控制指令,即mavros指令) ---> fake_odom 
     // 同时控制算法仿真：控制模块(即uav_cotrol) --- (底层控制指令,即mavros指令) ---> fake_odom 
 
-    nh.param("fake_odom/swarm_num_uav", swarm_num_uav, 8);
-    nh.param("fake_odom/swarm_num_ugv", swarm_num_ugv, 8);
-    nh.param("fake_odom/manual_init_pos", manual_init_pos, false);
-    nh.param("fake_odom/preset_init_pos_flag", preset_init_pos_flag, 1);
-    nh.param("fake_odom/pub_gazebo_model_state", pub_gazebo_model_state, false);
+    nh.param("fake_odom/swarm_num_uav", swarm_num_uav, 8);                          // 无人机数量
+    nh.param("fake_odom/swarm_num_ugv", swarm_num_ugv, 8);                          // 无人车数量
+    nh.param("fake_odom/manual_init_pos", manual_init_pos, false);                  // 是否手动设定初始点
+    nh.param("fake_odom/preset_init_pos_flag", preset_init_pos_flag, 1);            // 预设初始点
+    nh.param("fake_odom/pub_gazebo_model_state", pub_gazebo_model_state, false);    // 是否发布gazebo位置
 
     unsigned int seed = rd();
     eng.seed(seed);
