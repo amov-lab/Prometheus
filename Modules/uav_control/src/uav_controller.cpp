@@ -10,8 +10,6 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     node_name = "[uav_controller_uav" + std::to_string(uav_id) + "]";
     // 【参数】是否仿真模式
     nh.param<bool>("sim_mode", sim_mode, true);
-    // 【参数】仅COMMAND_CONTROL模式（用于集群和测试）(no rc mode,to do with swarm)
-    nh.param<bool>("only_command_mode", only_command_mode, false);
     // 【参数】控制器标志位,具体说明见CONTOLLER_FLAG说明
     nh.param<int>("control/pos_controller", pos_controller, 0);
     // 【参数】使用外部控制器的控制指令，直接发送至PX4，这种方式依赖外部控制器的稳定性，需要小心！
@@ -105,6 +103,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
         nh.subscribe<mavros_msgs::RCIn>(rc_topic_name,
                                         1,
                                         &UAV_controller::px4_rc_cb, this);
+    
     //【订阅】GPS位置偏移数据(用于户外多机飞行)
     offset_pose_sub =
         nh.subscribe<prometheus_msgs::OffsetPose>("/uav" + std::to_string(uav_id) + "/prometheus/offset_pose",
@@ -164,7 +163,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     uav_vel.setZero();
     u_att.setZero();
 
-    rc_input.init(only_command_mode);
+    rc_input.init();
 
     text_info.header.stamp = ros::Time::now();
     text_info.MessageType = prometheus_msgs::TextInfo::INFO;
@@ -174,7 +173,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
 
 void UAV_controller::mainloop()
 {
-    if (control_state == CONTROL_STATE::HOVER_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL)
+    if (control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL)
     {
         // 安全检查 - 包括地理围栏、定位有效性检查
         int safety_flag = check_failsafe();
@@ -210,19 +209,20 @@ void UAV_controller::mainloop()
     {
     case CONTROL_STATE::INIT:
 
-        // do nothing
-        break;
-
-    case CONTROL_STATE::MANUAL_CONTROL:
-
-        // 检查无人机是否位于定点模式，否则切换至定点模式
-        if (uav_state.mode != "POSCTL")
+        if(sim_mode)
         {
-            set_px4_mode_func("POSCTL");
+
+        }else
+        {
+            // 检查无人机是否位于定点模式，否则切换至定点模式
+            if (uav_state.mode != "POSCTL")
+            {
+                set_px4_mode_func("POSCTL");
+            }
         }
         break;
 
-    case CONTROL_STATE::HOVER_CONTROL:
+    case CONTROL_STATE::RC_POS_CONTROL:
 
         set_hover_pose_with_rc();
         pos_des = Hover_position;
@@ -274,8 +274,6 @@ void UAV_controller::mainloop()
             // 需要考虑万一高度数据不准确时，从高处自由落体
             if (uav_pos[2] < Disarm_height)
             {
-                // 此处切换会manual模式是因为:PX4默认在offboard模式且有控制的情况下没法上锁,直接使用飞控中的land模式
-                set_px4_mode_func("MANUAL");
                 // 进入急停
                 enable_emergency_func();
             }
@@ -284,10 +282,6 @@ void UAV_controller::mainloop()
         if (!uav_state.armed && uav_pos[2] < Disarm_height)
         {
             control_state = CONTROL_STATE::INIT;
-            if (only_command_mode)
-            {
-                control_state = CONTROL_STATE::COMMAND_CONTROL;
-            }
         }
 
         break;
@@ -301,8 +295,8 @@ void UAV_controller::mainloop()
     uav_control_state.pos_controller = pos_controller;
     uav_control_state_pub.publish(uav_control_state);
 
-    // INIT和MANUAL_CONTROL不需要调用控制器，直接返回
-    if (control_state == CONTROL_STATE::INIT || control_state == CONTROL_STATE::MANUAL_CONTROL)
+    // INIT下，Prometheus不发布任何控制指令，直接返回
+    if (control_state == CONTROL_STATE::INIT)
     {
         return;
     }
@@ -636,22 +630,15 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg
 
 void UAV_controller::send_pos_cmd_to_px4_original_controller()
 {
-    // HOVER_CONTROL
-    if (control_state == CONTROL_STATE::HOVER_CONTROL)
+    // RC_POS_CONTROL
+    if (control_state == CONTROL_STATE::RC_POS_CONTROL)
     {
         send_pos_setpoint(pos_des, yaw_des);
         return;
     }
 
-    if (control_state == CONTROL_STATE::LAND_CONTROL)
+    if (control_state == CONTROL_STATE::LAND_CONTROL && uav_state.mode == "OFFBOARD" )
     {
-        // 如果取消注释这一段，还是会弹跳
-        // if (uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
-        // {
-        //     // 使用AUTO.LAND模式降落，因此不需要发送
-        //     return;
-        // }
-
         if (quick_land)
         {
             // quick_land一般用于位置失效情况，因此直接使用速度控制
@@ -747,7 +734,7 @@ void UAV_controller::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg
 void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
 {
     // 调用外部函数对遥控器数据进行处理，具体见rc_data.h，此时rc_input中的状态已更新
-    rc_input.handle_rc_data(msg, only_command_mode);
+    rc_input.handle_rc_data(msg);
 
     // 重启PX4飞控，条件: 无人机已上锁
     if (rc_input.toggle_reboot && !uav_state.armed)
@@ -767,7 +754,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
 
     // 自动降落，条件: 必须在HOVER_CONTROL或者COMMAND_CONTROL模式才可以触发
     bool if_in_hover_or_command_mode =
-        control_state == CONTROL_STATE::HOVER_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
+        control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
     if (rc_input.toggle_land && if_in_hover_or_command_mode)
     {
         rc_input.toggle_land = false;
@@ -798,35 +785,35 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 收到进入MANUAL_CONTROL指令，且不在MANUAL_CONTROL模式时
-    if (rc_input.enter_manual_control && control_state != CONTROL_STATE::MANUAL_CONTROL)
+    // 收到进入INIT指令，且不在INIT模式时
+    if (rc_input.enter_init && control_state != CONTROL_STATE::INIT)
     {
-        rc_input.enter_manual_control = false;
-        control_state = CONTROL_STATE::MANUAL_CONTROL;
-        cout << GREEN << node_name << " Switch to MANUAL_CONTROL" << TAIL << endl;
+        rc_input.enter_init = false;
+        control_state = CONTROL_STATE::INIT;
+        cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
     }
 
-    if (rc_input.enter_hover_control && control_state != CONTROL_STATE::HOVER_CONTROL)
+    if (rc_input.enter_rc_pos_control && control_state != CONTROL_STATE::RC_POS_CONTROL)
     {
-        rc_input.enter_hover_control = false;
+        rc_input.enter_rc_pos_control = false;
         // odom失效，拒绝进入
         if (!uav_state.odom_valid)
         {
-            cout << RED << node_name << " Reject HOVER_CONTROL. Odom invalid! " << TAIL << endl;
+            cout << RED << node_name << " Reject RC_POS_CONTROL. Odom invalid! " << TAIL << endl;
             return;
         }
         // 切换至HOVER_CONTROL
-        control_state = CONTROL_STATE::HOVER_CONTROL;
+        control_state = CONTROL_STATE::RC_POS_CONTROL;
         // 初始化默认的UAVCommand
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
         // 进入HOVER_CONTROL，需设置初始悬停点
         set_hover_pose_with_odom();
-        cout << GREEN << node_name << " Switch to HOVER_CONTROL" << TAIL << endl;
+        cout << GREEN << node_name << " Switch to RC_POS_CONTROL" << TAIL << endl;
         return;
     }
 
     // 必须从HOVER_CONTROL模式切入（确保odom和offboard模式正常）
-    if (rc_input.enter_command_control && control_state == CONTROL_STATE::HOVER_CONTROL && uav_state.mode == "OFFBOARD")
+    if (rc_input.enter_command_control && control_state == CONTROL_STATE::RC_POS_CONTROL && uav_state.mode == "OFFBOARD")
     {
         rc_input.enter_command_control = false;
         control_state = CONTROL_STATE::COMMAND_CONTROL;
@@ -1076,12 +1063,8 @@ void UAV_controller::printf_control_state()
         cout << GREEN << "CONTROL_STATE: [ INIT ] " << TAIL << endl;
         break;
 
-    case CONTROL_STATE::MANUAL_CONTROL:
-        cout << GREEN << "CONTROL_STATE: [ MANUAL_CONTROL ] " << TAIL << endl;
-        break;
-
-    case CONTROL_STATE::HOVER_CONTROL:
-        cout << GREEN << "CONTROL_STATE: [ HOVER_CONTROL ] " << TAIL << endl;
+    case CONTROL_STATE::RC_POS_CONTROL:
+        cout << GREEN << "CONTROL_STATE: [ RC_POS_CONTROL ] " << TAIL << endl;
         cout << GREEN << "Hover_Pos [X Y Z] : " << Hover_position[0] << " [ m ] " << Hover_position[1] << " [ m ] " << Hover_position[2] << " [ m ] " << TAIL << endl;
         break;
 
@@ -1239,7 +1222,6 @@ void UAV_controller::printf_param()
 
     cout << GREEN << "uav_id                    : " << uav_id << " " << TAIL << endl;
     cout << GREEN << "sim_mode                  : " << sim_mode << " " << TAIL << endl;
-    cout << GREEN << "only_command_mode         : " << only_command_mode << " " << TAIL << endl;
     cout << GREEN << "pos_controller            : " << pos_controller << TAIL << endl;
     cout << GREEN << "enable_external_control   : " << enable_external_control << TAIL << endl;
     cout << GREEN << "Takeoff_height            : " << Takeoff_height << " [m] " << TAIL << endl;
@@ -1352,7 +1334,7 @@ void UAV_controller::enable_emergency_func()
     emergency_srv.request.param6 = 0.0;
     emergency_srv.request.param7 = 0.0;
     px4_emergency_client.call(emergency_srv);
-    cout << YELLOW << node_name << "kill cmd: force disarmed" << TAIL << endl;
+    ROS_INFO_STREAM_ONCE("send kill cmd: force disarmed!");
 }
 
 void UAV_controller::reboot_PX4()

@@ -12,7 +12,6 @@
     <!-- 启动 uav_control_main -->
     <arg name="sim_mode" default="true"/>
     <arg name="init_px4_mode" default="0"/>
-    <arg name="only_command_mode" default="false"/>
     <arg name="control/pos_controller" default="0"/>
     <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
     <arg name="control/enable_external_control" default="true"/> 
@@ -33,7 +32,6 @@
 		<param name="uav_id" value="$(arg uav_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />
         <param name="init_px4_mode" value="$(arg init_px4_mode)" />
-        <param name="only_command_mode" value="$(arg only_command_mode)" />
 		<param name="control/pos_controller" value="$(arg control/pos_controller)" />
 		<param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
         <param name="control/Takeoff_height" value="$(arg control/Takeoff_height)" />
