@@ -9,12 +9,12 @@ class RC_Input
 {
 public:
     RC_Input(){};
-    void init(bool only_command_mode);
-    void handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode);
+    void init();
+    void handle_rc_data(mavros_msgs::RCInConstPtr pMsg);
     void printf_info();
 
     double ch[4];     // 1-4通道数值: roll pitch yaw thrust
-    double channel_5; // 通道5（三段） - 切换HOVER_CONTROL
+    double channel_5; // 通道5（三段） - 切换RC_POS_CONTROL
     double channel_6; // 通道6（三段） - 切换COMMAND_CONTROL
     double channel_7; // 通道7（二段） - 切换LAND_CONTROL
     double channel_8; // 通道8（二段） - 重启飞控
@@ -31,10 +31,10 @@ public:
     mavros_msgs::RCIn msg;
     ros::Time rcv_stamp; // 收到遥控器消息的时间
 
-    bool enter_manual_control;
-    bool in_manual_control;
-    bool enter_hover_control;
-    bool in_hover_control;
+    bool enter_init;
+    bool in_init;
+    bool enter_rc_pos_control;
+    bool in_rc_pos_control;
     bool enter_command_control;
     bool in_command_control;
 
@@ -56,7 +56,7 @@ private:
     void check_validity();
 };
 
-void RC_Input::init(bool only_command_mode)
+void RC_Input::init()
 {
     rcv_stamp = ros::Time(0);
 
@@ -71,25 +71,12 @@ void RC_Input::init(bool only_command_mode)
     toggle_reboot = false;
     toggle_land = false;
 
-    // todo
-    if (only_command_mode)
-    {
-        enter_manual_control = false;
-        in_manual_control = false;
-        in_command_control = true;
-        enter_command_control = true;
-        in_hover_control = true;
-        enter_hover_control = false;
-    }
-    else
-    {
-        enter_manual_control = false;
-        in_manual_control = false;
-        in_command_control = false;
-        enter_command_control = false;
-        in_hover_control = false;
-        enter_hover_control = false;
-    }
+    enter_init = false;
+    in_init = false;
+    in_command_control = false;
+    enter_command_control = false;
+    in_rc_pos_control = false;
+    enter_rc_pos_control = false;
 }
 
 void RC_Input::printf_info()
@@ -119,15 +106,15 @@ void RC_Input::printf_info()
     cout << GREEN << "toggle_kill : " << toggle_kill << TAIL << endl;
     cout << GREEN << "toggle_land : " << toggle_land << TAIL << endl;
     cout << GREEN << "toggle_reboot : " << toggle_reboot << TAIL << endl;
-    cout << GREEN << "enter_manual_control : " << enter_manual_control << TAIL << endl;
-    cout << GREEN << "in_manual_control : " << in_manual_control << TAIL << endl;
-    cout << GREEN << "enter_hover_control : " << enter_hover_control << TAIL << endl;
-    cout << GREEN << "in_hover_control : " << in_hover_control << TAIL << endl;
+    cout << GREEN << "enter_init : " << enter_init << TAIL << endl;
+    cout << GREEN << "in_init : " << in_init << TAIL << endl;
+    cout << GREEN << "enter_rc_pos_control : " << enter_rc_pos_control << TAIL << endl;
+    cout << GREEN << "in_rc_pos_control : " << in_rc_pos_control << TAIL << endl;
     cout << GREEN << "enter_command_control : " << enter_command_control << TAIL << endl;
     cout << GREEN << "in_command_control : " << in_command_control << TAIL << endl; 
 }
 
-void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_mode)
+void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg)
 {
     msg = *pMsg;
     rcv_stamp = ros::Time::now();
@@ -210,19 +197,19 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
     // 判断通道6 - channel_6_threshold_value_1 （0.25） channel_6_threshold_value_2 （0.75）
     if (channel_6 <= channel_6_threshold_value_1)
     {
-        enter_manual_control = true;
-        enter_hover_control = false;
+        enter_init = true;
+        enter_rc_pos_control = false;
         enter_command_control = false;
     }
     else if (channel_6 > channel_6_threshold_value_1 && channel_6 < channel_6_threshold_value_2)
     {
-        enter_manual_control = false;
-        enter_hover_control = true;
+        enter_init = false;
+        enter_rc_pos_control = true;
         enter_command_control = false;
     }else if (channel_6 >= channel_6_threshold_value_2)
     {
-        enter_manual_control = false;
-        enter_hover_control = false;   
+        enter_init = false;
+        enter_rc_pos_control = false;   
         enter_command_control = true;
     }
 
@@ -249,12 +236,6 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg, bool only_command_
     last_channel_6 = channel_6;
     last_channel_7 = channel_7;
     last_channel_8 = channel_8;
-
-    // only_command_mode模式下，维持遥控器在command_control模式，无法进行模式切换（但是可以触发降落和重启命令）
-    if (only_command_mode)
-    {
-        enter_command_control = true;
-    }
 }
 
 void RC_Input::check_validity()

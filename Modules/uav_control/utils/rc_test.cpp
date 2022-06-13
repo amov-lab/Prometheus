@@ -8,7 +8,7 @@ RC_Input rc_input;
 void px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
 {
     // 调用外部函数对遥控器数据进行处理，具体见rc_data.h
-    rc_input.handle_rc_data(msg, false);
+    rc_input.handle_rc_data(msg);
 }
 
 int main(int argc, char **argv)
@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "rc_test");
     ros::NodeHandle nh("~");
 
-    rc_input.init(false);
+    rc_input.init();
 
     int uav_id = 1;
 

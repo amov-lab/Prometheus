@@ -134,6 +134,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.battery_state = 0.0;
     uav_state.battery_percetage = 0.0;
 
+    offset_pose.x = 0.0;
+    offset_pose.y = 0.0;
+
     // 【函数】打印参数
     printf_param();
     cout << GREEN << node_name << " init! " << TAIL << endl;
@@ -291,6 +294,7 @@ void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
 
 void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
+    // 统一坐标系（RTK情况下，可以设置offset_pose，其他情况offset_pose为零）
     uav_state.position[0] = msg->pose.position.x + offset_pose.x;
     uav_state.position[1] = msg->pose.position.y + offset_pose.y;
     uav_state.position[2] = msg->pose.position.z;
@@ -362,8 +366,8 @@ void UAV_estimator::fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
     uav_state.armed = true;
     uav_state.odom_valid = true;
     uav_state.mode = "OFFBOARD";
-    uav_state.position[0] = msg->pose.pose.position.x + offset_pose.x;
-    uav_state.position[1] = msg->pose.pose.position.y + offset_pose.y;
+    uav_state.position[0] = msg->pose.pose.position.x;
+    uav_state.position[1] = msg->pose.pose.position.y;
     uav_state.position[2] = msg->pose.pose.position.z;
     uav_state.velocity[0] = msg->twist.twist.linear.x;
     uav_state.velocity[1] = msg->twist.twist.linear.y;
@@ -604,6 +608,8 @@ void UAV_estimator::printf_gps_status()
             cout << GREEN << " [GPS_FIX_TYPE_RTK_FIXEDR] " << TAIL << endl;
             break;
         }
+        // offset_pose
+        cout << GREEN << "offset_pose [X Y] : " << offset_pose.x << " [ m ] " << offset_pose.y << " [ m ] " << TAIL << endl;
     }
 
     // 确定下单位，todo
@@ -676,6 +682,10 @@ void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::Con
     ecef_offset = current_uav_ecef - origin_ecef;
     enu_offset = mavros::ftf::transform_frame_ecef_enu(ecef_offset, origin_gps);
 
+    // estimator节点根据GPS初始位置解算得到初始偏差，只发布一次
+    // 发布出来的uav_state，在uav1的坐标系下
+    // 每个飞机的local_position还是在起飞坐标系
+    // 所以发布控制指令也要加上偏差
     offset_pose.uav_id = uav_id;
     offset_pose.x = enu_offset[0];
     offset_pose.y = enu_offset[1];

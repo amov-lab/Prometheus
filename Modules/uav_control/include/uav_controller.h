@@ -83,11 +83,10 @@ public:
     // 执行状态
     enum CONTROL_STATE
     {
-        INIT = 0,            // 初始模式      
-        MANUAL_CONTROL = 1,  // 手动定点控制
-        HOVER_CONTROL = 2,   // 悬停状态
-        COMMAND_CONTROL = 3, // 指令控制
-        LAND_CONTROL = 4     // 降落
+        INIT = 0,               // 初始模式      
+        RC_POS_CONTROL = 1,     // 悬停状态
+        COMMAND_CONTROL = 2,    // 指令控制
+        LAND_CONTROL = 3        // 降落
     };
     CONTROL_STATE control_state;
     CONTROL_STATE last_control_state;
@@ -109,7 +108,6 @@ public:
     int pos_controller;
     bool enable_external_control;
     bool sim_mode;
-    bool only_command_mode;       //集群控制逻辑与单机控制逻辑上略有差异,用该参数进行区分
     bool quick_land;
     float Takeoff_height; // 默认起飞高度
     float Disarm_height;  // 自动上锁高度

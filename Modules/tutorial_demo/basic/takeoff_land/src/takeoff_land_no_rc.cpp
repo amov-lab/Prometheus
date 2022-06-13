@@ -98,7 +98,6 @@ int main(int argc, char** argv)
             uav_setup_pub.publish(uav_setup);
         }
 
-
         //检测无人机是否处于[COMMAND_CONTROL]模式
         if(uav_control_state.control_state ==  prometheus_msgs::UAVControlState::COMMAND_CONTROL)
         {
