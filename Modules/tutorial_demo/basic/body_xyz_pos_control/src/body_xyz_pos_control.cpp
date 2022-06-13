@@ -41,12 +41,20 @@ int main(int argc, char** argv)
     ros::init(argc , argv, "body_xyz_pos_control");
     //创建句柄
     ros::NodeHandle n;
+
+    //声明起飞高度,无人机id变量
+    float takeoff_height;
+    int uav_id;
+    //获取起飞高度参数
+    ros::param::get("/uav_control_main_1/control/Takeoff_height", takeoff_height);
+    ros::param::get("~uav_id", uav_id);
+    
     //创建无人机控制命令发布者
-    ros::Publisher uav_command_pub = n.advertise<prometheus_msgs::UAVCommand>("/uav1/prometheus/command", 10);
+    ros::Publisher uav_command_pub = n.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command", 10);
     //创建无人机状态命令订阅者
-    ros::Subscriber uav_state_sub = n.subscribe<prometheus_msgs::UAVState>("/uav1/prometheus/state", 10, uav_state_cb);
+    ros::Subscriber uav_state_sub = n.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/state", 10, uav_state_cb);
     //创建无人机控制状态命令订阅者
-    ros::Subscriber uav_control_state_sub = n.subscribe<prometheus_msgs::UAVControlState>("/uav1/prometheus/control_state", 10, uav_control_state_cb);
+    ros::Subscriber uav_control_state_sub = n.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 10, uav_control_state_cb);
     //循环频率设置为1HZ
     ros::Rate r(1);
     //创建命令发布标志位,命令发布则为true;初始化为false
@@ -63,13 +71,8 @@ int main(int argc, char** argv)
     // 强制显示符号
     cout.setf(ios::showpos);
 
-    //声明起飞高度变量
-    float takeoff_height;
-    //获取起飞高度参数
-    ros::param::get("/uav_control_main_1/control/Takeoff_height", takeoff_height);
-    
     //打印demo相关信息
-    cout << GREEN << " [ENU XYZ position control] tutorial_demo start " << TAIL << endl;
+    cout << GREEN << " [BODY XYZ position control] tutorial_demo start " << TAIL << endl;
     sleep(1);
     cout << GREEN << " Level: [Basic] " << TAIL << endl;
     sleep(1);
@@ -131,7 +134,7 @@ int main(int argc, char** argv)
                     //时间戳
                     uav_command.header.stamp = ros::Time::now();
                     //坐标系
-                    uav_command.header.frame_id = "ENU";
+                    uav_command.header.frame_id = "BODY";
                     //Land降落,从当前位置降落至地面并自动上锁
                     uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
                     //发布的命令ID加1
@@ -140,7 +143,7 @@ int main(int argc, char** argv)
                     uav_command_pub.publish(uav_command);
                     //打印降落相关信息
                     cout << GREEN << " UAV Land" << TAIL << endl;
-                    cout << GREEN << " [ENU XYZ position control] tutorial_demo completed" << TAIL << endl;
+                    cout << GREEN << " [BODY XYZ position control] tutorial_demo completed" << TAIL << endl;
                     //任务结束,关闭该节点
                     ros::shutdown();
                 }
@@ -156,7 +159,7 @@ int main(int argc, char** argv)
             //在控制命令发布后,但无人机未结束任务的情况下,此时无人机未处于[COMMAND_CONTROL]控制状态,认为无人机出现意外情况,任务中止
             if(cmd_pub_flag)
             {
-                cout << RED << " Unknown error! [ENU XYZ position control] tutorial_demo aborted" << TAIL << endl;
+                cout << RED << " Unknown error! [BODY XYZ position control] tutorial_demo aborted" << TAIL << endl;
             }
             //命令未发布,等待无人机进入[COMMAND_CONTROL]状态
             else

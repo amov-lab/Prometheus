@@ -39,12 +39,20 @@ int main(int argc, char** argv)
     ros::init(argc , argv, "global_pos_control");
     //创建句柄
     ros::NodeHandle n;
+    
+    //声明起飞高度,无人机id变量
+    float takeoff_height;
+    int uav_id;
+    //获取起飞高度参数
+    ros::param::get("/uav_control_main_1/control/Takeoff_height", takeoff_height);
+    ros::param::get("~uav_id", uav_id);
+    
     //创建无人机控制命令发布者
-    ros::Publisher uav_command_pub = n.advertise<prometheus_msgs::UAVCommand>("/uav1/prometheus/command", 10);
+    ros::Publisher uav_command_pub = n.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command", 10);
     //创建无人机状态命令订阅者
-    ros::Subscriber uav_state_sub = n.subscribe<prometheus_msgs::UAVState>("/uav1/prometheus/state", 10, uav_state_cb);
+    ros::Subscriber uav_state_sub = n.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/state", 10, uav_state_cb);
     //创建无人机控制状态命令订阅者
-    ros::Subscriber uav_control_state_sub = n.subscribe<prometheus_msgs::UAVControlState>("/uav1/prometheus/control_state", 10, uav_control_state_cb);
+    ros::Subscriber uav_control_state_sub = n.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 10, uav_control_state_cb);
     //循环频率设置为1HZ
     ros::Rate r(1);
     //创建命令发布标志位,命令发布则为true;初始化为false
@@ -60,11 +68,6 @@ int main(int argc, char** argv)
     cout.setf(ios::showpoint);
     // 强制显示符号
     cout.setf(ios::showpos);
-
-    //声明起飞高度变量
-    float takeoff_height;
-    //获取起飞高度参数
-    ros::param::get("/uav_control_main_1/control/Takeoff_height", takeoff_height);
     
     //打印demo相关信息
     cout << GREEN << " [Global position control] tutorial_demo start " << TAIL << endl;
