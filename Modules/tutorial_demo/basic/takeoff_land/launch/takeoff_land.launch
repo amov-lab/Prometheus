@@ -1,6 +1,7 @@
 <launch>
 
     <node pkg="prometheus_demo" type="takeoff_land" name="takeoff_land" output="screen">
+        <param name="uav_id" value="1"/>
     </node>
 
 </launch>
