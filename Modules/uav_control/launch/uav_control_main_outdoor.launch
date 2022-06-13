@@ -6,9 +6,7 @@
     <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
     <arg name="control/enable_external_control" default="false"/> 
 
-    <!-- 启动Prometheus代码, run the uav_control_node.cpp
-    包括了uav_estimator.cpp和uav_controller.cpp
-     -->
+    <!-- 启动uav_control_main -->
 	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav_id)" output="screen">
 		<param name="uav_id" value="$(arg uav_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />

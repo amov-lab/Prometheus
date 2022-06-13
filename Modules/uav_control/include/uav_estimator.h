@@ -77,7 +77,7 @@ class UAV_estimator
 
         prometheus_msgs::UAVState uav_state;    // 无人机状态
         nav_msgs::Odometry uav_odom;                 // 无人机里程计
-        std::vector<geometry_msgs::PoseStamped> odom_vector;    // 无人机轨迹容器,用于rviz显示
+        std::vector<geometry_msgs::PoseStamped> pos_vector;    // 无人机轨迹容器,用于rviz显示
         geometry_msgs::PoseStamped vision_pose;        // vision_pose for px4
         prometheus_msgs::TextInfo text_info;
         prometheus_msgs::OffsetPose offset_pose;
