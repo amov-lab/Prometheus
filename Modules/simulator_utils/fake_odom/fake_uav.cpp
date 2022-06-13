@@ -147,19 +147,19 @@ void Fake_UAV::pos_cmd_cb(const mavros_msgs::PositionTarget::ConstPtr& msg)
 	}
 
 	// 角度限制幅度
-	if (std::fabs(control.thrust_enu(0)/control.thrust_enu(2)) > std::tan(uav_utils::toRad(control_param.tilt_angle_max)))
+	if (std::fabs(control.thrust_enu(0)/control.thrust_enu(2)) > std::tan(geometry_utils::toRad(control_param.tilt_angle_max)))
 	{
-		control.thrust_enu(0) = control.thrust_enu(0)/std::fabs(control.thrust_enu(0)) * control.thrust_enu(2) * std::tan(uav_utils::toRad(control_param.tilt_angle_max));
+		control.thrust_enu(0) = control.thrust_enu(0)/std::fabs(control.thrust_enu(0)) * control.thrust_enu(2) * std::tan(geometry_utils::toRad(control_param.tilt_angle_max));
 	}
 
 	// 角度限制幅度
-	if (std::fabs(control.thrust_enu(1)/control.thrust_enu(2)) > std::tan(uav_utils::toRad(control_param.tilt_angle_max)))
+	if (std::fabs(control.thrust_enu(1)/control.thrust_enu(2)) > std::tan(geometry_utils::toRad(control_param.tilt_angle_max)))
 	{
-		control.thrust_enu(1) = control.thrust_enu(1)/std::fabs(control.thrust_enu(1)) * control.thrust_enu(2) * std::tan(uav_utils::toRad(control_param.tilt_angle_max));	
+		control.thrust_enu(1) = control.thrust_enu(1)/std::fabs(control.thrust_enu(1)) * control.thrust_enu(2) * std::tan(geometry_utils::toRad(control_param.tilt_angle_max));	
 	}
 
     // thrust是位于ENU坐标系的,F_c是FLU
-    Eigen::Matrix3d wRc = uav_utils::rotz(uav_state.euler(2));
+    Eigen::Matrix3d wRc = geometry_utils::rotz(uav_state.euler(2));
     Eigen::Vector3d F_c = wRc.transpose() * control.thrust_enu;
     double fx = F_c(0);
     double fy = F_c(1);
@@ -250,8 +250,6 @@ void Fake_UAV::fake_odom_process(const ros::TimerEvent &e)
         uav_state.acc = uav_state.thrust_enu / control_param.quad_mass;
         uav_state.vel = uav_state.vel + uav_state.acc * delta_time;
         uav_state.pos = uav_state.pos + uav_state.vel * delta_time;
-
-        // 姿态已经更新过了
 
         // 模拟姿态环控制 输入：期望姿态角 输出：期望推力+力矩， todo
         // attitude_control();
