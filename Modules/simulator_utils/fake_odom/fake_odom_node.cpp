@@ -6,8 +6,6 @@
 int swarm_num_uav,swarm_num_ugv;
 bool manual_init_pos;
 bool pub_gazebo_model_state;
-int preset_init_pos_flag;
-string node_name;
 gazebo_msgs::ModelState model_state;
 
 Fake_UAV uav_agent[MAX_NUM];
@@ -24,10 +22,9 @@ uniform_real_distribution<double> rand_x;
 uniform_real_distribution<double> rand_y;
 
 ros::Publisher gazebo_model_state_pub;
-void get_preset_pos_uav(int i);
-void get_preset_pos_ugv(int i);
+void set_uav_init_pos(int i);
+void set_ugv_init_pos(int i);
 void gazebo_pub_cb(const ros::TimerEvent &e);
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "fake_odom_node");
@@ -45,7 +42,6 @@ int main(int argc, char **argv)
     nh.param("fake_odom/swarm_num_uav", swarm_num_uav, 8);                          // 无人机数量
     nh.param("fake_odom/swarm_num_ugv", swarm_num_ugv, 8);                          // 无人车数量
     nh.param("fake_odom/manual_init_pos", manual_init_pos, false);                  // 是否手动设定初始点
-    nh.param("fake_odom/preset_init_pos_flag", preset_init_pos_flag, 1);            // 预设初始点
     nh.param("fake_odom/pub_gazebo_model_state", pub_gazebo_model_state, false);    // 是否发布gazebo位置
 
     unsigned int seed = rd();
@@ -53,34 +49,34 @@ int main(int argc, char **argv)
 
     for(int i = 0; i<swarm_num_uav;i++)
     {
-        // 设置无人机初始位置
         if(manual_init_pos)
         {
+            // 根据外部参数设置无人机的初始位置
             nh.param("fake_odom/uav" + to_string(i+1) + "_init_x", init_pos_uav[i][0], 0.0);
             nh.param("fake_odom/uav" + to_string(i+1) + "_init_y", init_pos_uav[i][1], 0.0);
             nh.param("fake_odom/uav" + to_string(i+1) + "_init_z", init_pos_uav[i][2], 0.0);
             nh.param("fake_odom/uav" + to_string(i+1) + "_init_yaw", init_yaw_uav[i], 0.0);    
         }else
         {
-            // 得到预设的初始位置
-            get_preset_pos_uav(i);
+            // 随机设置无人机的初始位置
+            set_uav_init_pos(i);
         }
         uav_agent[i].init(nh, i+1, init_pos_uav[i], init_yaw_uav[i]);
     }
 
     for(int i = 0; i<swarm_num_ugv;i++)
     {
-        // 设置无人机初始位置
         if(manual_init_pos)
         {
+            // 根据外部参数设置无人车的初始位置
             nh.param("fake_odom/ugv" + to_string(i+1) + "_init_x", init_pos_ugv[i][0], 0.0);
             nh.param("fake_odom/ugv" + to_string(i+1) + "_init_y", init_pos_ugv[i][1], 0.0);
             nh.param("fake_odom/ugv" + to_string(i+1) + "_init_z", init_pos_ugv[i][2], 0.08);
             nh.param("fake_odom/ugv" + to_string(i+1) + "_init_yaw", init_yaw_ugv[i], 0.0);    
         }else
         {
-            // 得到预设的初始位置
-            get_preset_pos_ugv(i);
+            // 随机设置无人车的初始位置
+            set_ugv_init_pos(i);
         }
         ugv_agent[i].init(nh, i+1, init_pos_ugv[i], init_yaw_ugv[i]);
     }
@@ -90,8 +86,7 @@ int main(int argc, char **argv)
     gazebo_model_state_pub = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
     ros::Timer gazebo_pub_timer = nh.createTimer(ros::Duration(0.1), gazebo_pub_cb);
 
-    node_name = "[fake_odom_node]"; 
-    cout << GREEN << node_name << " init! "<< TAIL << endl;
+    cout << GREEN << "[fake_odom_node] init! "<< TAIL << endl;
 
     ros::spin();
 
@@ -108,76 +103,34 @@ void gazebo_pub_cb(const ros::TimerEvent &e)
     for(int i = 0; i<swarm_num_uav; i++)
     {
         model_state = uav_agent[i].get_model_state();
-        
         gazebo_model_state_pub.publish(model_state);
-
         sleep(0.001);
     }
 
     for(int i = 0; i<swarm_num_ugv; i++)
     {
         model_state = ugv_agent[i].get_model_state();
-        
         gazebo_model_state_pub.publish(model_state);
-
         sleep(0.001);
     }
 }
 
-void get_preset_pos_ugv(int i)
+void set_ugv_init_pos(int i)
 {
-    int ugv_id = i+1;
-    if(preset_init_pos_flag == 1)
-    {
-        if(ugv_id%2==1)
-        {
-            init_pos_ugv[i][0] = 0.5 * ugv_id;
-            init_pos_ugv[i][1] = -1.0;
-            init_pos_ugv[i][2] = 0.0;
-            init_yaw_ugv[i] = 0.0;
-        }else
-        {
-            init_pos_ugv[i][0] = -0.5 * (ugv_id - 1);
-            init_pos_ugv[i][1] = -1.0;
-            init_pos_ugv[i][2] = 0.0;
-            init_yaw_ugv[i] = 0.0;
-        }
-    }else
-    {
-        rand_y = uniform_real_distribution<double>(-10 , 10);
-        init_pos_ugv[i][0] = -1.0;
-        init_pos_ugv[i][1] = rand_y(eng);
-        init_pos_ugv[i][2] = 0.0;
-        init_yaw_ugv[i] = 0.0;
-        cout << RED  << "Wrong preset_init_pos_flag (ugv)."<< TAIL << endl;
-    }
+    // 无人车x轴固定,y轴取值范围为:[-10,10]
+    rand_y = uniform_real_distribution<double>(-10 , 10);
+    init_pos_ugv[i][0] = -11.0;
+    init_pos_ugv[i][1] = rand_y(eng);
+    init_pos_ugv[i][2] = 0.0;
+    init_yaw_ugv[i] = 0.0;
 }
 
-void get_preset_pos_uav(int i)
+void set_uav_init_pos(int i)
 {
-    int uav_id = i+1;
-    if(preset_init_pos_flag == 1)
-    {
-        if(uav_id%2==1)
-        {
-            init_pos_uav[i][0] = 0.5 * uav_id;
-            init_pos_uav[i][1] = 1.0;
-            init_pos_uav[i][2] = 0.0;
-            init_yaw_uav[i] = 0.0;
-        }else
-        {
-            init_pos_uav[i][0] = -0.5 * (uav_id - 1);
-            init_pos_uav[i][1] = 1.0;
-            init_pos_uav[i][2] = 0.0;
-            init_yaw_uav[i] = 0.0;
-        }
-    }else
-    {
-        rand_y = uniform_real_distribution<double>(-10 , 10);
-        init_pos_uav[i][0] = 1.0;
-        init_pos_uav[i][1] = rand_y(eng);
-        init_pos_uav[i][2] = 0.0;
-        init_yaw_uav[i] = 0.0;
-        cout << RED  << "Wrong preset_init_pos_flag(uav)."<< TAIL << endl;
-    }
+    // 无人机x轴固定,y轴取值范围为:[-10,10]
+    rand_y = uniform_real_distribution<double>(-10 , 10);
+    init_pos_uav[i][0] = -10.0;
+    init_pos_uav[i][1] = rand_y(eng);
+    init_pos_uav[i][2] = 0.0;
+    init_yaw_uav[i] = 0.0;
 }
