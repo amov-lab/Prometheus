@@ -4,9 +4,7 @@
     <arg name="only_command_mode" default="true"/>
     <arg name="flag_printf" default="true"/> 
 
-    <!-- 启动Prometheus代码, run the uav_control_node.cpp
-    包括了uav_estimator.cpp和uav_controller.cpp
-    -->
+    <!-- 启动uav_control_main -->
     <arg name="input_source" default="3"/>
 	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav_id)" output="screen">
 		<param name="uav_id" value="$(arg uav_id)" />

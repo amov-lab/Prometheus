@@ -105,7 +105,6 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
 
     // 变量初始化
     uav_state.uav_id = uav_id;
-    uav_state.state = prometheus_msgs::UAVState::ready;
     uav_state.connected = false;
     uav_state.armed = false;
     uav_state.mode = "";
@@ -116,7 +115,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.position[1] = 0.0;
     uav_state.position[2] = 0.0;
     //该经纬度为阿木实验室测试场地(小花园)的经纬度
-    uav_state.latitude = 30.7852600; 
+    uav_state.latitude = 30.7852600;
     uav_state.longitude = 103.8610300;
     uav_state.altitude = 100.0;
     uav_state.velocity[0] = 0.0;
@@ -144,6 +143,142 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     text_info.MessageType = prometheus_msgs::TextInfo::INFO;
     text_info.Message = node_name + " init.";
     ground_station_info_pub.publish(text_info);
+}
+
+void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
+{
+    if (!uav_state_update)
+    {
+        return;
+    }
+
+    // 无人机状态检查：
+    // 1，检查odom状态
+    // 2，待补充
+    check_uav_state();
+
+    // 发布uav_state
+    uav_state.header.stamp = ros::Time::now();
+    uav_state_pub.publish(uav_state);
+
+    // 发布无人机当前odometry(有些节点需要Odometry这个数据类型)
+    uav_odom.header.stamp = ros::Time::now();
+    uav_odom.header.frame_id = "world";
+    uav_odom.child_frame_id = "base_link";
+    uav_odom.pose.pose.position.x = uav_state.position[0];
+    uav_odom.pose.pose.position.y = uav_state.position[1];
+    uav_odom.pose.pose.position.z = uav_state.position[2];
+    // 导航算法规定 高度不能小于0
+    if (uav_odom.pose.pose.position.z <= 0)
+    {
+        uav_odom.pose.pose.position.z = 0.01;
+    }
+    uav_odom.pose.pose.orientation = uav_state.attitude_q;
+    uav_odom.twist.twist.linear.x = uav_state.velocity[0];
+    uav_odom.twist.twist.linear.y = uav_state.velocity[1];
+    uav_odom.twist.twist.linear.z = uav_state.velocity[2];
+    uav_odom_pub.publish(uav_odom);
+}
+
+void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
+{
+    if (location_source == prometheus_msgs::UAVState::GAZEBO)
+    {
+        vision_pose = gazebo_pose;
+    }
+    else if (location_source == prometheus_msgs::UAVState::MOCAP)
+    {
+        vision_pose = mocap_pose;
+    }
+    else if (location_source == prometheus_msgs::UAVState::T265)
+    {
+        vision_pose = t265_pose;
+    }
+    else
+    {
+        vision_pose_error = true;
+        return;
+    }
+
+    Eigen::Vector3d pos_vision = Eigen::Vector3d(vision_pose.pose.position.x, vision_pose.pose.position.y, vision_pose.pose.position.z);
+    Eigen::Vector3d pos_px4 = Eigen::Vector3d(uav_state.position[0], uav_state.position[1], uav_state.position[2]);
+
+    // vision位置和px4回传位置相差较多，一般是PX4中EKF2参数设置错误导致PX4没有收到vision定位数据导致
+    // 无人机发生剧烈位移，也会出现本错误，这个需要根据实际测试结果来确定
+    if ((pos_vision - pos_px4).norm() > maximum_vel_error_for_vision)
+    {
+        vision_pose_error = true;
+    }
+    else
+    {
+        vision_pose_error = false;
+    }
+
+    px4_vision_pose_pub.publish(vision_pose);
+}
+
+void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
+{
+    // 发布无人机运动轨迹，用于rviz显示
+    geometry_msgs::PoseStamped uav_pos;
+    uav_pos.header.stamp = ros::Time::now();
+    uav_pos.header.frame_id = "world";
+    uav_pos.pose.position.x = uav_state.position[0];
+    uav_pos.pose.position.y = uav_state.position[1];
+    uav_pos.pose.position.z = uav_state.position[2];
+    uav_pos.pose.orientation = uav_state.attitude_q;
+    pos_vector.insert(pos_vector.begin(), uav_pos);
+    if (pos_vector.size() > TRA_WINDOW)
+    {
+        pos_vector.pop_back();
+    }
+    nav_msgs::Path uav_trajectory;
+    uav_trajectory.header.stamp = ros::Time::now();
+    uav_trajectory.header.frame_id = "world";
+    uav_trajectory.poses = pos_vector;
+    uav_trajectory_pub.publish(uav_trajectory);
+
+    // 发布无人机marker
+    visualization_msgs::Marker meshROS;
+    meshROS.header.frame_id = "world";
+    meshROS.header.stamp = ros::Time::now();
+    meshROS.ns = "mesh";
+    meshROS.id = 0;
+    meshROS.type = visualization_msgs::Marker::MESH_RESOURCE;
+    meshROS.action = visualization_msgs::Marker::ADD;
+    meshROS.pose.position.x = uav_state.position[0];
+    meshROS.pose.position.y = uav_state.position[1];
+    meshROS.pose.position.z = uav_state.position[2];
+    meshROS.pose.orientation.w = uav_state.attitude_q.w;
+    meshROS.pose.orientation.x = uav_state.attitude_q.x;
+    meshROS.pose.orientation.y = uav_state.attitude_q.y;
+    meshROS.pose.orientation.z = uav_state.attitude_q.z;
+    meshROS.scale.x = 1.0;
+    meshROS.scale.y = 1.0;
+    meshROS.scale.z = 1.0;
+    meshROS.color.a = 1.0;
+    meshROS.color.r = 0.0;
+    meshROS.color.g = 0.0;
+    meshROS.color.b = 1.0;
+    meshROS.mesh_resource = std::string("package://prometheus_uav_control/meshes/hummingbird.mesh");
+    uav_mesh_pub.publish(meshROS);
+
+    // 发布TF用于RVIZ显示（用于lidar）
+    static tf2_ros::TransformBroadcaster broadcaster;
+    geometry_msgs::TransformStamped tfs;
+    //  |----头设置
+    tfs.header.frame_id = "world";       //相对于世界坐标系
+    tfs.header.stamp = ros::Time::now(); //时间戳
+    //  |----坐标系 ID
+    tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
+    //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
+    tfs.transform.translation.x = uav_state.position[0];
+    tfs.transform.translation.y = uav_state.position[1];
+    tfs.transform.translation.z = uav_state.position[2];
+    //  |--------- 四元数设置
+    tfs.transform.rotation = uav_state.attitude_q;
+    //  |--------- 广播器发布数据
+    broadcaster.sendTransform(tfs);
 }
 
 void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -181,11 +316,9 @@ void UAV_estimator::px4_att_cb(const sensor_msgs::Imu::ConstPtr &msg)
     Eigen::Vector3d euler_fcu = quaternion_to_euler(q_fcu);
 
     uav_state.attitude_q = msg->orientation;
-
     uav_state.attitude[0] = euler_fcu[0];
     uav_state.attitude[1] = euler_fcu[1];
     uav_state.attitude[2] = euler_fcu[2];
-
     uav_state.attitude_rate[0] = msg->angular_velocity.x;
     uav_state.attitude_rate[1] = msg->angular_velocity.y;
     uav_state.attitude_rate[2] = msg->angular_velocity.z;
@@ -264,10 +397,12 @@ void UAV_estimator::check_uav_state()
     else if (odom_state == 3 && last_odom_state != 3)
     {
         cout << RED << node_name << "--->  Odom invalid: vision_pose_error! " << TAIL << endl;
-    }else if (odom_state == 4 && last_odom_state != 4)
+    }
+    else if (odom_state == 4 && last_odom_state != 4)
     {
         cout << RED << node_name << "--->  Odom invalid: GPS/RTK location error! " << TAIL << endl;
-    }else if (odom_state == 5 && last_odom_state != 5)
+    }
+    else if (odom_state == 5 && last_odom_state != 5)
     {
         cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
     }
@@ -314,24 +449,23 @@ int UAV_estimator::check_uav_odom()
         return 3;
     }
 
-    // GPS,RTK,UWB 这些需要做什么检查确认吗，todo
     // odom失效可能原因4:GPS定位模块数据异常,无法获取定位数据
-    if(location_source == prometheus_msgs::UAVState::GPS)
+    if (location_source == prometheus_msgs::UAVState::GPS)
     {
-        if(uav_state.gps_status != prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
+        if (uav_state.gps_status != prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
         {
             return 4;
         }
     }
 
-    if(location_source == prometheus_msgs::UAVState::RTK)
+    if (location_source == prometheus_msgs::UAVState::RTK)
     {
-        if(uav_state.gps_status < prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
+        if (uav_state.gps_status < prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
         {
             return 4;
         }
-        // odom数据可信度降低可能原因1:RTK定位精度未达到FIXED状态(非odom失效状态)
-        else if(uav_state.gps_status <= prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR)
+        // odom数据可信度降低可能原因5:RTK定位精度未达到FIXED状态(非odom失效状态)
+        else if (uav_state.gps_status <= prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR)
         {
             return 5;
         }
@@ -339,149 +473,6 @@ int UAV_estimator::check_uav_odom()
     //UWB todo
 
     return 9;
-}
-
-void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
-{
-    if (!uav_state_update)
-    {
-        return;
-    }
-
-    // 1，检查odom状态
-    // 还有其他需要检查的吗，和李博、张灵商量 todo
-    check_uav_state();
-
-    uav_state.header.stamp = ros::Time::now();
-    uav_state_pub.publish(uav_state);
-
-    // 发布无人机当前odometry(有些节点需要Odometry这个数据类型)
-    uav_odom.header.stamp = ros::Time::now();
-    uav_odom.header.frame_id = "world";
-    uav_odom.child_frame_id = "base_link";
-
-    uav_odom.pose.pose.position.x = uav_state.position[0];
-    uav_odom.pose.pose.position.y = uav_state.position[1];
-    uav_odom.pose.pose.position.z = uav_state.position[2];
-
-    // 导航算法规定 高度不能小于0
-    if (uav_odom.pose.pose.position.z <= 0)
-    {
-        uav_odom.pose.pose.position.z = 0.01;
-    }
-
-    uav_odom.pose.pose.orientation = uav_state.attitude_q;
-    uav_odom.twist.twist.linear.x = uav_state.velocity[0];
-    uav_odom.twist.twist.linear.y = uav_state.velocity[1];
-    uav_odom.twist.twist.linear.z = uav_state.velocity[2];
-    uav_odom_pub.publish(uav_odom);
-}
-
-void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
-{
-    if (location_source == prometheus_msgs::UAVState::GAZEBO)
-    {
-        vision_pose = gazebo_pose;
-    }
-    else if (location_source == prometheus_msgs::UAVState::MOCAP)
-    {
-        vision_pose = mocap_pose;
-    }
-    else if (location_source == prometheus_msgs::UAVState::T265)
-    {
-        vision_pose = t265_pose;
-    }
-    else
-    {
-        return;
-    }
-
-    Eigen::Vector3d pos_vision = Eigen::Vector3d(vision_pose.pose.position.x, vision_pose.pose.position.y, vision_pose.pose.position.z);
-    Eigen::Vector3d pos_px4 = Eigen::Vector3d(uav_state.position[0], uav_state.position[1], uav_state.position[2]);
-
-    // vision位置和px4回传位置相差较多，一般是PX4中EKF2参数设置错误导致PX4没有收到vision定位数据导致
-    // 无人机发生剧烈位移，也会出现本错误，这个需要根据实际测试结果来确定
-    if ((pos_vision - pos_px4).norm() > maximum_vel_error_for_vision)
-    {
-        vision_pose_error = true;
-    }
-    else
-    {
-        vision_pose_error = false;
-    }
-
-    px4_vision_pose_pub.publish(vision_pose);
-}
-
-void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
-{
-    // 发布无人机运动轨迹，用于rviz显示
-    geometry_msgs::PoseStamped uav_pos;
-    uav_pos.header.stamp = ros::Time::now();
-    uav_pos.header.frame_id = "world";
-    uav_pos.pose.position.x = uav_state.position[0];
-    uav_pos.pose.position.y = uav_state.position[1];
-    uav_pos.pose.position.z = uav_state.position[2];
-
-    uav_pos.pose.orientation = uav_state.attitude_q;
-
-    //发布无人机的位姿 和 轨迹 用作rviz中显示
-    odom_vector.insert(odom_vector.begin(), uav_pos);
-    if (odom_vector.size() > TRA_WINDOW)
-    {
-        odom_vector.pop_back();
-    }
-
-    nav_msgs::Path uav_trajectory;
-    uav_trajectory.header.stamp = ros::Time::now();
-    uav_trajectory.header.frame_id = "world";
-    uav_trajectory.poses = odom_vector;
-    uav_trajectory_pub.publish(uav_trajectory);
-
-    visualization_msgs::Marker meshROS;
-    // Mesh model
-    meshROS.header.frame_id = "world";
-    meshROS.header.stamp = ros::Time::now();
-    meshROS.ns = "mesh";
-    meshROS.id = 0;
-    meshROS.type = visualization_msgs::Marker::MESH_RESOURCE;
-    meshROS.action = visualization_msgs::Marker::ADD;
-    meshROS.pose.position.x = uav_state.position[0];
-    meshROS.pose.position.y = uav_state.position[1];
-    meshROS.pose.position.z = uav_state.position[2];
-    meshROS.pose.orientation.w = uav_state.attitude_q.w;
-    meshROS.pose.orientation.x = uav_state.attitude_q.x;
-    meshROS.pose.orientation.y = uav_state.attitude_q.y;
-    meshROS.pose.orientation.z = uav_state.attitude_q.z;
-    meshROS.scale.x = 1.0;
-    meshROS.scale.y = 1.0;
-    meshROS.scale.z = 1.0;
-    meshROS.color.a = 1.0;
-    meshROS.color.r = 0.0;
-    meshROS.color.g = 0.0;
-    meshROS.color.b = 1.0;
-    meshROS.mesh_resource = std::string("package://prometheus_uav_control/meshes/hummingbird.mesh");
-    uav_mesh_pub.publish(meshROS);
-
-    // 发布TF用于RVIZ显示
-    static tf2_ros::TransformBroadcaster broadcaster;
-    geometry_msgs::TransformStamped tfs;
-    //  |----头设置
-    tfs.header.frame_id = "world";       //相对于世界坐标系
-    tfs.header.stamp = ros::Time::now(); //时间戳
-
-    //  |----坐标系 ID
-    tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
-
-    //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
-    tfs.transform.translation.x = uav_state.position[0];
-    tfs.transform.translation.y = uav_state.position[1];
-    tfs.transform.translation.z = uav_state.position[2];
-    //  |--------- 四元数设置
-    tfs.transform.rotation = uav_state.attitude_q;
-
-    //  |--------- 广播器发布数据
-    broadcaster.sendTransform(tfs);
 }
 
 void UAV_estimator::printf_uav_state()
@@ -501,16 +492,16 @@ void UAV_estimator::printf_uav_state()
     // 打印 无人机状态
     if (uav_state.connected == true)
     {
-        cout << GREEN << "PX4 State:  [ Connected ] ";
+        cout << GREEN << "PX4 Status:  [ Connected ] ";
     }
     else
     {
-        cout << RED << "PX4 State:[ Unconnected ] ";
+        cout << RED << "PX4 Status:[ Unconnected ] ";
     }
     //是否上锁
     if (uav_state.armed == true)
     {
-        cout << GREEN << "[ Armed ] ";
+        cout << GREEN << "[  Armed   ] ";
     }
     else
     {
@@ -549,71 +540,72 @@ void UAV_estimator::printf_uav_state()
         break;
     }
 
-    if(uav_state.odom_valid)
+    if (uav_state.odom_valid)
     {
-        cout << GREEN << "Odom State: [ Valid ] " << TAIL << endl;
+        cout << GREEN << "Odom Status     : [ Valid ] " << TAIL << endl;
     }
     else
     {
-        cout << RED << "Odom State: [ Invalid ] " << TAIL << endl;
+        cout << RED << "Odom Status     : [ Invalid ] " << TAIL << endl;
     }
 
     cout << GREEN << "UAV_pos [X Y Z] : " << uav_state.position[0] << " [ m ] " << uav_state.position[1] << " [ m ] " << uav_state.position[2] << " [ m ] " << TAIL << endl;
     cout << GREEN << "UAV_vel [X Y Z] : " << uav_state.velocity[0] << " [m/s] " << uav_state.velocity[1] << " [m/s] " << uav_state.velocity[2] << " [m/s] " << TAIL << endl;
     cout << GREEN << "UAV_att [R P Y] : " << uav_state.attitude[0] * 180 / M_PI << " [deg] " << uav_state.attitude[1] * 180 / M_PI << " [deg] " << uav_state.attitude[2] * 180 / M_PI << " [deg] " << TAIL << endl;
-    
-    cout << GREEN << "Battery Voltage : " << uav_state.battery_state << " [V] " << "  Battery Percent : " << uav_state.battery_percetage << TAIL << endl;
+
+    cout << GREEN << "Battery Voltage : " << uav_state.battery_state << " [V] "
+         << "  Battery Percent : " << uav_state.battery_percetage << TAIL << endl;
 }
 
 void UAV_estimator::printf_gps_status()
 {
     // 确认一下，哪些是红色，哪些是绿色，todo...
-    if(location_source == prometheus_msgs::UAVState::GPS)
+    if (location_source == prometheus_msgs::UAVState::GPS)
     {
         switch (uav_state.gps_status)
         {
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS:
-            cout << RED  << " [GPS_FIX_TYPE_NO_GPS] " << TAIL << endl;
+            cout << RED << " [GPS_FIX_TYPE_NO_GPS] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_FIX:
-            cout << RED  << " [GPS_FIX_TYPE_NO_FIX] " << TAIL << endl;
+            cout << RED << " [GPS_FIX_TYPE_NO_FIX] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_2D_FIX:
-            cout << YELLOW  << " [GPS_FIX_TYPE_2D_FIX] " << TAIL << endl;
+            cout << YELLOW << " [GPS_FIX_TYPE_2D_FIX] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX:
-            cout << GREEN  << " [GPS_FIX_TYPE_3D_FIX] " << TAIL << endl;
+            cout << GREEN << " [GPS_FIX_TYPE_3D_FIX] " << TAIL << endl;
             break;
         }
     }
-    if(location_source == prometheus_msgs::UAVState::RTK)
+    if (location_source == prometheus_msgs::UAVState::RTK)
     {
         switch (uav_state.gps_status)
         {
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS:
-            cout << RED  << " [GPS_FIX_TYPE_NO_GPS] " << TAIL << endl;
+            cout << RED << " [GPS_FIX_TYPE_NO_GPS] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_FIX:
-            cout << RED  << " [GPS_FIX_TYPE_NO_FIX] " << TAIL << endl;
+            cout << RED << " [GPS_FIX_TYPE_NO_FIX] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_2D_FIX:
-            cout << RED  << " [GPS_FIX_TYPE_2D_FIX] " << TAIL << endl;
+            cout << RED << " [GPS_FIX_TYPE_2D_FIX] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX:
-            cout << YELLOW  << " [GPS_FIX_TYPE_3D_FIX] " << TAIL << endl;
+            cout << YELLOW << " [GPS_FIX_TYPE_3D_FIX] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_DGPS:
-            cout << YELLOW  << " [GPS_FIX_TYPE_DGPS] " << TAIL << endl;
+            cout << YELLOW << " [GPS_FIX_TYPE_DGPS] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FLOATR:
-            cout << YELLOW  << " [GPS_FIX_TYPE_RTK_FLOATR] " << TAIL << endl;
+            cout << YELLOW << " [GPS_FIX_TYPE_RTK_FLOATR] " << TAIL << endl;
             break;
         case prometheus_msgs::UAVState::GPS_FIX_TYPE_RTK_FIXEDR:
-            cout << GREEN  << " [GPS_FIX_TYPE_RTK_FIXEDR] " << TAIL << endl;
+            cout << GREEN << " [GPS_FIX_TYPE_RTK_FIXEDR] " << TAIL << endl;
             break;
         }
     }
-    
+
     // 确定下单位，todo
     cout << GREEN << "GPS [lat lon alt] : " << uav_state.latitude << " [ deg ] " << uav_state.longitude << " [ deg ] " << uav_state.altitude << " [ m ] " << TAIL << endl;
 }
@@ -660,7 +652,7 @@ void UAV_estimator::printf_param()
     }
 }
 
-void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::ConstPtr& msg)
+void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::ConstPtr &msg)
 {
     GeographicLib::Geocentric earth(GeographicLib::Constants::WGS84_a(), GeographicLib::Constants::WGS84_f());
     Eigen::Vector3d origin_gps;

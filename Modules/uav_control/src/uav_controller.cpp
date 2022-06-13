@@ -1214,22 +1214,22 @@ void UAV_controller::printf_control_state()
         if (enable_external_control)
         {
             cout << GREEN << "Att_target [X Y Z] : " << px4_att_target[0] * 180 / M_PI << " [deg] " << px4_att_target[1] * 180 / M_PI << " [deg] " << px4_att_target[2] * 180 / M_PI << " [deg] " << TAIL << endl;
-            cout << GREEN << "Thr_target [X Y Z] : " << px4_thrust_target << TAIL << endl;
+            cout << GREEN << "Thr_target [ 0-1 ] : " << px4_thrust_target << TAIL << endl;
         }
         else
         {
             cout << GREEN << "Pos_target [X Y Z] : " << px4_pos_target[0] << " [ m ] " << px4_pos_target[1] << " [ m ] " << px4_pos_target[2] << " [ m ] " << TAIL << endl;
             cout << GREEN << "Vel_target [X Y Z] : " << px4_vel_target[0] << " [m/s] " << px4_vel_target[1] << " [m/s] " << px4_vel_target[2] << " [m/s] " << TAIL << endl;
             cout << GREEN << "Yaw_target         : " << px4_att_target[2] * 180 / M_PI << " [deg] " << TAIL << endl;
-            cout << GREEN << "Thr_target [X Y Z] : " << px4_thrust_target << TAIL << endl;
+            cout << GREEN << "Thr_target [ 0-1 ] : " << px4_thrust_target << TAIL << endl;
         }
     }
     else if (pos_controller == POS_CONTOLLER::PID ||
              pos_controller == POS_CONTOLLER::UDE ||
              pos_controller == POS_CONTOLLER::UDE)
     {
-        cout << GREEN << "Att_target [X Y Z] : " << px4_att_target[0] * 180 / M_PI << " [deg] " << px4_att_target[1] * 180 / M_PI << " [deg] " << px4_att_target[2] * 180 / M_PI << " [deg] " << TAIL << endl;
-        cout << GREEN << "Thr_target [X Y Z] : " << px4_thrust_target << TAIL << endl;
+        cout << GREEN << "Att_target [R P Y] : " << px4_att_target[0] * 180 / M_PI << " [deg] " << px4_att_target[1] * 180 / M_PI << " [deg] " << px4_att_target[2] * 180 / M_PI << " [deg] " << TAIL << endl;
+        cout << GREEN << "Thr_target [ 0-1 ] : " << px4_thrust_target << TAIL << endl;
     }
 }
 

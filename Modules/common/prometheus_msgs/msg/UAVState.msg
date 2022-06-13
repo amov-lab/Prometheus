@@ -3,14 +3,6 @@ std_msgs/Header header
 ## 无人机编号 
 uint8 uav_id
 
-## 无人机状态
-uint8 state
-## 无人机状态枚举
-uint8 unknown=0
-uint8 ready=1
-uint8 dead=2
-uint8 lost=3
-
 ## 机载电脑是否连接上飞控，true已连接，false则不是
 bool connected
 ## 是否解锁，true为已解锁，false则不是
