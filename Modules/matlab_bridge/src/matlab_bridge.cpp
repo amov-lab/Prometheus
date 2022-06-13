@@ -244,7 +244,7 @@ void Matlab_Bridge::matlab_drone_status_pub_cb(const ros::TimerEvent &e)
         matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000010000000;
     }
 
-    if (uav_control_state.control_state == prometheus_msgs::UAVControlState::HOVER_CONTROL)
+    if (uav_control_state.control_state == prometheus_msgs::UAVControlState::RC_POS_CONTROL)
     {
         matlab_drone_status.x = (int)matlab_drone_status.x ^ 0b000000010000;
     }else if (uav_control_state.control_state == prometheus_msgs::UAVControlState::COMMAND_CONTROL)

@@ -3,7 +3,6 @@
     <!-- 控制器编号：0 for PX4_ORIGIN, 1 for PID, 2 for UDE, 3 for NE -->
     <arg name="pos_controller" default="1"/>
     <arg name="sim_mode" default="true"/>
-    <arg name="only_command_mode" default="false"/>
     <arg name="flag_printf" default="true"/>
     <!-- 如果是matlab配置为ATT_CTRL_MODE，则此处要设置为True-->
     <arg name="control/enable_external_control" default="true"/> 
@@ -12,7 +11,6 @@
 	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav_id)" output="screen">
 		<param name="uav_id" value="$(arg uav_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />
-        <param name="only_command_mode" value="$(arg only_command_mode)" />
 		<param name="flag_printf" value="$(arg flag_printf)" />
         <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
         <param name="control/pos_controller" value="$(arg pos_controller)" />

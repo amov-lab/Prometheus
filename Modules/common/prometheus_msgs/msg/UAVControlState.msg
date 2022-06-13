@@ -7,10 +7,9 @@ uint8 uav_id
 uint8 control_state
 ## 状态枚举
 uint8 INIT=0
-uint8 MANUAL_CONTROL=1
-uint8 HOVER_CONTROL=2
-uint8 COMMAND_CONTROL=3
-uint8 LAND_CONTROL=4
+uint8 RC_POS_CONTROL=1
+uint8 COMMAND_CONTROL=2
+uint8 LAND_CONTROL=3
 
 ## 无人机控制器标志量
 uint8 pos_controller
