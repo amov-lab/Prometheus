@@ -37,8 +37,8 @@ void Fake_UAV::init(ros::NodeHandle& nh, int id, Eigen::Vector3d init_pos, doubl
     // quad.setStatePos(init_pos);
 
     // 干扰
-    disturbance.f << 0.0,0.0,0.0;
-    disturbance.m << 0.0,0.0,0.0;
+    // disturbance.f << 0.0,0.0,0.0;
+    // disturbance.m << 0.0,0.0,0.0;
 
     // 参数初始化
     control_param.quad_mass = 1.0;
