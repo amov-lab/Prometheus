@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(prometheus_simulator_utils)
 
+add_compile_options(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
   message_generation  
   roscpp
@@ -31,7 +33,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/ode
+  # ${CMAKE_CURRENT_SOURCE_DIR}/include/ode
   ../common/include
 )
 
@@ -39,13 +41,13 @@ include_directories(
 ##      声明可执行cpp文件     ##
 ###############################
 ##     智能体模拟    ##
-add_library(Quadrotor_dynamics quadrotor_dynamics/quadrotor_dynamics.cpp)
-add_library(fake_ugv fake_odom/fake_ugv.cpp)
+# add_library(Quadrotor_dynamics quadrotor_dynamics/quadrotor_dynamics.cpp)
+# add_library(fake_ugv fake_odom/fake_ugv.cpp)
 add_library(fake_uav fake_odom/fake_uav.cpp)
 
 add_executable(fake_odom_node fake_odom/fake_odom_node.cpp)
 target_link_libraries(fake_odom_node ${catkin_LIBRARIES})
-target_link_libraries(fake_odom_node fake_ugv)
+# target_link_libraries(fake_odom_node fake_ugv)
 target_link_libraries(fake_odom_node fake_uav)
 
 ##     地图生成    ##
@@ -56,10 +58,8 @@ target_link_libraries(map_generator_node ${PCL_LIBRARIES})
 target_link_libraries(map_generator_node map_generator)
 
 add_executable(laser_sim_node map_generator/laser_sim_node.cpp)
-
-target_link_libraries(laser_sim_node
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES})
+target_link_libraries(laser_sim_node ${catkin_LIBRARIES})
+target_link_libraries(laser_sim_node ${PCL_LIBRARIES})
 
 ##    RVIZ可视化   ##
 add_library(plan_visual rviz_visualization/plan_visual.cpp)
