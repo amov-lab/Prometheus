@@ -1,8 +1,9 @@
 #include "fake_uav.h"
+#include "fake_ugv.h"
 #include <random>
 
 #define MAX_NUM 40
-int swarm_num_uav;
+int swarm_num_uav,swarm_num_ugv;
 bool manual_init_pos;
 bool pub_gazebo_model_state;
 gazebo_msgs::ModelState model_state;
@@ -11,6 +12,10 @@ Fake_UAV uav_agent[MAX_NUM];
 Eigen::Vector3d init_pos_uav[MAX_NUM];
 double init_yaw_uav[MAX_NUM];
 
+Fake_UGV ugv_agent[MAX_NUM];
+Eigen::Vector3d init_pos_ugv[MAX_NUM];
+double init_yaw_ugv[MAX_NUM];
+
 random_device rd;
 default_random_engine eng(rd()); 
 uniform_real_distribution<double> rand_x;
@@ -18,6 +23,7 @@ uniform_real_distribution<double> rand_y;
 
 ros::Publisher gazebo_model_state_pub;
 void set_uav_init_pos(int i);
+void set_ugv_init_pos(int i);
 void gazebo_pub_cb(const ros::TimerEvent &e);
 int main(int argc, char **argv)
 {
@@ -34,6 +40,7 @@ int main(int argc, char **argv)
     // 同时控制算法仿真：控制模块(即uav_cotrol) --- (底层控制指令,即mavros指令) ---> fake_odom 
 
     nh.param("fake_odom/swarm_num_uav", swarm_num_uav, 8);                          // 无人机数量
+    nh.param("fake_odom/swarm_num_ugv", swarm_num_ugv, 8);                          // 无人车数量
     nh.param("fake_odom/manual_init_pos", manual_init_pos, false);                  // 是否手动设定初始点
     nh.param("fake_odom/pub_gazebo_model_state", pub_gazebo_model_state, false);    // 是否发布gazebo位置
 
@@ -55,6 +62,23 @@ int main(int argc, char **argv)
             set_uav_init_pos(i);
         }
         uav_agent[i].init(nh, i+1, init_pos_uav[i], init_yaw_uav[i]);
+    }
+
+    for(int i = 0; i<swarm_num_ugv;i++)
+    {
+        if(manual_init_pos)
+        {
+            // 根据外部参数设置无人车的初始位置
+            nh.param("fake_odom/ugv" + to_string(i+1) + "_init_x", init_pos_ugv[i][0], 0.0);
+            nh.param("fake_odom/ugv" + to_string(i+1) + "_init_y", init_pos_ugv[i][1], 0.0);
+            nh.param("fake_odom/ugv" + to_string(i+1) + "_init_z", init_pos_ugv[i][2], 0.08);
+            nh.param("fake_odom/ugv" + to_string(i+1) + "_init_yaw", init_yaw_ugv[i], 0.0);    
+        }else
+        {
+            // 随机设置无人车的初始位置
+            set_ugv_init_pos(i);
+        }
+        ugv_agent[i].init(nh, i+1, init_pos_ugv[i], init_yaw_ugv[i]);
     }
 
     sleep(0.5);
@@ -82,6 +106,23 @@ void gazebo_pub_cb(const ros::TimerEvent &e)
         gazebo_model_state_pub.publish(model_state);
         sleep(0.001);
     }
+
+    for(int i = 0; i<swarm_num_ugv; i++)
+    {
+        model_state = ugv_agent[i].get_model_state();
+        gazebo_model_state_pub.publish(model_state);
+        sleep(0.001);
+    }
+}
+
+void set_ugv_init_pos(int i)
+{
+    // 无人车x轴固定,y轴取值范围为:[-10,10]
+    rand_y = uniform_real_distribution<double>(-10 , 10);
+    init_pos_ugv[i][0] = -11.0;
+    init_pos_ugv[i][1] = rand_y(eng);
+    init_pos_ugv[i][2] = 0.0;
+    init_yaw_ugv[i] = 0.0;
 }
 
 void set_uav_init_pos(int i)
