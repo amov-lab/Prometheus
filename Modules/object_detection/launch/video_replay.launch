@@ -1,7 +1,7 @@
 <launch>
     <node pkg="prometheus_detection" type="video_replay.py" name="video_replay" output="screen">
-        <param name="input_video_dir" value="/home/jario/Videos/uav-track"/>
-        <param name="video_rate" value="20"/>
-        <param name="publish_topic" value="/prometheus/object_detection/video_replay"/>
+        <param name="input_video_dir" value="/home/jario/Videos/uav-track" />
+        <param name="video_rate" value="20" />
+        <param name="publish_topic" value="/prometheus/object_detection/video_replay" />
     </node>
 </launch>
