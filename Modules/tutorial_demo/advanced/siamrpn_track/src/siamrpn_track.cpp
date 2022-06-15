@@ -9,7 +9,6 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/DetectionInfo.h>
-#include "message_utils.h"
 
 #include "printf_utils.h"
 

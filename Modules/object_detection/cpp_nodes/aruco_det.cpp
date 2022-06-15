@@ -46,7 +46,6 @@
 #include <deque>
 #include "printf_utils.h"
 
-// #include "message_utils.h"
 
 using namespace std;
 using namespace cv;

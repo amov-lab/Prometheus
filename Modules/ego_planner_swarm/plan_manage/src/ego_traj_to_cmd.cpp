@@ -13,7 +13,6 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 
-#include "prometheus_msgs/Message.h"
 #include "prometheus_msgs/DroneState.h"
 #include "prometheus_msgs/SwarmCommand.h"
 #include "quadrotor_msgs/PositionCommand.h"

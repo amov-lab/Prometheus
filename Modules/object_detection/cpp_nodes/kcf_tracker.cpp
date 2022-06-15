@@ -33,7 +33,6 @@
 #include <opencv2/ml.hpp>
 
 #include "kcftracker.hpp"
-#include "message_utils.h"
 
 
 using namespace std;
@@ -56,11 +55,6 @@ ros::Subscriber switch_subscriber;
 bool is_suspanded = false;
 // 使用cout打印消息
 bool local_print = false;
-// 使用prometheus_msgs::Message打印消息
-bool message_print = true;
-//【发布】调试消息
-ros::Publisher message_pub;
-std::string msg_node_name;
 
 
 // 图像接收回调函数，接收web_cam的话题，并将图像保存在cam_image_copy中
@@ -77,8 +71,6 @@ void cameraCallback(const sensor_msgs::ImageConstPtr& msg)
     } catch (cv_bridge::Exception& e) {
         if (local_print)
             ROS_ERROR("cv_bridge exception: %s", e.what());
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::ERROR, msg_node_name, "cv_bridge exception");
         return;
     }
 
@@ -175,34 +167,22 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(nh); 
     ros::Rate loop_rate(30);
 
-    // 发布调试消息
-    msg_node_name = "/prometheus/message/kcf_tracker";
-    message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
-
     std::string camera_topic, camera_info;
     if (nh.getParam("camera_topic", camera_topic)) {
         if (local_print)
             ROS_INFO("camera_topic is %s", camera_topic.c_str());
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_topic is" + camera_topic);
     } else {
         if (local_print)
             ROS_WARN("didn't find parameter camera_topic");
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_topic");
         camera_topic = "/prometheus/camera/rgb/image_raw";
     }
 
     if (nh.getParam("camera_info", camera_info)) {
         if (local_print)
             ROS_INFO("camera_info is %s", camera_info.c_str());
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "camera_info is" + camera_info);
     } else {
         if (local_print)
             ROS_WARN("didn't find parameter camera_info");
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "didn't find parameter camera_info");
         camera_info = "camera_param.yaml";
     }
 
@@ -221,8 +201,6 @@ int main(int argc, char **argv)
     std::string ros_path = ros::package::getPath("prometheus_detection");
     if (local_print)
         cout << "DETECTION_PATH: " << ros_path << endl;
-    if (message_print)
-        pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "DETECTION_PATH: " + ros_path);
     // 读取参数文档camera_param.yaml中的参数值；
     YAML::Node camera_config = YAML::LoadFile(camera_info);
     // 相机内部参数
@@ -251,8 +229,6 @@ int main(int argc, char **argv)
         {
             if (local_print)
                 cout << "Waiting for image." << endl;
-            if (message_print)
-                pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Waiting for image.");
             std::this_thread::sleep_for(wait_duration);
             ros::spinOnce();
         }
@@ -264,15 +240,11 @@ int main(int argc, char **argv)
             {
                 if (local_print)
                     cout << "Start Detection." << endl;
-                if (message_print)
-                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Start Detection.");
             }
             else
             {
                 if (local_print)
                     cout << "Stop Detection." << endl;
-                if (message_print)
-                    pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, "Stop Detection.");
             }
         }
 
