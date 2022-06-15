@@ -347,7 +347,7 @@ inline bool fill_value_from_id(double id_to8_t[3], int id, float squareLength)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "aruco_det_v2");
+    ros::init(argc, argv, "aruco_det");
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
     // 更新频率为60HZ
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
     drone_state_subscriber = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/state", 1, droneStateCallbackb);
 
     //【发布】检测得到的位置与姿态信息
-    pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/uav" + std::to_string(uav_id) + "/prometheus/object_detection/aruco_det_v2", 1);
+    pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/uav" + std::to_string(uav_id) + "/prometheus/object_detection/aruco_det", 1);
 
     //【发布】检测结果图像
     aruco_pub = it.advertise(output_topic.c_str(), 1);

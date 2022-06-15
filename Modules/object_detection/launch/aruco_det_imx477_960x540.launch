@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="prometheus_detection" type="aruco_det_v2" name="aruco_det_v2" output="screen">
+    <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen">
         <param name="camera_topic" type="string" value="/prometheus/camera/rgb/image_raw" />
         <param name="camera_parameters" type="string" value="$(find prometheus_detection)/shell/calib_imx477_960x540.yaml" />
         <param name="output_topic" type="string" value="/prometheus/camera/rgb/image_aruco_det" />
