@@ -31,7 +31,6 @@
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
 
-// #include "message_utils.h"
 
 
 using namespace std;

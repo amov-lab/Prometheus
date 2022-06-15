@@ -15,7 +15,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/aruco.hpp>
-#include "message_utils.h"
 
 
 using namespace std;
@@ -23,11 +22,6 @@ using namespace cv;
 
 // 使用cout打印消息
 bool local_print = true;
-// 使用prometheus_msgs::Message打印消息
-bool message_print = false;
-//【发布】调试消息
-ros::Publisher message_pub;
-std::string msg_node_name;
 
 image_transport::Publisher image_pub;
 //设置图像大小
@@ -49,19 +43,12 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(nh);
     ros::Rate loop_rate(60);
 
-    // 发布调试消息
-    msg_node_name = "/prometheus/message/web_cam";
-    message_pub = nh.advertise<prometheus_msgs::Message>(msg_node_name, 10);
-
     int camera_id = 0;
     if (nh.getParam("cam_id", camera_id)) {
         char camera_id_msg[256];
         sprintf(camera_id_msg, "camera id is %d", camera_id);
         if (local_print)
             cout << camera_id_msg << endl;
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
-            camera_id_msg);
     }
     int camera_type = 0; // 0: web_cam, 1: mipi_cam, 2: arducam
     if (nh.getParam("camera_type", camera_type)) {
@@ -69,9 +56,6 @@ int main(int argc, char **argv)
         sprintf(camera_type_msg, "camera type is %d", camera_type);
         if (local_print)
             cout << camera_type_msg << endl;
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
-            camera_type_msg);
     }
     int camera_height(480), camera_width(640);
     int cam_h, cam_w;
@@ -81,9 +65,6 @@ int main(int argc, char **argv)
         sprintf(camera_id_msg, "set capture height %d", camera_height);
         if (local_print)
             cout << camera_id_msg << endl;
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
-            camera_id_msg);
     }
     if (nh.getParam("cam_w", cam_w)) {
         if (cam_w > 0) camera_width = cam_w;
@@ -91,9 +72,6 @@ int main(int argc, char **argv)
         sprintf(camera_id_msg, "set capture width %d", camera_width);
         if (local_print)
             cout << camera_id_msg << endl;
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
-            camera_id_msg);
     }
     int framerate = 30;
     int rate;
@@ -103,9 +81,6 @@ int main(int argc, char **argv)
         sprintf(framerate_msg, "set framerate %d", framerate);
         if (local_print)
             cout << framerate_msg << endl;
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
-            framerate_msg);
     }
     int flip_method = 0;
     int flip;
@@ -115,9 +90,6 @@ int main(int argc, char **argv)
         sprintf(flip_method_msg, "set flip_method %d", flip_method);
         if (local_print)
             cout << flip_method_msg << endl;
-        if (message_print)
-            pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_node_name, 
-            flip_method_msg);
     }
 
     int resize_h(0), resize_w(0);
@@ -203,8 +175,6 @@ int main(int argc, char **argv)
                 cant_open = true;
                 if (local_print)
                     ROS_WARN("Can not open camera %d.", camera_id);
-                if (message_print)
-                    pub_message(message_pub, prometheus_msgs::Message::WARN, msg_node_name, "Can not open camera");
             }
         }
         ros::spinOnce();
