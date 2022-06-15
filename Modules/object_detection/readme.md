@@ -5,7 +5,7 @@
 - python3 部分程序依赖于python3
 - pytorch
 
-# 配置 Melodic cv_bridge 支持 python3
+## 配置 Melodic cv_bridge 支持 python3
 > https://blog.actorsfit.com/a?ID=01750-a3d568ec-ce66-4961-9573-0f9bba2561f8
 
 ```bash
@@ -54,7 +54,8 @@ export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/onx/Code/prometheus_px4/Tools/si
 ....
 ```
 
-# 安装Python3相关环境
+
+## 安装Python3相关环境
 
 1. [安装并配置conda](https://docs.conda.io/en/latest/miniconda.html)。_conda详细安装教程较多，自行搜索_
 
@@ -73,4 +74,32 @@ which python3
 5. 加入`.bashrc`启动时自动激活`prometheus_python3`环境
 ```bash
 echo "conda activate prometheus_python3" >> ~/.bashrc
+```
+
+# 代码说明
+
+- 加载不同的相机内参参数，进行二维码检测估计
+```
+aruco_det_imx477_960x540.launch
+aruco_det_webcam_640x480.launch
+aruco_det.launch
+```
+- 启动相关相机并转化为ROS话题发布
+```
+mipi_cam_720p.launch
+mipi_cam_imx477_960x540.launch
+mipi_cam_imx477_1080p.launch
+```
+- yolo(darnet版)目标检测，加载模型，从图像话题中获取视频流，发布检测信息
+```
+ms_coco_det.launch # 加载coco数据集训练的模型
+uav_det.launch #
+```
+- 从不同的图像话题获取视频流，进行框选跟踪
+```
+tracker_kcf_gazebo.launch # KCF跟踪
+tracker_kcf.launch # KCF跟踪
+tracker_siamrpn.launch # siamrpn跟踪
+```
+- 将本地视频转换为图像话题
 ```
