@@ -1,5 +1,5 @@
 # 脚本名称: formation_control
-# 脚本描述: todo
+# 脚本描述: 该脚本为集群控制demo启动脚本,包含PX4 SITL,Gazebo仿真环境,无人机控制节点以及集群控制节点
 
 # 启动PX4 SITL及Gazebo仿真环境
 roslaunch prometheus_gazebo sitl_outdoor_4uav.launch & sleep 5s;
