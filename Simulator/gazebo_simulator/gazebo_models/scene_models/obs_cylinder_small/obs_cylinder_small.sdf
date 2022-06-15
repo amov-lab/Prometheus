@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='obs_cylinder'>
+  <model name='obs_cylinder_small'>
     <link name='link'>
       <inertial>
         <mass>1</mass>
