@@ -47,7 +47,6 @@
 #include <geometry_msgs/Pose.h>
 #include <std_msgs/Bool.h>
 #include <prometheus_msgs/DetectionInfo.h>
-#include <prometheus_msgs/Message.h>
 
 #include "printf_utils.h"
 
