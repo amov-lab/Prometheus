@@ -1,3 +1,4 @@
+#!/bin/bash
 # 脚本名称: body_xyz_pos_control
 # 脚本描述: 该脚本为机体坐标系下控制demo启动脚本,包含PX4 SITL,Gazebo仿真环境,无人机控制节点以及机体坐标系位置控制demo
 

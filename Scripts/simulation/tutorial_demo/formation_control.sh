@@ -1,3 +1,4 @@
+#!/bin/bash
 # 脚本名称: formation_control
 # 脚本描述: todo
 
