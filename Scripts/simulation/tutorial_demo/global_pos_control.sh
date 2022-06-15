@@ -1,3 +1,4 @@
+#!/bin/bash
 # 脚本名称: global_pos_control
 # 脚本描述: 该脚本为全局坐标系下位置控制demo启动脚本,包含PX4 SITL,Gazebo仿真环境,无人机控制节点以及全局坐标系下位置控制demo
 
