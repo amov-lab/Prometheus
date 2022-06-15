@@ -1,6 +1,6 @@
 #!/bin/bash
 # 脚本名称: enu_xyz_pos_control
-# 脚本描述: 该脚本为本地坐标系下位置控制demo启动脚本,包含PX4 SITL,Gazebo仿真环境,无人机控制节点以及本地坐标系下位置控制demo
+# 脚本描述: 该脚本为本地坐标系下位置控制demo启动脚本,包含PX4 SITL,Gazebo仿真环境,无人机控制节点以及本地坐标系下位置控制节点
 
 # 启动PX4 SITL及Gazebo仿真环境
 roslaunch prometheus_gazebo sitl_outdoor_1uav.launch & sleep 5s;
