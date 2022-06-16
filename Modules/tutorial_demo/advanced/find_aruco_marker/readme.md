@@ -3,7 +3,7 @@
 # 使用
 _多个二维码检测比较吃CPU资源，可能会导致卡顿_
 ```bash
-roslaunch prometheus_demo find_aruco_marker.launch
+roslaunch prometheus_demo find_aruco_marker_all.launch
 ```
 
 输入二维码id，目前world中有id为1~20二维码

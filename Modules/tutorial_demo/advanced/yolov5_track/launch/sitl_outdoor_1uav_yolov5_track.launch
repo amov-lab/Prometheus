@@ -1,0 +1,6 @@
+<launch>
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
+        <arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/multi_person.world"/>
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf"/>
+	</include>
+</launch>

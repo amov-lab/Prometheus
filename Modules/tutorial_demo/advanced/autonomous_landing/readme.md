@@ -2,7 +2,7 @@
 ![二维码自主降落.gif](https://qiniu.md.amovlab.com/img/m/202206/20220606/1126474273967363998515200.gif)
 # 使用
 ```bash
-roslaunch prometheus_demo autonomous_landing.launch
+roslaunch prometheus_demo autonomous_landing_all.launch
 ```
 
 运行`rqt_image_view`，切换话题到`/prometheus/camera/rgb/image_landpad_det`可显示降落点可视化。
