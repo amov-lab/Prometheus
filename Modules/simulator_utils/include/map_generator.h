@@ -25,7 +25,7 @@ using namespace Eigen;
 
 #define MAX_SWRAM_NUM 41
 
-// 节点功能：生成随机地图，并模拟无人机检测，模拟得到局部地图与全局地图
+// 节点功能：生成地图，并模拟无人机检测，模拟得到局部地图与全局地图
 class Map_Generator
 {
 public:
@@ -41,18 +41,18 @@ public:
     double sensing_range, sensing_rate; // 传感器感知半径与频率
     double sensing_horizon;
 
-    double obs_min_dist;                     // 障碍物最小间距
-    int cylinder_num;                        // 圆柱体数量
-    double cylinder_radius, cylinder_height; // 圆柱体参数
-    int square_num;                          // 立方体数量
-    double square_size, square_height;       // 立方体参数
-    double wall_length, wall_height;         // 墙参数
-    double line_height;
-    // 初始状态量
-    
-    bool uav_odom_ok[MAX_SWRAM_NUM] = {false};
+    double obs_min_dist;                                 // 障碍物最小间距
+    int large_cylinder_num, small_cylinder_num;          // 圆柱体数量
+    double large_cylinder_radius, large_cylinder_height; // 圆柱体参数
+    double small_cylinder_radius, small_cylinder_height; // 圆柱体参数
+    double square_size, square_height;                   // 立方体参数
+    double wall_length, wall_height;                     // 墙参数
+    double line_height;                                  // 线参数
+
     // 无人机初始位置
     double uav_init_x, uav_init_y;
+    // 无人机odom状态量
+    bool uav_odom_ok[MAX_SWRAM_NUM] = {false};
     nav_msgs::Odometry uav_odom[MAX_SWRAM_NUM];
 
     bool global_map_ok = false;
@@ -63,18 +63,19 @@ public:
     pcl::KdTreeFLANN<pcl::PointXYZ> kdtreeLocalMap;
 
     // 基本形状生成函数
-    void generate_cylinder(double x, double y);
+    void generate_large_cylinder(double x, double y);
+    void generate_small_cylinder(double x, double y);
     void generate_square(double x, double y);
     void generate_row_wall(double x, double y);
     void generate_column_wall(double x, double y);
     void generate_line(double x, double y);
-
-    // 边界生成
+    // 边界生成函数
     void GenerateBorder();
-    // 随机地图生成
+    // 随机地图生成函数
     void GenerateRandomMap();
-    // 固定地图生成
-    void GenerateMap1();
+    // planning_test地图生成函数
+    void GeneratePlanningTestMap();
+    void GeneratePlanningTestMap2();
 
 private:
     // 订阅
