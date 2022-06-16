@@ -79,126 +79,126 @@
     <!-- 障碍物 -->
     <model name='cylinder1_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 -8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 -6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 -4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 -2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 -0.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder1_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>8.0 8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
    <model name='cylinder2_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 -9.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 -7.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 -5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 -3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 -1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder2_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>6.0 7.0 1.0 0 0 0</pose>
       </include>
     </model>
@@ -206,126 +206,126 @@
     <!-- // -->
     <model name='cylinder3_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 -8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 -6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 -4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 -2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 -0.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>4.0 8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
    <model name='cylinder4_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 -9.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 -7.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 -5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 -3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 -1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>2.0 7.0 1.0 0 0 0</pose>
       </include>
     </model>
@@ -333,126 +333,126 @@
     <!-- // -->
     <model name='cylinder5_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 -8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 -6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 -4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 -2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 -0.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder5_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>0.0 8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
    <model name='cylinder6_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 -9.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 -7.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 -5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 -3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 -1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder6_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-2.0 7.0 1.0 0 0 0</pose>
       </include>
     </model>
@@ -460,126 +460,126 @@
     <!-- // -->
     <model name='cylinder7_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 -8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 -6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 -4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 -2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 -0.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder7_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-4.0 8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
    <model name='cylinder8_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 -9.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 -7.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 -5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 -3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 -1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 1.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 3.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 5.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder8_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-6.0 7.0 1.0 0 0 0</pose>
       </include>
     </model>
@@ -588,63 +588,63 @@
     <!-- // -->
     <model name='cylinder9_a'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 -8.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_b'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 -6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_c'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 -4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_d'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 -2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_e'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 -0.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_f'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 2.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_g'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 4.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_h'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 6.0 1.0 0 0 0</pose>
       </include>
     </model>
 
     <model name='cylinder9_i'>
       <include>
-        <uri>model://obs_cylinder</uri>
+        <uri>model://obs_cylinder_small</uri>
         <pose>-8.0 8.0 1.0 0 0 0</pose>
       </include>
     </model>
