@@ -17,18 +17,21 @@ void Map_Generator::init(ros::NodeHandle &nh)
     // 【参数】障碍物最小距离
     nh.param("map_generator/obs_min_dist", obs_min_dist, 2.0);
     // 【参数】障碍物数量 - 圆柱
-    nh.param("map_generator/cylinder_num", cylinder_num, 20);
-    // 【参数】障碍物参数 - 圆柱
-    nh.param("map_generator/cylinder_radius", cylinder_radius, 0.25);
-    nh.param("map_generator/cylinder_height", cylinder_height, 2.0);
-    // 【参数】障碍物数量 - 立方体
-    nh.param("map_generator/square_num", square_num, 10);
+    nh.param("map_generator/small_cylinder_num", small_cylinder_num, 20);
+    nh.param("map_generator/large_cylinder_num", large_cylinder_num, 20);
+    // 【参数】障碍物参数 - 小圆柱
+    nh.param("map_generator/small_cylinder_radius", small_cylinder_radius, 0.2);
+    nh.param("map_generator/small_cylinder_height", small_cylinder_height, 2.0);
+    // 【参数】障碍物参数 - 大圆柱
+    nh.param("map_generator/large_cylinder_radius", large_cylinder_radius, 0.4);
+    nh.param("map_generator/large_cylinder_height", large_cylinder_height, 2.0);
     // 【参数】障碍物参数 - 立方体
     nh.param("map_generator/square_size", square_size, 0.5);
     nh.param("map_generator/square_height", square_height, 2.0);
     // 【参数】障碍物参数 - 墙
     nh.param("map_generator/wall_length", wall_length, 10.0);
     nh.param("map_generator/wall_height", wall_height, 2.0);
+    // 【参数】障碍物参数 - 线
     nh.param("map_generator/line_height", line_height, 2.0);
     // 【参数】初始位置
     nh.param("uav_init_x", uav_init_x, -100.0);
@@ -40,6 +43,11 @@ void Map_Generator::init(ros::NodeHandle &nh)
     map_y_min = -map_size_y / 2.0;
     map_y_max = +map_size_y / 2.0;
     map_z_limit = map_size_z;
+
+    cout << GREEN << "Sensor INFO     :" << TAIL << endl;
+    cout << GREEN << "sensing_range   : " << sensing_range << " [ m ]" << TAIL << endl;
+    cout << GREEN << "sensing_horizon : " << sensing_horizon << " [ m ]" << TAIL << endl;
+    cout << GREEN << "sensing_rate    : " << sensing_rate << " [ Hz]" << TAIL << endl;
 
     cout << GREEN << "Map INFO:" << TAIL << endl;
     cout << GREEN << "X:  [" << map_x_min << "," << map_x_max << "]" << TAIL << endl;
@@ -71,23 +79,23 @@ void Map_Generator::init(ros::NodeHandle &nh)
     eng.seed(seed);
 }
 
-// 生成圆柱体
-// 圆柱体半径：cylinder_radius
-// 圆柱体高度：cylinder_height
-void Map_Generator::generate_cylinder(double x, double y)
+// 生成圆柱体 - small
+// 圆柱体半径：small_cylinder_radius
+// 圆柱体高度：small_cylinder_height
+void Map_Generator::generate_small_cylinder(double x, double y)
 {
     // 必须在地图范围内
     if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
     {
-        cout << RED << "generate_cylinder wrong." << TAIL << endl;
+        cout << RED << "generate_small_cylinder wrong." << TAIL << endl;
         return;
     }
 
     pcl::PointXYZ pt_random;
     x = floor(x / map_resolution) * map_resolution;
     y = floor(y / map_resolution) * map_resolution;
-    int widNum = ceil((cylinder_radius) / map_resolution);
-    int heiNum = ceil(cylinder_height / map_resolution);
+    int widNum = ceil((small_cylinder_radius) / map_resolution);
+    int heiNum = ceil(small_cylinder_height / map_resolution);
     for (int r = -widNum; r <= widNum; r++)
         for (int s = -widNum; s <= widNum; s++)
             for (int t = -1; t <= heiNum; t++)
@@ -95,7 +103,41 @@ void Map_Generator::generate_cylinder(double x, double y)
                 double temp_x = x + r * map_resolution;
                 double temp_y = y + s * map_resolution;
                 double temp_z = t * map_resolution;
-                if ((Eigen::Vector2d(temp_x, temp_y) - Eigen::Vector2d(x, y)).norm() < cylinder_radius + 1e-2)
+                if ((Eigen::Vector2d(temp_x, temp_y) - Eigen::Vector2d(x, y)).norm() < small_cylinder_radius + 1e-2)
+                {
+                    pt_random.x = temp_x;
+                    pt_random.y = temp_y;
+                    pt_random.z = temp_z;
+                    global_map_pcl.points.push_back(pt_random);
+                }
+            }
+}
+
+// 生成圆柱体 - large
+// 圆柱体半径：large_cylinder_radius
+// 圆柱体高度：large_cylinder_height
+void Map_Generator::generate_large_cylinder(double x, double y)
+{
+    // 必须在地图范围内
+    if (x < map_x_min || x > map_x_max || y < map_y_min || y > map_y_max)
+    {
+        cout << RED << "generate_large_cylinder wrong." << TAIL << endl;
+        return;
+    }
+
+    pcl::PointXYZ pt_random;
+    x = floor(x / map_resolution) * map_resolution;
+    y = floor(y / map_resolution) * map_resolution;
+    int widNum = ceil((large_cylinder_radius) / map_resolution);
+    int heiNum = ceil(large_cylinder_height / map_resolution);
+    for (int r = -widNum; r <= widNum; r++)
+        for (int s = -widNum; s <= widNum; s++)
+            for (int t = -1; t <= heiNum; t++)
+            {
+                double temp_x = x + r * map_resolution;
+                double temp_y = y + s * map_resolution;
+                double temp_z = t * map_resolution;
+                if ((Eigen::Vector2d(temp_x, temp_y) - Eigen::Vector2d(x, y)).norm() < large_cylinder_radius + 1e-2)
                 {
                     pt_random.x = temp_x;
                     pt_random.y = temp_y;
@@ -242,37 +284,14 @@ void Map_Generator::GenerateBorder()
     cout << GREEN << "[map_generator] Finished generate border." << TAIL << endl;
 }
 
-void Map_Generator::GenerateMap1()
-{
-    generate_cylinder(1.0, 1.0);
-
-    generate_square(2.0, 2.0);
-
-    generate_row_wall(10.0, 10.0);
-
-    generate_column_wall(-10.0, -10.0);
-
-    generate_line(0.0, 0.0);
-
-    global_map_pcl.width = global_map_pcl.points.size();
-
-    global_map_pcl.height = 1;
-    global_map_pcl.is_dense = true;
-
-    kdtreeLocalMap.setInputCloud(global_map_pcl.makeShared());
-
-    global_map_ok = true;
-
-    cout << GREEN << "[map_generator] Finished generate map 1. Map points:" << global_map_pcl.width << TAIL << endl;
-}
-
+// 生成随机地图（随机地图中只有圆柱体）
 void Map_Generator::GenerateRandomMap()
 {
-    if ((cylinder_num + square_num) > map_size_x * 8)
+    if ((small_cylinder_num + large_cylinder_num) > map_size_x * 8)
     {
         cout << RED << "[map_generator] The map can't put all the obstacles, remove some." << TAIL << endl;
-        cylinder_num = map_size_x * 4;
-        square_num = map_size_x * 4;
+        small_cylinder_num = map_size_x * 4;
+        large_cylinder_num = map_size_x * 4;
     }
 
     // 待存入全局点云的点
@@ -286,8 +305,8 @@ void Map_Generator::GenerateRandomMap()
     rand_x = uniform_real_distribution<double>(map_x_min, map_x_max);
     rand_y = uniform_real_distribution<double>(map_y_min, map_y_max);
 
-    // 生成圆柱体障碍物
-    for (int i = 0; i < cylinder_num; i++)
+    // 生成圆柱体 - small
+    for (int i = 0; i < small_cylinder_num; i++)
     {
         double x, y;
         // 随机生成障碍物位置：[x,y]
@@ -309,11 +328,11 @@ void Map_Generator::GenerateRandomMap()
         // 将本次生成的障碍物位置推入容器
         obs_position.push_back(Eigen::Vector2d(x, y));
 
-        generate_cylinder(x, y);
+        generate_small_cylinder(x, y);
     }
 
-    // 生成长方体障碍物
-    for (int i = 0; i < square_num; ++i)
+    // 生成圆柱体 - large
+    for (int i = 0; i < large_cylinder_num; ++i)
     {
         double x, y, z;
         // 随机生成障碍物位置：[x,y]
@@ -335,7 +354,7 @@ void Map_Generator::GenerateRandomMap()
         // 将本次生成的障碍物位置推入容器
         obs_position.push_back(Eigen::Vector2d(x, y));
 
-        generate_square(x, y);
+        generate_large_cylinder(x, y);
     }
 
     global_map_pcl.width = global_map_pcl.points.size();
@@ -344,7 +363,83 @@ void Map_Generator::GenerateRandomMap()
     kdtreeLocalMap.setInputCloud(global_map_pcl.makeShared());
     global_map_ok = true;
 
-    cout << GREEN << "[map_generator] Finished generate random map. Map points:" << global_map_pcl.width << TAIL << endl;
+    cout << GREEN << "[map_generator] Finished generate map: [ random ]. Map points:" << global_map_pcl.width << TAIL << endl;
+}
+
+void Map_Generator::GeneratePlanningTestMap()
+{
+    // 第一排
+    for (int t = -8; t <= 8; t = t + 2)
+    {
+        generate_small_cylinder((double)8, (double)t);
+    }
+
+    // 第二排
+    for (int t = -9; t <= 7; t = t + 2)
+    {
+        generate_small_cylinder((double)6, (double)t);
+    }
+
+    for (int t = -8; t <= 8; t = t + 2)
+    {
+        generate_small_cylinder((double)4, (double)t);
+    }
+
+    for (int t = -9; t <= 7; t = t + 2)
+    {
+        generate_small_cylinder((double)2, (double)t);
+    }
+
+    for (int t = -8; t <= 8; t = t + 2)
+    {
+        generate_small_cylinder((double)0, (double)t);
+    }
+
+    for (int t = -9; t <= 7; t = t + 2)
+    {
+        generate_small_cylinder((double)-2, (double)t);
+    }
+
+    for (int t = -8; t <= 8; t = t + 2)
+    {
+        generate_small_cylinder((double)-4, (double)t);
+    }
+
+    for (int t = -9; t <= 7; t = t + 2)
+    {
+        generate_small_cylinder((double)-6, (double)t);
+    }
+
+    for (int t = -8; t <= 8; t = t + 2)
+    {
+        generate_small_cylinder((double)-8, (double)t);
+    }
+
+    global_map_pcl.width = global_map_pcl.points.size();
+    global_map_pcl.height = 1;
+    global_map_pcl.is_dense = true;
+    kdtreeLocalMap.setInputCloud(global_map_pcl.makeShared());
+    global_map_ok = true;
+    cout << GREEN << "[map_generator] Finished generate map [ planning_test ]. Map points:" << global_map_pcl.width << TAIL << endl;
+}
+
+void Map_Generator::GeneratePlanningTestMap2()
+{
+    generate_small_cylinder(2.0, -2.0);
+    generate_small_cylinder(2.0, 0.0);
+    generate_small_cylinder(2.0, 2.0);
+    generate_large_cylinder(4.0, -1.5);
+    generate_large_cylinder(4.0, 1.5);
+    generate_small_cylinder(6.0, -2.0);
+    generate_small_cylinder(6.0, 0.0);
+    generate_small_cylinder(6.0, 2.0);
+    
+    global_map_pcl.width = global_map_pcl.points.size();
+    global_map_pcl.height = 1;
+    global_map_pcl.is_dense = true;
+    kdtreeLocalMap.setInputCloud(global_map_pcl.makeShared());
+    global_map_ok = true;
+    cout << GREEN << "[map_generator] Finished generate map [ planning_test ]. Map points:" << global_map_pcl.width << TAIL << endl;
 }
 
 void Map_Generator::uav_odom_cb(const nav_msgs::Odometry::ConstPtr &odom, int uav_id)
@@ -372,7 +467,7 @@ void Map_Generator::pub_local_map_cb(const ros::TimerEvent &event, int uav_id)
 {
     if (!global_map_ok || !uav_odom_ok[uav_id])
     {
-        // cout << RED << "[map_generator] fail to pub local map." << TAIL << endl;
+        cout << RED << "[map_generator] fail to pub local map." << TAIL << endl;
         return;
     }
 
