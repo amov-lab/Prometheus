@@ -6,7 +6,7 @@
 # 使用
 
 ```bash
-roslaunch prometheus_demo siamrpn_track.launch
+roslaunch prometheus_demo siamrpn_track_all.launch
 ```
 框选目标
 
