@@ -1,6 +1,5 @@
 <launch>
-	<!-- run the autonomous_landing.cpp -->
-	<node pkg="prometheus_demo" type="siamrpn_track" name="siamrpn_track" output="screen" launch-prefix="gnome-terminal --">
+	<node pkg="prometheus_demo" type="siamrpn_track" name="siamrpn_track" output="screen">
 		<param name="uav_id" value="1" />
 		<!-- 视觉丢失次数阈值 -->
 		<param name="Thres_vision" value="10" />
@@ -19,6 +18,6 @@
 		<param name="kpx_track" value="0.2" />
 		<param name="kpy_track" value="0.2" />
 		<param name="kpz_track" value="0.2" />
-		
+
 	</node>
 </launch>

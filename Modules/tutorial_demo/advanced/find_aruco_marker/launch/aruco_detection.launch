@@ -1,9 +1,9 @@
 <launch>
-    <!-- run the landpad_det.cpp -->
-    <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen" launch-prefix="gnome-terminal \-\-">
+    <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen">
         <param name="uav_id" type="int" value="1" />
         <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
         <param name="camera_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
+        <param name="output_topic" type="string" value="/uav1/detection/image" />
         <param name="run_state" type="string" value="0" />
         <param name="dictionary_type" type="int" value="10" />
     </node>

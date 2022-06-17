@@ -173,6 +173,7 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(nh);
 
     std::string camera_topic, camera_info;
+    int uav_id;
     if (nh.getParam("camera_topic", camera_topic))
     {
         PCOUT(0, GREEN, std::string("camera_topic is ") + camera_topic);
@@ -193,7 +194,17 @@ int main(int argc, char **argv)
         PCOUT(0, YELLOW, std::string("didn't find parameter camera_info, and camera_info set to") + camera_info);
     }
 
-    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10);
+    if (nh.getParam("uav_id", uav_id))
+    {
+        PCOUT(0, GREEN, std::string("uav_id ") + std::to_string(uav_id));
+    }
+    else
+    {
+        camera_info = "camera_param.yaml";
+        PCOUT(0, YELLOW, std::string("didn't find parameter camera_info, and camera_info set to") + camera_info);
+    }
+
+    position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/uav" + std::to_string(uav_id) + "/prometheus/object_detection/landpad_det", 10);
 
     // 接收开关话题
     switch_subscriber = nh.subscribe("/prometheus/switch/landpad_det", 10, switchCallback);
@@ -201,7 +212,7 @@ int main(int argc, char **argv)
     // 接收图像的话题
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);
     // 发布ArUco检测结果的话题
-    landpad_pub = it.advertise("/prometheus/camera/rgb/image_landpad_det", 1);
+    landpad_pub = it.advertise("/uav" + std::to_string(uav_id) + "/prometheus/camera/rgb/image_landpad_det", 1);
 
     sensor_msgs::ImagePtr msg_ellipse;
 

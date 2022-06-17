@@ -1,6 +1,5 @@
 <launch>
-	<!-- run the autonomous_landing.cpp -->
-	<node pkg="prometheus_demo" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="gnome-terminal --">
+	<node pkg="prometheus_demo" type="autonomous_landing" name="autonomous_landing" output="screen">
 		<param name="uav_id" value="1" />
 		<!-- 是否使用降落板绝对高度 -->
 		<param name="use_pad_height" value="true" />
