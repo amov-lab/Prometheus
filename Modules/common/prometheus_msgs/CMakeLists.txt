@@ -26,8 +26,7 @@ add_message_files(
   UAVControlState.msg
   UAVSetup.msg
   TextInfo.msg
-  Message.msg
-  IndoorSearch.msg
+  GlobalAruco.msg
 
   ArucoInfo.msg
   MultiArucoInfo.msg

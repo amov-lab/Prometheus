@@ -1,5 +1,5 @@
 <launch>
-	<node pkg="prometheus_demo" type="siamrpn_track" name="siamrpn_track" output="screen" launch-prefix="gnome-terminal --">
+	<node pkg="prometheus_demo" type="siamrpn_track" name="siamrpn_track" output="screen">
 		<param name="uav_id" value="1" />
 		<!-- 视觉丢失次数阈值 -->
 		<param name="Thres_vision" value="10" />

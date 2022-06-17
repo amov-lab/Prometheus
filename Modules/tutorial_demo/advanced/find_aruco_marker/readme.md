@@ -1,14 +1,26 @@
 # 多二维码识别自主降落
 ![多二维码.gif](https://qiniu.md.amovlab.com/img/m/202206/20220606/1130165150895711620857856.gif)
+# 必要阅读
+1. 仿真环境遥控器操作
+
+# 推荐阅读
+2. [二维码检测原理概述](https://github.com/amov-lab/Prometheus/wiki/Prometheus%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E7%AE%97%E6%B3%95-%E4%BA%8C%E7%BB%B4%E7%A0%81%E6%A3%80%E6%B5%8B)
+
 # 使用
 _多个二维码检测比较吃CPU资源，可能会导致卡顿_
+1. 打开终端进入Prometheus根目录，执行以下命令
 ```bash
-roslaunch prometheus_demo find_aruco_marker_all.launch
+./Scripts/simulation/tutorial_demo/find_aruco_marker.sh
 ```
+1. 等待程序全部启动完成
+3. 切换rqt_image_view的图像话题到`/uav1/detection/image`，查看二维码检测的可视化(无人机在没有起飞时，摄像头朝下画面可能为白色)
+![image.png](https://qiniu.md.amovlab.com/img/m/202206/20220616/1807212716561216578158592.png)
+4. 输入二维码id，目前world中有id为1~20二维码，比如这里输入17
+![image.png](https://qiniu.md.amovlab.com/img/m/202206/20220616/1809113174931085385433088.png)
+4. 遥控器解锁无人机，并切换到`RC_POS_CONTROL`模式，等待无人机起飞并保持悬停
+5. 遥控器切换到`COMMAND_CONTROL`，无人机绕圆飞行，并且在绕圆到过程中进行二维码识别，如果识别到给定id的二维码则终端绕圆飞行，前往对应二维码进行自主降落
 
-输入二维码id，目前world中有id为1~20二维码
-
-# 逻辑描述
+# 程序核心逻辑
 `Modules/object_detection/cpp_nodes/aruco_det.cpp`有3种运行模式`run_state`
 - 0: 二维码检测
 - 1: 标定map位姿，完成标定后自动进入2模式. **相机移动后需要重新标定** 

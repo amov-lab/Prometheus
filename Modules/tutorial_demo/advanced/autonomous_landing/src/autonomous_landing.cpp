@@ -133,7 +133,7 @@ inline void topicSub(ros::NodeHandle &nh)
     //【订阅】降落板与无人机的相对位置及相对偏航角  单位：米   单位：弧度
     //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    static ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/object_detection/landpad_det", 10, landpadDetCb);
+    static ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::DetectionInfo>("/uav" + std::to_string(g_uav_id) + "/prometheus/object_detection/landpad_det", 10, landpadDetCb);
 
     // 无人机状态
     static ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(g_uav_id) + "/prometheus/state", 10, droneStateCb);

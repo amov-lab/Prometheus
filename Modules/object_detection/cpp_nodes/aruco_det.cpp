@@ -29,7 +29,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <prometheus_msgs/DetectionInfo.h>
-#include <prometheus_msgs/IndoorSearch.h>
+#include <prometheus_msgs/GlobalAruco.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/ArucoInfo.h>
 #include <prometheus_msgs/MultiArucoInfo.h>
@@ -411,7 +411,7 @@ int main(int argc, char **argv)
     if (3 == run_state)
     {
         //【发布】融合DroneState的二维码全局位置
-        indoor_search_pub = nh.advertise<prometheus_msgs::IndoorSearch>("/uav" + std::to_string(uav_id) + "/prometheus/indoor_search/detection_result", 1);
+        indoor_search_pub = nh.advertise<prometheus_msgs::GlobalAruco>("/uav" + std::to_string(uav_id) + "/prometheus/indoor_search/detection_result", 1);
     }
     if (0 == run_state)
     {
@@ -426,7 +426,7 @@ int main(int argc, char **argv)
     Eigen::Matrix3d cam2drn_rmat_eigen;
     Eigen::Quaterniond cam2drn_q;
 
-    prometheus_msgs::IndoorSearch _indoor_search_msg;
+    prometheus_msgs::GlobalAruco _indoor_search_msg;
     map<int, prometheus_msgs::ArucoInfo *> id3aruc = {
         {1, &_indoor_search_msg.Aruco1},
         {2, &_indoor_search_msg.Aruco2},
@@ -446,7 +446,7 @@ int main(int argc, char **argv)
         cam2drn_tvecs[1] = 0.;
         cam2drn_tvecs[2] = -0.1;
         // <pose>0 0 -0.1 0 1.5707963 0</pose>
-        // TODO: 根据实际结构调整
+        // TODO: 根据实际调整
         cam2drn_rvecs1[0] = 1.5707963 * 2.;
         cam2drn_rvecs1[1] = 0.;
         cam2drn_rvecs1[2] = 0.;
@@ -497,7 +497,7 @@ int main(int argc, char **argv)
     const auto wait_duration = std::chrono::milliseconds(1000);
     while (ros::ok())
     {
-        while (!getImageStatus() && ros::ok())
+        while (!getImageStatus())
         {
             PCOUT(-1, WHITE, "Waiting for image...");
             std::this_thread::sleep_for(wait_duration);
