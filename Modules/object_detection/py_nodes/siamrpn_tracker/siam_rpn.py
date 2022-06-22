@@ -6,6 +6,7 @@ path = path + '/../../src/siam_rpn_lib/'
 print(path)
 sys.path.append(path)
 sys.path.append("/home/onx/Code/Prometheus/devel/lib/python2.7/dist-packages")
+sys.path.insert(0,'/opt/ros/' + os.environ['ROS_DISTRO'] + '/lib/python3/dist-packages/')
 import rospy
 import cv2
 import torch

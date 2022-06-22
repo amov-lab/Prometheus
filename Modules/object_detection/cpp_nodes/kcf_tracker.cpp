@@ -1,14 +1,3 @@
-/***************************************************************************************************************************
- * kcf_tracker.cpp
- * Author: Jario
- * Update Time: 2020.1.14
- *
- * 说明: KCF目标跟踪程序
- *      1. 【订阅】图像话题 (默认来自web_cam)
- *         /prometheus/camera/rgb/image_raw
- *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
- *         /prometheus/object_detection/kcf_tracker
-***************************************************************************************************************************/
 #include <math.h>
 #include <string>
 #include <vector>
