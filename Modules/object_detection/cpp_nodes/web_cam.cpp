@@ -1,12 +1,3 @@
-/***************************************************************************************************************************
- * web_cam.cpp
- * Author: Jario
- * Update Time: 2020.1.12
- *
- * 说明: 读取usb摄像头，并将话题发布出来
- *      1. 【发布】图像话题
- *         /prometheus/camera/rgb/image_raw
-***************************************************************************************************************************/
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -95,6 +86,8 @@ int main(int argc, char **argv)
     int resize_h(0), resize_w(0);
     nh.getParam("resize_h", resize_h);
     nh.getParam("resize_w", resize_w);
+    std::string adv_topic("/prometheus/camera/rgb/image_raw");
+    nh.getParam("adv_topic", adv_topic);
 
 
     std::string pipeline = gstreamer_pipeline(
@@ -108,7 +101,7 @@ int main(int argc, char **argv)
 
 
     // 在这里修改发布话题名称
-    image_pub = it.advertise("/prometheus/camera/rgb/image_raw", 1);
+    image_pub = it.advertise(adv_topic, 1);
 
     // 用系统默认驱动读取摄像头0，使用其他摄像头ID，请在这里修改
     

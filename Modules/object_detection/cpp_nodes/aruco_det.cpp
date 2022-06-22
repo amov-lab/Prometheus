@@ -1,14 +1,3 @@
-/***************************************************************************************************************************
- * 说明: 单个二维码识别程序，可识别的二维码在Prometheus/Modules/object_detection/config/aruco_images文件夹中
- *      视野里只允许存在一个二维码 且二维码的字典类型要对应
- *      默认二维码的边长为0.2m
- *      1. 【订阅】图像话题 (默认来自web_cam)
- *         /prometheus/camera/rgb/image_raw
- *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
- *         /prometheus/object_detection/aruco_det
- *      3. 【发布】检测结果的可视化图像话题
- *         /prometheus/camera/rgb/image_aruco_det
- ***************************************************************************************************************************/
 #include <pthread.h>
 #include <map>
 #include <thread>
@@ -45,7 +34,6 @@
 #include <opencv2/core/eigen.hpp>
 #include <deque>
 #include "printf_utils.h"
-
 
 using namespace std;
 using namespace cv;
@@ -240,7 +228,7 @@ inline void readParams(ros::NodeHandle &nh, std::string &camera_params_yaml, std
         ROS_WARN("didn't find parameter uav_id");
     }
 }
-inline bool fill_value_from_id(double id_to8_t[3], int id, float squareLength)
+inline bool fill_value_from_id(float id_to8_t[3], int id, float squareLength)
 {
     if (id == 0)
     {
@@ -446,7 +434,7 @@ int main(int argc, char **argv)
         cam2drn_tvecs[1] = 0.;
         cam2drn_tvecs[2] = -0.1;
         // <pose>0 0 -0.1 0 1.5707963 0</pose>
-        // TODO: 根据实际调整
+        // 根据实际数据调整
         cam2drn_rvecs1[0] = 1.5707963 * 2.;
         cam2drn_rvecs1[1] = 0.;
         cam2drn_rvecs1[2] = 0.;
@@ -504,7 +492,7 @@ int main(int argc, char **argv)
             ros::spinOnce();
         }
 
-        PCOUT(-1, GREEN, "RUNING...");
+        // PCOUT(1, GREEN, "RUNING...");
         {
             boost::unique_lock<boost::shared_mutex> lockImageCallback(mutex_image_callback);
             frame = cam_image_copy.clone();
@@ -565,6 +553,8 @@ int main(int argc, char **argv)
                     if (3 == run_state) // 使用UAVstate信息进行全局位置估计
                     {
                         // 发布世界坐标系，无人机，相机，二维码到tf树
+
+                        // 二维码相对于相机到位姿
                         static tf::TransformBroadcaster br;
                         tf::Transform aruco2camera = tf::Transform(tf::Quaternion(q.x(), q.y(), q.z(), q.w()), tf::Vector3(tvecs[i][0], tvecs[i][1], tvecs[i][2]));
                         char obj_str[16];
@@ -572,18 +562,21 @@ int main(int argc, char **argv)
                         tf::StampedTransform trans_aruco2camera = tf::StampedTransform(aruco2camera, ros::Time(pose.header.stamp), "camera", obj_str);
                         // br.sendTransform(trans_aruco2camera);
 
+                        // 相机相对于无人机质心的位姿
                         tf::Transform camera2drone = tf::Transform(
                             tf::Quaternion(cam2drn_q.x(), cam2drn_q.y(), cam2drn_q.z(), cam2drn_q.w()),
                             tf::Vector3(cam2drn_tvecs[0], cam2drn_tvecs[1], cam2drn_tvecs[2]));
                         tf::StampedTransform trans_camera2drone = tf::StampedTransform(camera2drone, ros::Time(pose.header.stamp), "drone", "camera");
                         // br.sendTransform(trans_camera2drone);
 
+                        // 无人机相对于世界的位姿
                         tf::Transform drone2world = tf::Transform(
                             tf::Quaternion(_drone_state.attitude_q.x, _drone_state.attitude_q.y, _drone_state.attitude_q.z, _drone_state.attitude_q.w),
                             tf::Vector3(_drone_state.position[0], _drone_state.position[1], _drone_state.position[2]));
                         tf::StampedTransform trans_drone2world = tf::StampedTransform(drone2world, ros::Time(pose.header.stamp), "world", "drone");
                         // br.sendTransform(trans_drone2world);
 
+                        // 二维码相对于世界位姿
                         tf::Transform aruco2world;
                         // 二维码 -> 相机 -> 无人机 -> 世界 ==> 世界坐标系下二维码位置
                         aruco2world = drone2world * camera2drone * aruco2camera;
@@ -647,12 +640,11 @@ int main(int argc, char **argv)
                             // vect_t 相机下二维码到位置
                             std::vector<double> vec_t{tvecs[i][0], tvecs[i][1], tvecs[i][2]};
                             cv::Mat vec_t_mat{vec_t};
-                            vec_t_mat = vec_t_mat;
                             vec_t_mat.convertTo(vec_t_mat, CV_32FC1);
                             // cout << "vec_t_mat.size():" << vec_t_mat.size() << endl;
                             // cout << "vec_t_mat.type():" << vec_t_mat.type() <<endl;
                             // std::vector<double> id_to8_t(3);
-                            double id_to8_t[3];
+                            float id_to8_t[3];
                             // 根据检测到ID，转化为对于到对应到坐标，加入vector中用于计算平均值
                             if (!fill_value_from_id(id_to8_t, ids[i], squareLength))
                             {
@@ -667,9 +659,10 @@ int main(int argc, char **argv)
                                 collected_qw.push_back(q.w());
                                 continue;
                             }
-
                             cv::Mat id_to8_t_mat = cv::Mat(3, 1, CV_32FC1, id_to8_t);
-
+                            // id_to8_t_mat.at<Vec<float, 1>>(0, 0)[0] = id_to8_t[0];
+                            // id_to8_t_mat.at<Vec<float, 1>>(1, 0)[0] = id_to8_t[1];
+                            // id_to8_t_mat.at<Vec<float, 1>>(2, 0)[0] = id_to8_t[2];
                             rotation_matrix.convertTo(rotation_matrix, CV_32FC1);
                             // cv::invert(rotation_matrix, rotation_matrix);
                             // rotation 二维码姿态
@@ -680,7 +673,6 @@ int main(int argc, char **argv)
                             collected_tx.push_back(id_8_t.at<float>(0));
                             collected_ty.push_back(id_8_t.at<float>(1));
                             collected_tz.push_back(id_8_t.at<float>(2));
-
                             collected_qx.push_back(q.x());
                             collected_qy.push_back(q.y());
                             collected_qz.push_back(q.z());
@@ -770,7 +762,7 @@ int main(int argc, char **argv)
                 float mqz_std = _vector_stdev(collected_mqz);
                 float mqw_std = _vector_stdev(collected_mqw);
 
-                // cout<<mtx_std<<", "<<mty_std<<", "<<mtz_std<<", "<<mqx_std<<", "<<mqy_std<<", "<<mqz_std<<", "<<mqw_std<<endl;
+                std::cout<<mtx_std<<", "<<mty_std<<", "<<mtz_std<<", "<<mqx_std<<", "<<mqy_std<<", "<<mqz_std<<", "<<mqw_std<<std::endl;
                 if (mtx_std < 0.01 && mty_std < 0.01 && mtz_std < 0.01 && mqx_std < 0.01 && mqy_std < 0.01 && mqz_std < 0.01 && mqw_std < 0.01)
                 {
                     ROS_INFO("Calibration completed!");

@@ -6,54 +6,28 @@
 - pytorch
 
 ## 配置 Melodic cv_bridge 支持 python3
-> https://blog.actorsfit.com/a?ID=01750-a3d568ec-ce66-4961-9573-0f9bba2561f8
-
 ```bash
-sudo apt-get install python-catkin-tools python3-dev python3-catkin-pkg-modules python3-numpy python3-yaml ros-melodic-cv-bridge
-mkdir -p catkin_workspace/src
-cd catkin_workspace
-# 注意检查路径是否存在
-catkin config -DPYTHON_EXECUTABLE =/usr/bin/python3 -DPYTHON_INCLUDE_DIR =/usr/include/python3.6m -DPYTHON_LIBRARY =/usr/lib/x86_64-linux-gnu/libpython3.6m.so
-catkin config --install
-git clone https://github.com/ros-perception/vision_opencv.git src/vision_opencv
+sudo apt install ros-melodic-cv-bridge-python3
 ```
+在每一个python3的脚本中，在文件头都要添加`#!/usr/bin/env python3`以及`import sys, os; sys.path.insert(0,'/opt/ros/' + os.environ['ROS_DISTRO'] + '/lib/python3/dist-packages/')`
 
-查看当前系统cv_bridge到版本，编译相应到版本
-```bash
-apt-cache show ros-melodic-cv-bridge |  grep Version
-# Version: 1.13.0-0bionic.20220127.152918
-
-cd src/vision_opencv/
-git checkout 1.13.0
-cd  ../../
-catkin build cv_bridge
-source install/setup.bash --extend
+例如在SiamRPN跟踪中：
+```py
+import sys
+import os
+path = sys.path[0]
+path = path + '/../../src/siam_rpn_lib/'
+print(path)
+sys.path.append(path)
+sys.path.append("/home/onx/Code/Prometheus/devel/lib/python2.7/dist-packages")
+sys.path.insert(0,'/opt/ros/' + os.environ['ROS_DISTRO'] + '/lib/python3/dist-packages/')
+import rospy
+import cv2
+import torch
+import numpy as np
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge,CvBridgeError
 ```
-
-加入到`.bashrc`中，注意加在上一条 source 之后，否则可能会导致包覆盖，而找不到某些包
-
-**example**:
-```bash
-....
-source /opt/ros/melodic/setup.bash
-source /home/onx/prometheus_mavros/devel/setup.bash
-source /home/onx/Code/Prometheus/devel/setup.bash
-source ~/catkin_workspace/install/setup.bash --extend
-## Promehteus
-export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:/home/onx/Code/Prometheus/devel/lib
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/onx/Code/Prometheus/Simulator/gazebo_simulator/gazebo_models/uav_models
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/onx/Code/Prometheus/Simulator/gazebo_simulator/gazebo_models/ugv_models
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/onx/Code/Prometheus/Simulator/gazebo_simulator/gazebo_models/sensor_models
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/onx/Code/Prometheus/Simulator/gazebo_simulator/gazebo_models/scene_models
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/home/onx/Code/Prometheus/Simulator/gazebo_simulator/gazebo_models/texture
-
-## Promehteus_PX4
-source /home/onx/Code/prometheus_px4/Tools/setup_gazebo.bash /home/onx/Code/prometheus_px4 /home/onx/Code/prometheus_px4/build/amovlab_sitl_default >> /dev/null
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/onx/Code/prometheus_px4
-export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/onx/Code/prometheus_px4/Tools/sitl_gazebo
-....
-```
-
 
 ## 安装Python3相关环境
 
@@ -76,30 +50,57 @@ which python3
 echo "conda activate prometheus_python3" >> ~/.bashrc
 ```
 
-# 代码说明
+# 使用案例
+## 相机标定
+创建一个标定板，运行后会在当前目录创建一个名为`board_charuco_d6.png`的图片，使用A4进行打印
+```bash
+./Modules/object_detection/shell/create_board_charuco.sh
+```
+运行标定程序，程序会读取相机id为0的画面，根据画面提示，按`c`键添加标定图像(建议添加20张以上)，然后按`esc`键程序开始根据获取到图像进行相机内参计算(画面会卡主，此时正在计算)，等待计算完成
+```bash
+./Modules/object_detection/shell/calibrate_camera_charuco_cam0.sh
+```
+将生成的文件重命名为`calib_webcam_640x480.yaml`替换掉`Modules/object_detection/shell/calib_webcam_640x480.yaml`中的文件
 
-- 加载不同的相机内参参数，进行二维码检测估计
+## 二维码检测
+测试二维码检测`aruco_det.cpp`
+```bash
+# 默认使用0号摄像头
+roslaunch prometheus_detection web_cam0.launch
+# 启动二维码检测
+roslaunch prometheus_detection aruco_det.launch
 ```
-aruco_det_imx477_960x540.launch
-aruco_det_webcam_640x480.launch
-aruco_det.launch
+
+## yolov3目标检测
+_注意配置安装Nvidia驱动，CUDA否则帧率只有1帧率_
+```bash
+# 默认使用0号摄像头
+roslaunch prometheus_detection web_cam0.launch
+roslaunch prometheus_detection ms_coco_det.launch
 ```
-- 启动相关相机并转化为ROS话题发布
+## KCF跟踪
+```bash
+# 默认使用0号摄像头
+roslaunch prometheus_detection web_cam0.launch
+roslaunch prometheus_detection tracker_kcf.launch
 ```
-mipi_cam_720p.launch
-mipi_cam_imx477_960x540.launch
-mipi_cam_imx477_1080p.launch
+## SiamRPN跟踪
+```bash
+# 默认使用0号摄像头
+roslaunch prometheus_detection web_cam0.launch
+roslaunch prometheus_detection tracker_siamrpn.launch
 ```
-- yolo(darnet版)目标检测，加载模型，从图像话题中获取视频流，发布检测信息
+
+## 其他
+启动minip相机
+```bash
+roslaunch prometheus_detection mipi_cam_720p.launch
 ```
-ms_coco_det.launch # 加载coco数据集训练的模型
-uav_det.launch #
+将视频文件转为ROS图像话题，修改`input_video_dir`路径为视频文件地址
+```bash
+roslaunch prometheus_detection video_replay.launch
 ```
-- 从不同的图像话题获取视频流，进行框选跟踪
-```
-tracker_kcf_gazebo.launch # KCF跟踪
-tracker_kcf.launch # KCF跟踪
-tracker_siamrpn.launch # siamrpn跟踪
-```
-- 将本地视频转换为图像话题
+yolov5的tensorrt加速，目标跟踪。需要另外其他内容参考[高级demo到yolov5的使用部分](Modules/tutorial_demo/advanced/yolov5_track/readme.md)
+```bash
+roslaunch prometheus_detection yolov5_nvidia_tensorrt.launch
 ```
