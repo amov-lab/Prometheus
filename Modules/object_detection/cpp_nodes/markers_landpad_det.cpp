@@ -1,14 +1,3 @@
-/***************************************************************************************************************************
- *
- * 说明: 降落目标识别程序，降落板的尺寸为60cmX60cm
- *      1. 【订阅】图像话题 (默认来自web_cam)
- *         /prometheus/camera/rgb/image_raw
- *      2. 【发布】目标位置，发布话题见 Prometheus/Modules/msgs/msg/DetectionInfo.msg
- *         /prometheus/object_detection/landpad_det
- *      3. 【发布】检测结果的可视化图像话题
- *         /prometheus/camera/rgb/image_landpad_det
- ***************************************************************************************************************************/
-
 #include <time.h>
 #include <fstream>
 #include <iostream>
@@ -207,7 +196,7 @@ int main(int argc, char **argv)
     position_pub = nh.advertise<prometheus_msgs::DetectionInfo>("/uav" + std::to_string(uav_id) + "/prometheus/object_detection/landpad_det", 10);
 
     // 接收开关话题
-    switch_subscriber = nh.subscribe("/prometheus/switch/landpad_det", 10, switchCallback);
+    switch_subscriber = nh.subscribe("/uav" + std::to_string(uav_id) + "/prometheus/switch/landpad_det", 10, switchCallback);
 
     // 接收图像的话题
     image_subscriber = it.subscribe(camera_topic.c_str(), 1, cameraCallback);

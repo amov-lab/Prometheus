@@ -57,10 +57,6 @@ object_names_txt = rospy.get_param('~object_names_txt', 'coco')
 config = rospy.get_param('~camera_parameters', '/home/onx/Code/Prometheus/Simulator/gazebo_simulator/config/camera_config/gimbal_camera.yaml')
 uav_id = rospy.get_param('~uav_id', 1)
 cls_names, cls_ws, cls_hs = load_class_desc(object_names_txt)
-# print(pub_topic_name)
-# print(object_names_txt)
-# print(cls_names)
-# print(config)
 
 fs = cv2.FileStorage(config, cv2.FileStorage_READ)
 image_width = int(fs.getNode('image_width').real())
@@ -68,10 +64,6 @@ image_height = int(fs.getNode('image_height').real())
 camera_matrix = fs.getNode('camera_matrix').mat()
 distortion_coefficients = fs.getNode('distortion_coefficients').mat()
 fs.release()
-print(image_width)
-print(image_height)
-print(camera_matrix)
-print(distortion_coefficients)
 
 pub = rospy.Publisher("/uav" + str(uav_id) + pub_topic_name, MultiDetectionInfo, queue_size=1)
 track_pub = rospy.Publisher("/uav" + str(uav_id) + track_pub_topic_name, DetectionInfo, queue_size=1)
@@ -94,17 +86,12 @@ last_fid = 0
 m_info = MultiDetectionInfo()
 m_info.num_objs = 0
 
-# print(camera_matrix[0][0])
-# print(camera_matrix[1][1])
 aos_x = math.atan(image_width / 2. / camera_matrix[0][0])  # angle of sight
 aos_y = math.atan(image_height / 2. / camera_matrix[1][1])
-# print(aos_x)
-# print(aos_y)
 
 while not rospy.is_shutdown():
     data = s.recv(62)  # 35
     data = data.decode('utf-8')
-    print(data)
 
 
     if len(data) > 0:
@@ -120,7 +107,6 @@ while not rospy.is_shutdown():
             pixel_cy = int(nums[10])
             detect_track = int(nums[11])  # 0:detect, 1:track
             m_info.detect_or_track = detect_track
-            # print(frame_id)
             if deted >= 1:
                 d_info = DetectionInfo()
                 d_info.detected = True
@@ -143,7 +129,6 @@ while not rospy.is_shutdown():
                     if i > 0:
                         data = s.recv(62)  # 35
                         data = data.decode('utf-8')
-                        print(data)
                         if len(data) > 0:
                             nums = data.split(',')
                             if len(nums) == 11:
@@ -177,11 +162,6 @@ while not rospy.is_shutdown():
                 m_info.num_objs = 0
 
             last_fid = frame_id
-            # print("{:.3f}, {:.3f}, {:.3f}, {:.3f}".format(ex, ey ,ess, speed))
-            # py_array = [ex * qx / 57.3, ey * qy / 57.3, ess, dt, lock_stat, prop]
-            # ros_array = Float32MultiArray(data=py_array)
-            # pose = Pose(Point(ex, ey ,ess), Quaternion(speed, dt, lock_stat, 0.))
-            # pub.publish(ros_array)
 
     rate.sleep()
 

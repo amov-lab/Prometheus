@@ -1,7 +1,0 @@
-<launch>
-    <node pkg="prometheus_detection" type="yolov5_openvino_client.py" name="yolov5_openvino_client" output="screen">
-        <param name="output_topic" value="/prometheus/object_detection/yolov5_openvino_det" />
-        <param name="camera_parameters" type="string" value="$(find prometheus_detection)/shell/calib_webcam_640x480.yaml" />
-        <param name="object_names_txt" value="coco" />
-    </node>
-</launch>
