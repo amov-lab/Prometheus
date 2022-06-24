@@ -314,10 +314,10 @@ cv::Mat KCFTracker::gaussianCorrelation(cv::Mat x1, cv::Mat x2)
         c = real(c);
     }
     cv::Mat d; 
-    cv::max(( (cv::sum(x1.mul(x1))[0] + cv::sum(x2.mul(x2))[0])- 2. * c) / (size_patch[0]*size_patch[1]*size_patch[2]) , 0, d);
+    cv::max(cv::Mat(((cv::sum(cv::Mat(x1.mul(x1)))[0] + cv::sum(cv::Mat(x2.mul(x2)))[0])- 2. * c) / (size_patch[0]*size_patch[1]*size_patch[2])), 0, d);
 
     cv::Mat k;
-    cv::exp((-d / (sigma * sigma)), k);
+    cv::exp(cv::Mat(-d / (sigma * sigma)), k);
     return k;
 }
 
@@ -407,7 +407,11 @@ cv::Mat KCFTracker::getFeatures(const cv::Mat & image, bool inithann, float scal
 
     // HOG features
     if (_hogfeatures) {
+        #if CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR > 3
+        IplImage z_ipl = cvIplImage(z);
+        #else
         IplImage z_ipl = z;
+        #endif
         CvLSVMFeatureMapCaskade *map;
         getFeatureMaps(&z_ipl, cell_size, &map);
         normalizeAndTruncate(map,0.2f);
