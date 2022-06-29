@@ -104,3 +104,16 @@ yolov5的tensorrt加速，目标跟踪。需要另外其他内容参考[高级de
 ```bash
 roslaunch prometheus_detection yolov5_nvidia_tensorrt.launch
 ```
+图像推流
+```bash
+
+```
+
+# 相关msg说明
+- ArucoInfo.msg：Aruco二维码的信息
+- MultiArucoInfo.msg：MultiArucoInfo.msgz的数组表示
+- BoundingBox.msg：单个视觉检测框的信息
+- BoundingBoxs.msg：BoundingBox.msg的数组表示
+- DetectionInfo.msg：视觉检测反馈消息
+- MultiDetectionInfo.msg：DetectionInfo.msg的数组表示
+- GlobalAruco.msg：室内多二维码定位
