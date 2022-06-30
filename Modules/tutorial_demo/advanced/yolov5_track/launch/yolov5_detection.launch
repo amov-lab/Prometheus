@@ -1,7 +1,0 @@
-<launch>
-    <node pkg="prometheus_detection" type="yolov5_tensorrt_client.py" name="yolov5_client" output="screen">
-        <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
-        <param name="pub_track_topic" type="string" value="/prometheus/object_detection/siamrpn_tracker" />
-        <param name="uav_id" type="int" value="1" />
-    </node>
-</launch>
