@@ -1,18 +1,20 @@
 <launch>
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
-        <arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/multi_person.world"/>
-		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf"/>
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/multi_person.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf" />
 	</include>
 
-	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch" />
+    <include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
+        <arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
+    </include>
 
-    <node pkg="prometheus_detection" type="yolov5_tensorrt_client.py" name="yolov5_client" output="screen" launch-prefix="gnome-terminal --">
-        <param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
-        <param name="pub_track_topic" type="string" value="/prometheus/object_detection/siamrpn_tracker" />
-        <param name="uav_id" type="int" value="1" />
-    </node>
+	<node pkg="prometheus_detection" type="yolov5_tensorrt_client.py" name="yolov5_client" output="screen" launch-prefix="bash -c 'sleep 1; gnome-terminal --tab -- $0 $@; bash'">
+		<param name="camera_parameters" type="string" value="$(find prometheus_gazebo)/config/camera_config/gimbal_camera.yaml" />
+		<param name="pub_track_topic" type="string" value="/prometheus/object_detection/siamrpn_tracker" />
+		<param name="uav_id" type="int" value="1" />
+	</node>
 
-	<node pkg="prometheus_demo" type="siamrpn_track" name="siamrpn_track" output="screen" launch-prefix="gnome-terminal --">
+	<node pkg="prometheus_demo" type="siamrpn_track" name="siamrpn_track" output="screen" launch-prefix="bash -c 'sleep 2; gnome-terminal --tab -- $0 $@; bash'">
 		<param name="uav_id" value="1" />
 		<!-- 视觉丢失次数阈值 -->
 		<param name="Thres_vision" value="10" />
@@ -36,6 +38,6 @@
 		<param name="start_point_x" value="0" />
 		<param name="start_point_y" value="0" />
 		<param name="start_point_z" value="1" />
-		
+
 	</node>
 </launch>
