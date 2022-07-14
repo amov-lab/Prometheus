@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
-  <model name="landing_pad">
+  <model name="fly_race_target_move">
     <pose>0 0 0.01 0 0 0</pose>
-    <static>true</static>
+    <static>false</static>
     <link name="link">
       <inertial>
         <mass>0.5</mass>
@@ -18,21 +18,21 @@
       <collision name="collision">
         <geometry>
           <box>
-            <size>0.6 0.6 0.02</size>
+            <size>0.8 0.8 0.02</size>
           </box>
         </geometry>
       </collision>
       <visual name="visual">
         <geometry>
           <box>
-            <size>0.6 0.6 0.02</size>
+            <size>0.8 0.8 0.02</size>
           </box>
         </geometry>
         <material>
           <script>
-            <uri>model://landing_pad/materials/scripts</uri>
-            <uri>model://landing_pad/materials/textures</uri>
-            <name>Cube/landing_pad</name>
+            <uri>model://fly_race_target_move/materials/scripts</uri>
+            <uri>model://fly_race_target_move/materials/textures</uri>
+            <name>Cube/fly_race_target_move</name>
           </script>
         </material>
       </visual>
@@ -42,20 +42,20 @@
       <alwaysOn>true</alwaysOn>
       <updateRate>30.0</updateRate>
       <bodyName>link</bodyName>
-      <topicName>ground_truth/landing_pad</topicName>
+      <topicName>ground_truth/fly_race_target_move</topicName>
       <gaussianNoise>0.00</gaussianNoise>
-      <frameName>world</frameName>
+      <frameName>word</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
       <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>
-
-    <!-- <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+<!-- 使用python 脚本控制 -->
+    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
       <commandTopic>cmd_vel</commandTopic>
       <odometryTopic>odom</odometryTopic>
       <odometryFrame>odom</odometryFrame>
       <odometryRate>30.0</odometryRate>
       <robotBaseFrame>base_link</robotBaseFrame>
-    </plugin> -->
+    </plugin>
 
   </model>
 </sdf>
