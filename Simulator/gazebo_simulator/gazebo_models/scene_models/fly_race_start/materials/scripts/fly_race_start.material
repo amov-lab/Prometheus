@@ -1,0 +1,16 @@
+material Cube/fly_race_start
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      alpha_rejection greater 128
+      texture_unit
+      {
+        texture start.png
+      }
+    }
+  }
+}
+  
