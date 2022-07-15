@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(prometheus_detection)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 # set(OpenCV_DIR /usr/local/share/OpenCV)
 
@@ -362,6 +362,17 @@ add_executable(markers_landpad_det
     cpp_nodes/markers_landpad_det.cpp
 )
 target_link_libraries(markers_landpad_det ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+
+add_executable(ellipse_det
+    cpp_nodes/ellipse_det.cpp
+    src/ellipse_detector/ellipse_detector.cpp
+    src/ellipse_detector/ellipse_detector.h
+)
+target_include_directories(ellipse_det PUBLIC
+    src/ellipse_detector/
+)
+target_link_libraries(ellipse_det ${catkin_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
+
 
 if(CATKIN_ENABLE_TESTING)
   # Download yolov3-tiny.weights
