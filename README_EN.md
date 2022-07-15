@@ -6,87 +6,23 @@ In Greek mythology, **Prometheus** is one of the most intelligent gods. We hope 
 
 ## Project Overview
 
-Prometheus is an open source **autonomous drone software platform**, which provides **full set of solutions** for the intelligent and autonomous flight of drones. This project is based on the **PX4** open source flight controller firmware, and aims to provide PX4 developers with mature and available **airborne computer terminal** programs, bringing a more concise and faster development experience. At present, modules such as **mapping**, **localization**, **planning**, **control** and **target detection** have been integrated, and simulation code of Gazebo is also provided.
+Prometheus is an open source **autonomous drone software platform**, which provides **full set of solutions** for the intelligent and autonomous flight of drones. This project is based on the [PX4](https://docs.px4.io/main/zh/index.html) open source flight controller firmware, and aims to provide PX4 developers with mature and available **airborne computer terminal** programs, bringing a more concise and faster development experience. At present, modules such as **control** ,**planning**, and **target detection** have been integrated, and simulation code of Gazebo is also provided.
 
- - **Installation and Instructions:** [Prometheus WIKI](https://github.com/amov-lab/Prometheus/wiki)
+  - This project relies on [Amov Lab](https://www.amovlab.com) to operate
+  - **Open source project, maintenance is not easy, please click a star collection, thank you for your support!**
 
- - **Supporting Courses:**   Prometheus autonomous drone secondary development course, this course focuses on the basic knowledge and operation practice in this project, suitable for beginners. After purchasing the course, online Q&A activities will be arranged regularly (voice communication, convenient and easy to understand!)  [Course Registration](https://bbs.amovlab.com/plugin.php?id=zhanmishu_video:video&mod=video&cid=43)
+## Prometheus Community
 
- - **Supporting Hardware Kit：** Coming soon, stay tuned! Please follow [AmovLab - Taobao](https://shop142114972.taobao.com/?spm=a230r.7195193.1997079397.2.67d03d8dJQgFRW)　or　[AmovLab - JD.COM](https://mall.jd.com/index-10260560.html?from=pc)
+  - [AMOVLAB-Prometheus Q&A Zone] (https://bbs.amovlab.com/forum.php?mod=forumdisplay&fid=101) maintained by AMOVLAB, any related problems encountered in the process of learning to use Prometheus can be Discuss and communicate in it, and members of the Prometheus project team will also regularly answer questions in the forum.
 
- - **Supporting Ground Control Station：**  Coming soon, stay tuned! 
+  - Prometheus WeChat exchange group, if you need to enter the Prometheus WeChat group, you can scan the WeChat QR code below and add **AMOVLAB-Jiayue** WeChat contact.
 
- - **Development and Maintenance Team:** [Member Introduction](https://github.com/amov-lab/Prometheus/wiki/开发成员介绍)
+    <span style="display: flex; flex-direction: column; width: 20%">
+        <img src = https://qiniu.md.amovlab.com/img/m/202207/20220707/0944093153070270089101312.jpg>
+    </span>
 
-   <img src="https://s1.ax1x.com/2020/08/13/dSEJhR.png" alt="amov qrcode" align="right" height="200" />
+  - Irregular live broadcast, online training, offline training and other activities can better help everyone communicate better.
 
- - **This is an open source project and it is not easy to maintain. Please click Star to support us. Thank you!**
+  - [Prometheus Campus Sponsorship Program](https://mp.weixin.qq.com/s/zU-iXMKh0An-v6vZXH_Rmg): To reward student researchers who use Prometheus to conduct experiments and publish related papers.
 
- - If you have any questions about the project, please ask in the issue of this project, or add WeChat: jiayue199506 (remark message: Prometheus) to the Prometheus autonomous drone discussion group
-
- - For more information or to seek project cooperation, drone software and hardware customization services, please scan the QR code on the right and follow the WeChat public account : **阿木实验室**
-
-## Prometheus Campus Scholarship Program
-
-As long as you use the Prometheus project to develop autonomous drones and publish a paper, you can get the Amov scholarship! For more details, please click [here](https://mp.weixin.qq.com/s/zU-iXMKh0An-v6vZXH_Rmg).
-
-## Function Presentation
-
- - **RGB-D Mapping**
-    	
-   <img width="400" src="https://s1.ax1x.com/2020/04/08/GWhyFO.gif"/>
-
- - **3D Lidar Mapping (no demo picture yet)**
-
- - **Local Mapping (APF)**
-
-   <img width="400" src="https://s1.ax1x.com/2020/04/12/GLvcpq.gif"/>
-
- - **Global Mapping (A*)**
-    	
-   <img width="400" src="https://s1.ax1x.com/2020/04/12/GOSrAe.gif"/>
-
- - **Trace Optimization (Fast_Planner)**
-
-   <img width="400" src="https://s1.ax1x.com/2020/04/12/GOCvHf.md.png"/>
-
-- **Second Development of Outer Loop Controller**
-
-  <img width="400" src="https://s1.ax1x.com/2020/04/12/GOADfS.gif"/>
-
-- **Multi-drone Formation Flying**
-
-  <img width="400" src="https://s1.ax1x.com/2020/04/12/GOAqmR.gif"/>
-
-- **Circular Crossing**
-
-  <img width="400" src="https://s1.ax1x.com/2020/04/12/GOFrAf.gif"/>
-
-- **Color Line Inspection**
-
-  <img width="400" src="https://s1.ax1x.com/2020/04/12/GOkLi8.gif"/>
-
-- **Number Recognition**
-
-  <img width="400" src="https://s1.ax1x.com/2020/04/12/GOkVbt.gif"/>
-
-- **KCF Tracking**
-
-  <img width="400" src="https://s1.ax1x.com/2020/04/12/GOkhxH.gif"/>
-
-- **YOLO-Based Target Detection (no demo picture yet)**
-
-- **Autonomous Landing on Mobile Platform**
-
-  <img width="400" src="https://s1.ax1x.com/2020/08/11/aLawvj.gif"/>
-
-- **UAV + UGV Coordinated Control**
-
-  <img width="400" src="https://s1.ax1x.com/2020/10/13/0fAJN6.gif"/>
-
-## Copyright Notice
-
- - This project is protected by the BSD 3-Clause protocol. Click [LICENSE](https://github.com/amov-lab/Prometheus/blob/master/LICENSE) to get more information.
- - This project is for personal use only, please do not use it for commercial purposes.
- - If this project is used for profit-making activities, AmovLab will pursue the infringement.
-
+To learn more about Prometheus, please go to [Prometheus User Manual](https://wiki.amovlab.com/public/prometheus-wiki/)
