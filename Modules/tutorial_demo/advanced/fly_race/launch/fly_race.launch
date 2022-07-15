@@ -9,4 +9,13 @@
 	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
 		<arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
 	</include>
+
+	<!-- 椭圆识别 -->
+    <node pkg="prometheus_detection" type="ellipse_det" name="ellipse_det" output="screen">
+        <param name="input_image_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
+        <param name="camera_params" type="string" value="$(find prometheus_demo)/advanced/fly_race/conf/calib_sitl.yaml"/>
+    </node>
+
+	<!-- gazebo 动目标控制 -->
+	<node pkg="prometheus_demo" type="locus.py" name="fly_race_sitle"/>
 </launch>

@@ -44,7 +44,7 @@
       <bodyName>link</bodyName>
       <topicName>ground_truth/fly_race_target_move</topicName>
       <gaussianNoise>0.00</gaussianNoise>
-      <frameName>word</frameName>
+      <frameName>world</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
       <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>

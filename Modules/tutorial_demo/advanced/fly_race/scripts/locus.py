@@ -1,5 +1,4 @@
-from operator import pos
-from turtle import pu
+#!/usr/bin/env python3
 import rospy
 import math
 import time as t
@@ -8,8 +7,10 @@ from gazebo_msgs.msg import ModelState, ModelStates
 from gazebo_msgs.srv import SetModelState, SetModelStateRequest, SetModelStateResponse
 
 
+client = rospy.ServiceProxy("/gazebo/set_model_state", SetModelState)
+client.wait_for_service()
+
 def init_pose():
-    client = rospy.ServiceProxy("/gazebo/set_model_state", SetModelState)
     req = SetModelStateRequest()
     req.model_state.model_name = "fly_race_target_move"
     req.model_state.pose.position.x = 0
