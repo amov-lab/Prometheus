@@ -10,8 +10,8 @@
 
 Prometheus是一套开源的**自主无人机软件系统平台**，为无人机的智能与自主飞行提供**全套解决方案**。本项目基于[PX4开源飞控固件](https://docs.px4.io/main/zh/index.html)和[ROS机器人操作系统](https://wiki.ros.org/)，旨在为无人机开发者配套成熟可用的**机载电脑端**软件系统，提供更加简洁快速的开发体验。目前已集成**控制**、**规划**及**目标检测**等研究方向，提供多个功能demo，并配套有Amovlab仿真组件。
 
- - 本项目依托于[阿木实验室](https://www.amovlab.com)运营
-
+ - Github：https://github.com/amov-lab/Prometheus
+ - Gitee：https://gitee.com/amovlab/Prometheus
  - **开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
 
 ## 快速入门
@@ -40,7 +40,7 @@ Prometheus是一套开源的**自主无人机软件系统平台**，为无人机
  
  - 其他配套硬件：机架、机载电脑、双目、激光雷达等无人机二次开发硬件请关注 [阿木实验室淘宝店](https://shop142114972.taobao.com/?spm=a230r.7195193.1997079397.2.67d03d8dJQgFRW)　或　[阿木实验室京东旗舰店](https://mall.jd.com/index-10260560.html?from=pc)。
  
- - 项目合作、无人机软硬件定制，请添加微信“yanyue199506”（备注消息：Prometheus定制）。
+
 
 ## Prometheus校园赞助计划
  - 奖励使用Prometheus进行实验并发表相关论文的学生科研工作者。
@@ -50,5 +50,11 @@ Prometheus是一套开源的**自主无人机软件系统平台**，为无人机
  - 奖励为Prometheus提供新功能或帮忙进行测试的学生开发者。
 
 - 详情[请戳这里](https://mp.weixin.qq.com/s/zU-iXMKh0An-v6vZXH_Rmg) ！
+
+## 联系我们
+
+- 公司官网：[阿木实验室](https://www.amovlab.com)
+
+- 项目合作、无人机软硬件定制，请添加微信“yanyue199506”（备注消息：Prometheus定制）。
 
 ## 版权声明
