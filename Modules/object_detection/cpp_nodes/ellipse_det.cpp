@@ -6,9 +6,10 @@
 #include <prometheus_msgs/MultiDetectionInfo.h>
 #include <prometheus_msgs/DetectionInfo.h>
 #include <unistd.h>
-#include "opencv2/opencv.hpp"
+#include <opencv2/opencv.hpp>
 #include <sensor_msgs/image_encodings.h>
 #include <shared_mutex>
+#include <std_msgs/Float32.h>
 
 std::shared_mutex g_mutex;
 int frame_width = 0, frame_height = 0;
@@ -31,14 +32,21 @@ void imageCb(const sensor_msgs::ImageConstPtr &msg)
     }
 }
 
+float g_camera_height = 0;
+void heightCb(const std_msgs::Float32ConstPtr &msg)
+{
+    g_camera_height = msg->data;
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ellipse_det");
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
-    std::string input_image_topic, output_image_topic, camera_params, det_info_topic;
+    std::string input_image_topic, output_image_topic, camera_params, det_info_topic, camera_height_topic;
     nh.param<std::string>("input_image_topic", input_image_topic, "/prometheus/camera/rgb/image_raw");
     nh.param<std::string>("output_image_topic", output_image_topic, "/prometheus/detection/image_raw");
+    nh.param<std::string>("camera_height_topic", camera_height_topic, "/camera/height");
     nh.param<std::string>("camera_params", camera_params, "");
     nh.param<std::string>("det_info_topic", det_info_topic, "/prometheus/ellipse_det");
 
@@ -99,22 +107,26 @@ int main(int argc, char **argv)
             cv::Mat tmp;
             frame.copyTo(tmp, mask);
             // cv::bitwise_and(frame, cv::noArray(), tmp, mask);
-            cv::inRange(tmp, cv::Scalar(127, 127, 127), cv::Scalar(255, 255, 255), tmp);
+            cv::inRange(tmp, cv::Scalar(150, 150, 150), cv::Scalar(255, 255, 255), tmp);
 
             int *tmpi = nullptr;
             if (static_cast<float>(cv::countNonZero(tmp)) / cv::countNonZero(mask) > 0.1)
             {
-                info.object_name = "start";
-                cv::Size sz = cv::getTextSize(info.object_name, 0, 0.5, 1, tmpi);
+                info.object_name = "S";
+                cv::Size sz = cv::getTextSize(info.object_name, 0, 0.8, 1, tmpi);
                 cv::putText(frame, info.object_name, cv::Point(ellipse.xc_ - sz.width / 2, ellipse.yc_ + sz.height / 2), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 0), 1);
             }
             else
             {
-                info.object_name = "target";
-                cv::Size sz = cv::getTextSize(info.object_name, 0, 0.5, 1, tmpi);
+                info.object_name = "T";
+                cv::Size sz = cv::getTextSize(info.object_name, 0, 0.8, 1, tmpi);
                 cv::putText(frame, info.object_name, cv::Point(ellipse.xc_ - sz.width / 2, ellipse.yc_ + sz.height / 2), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 0), 1);
             }
             info.frame = 0;
+            info.detected = true;
+            info.position[0] = g_camera_height * ellipse.yc_ / g_camera_matrix.at<float>(1,1);
+            info.position[1] = g_camera_height * ellipse.xc_ / g_camera_matrix.at<float>(0,0);
+            info.position[2] = g_camera_height;
             info.sight_angle[0] = (ellipse.xc_ - frame_width / 2) / (frame_width / 2) * std::atan(frame_width / (2 * g_camera_matrix.at<float>(0, 0)));
             info.sight_angle[1] = (ellipse.yc_ - frame_height / 2) / (frame_height / 2) * std::atan(frame_height / (2 * g_camera_matrix.at<float>(1, 1)));
             info.pixel_position[0] = ellipse.xc_;
