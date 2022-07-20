@@ -124,8 +124,8 @@ int main(int argc, char **argv)
             }
             info.frame = 0;
             info.detected = true;
-            info.position[0] = g_camera_height * ellipse.yc_ / g_camera_matrix.at<float>(1,1);
-            info.position[1] = g_camera_height * ellipse.xc_ / g_camera_matrix.at<float>(0,0);
+            info.position[0] = g_camera_height * (ellipse.yc_ - frame_height / 2) / g_camera_matrix.at<float>(1, 1);
+            info.position[1] = g_camera_height * (ellipse.xc_ - frame_width / 2) / g_camera_matrix.at<float>(0, 0);
             info.position[2] = g_camera_height;
             info.sight_angle[0] = (ellipse.xc_ - frame_width / 2) / (frame_width / 2) * std::atan(frame_width / (2 * g_camera_matrix.at<float>(0, 0)));
             info.sight_angle[1] = (ellipse.yc_ - frame_height / 2) / (frame_height / 2) * std::atan(frame_height / (2 * g_camera_matrix.at<float>(1, 1)));
