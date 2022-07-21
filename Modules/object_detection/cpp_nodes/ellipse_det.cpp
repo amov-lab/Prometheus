@@ -24,7 +24,7 @@ void imageCb(const sensor_msgs::ImageConstPtr &msg)
     {
         std::unique_lock lock(g_mutex);
         cv::Mat tmp = cam_image->image.clone();
-        // 如果CPU负载太高，注释去畸变代码
+        // NOTE: 图像去畸变
         // g_frame = tmp
         cv::undistort(tmp, g_frame, g_camera_matrix, g_dist_coeffs);
         frame_width = cam_image->image.size().width;
@@ -65,8 +65,6 @@ int main(int argc, char **argv)
     image_transport::Publisher image_pub = it.advertise(output_image_topic, 1);
 
     // 发布MultiDetectionInfo话题
-    prometheus_msgs::MultiDetectionInfo det_info;
-    det_info.detect_or_track = 0;
     ros::Publisher det_info_pub = nh.advertise<prometheus_msgs::MultiDetectionInfo>(det_info_topic, 1);
 
     // 圆检测参数调整
@@ -77,6 +75,8 @@ int main(int argc, char **argv)
     ros::Rate rate(60);
     while (ros::ok())
     {
+        prometheus_msgs::MultiDetectionInfo det_info;
+        det_info.detect_or_track = 0;
         ros::spinOnce();
         if (g_frame.empty())
         {
@@ -93,7 +93,6 @@ int main(int argc, char **argv)
         ellipse_detector.Detect(frame, ellsCned);
 
         sensor_msgs::ImagePtr det_output_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
-        image_pub.publish(det_output_msg);
 
         // cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
         det_info.num_objs = ellsCned.size();
@@ -101,7 +100,7 @@ int main(int argc, char **argv)
         {
             const Ellipse &ellipse = ellsCned[i];
             prometheus_msgs::DetectionInfo info;
-
+            // NOTE: 如果区分无人机起点和靶标?
             cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8U);
             cv::ellipse(mask, cv::Point(cvRound(ellipse.xc_), cvRound(ellipse.yc_)), cv::Size(cvRound(ellipse.a_), cvRound(ellipse.b_)), ellipse.rad_ * 180 / CV_PI, 0, 360, cv::Scalar(255, 255, 255), -1);
             cv::Mat tmp;
@@ -124,6 +123,7 @@ int main(int argc, char **argv)
             }
             info.frame = 0;
             info.detected = true;
+            // NOTE: 目标位置估计
             info.position[0] = g_camera_height * (ellipse.yc_ - frame_height / 2) / g_camera_matrix.at<float>(1, 1);
             info.position[1] = g_camera_height * (ellipse.xc_ - frame_width / 2) / g_camera_matrix.at<float>(0, 0);
             info.position[2] = g_camera_height;
@@ -140,11 +140,12 @@ int main(int argc, char **argv)
         cv::putText(frame, msg, cv::Point(10, 20), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(0, 0, 255), 1, 4, 0);
 
         ellipse_detector.DrawDetectedEllipses(frame, ellsCned, 1, 6);
+        image_pub.publish(det_output_msg);
         cv::imshow("show", frame);
-        cv::waitKey(10);
+        cv::waitKey(1);
 
-        rate.sleep();
         det_info_pub.publish(det_info);
+        rate.sleep();
     }
     return 0;
 }
