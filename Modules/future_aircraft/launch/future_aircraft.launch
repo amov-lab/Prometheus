@@ -1,8 +1,8 @@
 <launch>
 	<!-- 启动仿真环境 -->
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
-		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/fly_race.world" />
-		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_fly_race/p450_fly_race.sdf" />
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/future_aircraft.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_future_aircraft/p450_future_aircraft.sdf" />
 	</include>
 
 	<!-- 启动prometheus控制器 -->
@@ -13,9 +13,10 @@
 	<!-- 椭圆识别 -->
     <node pkg="prometheus_detection" type="ellipse_det" name="ellipse_det" output="screen">
         <param name="input_image_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
-        <param name="camera_params" type="string" value="$(find prometheus_demo)/advanced/fly_race/conf/calib_sitl.yaml"/>
+        <param name="camera_height_topic" type="string" value="/uav/hgt" />
+        <param name="camera_params" type="string" value="$(find prometheus_future_aircraft)/conf/calib_sitl.yaml"/>
     </node>
 
 	<!-- gazebo 动目标控制 -->
-	<node pkg="prometheus_demo" type="locus.py" name="fly_race_sitle"/>
+	<node pkg="prometheus_future_aircraft" type="locus.py" name="future_aircraft_sitle"/>
 </launch>

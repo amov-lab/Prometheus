@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
-  <model name="fly_race_target_move">
+  <model name="future_aircraft_start">
     <pose>0 0 0.01 0 0 0</pose>
     <static>false</static>
     <link name="link">
@@ -18,44 +18,39 @@
       <collision name="collision">
         <geometry>
           <box>
-            <size>0.8 0.8 0.02</size>
+            <size>1 1 0.02</size>
           </box>
         </geometry>
       </collision>
       <visual name="visual">
         <geometry>
           <box>
-            <size>0.8 0.8 0.02</size>
+            <size>1 1 0.02</size>
           </box>
         </geometry>
         <material>
           <script>
-            <uri>model://fly_race_target_move/materials/scripts</uri>
-            <uri>model://fly_race_target_move/materials/textures</uri>
-            <name>Cube/fly_race_target_move</name>
+            <uri>model://future_aircraft_start/materials/scripts</uri>
+            <uri>model://future_aircraft_start/materials/textures</uri>
+            <name>Cube/future_aircraft_start</name>
           </script>
+          <color>
+            <rgba>255 0 0 0.5</rgba>>
+          </color>
         </material>
       </visual>
     </link>
     <!-- NOTE: 发布gazebo中的位姿信息 -->
-    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+    <!-- <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
       <alwaysOn>true</alwaysOn>
       <updateRate>30.0</updateRate>
       <bodyName>link</bodyName>
-      <topicName>ground_truth/fly_race_target_move</topicName>
+      <topicName>ground_truth/future_aircraft_start</topicName>
       <gaussianNoise>0.00</gaussianNoise>
-      <frameName>world</frameName>
+      <frameName>word</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
       <rpyOffsets>0 0 0</rpyOffsets>
-    </plugin>
-<!-- 使用python 脚本控制 -->
-    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
-      <commandTopic>cmd_vel</commandTopic>
-      <odometryTopic>odom</odometryTopic>
-      <odometryFrame>odom</odometryFrame>
-      <odometryRate>30.0</odometryRate>
-      <robotBaseFrame>base_link</robotBaseFrame>
-    </plugin>
+    </plugin> -->
 
   </model>
 </sdf>

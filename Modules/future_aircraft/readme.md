@@ -1,6 +1,6 @@
 # 运行
 ```bash
-roslaunch prometheus_demo fly_race.launch 
+roslaunch prometheus_demo future_aircraft.launch 
 ```
 
 # 真实环境使用
