@@ -35,33 +35,33 @@
       </link>
     </model>
 
-    <model name='fly_race_target_move'>
+    <model name='future_aircraft_target_move'>
       <include>
-        <uri>model://fly_race_target_move</uri>
+        <uri>model://future_aircraft_target_move</uri>
 	      <pose> 5 0 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>
 
-    <model name='fly_race_target_static1'>
+    <model name='future_aircraft_target_static1'>
       <static>true</static>
       <include>
-        <uri>model://fly_race_target_move</uri>
+        <uri>model://future_aircraft_target_move</uri>
 	      <pose> -2 -3 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>
 
-    <model name='fly_race_target_static2'>
+    <model name='future_aircraft_target_static2'>
       <static>true</static>
       <include>
-        <uri>model://fly_race_target_move</uri>
+        <uri>model://future_aircraft_target_move</uri>
 	      <pose> -4 3 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>
 
-    <model name='fly_race_start'>
+    <model name='future_aircraft_start'>
       <static>true</static>
       <include>
-        <uri>model://fly_race_start</uri>
+        <uri>model://future_aircraft_start</uri>
 	      <pose> -9 -4 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>

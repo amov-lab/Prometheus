@@ -1,4 +1,4 @@
-material Cube/fly_race_target_move
+material Cube/future_aircraft_target_move
 {
   receive_shadows off
   technique

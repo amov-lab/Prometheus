@@ -2,6 +2,6 @@
     <include file="$(find prometheus_detection)/launch/web_cam0.launch"/>
     <node pkg="prometheus_detection" type="ellipse_det" name="ellipse_det" output="screen">
         <param name="input_image_topic" type="string" value="/prometheus/camera/rgb/image_raw" />
-        <param name="camera_params" type="string" value="$(find prometheus_demo)/advanced/fly_race/conf/calib.yaml"/>
+        <param name="camera_params" type="string" value="$(find prometheus_demo)/advanced/future_aircraft/conf/calib.yaml"/>
     </node>
 </launch>

@@ -12,7 +12,7 @@
 #include <std_msgs/Float32.h>
 
 std::shared_mutex g_mutex;
-int frame_width = 0, frame_height = 0;
+int frame_width = 640, frame_height = 480;
 
 cv::Mat g_camera_matrix, g_dist_coeffs;
 cv::Mat g_frame;
