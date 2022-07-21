@@ -1,4 +1,4 @@
-material Cube/fly_race_target_static
+material Cube/future_aircraft_start
 {
   receive_shadows off
   technique
@@ -8,7 +8,7 @@ material Cube/fly_race_target_static
       alpha_rejection greater 128
       texture_unit
       {
-        texture target.png
+        texture start.png
       }
     }
   }
