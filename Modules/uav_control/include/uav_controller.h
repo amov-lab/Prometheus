@@ -112,6 +112,7 @@ public:
     float Takeoff_height; // 默认起飞高度
     float Disarm_height;  // 自动上锁高度
     float Land_speed;     // 降落速度
+    bool set_landing_des;
 
     // 无人机状态量
     Eigen::Vector3d uav_pos;     // 无人机位置
