@@ -20,7 +20,7 @@ using namespace std;
 prometheus_msgs::UAVCommand uav_command;
 prometheus_msgs::UAVState uav_state;
 prometheus_msgs::UAVControlState uav_control_state;
-Eigen::Vector3d target_pos = {1.0, 0.0, 1.0};
+Eigen::Vector3d target_pos = {1.0, 0.0, 0};
 
 //无人机状态回调函数
 void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
