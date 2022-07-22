@@ -55,7 +55,7 @@ enum EXEC_STATE
     LOST,
     RETURN,
 };
-EXEC_STATE exec_state;标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
+EXEC_STATE exec_state;//志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
 void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
 {
     uav_state = *msg;
@@ -398,14 +398,14 @@ int main(int argc, char** argv)
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
                 // 机体系下的速度控制
                 uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY;
-                uav_command.velocity_ref[0] = 0.5 * now_arucos_info.position[0];
-                uav_command.velocity_ref[1] = 0.5 * now_arucos_info.position[1];
+                uav_command.velocity_ref[0] = 0.5 * ellipse_det.Detection_info.position[0];
+                uav_command.velocity_ref[1] = 0.5 * ellipse_det.Detection_info.position[1];
                 uav_command.position_ref[2] = 1.0;
                 uav_command.yaw_ref = 0.0;
-                info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
-                        << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
-                        << std::endl;
-                PCOUT(1, GREEN, info.str());
+                // info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
+                //         << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
+                //         << std::endl;
+                // PCOUT(1, GREEN, info.str());
                 break;
             }
             case RETURN:
