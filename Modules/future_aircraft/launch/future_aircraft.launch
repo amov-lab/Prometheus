@@ -18,5 +18,5 @@
     </node>
 
 	<!-- gazebo 动目标控制 -->
-	<!-- <node pkg="prometheus_future_aircraft" type="locus.py" name="future_aircraft_sitle"/> -->
+	<node pkg="prometheus_future_aircraft" type="locus.py" name="future_aircraft_sitle"/>
 </launch>
