@@ -37,7 +37,7 @@ def pose_publisher_circle():
     pose_msg.pose.position.z = 0
 
     rate = rospy.Rate(30)
-    pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    pub = rospy.Publisher('/wheeltec/cmd_vel', Twist, queue_size=10)
     pose_msg = Twist()
     rate = rospy.Rate(60)
     circle_radius = 1.5

@@ -1,0 +1,360 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="future_aircraft_car">
+    <pose>0 0 0.16 0 0 0</pose>
+    <static>false</static>
+    <link name="base_link">
+    <collision name="base_link_collision">
+      <geometry>
+        <box>
+          <size>0.67 0.53 0.150</size>
+        </box>
+      </geometry>
+    </collision>
+    <visual name="base_link_visual">
+      <geometry>
+        <box>
+          <size>0.67 0.53 0.150</size>
+        </box>
+      </geometry>
+      <material>
+         <ambient>0 0 0 1</ambient>
+         <diffuse>0 0 0 1</diffuse>
+         <specular>0 0 0 0</specular>
+         <emissive>0 1 0 1</emissive>
+      </material>
+    </visual>
+    <inertial>
+      <mass>9</mass>
+      <inertia>
+        <ixx>0.1836</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.3446</iyy>
+        <iyz>0</iyz>
+        <izz>0.4623</izz>
+      </inertia>
+    </inertial>
+    </link>
+
+    <link name="left_front_wheel">
+    <pose>0.25 0.3 -0.016 1.57 0 0</pose>
+    <collision name="left_front_wheel_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.0</mu>
+            <mu2>0.0</mu2>
+            <slip1>1.0</slip1>
+            <slip2>1.0</slip2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <visual name="left_front_wheel_visual">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.2 1</diffuse>
+          <specular>0 0 0 0</specular>
+          <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
+    <inertial>
+      <mass>1</mass>
+      <inertia>
+        <ixx>0.1836</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.3446</iyy>
+        <iyz>0</iyz>
+        <izz>0.4623</izz>
+      </inertia>
+    </inertial>
+    </link>
+
+    <link name="left_back_wheel">
+    <pose>-0.25 0.3 -0.016 1.57 0 0</pose>
+    <collision name="left_back_wheel_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.0</mu>
+            <mu2>0.0</mu2>
+            <slip1>1.0</slip1>
+            <slip2>1.0</slip2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <visual name="left_back_wheel_visual">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.2 1</diffuse>
+          <specular>0 0 0 0</specular>
+          <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
+    <inertial>
+      <mass>1</mass>
+      <inertia>
+        <ixx>0.1836</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.3446</iyy>
+        <iyz>0</iyz>
+        <izz>0.4623</izz>
+      </inertia>
+    </inertial>
+    </link>
+
+    <link name="right_front_wheel">
+    <pose>0.25 -0.3 -0.016 1.57 0 0</pose>
+    <collision name="right_front_wheel_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.0</mu>
+            <mu2>0.0</mu2>
+            <slip1>1.0</slip1>
+            <slip2>1.0</slip2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <visual name="right_front_wheel_visual">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.2 1</diffuse>
+          <specular>0 0 0 0</specular>
+          <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
+    <inertial>
+      <mass>1</mass>
+      <inertia>
+        <ixx>0.1836</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.3446</iyy>
+        <iyz>0</iyz>
+        <izz>0.4623</izz>
+      </inertia>
+    </inertial>
+    </link>
+
+    <link name="right_back_wheel">
+    <pose>-0.25 -0.3 -0.016 1.57 0 0</pose>
+    <collision name="right_back_wheel_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.0</mu>
+            <mu2>0.0</mu2>
+            <slip1>1.0</slip1>
+            <slip2>1.0</slip2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <visual name="right_back_wheel_visual">
+      <geometry>
+        <cylinder>
+          <radius>0.109</radius>
+          <length>0.04</length>
+        </cylinder>
+      </geometry>
+      <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.2 1</diffuse>
+          <specular>0 0 0 0</specular>
+          <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
+    <inertial>
+      <mass>1</mass>
+      <inertia>
+        <ixx>0.1836</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.3446</iyy>
+        <iyz>0</iyz>
+        <izz>0.4623</izz>
+      </inertia>
+    </inertial>
+    </link>
+
+    <link name="target_pad_link">
+    <pose>-0 0 0.165 0 0 0</pose>
+    <collision name="target_pad_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.8</radius>
+          <length>0.00</length>
+        </cylinder>
+      </geometry>
+    </collision>
+    <visual name="target_pad_visual">
+      <geometry>
+        <box>
+          <size>0.8 0.8 0.02</size>
+        </box>
+      </geometry>
+      <material>
+        <script>
+            <uri> model://future_aircraft_target_static/materials/scripts</uri>
+            <uri>model://future_aircraft_target_static/materials/textures</uri>
+            <name>Cube/future_aircraft_target_static</name>
+        </script>
+      </material>
+    </visual>
+    <inertial>
+      <mass>0.5</mass>
+      <inertia>
+        <ixx>0.001</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>0.001</iyy>
+        <iyz>0</iyz>
+        <izz>0.001</izz>
+      </inertia>
+    </inertial>
+    </link>
+
+    <joint type="revolute" name="left_front_wheel_joint">
+      <pose>0 0 0 1.57 0 0</pose>
+      <child>left_front_wheel</child>
+      <parent>base_link</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <joint type="revolute" name="left_back_wheel_joint">
+      <pose>0 0 0 1.57 0 0</pose>
+      <child>left_back_wheel</child>
+      <parent>base_link</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <joint type="revolute" name="right_front_wheel_joint">
+      <pose>0 0 0 1.57 0 0</pose>
+      <child>right_front_wheel</child>
+      <parent>base_link</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <joint type="revolute" name="right_back_wheel_joint">
+      <pose>0 0 0 1.57 0 0</pose>
+      <child>right_back_wheel</child>
+      <parent>base_link</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <joint type="fixed" name="target_pad_fixed">
+      <pose>0 0 0 0 0 0</pose>
+      <child>target_pad_link</child>
+      <parent>base_link</parent>
+    </joint>
+
+    <include>
+      <uri>model://noisy_imu</uri>
+      <pose>0 0 0.1 0 0 0</pose>
+    </include>
+    <joint type="fixed" name="imu_fixed">
+      <child>imu::imu_link</child>
+      <parent>base_link</parent>
+    </joint>
+
+    <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
+      <alwaysOn>true</alwaysOn>
+      <bodyName>imu::imu_link</bodyName>
+      <topicName>/imu</topicName>
+      <serviceName>imu_service</serviceName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <updateRate>200.0</updateRate>
+    </plugin>
+
+    <plugin name="diffcontroller" filename="libgazebo_ros_skid_steer_drive.so">
+      <updateRate>100.0</updateRate>
+      <robotNamespace>/wheeltec</robotNamespace>
+      <leftFrontJoint>left_front_wheel_joint</leftFrontJoint>
+      <rightFrontJoint>right_front_wheel_joint</rightFrontJoint>
+      <leftRearJoint>left_back_wheel_joint</leftRearJoint>
+      <rightRearJoint>right_back_wheel_joint</rightRearJoint>
+      <wheelSeparation>0.50</wheelSeparation>
+      <wheelDiameter>0.218</wheelDiameter>
+      <robotBaseFrame>base_link</robotBaseFrame>
+      <torque>500</torque>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <broadcastTF>1</broadcastTF>
+    </plugin>
+    <!-- <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+      <updateRate>100</updateRate>
+      <leftJoint>left_front_wheel_joint</leftJoint>
+      <rightJoint>right_front_wheel_joint</rightJoint>
+      <wheelSeparation>0.5</wheelSeparation>
+      <wheelDiameter>0.218</wheelDiameter>
+      <wheelAcceleration>1.0</wheelAcceleration>
+      <wheelTorque>20</wheelTorque>
+      <commandTopic>/wheeltec/cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <robotBaseFrame>base_link</robotBaseFrame>
+      <odometrySource>1</odometrySource>
+      <publishWheelTF>true</publishWheelTF>
+      <publishOdom>true</publishOdom>
+      <publishWheelJointState>true</publishWheelJointState>
+    </plugin> -->
+
+  </model>
+</sdf>

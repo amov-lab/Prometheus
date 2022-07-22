@@ -35,10 +35,10 @@
       </link>
     </model>
 
-    <model name='future_aircraft_target_move'>
+    <model name='future_aircraft_car'>
       <include>
-        <uri>model://future_aircraft_target_move</uri>
-	      <pose> 5 0 0.02 0 0 -1.5707963 </pose>
+        <uri>model://future_aircraft_car</uri>
+	      <pose> 5 0 0 0 0 0 </pose>
       </include>
     </model>
 
