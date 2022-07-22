@@ -55,7 +55,6 @@
       uav_command.header.frame_id = "ENU";
       uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
       ```
-
   - SEARCH     搜寻状态机
 
     - 使用惯性系或者机体系下的位置控制
@@ -141,9 +140,9 @@
 
 ## 三、无人机视觉
 
-- 需要有一定基础，对于是小白的同学，可以知道学习方向，搜索的时候可以知道关键词，毕竟你不知到你不知道才是最致命的
+- 需要有一定基础
 - 完成比赛中不一定会用到所有讲解的知识
-- 本人才疏学浅，如果有大佬发现错误，欢迎留言指正
+- 才疏学浅，如果有大佬发现错误，欢迎留言指正
 
 ### Prometheus视觉模块简介
 
@@ -155,14 +154,26 @@
 ```bash
 roslaunch prometheus_detection ellipse_det.launch
 ```
+![Peek 2022-07-22 10-33.gif](https://qiniu.md.amovlab.com/img/m/202207/20220722/1156295734737485863223296.gif)
 
-### 检测原理简介
 
- TODO: 与OPENCV圆检测的区别
 
- TODO: 同心圆是否会返回最大直径的圆
+### 椭圆检测流程简介
 
- TODO: 变换矩阵是近似？
+OPENCV版本: 霍夫椭圆检测,更慢
+<img src=https://qiniu.md.amovlab.com/img/m/202207/20220722/1146163162603317041725440.png width=1000 />
+
+1. 图像去噪声, 去除图像中到椒盐噪声
+2. 弧检测,挑选出可能为弧的对象
+3. 弧分类,判定弧属于四个象限中的那个一个
+
+<img src=https://qiniu.md.amovlab.com/img/m/202207/20220722/1148073625111206118719488.png width=400 />
+
+4. 弧过滤,运用两段弧约束, CNC约束(三段弧约束),过滤不满足要求的弧
+
+5. 椭圆估计,在剩下的四个象限的弧中进行排列组合,使用优化算法,通过4个弧线估计一个椭圆
+
+6. 椭圆打分,使用特定打分算法,计算椭圆与4个弧线的拟合程度,给椭圆打分,最后选出得分较高的椭圆
 
 ### 相机模型简介
 
@@ -177,7 +188,7 @@ roslaunch prometheus_detection ellipse_det.launch
 
 <img src=https://qiniu.md.amovlab.com/img/m/202207/20220721/1833531607766405921275904.png width=1000 />
 
-世界坐标系到像素坐标系变换
+世界坐标系到像素坐标系变换(_下图中,图像坐标系到像素坐标系转换矩阵添加畸变矫正参数矫正_)
 
 <img src=https://qiniu.md.amovlab.com/img/m/202207/20220721/1756487722766173141565440.png width=1000 />
 
@@ -208,7 +219,6 @@ Y_c = Z_c * (v - v_0) /(\frac{f}{dy}) \\
 \end{array}
 $$
 
- TODO: v_0 ? 代码中是图像分辨率啊
 其中$Z_c$一般可以通过传感器直接获得，或者通过事先已知目标真实尺寸，像素尺寸通过相似三角形比值关系获得，具体可以看[配置目标的实际长宽](https://wiki.amovlab.com/public/prometheus-wiki/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E6%A8%A1%E5%9D%97-object_detection/%E6%89%A9%E5%B1%95%E9%98%85%E8%AF%BB/%E9%85%8D%E7%BD%AE%E7%9B%AE%E6%A0%87%E7%9A%84%E5%AE%9E%E9%99%85%E9%95%BF%E5%AE%BD.html)进行学习。
 
 ### 相机标定
@@ -254,15 +264,6 @@ avg_reprojection_error: 4.7592643246496424e-01
 - 目标位置估计
 - 区分起飞点和靶标
 
- TODO: 可调参数
-
-### 数据流
- TODO: 数据流图 rqt_graph
-
-```bash
-
-```
-
 ### messge定义
 
 [DetectionInfo](../common/prometheus_msgs/msg/DetectionInfo.msg)
@@ -270,7 +271,7 @@ avg_reprojection_error: 4.7592643246496424e-01
 [MultiDetectionInfo](../common/prometheus_msgs/msg/MultiDetectionInfo.msg)
 
 ### 椭圆检测launch文件
-```yaml
+```
 <node pkg="prometheus_detection" type="ellipse_det" name="ellipse_det" output="screen">
     <param name="input_image_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
     <param name="camera_height_topic" type="string" value="/uav/hgt" />
@@ -279,4 +280,5 @@ avg_reprojection_error: 4.7592643246496424e-01
 ```
 
 ### 问题
+
 - 飞行过程中无人机姿态变化，会导致估计的目标位置误差加大，该怎么解决？
