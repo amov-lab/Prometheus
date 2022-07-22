@@ -1,21 +1,151 @@
-# 编译必要文件(在Prometheus跟目录下运行)
-```
-./Modules/future_aircraft/compile_aircraft_sitle.sh
-```
-# 运行
-```bash
-roslaunch prometheus_demo future_aircraft.launch 
-```
+# future_aircraft 功能包使用介绍
 
-# 直播课件
+## 一、介绍及使用
 
-# 无人机视觉
+- 本功能包为第二届大学生未来飞行器挑战赛的实践类仿真demo
+  - 设置比赛区域（10 * 20 * 6 m，暂定）场地内随机模拟圆形标靶 3 个；其中， 2 个随
+    机固定在场地位置， 1 个固定于移动的无人车上面，无人车以≤ 1m/s 的速度在
+    8 字形轮廓进行移动。  
+  - 无人机由指定的位置一键起飞后，立即转换为自动模式，开始通过机载传感器
+    自主搜索这些目标标靶，并向目标标靶投掷模拟子弹；完成所有的投掷任务后，
+    自主回到起飞点降落。以投中目标的数量和完成时间来综合计分。  
+  - 模拟子弹选用与标靶粘接的子弹，以减少因弹性或是风力影响。  
+  - 主办方在赛场内提供 UWB 基站信号覆盖，参赛队伍可以自主选择目标识别和
+    定位方式。  
+
+![image.png](https://qiniu.md.amovlab.com/img/m/202207/20220722/1153184932903574280503296.png)
+
+- 编译必要的文件（在Prometheus跟目录下运行）
+
+  - ```
+    ./Modules/future_aircraft/compile_aircraft_sitle.sh
+    ```
+
+- 仿真运行：（需要连接遥控器）
+
+  - 启动仿真环境：
+
+    - ```
+      roslaunch prometheus_future_aircraft future_aircraft.launch
+      ```
+
+  - 启动控制demo：（后续融合到一个launch文件中）
+
+    - ```
+      rosrun prometheus_future_aircraft future_aircraft
+      ```
+
+
+
+##  二、任务控制demo说明
+
+- 控制需要有一定基础，可以熟悉了解 [控制demo模块](https://wiki.amovlab.com/public/prometheus-wiki/%E6%97%A0%E4%BA%BA%E6%9C%BA%E6%8E%A7%E5%88%B6%E6%A8%A1%E5%9D%97-uav_control/%E6%97%A0%E4%BA%BA%E6%9C%BA%E6%8E%A7%E5%88%B6%E6%A8%A1%E5%9D%97-uav_control.html) 
+- 针对比赛以及实际情况，选择合适的控制接口进行控制。本demo中会使用惯性系与机体系下的位置和速度控制
+
+### 任务状态机
+
+- 状态机：
+
+  - TAKEOFF    起飞状态机
+
+    - 直接调用起飞函数
+
+    - ```
+      uav_command.header.stamp = ros::Time::now();
+      uav_command.header.frame_id = "ENU";
+      uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+      ```
+
+  - SEARCH     搜寻状态机
+
+    - 使用惯性系或者机体系下的位置控制
+
+    - ```
+      uav_command.header.stamp = ros::Time::now();
+      uav_command.header.frame_id = "BODY";
+      uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+      uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
+      uav_command.position_ref[0] = waypoint1[0];
+      uav_command.position_ref[1] = waypoint1[1];
+      uav_command.position_ref[2] = waypoint1[2];
+      uav_command.yaw_ref = 0.0;
+      ```
+
+    - ```
+      uav_command.header.stamp = ros::Time::now();
+      uav_command.header.frame_id = "ENU";
+      uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+      uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+      uav_command.position_ref[0] = waypoint4[0];
+      uav_command.position_ref[1] = waypoint4[1];
+      uav_command.position_ref[2] = waypoint4[2];
+      uav_command.yaw_ref = 0.0;
+      ```
+
+  - TRACKING    跟踪状态机
+
+    - 使用机体系下的水平方向速度控制，垂直方向高度控制
+
+    - ```
+      //坐标系
+      uav_command.header.frame_id = "BODY";
+      // Move模式
+      uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+      // 机体系下的速度控制
+      uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY;
+      uav_command.velocity_ref[0] = 0.5 * now_arucos_info.position[0];
+      uav_command.velocity_ref[1] = 0.5 * now_arucos_info.position[1];
+      uav_command.position_ref[2] = 1.0;
+      uav_command.yaw_ref = 0.0;
+      ```
+
+  - LOST            目标丢失状态机
+
+  - RETURN       返航状态机（返航以及降落状态机）
+
+### 视觉端处理
+
+- 坐标系变换说明（Prometheus\Modules\tutorial_demo\advanced\autonomous_landing\include\mission_utils.h）
+
+  - 接受图像话题 
+
+    ```
+    /prometheus/ellipse_det
+    ```
+
+  - 识别算法发布的目标位置位于**相机坐标系**（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
+
+  - 首先，从相机坐标系转换至**机体坐标系**（从机体往前看，物体在相机前方x为正，左方y为正，上方z为正）：`camera_offset`为相机安装偏移量，此处为下置摄像头，参看  `p450_future_aircraft.sdf`可知，相机安装于机体质心下方0.05米，因此，`camera_offset[0] = 0.0`，`camera_offset[1] = 0.0`，`camera_offset[2] = -0.05` 。
+
+    - ```
+      ellipse_det.pos_body_frame[0] = -ellipse_det.Detection_info.position[1] + camera_offset[0];
+      ellipse_det.pos_body_frame[1] = -ellipse_det.Detection_info.position[0] + camera_offset[1];
+      ellipse_det.pos_body_frame[2] = -ellipse_det.Detection_info.position[2] + camera_offset[2];
+      ```
+
+  - 从机体坐标系转换至**与机体固连的ENU系**（原点位于质心，x轴指向yaw=0的方向，y轴指向yaw=90的方向，z轴指向上的坐标系）：直接乘上机体系到惯性系的旋转矩阵即可 R_Body_to_ENU = get_rotation_matrix(_DroneState.attitude[0], _DroneState.attitude[1], _DroneState.attitude[2]);
+
+    - ```
+      ellipse_det.pos_body_enu_frame = R_Body_to_ENU * ellipse_det.pos_body_frame;
+      ```
+
+  - 机体惯性系 再变化为 惯性系
+
+    - ```
+      ellipse_det.pos_enu_frame[0] = uav_state.position[0] + ellipse_det.pos_body_enu_frame[0];
+      ellipse_det.pos_enu_frame[1] = uav_state.position[1] + ellipse_det.pos_body_enu_frame[1];
+      ellipse_det.pos_enu_frame[2] = uav_state.position[2] + ellipse_det.pos_body_enu_frame[2];
+      ```
+
+      
+
+## 三、无人机视觉
 
 - 需要有一定基础，对于是小白的同学，可以知道学习方向，搜索的时候可以知道关键词，毕竟你不知到你不知道才是最致命的
 - 完成比赛中不一定会用到所有讲解的知识
 - 本人才疏学浅，如果有大佬发现错误，欢迎留言指正
 
-## Prometheus视觉模块简介
+### Prometheus视觉模块简介
 
 1. [概览](https://wiki.amovlab.com/public/prometheus-wiki/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E6%A8%A1%E5%9D%97-object_detection/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E6%A8%A1%E5%9D%97%E4%BB%8B%E7%BB%8D/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B%E6%A8%A1%E5%9D%97%E4%BB%8B%E7%BB%8D.html)
 
@@ -26,14 +156,15 @@ roslaunch prometheus_demo future_aircraft.launch
 roslaunch prometheus_detection ellipse_det.launch
 ```
 
-## 椭圆检测原理简介
+### 检测原理简介
+
  TODO: 与OPENCV圆检测的区别
 
  TODO: 同心圆是否会返回最大直径的圆
 
  TODO: 变换矩阵是近似？
 
-## 相机模型简介
+### 相机模型简介
 
 世界平面到图像平面(根据小孔成像原理)
 
@@ -113,9 +244,10 @@ distortion_coefficients: !!opencv-matrix
 avg_reprojection_error: 4.7592643246496424e-01
 ```
 
-## 代码解析
+### 代码解析
 
 [ellipse_det.cpp](../object_detection/cpp_nodes/ellipse_det.cpp)
+
 - 整个代码逻辑
 - 可调节参数
 - 去除图像畸变
