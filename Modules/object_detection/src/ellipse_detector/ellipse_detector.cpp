@@ -1349,17 +1349,17 @@ EllipseDetector::~EllipseDetector(void)
 }
 
 void EllipseDetector::SetParameters(Size  szPreProcessingGaussKernel,
-    double  dPreProcessingGaussSigma,
-    float   fThPosition,
-    float   fMaxCenterDistance,
-    int     iMinEdgeLength,
-    float   fMinOrientedRectSide,
-    float   fDistanceToEllipseContour,
-    float   fMinScore,
-    float   fMinReliability,
-    int     iNs,
-    double  dPercentNe,
-    float   fT_CNC,
+    double  dPreProcessingGaussSigma, // 高斯模糊,去噪声
+    float   fThPosition, // 位置约束,阈值,低于阈值不要
+    float   fMaxCenterDistance, // 中心点约束   
+    int     iMinEdgeLength, // 最小弧度常识,一般 8-16, 小于的弧不要
+    float   fMinOrientedRectSide, // 筛选弧参数,最小外接矩形,短边长度
+    float   fDistanceToEllipseContour, // fitting得分d, 一般几个像素
+    float   fMinScore, // 0.5 - 0.7, 最终椭圆得分阈值
+    float   fMinReliability, // 弧长与椭圆周长比值阈值
+    int     iNs, // 中心性约数, 2个弧中心与椭圆中心距离 一般22 
+    double  dPercentNe, // 边缘检测阈值, 越大保留的弧数量越多 0.9 - 0.99
+    float   fT_CNC, // 判读集合CNC, 一般不会调
     float   fT_TCN_L,
     float   fT_TCN_P,
     float   fThre_r

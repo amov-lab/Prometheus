@@ -69,8 +69,8 @@ int main(int argc, char **argv)
 
     // 圆检测参数调整
     EllipseDetector ellipse_detector;
-    // float fMaxCenterDistance = sqrt(float(width * width + height * height)) * 0.05f;
-    // ellipse_detector.SetParameters(cv::Size(5, 5), 1.306, 1.f, fMaxCenterDistance, 9, 2.984, 0.111, 0.511, 0.470, 22, 0.946, 0.121, 0.468, 0.560, 0.202);
+    float fMaxCenterDistance = sqrt(float(width * width + height * height)) * 0.05f;
+    ellipse_detector.SetParameters(cv::Size(5, 5), 1.306, 1.f, fMaxCenterDistance, 9, 2.984, 0.111, 0.511, 0.470, 22, 0.946, 0.121, 0.468, 0.560, 0.202);
 
     ros::Rate rate(60);
     while (ros::ok())
