@@ -25,7 +25,7 @@
       </material>
     </visual>
     <inertial>
-      <mass>9</mass>
+      <mass>100</mass>
       <inertia>
         <ixx>0.1836</ixx>
         <ixy>0</ixy>
@@ -46,16 +46,16 @@
           <length>0.04</length>
         </cylinder>
       </geometry>
-      <surface>
+      <!-- <surface>
         <friction>
           <ode>
             <mu>0.0</mu>
             <mu2>0.0</mu2>
-            <slip1>1.0</slip1>
-            <slip2>1.0</slip2>
+            <kp>1000000.0</kp>
+            <kd>10.0</kd>
           </ode>
         </friction>
-      </surface>
+      </surface> -->
     </collision>
     <visual name="left_front_wheel_visual">
       <geometry>
@@ -71,7 +71,7 @@
           <emissive>0 0 0 1</emissive>
       </material>
     </visual>
-    <inertial>
+    <!-- <inertial>
       <mass>1</mass>
       <inertia>
         <ixx>0.1836</ixx>
@@ -81,7 +81,7 @@
         <iyz>0</iyz>
         <izz>0.4623</izz>
       </inertia>
-    </inertial>
+    </inertial> -->
     </link>
 
     <link name="left_back_wheel">
@@ -93,16 +93,16 @@
           <length>0.04</length>
         </cylinder>
       </geometry>
-      <surface>
+      <!-- <surface>
         <friction>
           <ode>
             <mu>0.0</mu>
             <mu2>0.0</mu2>
-            <slip1>1.0</slip1>
-            <slip2>1.0</slip2>
+            <kp>1000000.0</kp>
+            <kd>10.0</kd>
           </ode>
         </friction>
-      </surface>
+      </surface> -->
     </collision>
     <visual name="left_back_wheel_visual">
       <geometry>
@@ -118,7 +118,7 @@
           <emissive>0 0 0 1</emissive>
       </material>
     </visual>
-    <inertial>
+    <!-- <inertial>
       <mass>1</mass>
       <inertia>
         <ixx>0.1836</ixx>
@@ -128,7 +128,7 @@
         <iyz>0</iyz>
         <izz>0.4623</izz>
       </inertia>
-    </inertial>
+    </inertial> -->
     </link>
 
     <link name="right_front_wheel">
@@ -140,16 +140,16 @@
           <length>0.04</length>
         </cylinder>
       </geometry>
-      <surface>
+      <!-- <surface>
         <friction>
           <ode>
             <mu>0.0</mu>
             <mu2>0.0</mu2>
-            <slip1>1.0</slip1>
-            <slip2>1.0</slip2>
+            <kp>1000000.0</kp>
+            <kd>10.0</kd>
           </ode>
         </friction>
-      </surface>
+      </surface> -->
     </collision>
     <visual name="right_front_wheel_visual">
       <geometry>
@@ -165,7 +165,7 @@
           <emissive>0 0 0 1</emissive>
       </material>
     </visual>
-    <inertial>
+    <!-- <inertial>
       <mass>1</mass>
       <inertia>
         <ixx>0.1836</ixx>
@@ -175,7 +175,7 @@
         <iyz>0</iyz>
         <izz>0.4623</izz>
       </inertia>
-    </inertial>
+    </inertial> -->
     </link>
 
     <link name="right_back_wheel">
@@ -187,16 +187,16 @@
           <length>0.04</length>
         </cylinder>
       </geometry>
-      <surface>
+      <!-- <surface>
         <friction>
           <ode>
             <mu>0.0</mu>
             <mu2>0.0</mu2>
-            <slip1>1.0</slip1>
-            <slip2>1.0</slip2>
+            <kp>1000000.0</kp>
+            <kd>10.0</kd>
           </ode>
         </friction>
-      </surface>
+      </surface> -->
     </collision>
     <visual name="right_back_wheel_visual">
       <geometry>
@@ -212,7 +212,7 @@
           <emissive>0 0 0 1</emissive>
       </material>
     </visual>
-    <inertial>
+    <!-- <inertial>
       <mass>1</mass>
       <inertia>
         <ixx>0.1836</ixx>
@@ -222,7 +222,7 @@
         <iyz>0</iyz>
         <izz>0.4623</izz>
       </inertia>
-    </inertial>
+    </inertial> -->
     </link>
 
     <link name="target_pad_link">
@@ -249,7 +249,7 @@
         </script>
       </material>
     </visual>
-    <inertial>
+    <!-- <inertial>
       <mass>0.5</mass>
       <inertia>
         <ixx>0.001</ixx>
@@ -259,7 +259,7 @@
         <iyz>0</iyz>
         <izz>0.001</izz>
       </inertia>
-    </inertial>
+    </inertial> -->
     </link>
 
     <joint type="revolute" name="left_front_wheel_joint">
@@ -322,7 +322,7 @@
       <updateRate>200.0</updateRate>
     </plugin>
 
-    <plugin name="diffcontroller" filename="libgazebo_ros_skid_steer_drive.so">
+    <!-- <plugin name="diffcontroller" filename="libgazebo_ros_skid_steer_drive.so">
       <updateRate>100.0</updateRate>
       <robotNamespace>/wheeltec</robotNamespace>
       <leftFrontJoint>left_front_wheel_joint</leftFrontJoint>
@@ -332,12 +332,12 @@
       <wheelSeparation>0.50</wheelSeparation>
       <wheelDiameter>0.218</wheelDiameter>
       <robotBaseFrame>base_link</robotBaseFrame>
-      <torque>500</torque>
+      <torque>30</torque>
       <commandTopic>cmd_vel</commandTopic>
       <odometryTopic>odom</odometryTopic>
       <odometryFrame>odom</odometryFrame>
       <broadcastTF>1</broadcastTF>
-    </plugin>
+    </plugin> -->
     <!-- <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
       <updateRate>100</updateRate>
       <leftJoint>left_front_wheel_joint</leftJoint>
@@ -355,6 +355,13 @@
       <publishOdom>true</publishOdom>
       <publishWheelJointState>true</publishWheelJointState>
     </plugin> -->
+    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+      <commandTopic>/wheeltec/cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometryRate>30.0</odometryRate>
+      <robotBaseFrame>base_link</robotBaseFrame>
+    </plugin>
 
   </model>
 </sdf>
