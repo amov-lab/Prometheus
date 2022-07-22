@@ -155,6 +155,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     vel_des << 0.0, 0.0, 0.0;
     acc_des << 0.0, 0.0, 0.0;
     quick_land = false;
+    set_landing_des = false;
 
     offset_pose.x = 0.0;
     offset_pose.y = 0.0;
@@ -256,7 +257,8 @@ void UAV_controller::mainloop()
             set_px4_mode_func("AUTO.LAND");
         }else
         {
-            if (last_control_state != CONTROL_STATE::LAND_CONTROL)
+            // 第一次进入，设置降落的期望位置和速度
+            if (!set_landing_des)
             {
                 // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
                 if (quick_land)
@@ -269,6 +271,7 @@ void UAV_controller::mainloop()
                 vel_des << 0.0, 0.0, -Land_speed;
                 acc_des << 0.0, 0.0, 0.0;
                 yaw_des = uav_yaw;
+                set_landing_des = true;
             }
             // 当无人机位置低于指定高度时，自动上锁
             // 需要考虑万一高度数据不准确时，从高处自由落体
@@ -279,9 +282,11 @@ void UAV_controller::mainloop()
             }
         }
 
-        if (!uav_state.armed && uav_pos[2] < Disarm_height)
+        // 降落结束的标志：无人机上锁
+        if (!uav_state.armed)
         {
             control_state = CONTROL_STATE::INIT;
+            set_landing_des = false;
         }
 
         break;
