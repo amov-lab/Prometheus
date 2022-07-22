@@ -51,7 +51,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+  include ../tutorial_demo/advanced/autonomous_landing/include
   ${catkin_INCLUDE_DIRS}
   ../common/include
 )
@@ -74,6 +74,9 @@ include_directories(
 
 #add_executable(formation_control formation_control/formation_control.cpp)
 #target_link_libraries(formation_control ${catkin_LIBRARIES})
+add_executable(future_aircraft src/future_aircraft.cpp)
+target_link_libraries(future_aircraft ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##
@@ -117,6 +120,7 @@ install(DIRECTORY launch/
 #############
 ## Testing ##
 #############
+
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_prometheus_demo.cpp)
