@@ -39,7 +39,7 @@ using namespace std;
 
 #define DOWN_CAMERA_OFFSET_X 0.0
 #define DOWN_CAMERA_OFFSET_Y 0.0
-#define DOWN_CAMERA_OFFSET_Z -0.1
+#define DOWN_CAMERA_OFFSET_Z -0.05
 
 
 // 定义视觉检测结构体
