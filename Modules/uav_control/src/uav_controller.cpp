@@ -630,6 +630,11 @@ void UAV_controller::set_command_des_for_pos_controller()
 
 void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
 {
+    if(control_state != CONTROL_STATE::COMMAND_CONTROL)
+    {
+        return;
+    }
+
     uav_command = *msg;
 }
 
@@ -820,8 +825,12 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
     // 必须从HOVER_CONTROL模式切入（确保odom和offboard模式正常）
     if (rc_input.enter_command_control && control_state == CONTROL_STATE::RC_POS_CONTROL && uav_state.mode == "OFFBOARD")
     {
+        // 标志位重置
         rc_input.enter_command_control = false;
+        // 切换至COMMAND_CONTROL
         control_state = CONTROL_STATE::COMMAND_CONTROL;
+        // 初始化默认的UAVCommand
+        uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
         cout << GREEN << node_name << " Switch to COMMAND_CONTROL" << TAIL << endl;
         return;
     }
