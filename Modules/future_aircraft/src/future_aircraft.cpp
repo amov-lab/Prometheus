@@ -1,7 +1,9 @@
 /******************************************************************************
-*例程简介: 
+*例程简介: 第二届大学生未来飞行器挑战赛的实践类仿真demo
 *
-*效果说明: 
+*效果说明: 无人机由指定的位置一键起飞后，立即转换为自动模式，开始通过机载传感器
+*         自主搜索这些目标标靶，并向目标标靶投掷模拟子弹；完成所有的投掷任务后，
+*         自主回到起飞点降落。
 *
 *备注:该例程仅支持Prometheus仿真,真机测试需要熟练掌握相关接口的定义后以及真机适配修改后使用
 ******************************************************************************/
@@ -53,9 +55,7 @@ enum EXEC_STATE
     LOST,
     RETURN,
 };
-EXEC_STATE exec_state;
-
-//无人机状态回调函数
+EXEC_STATE exec_state;//志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
 void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
 {
     uav_state = *msg;
@@ -73,6 +73,8 @@ void ellipse_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
 {
     ellipse_det.object_name = "T";
     ellipse_det.Detection_info = *msg;
+    // 相机安装误差 在mission_utils.h中设置
+    // 相机坐标到机体坐标系x、y轴需要交换，并且方向相反。
     ellipse_det.pos_body_frame[0] = -ellipse_det.Detection_info.position[1] + camera_offset[0];
     ellipse_det.pos_body_frame[1] = -ellipse_det.Detection_info.position[0] + camera_offset[1];
     ellipse_det.pos_body_frame[2] = -ellipse_det.Detection_info.position[2] + camera_offset[2];
@@ -100,6 +102,7 @@ void ellipse_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
     // 当连续一段时间无法检测到目标时，认定目标丢失
     if (ellipse_det.num_lost > VISION_THRES)
     {
+        ellipse_det.Detection_info.detected = false;
         ellipse_det.is_detected = false;
     }
 
@@ -187,6 +190,7 @@ int main(int argc, char** argv)
                     continue;
                 }
                 cout << GREEN << " UAV takeoff successfully and search after 5 seconds" << TAIL << endl;
+                sleep(5);
                 exec_state = SEARCH;
             }
             case SEARCH:
@@ -244,7 +248,6 @@ int main(int argc, char** argv)
                 uav_command.header.frame_id = "ENU";
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
                 uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
                 uav_command.position_ref[0] = waypoint4[0];
                 uav_command.position_ref[1] = waypoint4[1];
                 uav_command.position_ref[2] = waypoint4[2];
@@ -395,20 +398,14 @@ int main(int argc, char** argv)
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
                 // 机体系下的速度控制
                 uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY;
-                // 使用机体惯性系作为误差进行惯性系的速度控制
-                for (int i = 0; i < 3; i++)
-                {
-                    uav_command.velocity_ref[i] = 0.5 * ellipse_det.pos_body_enu_frame[i];
-                }
-                uav_command.position_ref[2] = 1.2;
-                // 移动过程中，不调节航向角
+                uav_command.velocity_ref[0] = 0.5 * ellipse_det.Detection_info.position[0];
+                uav_command.velocity_ref[1] = 0.5 * ellipse_det.Detection_info.position[1];
+                uav_command.position_ref[2] = 1.0;
                 uav_command.yaw_ref = 0.0;
                 // info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
-                //     << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
-                //     << std::endl;
+                //         << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
+                //         << std::endl;
                 // PCOUT(1, GREEN, info.str());
-                // if (std::abs(uav_command.velocity_ref[0]) + std::abs(uav_command.velocity_ref[1]) < 0.04)
-                //     exec_state = LAND;
                 break;
             }
             case RETURN:
@@ -428,10 +425,7 @@ int main(int argc, char** argv)
                 cout << GREEN << "return to home" << TAIL << endl;
 
                 sleep(15);
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "ENU";
                 uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
-                uav_command.Command_ID += 1;
                 uav_command_pub.publish(uav_command);
                 cout << GREEN << "landing" << TAIL << endl;
             }

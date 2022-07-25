@@ -12,7 +12,7 @@ client.wait_for_service()
 
 def init_pose():
     req = SetModelStateRequest()
-    req.model_state.model_name = "future_aircraft_target_move"
+    req.model_state.model_name = "future_aircraft_car"
     req.model_state.pose.position.x = 0
     req.model_state.pose.position.y = 0
     req.model_state.pose.position.z = 0
@@ -22,7 +22,7 @@ landing_pad = None
 def get_pos(info: ModelStates):
     global landing_pad
     for i , name in enumerate(info.name):
-        if name == "future_aircraft_target_move":
+        if name == "future_aircraft_car":
             landing_pad = info.pose[i].position
             # print(landing_pad)
             return
@@ -37,7 +37,7 @@ def pose_publisher_circle():
     pose_msg.pose.position.z = 0
 
     rate = rospy.Rate(30)
-    pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+    pub = rospy.Publisher('/wheeltec/cmd_vel', Twist, queue_size=10)
     pose_msg = Twist()
     rate = rospy.Rate(60)
     circle_radius = 1.5
