@@ -1,0 +1,316 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='future_aircraft'>
+    <pose frame=''>0 0 0 0 -0 0</pose>
+    <link name='Floor_2'>
+      <collision name='Floor_2_Collision'>
+        <geometry>
+          <box>
+            <size>20 10 0.1</size>
+          </box>
+        </geometry>
+        <pose frame=''>0 0 0.05 0 -0 0</pose>
+      </collision>
+      <!-- <visual name='Floor_2_Visual'>
+        <pose frame=''>0 0 0.05 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>20 10 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script>
+          <ambient>1 1 1 1</ambient>
+        </material>
+        <meta>
+          <layer>1</layer>
+        </meta>
+      </visual> -->
+      <pose frame=''>0 0 5 0 -0 0</pose>
+    </link>
+
+    <link name='Wall_2'>
+      <collision name='Wall_2_Collision'>
+        <geometry>
+          <box>
+            <size>10 0.15 5</size>
+          </box>
+        </geometry>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+      </collision>
+      <visual name='Wall_2_Visual'>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>10 0.15 5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/CeilingTiled</name>
+          </script>
+          <ambient>1 1 1 1</ambient>
+        </material>
+        <meta>
+          <layer>0</layer>
+        </meta>
+      </visual>
+      <pose frame=''>-9.925 0 0 0 -0 -1.5708</pose>
+    </link>
+    <link name='Wall_3'>
+      <collision name='Wall_3_Collision'>
+        <geometry>
+          <box>
+            <size>20 0.15 5</size>
+          </box>
+        </geometry>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+      </collision>
+      <visual name='Wall_3_Visual'>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>20 0.15 5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/CeilingTiled</name>
+          </script>
+          <ambient>1 1 1 1</ambient>
+        </material>
+        <meta>
+          <layer>0</layer>
+        </meta>
+      </visual>
+      <pose frame=''>0 -4.925 0 0 -0 0</pose>
+    </link>
+    <link name='Wall_4'>
+      <collision name='Wall_4_Collision'>
+        <geometry>
+          <box>
+            <size>10 0.15 5</size>
+          </box>
+        </geometry>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+      </collision>
+      <visual name='Wall_4_Visual'>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>10 0.15 5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/CeilingTiled</name>
+          </script>
+          <ambient>1 1 1 1</ambient>
+        </material>
+        <meta>
+          <layer>0</layer>
+        </meta>
+      </visual>
+      <pose frame=''>9.925 0 0 0 -0 1.5708</pose>
+    </link>
+    <link name='Wall_5'>
+      <collision name='Wall_5_Collision'>
+        <geometry>
+          <box>
+            <size>20 0.15 5</size>
+          </box>
+        </geometry>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+      </collision>
+      <visual name='Wall_5_Visual'>
+        <pose frame=''>0 0 2.5 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>20 0.15 5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/CeilingTiled</name>
+          </script>
+          <ambient>1 1 1 1</ambient>
+        </material>
+        <meta>
+          <layer>0</layer>
+        </meta>
+      </visual>
+      <pose frame=''>0 4.925 0 0 -0 3.14159</pose>
+    </link>
+
+    <link name="amov_logo_prometheus">
+      <visual name="visual_osrf">
+        <pose>-9.850000 0 2.5 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.01 9 1.5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/prometheus</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="company_name">
+      <visual name="visual_osrf">
+        <pose>-9.850000 3.8 1.4 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.01 1.9375 0.5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/company_name</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="amov_logo">
+      <visual name="visual_osrf">
+        <pose>9.850000 0 2.5 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.01 6 4.5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/logo</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="amov_amov_1">
+      <visual name="visual_osrf">
+        <pose>5 4.85 2.5 0 0 1.5707</pose>
+        <geometry>
+          <box>
+            <size>0.01 8.5 2.5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/uni</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="amov_amov_2">
+      <visual name="visual_osrf">
+        <pose>-5 4.85 2.5 0 0 1.5707</pose>
+        <geometry>
+          <box>
+            <size>0.01 8.5 2.5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/amov</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="amov_amov_3">
+      <visual name="visual_osrf">
+        <pose>5 -4.85 2.5 0 0 -1.5707</pose>
+        <geometry>
+          <box>
+            <size>0.01 8.5 2.5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/amov</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="amov_amov_4">
+      <visual name="visual_osrf">
+        <pose>-5 -4.85 2.5 0 0 -1.5707</pose>
+        <geometry>
+          <box>
+            <size>0.01 8.5 2.5</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/uni</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="competition_name">
+      <visual name="visual_osrf">
+        <pose>0 -9 0 0 -1.5707963267948966 1.5707963267948966</pose>
+        <geometry>
+          <box>
+            <size>0.01 23.25 6</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/competition_name</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="slogan">
+      <visual name="visual_osrf">
+        <pose>0 8 0 0 -1.5707963267948966 1.5707963267948966 </pose>
+        <geometry>
+          <box>
+            <size>0.01 23.25 6</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_wall/materials/scripts</uri>
+            <uri>model://future_aircraft_wall/materials/textures</uri>
+            <name>amov/slogan</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <static>1</static>
+  </model>
+</sdf>

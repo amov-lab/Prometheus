@@ -1,10 +1,18 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 <sdf version="1.5">
   <world name="default">
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>-12.1657 -8.08476 36.3918 -0 1.17964 0.452192</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
     <scene>
-      <ambient>1.0 1.0 1.0 1.0</ambient>
+      <!-- <ambient>1.0 1.0 1.0 1.0</ambient> -->
       <shadows>0</shadows>
-  </scene>
+    </scene>
     <!-- A global light source -->
     <include>
       <uri>model://sun</uri>
@@ -19,13 +27,13 @@
       <link name="prometheus_logo">
         <pose> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
         <visual name="visual">
-            <cast_shadows>false</cast_shadows>
-            <geometry>
-              <box>
-                <size>20.0 10.0 0.01</size>
-              </box>
-            </geometry>
-            <!-- <material>
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <box>
+              <size>20.0 10.0 0.01</size>
+            </box>
+          </geometry>
+          <!-- <material>
               <script>
                 <uri>model://logo_ground/texture.material</uri>
                 <name>logo_ground</name>
@@ -38,7 +46,7 @@
     <model name='future_aircraft_car'>
       <include>
         <uri>model://future_aircraft_car</uri>
-	      <pose> 5 0 0 0 0 0 </pose>
+        <pose> 5 0 0 0 0 0 </pose>
       </include>
     </model>
 
@@ -46,7 +54,7 @@
       <static>true</static>
       <include>
         <uri>model://future_aircraft_target_move</uri>
-	      <pose> -2 -3 0.02 0 0 -1.5707963 </pose>
+        <pose> -2 -3 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>
 
@@ -54,7 +62,7 @@
       <static>true</static>
       <include>
         <uri>model://future_aircraft_target_move</uri>
-	      <pose> -4 3 0.02 0 0 -1.5707963 </pose>
+        <pose> -4 3 0.02 0 0 -1.5707963 </pose>
       </include>
     </model>
 
@@ -62,7 +70,15 @@
       <static>true</static>
       <include>
         <uri>model://future_aircraft_start</uri>
-	      <pose> -9 -4 0.02 0 0 -1.5707963 </pose>
+        <pose> -9 -4 0.02 0 0 -1.5707963 </pose>
+      </include>
+    </model>
+
+    <model name='wall'>
+      <static>true</static>
+      <include>
+        <uri>model://future_aircraft_wall</uri>
+        <pose> 0 0 0 0 0 3.1415926 </pose>
       </include>
     </model>
 
