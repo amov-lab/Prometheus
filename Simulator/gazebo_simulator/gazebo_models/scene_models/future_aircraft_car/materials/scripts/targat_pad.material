@@ -1,0 +1,15 @@
+material Cube/future_aircraft_car
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      alpha_rejection greater 128
+      texture_unit
+      {
+        texture target.png
+      }
+    }
+  }
+}
