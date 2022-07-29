@@ -3,10 +3,12 @@ project(prometheus_future_aircraft)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   message_generation  
   roscpp
@@ -21,6 +23,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   mavros_msgs
   prometheus_msgs
+  cv_bridge
+  image_transport
 )
 
 ##  System dependencies are found with CMake's conventions
@@ -76,6 +80,15 @@ include_directories(
 #target_link_libraries(formation_control ${catkin_LIBRARIES})
 add_executable(future_aircraft src/future_aircraft.cpp)
 target_link_libraries(future_aircraft ${catkin_LIBRARIES})
+
+add_executable(ellipse_det
+    src/ellipse_det.cpp
+    src/ellipse_detector/ellipse_detector.cpp
+)
+target_include_directories(ellipse_det PUBLIC
+    src/ellipse_detector/
+)
+target_link_libraries(ellipse_det ${catkin_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 
 #############
