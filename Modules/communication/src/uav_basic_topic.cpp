@@ -5,13 +5,13 @@ UAVBasic::UAVBasic()
 
 }
 
-UAVBasic::UAVBasic(ros::NodeHandle &nh,int id)
+UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     this->robot_id = id;
     this->offset_pose_.x = 0;
     this->offset_pose_.y = 0;
-    this->communication_ = new Communication(nh);
+    this->communication_ = communication;
 
     //【订阅】uav状态信息
     this->uav_state_sub_ = nh.subscribe("/uav" + std::to_string(this->robot_id) + "/prometheus/state", 10, &UAVBasic::stateCb, this);
@@ -64,6 +64,7 @@ void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
     this->uav_state_.battery_state = msg->battery_state;
     this->uav_state_.battery_percetage = msg->battery_percetage;
 
+    std::cout << " stateCb " << std::endl;
     //发送到组播地址
     this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_), multicast_udp_ip);
     setTimeStamp(msg->header.stamp.sec);

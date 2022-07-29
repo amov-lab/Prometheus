@@ -1,6 +1,7 @@
 #ifndef COMUNICATION_BRIDGE_HPP
 #define COMUNICATION_BRIDGE_HPP
 
+#include <ros/ros.h>
 #include "communication.hpp"
 
 #include <boost/thread.hpp>
@@ -33,11 +34,22 @@ public:
 
     void serverFun();
 
-    //解码
-    void decodeMsg(char *buff);
-
     //根据协议中MSG_ID的值，将数据段数据转化为正确的结构体
-    void pubMsg(int msg_id, std::string str);
+    void pubMsg(int msg_id);
+
+    void recvData(struct UAVState uav_state);
+    void recvData(struct UAVCommand uav_cmd);
+    void recvData(struct SwarmCommand swarm_command);
+    void recvData(struct ConnectState connect_state);
+    void recvData(struct GimbalControl gimbal_control);
+    void recvData(struct GimbalService gimbal_service);
+    void recvData(struct GimbalParamSet param_set);
+    void recvData(struct WindowPosition window_position);
+    void recvData(struct RheaControl rhea_control);
+    void recvData(struct RheaState rhea_state);
+    void recvData(struct ImageData image_data);
+    void recvData(struct UAVSetup uav_setup);
+    void recvData(struct ModeSelection mode_selection);
 
     void modeSwitch(struct ModeSelection mode_selection);
 
@@ -51,8 +63,6 @@ public:
     //ros::NodeHandle nh;
 
     void createImage(struct ImageData image_data);
-
-    void recvBigData(int len ,char *buff);
 
     bool createMode(struct ModeSelection mode_selection);
 

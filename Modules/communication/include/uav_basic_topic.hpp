@@ -1,6 +1,7 @@
 #ifndef UAV_BASIC_TOPIC_HPP
 #define UAV_BASIC_TOPIC_HPP
 
+#include <ros/ros.h>
 #include "communication.hpp"
 #include "prometheus_msgs/UAVState.h"
 #include "prometheus_msgs/TextInfo.h"
@@ -14,7 +15,7 @@ class UAVBasic
 public:
     UAVBasic();
 
-    UAVBasic(ros::NodeHandle &nh,int id);
+    UAVBasic(ros::NodeHandle &nh,int id,Communication *communication);
 
     ~UAVBasic();
 

@@ -50,6 +50,7 @@ include_directories(
   include ${catkin_INCLUDE_DIRS}
   include
   ${catkin_INCLUDE_DIRS}
+  ${PROJECT_SOURCE_DIR}/shard/include
 )
 
 file(GLOB_RECURSE CURRENT_INCLUDE include/*.hpp include/*.h)
@@ -58,5 +59,5 @@ file(GLOB_RECURSE CURRENT_SOURCE src/*.cpp)
 ## Specify libraries to link a library or executable target against
 add_executable(communication_bridge ${CURRENT_SOURCE} ${CURRENT_INCLUDE})
 add_dependencies(communication_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(communication_bridge ${catkin_LIBRARIES} -lboost_serialization)
+target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication.so boost_serialization)
 

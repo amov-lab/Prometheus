@@ -1,6 +1,7 @@
 #ifndef SWARM_CONTROL_TOPIC_HPP
 #define SWARM_CONTROL_TOPIC_HPP
 
+#include <ros/ros.h>
 #include "communication.hpp"
 #include "uav_basic_topic.hpp"
 
@@ -28,10 +29,10 @@ class SwarmControl//: public UAVBasic
 {
 public:
     //真机构造
-    SwarmControl(ros::NodeHandle &nh, int id, int swarm_num);
+    SwarmControl(ros::NodeHandle &nh, int id, int swarm_num,Communication *communication);
 
     //仿真构造
-    SwarmControl(ros::NodeHandle &nh, int swarm_num);
+    SwarmControl(ros::NodeHandle &nh, int swarm_num,Communication *communication);
 
     ~SwarmControl();
 
