@@ -2,7 +2,7 @@
 __pycache__
 _ext
 *.pyc
-*.so
+#*.so
 nano.save
 .catkin_workspace
 
