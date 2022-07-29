@@ -15,7 +15,6 @@
 #include <unistd.h>
 #include <Eigen/Eigen>
 #include "printf_utils.h"
-
 #include "mission_utils.h"
 
 using namespace std;
