@@ -20,6 +20,6 @@
         <param name="user_type" value="1"/>
 
         <!-- 自动启动项 在不使用地面站情况打开对应话题 -->
-        <param name="auto_start" value="false"/>
+        <param name="auto_start" value="true"/>
     </node>
 </launch>

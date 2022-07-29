@@ -1,6 +1,7 @@
 #ifndef UGV_BASIC_TOPIC_HPP
 #define UGV_BASIC_TOPIC_HPP
 
+#include <ros/ros.h>
 #include "communication.hpp"
 #include "prometheus_msgs/RheaCommunication.h"
 #include "prometheus_msgs/RheaState.h"
@@ -10,23 +11,23 @@ using namespace std;
 class UGVBasic
 {
 public:
-    UGVBasic(ros::NodeHandle &nh);
+    UGVBasic(ros::NodeHandle &nh,Communication *communication);
 
     ~UGVBasic();
 
-    void scanCb(const sensor_msgs::LaserScan::ConstPtr &msg);
+    // void scanCb(const sensor_msgs::LaserScan::ConstPtr &msg);
 
-    void scanMatchedPoints2Cb(const sensor_msgs::PointCloud2::ConstPtr &msg);
+    // void scanMatchedPoints2Cb(const sensor_msgs::PointCloud2::ConstPtr &msg);
 
-    void tfCb(const tf2_msgs::TFMessage::ConstPtr &msg);
+    // void tfCb(const tf2_msgs::TFMessage::ConstPtr &msg);
 
-    void tfStaticCb(const tf2_msgs::TFMessage::ConstPtr &msg);
+    // void tfStaticCb(const tf2_msgs::TFMessage::ConstPtr &msg);
 
-    void constraintListCb(const visualization_msgs::MarkerArray::ConstPtr &msg);
+    // void constraintListCb(const visualization_msgs::MarkerArray::ConstPtr &msg);
 
-    void landmarkPosesListCb(const visualization_msgs::MarkerArray::ConstPtr &msg);
+    // void landmarkPosesListCb(const visualization_msgs::MarkerArray::ConstPtr &msg);
 
-    void trajectoryNodeListCb(const visualization_msgs::MarkerArray::ConstPtr &msg);
+    // void trajectoryNodeListCb(const visualization_msgs::MarkerArray::ConstPtr &msg);
 
     void rheaControlPub(struct RheaControl rhea_control);
 

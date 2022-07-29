@@ -1,10 +1,10 @@
 #include "swarm_control_topic.hpp"
 
 //真机构造
-SwarmControl::SwarmControl(ros::NodeHandle &nh, int id, int swarm_num) // : UAVBasic(nh, Mode::SWARMCONTROL)
+SwarmControl::SwarmControl(ros::NodeHandle &nh, int id, int swarm_num,Communication *communication) // : UAVBasic(nh, Mode::SWARMCONTROL)
 {
     std::cout << "集群  真机模式" << std::endl;
-
+    this->communication_ = communication;
     is_simulation_ = false;
     init(nh, swarm_num, id);
 
@@ -17,10 +17,10 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, int id, int swarm_num) // : UAVB
 }
 
 //仿真构造
-SwarmControl::SwarmControl(ros::NodeHandle &nh, int swarm_num) 
+SwarmControl::SwarmControl(ros::NodeHandle &nh, int swarm_num,Communication *communication) 
 {
     std::cout << "集群 仿真模式" << std::endl;
-
+    this->communication_ = communication;
     is_simulation_ = true;
     init(nh, swarm_num);
 
@@ -39,15 +39,14 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, int swarm_num)
 
 SwarmControl::~SwarmControl()
 {
-    delete this->communication_;
-    this->communication_ = nullptr;
+    // delete this->communication_;
+    // this->communication_ = nullptr;
 }
 
 void SwarmControl::init(ros::NodeHandle &nh, int swarm_num, int id)
 {
     nh.param<std::string>("ground_stationt_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
-    this->communication_ = new Communication(nh);
     for (int i = 1; i <= swarm_num; i++)
     {
         struct UAVState uav_state;

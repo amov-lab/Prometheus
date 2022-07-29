@@ -1,6 +1,7 @@
 #ifndef AUTONOMOUS_LANDING_TOPIC_HPP
 #define AUTONOMOUS_LANDING_TOPIC_HPP
 
+#include <ros/ros.h>
 #include "communication.hpp"
 
 #include "gimbal_basic_topic.hpp"
@@ -9,10 +10,11 @@
 #include "mavros_msgs/ParamSet.h"
 #include "prometheus_msgs/RheaState.h"
 
+
 class AutonomousLanding
 {
 public:
-    AutonomousLanding(ros::NodeHandle &nh);
+    AutonomousLanding(ros::NodeHandle &nh,Communication *communication);
 
     ~AutonomousLanding();
 

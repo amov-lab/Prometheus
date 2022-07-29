@@ -1,11 +1,11 @@
 #include "autonomous_landing_topic.hpp"
 
-AutonomousLanding::AutonomousLanding(ros::NodeHandle &nh)
+AutonomousLanding::AutonomousLanding(ros::NodeHandle &nh,Communication *communication)
 {
     nh.param<int>("ROBOT_ID", robot_id, 0);
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
 
-    this->communication_ = new Communication(nh);
+    this->communication_ = communication;
 
     //prefix.c_str() + std::to_string(robot_id) + 
     //【服务】是否开启搜索
@@ -24,7 +24,7 @@ AutonomousLanding::AutonomousLanding(ros::NodeHandle &nh)
 
 AutonomousLanding::~AutonomousLanding()
 {
-    delete this->communication_;
+    // delete this->communication_;
 };
 
 void AutonomousLanding::gimbalSearchServer(bool is)

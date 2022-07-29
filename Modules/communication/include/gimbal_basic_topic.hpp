@@ -1,6 +1,7 @@
 #ifndef GimbalBasic_HPP
 #define GimbalBasic_HPP
 
+#include <ros/ros.h>
 #include "communication.hpp"
 
 #include "prometheus_msgs/GimbalState.h"
@@ -11,7 +12,7 @@
 class GimbalBasic
 {
 public:
-    GimbalBasic(ros::NodeHandle &nh);
+    GimbalBasic(ros::NodeHandle &nh,Communication *communication);
     ~GimbalBasic();
 
     void stateCb(const prometheus_msgs::GimbalState::ConstPtr &msg);

@@ -1,8 +1,8 @@
 #include "ugv_basic_topic.hpp"
 
-UGVBasic::UGVBasic(ros::NodeHandle &nh)
+UGVBasic::UGVBasic(ros::NodeHandle &nh,Communication *communication)
 {
-    communication_ = new Communication(nh);
+    this->communication_ = communication;
     nh.param<std::string>("ground_stationt_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
 
@@ -26,50 +26,50 @@ UGVBasic::UGVBasic(ros::NodeHandle &nh)
 
 UGVBasic::~UGVBasic()
 {
-    delete this->communication_;
+    // delete this->communication_;
 }
 
-void UGVBasic::scanCb(const sensor_msgs::LaserScan::ConstPtr &msg)
-{
-    sensor_msgs::LaserScan laser_scan = *msg;
-    this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(laser_scan), udp_ip);
-}
+// void UGVBasic::scanCb(const sensor_msgs::LaserScan::ConstPtr &msg)
+// {
+//     sensor_msgs::LaserScan laser_scan = *msg;
+//     this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(laser_scan), udp_ip);
+// }
 
-void UGVBasic::scanMatchedPoints2Cb(const sensor_msgs::PointCloud2::ConstPtr &msg)
-{
-    sensor_msgs::PointCloud2 scan_matched_points2 = *msg;
-    this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(scan_matched_points2), udp_ip);
-}
+// void UGVBasic::scanMatchedPoints2Cb(const sensor_msgs::PointCloud2::ConstPtr &msg)
+// {
+//     sensor_msgs::PointCloud2 scan_matched_points2 = *msg;
+//     this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(scan_matched_points2), udp_ip);
+// }
 
-void UGVBasic::tfCb(const tf2_msgs::TFMessage::ConstPtr &msg)
-{
-    tf2_msgs::TFMessage tf = *msg;
-    this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(tf), udp_ip);
-}
+// void UGVBasic::tfCb(const tf2_msgs::TFMessage::ConstPtr &msg)
+// {
+//     tf2_msgs::TFMessage tf = *msg;
+//     this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(tf), udp_ip);
+// }
 
-void UGVBasic::tfStaticCb(const tf2_msgs::TFMessage::ConstPtr &msg)
-{
-    tf2_msgs::TFMessage tf_static = *msg;
-    this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(tf_static, MsgId::UGVTFSTATIC), udp_ip);
-}
+// void UGVBasic::tfStaticCb(const tf2_msgs::TFMessage::ConstPtr &msg)
+// {
+//     tf2_msgs::TFMessage tf_static = *msg;
+//     this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(tf_static, MsgId::UGVTFSTATIC), udp_ip);
+// }
 
-void UGVBasic::constraintListCb(const visualization_msgs::MarkerArray::ConstPtr &msg)
-{
-    visualization_msgs::MarkerArray constraint_list = *msg;
-    this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(constraint_list), udp_ip);
-}
+// void UGVBasic::constraintListCb(const visualization_msgs::MarkerArray::ConstPtr &msg)
+// {
+//     visualization_msgs::MarkerArray constraint_list = *msg;
+//     this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(constraint_list), udp_ip);
+// }
 
-void UGVBasic::landmarkPosesListCb(const visualization_msgs::MarkerArray::ConstPtr &msg)
-{
-    visualization_msgs::MarkerArray landmark_poses_list = *msg;
-    this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(landmark_poses_list, MsgId::UGVMARKERARRAYLANDMARK), udp_ip);
-}
+// void UGVBasic::landmarkPosesListCb(const visualization_msgs::MarkerArray::ConstPtr &msg)
+// {
+//     visualization_msgs::MarkerArray landmark_poses_list = *msg;
+//     this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(landmark_poses_list, MsgId::UGVMARKERARRAYLANDMARK), udp_ip);
+// }
 
-void UGVBasic::trajectoryNodeListCb(const visualization_msgs::MarkerArray::ConstPtr &msg)
-{
-    visualization_msgs::MarkerArray trajectory_node_list = *msg;
-    this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(trajectory_node_list, MsgId::UGVMARKERARRAYTRAJECTORY), udp_ip);
-}
+// void UGVBasic::trajectoryNodeListCb(const visualization_msgs::MarkerArray::ConstPtr &msg)
+// {
+//     visualization_msgs::MarkerArray trajectory_node_list = *msg;
+//     this->communication_->sendRvizByUdp(this->communication_->encodeRvizMsg(trajectory_node_list, MsgId::UGVMARKERARRAYTRAJECTORY), udp_ip);
+// }
 
 void UGVBasic::rheaControlPub(struct RheaControl rhea_control)
 {
