@@ -64,7 +64,6 @@ void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
     this->uav_state_.battery_state = msg->battery_state;
     this->uav_state_.battery_percetage = msg->battery_percetage;
 
-    std::cout << " stateCb " << std::endl;
     //发送到组播地址
     this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_), multicast_udp_ip);
     setTimeStamp(msg->header.stamp.sec);
