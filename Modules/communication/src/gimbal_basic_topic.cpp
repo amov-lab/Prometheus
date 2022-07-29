@@ -1,9 +1,9 @@
 #include "gimbal_basic_topic.hpp"
 
-GimbalBasic::GimbalBasic(ros::NodeHandle &nh)
+GimbalBasic::GimbalBasic(ros::NodeHandle &nh,Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
-    this->communication_ = new Communication(nh);
+    this->communication_ = communication;
     //【订阅】吊舱状态数据
     this->gimbal_state_sub_ = nh.subscribe("/gimbal/state", 10, &GimbalBasic::stateCb, this);
     //【订阅】跟踪误差
@@ -16,7 +16,7 @@ GimbalBasic::GimbalBasic(ros::NodeHandle &nh)
 
 GimbalBasic::~GimbalBasic()
 {
-    delete this->communication_;
+    // delete this->communication_;
 }
 
 void GimbalBasic::stateCb(const prometheus_msgs::GimbalState::ConstPtr &msg)

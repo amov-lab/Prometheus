@@ -1,9 +1,9 @@
 #include "object_tracking_topic.hpp"
 
-ObjectTracking::ObjectTracking(ros::NodeHandle &nh)
+ObjectTracking::ObjectTracking(ros::NodeHandle &nh,Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", this->multicast_udp_ip, "224.0.0.88");
-    this->communication_ = new Communication(nh); 
+    this->communication_ = communication; 
     this->multi_detection_info_sub_ = nh.subscribe("/deepsort_ros/object_detection_result", 10, &ObjectTracking::multiDetectionInfoCb, this);
 }
 ObjectTracking::~ObjectTracking()

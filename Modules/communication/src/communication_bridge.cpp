@@ -7,7 +7,7 @@ std::mutex g_uav_basic;
 
 #define DEMO1 "gnome-terminal -- roslaunch prometheus_demo takeoff_land.launch"
 
-CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication(nh)
+CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
 {
     //是否仿真 1 为是  0为否
     nh.param<int>("is_simulation", this->is_simulation_, 1);
@@ -18,12 +18,24 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication(nh
     //集群模式下数据更新超时多久进行反馈
     nh.param<int>("swarm_data_update_timeout", this->swarm_data_update_timeout_, 5);
 
+    nh.param<int>("udp_port", UDP_PORT, 8889);
+    nh.param<int>("tcp_port", TCP_PORT, 55555);
+    nh.param<int>("tcp_heartbeat_port", TCP_HEARTBEAT_PORT, 55556);
+    // nh.param<int>("rviz_port", RVIZ_PORT, 8890);
+    nh.param<int>("ROBOT_ID", ROBOT_ID, 1);
+    nh.param<std::string>("ground_stationt_ip", udp_ip, "127.0.0.1");
+    nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
+    nh.param<int>("try_connect_num", try_connect_num, 3);
+
     this->nh_ = nh;
+
+    Communication::init(ROBOT_ID,UDP_PORT,TCP_PORT,TCP_HEARTBEAT_PORT);
 
     bool auto_start = false;
     this->nh_.param<bool>("auto_start", auto_start, false);
     //自动启动话题
-    if(auto_start == true) init();
+    if (auto_start == true)
+        init();
 
     // thread_recCommunicationBridgeiver
     boost::thread recv_thd(&CommunicationBridge::serverFun, this);
@@ -88,11 +100,11 @@ void CommunicationBridge::init()
     //根据载体进行初始化
     if (this->user_type_ == UserType::UAV)
     {
-        this->uav_basic_ = new UAVBasic(this->nh_, ROBOT_ID);
+        this->uav_basic_ = new UAVBasic(this->nh_, ROBOT_ID,(Communication*)this);
     }
     else if (this->user_type_ == UserType::UGV)
     {
-        this->ugv_basic_ = new UGVBasic(this->nh_);
+        this->ugv_basic_ = new UGVBasic(this->nh_,(Communication*)this);
     }
 }
 
@@ -133,333 +145,181 @@ void CommunicationBridge::serverFun()
         //目前只有地面站发送TCP消息、所以TCP服务端接收到数据后开始心跳包的发送
         this->is_heartbeat_ready_ = true;
 
-        decodeMsg(tcp_recv_buf);
+        pubMsg(decodeMsg(tcp_recv_buf));
         close(recv_sock);
     }
 }
 
-//解码
-void CommunicationBridge::decodeMsg(char *buff)
+void CommunicationBridge::recvData(struct UAVState uav_state)
 {
-    //HEAD
-    char *ptr = buff;
 
-    int8_t HEAD = 97;
-    if (HEAD == *((int8_t *)ptr))
+    if (this->swarm_control_ != NULL)
     {
-        ptr += sizeof(int8_t);
-        HEAD = 109;
-        if (HEAD == *((int8_t *)ptr))
-        {
-            ptr += sizeof(int8_t);
-        }
-        else
-        {
-            std::cout << "HEAD2 error" << std::endl;
-            return;
-        }
+        //融合到所有无人机状态然后发布话题
+        this->swarm_control_->updateAllUAVState(uav_state);
+        //发布话题
+        this->swarm_control_->allUAVStatePub(this->swarm_control_->getMultiUAVState());
     }
-    else
-    {
-        std::cout << "HEAD1 error" << std::endl;
-        return;
-    }
-    //LENGTH
-    uint32_t LENGTH = *((uint32_t *)ptr);
-    ptr += sizeof(uint32_t);
-
-    if (LENGTH > (BUF_LEN - sizeof(int8_t) * 3 - sizeof(uint8_t) - sizeof(uint32_t) - sizeof(uint16_t)))
-    {
-        recvBigData(LENGTH + sizeof(int8_t) * 3 + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint16_t), buff);
-        return;
-    }
-
-    //MSG_ID
-    uint8_t MSG_ID = *((uint8_t *)ptr);
-    ptr += sizeof(uint8_t);
-
-    //ROBOT_ID
-    int8_t ROBOT_ID = *((int8_t *)ptr);
-    ptr += sizeof(int8_t);
-
-    //PAYLOAD
-    std::string str = "";
-    for (int i = 0; i < LENGTH; i++)
-    {
-        str += *((char *)ptr);
-        ptr += sizeof(char);
-    }
-
-    //CHECK
-    uint16_t CHECK = *((uint16_t *)ptr);
-    if (CHECK != checksum(buff, ptr - buff))
-    {
-        std::cout << "CHECK error str:" << str << std::endl;
-        return;
-    }
-    ptr += sizeof(uint16_t);
-
-    pubMsg((int)MSG_ID, str);
 }
-
-void CommunicationBridge::recvBigData(int len, char *buff)
+void CommunicationBridge::recvData(struct UAVCommand uav_cmd)
 {
-    char big_buff[len];
-    for (int i = 0; i < BUF_LEN; i++)
+    if (this->uav_basic_ == NULL)
     {
-        big_buff[i] = buff[i];
-    }
-    int recv_len = BUF_LEN;
-
-    int num = BUF_LEN;
-    while (num < len)
-    {
-        char buf[BUF_LEN];
-        close(recv_sock);
-        //等待连接队列中抽取第一个连接，创建一个与s同类的新的套接口并返回句柄。
-        if ((recv_sock = accept(server_fd, (struct sockaddr *)NULL, NULL)) < 0)
-        {
-            perror("accept");
-            exit(EXIT_FAILURE);
-        }
-        //recv函数从TCP连接的另一端接收数据
-        int valread = recv(recv_sock, buf, int(BUF_LEN), 0);
-        usleep(200000);
-        if (valread <= 0)
-        {
-            ROS_ERROR("Received message length <= 0, maybe connection has lost");
-            close(recv_sock);
-            num += BUF_LEN;
-            continue;
-        }
-
-        for (int i = 0; i < valread; i++)
-        {
-            big_buff[recv_len + i] = buf[i];
-        }
-
-        recv_len += valread;
-
-        std::cout << "recv_len: " << recv_len << std::endl;
-
-        num += BUF_LEN;
-    }
-
-    if (recv_len != len)
-    {
-        std::cout << "接收数据不完整" << std::endl;
         return;
     }
-
-    //HEAD
-    char *ptr = big_buff;
-    int8_t HEAD = 97;
-    if (HEAD == *((int8_t *)ptr))
+    this->uav_basic_->uavCmdPub(uav_cmd);
+}
+void CommunicationBridge::recvData(struct SwarmCommand swarm_command)
+{
+    if (this->swarm_control_ == NULL)
     {
-        ptr += sizeof(int8_t);
-        HEAD = 109;
-        if (HEAD == *((int8_t *)ptr))
-        {
-            ptr += sizeof(int8_t);
-        }
-        else
-        {
-            std::cout << "HEAD2 error" << std::endl;
-            return;
-        }
+        return;
+    }
+    if (swarm_command.swarm_num != this->swarm_num_)
+    {
+        struct TextInfo text_info;
+        text_info.MessageType = text_info.WARN;
+        text_info.Message = "ground station swarm num ！= communication module swarm num";
+        text_info.sec = ros::Time::now().sec;
+        sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
+    }
+    //发布话题
+    this->swarm_control_->swarmCommandPub(swarm_command);
+}
+void CommunicationBridge::recvData(struct ConnectState connect_state)
+{
+    if (this->is_simulation_ == 0)
+        return;
+    if (!connect_state.state || connect_state.num < this->swarm_num_)
+        //this->swarm_control_->closeUAVState(connect_state.num);
+        //触发降落信号
+        this->swarm_control_->communicationStatePub(connect_state.state, connect_state.num);
+}
+void CommunicationBridge::recvData(struct GimbalControl gimbal_control)
+{
+    if (this->gimbal_basic_ == NULL)
+    {
+        return;
+    }
+    this->gimbal_basic_->gimbalControlPub(gimbal_control);
+}
+void CommunicationBridge::recvData(struct GimbalService gimbal_service)
+{
+    if (this->autonomous_landing_ == NULL)
+    {
+        return;
+    }
+    if (gimbal_service.service == gimbal_service.search)
+        this->autonomous_landing_->gimbalSearchServer(gimbal_service.data);
+    else if (gimbal_service.service == gimbal_service.record_video)
+        this->autonomous_landing_->gimbalRecordVideoServer(gimbal_service.data);
+    else if (gimbal_service.service == gimbal_service.track_mode)
+        this->autonomous_landing_->gimbalTrackModeServer(gimbal_service.data);
+}
+void CommunicationBridge::recvData(struct GimbalParamSet param_set)
+{
+    if (this->autonomous_landing_ == NULL)
+    {
+        return;
+    }
+    this->autonomous_landing_->gimbalParamSetServer(param_set);
+}
+void CommunicationBridge::recvData(struct WindowPosition window_position)
+{
+    if (this->gimbal_basic_ == NULL)
+    {
+        return;
+    }
+    //如果udp_msg数据不为空 则向udo端口发送数据。否则发布ros话题
+    if (!window_position.udp_msg.empty())
+    {
+        std::cout << "udp_msg size :" << window_position.udp_msg.size() << std::endl;
+        sendMsgByUdp(window_position.udp_msg.size(), window_position.udp_msg.c_str(), "127.0.0.1", SERV_PORT);
     }
     else
     {
-        std::cout << "HEAD1 error" << std::endl;
+        this->gimbal_basic_->gimbalWindowPositionPub(window_position);
+    }
+}
+void CommunicationBridge::recvData(struct RheaControl rhea_control)
+{
+    if (this->ugv_basic_ == NULL)
+    {
         return;
     }
-    //LENGTH
-    uint32_t LENGTH = *((uint32_t *)ptr);
-    ptr += sizeof(uint32_t);
-
-    //MSG_ID
-    uint8_t MSG_ID = *((uint8_t *)ptr);
-    ptr += sizeof(uint8_t);
-
-    //ROBOT_ID
-    int8_t ROBOT_ID = *((int8_t *)ptr);
-    ptr += sizeof(int8_t);
-
-    //PAYLOAD
-    std::string str = "";
-    for (int i = 0; i < LENGTH; i++)
+    this->ugv_basic_->rheaControlPub(rhea_control);
+}
+void CommunicationBridge::recvData(struct RheaState rhea_state)
+{
+    if (this->autonomous_landing_ == NULL)
     {
-        str += *((char *)ptr);
-        ptr += sizeof(char);
-    }
-    //CHECK
-    uint16_t CHECK = *((uint16_t *)ptr);
-    if (CHECK != checksum(big_buff, ptr - big_buff))
-    {
-        std::cout << "CHECK error str:" << str << std::endl;
         return;
     }
-    ptr += sizeof(uint16_t);
-    pubMsg((int)MSG_ID, str);
+    this->autonomous_landing_->rheaStatePub(rhea_state);
+}
+void CommunicationBridge::recvData(struct ImageData image_data)
+{
+    createImage(image_data);
+}
+void CommunicationBridge::recvData(struct UAVSetup uav_setup)
+{
+    if (this->uav_basic_ == NULL)
+    {
+        return;
+    }
+    this->uav_basic_->uavSetupPub(uav_setup);
+}
+void CommunicationBridge::recvData(struct ModeSelection mode_selection)
+{
+    modeSwitch(mode_selection);
 }
 
 //根据协议中MSG_ID的值，将数据段数据转化为正确的结构体
-void CommunicationBridge::pubMsg(int msg_id, std::string str)
+void CommunicationBridge::pubMsg(int msg_id)
 {
-    std::istringstream is(str);
-    boost::archive::text_iarchive ia(is);
-
-    struct SwarmCommand swarm_command;
-    struct UAVState uav_state;
-    struct ConnectState connect_state;
-    struct GimbalControl gimbal_control;
-    struct ModeSelection mode_selection;
-    struct GimbalService gimbal_service;
-    struct WindowPosition window_position;
-    struct RheaControl rhea_control;
-    struct GimbalParamSet param_set;
-    struct RheaState rhea_state;
-    struct ImageData image_data;
-    struct UAVCommand uav_cmd;
-    struct UAVSetup uav_setup;
-
-    struct TextInfo text_info;
-    struct GimbalState gimbal_state;
-    struct VisionDiff vision_diff;
     switch (msg_id)
     {
     case MsgId::UAVSTATE:
-        ia >> uav_state;
-        if (this->swarm_control_ != NULL)
-        {
-            //融合到所有无人机状态然后发布话题
-            this->swarm_control_->updateAllUAVState(uav_state);
-            //发布话题
-            this->swarm_control_->allUAVStatePub(this->swarm_control_->getMultiUAVState());
-        }
+        recvData(recv_uav_state_);
         break;
     case MsgId::SWARMCOMMAND:
-        ia >> swarm_command;
-        if (this->swarm_control_ == NULL)
-        {
-            return;
-        }
-        if (swarm_command.swarm_num != this->swarm_num_)
-        {
-            text_info.MessageType = text_info.WARN;
-            text_info.Message = "ground station swarm num ！= communication module swarm num";
-            text_info.sec = ros::Time::now().sec;
-            sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
-        }
-        //发布话题
-        this->swarm_control_->swarmCommandPub(swarm_command);
-        break;
-    case MsgId::TEXTINFO:
+        recvData(recv_swarm_command_);
         break;
     case MsgId::CONNECTSTATE:
-        ia >> connect_state;
         //集群仿真下有效
-        if (this->is_simulation_ == 0)
-            return;
-        if (!connect_state.state || connect_state.num < this->swarm_num_)
-            //this->swarm_control_->closeUAVState(connect_state.num);
-            //触发降落信号
-            this->swarm_control_->communicationStatePub(connect_state.state, connect_state.num);
-        break;
-    case MsgId::GIMBALSTATE:
-        ia >> gimbal_state;
-        break;
-    case MsgId::VISIONDIFF:
-        ia >> vision_diff;
+        recvData(recv_connect_state_);
         break;
     case MsgId::GIMBALCONTROL:
-        ia >> gimbal_control;
-        if (this->gimbal_basic_ == NULL)
-        {
-            return;
-        }
-        this->gimbal_basic_->gimbalControlPub(gimbal_control);
+        recvData(recv_gimbal_control_);
         break;
     case MsgId::GIMBALSERVICE:
-        ia >> gimbal_service;
-        if (this->autonomous_landing_ == NULL)
-        {
-            return;
-        }
-        if (gimbal_service.service == gimbal_service.search)
-            this->autonomous_landing_->gimbalSearchServer(gimbal_service.data);
-        else if (gimbal_service.service == gimbal_service.record_video)
-            this->autonomous_landing_->gimbalRecordVideoServer(gimbal_service.data);
-        else if (gimbal_service.service == gimbal_service.track_mode)
-            this->autonomous_landing_->gimbalTrackModeServer(gimbal_service.data);
+        recvData(recv_gimbal_service_);
         break;
     case MsgId::GIMBALPARAMSET:
-        ia >> param_set;
-        if (this->autonomous_landing_ == NULL)
-        {
-            return;
-        }
-        this->autonomous_landing_->gimbalParamSetServer(param_set);
+        recvData(recv_param_set_);
         break;
     case MsgId::WINDOWPOSITION:
-        ia >> window_position;
-        if (this->gimbal_basic_ == NULL)
-        {
-            return;
-        }
-        //如果udp_msg数据不为空 则向udo端口发送数据。否则发布ros话题
-        if (!window_position.udp_msg.empty())
-        {
-            std::cout << "udp_msg size :" << window_position.udp_msg.size() << std::endl;
-            sendMsgByUdp(window_position.udp_msg.size(), window_position.udp_msg.c_str(), "127.0.0.1", SERV_PORT);
-        }
-        else
-        {
-            this->gimbal_basic_->gimbalWindowPositionPub(window_position);
-        }
+        recvData(recv_window_position_);
         break;
     case MsgId::RHEACONTROL:
-        ia >> rhea_control;
-        if (this->ugv_basic_ == NULL)
-        {
-            return;
-        }
-        this->ugv_basic_->rheaControlPub(rhea_control);
+        recvData(recv_rhea_control_);
         break;
     case MsgId::RHEASTATE:
-        ia >> rhea_state;
-        if (this->autonomous_landing_ == NULL)
-        {
-            return;
-        }
-        this->autonomous_landing_->rheaStatePub(rhea_state);
+        recvData(recv_rhea_state_);
         break;
     case MsgId::IMAGEDATA:
-        ia >> image_data;
-        createImage(image_data);
+        recvData(recv_image_data_);
         break;
     case MsgId::UAVCOMMAND:
-        ia >> uav_cmd;
-        if (this->uav_basic_ == NULL)
-        {
-            return;
-        }
-        this->uav_basic_->uavCmdPub(uav_cmd);
+        recvData(recv_uav_cmd_);
         break;
     case MsgId::UAVSETUP:
-        ia >> uav_setup;
-        if (this->uav_basic_ == NULL)
-        {
-            return;
-        }
-        this->uav_basic_->uavSetupPub(uav_setup);
+        recvData(recv_uav_setup_);
         break;
     case MsgId::MODESELECTION:
-        ia >> mode_selection;
-        modeSwitch(mode_selection);
+        recvData(recv_mode_selection_);
         break;
     default:
-        std::cout << "MSG_ID not find " << msg_id << std::endl;
         break;
     }
 }
@@ -546,7 +406,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 }
 
                 //创建并存入
-                this->swarm_control_simulation_[mode_selection.selectId[i]] = new UAVBasic(this->nh_, mode_selection.selectId[i]);
+                this->swarm_control_simulation_[mode_selection.selectId[i]] = new UAVBasic(this->nh_, mode_selection.selectId[i],(Communication*)this);
                 text_info.Message = "create UAVBasic simulation id :" + to_string(mode_selection.selectId[i]) + "...";
                 //如果id与通信节点相同则存入uav_basic_
                 if (ROBOT_ID == mode_selection.selectId[i])
@@ -575,7 +435,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 {
                     if (this->uav_basic_ == NULL)
                     {
-                        this->uav_basic_ = new UAVBasic(this->nh_, ROBOT_ID);
+                        this->uav_basic_ = new UAVBasic(this->nh_, ROBOT_ID,(Communication*)this);
                         text_info.Message = "create UAVBasic :" + to_string(ROBOT_ID) + "...";
 
                         //启动 uav_control节点
@@ -599,7 +459,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
     {
         if (this->ugv_basic_ == NULL)
         {
-            this->ugv_basic_ = new UGVBasic(this->nh_);
+            this->ugv_basic_ = new UGVBasic(this->nh_,(Communication*)this);
             text_info.Message = "UGVBasic";
             sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
             system(CLOSEUGVBASIC);
@@ -638,7 +498,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
             }
             if (this->swarm_control_ == NULL)
             {
-                this->swarm_control_ = new SwarmControl(this->nh_, this->swarm_num_);
+                this->swarm_control_ = new SwarmControl(this->nh_, this->swarm_num_,(Communication*)this);
                 //this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, this->swarm_num);
                 text_info.Message = "simulation SwarmControl: swarm_num:" + std::to_string(this->swarm_num_);
                 sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
@@ -651,7 +511,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
             {
                 if (mode_selection.selectId[i] == ROBOT_ID)
                 {
-                    this->swarm_control_ = new SwarmControl(this->nh_, ROBOT_ID, this->swarm_num_);
+                    this->swarm_control_ = new SwarmControl(this->nh_, ROBOT_ID, this->swarm_num_,(Communication*)this);
                     text_info.Message = "SwarmControl: swarm_num:" + std::to_string(this->swarm_num_);
                     sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
                     break;
@@ -683,12 +543,12 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             if (this->gimbal_basic_ == NULL)
             {
-                this->gimbal_basic_ = new GimbalBasic(this->nh_);
+                this->gimbal_basic_ = new GimbalBasic(this->nh_,(Communication*)this);
             }
             //自主降落
             if (this->autonomous_landing_ == NULL)
             {
-                this->autonomous_landing_ = new AutonomousLanding(this->nh_);
+                this->autonomous_landing_ = new AutonomousLanding(this->nh_,(Communication*)this);
             }
             text_info.Message = "AutonomousLanding";
             sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
@@ -702,11 +562,11 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             if (this->gimbal_basic_ == NULL)
             {
-                this->gimbal_basic_ = new GimbalBasic(this->nh_);
+                this->gimbal_basic_ = new GimbalBasic(this->nh_,(Communication*)this);
             }
             if (this->object_tracking_ == NULL)
             {
-                this->object_tracking_ = new ObjectTracking(this->nh_);
+                this->object_tracking_ = new ObjectTracking(this->nh_,(Communication*)this);
             }
             text_info.Message = "ObjectTracking";
             sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
@@ -872,7 +732,7 @@ void CommunicationBridge::multicastUdpFun()
         //std::lock_guard<std::mutex> lg(g_m);
 
         std::cout << "udp valread: " << valread << std::endl;
-        decodeMsg(udp_recv_buf);
+        pubMsg(decodeMsg(udp_recv_buf));
     }
 }
 
@@ -966,7 +826,7 @@ void CommunicationBridge::toGroundStationFun()
                 {
                     //反馈地面站
                     struct TextInfo text_info;
-                    text_info.MessageType = TextInfo::MessageTypeGrade::WARN;
+                    text_info.MessageType = TextInfo::MessageTypeGrade::ERROR;
                     if (this->uav_basic_ != NULL)
                         text_info.Message = "UAV" + to_string(ROBOT_ID) + " data update timeout";
                     else
