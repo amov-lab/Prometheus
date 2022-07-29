@@ -1,12 +1,12 @@
 <launch>
 	<!-- 启动仿真环境 -->
-	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_indoor_1uav.launch">
 		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/future_aircraft.world" />
-		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_future_aircraft/p450_future_aircraft.sdf" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p230_future_aircraft/p230_future_aircraft.sdf" />
 	</include>
 
 	<!-- 启动prometheus控制器 -->
-	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
+	<include file="$(find prometheus_uav_control)/launch/uav_control_main_indoor.launch">
 		<arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
 	</include>
 

@@ -27,13 +27,13 @@
       <link name="prometheus_logo">
         <pose> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
         <visual name="visual">
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <box>
-              <size>20.0 10.0 0.01</size>
-            </box>
-          </geometry>
-          <!-- <material>
+            <cast_shadows>true</cast_shadows>
+            <geometry>
+              <box>
+                <size>20.0 10.0 0.01</size>
+              </box>
+            </geometry>
+            <!-- <material>
               <script>
                 <uri>model://logo_ground/texture.material</uri>
                 <name>logo_ground</name>
