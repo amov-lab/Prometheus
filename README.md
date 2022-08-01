@@ -61,6 +61,6 @@ Prometheus是一套开源的**自主无人机软件系统平台**，为无人机
 
 ## 版权声明
 
- - 本项目受 BSD 3-Clause 协议保护。点击 [LICENSE](https://wiki.amovlab.com/public/prometheus-wiki/Prometheus-%E8%87%AA%E4%B8%BB%E6%97%A0%E4%BA%BA%E6%9C%BA%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/%E5%BC%80%E6%BA%90License%E5%8F%8A%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E.html)了解更多
+ - 本项目受 Apache License 2.0 协议保护。点击 [LICENSE](https://wiki.amovlab.com/public/prometheus-wiki/Prometheus-%E8%87%AA%E4%B8%BB%E6%97%A0%E4%BA%BA%E6%9C%BA%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/%E5%BC%80%E6%BA%90License%E5%8F%8A%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E.html)了解更多
  - 本项目仅限个人使用，请勿用于商业用途。
  - 如利用本项目进行营利活动，阿木实验室将追究侵权行为。
