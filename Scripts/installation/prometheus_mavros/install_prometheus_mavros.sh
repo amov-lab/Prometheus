@@ -1,7 +1,20 @@
 #!/bin/bash
 SHELL_FOLDER=$(dirname $(readlink -f "$0"))
-sudo apt update &&\
-sudo apt-get install python-catkin-tools python-rosinstall-generator -y &&\
+sudo apt update
+
+UBUNTU_RELEASE="`lsb_release -rs`"
+
+if [[ "${UBUNTU_RELEASE}" == "18.04" ]]; then
+	echo "Ubuntu 18.04"
+    sudo apt-get install python-catkin-tools python-rosinstall-generator -y
+elif [[ "${UBUNTU_RELEASE}" == "20.04" ]]; then
+	echo "Ubuntu 20.04"
+    sudo apt-get install python3-catkin-tools python3-rosinstall-generator -y
+else
+    echo "no supported"
+    exit 1
+fi
+
 
 mkdir -p ~/prometheus_mavros/src &&\
 cd ~/prometheus_mavros &&\

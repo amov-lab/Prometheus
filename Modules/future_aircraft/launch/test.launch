@@ -1,0 +1,9 @@
+<launch>
+	<!-- 椭圆识别 -->
+    <node pkg="prometheus_detection" type="ellipse_det" name="ellipse_det" output="screen">
+        <param name="input_image_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
+        <param name="camera_height_topic" type="string" value="/uav/hgt" />
+        <param name="camera_params" type="string" value="$(find prometheus_demo)/advanced/future_aircraft/conf/calib_sitl.yaml"/>
+    </node>
+
+</launch>

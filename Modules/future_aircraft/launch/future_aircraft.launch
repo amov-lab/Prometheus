@@ -1,0 +1,22 @@
+<launch>
+	<!-- 启动仿真环境 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_indoor_1uav.launch">
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/future_aircraft.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p230_future_aircraft/p230_future_aircraft.sdf" />
+	</include>
+
+	<!-- 启动prometheus控制器 -->
+	<include file="$(find prometheus_uav_control)/launch/uav_control_main_indoor.launch">
+		<arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
+	</include>
+
+	<!-- 椭圆识别 -->
+    <node pkg="prometheus_detection" type="ellipse_det" name="ellipse_det" output="screen">
+        <param name="input_image_topic" type="string" value="/prometheus/sensor/monocular_down/image_raw" />
+        <param name="camera_height_topic" type="string" value="/uav/hgt" />
+        <param name="camera_params" type="string" value="$(find prometheus_future_aircraft)/conf/calib_sitl.yaml"/>
+    </node>
+
+	<!-- gazebo 动目标控制 -->
+	<node pkg="prometheus_future_aircraft" type="locus.py" name="future_aircraft_sitle"/>
+</launch>
