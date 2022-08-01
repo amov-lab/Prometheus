@@ -39,6 +39,17 @@ add_message_files(
   FormationAssign.msg
   OffsetPose.msg
   GPSData.msg
+
+#communication
+  DetectionInfo.msg
+  GimbalControl.msg
+  GimbalState.msg
+  MultiDetectionInfoSub.msg
+  RheaCommunication.msg
+  RheaGPS.msg
+  RheaState.msg
+  VisionDiff.msg
+  WindowPosition.msg
 )
 
 add_action_files(
