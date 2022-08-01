@@ -1,0 +1,154 @@
+
+material amov/prometheus
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      emissive .5 .5 .5 1.0
+      alpha_rejection greater 128
+
+      texture_unit
+      {
+        texture prometheus.png
+        filtering anistorpic
+        max_anisotropy 16
+      }
+    }
+  }
+}
+
+material amov/amov
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      emissive .5 .5 .5 1.0
+      alpha_rejection greater 128
+
+      texture_unit
+      {
+        texture amov.png
+        filtering anistorpic
+        max_anisotropy 16
+      }
+    }
+  }
+}
+
+material amov/logo
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      emissive .5 .5 .5 1.0
+      alpha_rejection greater 128
+
+      texture_unit
+      {
+        texture logo.png
+        filtering anistorpic
+        max_anisotropy 16
+      }
+    }
+  }
+}
+
+material amov/slogan
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      emissive .5 .5 .5 1.0
+      alpha_rejection greater 128
+
+      texture_unit
+      {
+        texture slogan_2.png
+        filtering anistorpic
+        max_anisotropy 16
+      }
+    }
+  }
+}
+
+material amov/company_name
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      emissive .5 .5 .5 1.0
+      alpha_rejection greater 128
+
+      texture_unit
+      {
+        texture company_name.png
+        filtering anistorpic
+        max_anisotropy 16
+      }
+    }
+  }
+}
+
+material amov/uni
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      emissive .5 .5 .5 1.0
+      alpha_rejection greater 128
+
+      texture_unit
+      {
+        texture Uni.png
+        filtering anistorpic
+        max_anisotropy 16
+      }
+    }
+  }
+}
+
+material amov/competition_name
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      emissive .5 .5 .5 1.0
+      alpha_rejection greater 128
+
+      texture_unit
+      {
+        texture competition_name.png
+        filtering anistorpic
+        max_anisotropy 16
+      }
+    }
+  }
+}

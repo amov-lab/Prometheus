@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="future_aircraft_target_move">
+    <pose>0 0 0.01 0 0 0</pose>
+    <static>false</static>
+    <link name="link">
+      <inertial>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.8 0.8 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.8 0.8 0.02</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_target_move/materials/scripts</uri>
+            <uri>model://future_aircraft_target_move/materials/textures</uri>
+            <name>Cube/future_aircraft_target_move</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <!-- NOTE: 发布gazebo中的位姿信息 -->
+    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>30.0</updateRate>
+      <bodyName>link</bodyName>
+      <topicName>ground_truth/future_aircraft_target_move</topicName>
+      <gaussianNoise>0.00</gaussianNoise>
+      <frameName>world</frameName>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
+    </plugin>
+<!-- 使用python 脚本控制 -->
+    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometryRate>30.0</odometryRate>
+      <robotBaseFrame>base_link</robotBaseFrame>
+    </plugin>
+
+  </model>
+</sdf>

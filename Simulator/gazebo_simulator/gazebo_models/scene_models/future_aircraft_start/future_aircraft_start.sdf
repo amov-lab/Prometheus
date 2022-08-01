@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="future_aircraft_start">
+    <pose>0 0 0.01 0 0 0</pose>
+    <static>false</static>
+    <link name="link">
+      <inertial>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>1 1 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>1 1 0.02</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://future_aircraft_start/materials/scripts</uri>
+            <uri>model://future_aircraft_start/materials/textures</uri>
+            <name>Cube/future_aircraft_start</name>
+          </script>
+          <color>
+            <rgba>255 0 0 0.5</rgba>>
+          </color>
+        </material>
+      </visual>
+    </link>
+    <!-- NOTE: 发布gazebo中的位姿信息 -->
+    <!-- <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>30.0</updateRate>
+      <bodyName>link</bodyName>
+      <topicName>ground_truth/future_aircraft_start</topicName>
+      <gaussianNoise>0.00</gaussianNoise>
+      <frameName>word</frameName>
+      <xyzOffsets>0 0 0</xyzOffsets>
+      <rpyOffsets>0 0 0</rpyOffsets>
+    </plugin> -->
+
+  </model>
+</sdf>

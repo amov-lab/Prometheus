@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(prometheus_demo)
+project(prometheus_future_aircraft)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   message_generation  
   roscpp
@@ -21,6 +23,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   mavros_msgs
   prometheus_msgs
+  cv_bridge
+  image_transport
 )
 
 ##  System dependencies are found with CMake's conventions
@@ -51,8 +55,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
-  advanced/autonomous_landing/include
+  include ../tutorial_demo/advanced/autonomous_landing/include
   ${catkin_INCLUDE_DIRS}
   ../common/include
 )
@@ -75,36 +78,18 @@ include_directories(
 
 #add_executable(formation_control formation_control/formation_control.cpp)
 #target_link_libraries(formation_control ${catkin_LIBRARIES})
+add_executable(future_aircraft src/future_aircraft.cpp)
+target_link_libraries(future_aircraft ${catkin_LIBRARIES})
 
-add_executable(takeoff_land basic/takeoff_land/src/takeoff_land.cpp)
-target_link_libraries(takeoff_land ${catkin_LIBRARIES})
+add_executable(ellipse_det
+    src/ellipse_det.cpp
+    src/ellipse_detector/ellipse_detector.cpp
+)
+target_include_directories(ellipse_det PUBLIC
+    src/ellipse_detector/
+)
+target_link_libraries(ellipse_det ${catkin_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
-add_executable(takeoff_land_no_rc basic/takeoff_land/src/takeoff_land_no_rc.cpp)
-target_link_libraries(takeoff_land_no_rc ${catkin_LIBRARIES})
-
-add_executable(global_pos_control basic/global_pos_control/src/global_pos_control.cpp)
-target_link_libraries(global_pos_control ${catkin_LIBRARIES})
-
-add_executable(enu_xyz_pos_control basic/enu_xyz_pos_control/src/enu_xyz_pos_control.cpp)
-target_link_libraries(enu_xyz_pos_control ${catkin_LIBRARIES})
-
-add_executable(body_xyz_pos_control basic/body_xyz_pos_control/src/body_xyz_pos_control.cpp)
-target_link_libraries(body_xyz_pos_control ${catkin_LIBRARIES})
-
-add_executable(circular_trajectory_control basic/circular_trajectory_control/src/circular_trajectory_control.cpp)
-target_link_libraries(circular_trajectory_control ${catkin_LIBRARIES})
-
-add_executable(formation_control advanced/formation_control/src/formation_control.cpp)
-target_link_libraries(formation_control ${catkin_LIBRARIES})
-
-add_executable(autonomous_landing advanced/autonomous_landing/src/autonomous_landing.cpp)
-target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
-
-add_executable(siamrpn_track advanced/siamrpn_track/src/siamrpn_track.cpp)
-target_link_libraries(siamrpn_track ${catkin_LIBRARIES})
-
-add_executable(find_aruco_marker advanced/find_aruco_marker/src/find_aruco_marker.cpp)
-target_link_libraries(find_aruco_marker ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -115,10 +100,10 @@ target_link_libraries(find_aruco_marker ${catkin_LIBRARIES})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-  # advanced/future_aircraft/scripts/locus.py
-  # DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(PROGRAMS
+  scripts/locus.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
@@ -148,6 +133,7 @@ install(DIRECTORY launch/
 #############
 ## Testing ##
 #############
+
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_prometheus_demo.cpp)
