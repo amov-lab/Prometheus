@@ -6,7 +6,7 @@ control:
   # 是否支持外部控制
   enable_external_control : false
   ## 起飞高度
-  Takeoff_height : 1.0
+  Takeoff_height : 1.5
   ## 降落速度
   Land_speed : 0.2
   ##　上锁高度
