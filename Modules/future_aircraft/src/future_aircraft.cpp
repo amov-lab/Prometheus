@@ -12,49 +12,39 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/DetectionInfo.h>
+#include <prometheus_msgs/MultiDetectionInfo.h>
+#include <sstream>
 #include <unistd.h>
+#include <math.h>
 #include <Eigen/Eigen>
 #include "printf_utils.h"
 #include "mission_utils.h"
 
 using namespace std;
 
+#define VISION_THRES 10
+#define HOLD_THRES 60
+const float PI = 3.1415926;
+
 //创建无人机相关数据变量
 prometheus_msgs::UAVCommand uav_command;
 prometheus_msgs::UAVState uav_state;
 prometheus_msgs::UAVControlState uav_control_state;
 Eigen::Matrix3f R_Body_to_ENU;      // 无人机机体系至惯性系转换矩阵
-Detection_result ellipse_det;
+prometheus_msgs::DetectionInfo ellipse_det;
 float camera_offset[3];
 //static target1
-Eigen::Vector3d waypoint1 = {8.0, 0, 0};
-Eigen::Vector3d waypoint2 = {-8.0, 2, 0};
-Eigen::Vector3d waypoint3 = {8.0, 2, 0};
-//static target2
-Eigen::Vector3d waypoint4 = {0, 5, 2};//ENU
-Eigen::Vector3d waypoint5 = {8.0, 0, 0};
-Eigen::Vector3d waypoint6 = {-8.0, 2, 0};
-Eigen::Vector3d waypoint7 = {8.0, 2, 0};
-//move target3
-Eigen::Vector3d waypoint8 = {10.0, 0, 2};//ENU
-Eigen::Vector3d waypoint9 = {8.0, 2, 0};
-Eigen::Vector3d waypoint10 = {-8.0, 2, 0};
-Eigen::Vector3d waypoint11 = {8.0, 2, 0};
-Eigen::Vector3d waypoint12 = {-8.0, 2, 0};
 // 最大目标丢失计数
 constexpr int max_loss_count = 30;
 int loss_count = max_loss_count;
+int num_lost = 0;          //视觉丢失计数器
+int num_regain = 0; 
+bool is_detected = false;
+int hold_count = 0;
+int hold_lost = 0;
+bool is_holded = false;
 
-// 四种状态机
-enum EXEC_STATE
-{
-    TAKEOFF,
-    SEARCH,
-    TRACKING,
-    LOST,
-    RETURN,
-};
-EXEC_STATE exec_state;//志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
+
 void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
 {
     uav_state = *msg;
@@ -68,48 +58,56 @@ void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg)
     uav_control_state = *msg;
 }
 
-void ellipse_det_cb(const prometheus_msgs::DetectionInfo::ConstPtr &msg)
+void ellipse_det_cb(const prometheus_msgs::MultiDetectionInfo::ConstPtr &msg)
 {
-    ellipse_det.object_name = "T";
-    ellipse_det.Detection_info = *msg;
-    // 相机安装误差 在mission_utils.h中设置
-    // 相机坐标到机体坐标系x、y轴需要交换，并且方向相反。
-    ellipse_det.pos_body_frame[0] = -ellipse_det.Detection_info.position[1] + camera_offset[0];
-    ellipse_det.pos_body_frame[1] = -ellipse_det.Detection_info.position[0] + camera_offset[1];
-    ellipse_det.pos_body_frame[2] = -ellipse_det.Detection_info.position[2] + camera_offset[2];
-
-    ellipse_det.pos_body_enu_frame = R_Body_to_ENU * ellipse_det.pos_body_frame;
+    // g_ellipse_det. = false;
+    for(auto &ellipes : msg->detection_infos)
+    {
+        ellipse_det = ellipes;
+        if (ellipse_det.detected && ellipse_det.object_name == "T")
+        {
+            num_regain++;
+            num_lost = 0;
+        }
+        else{
+            num_regain = 0;
+            num_lost++;
+        }
+        if(num_lost > VISION_THRES)
+        {
+            is_detected = false;
+            // PCOUT(1, GREEN, "no detect");
+        }
+        if(num_regain > VISION_THRES){
+            is_detected = true;
+            // PCOUT(1, GREEN, "detected");
+        }
+        ellipse_det.sight_angle[0] = ellipes.sight_angle[1];
+        ellipse_det.sight_angle[1] = ellipes.sight_angle[0];
+        // ellipse_det.position[2] = -ellipes.position[2];
+    }
     
-    // 机体惯性系 -> 惯性系
-    ellipse_det.pos_enu_frame[0] = uav_state.position[0] + ellipse_det.pos_body_enu_frame[0];
-    ellipse_det.pos_enu_frame[1] = uav_state.position[1] + ellipse_det.pos_body_enu_frame[1];
-    ellipse_det.pos_enu_frame[2] = uav_state.position[2] + ellipse_det.pos_body_enu_frame[2];
-    // 此降落方案不考虑偏航角
-    ellipse_det.att_enu_frame[2] = 0.0;
-
-    if (ellipse_det.Detection_info.detected)
-    {
-        ellipse_det.num_regain++;
-        ellipse_det.num_lost = 0;
-    }
-    else
-    {
-        ellipse_det.num_regain = 0;
-        ellipse_det.num_lost++;
-    }
-
-    // 当连续一段时间无法检测到目标时，认定目标丢失
-    if (ellipse_det.num_lost > VISION_THRES)
-    {
-        ellipse_det.Detection_info.detected = false;
-        ellipse_det.is_detected = false;
-    }
-
-    // 当连续一段时间检测到目标时，认定目标得到
-    if (ellipse_det.num_regain > VISION_THRES)
-    {
-        ellipse_det.is_detected = true;
-    }
+}
+// 创建圆形跟踪的相关变量
+// 整个圆形的飞行时间
+float circular_time;
+// 每次控制数据更新时的弧度增量
+float angle_increment;
+// 无人机的合速度也就是圆的线速度
+float line_velocity;
+// 无人机的控制频率
+float control_rate;
+// 圆的半径
+float radius;
+//通过设定整个圆的飞行时间,控制频率,圆的半径来获取相关参数
+void get_circular_property(float time, int rate, float radius)
+{
+    //计算角速度(rad/s)
+    float w = 2 * PI / time;
+    //计算线速度(m/s)
+    line_velocity = radius * w;
+    //计算控制数据发布的弧度增量
+    angle_increment = w / rate;
 }
 
 //主函数
@@ -136,14 +134,25 @@ int main(int argc, char** argv)
     //创建无人机控制状态命令订阅者
     ros::Subscriber uav_control_state_sub = n.subscribe<prometheus_msgs::UAVControlState>("/uav1/prometheus/control_state", 10, uav_control_state_cb);
 
-    ros::Subscriber ellipse_det_sub = n.subscribe<prometheus_msgs::DetectionInfo>("/prometheus/ellipse_det", 10, ellipse_det_cb);
-    //循环频率设置为1HZ
-    ros::Rate r(1);
-    //创建命令发布标志位,命令发布则为true;初始化为false
-    bool cmd_pub_flag = false;
-    uav_command.Command_ID = 1;
-    exec_state = EXEC_STATE::TAKEOFF;
+    ros::Subscriber ellipse_det_sub = n.subscribe<prometheus_msgs::MultiDetectionInfo>("/prometheus/ellipse_det", 10, ellipse_det_cb);
+    
+    // 圆轨迹周期
+    circular_time = 40;
+    control_rate = 20;
+    // 圆轨迹半径
+    radius = 2.5;
 
+    // 获取线速度line_velocity， 角速度angle_increment
+    get_circular_property(circular_time, control_rate, radius);
+    int count = 0;
+    bool circular_success = false;
+    
+    //循环频率设置为**HZ
+    ros::Rate r(control_rate);
+
+    Eigen::Vector3d waypoint1 = {-4.5, -3.0, 1.5};
+    Eigen::Vector3d waypoint2 = {-4.5, 3.0, 1.5};
+    Eigen::Vector3d waypoint3 = {4.5, 0, 2.3};
     //固定的浮点显示
     cout.setf(ios::fixed);
     // setprecision(n) 设显示小数精度为2位
@@ -162,6 +171,21 @@ int main(int argc, char** argv)
     sleep(1);
     cout << GREEN << " Please use the RC SWA to armed, and the SWB to switch the drone to [COMMAND_CONTROL] mode  " << TAIL << endl;
 
+    // 四种状态机
+    enum EXEC_STATE
+    {
+        TAKEOFF,
+        WAY1,
+        WAY2,
+        WAY3,
+        SEARCH,
+        SEARCH_MOVING,
+        TRACKING,
+        TRACKING_MOVING,
+        LOST,
+        RETURN,
+    };
+    EXEC_STATE exec_state = TAKEOFF;//志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
 
     while(ros::ok())
     {
@@ -173,262 +197,279 @@ int main(int argc, char** argv)
             PCOUT(-1, TAIL, "Waiting for enter COMMAND_CONTROL state");
             continue;
         }
+        // else{
+        //     uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
+        //     PCOUT(-1, TAIL, "hold for now");
+        // }
+
+        std::ostringstream info;
+        uav_command.header.stamp = ros::Time::now();
         switch (exec_state)
         {
-
-            case TAKEOFF:
+        case TAKEOFF:
+            uav_command.header.frame_id = "ENU";
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+            PCOUT(1, GREEN, "Go to takeoff point");
+            // info << "height is : " << uav_state.position[2];
+            // PCOUT(1, GREEN, info.str());
             {
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "ENU";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                if(fabs(uav_state.position[2] - takeoff_height) >= 0.2)
+                if(fabs(uav_state.position[2] - takeoff_height) < 0.1)
                 {
-                    continue;
+                    PCOUT(1, GREEN, " UAV arrived at takeoff point");
+                    exec_state = WAY1;
                 }
-                cout << GREEN << " UAV takeoff successfully and search after 5 seconds" << TAIL << endl;
-                sleep(5);
-                exec_state = SEARCH;
             }
-            case SEARCH:
+            break;
+        case WAY1:
+            uav_command.header.frame_id = "ENU";
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+            uav_command.position_ref[0] = waypoint1[0];
+            uav_command.position_ref[1] = waypoint1[1];
+            uav_command.position_ref[2] = waypoint1[2];
+            uav_command.yaw_ref = 0.0;
+            PCOUT(1, GREEN, "Waypoint1 ");
+            // exec_state = SEARCH;
             {
-                if(ellipse_det.is_detected)
+                Eigen::Vector3d uav_pos = {uav_state.position[0], uav_state.position[1], uav_state.position[2]};
+                float distance = (uav_pos - waypoint1).norm();
+                if (distance < 0.1)
                 {
-                    exec_state = TRACKING;
-                    loss_count = max_loss_count;
+                    // sleep(10);
+                    PCOUT(1, GREEN, " UAV arrived at waypoint1 point");
+                    exec_state = SEARCH;
+                    count = 0;
                 }
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                uav_command.position_ref[0] = waypoint1[0];
-                uav_command.position_ref[1] = waypoint1[1];
-                uav_command.position_ref[2] = waypoint1[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint1" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint2[0];
-                uav_command.position_ref[1] = waypoint2[1];
-                uav_command.position_ref[2] = waypoint2[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint2" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint3[0];
-                uav_command.position_ref[1] = waypoint3[1];
-                uav_command.position_ref[2] = waypoint3[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint3" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "ENU";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
-                uav_command.position_ref[0] = waypoint4[0];
-                uav_command.position_ref[1] = waypoint4[1];
-                uav_command.position_ref[2] = waypoint4[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint4" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint5[0];
-                uav_command.position_ref[1] = waypoint5[1];
-                uav_command.position_ref[2] = waypoint5[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint5" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint6[0];
-                uav_command.position_ref[1] = waypoint6[1];
-                uav_command.position_ref[2] = waypoint6[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint6" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint7[0];
-                uav_command.position_ref[1] = waypoint7[1];
-                uav_command.position_ref[2] = waypoint7[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint7" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "ENU";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint8[0];
-                uav_command.position_ref[1] = waypoint8[1];
-                uav_command.position_ref[2] = waypoint8[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint8" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint9[0];
-                uav_command.position_ref[1] = waypoint9[1];
-                uav_command.position_ref[2] = waypoint9[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint9" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint10[0];
-                uav_command.position_ref[1] = waypoint10[1];
-                uav_command.position_ref[2] = waypoint10[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint10" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint11[0];
-                uav_command.position_ref[1] = waypoint11[1];
-                uav_command.position_ref[2] = waypoint11[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint11" << TAIL << endl;
-
-                sleep(15);
-
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "BODY";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS_BODY;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = waypoint12[0];
-                uav_command.position_ref[1] = waypoint12[1];
-                uav_command.position_ref[2] = waypoint12[2];
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "waypoint12" << TAIL << endl;
-
-                sleep(30);
-
-                exec_state = RETURN;
-
-
-                
             }
-            case TRACKING:
+            break;
+        case WAY2:
+            uav_command.header.frame_id = "ENU";
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+            uav_command.position_ref[0] = waypoint2[0];
+            uav_command.position_ref[1] = waypoint2[1];
+            uav_command.position_ref[2] = waypoint2[2];
+            uav_command.yaw_ref = 0.0;
+            PCOUT(1, GREEN, "Waypoint2 ");
             {
-                if (!ellipse_det.is_detected)
+                Eigen::Vector3d uav_pos = {uav_state.position[0], uav_state.position[1], uav_state.position[2]};
+                float distance = (uav_pos - waypoint2).norm();
+                if (distance < 0.2)
                 {
-                    --loss_count;
-                    if(loss_count < 0)
-                        exec_state = SEARCH;
-                    break;
+                    sleep(10);
+                    PCOUT(1, GREEN, " UAV arrived at waypoint2 point");
+                    exec_state = SEARCH;
+                    count = 0;
                 }
-                //坐标系
-                uav_command.header.frame_id = "BODY";
-                // Move模式
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                // 机体系下的速度控制
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY;
-                uav_command.velocity_ref[0] = 0.5 * ellipse_det.Detection_info.position[0];
-                uav_command.velocity_ref[1] = 0.5 * ellipse_det.Detection_info.position[1];
-                uav_command.position_ref[2] = 1.0;
-                uav_command.yaw_ref = 0.0;
-                // info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
-                //         << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
-                //         << std::endl;
-                // PCOUT(1, GREEN, info.str());
-                break;
             }
-            case RETURN:
+            break;
+        case WAY3:
+            uav_command.header.frame_id = "ENU";
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+            uav_command.position_ref[0] = waypoint3[0];
+            uav_command.position_ref[1] = waypoint3[1];
+            uav_command.position_ref[2] = waypoint3[2];
+            uav_command.yaw_ref = 0.0;
+            PCOUT(1, GREEN, "Waypoint3 ");
             {
-                // return to home 
-                uav_command.header.stamp = ros::Time::now();
-                uav_command.header.frame_id = "ENU";
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
-                uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
-                // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-                uav_command.position_ref[0] = 0;
-                uav_command.position_ref[1] = 0;
-                uav_command.position_ref[2] = 1;
-                uav_command.yaw_ref = 0.0;
-                uav_command.Command_ID += 1;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "return to home" << TAIL << endl;
-
-                sleep(15);
-                uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
-                uav_command_pub.publish(uav_command);
-                cout << GREEN << "landing" << TAIL << endl;
+                Eigen::Vector3d uav_pos = {uav_state.position[0], uav_state.position[1], uav_state.position[2]};
+                float distance = (uav_pos - waypoint3).norm();
+                if (distance < 0.2)
+                {
+                    sleep(10);
+                    PCOUT(1, GREEN, " UAV arrived at waypoint3 point");
+                    exec_state = SEARCH_MOVING;
+                }
             }
+            break;
+        case SEARCH:
+            // sleep(10);
+            //坐标系
+            uav_command.header.frame_id = "ENU";
+            // Move模式
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            // Move_mode
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS;
+            //无人机按照圆形轨迹飞行
+
+            uav_command.velocity_ref[0] = -line_velocity * std::sin(count * angle_increment);
+            uav_command.velocity_ref[1] = line_velocity * std::cos(count * angle_increment);
+            uav_command.velocity_ref[2] = 0;
+            uav_command.position_ref[2] = 1.5;
+            //发布的命令ID加1
+            //发布降落命令
+            //计数器
+            if(count > control_rate*circular_time)
+            {
+                circular_success = true;
+                count = 0;
+            }
+            count++;
+            info << "Waypoint Tracking > Velocity_x: " << uav_command.velocity_ref[0] << " Veloticy_y: " << uav_command.velocity_ref[1]<< " count: " << count;
+            PCOUT(1, GREEN, info.str());
+            if(is_detected && circular_success)
+            {
+                exec_state = TRACKING;
+                PCOUT(1, GREEN, "tracking");
+                loss_count = max_loss_count;
+            }
+            break;
+        case SEARCH_MOVING:
+            // sleep(10);
+            //坐标系
+            uav_command.header.frame_id = "ENU";
+            // Move模式
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            // Move_mode
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS;
+            //无人机按照圆形轨迹飞行
+            get_circular_property(31, 40, 5);
+
+            uav_command.velocity_ref[0] = -line_velocity * std::sin(count * angle_increment);
+            uav_command.velocity_ref[1] = line_velocity * std::cos(count * angle_increment);
+            uav_command.velocity_ref[2] = 0;
+            uav_command.position_ref[2] = 2.3;
+            //发布的命令ID加1
+            //发布降落命令
+            //计数器
+            if(count > control_rate*circular_time)
+            {
+                circular_success = true;
+            }
+            count++;
+            info << "Waypoint Tracking > Velocity_x: " << uav_command.velocity_ref[0] << " Veloticy_y: " << uav_command.velocity_ref[1];
+            PCOUT(1, GREEN, info.str());
+            if(is_detected && circular_success)
+            {
+                exec_state = TRACKING_MOVING;
+                PCOUT(1, GREEN, "tracking");
+                loss_count = max_loss_count;
+            }
+            break;
+        case TRACKING:
+            if (!is_detected)
+            {
+                --loss_count;
+                if(loss_count < 0)
+                    exec_state = RETURN;
+                    PCOUT(0, YELLOW, "Return");
+            }
+            //坐标系
+            uav_command.header.frame_id = "BODY";
+            // Move模式
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            // 机体系下的速度控制
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY;
+            uav_command.velocity_ref[0] = -0.9 * ellipse_det.sight_angle[0];
+            uav_command.velocity_ref[1] = 0.9 * ellipse_det.sight_angle[1];
+            uav_command.velocity_ref[2] = 0;
+            uav_command.position_ref[2] = 1.5;
+            uav_command.yaw_ref = 0.0;
+            info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
+                    << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
+                    << std::endl;
+            PCOUT(1, GREEN, info.str());
+            if(is_holded && circular_success){
+                if(uav_state.position[0] > -9 && uav_state.position[0] < 0)
+                    if(uav_state.position[1] > -4 && uav_state.position[1] < 0)
+                        exec_state = WAY2;
+                if(uav_state.position[0] > -9 && uav_state.position[0] < 0)
+                    if(uav_state.position[1] > 0 && uav_state.position[1] < 4)
+                        exec_state = WAY3;
+            }
+
+            if (std::abs(uav_command.velocity_ref[0]) + std::abs(uav_command.velocity_ref[1]) < 0.03)
+            {
+                hold_count++;
+                hold_lost = 0;
+            }
+            else{
+                hold_count = 0;
+                hold_lost++;
+            }
+            if(hold_lost > HOLD_THRES)
+            {
+                is_holded = false;
+                // PCOUT(1, GREEN, "no hold");
+            }
+            if(hold_count > HOLD_THRES){
+                is_holded = true;
+                // PCOUT(1, GREEN, "holded");
+            }
+            break;
+        case TRACKING_MOVING:
+            if (!is_detected)
+            {
+                --loss_count;
+                if(loss_count < 0)
+                    exec_state = RETURN;
+                    PCOUT(0, YELLOW, "Return");
+            }
+            //坐标系
+            uav_command.header.frame_id = "BODY";
+            // Move模式
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            // 机体系下的速度控制
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY;
+            uav_command.velocity_ref[0] = -2.5 * ellipse_det.sight_angle[0];
+            uav_command.velocity_ref[1] = 2 * ellipse_det.sight_angle[1];
+            uav_command.velocity_ref[2] = 0;
+            uav_command.position_ref[2] = 2.3;
+            uav_command.yaw_ref = 0.0;
+            info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
+                    << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
+                    << std::endl;
+            PCOUT(1, GREEN, info.str());
+            // if(is_holded){
+            //     if(uav_state.position[0] > -9 && uav_state.position[0] < 0)
+            //         if(uav_state.position[1] > -4 && uav_state.position[1] < 0)
+            //             exec_state = WAY2;
+            //     if(uav_state.position[0] > -9 && uav_state.position[0] < 0)
+            //         if(uav_state.position[1] > 0 && uav_state.position[1] < 4)
+            //             exec_state = WAY3;
+            // }
+
+            if (std::abs(uav_command.velocity_ref[0]) + std::abs(uav_command.velocity_ref[1]) < 0.03)
+            {
+                hold_count++;
+                hold_lost = 0;
+            }
+            else{
+                hold_count = 0;
+                hold_lost++;
+            }
+            if(hold_lost > HOLD_THRES)
+            {
+                is_holded = false;
+                // PCOUT(1, GREEN, "no hold");
+            }
+            if(hold_count > HOLD_THRES){
+                is_holded = true;
+                // PCOUT(1, GREEN, "holded");
+            }
+            break;
+        case RETURN:
+            // return to home 
+            uav_command.header.frame_id = "ENU";
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
+            uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
+            // uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+            uav_command.position_ref[0] = 0;
+            uav_command.position_ref[1] = 0;
+            uav_command.position_ref[2] = 1;
+            uav_command.yaw_ref = 0.0;
+            cout << GREEN << "return to home" << TAIL << endl;
+
+            sleep(15);
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Land;
+            cout << GREEN << "landing" << TAIL << endl;
+
+            break;
         }
+        uav_command.Command_ID += 1;
+        uav_command_pub.publish(uav_command);
+        r.sleep();
     }
     return 0;
 }
