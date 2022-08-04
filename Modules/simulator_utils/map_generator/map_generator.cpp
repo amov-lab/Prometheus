@@ -467,9 +467,21 @@ void Map_Generator::pub_local_map_cb(const ros::TimerEvent &event, int uav_id)
 {
     if (!global_map_ok || !uav_odom_ok[uav_id])
     {
-        cout << RED << "[map_generator] fail to pub local map." << TAIL << endl;
+        if(local_map_ready)
+        {
+            cout << RED << "[map_generator] pub local map fail." << TAIL << endl;
+        }
+        local_map_ready = false;
         return;
-    }
+    }else
+    {
+        if(!local_map_ready)
+        {
+            cout << GREEN << "[map_generator] pub local map success." << TAIL << endl;
+        }
+        local_map_ready = true;
+        
+    } 
 
     // 读取无人机姿态
     Eigen::Quaterniond q;
