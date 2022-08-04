@@ -41,7 +41,7 @@ add_message_files(
   GPSData.msg
 
 #communication
-  DetectionInfo.msg
+  DetectionInfoSub.msg
   GimbalControl.msg
   GimbalState.msg
   MultiDetectionInfoSub.msg
