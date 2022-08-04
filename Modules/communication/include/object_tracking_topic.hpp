@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include "communication.hpp"
 #include "prometheus_msgs/MultiDetectionInfoSub.h"
-#include "prometheus_msgs/DetectionInfo.h"
+#include "prometheus_msgs/DetectionInfoSub.h"
 
 class ObjectTracking
 {
