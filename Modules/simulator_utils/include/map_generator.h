@@ -54,6 +54,7 @@ public:
     // 无人机odom状态量
     bool uav_odom_ok[MAX_SWRAM_NUM] = {false};
     nav_msgs::Odometry uav_odom[MAX_SWRAM_NUM];
+    bool local_map_ready{false};
 
     bool global_map_ok = false;
     pcl::PointCloud<pcl::PointXYZ> global_map_pcl; // 全局点云地图 - pcl格式
