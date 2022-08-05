@@ -6,5 +6,6 @@ mkdir build
 cd build
 cmake ..
 make
-python3 ../gen_wts.py
-sudo ./yolov5 -s
+cd .. && ./weights/download_weights.sh
+python3 gen_wts.py
+sudo build/yolov5 -s
