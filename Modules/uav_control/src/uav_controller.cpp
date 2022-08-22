@@ -212,7 +212,11 @@ void UAV_controller::mainloop()
 
         if(sim_mode)
         {
-
+            // 检查无人机是否位于定点模式，否则切换至定点模式
+            if (uav_state.mode != "POSCTL")
+            {
+                set_px4_mode_func("POSCTL");
+            }
         }else
         {
             // 检查无人机是否位于定点模式，否则切换至定点模式
@@ -486,37 +490,44 @@ void UAV_controller::set_command_des()
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL_BODY)
         {
-            float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
-            float d_vel_enu[2];
-            rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
-            uav_command.velocity_ref[0] = d_vel_enu[0];
-            uav_command.velocity_ref[1] = d_vel_enu[1];
-            pos_des[0] = 0.0;
-            pos_des[1] = 0.0;
-            pos_des[2] = 0.0;
-            vel_des[0] = uav_command.velocity_ref[0];
-            vel_des[1] = uav_command.velocity_ref[1];
-            vel_des[2] = uav_command.velocity_ref[2];
-            acc_des << 0.0, 0.0, 0.0;
-            yaw_rate_des = uav_command.yaw_rate_ref;
-            yaw_des = uav_command.yaw_ref;
+            if(uav_command.Command_ID > uav_command_last.Command_ID)
+            {
+                float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
+                float d_vel_enu[2];
+                rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
+                uav_command.velocity_ref[0] = d_vel_enu[0];
+                uav_command.velocity_ref[1] = d_vel_enu[1];
+                pos_des[0] = 0.0;
+                pos_des[1] = 0.0;
+                pos_des[2] = 0.0;
+                vel_des[0] = uav_command.velocity_ref[0];
+                vel_des[1] = uav_command.velocity_ref[1];
+                vel_des[2] = uav_command.velocity_ref[2];
+                acc_des << 0.0, 0.0, 0.0;
+                yaw_rate_des = uav_command.yaw_rate_ref;
+                yaw_des = uav_command.yaw_ref;
+            }
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY)
         {
-            // 【XY_VEL_Z_POS_BODY】Z轴定高，偏航角固定，XY速度转换为惯性系
-            float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
-            float d_vel_enu[2];
-            rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
-            uav_command.velocity_ref[0] = d_vel_enu[0];
-            uav_command.velocity_ref[1] = d_vel_enu[1];
-            pos_des[0] = 0.0;
-            pos_des[1] = 0.0;
-            pos_des[2] = uav_command.position_ref[2];
-            vel_des[0] = uav_command.velocity_ref[0];
-            vel_des[1] = uav_command.velocity_ref[1];
-            vel_des[2] = 0.0;
-            acc_des << 0.0, 0.0, 0.0;
-            yaw_des = uav_command.yaw_ref;
+            if(uav_command.Command_ID > uav_command_last.Command_ID)
+            {
+                // 【XY_VEL_Z_POS_BODY】Z轴定高，偏航角固定，XY速度转换为惯性系
+                float d_vel_body[2] = {uav_command.velocity_ref[0], uav_command.velocity_ref[1]};
+                float d_vel_enu[2];
+                rotation_yaw(uav_yaw, d_vel_body, d_vel_enu);
+                uav_command.velocity_ref[0] = d_vel_enu[0];
+                uav_command.velocity_ref[1] = d_vel_enu[1];
+                pos_des[0] = 0.0;
+                pos_des[1] = 0.0;
+                pos_des[2] = uav_command.position_ref[2];
+                vel_des[0] = uav_command.velocity_ref[0];
+                vel_des[1] = uav_command.velocity_ref[1];
+                vel_des[2] = 0.0;
+                acc_des << 0.0, 0.0, 0.0;
+                yaw_des = uav_command.yaw_ref;
+            }
+            
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
         {
@@ -769,8 +780,9 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
     if (rc_input.toggle_land && if_in_hover_or_command_mode)
     {
-        rc_input.toggle_land = false;
+        //rc_input.toggle_land = false;
         control_state = CONTROL_STATE::LAND_CONTROL;
+        set_landing_des = false;
         return;
     }
 
@@ -791,8 +803,14 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 如果无人机没有解锁或者无人机处于LAND_CONTROL下，则不需要判断模式切换指令，直接返回
-    if (!uav_state.armed || control_state == CONTROL_STATE::LAND_CONTROL)
+    // // 如果无人机没有解锁或者无人机处于LAND_CONTROL下，则不需要判断模式切换指令，直接返回
+    // if (!uav_state.armed || control_state == CONTROL_STATE::LAND_CONTROL)
+    // {
+    //     return;
+    // }
+
+    // 如果无人机没有解锁，则不需要判断模式切换指令，直接返回
+    if (!uav_state.armed)
     {
         return;
     }
