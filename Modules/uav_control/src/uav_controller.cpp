@@ -376,7 +376,9 @@ Eigen::Vector4d UAV_controller::get_cmd_from_controller()
 void UAV_controller::set_hover_pose_with_odom()
 {
     // 设定悬停点
-    Hover_position = uav_pos;
+    Hover_position[0] = uav_pos[0] - offset_pose.x;
+    Hover_position[1] = uav_pos[1] - offset_pose.y;
+    Hover_position[2] = uav_pos[2];
     Hover_yaw = uav_yaw;
 
     last_set_hover_pose_time = ros::Time::now();
@@ -419,7 +421,9 @@ void UAV_controller::set_command_des()
         // 【Current_Pos_Hover】 当前位置悬停
         if (uav_command_last.Agent_CMD != prometheus_msgs::UAVCommand::Current_Pos_Hover)
         {
-            Hover_position = uav_pos;
+            Hover_position[0] = uav_pos[0] - offset_pose.x;
+            Hover_position[1] = uav_pos[1] - offset_pose.y;
+            Hover_position[2] = uav_pos[2];
             Hover_yaw = uav_yaw;
         }
         pos_des << Hover_position;
@@ -626,7 +630,9 @@ void UAV_controller::set_command_des_for_pos_controller()
         // 【Current_Pos_Hover】 悬停。当前位置悬停
         if (uav_command_last.Agent_CMD != prometheus_msgs::UAVCommand::Current_Pos_Hover)
         {
-            Hover_position = uav_pos;
+            Hover_position[0] = uav_pos[0] - offset_pose.x;
+            Hover_position[1] = uav_pos[1] - offset_pose.y;
+            Hover_position[2] = uav_pos[2];
             Hover_yaw = uav_yaw;
         }
         pos_des << Hover_position;
@@ -747,7 +753,9 @@ void UAV_controller::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg
     // 将无人机解锁位置设定为起飞点
     if (uav_state.armed && !uav_state_last.armed)
     {
-        Takeoff_position = uav_pos;
+        Takeoff_position[0] = uav_pos[0] - offset_pose.x;
+        Takeoff_position[1] = uav_pos[1] - offset_pose.y;
+        Takeoff_position[1] = uav_pos[2];
         Takeoff_yaw = uav_yaw;
     }
 
@@ -787,7 +795,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
     }
 
     // 解锁，条件: 无人机已上锁
-    if (rc_input.toggle_arm && !uav_state.armed)
+    if (rc_input.toggle_arm)
     {
         rc_input.toggle_arm = false;
         arm_disarm_func(true);
@@ -796,7 +804,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
 
     // 上锁，条件: 无人机已解锁
     // PX4代码规定:无人机必须处于地面时才可以上锁
-    if (rc_input.toggle_disarm && uav_state.armed)
+    if (rc_input.toggle_disarm)
     {
         rc_input.toggle_arm = false;
         arm_disarm_func(false);

@@ -15,16 +15,16 @@
     <arg name="uav3_id" default="3"/>
     <arg name="uav4_id" default="4"/>
 	<!-- 无人机初始位置 -->
-	<arg name="uav1_init_x" default="1.5"/>
+	<arg name="uav1_init_x" default="4.5"/>
     <arg name="uav1_init_y" default="0.0"/>
 	<arg name="uav1_init_yaw" default="0.0"/>
-    <arg name="uav2_init_x" default="0.5"/>
+    <arg name="uav2_init_x" default="1.5"/>
     <arg name="uav2_init_y" default="0.0"/>
 	<arg name="uav2_init_yaw" default="0.0"/>
-    <arg name="uav3_init_x" default="-0.5"/>
+    <arg name="uav3_init_x" default="-1.5"/>
     <arg name="uav3_init_y" default="0.0"/>
 	<arg name="uav3_init_yaw" default="0.0"/>
-    <arg name="uav4_init_x" default="-1.5"/>
+    <arg name="uav4_init_x" default="-4.5"/>
     <arg name="uav4_init_y" default="0.0"/>
 	<arg name="uav4_init_yaw" default="0.0"/>
 
