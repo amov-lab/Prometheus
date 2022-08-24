@@ -40,6 +40,10 @@ add_message_files(
   OffsetPose.msg
   GPSData.msg
 
+  # UWB msg
+  LinktrackNode2.msg
+  LinktrackNodeframe2.msg
+
 #communication
   DetectionInfoSub.msg
   GimbalControl.msg

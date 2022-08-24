@@ -33,6 +33,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【订阅】无人机当前欧拉角 坐标系:ENU系 - 来自飞控
     px4_attitude_sub = nh.subscribe<sensor_msgs::Imu>(uav_name + "/mavros/imu/data", 1, &UAV_estimator::px4_att_cb, this);
 
+     // 【订阅】无人机定高雷达数据 - 来自飞控
+    px4_range_sub = nh.subscribe<sensor_msgs::Range>(uav_name + "/mavros/distance_sensor/hrlv_ez4_pub", 10, &UAV_estimator::px4_range_cb, this);
+
     // 根据设定的定位来源订阅不同的定位数据
     if (location_source == prometheus_msgs::UAVState::MOCAP)
     {
@@ -66,7 +69,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
-        // uwb todo
+        // 【订阅】UWB
+        uwb_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>("/nlink_linktrack_nodeframe2", 10, &UAV_estimator::uwb_cb, this);
     }
     else
     {
@@ -91,7 +95,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【发布】运行状态信息(-> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
-    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO)
+    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB)
     {
         // 【定时器】当需要使用外部定位设备时，需要定时发送vision信息至飞控,并保证一定频率
         timer_px4_vision_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_vision_pose, this);
@@ -196,6 +200,18 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     else if (location_source == prometheus_msgs::UAVState::T265)
     {
         vision_pose = t265_pose;
+    }
+    else if (location_source == prometheus_msgs::UAVState::UWB)
+    {
+        // vision_pose = uwb_pose;
+        vision_pose.pose.position.x = pos_drone_uwb[0];
+        vision_pose.pose.position.y = pos_drone_uwb[1];
+        vision_pose.pose.position.z = uav_state.range;
+
+        vision_pose.pose.orientation.x = q_uwb.x();
+        vision_pose.pose.orientation.y = q_uwb.y();
+        vision_pose.pose.orientation.z = q_uwb.z();
+        vision_pose.pose.orientation.w = q_uwb.w();
     }
     else
     {
@@ -334,6 +350,11 @@ void UAV_estimator::px4_battery_cb(const sensor_msgs::BatteryState::ConstPtr &ms
     uav_state.battery_percetage = msg->percentage;
 }
 
+void UAV_estimator::px4_range_cb(const sensor_msgs::Range::ConstPtr &msg)
+{
+    uav_state.range = msg->range;
+}
+
 void UAV_estimator::gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr &msg)
 {
     uav_state.gps_status = msg->fix_type;
@@ -350,6 +371,17 @@ void UAV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     gazebo_pose.header = msg->header;
     gazebo_pose.pose = msg->pose.pose;
     get_gazebo_stamp = ros::Time::now(); // 记录时间戳，防止超时
+}
+
+void UAV_estimator::uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg)
+{
+    pos_drone_uwb[0] = msg->pos_3d[0];
+    pos_drone_uwb[1] = msg->pos_3d[1];
+    pos_drone_uwb[2] = msg->pos_3d[2];
+    q_uwb = Eigen::Quaterniond(msg->quaternion[0],msg->quaternion[1],msg->quaternion[2],msg->quaternion[3]);
+    Euler_uwb = quaternion_to_euler(q_uwb);
+
+    get_uwb_stamp = ros::Time::now(); // 记录时间戳，防止超时
 }
 
 void UAV_estimator::t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
@@ -410,6 +442,10 @@ void UAV_estimator::check_uav_state()
     {
         cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
     }
+    else if (odom_state == 6 && last_odom_state != 6)
+    {
+        cout << YELLOW << node_name << "--->  Odom invalid: Get UWB Pose Timeout! " << TAIL << endl;
+    }
 
     if (odom_state == 9 || odom_state == 5)
     {
@@ -436,6 +472,11 @@ int UAV_estimator::check_uav_odom()
         return 1;
     }
     else if (location_source == prometheus_msgs::UAVState::T265 && (time_now - get_t265_stamp).toSec() > T265_TIMEOUT)
+    {
+        return 1;
+    }
+    // UWB
+    else if (location_source == prometheus_msgs::UAVState::UWB && (time_now - get_uwb_stamp).toSec() > UWB_TIMEOUT)
     {
         return 1;
     }
@@ -474,8 +515,6 @@ int UAV_estimator::check_uav_odom()
             return 5;
         }
     }
-    //UWB todo
-
     return 9;
 }
 
@@ -540,7 +579,7 @@ void UAV_estimator::printf_uav_state()
         printf_gps_status();
     case prometheus_msgs::UAVState::UWB:
         cout << GREEN << "Location: [ UWB ] " << TAIL;
-        // todo
+        cout << GREEN << "UWB_pos [X Y Z] : " << pos_drone_uwb[0]  << " [ m ] " << pos_drone_uwb[1] << " [ m ] " << pos_drone_uwb[2] << " [ m ] " << TAIL << endl;
         break;
     }
 
@@ -650,7 +689,7 @@ void UAV_estimator::printf_param()
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
-        cout << GREEN << "location_source: [GPS] " << TAIL << endl;
+        cout << GREEN << "location_source: [UWB] " << TAIL << endl;
     }
     else
     {
