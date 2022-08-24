@@ -31,6 +31,7 @@ generate_messages(
   nav_msgs
   sensor_msgs
   std_msgs
+  prometheus_msgs
 )
 
 catkin_package(
