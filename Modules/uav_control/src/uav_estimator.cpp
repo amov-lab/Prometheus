@@ -726,8 +726,8 @@ void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::Con
     // 每个飞机的local_position还是在起飞坐标系
     // 所以发布控制指令也要加上偏差
     offset_pose.uav_id = uav_id;
-    offset_pose.x = enu_offset[0];
-    offset_pose.y = enu_offset[1];
+    offset_pose.x = enu_offset[0] - uav_state.position[0] + msg->x;
+    offset_pose.y = enu_offset[1] - uav_state.position[1] + msg->y;
 
     local_pose_offset_pub.publish(offset_pose);
 }

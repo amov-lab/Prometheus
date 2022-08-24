@@ -19,8 +19,6 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->text_info_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/text_info", 10, &UAVBasic::textInfoCb, this);
     //【订阅】uav控制状态信息
     this->uav_control_state_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/control_state", 10, &UAVBasic::controlStateCb, this);
-    //【订阅】偏移量
-    this->offset_pose_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/offset_pose", 10, &UAVBasic::offsetPoseCb, this);
     //【发布】底层控制指令(-> uav_control.cpp)
     this->uav_cmd_pub_ = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(id) + "/prometheus/command", 1);
     //【发布】mavros接口调用指令(-> uav_control.cpp)
@@ -78,13 +76,6 @@ void UAVBasic::textInfoCb(const prometheus_msgs::TextInfo::ConstPtr &msg)
 
     //发送到组播地址
     this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_), multicast_udp_ip);
-}
-
-//【订阅】偏移量
-void UAVBasic::offsetPoseCb(const prometheus_msgs::OffsetPose::ConstPtr &msg)
-{
-    this->offset_pose_.x = msg->x;
-    this->offset_pose_.y = msg->y;
 }
 
 void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &msg)

@@ -110,6 +110,8 @@ void uav1_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
     origin_gps.latitude  = msg->latitude;
     origin_gps.longitude = msg->longitude;
     origin_gps.altitude  = msg->altitude;
+    origin_gps.x = msg->position[0];
+    origin_gps.y = msg->position[1];
 }
 
 int main(int argc, char** argv)
@@ -177,6 +179,10 @@ int main(int argc, char** argv)
             uav_command.position_ref[0] = leader_pos[0] + separation(i,0);
             uav_command.position_ref[1] = leader_pos[1] + separation(i,1);
             uav_command.position_ref[2] = leader_pos[2] + separation(i,2);
+            if(uav_command.position_ref[2] < 1)
+            {
+                uav_command.position_ref[2] = 1;
+            }
 
             uav_command_pub[i].publish(uav_command); 
         }
