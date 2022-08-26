@@ -26,9 +26,6 @@ public:
     //【回调】uav反馈信息
     void textInfoCb(const prometheus_msgs::TextInfo::ConstPtr &msg);
 
-    //【订阅】偏移量
-    void offsetPoseCb(const prometheus_msgs::OffsetPose::ConstPtr &msg);
-
     void controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &msg);
 
     struct UAVState getUAVState();
@@ -48,8 +45,6 @@ private:
     ros::Subscriber text_info_sub_;
     //控制状态
     ros::Subscriber uav_control_state_sub_;
-    //偏移量订阅
-    ros::Subscriber offset_pose_sub_;
 
     ros::Publisher uav_cmd_pub_;
 

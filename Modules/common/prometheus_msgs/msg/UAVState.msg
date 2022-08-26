@@ -38,6 +38,8 @@ uint8 GPS_FIX_TYPE_PPP=8
 
 ## 无人机位置、速度、姿态
 float32[3] position                 ## [m]
+## 无人机定高雷达                     ## [m]
+float32  range
 ## 无人机经度、纬度、高度
 float32 latitude                       
 float32 longitude
