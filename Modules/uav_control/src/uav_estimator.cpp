@@ -59,6 +59,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         gps_status_sub = nh.subscribe<mavros_msgs::GPSRAW>(uav_name + "/mavros/gpsstatus/gps1/raw", 10, &UAV_estimator::gps_status_cb, this);
         // 【订阅】无人机当前经纬度，来自飞控
         px4_global_position_sub = nh.subscribe<sensor_msgs::NavSatFix>(uav_name + "/mavros/global_position/global", 1, &UAV_estimator::px4_global_pos_cb, this);
+        // 【订阅】无人机当前真实高度，来自飞控
+        px4_global_position_sub = nh.subscribe<std_msgs::Float64>(uav_name + "/mavros/global_position/rel_alt", 1, &UAV_estimator::px4_global_rel_alt_cb, this);
         // 【订阅】设置ENU坐标系下无人机的位置偏移量  坐标系:ENU系 - 来自地面站/终端窗口
         set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GPSData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
         // 【发布】ENU坐标系下的位置偏移量
@@ -305,6 +307,11 @@ void UAV_estimator::px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &ms
     uav_state.latitude = msg->latitude;
     uav_state.longitude = msg->longitude;
     uav_state.altitude = msg->altitude;
+}
+
+void UAV_estimator::px4_global_rel_alt_cb(const std_msgs::Float64::ConstPtr &msg)
+{
+    uav_state.rel_alt = msg->data;
 }
 
 void UAV_estimator::px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)

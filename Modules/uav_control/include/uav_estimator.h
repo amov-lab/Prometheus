@@ -114,6 +114,7 @@ class UAV_estimator
         void px4_state_cb(const mavros_msgs::State::ConstPtr &msg);
         void px4_battery_cb(const sensor_msgs::BatteryState::ConstPtr &msg);
         void px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &msg);
+        void px4_global_rel_alt_cb(const std_msgs::Float64::ConstPtr &msg);
         void px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
         void px4_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
         void px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg);
