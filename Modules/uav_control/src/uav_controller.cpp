@@ -755,8 +755,10 @@ void UAV_controller::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg
     {
         Takeoff_position[0] = uav_pos[0] - offset_pose.x;
         Takeoff_position[1] = uav_pos[1] - offset_pose.y;
-        Takeoff_position[1] = uav_pos[2];
+        Takeoff_position[2] = uav_pos[2];
         Takeoff_yaw = uav_yaw;
+        cout << GREEN << "Set Takeoff_position [X Y Z] : " << Takeoff_position[0] << " [ m ] " << Takeoff_position[1] << " [ m ] " << Takeoff_position[2] << " [ m ] " << TAIL << endl;
+        cout << GREEN << "Set Takeoff_yaw : " << Takeoff_yaw/3.1415926*180 << " [ deg ] " << TAIL << endl;
     }
 
     uav_state_last = uav_state;

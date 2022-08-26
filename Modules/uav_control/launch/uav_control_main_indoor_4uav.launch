@@ -49,6 +49,7 @@
     <arg name="joy_enable" default="true"/>
     <group if="$(arg joy_enable)">
         <node pkg="prometheus_uav_control" type="joy_node" name="joy_node" output="screen">
+            <param name="agent_num" value="4" />
         </node>
     </group>
 </launch>

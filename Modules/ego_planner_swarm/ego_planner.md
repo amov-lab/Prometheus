@@ -28,9 +28,7 @@ cd Prometheus/Scripts/simulation/ego_planner/
 四机版本
 ./ego_planner_4uav.sh
 
-飞机加载完毕后，检查报错，然后解锁-切换至COMMAND_CONTROL模式，无人机自动起飞
-
-然后，给定目标点即可
+飞机加载完毕后，检查报错，然后解锁-切换至COMMAND_CONTROL模式，无人机自动起飞，然后，给定目标点即可
 
 ## 如何发布目标点
 
@@ -42,4 +40,5 @@ cd Prometheus/Scripts/simulation/ego_planner/
 
 ## 注意事项
 
+ - roslaunch prometheus_simulator_utils map_generator.launch 可以在这个launch 文件中定义新的场景
  - 在规划过程中（没有抵达目标点的时候），可以切换至RC_POS_CONTROL，但如果切换回COMMAND_CONTROL模式，可能会发生碰撞。正确的做法是发布一个悬停目标点（99.99）。
