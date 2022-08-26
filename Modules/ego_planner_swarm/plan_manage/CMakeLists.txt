@@ -59,5 +59,8 @@ target_link_libraries(traj_server ${catkin_LIBRARIES})
 add_executable(traj_server_for_prometheus src_for_prometheus/traj_server_for_prometheus.cpp)
 target_link_libraries(traj_server_for_prometheus ${catkin_LIBRARIES})
 
-add_executable(ego_goal_pub src_for_prometheus/ego_goal_pub.cpp)
-target_link_libraries(ego_goal_pub ${catkin_LIBRARIES})
+add_executable(pub_goal src_for_prometheus/pub_goal.cpp)
+target_link_libraries(pub_goal ${catkin_LIBRARIES})
+
+add_executable(pub_preset_goal src_for_prometheus/pub_preset_goal.cpp)
+target_link_libraries(pub_preset_goal ${catkin_LIBRARIES})

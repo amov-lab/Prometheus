@@ -39,18 +39,28 @@
 
   <!-- main node -->
   <node pkg="ego_planner" name="uav$(arg uav_id)_ego_planner_node" type="ego_planner_node" output="screen">
+    <!-- odom话题 -->
     <remap from="~odom_world" to="/uav$(arg uav_id)/$(arg odometry_topic)"/>
+    <!-- 发布的B样条话题 -->
     <remap from="~planning/bspline" to = "/uav$(arg uav_id)/planning/bspline"/>
+    <!-- 显示话题 -->
     <remap from="~planning/data_display" to = "/uav$(arg uav_id)/planning/data_display"/>
+    <!-- 订阅 广播的B样条 -->
     <remap from="~planning/broadcast_bspline_from_planner" to = "/broadcast_bspline"/>
+    <!-- 发布 广播的B样条 -->
     <remap from="~planning/broadcast_bspline_to_planner" to = "/broadcast_bspline"/>
 
+    <!-- 地图中的odom话题 -->
     <remap from="~grid_map/odom" to="/uav$(arg uav_id)/$(arg odometry_topic)"/>
+    <!-- 地图中点云话题 -->
     <remap from="~grid_map/cloud" to="/uav$(arg uav_id)/$(arg cloud_topic)"/>
+    <!-- 地图中相机位姿话题 -->
     <remap from="~grid_map/pose"   to = "/uav$(arg uav_id)/$(arg camera_pose_topic)"/> 
+    <!-- 地图中相机深度话题 -->
     <remap from="~grid_map/depth" to = "/uav$(arg uav_id)/$(arg depth_topic)"/>
     
     <!-- planning fsm -->
+    <!-- 不同的目标点给定方式 -->
     <param name="fsm/flight_type" value="$(arg flight_type)" type="int"/>
     <!-- 重规划时间间隔，如果要增大规划频率，则减小该数值 -->
     <param name="fsm/thresh_replan_time" value="1.0" type="double"/>

@@ -32,8 +32,8 @@ using namespace std;
         ros::NodeHandle global_planner_nh;
 
     private:
-        // 参数
-        int uav_id;
+        string uav_name;   // 无人机名字
+        int uav_id;        // 无人机编号
         bool sim_mode;
         int map_input_source;
         double fly_height;

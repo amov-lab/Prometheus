@@ -54,7 +54,7 @@ int main(int argc, char **argv)
   // [发布] EGO规划结果
   pos_cmd_pub = nh.advertise<quadrotor_msgs::PositionCommand>(uav_name + "/position_cmd", 50);
 
-  // [订阅] EGO规划结果 - to Prometheus
+  // [订阅] EGO规划结果 - to Prometheus uav_control
   uav_cmd_pub = nh.advertise<prometheus_msgs::UAVCommand>(uav_name + "/prometheus/command", 50);
 
   // [定时器] EGO规划结果发布定时器
@@ -88,12 +88,12 @@ void pub_prometheus_command(quadrotor_msgs::PositionCommand ego_traj_cmd)
   uav_command.Command_ID = uav_command.Command_ID + 1;
   if (control_flag == 0)
   {
-    // pos_controller
+    // 轨迹追踪
     uav_command.Move_mode = prometheus_msgs::UAVCommand::TRAJECTORY;
   }
   else if (control_flag == 1)
   {
-    // px4_sender
+    // 目标点追踪
     uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
   }
   uav_command.position_ref[0] = ego_traj_cmd.position.x;
