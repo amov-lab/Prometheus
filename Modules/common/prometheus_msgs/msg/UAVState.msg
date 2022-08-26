@@ -42,6 +42,7 @@ float32[3] position                 ## [m]
 float32 latitude                       
 float32 longitude
 float32 altitude
+float32 rel_alt
 ## 无人机速度、姿态
 float32[3] velocity                 ## [m/s]
 ## 无人机姿态（欧拉角、四元数）

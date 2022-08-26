@@ -20,7 +20,7 @@ std_msgs::Bool vision_switch;
 float max_height; // 起始降落位置
 float g_camera_offset[3];
 prometheus_msgs::UAVCommand g_command_now;
-prometheus_msgs::UAVControlState g_uavcontrol_state; //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
+prometheus_msgs::UAVControlState g_uavcontrol_state; // 遥控器状态
 //---------------------------------------Drone---------------------------------------------
 prometheus_msgs::UAVState g_UAVState; // 无人机状态
 Eigen::Matrix3f g_R_Body_to_ENU;      // 无人机机体系至惯性系转换矩阵
