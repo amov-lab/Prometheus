@@ -37,6 +37,8 @@
     <arg name="fy" value="387.229248046875"/>
     <!-- 点云信息，仿真中由map_generator产生 -->
     <arg name="cloud_topic" value="map_generator/local_cloud"/>
+    <!-- scan -->
+    <arg name="scan_topic" value="scan"/>
     <!-- 最大速度及加速度 -->
     <arg name="max_vel" value="0.5" />
     <arg name="max_acc" value="0.5" />
