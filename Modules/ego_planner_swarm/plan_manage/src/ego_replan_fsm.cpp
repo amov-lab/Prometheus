@@ -12,7 +12,6 @@ namespace ego_planner
     have_odom_ = false;
     have_recv_pre_agent_ = false;
 
-    /*  fsm param  */
     // 目标点类型：1，手动设定目标点；2，预设目标点
     nh.param("fsm/flight_type", target_type_, -1);
     // 重规划时间间隔
@@ -56,6 +55,7 @@ namespace ego_planner
     odom_sub_ = nh.subscribe("odom_world", 1, &EGOReplanFSM::odometryCallback, this);
 
     // 订阅其他无人机位置
+    // ~/swarm_trajs是发送给相邻的无人机，~/broadcast_bspline_from_planner是发送给所有无人机
     // ego默认从0开始，我们默认从1开始，因此这里>2
     if (planner_manager_->pp_.drone_id >= 2)
     {
@@ -102,6 +102,7 @@ namespace ego_planner
       cout << "Wrong target_type_ value! target_type_=" << target_type_ << endl;
   }
 
+  // 读取 预设目标点
   void EGOReplanFSM::readGivenWps()
   {
     if (waypoint_num_ <= 0)
@@ -185,9 +186,12 @@ namespace ego_planner
 
   void EGOReplanFSM::waypointCallback(const geometry_msgs::PoseStampedPtr &msg)
   {
+    cout << "EGO: Get goal:" << msg->pose.position.x << "[m]" << msg->pose.position.y<< "[m]" << msg->pose.position.z << "[m]" << endl;
+    
     if (msg->pose.position.z < -0.1)
       return;
 
+    // 特殊情况，当x和y值为99.99时，无人机原地悬停
     if(msg->pose.position.x == 99.99 && msg->pose.position.y == 99.99)
     {
       callEmergencyStop(odom_pos_);
@@ -199,10 +203,8 @@ namespace ego_planner
     callEmergencyStop(odom_pos_);
     sleep(2.0);
 
-    cout << "EGO: Get goal!" << endl;
     init_pt_ = odom_pos_;
 
-    // 此处定高1米
     Eigen::Vector3d end_wp(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
 
     // 发布目标点用于显示 - [目标点,颜色,大小,id]
@@ -220,8 +222,6 @@ namespace ego_planner
     odom_vel_(0) = msg->twist.twist.linear.x;
     odom_vel_(1) = msg->twist.twist.linear.y;
     odom_vel_(2) = msg->twist.twist.linear.z;
-
-    //odom_acc_ = estimateAcc( msg );
 
     odom_orient_.w() = msg->pose.pose.orientation.w;
     odom_orient_.x() = msg->pose.pose.orientation.x;
@@ -407,7 +407,7 @@ namespace ego_planner
     int pre_s = int(exec_state_);
     exec_state_ = new_state;
     // COMMENT
-    cout << "[" + pos_call + "]: from " + state_str[pre_s] + " to " + state_str[int(new_state)] << endl;
+    // cout << "[" + pos_call + "]: from " + state_str[pre_s] + " to " + state_str[int(new_state)] << endl;
   }
 
   std::pair<int, EGOReplanFSM::FSM_EXEC_STATE> EGOReplanFSM::timesOfConsecutiveStateCalls()
@@ -469,7 +469,7 @@ namespace ego_planner
     {
       // swarmTrajsCallback回调后,have_recv_pre_agent_会被设置为true
       // ego默认从0开始，我们默认从1开始，因此这里>2
-      if (planner_manager_->pp_.drone_id <= 1 || (planner_manager_->pp_.drone_id >= 2&& have_recv_pre_agent_))
+      if (planner_manager_->pp_.drone_id <= 1 || (planner_manager_->pp_.drone_id >= 2 && have_recv_pre_agent_))
       {
         if (have_odom_ && have_target_ && have_trigger_)
         {
@@ -602,7 +602,7 @@ namespace ego_planner
     data_disp_.header.stamp = ros::Time::now();
     data_disp_pub_.publish(data_disp_);
 
-  force_return:;
+    force_return:;
     exec_timer_.start();
   }
 

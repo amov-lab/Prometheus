@@ -1,5 +1,5 @@
 # 脚本名称: ego_planner_1uav
-# 脚本描述: 单个无人机的ego_planner算法测试
+# 脚本描述: 单个无人机的ego_planner算法测试（传感器信息由map_generator模拟得到）
 
 gnome-terminal --window -e 'bash -c "roscore; exec bash"' \
 --tab -e 'bash -c "sleep 5; roslaunch prometheus_simulator_utils map_generator.launch swarm_num:=1; exec bash"' \
