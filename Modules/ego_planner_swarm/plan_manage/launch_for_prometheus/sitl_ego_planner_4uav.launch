@@ -27,7 +27,7 @@
     <!-- 地图尺寸 -->
     <arg name="map_size_x" default="50.0"/>
     <arg name="map_size_y" default="50.0"/>
-    <arg name="map_size_z" default=" 3.0"/>
+    <arg name="map_size_z" default=" 2.0"/>
 
     <!-- 1号飞机 -->
     <include file="$(find ego_planner)/launch_for_prometheus/sitl_ego_planner_basic.launch">
