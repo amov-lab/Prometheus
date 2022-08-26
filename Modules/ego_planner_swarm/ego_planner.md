@@ -1,34 +1,18 @@
 ## EGO_planner_swarm
 
-map_generator
-- 局部点云
-- 全局点云
-
-uav_control
-- fake_odom
-- PX4
-
-#### 情况讨论
-
- - 局部点云情况
-   - 对应真实情况:D435i等RGBD相机,三维激光雷达
-   - map_generator生成全局点云,模拟得到局部点云信息
-   - 无人机不需要搭载传感器
-   - PX4动力学 & fake_odom模块
-
-roslaunch prometheus_simulator_utils map_generator_with_fake_odom.launch
-roslaunch ego_planner sitl_ego_planner_basic.launch
-
-
 ## 运行
 
 cd Prometheus/Scripts/simulation/ego_planner/
 单机版本
 ./ego_planner_1uav.sh
+单机版本 - scan
+./ego_planner_1uav_scan.sh
 四机版本
 ./ego_planner_4uav.sh
+四机版本 - scan
+./ego_planner_4uav_scan.sh
 
-飞机加载完毕后，检查报错，然后解锁-切换至COMMAND_CONTROL模式，无人机自动起飞，然后，给定目标点即可
+飞机加载完毕后，检查报错，然后解锁-切换至COMMAND_CONTROL模式(多机模式时，单个遥控器控制所有)，无人机自动起飞，然后，给定目标点即可
 
 ## 如何发布目标点
 
@@ -41,4 +25,9 @@ cd Prometheus/Scripts/simulation/ego_planner/
 ## 注意事项
 
  - roslaunch prometheus_simulator_utils map_generator.launch 可以在这个launch 文件中定义新的场景
- - 在规划过程中（没有抵达目标点的时候），可以切换至RC_POS_CONTROL，但如果切换回COMMAND_CONTROL模式，可能会发生碰撞。正确的做法是发布一个悬停目标点（99.99）。
+ - 在规划过程中（没有抵达目标点的时候），可以切换至RC_POS_CONTROL，但如果切换回COMMAND_CONTROL模式，可能会发生碰撞。正确的做法是发布一个悬停目标点（99.99）
+ - 真机实验中如果要想更安全和稳定，将ego的限速调小，并且可以设置规划范围，特别是z轴的范围
+ - 真机如果使用scan的话，一定要设置z轴范围，使得其稳定在一定高度飞行（z轴膨胀范围要大于无人机的飞行高度范围）
+ - 目前scan和点云是同时订阅的，因此只能发布一个使用，不能同时发布，会有bug
+ - 真实情况的时候，scan数据可能要做一个滤波，去掉检测到自身的点，不然会认为自己的位置有障碍
+ - ego_planner_4uav_scan还有点小bug，没法做到100%。原因见上条，也可能时仿真中scan数据不稳定，不清楚实际中情况如何

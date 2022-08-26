@@ -10,6 +10,7 @@
   <arg name="camera_pose_topic"/>
   <arg name="depth_topic"/>
   <arg name="cloud_topic"/>
+  <arg name="scan_topic"/>
 
   <arg name="cx"/>
   <arg name="cy"/>
@@ -19,6 +20,8 @@
   <arg name="max_vel"/>
   <arg name="max_acc"/>
   <arg name="planning_horizon"/>
+  
+  
 
   <arg name="point_num"/>
   <arg name="point0_x"/>
@@ -54,6 +57,8 @@
     <remap from="~grid_map/odom" to="/uav$(arg uav_id)/$(arg odometry_topic)"/>
     <!-- 地图中点云话题 -->
     <remap from="~grid_map/cloud" to="/uav$(arg uav_id)/$(arg cloud_topic)"/>
+    <!-- 地图中点云话题 -->
+    <remap from="~grid_map/scan" to="/uav$(arg uav_id)/$(arg scan_topic)"/>
     <!-- 地图中相机位姿话题 -->
     <remap from="~grid_map/pose"   to = "/uav$(arg uav_id)/$(arg camera_pose_topic)"/> 
     <!-- 地图中相机深度话题 -->
