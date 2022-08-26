@@ -13,11 +13,14 @@
 #include <prometheus_msgs/TextInfo.h>
 #include <prometheus_msgs/OffsetPose.h>
 #include <prometheus_msgs/GPSData.h>
+#include <prometheus_msgs/LinktrackNodeframe2.h>
+#include <prometheus_msgs/LinktrackNode2.h>
 
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/GPSRAW.h>
 #include <mavros_msgs/PositionTarget.h>
 #include <sensor_msgs/BatteryState.h>
+#include <sensor_msgs/Range.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -41,7 +44,8 @@ using namespace std;
 #define TRA_WINDOW 40                // 发布轨迹长度
 #define MOCAP_TIMEOUT 0.1                   
 #define GAZEBO_TIMEOUT 0.1                    
-#define T265_TIMEOUT 0.1                     
+#define T265_TIMEOUT 0.1
+#define UWB_TIMEOUT 0.1                     
 
 class UAV_estimator
 {
@@ -54,8 +58,10 @@ class UAV_estimator
         ros::Subscriber px4_position_sub;
         ros::Subscriber px4_velocity_sub;
         ros::Subscriber px4_attitude_sub;
+        ros::Subscriber px4_range_sub;
         ros::Subscriber mocap_sub;
         ros::Subscriber gazebo_sub;
+        ros::Subscriber uwb_sub;
         ros::Subscriber fake_odom_sub;
         ros::Subscriber px4_global_position_sub;
         ros::Subscriber gps_status_sub;
@@ -83,12 +89,18 @@ class UAV_estimator
 
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose
-        geometry_msgs::PoseStamped t265_pose;          // gazebo pose
+        geometry_msgs::PoseStamped t265_pose;          // t265 pose
+        // geometry_msgs::PoseStamped uwb_pose;           // uwb pose
+        //---------------------------------------UWB定位相关------------------------------------------
+        Eigen::Vector3d pos_drone_uwb; //无人机当前位置 (UWB)
+        Eigen::Quaterniond q_uwb;
+        Eigen::Vector3d Euler_uwb; //无人机当前姿态 (UWB)
         int odom_state,last_odom_state{9};
         
         ros::Time get_mocap_stamp{0};
         ros::Time get_gazebo_stamp{0};
         ros::Time get_t265_stamp{0};
+        ros::Time get_uwb_stamp{0};
 
         // 基本变量
         int uav_id;                   // 无人机编号
@@ -109,10 +121,12 @@ class UAV_estimator
 
         void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
         void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg);
+        void uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg);
         void fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void t265_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void px4_state_cb(const mavros_msgs::State::ConstPtr &msg);
         void px4_battery_cb(const sensor_msgs::BatteryState::ConstPtr &msg);
+        void px4_range_cb(const sensor_msgs::Range::ConstPtr &msg);
         void px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &msg);
         void px4_global_rel_alt_cb(const std_msgs::Float64::ConstPtr &msg);
         void px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
