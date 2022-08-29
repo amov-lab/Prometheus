@@ -63,7 +63,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         // 【订阅】无人机当前经纬度，来自飞控
         px4_global_position_sub = nh.subscribe<sensor_msgs::NavSatFix>(uav_name + "/mavros/global_position/global", 1, &UAV_estimator::px4_global_pos_cb, this);
         // 【订阅】无人机当前真实高度，来自飞控
-        px4_global_position_sub = nh.subscribe<std_msgs::Float64>(uav_name + "/mavros/global_position/rel_alt", 1, &UAV_estimator::px4_global_rel_alt_cb, this);
+        px4_rel_alt_sub = nh.subscribe<std_msgs::Float64>(uav_name + "/mavros/global_position/rel_alt", 1, &UAV_estimator::px4_global_rel_alt_cb, this);
         // 【订阅】设置ENU坐标系下无人机的位置偏移量  坐标系:ENU系 - 来自地面站/终端窗口
         set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GPSData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
         // 【发布】ENU坐标系下的位置偏移量
@@ -733,8 +733,9 @@ void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::Con
     // 每个飞机的local_position还是在起飞坐标系
     // 所以发布控制指令也要加上偏差
     offset_pose.uav_id = uav_id;
-    offset_pose.x = enu_offset[0] - uav_state.position[0] + msg->x;
-    offset_pose.y = enu_offset[1] - uav_state.position[1] + msg->y;
+    //重复调用时,避免偏移量错误计算,需要先减掉偏移量
+    offset_pose.x += enu_offset[0] - uav_state.position[0] + msg->x;
+    offset_pose.y += enu_offset[1] - uav_state.position[1] + msg->y;
 
     local_pose_offset_pub.publish(offset_pose);
 }

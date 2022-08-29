@@ -524,7 +524,7 @@ void UAV_controller::set_command_des()
                 uav_command.velocity_ref[1] = d_vel_enu[1];
                 pos_des[0] = 0.0;
                 pos_des[1] = 0.0;
-                pos_des[2] = uav_command.position_ref[2];
+                pos_des[2] = uav_pos[2] + uav_command.position_ref[2];
                 vel_des[0] = uav_command.velocity_ref[0];
                 vel_des[1] = uav_command.velocity_ref[1];
                 vel_des[2] = 0.0;
