@@ -785,17 +785,6 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 自动降落，条件: 必须在HOVER_CONTROL或者COMMAND_CONTROL模式才可以触发
-    bool if_in_hover_or_command_mode =
-        control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
-    if (rc_input.toggle_land && if_in_hover_or_command_mode)
-    {
-        //rc_input.toggle_land = false;
-        control_state = CONTROL_STATE::LAND_CONTROL;
-        set_landing_des = false;
-        return;
-    }
-
     // 解锁，条件: 无人机已上锁
     if (rc_input.toggle_arm)
     {
@@ -810,6 +799,17 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
     {
         rc_input.toggle_arm = false;
         arm_disarm_func(false);
+        return;
+    }
+
+    // 自动降落，条件: 必须在HOVER_CONTROL或者COMMAND_CONTROL模式才可以触发
+    bool if_in_hover_or_command_mode =
+        control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
+    if (rc_input.toggle_land && if_in_hover_or_command_mode)
+    {
+        //rc_input.toggle_land = false;
+        control_state = CONTROL_STATE::LAND_CONTROL;
+        set_landing_des = false;
         return;
     }
 
