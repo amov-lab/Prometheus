@@ -807,21 +807,48 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
     if (rc_input.toggle_land && if_in_hover_or_command_mode)
     {
-        //rc_input.toggle_land = false;
+        rc_input.toggle_land = false;
         control_state = CONTROL_STATE::LAND_CONTROL;
         set_landing_des = false;
         return;
     }
 
-    // // 如果无人机没有解锁或者无人机处于LAND_CONTROL下，则不需要判断模式切换指令，直接返回
-    // if (!uav_state.armed || control_state == CONTROL_STATE::LAND_CONTROL)
-    // {
-    //     return;
-    // }
-
     // 如果无人机没有解锁，则不需要判断模式切换指令，直接返回
     if (!uav_state.armed)
     {
+        return;
+    }
+
+    // 如果无人机处于LAND_CONTROL下，单独判断无人机模式切换指令
+    if (control_state == CONTROL_STATE::LAND_CONTROL)
+    {
+        // 收到进入INIT指令，且不在INIT模式时
+        if (rc_input.enter_init)
+        {
+            rc_input.enter_init = false;
+            control_state = CONTROL_STATE::INIT;
+            cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
+        }
+
+        if (rc_input.enter_rc_pos_control)
+        {
+            rc_input.enter_rc_pos_control = false;
+            // odom失效，拒绝进入
+            if (!uav_state.odom_valid)
+            {
+                cout << RED << node_name << " Reject RC_POS_CONTROL. Odom invalid! " << TAIL << endl;
+                return;
+            }
+            // 切换至HOVER_CONTROL
+            control_state = CONTROL_STATE::RC_POS_CONTROL;
+            // 初始化默认的UAVCommand
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+            // 进入HOVER_CONTROL，需设置初始悬停点
+            set_hover_pose_with_odom();
+            cout << GREEN << node_name << " Switch to RC_POS_CONTROL" << TAIL << endl;
+            return;
+        }
+
         return;
     }
 
