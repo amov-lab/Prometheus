@@ -439,8 +439,125 @@ void Map_Generator::GeneratePlanningTestMap2()
     global_map_pcl.is_dense = true;
     kdtreeLocalMap.setInputCloud(global_map_pcl.makeShared());
     global_map_ok = true;
-    cout << GREEN << "[map_generator] Finished generate map [ planning_test ]. Map points:" << global_map_pcl.width << TAIL << endl;
+    cout << GREEN << "[map_generator] Finished generate map [ planning_test 2 ]. Map points:" << global_map_pcl.width << TAIL << endl;
 }
+
+void Map_Generator::GeneratePlanningTestMap3()
+{
+    // cylinder_small_1 (a-k)
+    generate_small_cylinder(1.0, -10.0);
+    generate_small_cylinder(1.0, -8.0);
+    generate_small_cylinder(1.0, -6.0);
+    generate_small_cylinder(1.0, -4.0);
+    generate_small_cylinder(1.0, -2.0);
+    generate_small_cylinder(1.0, 0.0);
+    generate_small_cylinder(1.0, 2.0);
+    generate_small_cylinder(1.0, 4.0);
+    generate_small_cylinder(1.0, 6.0);
+    generate_small_cylinder(1.0, 8.0);
+    generate_small_cylinder(1.0, 10.0);
+    // cylinder_small_2 (a-k)
+    generate_small_cylinder(5.0, -10.0);
+    generate_small_cylinder(5.0, -8.0);
+    generate_small_cylinder(5.0, -6.0);
+    generate_small_cylinder(5.0, -4.0);
+    generate_small_cylinder(5.0, -2.0);
+    generate_small_cylinder(5.0, 0.0);
+    generate_small_cylinder(5.0, 2.0);
+    generate_small_cylinder(5.0, 4.0);
+    generate_small_cylinder(5.0, 6.0);
+    generate_small_cylinder(5.0, 8.0);
+    generate_small_cylinder(5.0, 10.0);
+    // cylinder_small_3 (a-k)
+    generate_small_cylinder(9.0, -10.0);
+    generate_small_cylinder(9.0, -8.0);
+    generate_small_cylinder(9.0, -6.0);
+    generate_small_cylinder(9.0, -4.0);
+    generate_small_cylinder(9.0, -2.0);
+    generate_small_cylinder(9.0, 0.0);
+    generate_small_cylinder(9.0, 2.0);
+    generate_small_cylinder(9.0, 4.0);
+    generate_small_cylinder(9.0, 6.0);
+    generate_small_cylinder(9.0, 8.0);
+    generate_small_cylinder(9.0, 10.0);
+    // cylinder_small_4 (a-k)
+    generate_small_cylinder(-1.0, -10.0);
+    generate_small_cylinder(-1.0, -8.0);
+    generate_small_cylinder(-1.0, -6.0);
+    generate_small_cylinder(-1.0, -4.0);
+    generate_small_cylinder(-1.0, -2.0);
+    generate_small_cylinder(-1.0, 0.0);
+    generate_small_cylinder(-1.0, 2.0);
+    generate_small_cylinder(-1.0, 4.0);
+    generate_small_cylinder(-1.0, 6.0);
+    generate_small_cylinder(-1.0, 8.0);
+    generate_small_cylinder(-1.0, 10.0);
+    // cylinder_small_5 (a-k)
+    generate_small_cylinder(-5.0, -10.0);
+    generate_small_cylinder(-5.0, -8.0);
+    generate_small_cylinder(-5.0, -6.0);
+    generate_small_cylinder(-5.0, -4.0);
+    generate_small_cylinder(-5.0, -2.0);
+    generate_small_cylinder(-5.0, 0.0);
+    generate_small_cylinder(-5.0, 2.0);
+    generate_small_cylinder(-5.0, 4.0);
+    generate_small_cylinder(-5.0, 6.0);
+    generate_small_cylinder(-5.0, 8.0);
+    generate_small_cylinder(-5.0, 10.0);
+    // cylinder_small_6 (a-k)
+    generate_small_cylinder(-9.0, -10.0);
+    generate_small_cylinder(-9.0, -8.0);
+    generate_small_cylinder(-9.0, -6.0);
+    generate_small_cylinder(-9.0, -4.0);
+    generate_small_cylinder(-9.0, -2.0);
+    generate_small_cylinder(-9.0, 0.0);
+    generate_small_cylinder(-9.0, 2.0);
+    generate_small_cylinder(-9.0, 4.0);
+    generate_small_cylinder(-9.0, 6.0);
+    generate_small_cylinder(-9.0, 8.0);
+    generate_small_cylinder(-9.0, 10.0);
+    
+    // cylinder_large_1 (a-g)
+    generate_large_cylinder(3.0, -9.0);
+    generate_large_cylinder(3.0, -6.0);
+    generate_large_cylinder(3.0, -3.0);
+    generate_large_cylinder(3.0, 0.0);
+    generate_large_cylinder(3.0, 3.0);
+    generate_large_cylinder(3.0, 6.0);
+    generate_large_cylinder(3.0, 9.0);
+    // cylinder_large_2 (a-g)
+    generate_large_cylinder(7.0, -9.0);
+    generate_large_cylinder(7.0, -6.0);
+    generate_large_cylinder(7.0, -3.0);
+    generate_large_cylinder(7.0, 0.0);
+    generate_large_cylinder(7.0, 3.0);
+    generate_large_cylinder(7.0, 6.0);
+    generate_large_cylinder(7.0, 9.0);
+    // cylinder_large_3 (a-g)
+    generate_large_cylinder(-3.0, -9.0);
+    generate_large_cylinder(-3.0, -6.0);
+    generate_large_cylinder(-3.0, -3.0);
+    generate_large_cylinder(-3.0, 0.0);
+    generate_large_cylinder(-3.0, 3.0);
+    generate_large_cylinder(-3.0, 6.0);
+    generate_large_cylinder(-3.0, 9.0);
+    // cylinder_large_4 (a-g)
+    generate_large_cylinder(-7.0, -9.0);
+    generate_large_cylinder(-7.0, -6.0);
+    generate_large_cylinder(-7.0, -3.0);
+    generate_large_cylinder(-7.0, 0.0);
+    generate_large_cylinder(-7.0, 3.0);
+    generate_large_cylinder(-7.0, 6.0);
+    generate_large_cylinder(-7.0, 9.0);
+
+    global_map_pcl.width = global_map_pcl.points.size();
+    global_map_pcl.height = 1;
+    global_map_pcl.is_dense = true;
+    kdtreeLocalMap.setInputCloud(global_map_pcl.makeShared());
+    global_map_ok = true;
+    cout << GREEN << "[map_generator] Finished generate map [ planning_test 3]. Map points:" << global_map_pcl.width << TAIL << endl;
+}
+
 
 void Map_Generator::uav_odom_cb(const nav_msgs::Odometry::ConstPtr &odom, int uav_id)
 {

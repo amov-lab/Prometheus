@@ -524,7 +524,7 @@ void UAV_controller::set_command_des()
                 uav_command.velocity_ref[1] = d_vel_enu[1];
                 pos_des[0] = 0.0;
                 pos_des[1] = 0.0;
-                pos_des[2] = uav_command.position_ref[2];
+                pos_des[2] = uav_pos[2] + uav_command.position_ref[2];
                 vel_des[0] = uav_command.velocity_ref[0];
                 vel_des[1] = uav_command.velocity_ref[1];
                 vel_des[2] = 0.0;
@@ -755,8 +755,10 @@ void UAV_controller::uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg
     {
         Takeoff_position[0] = uav_pos[0] - offset_pose.x;
         Takeoff_position[1] = uav_pos[1] - offset_pose.y;
-        Takeoff_position[1] = uav_pos[2];
+        Takeoff_position[2] = uav_pos[2];
         Takeoff_yaw = uav_yaw;
+        cout << GREEN << "Set Takeoff_position [X Y Z] : " << Takeoff_position[0] << " [ m ] " << Takeoff_position[1] << " [ m ] " << Takeoff_position[2] << " [ m ] " << TAIL << endl;
+        cout << GREEN << "Set Takeoff_yaw : " << Takeoff_yaw/3.1415926*180 << " [ deg ] " << TAIL << endl;
     }
 
     uav_state_last = uav_state;
@@ -783,17 +785,6 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 自动降落，条件: 必须在HOVER_CONTROL或者COMMAND_CONTROL模式才可以触发
-    bool if_in_hover_or_command_mode =
-        control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
-    if (rc_input.toggle_land && if_in_hover_or_command_mode)
-    {
-        //rc_input.toggle_land = false;
-        control_state = CONTROL_STATE::LAND_CONTROL;
-        set_landing_des = false;
-        return;
-    }
-
     // 解锁，条件: 无人机已上锁
     if (rc_input.toggle_arm)
     {
@@ -811,15 +802,53 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // // 如果无人机没有解锁或者无人机处于LAND_CONTROL下，则不需要判断模式切换指令，直接返回
-    // if (!uav_state.armed || control_state == CONTROL_STATE::LAND_CONTROL)
-    // {
-    //     return;
-    // }
+    // 自动降落，条件: 必须在HOVER_CONTROL或者COMMAND_CONTROL模式才可以触发
+    bool if_in_hover_or_command_mode =
+        control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
+    if (rc_input.toggle_land && if_in_hover_or_command_mode)
+    {
+        rc_input.toggle_land = false;
+        control_state = CONTROL_STATE::LAND_CONTROL;
+        set_landing_des = false;
+        return;
+    }
 
     // 如果无人机没有解锁，则不需要判断模式切换指令，直接返回
     if (!uav_state.armed)
     {
+        return;
+    }
+
+    // 如果无人机处于LAND_CONTROL下，单独判断无人机模式切换指令
+    if (control_state == CONTROL_STATE::LAND_CONTROL)
+    {
+        // 收到进入INIT指令，且不在INIT模式时
+        if (rc_input.enter_init)
+        {
+            rc_input.enter_init = false;
+            control_state = CONTROL_STATE::INIT;
+            cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
+        }
+
+        if (rc_input.enter_rc_pos_control)
+        {
+            rc_input.enter_rc_pos_control = false;
+            // odom失效，拒绝进入
+            if (!uav_state.odom_valid)
+            {
+                cout << RED << node_name << " Reject RC_POS_CONTROL. Odom invalid! " << TAIL << endl;
+                return;
+            }
+            // 切换至HOVER_CONTROL
+            control_state = CONTROL_STATE::RC_POS_CONTROL;
+            // 初始化默认的UAVCommand
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
+            // 进入HOVER_CONTROL，需设置初始悬停点
+            set_hover_pose_with_odom();
+            cout << GREEN << node_name << " Switch to RC_POS_CONTROL" << TAIL << endl;
+            return;
+        }
+
         return;
     }
 

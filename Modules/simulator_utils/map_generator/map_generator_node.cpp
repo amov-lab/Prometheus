@@ -29,6 +29,10 @@ int main(int argc, char **argv)
     {
         // 对应 planning_test2.world
         Obs_Map.GeneratePlanningTestMap2();
+    }else if (map_name == "planning_test3")
+    {
+        // 对应 planning_test3.world
+        Obs_Map.GeneratePlanningTestMap3();
     }
     else if (map_name == "random")
     {

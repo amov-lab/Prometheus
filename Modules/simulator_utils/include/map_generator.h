@@ -77,6 +77,7 @@ public:
     // planning_test地图生成函数
     void GeneratePlanningTestMap();
     void GeneratePlanningTestMap2();
+    void GeneratePlanningTestMap3();
 
 private:
     // 订阅
