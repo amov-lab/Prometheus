@@ -32,6 +32,8 @@ public:
 
     void uavCmdPub(struct UAVCommand uav_cmd);
 
+    void uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg);
+
     void uavSetupPub(struct UAVSetup uav_setup);
 
     void setTimeStamp(uint time);
@@ -49,6 +51,8 @@ private:
     ros::Publisher uav_cmd_pub_;
 
     ros::Publisher uav_setup_pub_;
+
+    ros::Subscriber uav_cmd_sub_;
 
     int current_mode_;
 

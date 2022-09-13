@@ -31,14 +31,13 @@
 //分为两种情况  
 //1:杀掉子模块，这种情况不会杀掉uav control节点和通信节点以及master节点。 
 //2:杀掉uav control节点，这种情况下只会保留通信节点以及master节点。
-#define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /ground_station_bridge | grep -v /rosout`"
-#define CLOSEOTHERMODE "gnome-terminal -- rosnode kill `rosnode list | grep -v /ground_station_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
+#define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
+#define CLOSEOTHERMODE "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
 
 //重启
 #define REBOOTNXCMD "shutdown -r now"
 //关机
 #define EXITNXCMD "shutdown -h now"
-
 
 enum MsgId
 {

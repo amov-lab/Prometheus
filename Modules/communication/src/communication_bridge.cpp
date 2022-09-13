@@ -419,7 +419,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     this->uav_basic_ = this->swarm_control_simulation_[mode_selection.selectId[i]];
 
                     //打开
-                    // system(OPENUAVBASIC);
+                    system(OPENUAVBASIC);
                 }
                 text_info.Message = "create UAVBasic simulation id :" + to_string(mode_selection.selectId[0]) + "...";
                 sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
@@ -603,7 +603,7 @@ bool CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
                     {
                         // delete this->uav_basic_;
                         this->uav_basic_ = NULL;
-                        // system(CLOSEUAVBASIC);
+                        system(CLOSEUAVBASIC);
                     }
                 }
                 text_info.Message = "delete UAVBasic simulation id :" + to_string(mode_selection.selectId[i]) + "...";
