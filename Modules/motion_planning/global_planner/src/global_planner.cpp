@@ -7,18 +7,18 @@ GlobalPlanner::GlobalPlanner(ros::NodeHandle &nh)
     nh.param("uav_id", uav_id, 0);
     // 【参数】是否为仿真模式
     nh.param("global_planner/sim_mode", sim_mode, false);
-    // 【参数】选择地图更新方式：　0代表全局点云，1代表局部点云，2代表激光雷达scan数据
+    // 【参数】选择地图更新方式: 0代表全局点云，1代表局部点云，2代表二维激光雷达
     nh.param("global_planner/map_input_source", map_input_source, 0);
-    // 【参数】无人机飞行高度
+    // 【参数】无人机指定飞行高度
     nh.param("global_planner/fly_height", fly_height, 1.0);
-    // 【参数】安全距离，若膨胀距离设置已考虑安全距离，建议此处设为0
+    // 【参数】无人机安全距离，若膨胀距离设置已考虑安全距离，建议此处设为0
     nh.param("global_planner/safe_distance", safe_distance, 0.05);
     // 【参数】路径追踪频率
     nh.param("global_planner/time_per_path", time_per_path, 1.0);
     // 【参数】Astar重规划频率
     nh.param("global_planner/replan_time", replan_time, 2.0);
 
-    //【订阅】目标点
+    //【订阅】期望目标点
     goal_sub = nh.subscribe<geometry_msgs::PoseStamped>("/uav" + std::to_string(uav_id) + "/prometheus/motion_planning/goal",
                                                         1,
                                                         &GlobalPlanner::goal_cb, this);
@@ -28,11 +28,12 @@ GlobalPlanner::GlobalPlanner(ros::NodeHandle &nh)
                                                             1,
                                                             &GlobalPlanner::uav_state_cb, this);
 
+    //【订阅】无人机控制状态
     uav_control_state_sub = nh.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state",
                                                                            1,
                                                                            &GlobalPlanner::uav_control_state_cb, this);
 
-    string uav_name = "/uav" + std::to_string(uav_id);
+    uav_name = "/uav" + std::to_string(uav_id);
     //【订阅】根据map_input_source选择地图更新方式
     if (map_input_source == 0)
     {
@@ -348,6 +349,7 @@ void GlobalPlanner::Lpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg)
         return;
     }
     sensor_ready = true;
+    // 对Astar中的地图(局部点云+odom)进行更新
     Astar_ptr->Occupy_map_ptr->map_update_lpcl(msg, uav_odom);
 }
 
@@ -360,7 +362,7 @@ void GlobalPlanner::laser_cb(const sensor_msgs::LaserScanConstPtr &msg)
         return;
     }
     sensor_ready = true;
-    // 对Astar中的地图进行更新（laser+odom）并对地图进行膨胀
+    // 对Astar中的地图进行更新(laserscan+odom)并对地图进行膨胀
     Astar_ptr->Occupy_map_ptr->map_update_laser(msg, uav_odom);
 }
 

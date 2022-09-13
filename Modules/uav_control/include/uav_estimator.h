@@ -64,6 +64,7 @@ class UAV_estimator
         ros::Subscriber uwb_sub;
         ros::Subscriber fake_odom_sub;
         ros::Subscriber px4_global_position_sub;
+        ros::Subscriber px4_rel_alt_sub;
         ros::Subscriber gps_status_sub;
         ros::Subscriber set_local_pose_offset_sub;
         // 发布话题

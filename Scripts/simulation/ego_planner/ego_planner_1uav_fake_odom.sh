@@ -1,4 +1,4 @@
-# 脚本名称: ego_planner_1uav
+# 脚本名称: ego_planner_1uav_fake_odom(未完成)
 # 脚本描述: 单个无人机的ego_planner算法测试
 
 gnome-terminal --window -e 'bash -c "roscore; exec bash"' \

@@ -76,3 +76,11 @@ roslaunch prometheus_global_planner sitl_global_planner_with_2dlidar.launch
  6.3 ego_planner
 
 
+## 8.27 update
+
+2dlidar仿真
+
+执行sitl_global_planner_with_2dlidar.sh脚本
+
+- 勉强也能使用，但是有的时候，路径有点奇怪（不是最短路径）（主要问题）
+- 另外还有点慢（可以调参，仿真中无法反映真机的情况）

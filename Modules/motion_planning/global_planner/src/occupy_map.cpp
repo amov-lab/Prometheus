@@ -3,14 +3,15 @@
 // 初始化函数
 void Occupy_map::init(ros::NodeHandle &nh)
 {
-    // 【参数】编号，从1开始编号
+    // 【参数】无人机编号，从1开始编号
     nh.param("uav_id", uav_id, 0);
-    // 【参数】仿真模式
+    // 【参数】是否为仿真模式
     nh.param("global_planner/sim_mode", sim_mode, true);
-    // 【参数】2D规划时,定高高度
+    // 【参数】无人机指定飞行高度
     nh.param("global_planner/fly_height", fly_height, 1.0);
-    // 集群数量
+    // 【参数】集群数量
     nh.param("global_planner/swarm_num_uav", swarm_num_uav, 1);
+    // 【参数】其他无人机膨胀距离
     nh.param("global_planner/odom_inflate", odom_inflate_, 0.6);
     nh.param("global_planner/cost_inflate", cost_inflate, 5);
     // 【参数】地图原点
@@ -21,9 +22,9 @@ void Occupy_map::init(ros::NodeHandle &nh)
     nh.param("map/map_size_x", map_size_3d_(0), 10.0);
     nh.param("map/map_size_y", map_size_3d_(1), 10.0);
     nh.param("map/map_size_z", map_size_3d_(2), 2.0);
-    // 【参数】localmap slide window
+    // 【参数】地图滑窗尺寸，-1代表unlimited
     nh.param("map/queue_size", queue_size, -1);
-    // 【参数】show border
+    // 【参数】首否在rviz中显示地图边界
     nh.param("map/border", show_border, false);
     // 【参数】地图分辨率，单位：米
     nh.param("map/resolution", resolution_, 0.2);

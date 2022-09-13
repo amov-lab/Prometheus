@@ -1,7 +1,7 @@
 <launch>
     <!-- Gazebo config -->
     <arg name="gazebo_enable" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/planning_test2.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/planning_test3.world"/>
     <!-- 启动Gazebo -->
     <group if="$(arg gazebo_enable)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -17,13 +17,17 @@
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
     </group>
 
+    <!-- map_generator_node config -->
 	<!-- 集群数量 -->
 	<arg name="swarm_num" default="1"/>
-    <!-- 地图 -->
-    <arg name="map_name" default="planning_test2"/>
-    <!-- map_generator_node: 生成随机地图，并发布全局、局部点云 -->
-    <node pkg="prometheus_simulator_utils" name="map_generator_node" type="map_generator_node" launch-prefix="gnome-terminal --tab --">
-        <param name="swarm_num" value="$(arg swarm_num)"/>
-        <param name="map_name" 	value="$(arg map_name)" />  
-    </node>
+    <!-- 地图,注意与world匹配 -->
+    <arg name="map_name" default="planning_test3"/>
+    <arg name="map_generator_enable" default="true"/>
+	<group if="$(arg map_generator_enable)">
+        <!-- map_generator_node: 生成随机地图，并发布全局、局部点云 -->
+        <node pkg="prometheus_simulator_utils" name="map_generator_node" type="map_generator_node" launch-prefix="gnome-terminal --tab --">
+            <param name="swarm_num" value="$(arg swarm_num)"/>
+            <param name="map_name" 	value="$(arg map_name)" />  
+        </node>
+    </group>
 </launch>

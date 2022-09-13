@@ -8,6 +8,9 @@
 #include <iostream>
 #include <random>
 #include <nav_msgs/Odometry.h>
+#include <sensor_msgs/LaserScan.h>
+#include <laser_geometry/laser_geometry.h>
+
 #include <queue>
 #include <ros/ros.h>
 #include <tuple>
@@ -15,6 +18,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <message_filters/subscriber.h>
@@ -199,6 +203,8 @@ private:
   void depthOdomCallback(const sensor_msgs::ImageConstPtr& img, const nav_msgs::OdometryConstPtr& odom);
   void cloudCallback(const sensor_msgs::PointCloud2ConstPtr& img);
   void odomCallback(const nav_msgs::OdometryConstPtr& odom);
+  void scanCallback(const sensor_msgs::LaserScanConstPtr &laser_scan);
+  
 
   // update occupancy by raycasting
   void updateOccupancyCallback(const ros::TimerEvent& /*event*/);
@@ -231,9 +237,10 @@ private:
   SynchronizerImagePose sync_image_pose_;
   SynchronizerImageOdom sync_image_odom_;
 
-  ros::Subscriber indep_cloud_sub_, indep_odom_sub_, extrinsic_sub_;
+  ros::Subscriber indep_cloud_sub_, indep_odom_sub_, extrinsic_sub_,scan_sub_;
   ros::Publisher map_pub_, map_inf_pub_;
   ros::Timer occ_timer_, vis_timer_;
+  nav_msgs::Odometry odom_uav;
 
   //
   uniform_real_distribution<double> rand_noise_;
