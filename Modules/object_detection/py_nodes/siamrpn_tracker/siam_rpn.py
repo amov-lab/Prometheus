@@ -137,6 +137,7 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
 
     rospy.Subscriber(subscriber, Image, callback)
     pub = rospy.Publisher("/uav" + str(uav_id) + '/prometheus/object_detection/siamrpn_tracker', DetectionInfo, queue_size=10)
+    detection_img_pub = rospy.Publisher("/uav" + str(uav_id) + '/prometheus/object_detection/siamrpn_tracker/detection', Image, queue_size=1)
 
     cv2.namedWindow('image')
     cv2.setMouseCallback('image', draw_circle)
@@ -198,6 +199,8 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
             ## ! 
             pub.publish(d_info)
             cv2.imshow('image', image)
+            image_msg = CvBridge().cv2_to_imgmsg(image, encoding='bgr8')
+            detection_img_pub.publish(image_msg)
             cv2.waitKey(10)
 
         rate.sleep()
