@@ -23,6 +23,8 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->uav_cmd_pub_ = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(id) + "/prometheus/command", 1);
     //【发布】mavros接口调用指令(-> uav_control.cpp)
     this->uav_setup_pub_ = nh.advertise<prometheus_msgs::UAVSetup>("/uav" + std::to_string(this->robot_id) + "/prometheus/setup", 1);
+    //【订阅】uav控制信息
+    this->uav_cmd_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/command",10,&UAVBasic::uavCmdCb,this);
 }
 
 UAVBasic::~UAVBasic()
@@ -115,6 +117,29 @@ void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
     uav_cmd_.longitude = uav_cmd.longitude;
     uav_cmd_.altitude = uav_cmd.altitude;
     this->uav_cmd_pub_.publish(uav_cmd_);
+}
+
+void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
+{
+    struct UAVCommand uav_cmd;
+    uav_cmd.Agent_CMD = msg->Agent_CMD;
+    uav_cmd.Move_mode = msg->Move_mode;
+    for(int i = 0; i < 3; i++)
+    {
+        uav_cmd.position_ref[i] = msg->position_ref[i];
+        uav_cmd.velocity_ref[i] = msg->velocity_ref[i];
+        uav_cmd.acceleration_ref[i] = msg->acceleration_ref[i];
+        uav_cmd.att_ref[i] = msg->att_ref[i];
+    }
+    uav_cmd.att_ref[3] = msg->att_ref[3];
+    uav_cmd.yaw_ref = msg->yaw_ref;
+    uav_cmd.Yaw_Rate_Mode = msg->Yaw_Rate_Mode;
+    uav_cmd.yaw_rate_ref = msg->yaw_rate_ref;
+    uav_cmd.Command_ID = msg->Command_ID;
+    uav_cmd.latitude = msg->latitude;
+    uav_cmd.longitude = msg->longitude;
+    uav_cmd.altitude = msg->altitude;
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_cmd),multicast_udp_ip);
 }
 
 void UAVBasic::uavSetupPub(struct UAVSetup uav_setup)
