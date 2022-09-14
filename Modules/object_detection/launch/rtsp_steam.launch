@@ -1,6 +1,6 @@
 <launch>
     <node pkg="prometheus_detection" type="gstreamer_rtsp_stream.py" name="gstreamer_rtsp_stream" output="screen">
-        <param name="camera_topic" value="/prometheus/camera/rgb/image_raw"/>
+        <param name="camera_topic" value="/uav1/prometheus/object_detection/siamrpn_tracker/detection"/>
         <param name="config_info" value="$(find prometheus_detection)/py_nodes/rtsp_stream/encode_config.yaml"/>
     </node>
 </launch>
