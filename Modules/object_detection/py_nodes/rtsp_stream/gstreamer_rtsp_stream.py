@@ -22,7 +22,7 @@ from gi.repository import GObject, Gst, GstRtspServer
 def main(width,height,port,factory_name):
     global out_send
     out_send = cv2.VideoWriter('appsrc is-live=true ! videoconvert ! \
-                                omxh264enc bitrate=12000000 ! video/x-h264, \
+                                omxh264enc bitrate=4000000 ! video/x-h264, \
                                 stream-format=byte-stream ! rtph264pay pt=96 ! \
                                 udpsink host=127.0.0.1 port=5400 async=false',
                                 cv2.CAP_GSTREAMER, 0, 30, (width,height), True)
