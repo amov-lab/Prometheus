@@ -24,7 +24,7 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from threading import Lock
-from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo
+from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo,WindowPosition
 import math
 
 
@@ -112,6 +112,20 @@ def callback(data):
         g_image = cv_image   
     getim = True
 
+def winpos_callback(data):
+    global x1, y1, x2, y2, init, start
+    x1=data.origin_x
+    y1=data.origin_y
+    x2=x1+data.width
+    y2=y1+data.height
+    if data.mode==1:
+        init = True
+        start = False
+    else:
+        init = False
+        start = False
+    print(data)
+    
 
 def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
     global x1, y1, x2, y2, drawing, init, flag, g_image, getim, start
@@ -136,6 +150,7 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
     print('ready for starting!')
 
     rospy.Subscriber(subscriber, Image, callback)
+    rospy.Subscriber("/detection/bbox_draw",WindowPosition,winpos_callback)
     pub = rospy.Publisher("/uav" + str(uav_id) + '/prometheus/object_detection/siamrpn_tracker', DetectionInfo, queue_size=10)
     detection_img_pub = rospy.Publisher("/uav" + str(uav_id) + '/prometheus/object_detection/siamrpn_tracker/detection', Image, queue_size=1)
 
