@@ -21,5 +21,12 @@
 
         <!-- 自动启动项 在不使用地面站情况打开对应话题 -->
         <param name="auto_start" value="true"/>
+
+        <param name="drone_id" value="1"/>
+        <param name="next_drone_ip" value="127.0.0.1"/>
+        <param name="broadcast_ip" value="127.0.0.255"/>
+
+        <!-- <rosparam command="load" file="$(find prometheus_communication_bridge)/../uav_control/launch/uav_control_indoor.yaml" /> -->
+        <!--  -->
     </node>
 </launch>

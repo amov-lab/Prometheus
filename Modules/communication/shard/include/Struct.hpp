@@ -27,6 +27,10 @@
 //目标识别与追踪
 #define OPENOBJECTTRACKING ""
 #define CLOSEOBJECTTRACKING ""
+//EGO Planner
+#define OPENEGOPLANNER ""
+#define CLOSEEGOPLANNER ""
+
 //杀掉除了通信节点和主节点的其他节点
 //分为两种情况  
 //1:杀掉子模块，这种情况不会杀掉uav control节点和通信节点以及master节点。 
@@ -59,6 +63,9 @@ enum MsgId
     IMAGEDATA = 107,
     UAVCOMMAND = 108,
     UAVSETUP = 109,
+    PARAMSETTINGS = 110,
+    BSPLINE = 111,
+    MULTIBSPLINES = 112,
 
     CONNECTSTATE = 201,
     MODESELECTION = 202,
@@ -87,10 +94,10 @@ struct Quaternion
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &x;
-        ar &y;
-        ar &z;
-        ar &w;
+        ar & x;
+        ar & y;
+        ar & z;
+        ar & w;
     }
 };
 //MSG 1
@@ -167,24 +174,24 @@ struct UAVState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &uav_id;
-        // ar &state;
-        ar &location_source;
-        ar &connected;
-        ar &mode;
-        ar &armed;
-        ar &odom_valid;
-        ar &gps_status;
-        ar &latitude;
-        ar &longitude;
-        ar &altitude;
-        ar &position;
-        ar &velocity;
-        ar &attitude;
-        ar &attitude_q;
-        ar &attitude_rate;
-        ar &battery_state;
-        ar &battery_percetage;
+        ar & uav_id;
+        // ar & state;
+        ar & location_source;
+        ar & connected;
+        ar & mode;
+        ar & armed;
+        ar & odom_valid;
+        ar & gps_status;
+        ar & latitude;
+        ar & longitude;
+        ar & altitude;
+        ar & position;
+        ar & velocity;
+        ar & attitude;
+        ar & attitude_q;
+        ar & attitude_rate;
+        ar & battery_state;
+        ar & battery_percetage;
     }
 };
 
@@ -196,8 +203,8 @@ struct Heartbeat
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &count;
-        ar &message;
+        ar & count;
+        ar & message;
     }
 };
 
@@ -216,15 +223,15 @@ struct RheaState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &rhea_id;
-        ar &linear;
-        ar &angular;
-        ar &yaw;
-        ar &latitude;
-        ar &longitude;
-        ar &altitude;
-        ar &position;
-        ar &battery_voltage;
+        ar & rhea_id;
+        ar & linear;
+        ar & angular;
+        ar & yaw;
+        ar & latitude;
+        ar & longitude;
+        ar & altitude;
+        ar & position;
+        ar & battery_voltage;
     }
 };
 
@@ -239,9 +246,10 @@ struct ModeSelection
         //GIMBAL?
         AUTONOMOUSLANDING = 4,
         OBJECTTRACKING = 5,
-        CUSTOMMODE = 6,
-        REBOOTNX = 7,
-        EXITNX = 8
+        EGOPLANNER = 6,
+        CUSTOMMODE = 7,
+        REBOOTNX = 8,
+        EXITNX = 9
     };
 //    bool is_simulation;
     std::vector<uint8_t> selectId;
@@ -264,12 +272,12 @@ struct ModeSelection
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &selectId;
-        ar &mode;
-        ar &use_mode;
-        ar &is_simulation;
-        ar &swarm_num;
-        ar &cmd;
+        ar & selectId;
+        ar & mode;
+        ar & use_mode;
+        ar & is_simulation;
+        ar & swarm_num;
+        ar & cmd;
     }
 };
 
@@ -282,9 +290,9 @@ struct Point
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &x;
-        ar &y;
-        ar &z;
+        ar & x;
+        ar & y;
+        ar & z;
     }
 };
 
@@ -353,20 +361,20 @@ struct SwarmCommand
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &source;
-        ar &swarm_num;
-        ar &swarm_location_source;
-        ar &Swarm_CMD;
-        ar &leader_pos;
-        ar &leader_vel;
-        ar &swarm_size;
-        ar &swarm_shape;
-        ar &target_area_x_min;
-        ar &target_area_y_min;
-        ar &target_area_x_max;
-        ar &target_area_y_max;
-        ar &attack_target_pos;
-        ar &formation_poses;
+        ar & source;
+        ar & swarm_num;
+        ar & swarm_location_source;
+        ar & Swarm_CMD;
+        ar & leader_pos;
+        ar & leader_vel;
+        ar & swarm_size;
+        ar & swarm_shape;
+        ar & target_area_x_min;
+        ar & target_area_y_min;
+        ar & target_area_x_max;
+        ar & target_area_y_max;
+        ar & attack_target_pos;
+        ar & formation_poses;
     }
 };
 
@@ -393,9 +401,9 @@ struct TextInfo
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &sec;
-        ar &MessageType;
-        ar &Message;
+        ar & sec;
+        ar & MessageType;
+        ar & Message;
     }
 };
 
@@ -426,16 +434,16 @@ struct GimbalState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &Id;
-        ar &feedbackMode;
-        ar &mode;
-        ar &isRecording;
-        ar &zoomState;
-        ar &zoomVal;
-        ar &imuAngle;
-        ar &rotorAngle;
-        ar &imuAngleVel;
-        ar &rotorAngleTarget;
+        ar & Id;
+        ar & feedbackMode;
+        ar & mode;
+        ar & isRecording;
+        ar & zoomState;
+        ar & zoomVal;
+        ar & imuAngle;
+        ar & rotorAngle;
+        ar & imuAngleVel;
+        ar & rotorAngleTarget;
     }
 };
 //参考文件： VisionDiff.msg
@@ -477,22 +485,22 @@ struct VisionDiff
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &id;
-        ar &objectX;
-        ar &objectY;
-        ar &objectWidth;
-        ar &objectHeight;
-        ar &frameWidth;
-        ar &frameHeight;
-        ar &kp;
-        ar &ki;
-        ar &kd;
-        ar &ctlMode;
-        ar &currSize;
-        ar &maxSize;
-        ar &minSize;
-        ar &trackIgnoreError;
-        ar &autoZoom;
+        ar & id;
+        ar & objectX;
+        ar & objectY;
+        ar & objectWidth;
+        ar & objectHeight;
+        ar & frameWidth;
+        ar & frameHeight;
+        ar & kp;
+        ar & ki;
+        ar & kd;
+        ar & ctlMode;
+        ar & currSize;
+        ar & maxSize;
+        ar & minSize;
+        ar & trackIgnoreError;
+        ar & autoZoom;
     }
 };
 
@@ -547,16 +555,16 @@ struct GimbalControl
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &Id;
-        ar &rpyMode;
-        ar &roll;
-        ar &yaw;
-        ar &pitch;
-        ar &rValue;
-        ar &yValue;
-        ar &pValue;
-        ar &focusMode;
-        ar &zoomMode;
+        ar & Id;
+        ar & rpyMode;
+        ar & roll;
+        ar & yaw;
+        ar & pitch;
+        ar & rValue;
+        ar & yValue;
+        ar & pValue;
+        ar & focusMode;
+        ar & zoomMode;
     }
 };
 
@@ -575,8 +583,8 @@ struct GimbalService
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &service;
-        ar &data;
+        ar & service;
+        ar & data;
     }
 };
 
@@ -588,8 +596,8 @@ struct GimbalParamSet
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &param_id;
-        ar &real;
+        ar & param_id;
+        ar & real;
     }
 };
 
@@ -630,16 +638,16 @@ struct WindowPosition
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &mode;
-        ar &origin_x;
-        ar &origin_y;
-        ar &width;
-        ar &height;
-        ar &window_position_x;
-        ar &window_position_y;
-        ar &track_id;
-        // ar &frame_id;
-        ar &udp_msg;
+        ar & mode;
+        ar & origin_x;
+        ar & origin_y;
+        ar & width;
+        ar & height;
+        ar & window_position_x;
+        ar & window_position_y;
+        ar & track_id;
+        // ar & frame_id;
+        ar & udp_msg;
     }
 };
 
@@ -659,11 +667,11 @@ struct DetectionInfo
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &left;
-        ar &top;
-        ar &bot;
-        ar &right;
-        ar &trackIds;
+        ar & left;
+        ar & top;
+        ar & bot;
+        ar & right;
+        ar & trackIds;
     }
 };
 struct MultiDetectionInfo
@@ -682,9 +690,9 @@ struct MultiDetectionInfo
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &mode;
-        ar &num_objs;
-        ar &detection_infos;
+        ar & mode;
+        ar & num_objs;
+        ar & detection_infos;
     }
 };
 
@@ -697,9 +705,9 @@ struct RheaGPS
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &latitude;
-        ar &longitude;
-        ar &altitude;
+        ar & latitude;
+        ar & longitude;
+        ar & altitude;
     }
 };
 
@@ -729,10 +737,10 @@ struct RheaControl
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &Mode;
-        ar &linear;
-        ar &angular;
-        ar &waypoint;
+        ar & Mode;
+        ar & linear;
+        ar & angular;
+        ar & waypoint;
     }
 };
 
@@ -744,8 +752,8 @@ struct ImageData
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &name;
-        ar &data;
+        ar & name;
+        ar & data;
     }
 };
 
@@ -797,19 +805,19 @@ struct UAVCommand
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &Agent_CMD;
-        ar &Move_mode;
-        ar &position_ref;
-        ar &velocity_ref;
-        ar &acceleration_ref;
-        ar &yaw_ref;
-        ar &Yaw_Rate_Mode;
-        ar &yaw_rate_ref;
-        ar &att_ref;
-        ar &Command_ID;
-        ar &latitude;
-        ar &longitude;
-        ar &altitude;
+        ar & Agent_CMD;
+        ar & Move_mode;
+        ar & position_ref;
+        ar & velocity_ref;
+        ar & acceleration_ref;
+        ar & yaw_ref;
+        ar & Yaw_Rate_Mode;
+        ar & yaw_rate_ref;
+        ar & att_ref;
+        ar & Command_ID;
+        ar & latitude;
+        ar & longitude;
+        ar & altitude;
     }
 };
 
@@ -834,10 +842,10 @@ struct UAVSetup
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &cmd;
-        ar &arming;
-        ar &px4_mode;
-        ar &control_state;
+        ar & cmd;
+        ar & arming;
+        ar & px4_mode;
+        ar & control_state;
     }
 };
 
@@ -876,10 +884,88 @@ struct UAVControlState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &uav_id;
-        ar &control_state;
-        ar &pos_controller;
-        ar &failsafe;
+        ar & uav_id;
+        ar & control_state;
+        ar & pos_controller;
+        ar & failsafe;
+    }
+};
+
+struct Bspline
+{
+    int drone_id;
+    int order;
+    long traj_id;
+    double sec;
+    std::vector<double> knots;
+    std::vector<Point> pos_pts;
+    std::vector<double> yaw_pts;
+    double yaw_dt;
+    
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & drone_id;
+        ar & order;
+        ar & traj_id;
+        ar & sec;
+        ar & knots;
+        ar & pos_pts;
+        ar & yaw_pts;
+        ar & yaw_dt;
+    }
+};
+
+struct MultiBsplines
+{
+    int drone_id_from;
+    std::vector<Bspline> traj;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & drone_id_from;
+        ar & traj;
+    }
+};
+
+struct Param
+{
+    uint8_t type;
+    enum Type
+    {
+        INT = 0,
+        LONG = 1,
+        FLOAT = 2,
+        DOUBLE = 3,
+        STRING = 4
+    };
+    std::string param_name;
+    std::string param_value;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & type;
+        ar & param_name;
+        ar & param_value;
+    }
+};
+
+struct ParamSettings
+{
+    int param_nums;
+    std::vector<Param> params;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & param_nums;
+        ar & params;
     }
 };
 
@@ -891,8 +977,8 @@ struct ConnectState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &num;
-        ar &state;
+        ar & num;
+        ar & state;
     }
 };
 
