@@ -68,7 +68,9 @@ public:
     prometheus_msgs::UAVControlState uav_control_state;
     prometheus_msgs::UAVSetup uav_setup;
     prometheus_msgs::TextInfo text_info;
+    prometheus_msgs::TextInfo last_text_info;
     prometheus_msgs::OffsetPose offset_pose;
+
     RC_Input rc_input;
 
     // 控制器
@@ -136,6 +138,9 @@ public:
     double Hover_yaw;
     ros::Time last_set_hover_pose_time;
 
+
+    ros::Timer ground_station_info_timer;
+
     pos_controller_PID pos_controller_pid;
     pos_controller_UDE pos_controller_ude;
     pos_controller_NE pos_controller_ne;
@@ -162,7 +167,8 @@ private:
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
     void offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg);
-    
+    void sendStationTextInfo(const ros::TimerEvent &e);
+
     void set_command_des();
     void set_command_des_for_pos_controller();
 
