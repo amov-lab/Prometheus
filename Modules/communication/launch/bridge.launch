@@ -20,7 +20,7 @@
         <param name="user_type" value="1"/>
 
         <!-- 自动启动项 在不使用地面站情况打开对应话题 -->
-        <param name="auto_start" value="true"/>
+        <param name="auto_start" value="false"/>
 
         <param name="drone_id" value="1"/>
         <param name="next_drone_ip" value="127.0.0.1"/>
