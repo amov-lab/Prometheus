@@ -969,6 +969,41 @@ struct ParamSettings
     }
 };
 
+struct BasicDataTypeAndValue
+{
+    uint8_t type;
+    enum Type
+    {
+        INTEGER = 1,
+        BOOLEAN = 2,
+        FLOAT = 3,
+        DOUBLE = 4,
+        STRING = 5
+    };
+    std::string value;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & type;
+        ar & value;
+    }
+};
+
+struct CustomDataSegment
+{
+    int flag;
+    std::vector<BasicDataTypeAndValue> datas;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & datas;
+    }
+};
+
 struct ConnectState
 {
     uint8_t num;

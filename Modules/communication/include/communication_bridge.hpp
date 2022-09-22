@@ -54,6 +54,7 @@ public:
     void recvData(struct ParamSettings param_settings);
     void recvData(struct MultiBsplines multi_bsplines);
     void recvData(struct Bspline bspline);
+    void recvData(struct CustomDataSegment custom_data_segment);
 
     void modeSwitch(struct ModeSelection mode_selection);
 
