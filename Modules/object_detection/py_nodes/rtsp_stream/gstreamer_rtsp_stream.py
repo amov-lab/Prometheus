@@ -1,13 +1,16 @@
-#!/usr/bin/env python
-#!coding=utf-8
- 
- 
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+
+import sys
+import os
+
+from cv_bridge import CvBridge, CvBridgeError
 import rospy
 import numpy as np
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import yaml
+
 
 import gi
 gi.require_version('Gst', '1.0')
@@ -19,14 +22,14 @@ from gi.repository import GObject, Gst, GstRtspServer
 def main(width,height,port,factory_name):
     global out_send
     out_send = cv2.VideoWriter('appsrc is-live=true ! videoconvert ! \
-                                omxh264enc bitrate=12000000 ! video/x-h264, \
+                                omxh264enc bitrate=4000000 ! video/x-h264, \
                                 stream-format=byte-stream ! rtph264pay pt=96 ! \
                                 udpsink host=127.0.0.1 port=5400 async=false',
                                 cv2.CAP_GSTREAMER, 0, 30, (width,height), True)
  
     if not out_send.isOpened():
         print('VideoWriter not opened')
-        exit(0)
+        # exit(0)
  
     rtsp_port_num = port  
  
@@ -46,7 +49,6 @@ def main(width,height,port,factory_name):
 
  
 def callback(data):
-
     scaling_factor = 0.5
     global count,bridge
     global out_send
@@ -55,7 +57,7 @@ def callback(data):
         count = 0
         cv_img = bridge.imgmsg_to_cv2(data, "bgr8")
         out_send.write(cv_img)
-        cv2.imshow("frame" , cv_img)
+        # cv2.imshow("frame" , cv_img)
         cv2.waitKey(3)
     else:
         pass
@@ -68,8 +70,9 @@ if __name__ == '__main__':
     config = rospy.get_param('~config_info', 'encode_config.yaml')
 
     yaml_config_fn = config
-    print('Input config file: {}'.format(config))
-    yaml_config = yaml.load(open(yaml_config_fn))
+    with open(yaml_config_fn) as f:
+        yaml_config=yaml.load(f,Loader=yaml.FullLoader)
+
     image_width=yaml_config['image_width']
     image_height=yaml_config['image_height']
     rtsp_port=yaml_config['rtsp_port']

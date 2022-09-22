@@ -93,6 +93,9 @@ public:
     struct TextInfo recv_text_info_;
     struct GimbalState recv_gimbal_state_;
     struct VisionDiff recv_vision_diff_;
+    struct ParamSettings recv_param_settings_;
+    struct Bspline recv_bspline_;
+    struct MultiBsplines recv_multi_bsplines_;
 };
 
 #endif

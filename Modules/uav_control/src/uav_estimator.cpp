@@ -76,6 +76,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     }
     else
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+        text_info.Message = node_name + ": wrong location_source param, no external location information input!";
         cout << YELLOW << node_name << ": wrong location_source param, no external location information input!" << TAIL << endl;
     }
 
@@ -108,6 +110,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
 
     // 【定时器】定时发布 rviz显示,保证1Hz以上
     timer_rviz_pub = nh.createTimer(ros::Duration(0.05), &UAV_estimator::timercb_rviz, this);
+
+    this->ground_station_info_timer = nh.createTimer(ros::Duration(0.1), &UAV_estimator::sendStationTextInfo, this);
 
     // 变量初始化
     uav_state.uav_id = uav_id;
@@ -148,10 +152,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     cout << GREEN << node_name << " init! " << TAIL << endl;
 
     // 地面站消息打印
-    text_info.header.stamp = ros::Time::now();
     text_info.MessageType = prometheus_msgs::TextInfo::INFO;
     text_info.Message = node_name + " init.";
-    ground_station_info_pub.publish(text_info);
 }
 
 void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
@@ -431,26 +433,38 @@ void UAV_estimator::check_uav_state()
 
     if (odom_state == 1 && last_odom_state != 1)
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "Odom invalid: Get Vision Pose Timeout!";
         cout << RED << node_name << "--->  Odom invalid: Get Vision Pose Timeout! " << TAIL << endl;
     }
     else if (odom_state == 2 && last_odom_state != 2)
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "Odom invalid: Velocity too large!";
         cout << RED << node_name << "--->  Odom invalid: Velocity too large! " << TAIL << endl;
     }
     else if (odom_state == 3 && last_odom_state != 3)
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "Odom invalid: vision_pose_error!";
         cout << RED << node_name << "--->  Odom invalid: vision_pose_error! " << TAIL << endl;
     }
     else if (odom_state == 4 && last_odom_state != 4)
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "Odom invalid: GPS/RTK location error!";
         cout << RED << node_name << "--->  Odom invalid: GPS/RTK location error! " << TAIL << endl;
     }
     else if (odom_state == 5 && last_odom_state != 5)
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+        text_info.Message = "Odom invalid: RTK not fixed!";
         cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
     }
     else if (odom_state == 6 && last_odom_state != 6)
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+        text_info.Message = "Odom invalid: Get UWB Pose Timeout!";
         cout << YELLOW << node_name << "--->  Odom invalid: Get UWB Pose Timeout! " << TAIL << endl;
     }
 
@@ -738,4 +752,21 @@ void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::Con
     offset_pose.y += enu_offset[1] - uav_state.position[1] + msg->y;
 
     local_pose_offset_pub.publish(offset_pose);
+}
+
+//向地面发送反馈信息,如果重复,将不会发送
+void UAV_estimator::sendStationTextInfo(const ros::TimerEvent &e)
+{
+    if(this->text_info.Message == this->last_text_info.Message)
+    {
+        return;
+    }
+    else
+    {
+        this->text_info.header.stamp = ros::Time::now();
+        this->ground_station_info_pub.publish(this->text_info);
+        this->last_text_info = this->text_info;
+        return;
+    }
+    
 }

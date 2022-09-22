@@ -6,6 +6,7 @@
 #include "prometheus_msgs/RheaCommunication.h"
 #include "prometheus_msgs/RheaState.h"
 #include "prometheus_msgs/RheaGPS.h"
+
 using namespace std;
 
 class UGVBasic
