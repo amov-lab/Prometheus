@@ -5,8 +5,6 @@ std::mutex g_m;
 std::mutex g_uav_basic;
 // boost::shared_mutex g_m;
 
-#define DEMO1 "gnome-terminal -- roslaunch prometheus_demo takeoff_land.launch"
-
 CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
 {
     //是否仿真 1 为是  0为否
@@ -307,7 +305,7 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
 }
 void CommunicationBridge::recvData(struct MultiBsplines multi_bsplines)
 {
-    if(this->ego_planner_ == NULL)
+    if (this->ego_planner_ == NULL)
     {
         return;
     }
@@ -315,11 +313,15 @@ void CommunicationBridge::recvData(struct MultiBsplines multi_bsplines)
 }
 void CommunicationBridge::recvData(struct Bspline bspline)
 {
-    if(this->ego_planner_ == NULL)
+    if (this->ego_planner_ == NULL)
     {
         return;
     }
     this->ego_planner_->oneTrajPub(bspline);
+}
+void CommunicationBridge::recvData(struct CustomDataSegment custom_data_segment)
+{
+    //自定义
 }
 
 //根据协议中MSG_ID的值，将数据段数据转化为正确的结构体
@@ -391,12 +393,6 @@ void CommunicationBridge::createImage(struct ImageData image_data)
 
 void CommunicationBridge::modeSwitch(struct ModeSelection mode_selection)
 {
-    // test
-    //  if ((int)mode_selection.mode == 6)
-    //  {
-    //      system(DEMO1);
-    //      return;
-    //  }
     if (mode_selection.mode == ModeSelection::Mode::REBOOTNX)
     {
         system(REBOOTNXCMD);
@@ -478,6 +474,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     //打开
                     system(OPENUAVBASIC);
                 }
+
                 text_info.Message = "create UAVBasic simulation id :" + to_string(mode_selection.selectId[0]) + "...";
                 sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
             }
@@ -636,7 +633,7 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
-        if(this->ego_planner_ == NULL)
+        if (this->ego_planner_ == NULL)
         {
             this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
         }
@@ -855,13 +852,24 @@ void CommunicationBridge::toGroundStationFun()
             else if (this->uav_basic_ != NULL)
             {
                 //触发降落  暂定
-                struct UAVSetup uav_setup;
-                uav_setup.cmd = UAVSetup::CMD::SET_PX4_MODE;
-                uav_setup.px4_mode = "AUTO.LAND";
-                // uav_setup.px4_mode = "AUTO.RTL"; //返航
-                uav_setup.arming = false;
-                uav_setup.control_state = "";
-                this->uav_basic_->uavSetupPub(uav_setup);
+                struct UAVCommand uav_command;
+                uav_command.Agent_CMD = UAVCommand::AgentCMD::Land;
+                uav_command.Move_mode = UAVCommand::MoveMode::XYZ_VEL;
+                uav_command.yaw_ref = 0;
+                uav_command.Yaw_Rate_Mode = true;
+                uav_command.yaw_rate_ref = 0;
+                uav_command.latitude = 0;
+                uav_command.longitude = 0;
+                uav_command.altitude = 0;
+                for (int i = 0; i < 3; i++)
+                {
+                    uav_command.position_ref[i] = 0;
+                    uav_command.velocity_ref[i] = 0;
+                    uav_command.acceleration_ref[i] = 0;
+                    uav_command.att_ref[i] = 0;
+                }
+                uav_command.att_ref[3] = 0;
+                this->uav_basic_->uavCmdPub(uav_command);
             }
             //无人车  停止小车
             else if (this->ugv_basic_ != NULL)

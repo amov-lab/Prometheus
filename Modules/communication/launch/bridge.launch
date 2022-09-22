@@ -2,6 +2,9 @@
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
         <!--组播ip-->
         <param name="multicast_udp_ip" value="224.0.0.88"/>
+	<!--ego planner-->
+        <param name="next_drone_ip" value="127.0.0.1"/>
+	    <param name="broadcast_ip" value="127.0.0.255"/>
         <!-- 地面站ip -->
         <param name="ground_stationt_ip" value="127.0.0.1"/>
         <param name="udp_port" value="8889"/>

@@ -2,7 +2,7 @@
 
 EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
 {
-    nh.param("drone_id", drone_id_, 1);
+    nh.param("ROBOT_ID", drone_id_, 1);
     nh.param("next_drone_ip", tcp_ip_, std::string("127.0.0.1"));
     nh.param("broadcast_ip", udp_ip_, std::string("127.0.0.255"));
 
