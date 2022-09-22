@@ -194,18 +194,18 @@ void RC_Input::handle_rc_data(mavros_msgs::RCInConstPtr pMsg)
     }
 
     // 判断通道6 - channel_6_threshold_value_1 （0.25） channel_6_threshold_value_2 （0.75）
-    if (channel_6 != last_channel_6 && channel_6 <= channel_6_threshold_value_1)
+    if ((fabs(channel_6 - last_channel_6) > 0.4 ) && channel_6 <= channel_6_threshold_value_1)
     {
         enter_init = true;
         enter_rc_pos_control = false;
         enter_command_control = false;
     }
-    else if (channel_6 != last_channel_6 && (channel_6 > channel_6_threshold_value_1 && channel_6 < channel_6_threshold_value_2))
+    else if ((fabs(channel_6 - last_channel_6) > 0.4 ) && (channel_6 > channel_6_threshold_value_1 && channel_6 < channel_6_threshold_value_2))
     {
         enter_init = false;
         enter_rc_pos_control = true;
         enter_command_control = false;
-    }else if (channel_6 != last_channel_6 && channel_6 >= channel_6_threshold_value_2)
+    }else if ((fabs(channel_6 - last_channel_6) > 0.4 ) && channel_6 >= channel_6_threshold_value_2)
     {
         enter_init = false;
         enter_rc_pos_control = false;   
