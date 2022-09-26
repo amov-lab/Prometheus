@@ -1423,7 +1423,9 @@ void UAV_controller::enable_emergency_func()
     emergency_srv.request.param6 = 0.0;
     emergency_srv.request.param7 = 0.0;
     px4_emergency_client.call(emergency_srv);
-    ROS_INFO_STREAM_ONCE("send kill cmd: force disarmed!");
+    cout << RED << node_name << " send kill cmd: force disarmed!" << TAIL << endl;
+    this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+    this->text_info.Message = "send kill cmd: force disarmed!";
 }
 
 void UAV_controller::reboot_PX4()

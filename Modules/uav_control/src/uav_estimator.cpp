@@ -457,9 +457,20 @@ void UAV_estimator::check_uav_state()
     }
     else if (odom_state == 5 && last_odom_state != 5)
     {
-        text_info.MessageType = prometheus_msgs::TextInfo::WARN;
-        text_info.Message = "Odom invalid: RTK not fixed!";
-        cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
+        if(location_source == prometheus_msgs::UAVState::GPS)
+        {
+            text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+            text_info.Message = "Odom invalid: RTK not fixed!";
+            cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
+        }
+        
+        if(location_source == prometheus_msgs::UAVState::RTK)
+        {
+            text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+            text_info.Message = "The GPS status seems to be RTK, please confirm whether the location source selection is normal!";
+            cout << YELLOW << node_name << "--->  The GPS status seems to be RTK, please confirm whether the location source selection is normal!" << TAIL << endl;
+        }
+
     }
     else if (odom_state == 6 && last_odom_state != 6)
     {
@@ -501,6 +512,11 @@ int UAV_estimator::check_uav_odom()
     {
         return 1;
     }
+    else if ((location_source == prometheus_msgs::UAVState::GPS || location_source == prometheus_msgs::UAVState::RTK) && (time_now - get_gps_stamp).toSec() > GPS_TIMEOUT)
+    {
+        return 1;
+    }
+    
 
     // odom失效可能原因2：无人机合速度过大，认为定位模块失效
     Eigen::Vector2d uav_vel_xy = Eigen::Vector2d(uav_state.velocity[0], uav_state.velocity[1]);
@@ -518,9 +534,13 @@ int UAV_estimator::check_uav_odom()
     // odom失效可能原因4:GPS定位模块数据异常,无法获取定位数据
     if (location_source == prometheus_msgs::UAVState::GPS)
     {
-        if (uav_state.gps_status != prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
+        if (uav_state.gps_status < prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
         {
             return 4;
+        }
+        else if(uav_state.gps_status > prometheus_msgs::UAVState::GPS_FIX_TYPE_3D_FIX)
+        {
+            return 5;
         }
     }
 
@@ -560,6 +580,8 @@ void UAV_estimator::printf_uav_state()
     }
     else
     {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "PX4 unconnected";
         cout << RED << "PX4 Status:[ Unconnected ] ";
     }
     //是否上锁
