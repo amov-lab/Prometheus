@@ -45,7 +45,8 @@ using namespace std;
 #define MOCAP_TIMEOUT 0.1                   
 #define GAZEBO_TIMEOUT 0.1                    
 #define T265_TIMEOUT 0.1
-#define UWB_TIMEOUT 0.1                     
+#define UWB_TIMEOUT 0.1
+#define GPS_TIMEOUT 0.1                      
 
 class UAV_estimator
 {
@@ -104,6 +105,7 @@ class UAV_estimator
         ros::Time get_gazebo_stamp{0};
         ros::Time get_t265_stamp{0};
         ros::Time get_uwb_stamp{0};
+        ros::Time get_gps_stamp{0};
 
         // 基本变量
         int uav_id;                   // 无人机编号
