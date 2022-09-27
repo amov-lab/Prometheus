@@ -50,6 +50,7 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     ros::Duration(1).sleep(); // wait
 
     // system(OPENUAVBASIC);
+    sendControlParam();
 }
 
 CommunicationBridge::~CommunicationBridge()
@@ -273,7 +274,12 @@ void CommunicationBridge::recvData(struct ModeSelection mode_selection)
 }
 void CommunicationBridge::recvData(struct ParamSettings param_settings)
 {
-    for (int i = 0; i < param_settings.param_nums; i++)
+    if(param_settings.params.size() == 0 && (param_settings.param_module == ParamSettings::ParamModule::UAVCONTROL))
+    {
+        sendControlParam();
+        return;
+    }
+    for (int i = 0; i < param_settings.params.size(); i++)
     {
         bool is = false;
         // 根据不同类型将string转为对应类型
@@ -289,16 +295,20 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
             // this->nh_.setParam(param_settings.params[i].param_name,value);
             is = setParam(param_settings.params[i].param_name, value);
         }
-        else if (param_settings.params[i].type == param_settings.params[i].LONG)
+        else if (param_settings.params[i].type == param_settings.params[i].DOUBLE)
         {
             double value = stod(param_settings.params[i].param_value.c_str());
             // this->nh_.setParam(param_settings.params[i].param_name,value);
             is = setParam(param_settings.params[i].param_name, value);
         }
-        else
+        else if (param_settings.params[i].type == param_settings.params[i].STRING)
         {
             // this->nh_.setParam(param_settings.params[i].param_name,param_settings.params[i].param_value);
             is = setParam(param_settings.params[i].param_name, param_settings.params[i].param_value);
+        }else if (param_settings.params[i].type == param_settings.params[i].BOOLEAN)
+        {
+            bool value = param_settings.params[i].param_value == "true"?true:false;
+            is = setParam(param_settings.params[i].param_name, value);
         }
         //反馈消息 表示、设置成功与否 textinfo
     }
@@ -924,4 +934,92 @@ void CommunicationBridge::toGroundStationFun()
 
         sleep(1);
     }
+}
+
+bool CommunicationBridge::getParam(struct Param* param)
+{
+    if(param->type == Param::Type::INT || param->type == Param::Type::LONG)
+    {
+        int value = 0;
+        if(!nh_.getParam(param->param_name,value))
+        {
+            return false;
+        }
+        param->param_value = std::to_string(value);
+    }else if(param->type == Param::Type::FLOAT)
+    {
+        float value = 0.0;
+        if(!nh_.getParam(param->param_name,value))
+        {
+            return false;
+        }
+        param->param_value = std::to_string(value);
+    }else if(param->type == Param::Type::DOUBLE)
+    {
+        double value = 0.0;
+        if(!nh_.getParam(param->param_name,value))
+        {
+            return false;
+        }
+        param->param_value = std::to_string(value);
+    }else if(param->type == Param::Type::BOOLEAN)
+    {
+        bool value = false;
+        if(!nh_.getParam(param->param_name,value))
+        {
+            return false;
+        }
+        if(value) param->param_value = "true";
+        else param->param_value = "false";
+    }else if(param->type == Param::Type::STRING)
+    {
+        std::string value = "";
+        if(!nh_.getParam(param->param_name,value))
+        {
+            return false;
+        }
+        param->param_value = value;
+    }
+    return true;
+}
+
+void CommunicationBridge::sendControlParam()
+{
+    ///communication_bridge/control/
+    std::string param_name[15] = {"pos_controller","enable_external_control","Takeoff_height","Land_speed","Disarm_height","location_source","maximum_safe_vel_xy","maximum_safe_vel_z","maximum_vel_error_for_vision","x_min","x_max","y_min","y_max","z_min","z_max"};
+    int8_t param_type[15] = {Param::Type::INT,Param::Type::BOOLEAN,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::INT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT};
+    sendTextInfo(TextInfo::INFO,"开始加载参数...");
+    usleep(500);
+    struct ParamSettings param_settings;
+    for(int i = 0;i < 15; i++)
+    {
+        if(i < 9) param_name[i] = "/communication_bridge/control/" + param_name[i];
+        else param_name[i] = "/communication_bridge/geo_fence/" + param_name[i];
+        struct Param param;
+        param.param_name = param_name[i];
+        param.type = param_type[i];
+        if(getParam(&param))
+        {
+            param_settings.params.push_back(param);
+            std::cout << param.param_name << " " << param.param_value << std::endl;
+        }else
+        {
+            sendTextInfo(TextInfo::INFO,"参数加载失败...");
+            return;
+        }
+    }
+    param_settings.param_module = ParamSettings::ParamModule::UAVCONTROL;
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
+    usleep(500);
+    sendTextInfo(TextInfo::INFO,"参数加载完成...");
+    usleep(500);
+}
+
+void CommunicationBridge::sendTextInfo(uint8_t message_type,std::string message)
+{
+    struct TextInfo text_info;
+    text_info.MessageType = message_type;
+    text_info.Message = message;
+    text_info.sec = ros::Time::now().sec;
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
 }

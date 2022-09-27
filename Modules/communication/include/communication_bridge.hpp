@@ -58,6 +58,12 @@ public:
 
     void modeSwitch(struct ModeSelection mode_selection);
 
+    bool getParam(struct Param* param);
+
+    void sendControlParam();
+
+    void sendTextInfo(uint8_t message_type,std::string message);
+
     //接收组播地址的数据
     void multicastUdpFun();
 
