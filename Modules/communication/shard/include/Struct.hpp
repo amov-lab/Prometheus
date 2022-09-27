@@ -13,7 +13,7 @@
 #include <boost/serialization/vector.hpp>
 
 //uav control
-#define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_outdoor.launch"
+#define OPENUAVBASIC "gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_outdoor.launch"
 // #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
 //rhea control
 #define OPENUGVBASIC ""
@@ -35,8 +35,8 @@
 //分为两种情况  
 //1:杀掉子模块，这种情况不会杀掉uav control节点和通信节点以及master节点。 
 //2:杀掉uav control节点，这种情况下只会保留通信节点以及master节点。
-#define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
-#define CLOSEOTHERMODE ""//"gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
+#define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
+#define CLOSEOTHERMODE "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
 
 //重启
 #define REBOOTNXCMD "shutdown -r now"
@@ -936,11 +936,12 @@ struct Param
     uint8_t type;
     enum Type
     {
-        INT = 0,
-        LONG = 1,
-        FLOAT = 2,
-        DOUBLE = 3,
-        STRING = 4
+        INT = 1,
+        LONG = 2,
+        FLOAT = 3,
+        DOUBLE = 4,
+        STRING = 5,
+        BOOLEAN = 6
     };
     std::string param_name;
     std::string param_value;
@@ -957,14 +958,19 @@ struct Param
 
 struct ParamSettings
 {
-    int param_nums;
+    uint8_t param_module;
+    enum ParamModule
+    {
+        UAVCONTROL = 1,
+        SWARMCONTROL = 2
+    };
     std::vector<Param> params;
 
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & param_nums;
+        ar & param_module;
         ar & params;
     }
 };
