@@ -46,7 +46,7 @@ using namespace std;
 #define GAZEBO_TIMEOUT 0.1                    
 #define T265_TIMEOUT 0.1
 #define UWB_TIMEOUT 0.1
-#define GPS_TIMEOUT 0.1                      
+#define GPS_TIMEOUT 0.3                      
 
 class UAV_estimator
 {

@@ -367,6 +367,7 @@ void UAV_estimator::px4_range_cb(const sensor_msgs::Range::ConstPtr &msg)
 void UAV_estimator::gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr &msg)
 {
     uav_state.gps_status = msg->fix_type;
+    get_gps_stamp = ros::Time::now();
 }
 
 void UAV_estimator::mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -460,15 +461,15 @@ void UAV_estimator::check_uav_state()
         if(location_source == prometheus_msgs::UAVState::GPS)
         {
             text_info.MessageType = prometheus_msgs::TextInfo::WARN;
-            text_info.Message = "Odom invalid: RTK not fixed!";
-            cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
+            text_info.Message = "The GPS status seems to be RTK, please confirm whether the location source selection is normal!";
+            cout << YELLOW << node_name << "--->  The GPS status seems to be RTK, please confirm whether the location source selection is normal!" << TAIL << endl;
         }
         
         if(location_source == prometheus_msgs::UAVState::RTK)
         {
             text_info.MessageType = prometheus_msgs::TextInfo::WARN;
-            text_info.Message = "The GPS status seems to be RTK, please confirm whether the location source selection is normal!";
-            cout << YELLOW << node_name << "--->  The GPS status seems to be RTK, please confirm whether the location source selection is normal!" << TAIL << endl;
+            text_info.Message = "Odom invalid: RTK not fixed!";
+            cout << YELLOW << node_name << "--->  Odom invalid: RTK not fixed! " << TAIL << endl;
         }
 
     }
