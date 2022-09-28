@@ -429,8 +429,17 @@ void UAV_estimator::fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
 
 void UAV_estimator::check_uav_state()
 {
+    if (uav_state.connected == false)
+    {
+        return;
+    }
     // 检查odom状态
     odom_state = check_uav_odom();
+    if(odom_first_check)
+    {
+        last_odom_state = odom_state;
+        odom_first_check = false;
+    }
 
     if (odom_state == 1 && last_odom_state != 1)
     {
@@ -479,6 +488,12 @@ void UAV_estimator::check_uav_state()
         text_info.Message = "Odom invalid: Get UWB Pose Timeout!";
         cout << YELLOW << node_name << "--->  Odom invalid: Get UWB Pose Timeout! " << TAIL << endl;
     }
+    else if (odom_state == 7 && last_odom_state != 7)
+    {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "Odom invalid: Get GPS/RTK Pose Timeout!";
+        cout << YELLOW << node_name << "--->  Odom invalid: Get GPS/RTK Pose Timeout! " << TAIL << endl;
+    }
 
     if (odom_state == 9 || odom_state == 5)
     {
@@ -515,7 +530,7 @@ int UAV_estimator::check_uav_odom()
     }
     else if ((location_source == prometheus_msgs::UAVState::GPS || location_source == prometheus_msgs::UAVState::RTK) && (time_now - get_gps_stamp).toSec() > GPS_TIMEOUT)
     {
-        return 1;
+        return 7;
     }
     
 
