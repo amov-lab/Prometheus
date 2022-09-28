@@ -46,7 +46,7 @@ using namespace std;
 #define GAZEBO_TIMEOUT 0.1                    
 #define T265_TIMEOUT 0.1
 #define UWB_TIMEOUT 0.1
-#define GPS_TIMEOUT 0.3                      
+#define GPS_TIMEOUT 1.0
 
 class UAV_estimator
 {
@@ -119,6 +119,7 @@ class UAV_estimator
         bool fake_odom;                 // Gazebo是否使用fake_odom
         bool uav_state_update{false};
         bool vision_pose_error{false};
+        bool odom_first_check{true};
 
         void printf_uav_state();
 
