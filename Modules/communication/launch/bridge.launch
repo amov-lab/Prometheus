@@ -33,6 +33,6 @@
         <param name="trajectory_mode" value="0"/>
         <param name="trajectory_time" value="0"/>
 
-        <!-- <rosparam command="load" file="$(find prometheus_communication_bridge)/../uav_control/launch/uav_control_outdoor.yaml" /> -->
+        <rosparam command="load" file="$(find prometheus_communication_bridge)/../uav_control/launch/uav_control_outdoor.yaml" />
     </node>
 </launch>

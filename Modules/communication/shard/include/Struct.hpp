@@ -13,7 +13,7 @@
 #include <boost/serialization/vector.hpp>
 
 //uav control
-#define OPENUAVBASIC "gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_outdoor.launch"
+#define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
 // #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
 //rhea control
 #define OPENUGVBASIC ""
@@ -79,7 +79,9 @@ enum MsgId
 
     UGVMARKERARRAY = 234,
     UGVMARKERARRAYLANDMARK = 235,
-    UGVMARKERARRAYTRAJECTORY = 236
+    UGVMARKERARRAYTRAJECTORY = 236,
+
+    GOAL = 255
 };
 
 //参考文件： UAVState.msg
@@ -1020,6 +1022,34 @@ struct ConnectState
     {
         ar & num;
         ar & state;
+    }
+};
+
+struct Goal
+{
+    int seq;
+    std::string frame_id;
+    double position_x;
+    double position_y;
+    double position_z;
+    double orientation_x;
+    double orientation_y;
+    double orientation_z;
+    double orientation_w;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & seq;
+        ar & frame_id;
+        ar & position_x;
+        ar & position_y;
+        ar & position_z;
+        ar & orientation_y;
+        ar & orientation_z;
+        ar & orientation_x;
+        ar & orientation_w;
     }
 };
 
