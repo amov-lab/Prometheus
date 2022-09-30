@@ -55,6 +55,7 @@ public:
     void recvData(struct MultiBsplines multi_bsplines);
     void recvData(struct Bspline bspline);
     void recvData(struct CustomDataSegment custom_data_segment);
+    void recvData(struct Goal goal);
 
     void modeSwitch(struct ModeSelection mode_selection);
 

@@ -5,6 +5,7 @@ EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
     nh.param("ROBOT_ID", drone_id_, 1);
     nh.param("next_drone_ip", tcp_ip_, std::string("127.0.0.1"));
     nh.param("broadcast_ip", udp_ip_, std::string("127.0.0.255"));
+    nh.param("ground_stationt_ip", rviz_ip_, std::string("127.0.0.1"));
 
     this->communication = new Communication();
 
@@ -23,6 +24,19 @@ EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
 
     one_traj_sub_ = nh.subscribe("/broadcast_bspline", 100, &EGOPlannerSwarm::oneTrajSubUdpCb, this, ros::TransportHints().tcpNoDelay());
     one_traj_pub_ = nh.advertise<prometheus_msgs::Bspline>("/broadcast_bspline2", 100);
+
+    point_cloud_sub_ = nh.subscribe("/map_generator/global_cloud", 100, &EGOPlannerSwarm::pointCloudSubCb, this);
+
+    point_cloud_ex_sub_ = nh.subscribe("/uav1/map_generator/local_cloud", 100, &EGOPlannerSwarm::pointCloudExSubCb, this);
+    ///map_generator/global_cloud
+
+    tf_sub_ = nh.subscribe("/tf", 10, &EGOPlannerSwarm::tfCb, this);
+    tf_static_sub_ = nh.subscribe("/tf_static", 10, &EGOPlannerSwarm::tfStaticCb, this);
+    trajectory_sub_ = nh.subscribe("/uav1/prometheus/trajectory", 10, &EGOPlannerSwarm::trajectoryCb, this);
+
+    goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/uav1/prometheus/motion_planning/goal", 100);
+
+    uav_mesh_sub_ = nh.subscribe("/uav1/prometheus/uav_mesh",10 , &EGOPlannerSwarm::uavMeshCb, this);
 }
 
 EGOPlannerSwarm::~EGOPlannerSwarm()
@@ -153,3 +167,105 @@ void EGOPlannerSwarm::oneTrajPub(struct Bspline bspline)
     msg.yaw_dt = bspline.yaw_dt;
     this->one_traj_pub_.publish(msg);
 }
+
+void EGOPlannerSwarm::goalPub(struct Goal goal)
+{
+    geometry_msgs::PoseStamped msg;
+    msg.header.seq = goal.seq;
+    msg.header.frame_id = goal.frame_id;
+    msg.pose.position.x = goal.position_x;
+    msg.pose.position.y = goal.position_y;
+    msg.pose.position.z = goal.position_z;
+    msg.pose.orientation.x = goal.orientation_x;
+    msg.pose.orientation.y = goal.orientation_y;
+    msg.pose.orientation.z = goal.orientation_z;
+    msg.pose.orientation.w = goal.orientation_w;
+    goal_pub_.publish(msg);
+}
+
+void EGOPlannerSwarm::sendRvizByUdp(int msg_len, std::string target_ip)
+{
+    //std::cout << "rviz:" << msg_len << std::endl;
+    rviz_socket = socket(PF_INET, SOCK_DGRAM, 0);
+    if (rviz_socket < 0)
+    {
+        printf("Socket creation error \n");
+        return;
+    }
+
+    memset(&rviz_addr, 0, sizeof(rviz_addr));
+    rviz_addr.sin_family = AF_INET;
+    rviz_addr.sin_port = htons(8890);
+    rviz_addr.sin_addr.s_addr = inet_addr(target_ip.c_str());
+
+    // Convert IPv4 and IPv6 addresses from text to binary form
+    if (inet_pton(AF_INET, target_ip.c_str(), &rviz_addr.sin_addr) <= 0)
+    {
+        printf("Invalid address/ Address not supported \n");
+        return;
+    }
+
+
+    char *ptr = rviz_recv_buf;
+    if (msg_len < BUF_LEN)
+        sendto(rviz_socket, rviz_recv_buf, msg_len, 0, (struct sockaddr *)&rviz_addr, sizeof(rviz_addr));
+    else
+    {
+        int len = msg_len;
+        while (true)
+        {
+            //std::cout << "len: " << len << std::endl;
+            len = len - BUF_LEN;
+            if (len > 0)
+            {
+                sendto(rviz_socket, ptr, BUF_LEN, 0, (struct sockaddr *)&rviz_addr, sizeof(rviz_addr));
+            }
+            else if (len < 0)
+            {
+                sendto(rviz_socket, ptr, len + BUF_LEN, 0, (struct sockaddr *)&rviz_addr, sizeof(rviz_addr));
+                break;
+            }
+            //偏移量
+            ptr += BUF_LEN;
+            usleep(100);
+        }
+    }
+    close(rviz_socket);
+}
+
+void EGOPlannerSwarm::pointCloudSubCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
+{
+    sensor_msgs::PointCloud2 point_cloud = *msg;
+    sendRvizByUdp(encodeRvizMsg(point_cloud),rviz_ip_);
+}
+
+void EGOPlannerSwarm::pointCloudExSubCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
+{
+    sensor_msgs::PointCloud2 point_cloud = *msg;
+    sendRvizByUdp(encodeRvizMsg(point_cloud,RvizMsgId::PointClound2Ex),rviz_ip_);
+}
+
+void EGOPlannerSwarm::tfCb(const tf2_msgs::TFMessage::ConstPtr &msg)
+{
+    tf2_msgs::TFMessage tf = *msg;
+    sendRvizByUdp(encodeRvizMsg(tf,RvizMsgId::TF),rviz_ip_);
+}
+
+void EGOPlannerSwarm::tfStaticCb(const tf2_msgs::TFMessage::ConstPtr &msg)
+{
+    tf2_msgs::TFMessage tf_static = *msg;
+    sendRvizByUdp(encodeRvizMsg(tf_static,RvizMsgId::TFStatic),rviz_ip_);
+}
+
+void EGOPlannerSwarm::trajectoryCb(const nav_msgs::Path::ConstPtr &msg)
+{
+    nav_msgs::Path trajectory = *msg;
+    sendRvizByUdp(encodeRvizMsg(trajectory,RvizMsgId::Trajectory),rviz_ip_);
+}
+
+void EGOPlannerSwarm::uavMeshCb(const visualization_msgs::Marker::ConstPtr &msg)
+{
+    visualization_msgs::Marker uav_mesh = *msg;
+    sendRvizByUdp(encodeRvizMsg(uav_mesh,RvizMsgId::UAVMesh),rviz_ip_);
+}
+

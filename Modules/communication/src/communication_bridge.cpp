@@ -50,7 +50,8 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     ros::Duration(1).sleep(); // wait
 
     // system(OPENUAVBASIC);
-    sendControlParam();
+    // sendControlParam();
+    // ego_planner_ = new EGOPlannerSwarm(nh);
 }
 
 CommunicationBridge::~CommunicationBridge()
@@ -333,6 +334,13 @@ void CommunicationBridge::recvData(struct CustomDataSegment custom_data_segment)
 {
     //自定义
 }
+void CommunicationBridge::recvData(struct Goal goal)
+{
+    if(this->ego_planner_ != NULL)
+    {
+        this->ego_planner_->goalPub(goal);
+    }
+}
 
 //根据协议中MSG_ID的值，将数据段数据转化为正确的结构体
 void CommunicationBridge::pubMsg(int msg_id)
@@ -387,6 +395,9 @@ void CommunicationBridge::pubMsg(int msg_id)
         break;
     case MsgId::MULTIBSPLINES:
         recvData(recv_multi_bsplines_);
+        break;
+    case MsgId::GOAL:
+        recvData(recv_goal_);
         break;
     default:
         break;
@@ -1001,7 +1012,6 @@ void CommunicationBridge::sendControlParam()
         if(getParam(&param))
         {
             param_settings.params.push_back(param);
-            std::cout << param.param_name << " " << param.param_value << std::endl;
         }else
         {
             sendTextInfo(TextInfo::INFO,"参数加载失败...");
@@ -1010,9 +1020,7 @@ void CommunicationBridge::sendControlParam()
     }
     param_settings.param_module = ParamSettings::ParamModule::UAVCONTROL;
     sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
-    usleep(500);
     sendTextInfo(TextInfo::INFO,"参数加载完成...");
-    usleep(500);
 }
 
 void CommunicationBridge::sendTextInfo(uint8_t message_type,std::string message)

@@ -42,9 +42,6 @@ public:
     template <typename T>
     uint8_t getMsgId(T msg);
 
-    template <typename T>
-    T add(T num1,T num2);
-
     // UDP client
     int connectToUdpMulticast(const char *ip, const int port);
 
@@ -96,6 +93,7 @@ public:
     struct ParamSettings recv_param_settings_;
     struct Bspline recv_bspline_;
     struct MultiBsplines recv_multi_bsplines_;
+    struct Goal recv_goal_;
 };
 
 #endif
