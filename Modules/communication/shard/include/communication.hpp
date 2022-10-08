@@ -36,7 +36,7 @@ public:
     int encodeMsg(int8_t send_mode, T msg);
 
     //解码
-    int decodeMsg(char *buff);
+    int decodeMsg(char *buff,int8_t send_mode);
 
     //根据传入的struct返回对应的MSG_ID
     template <typename T>

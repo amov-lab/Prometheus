@@ -27,16 +27,24 @@ EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
 
     point_cloud_sub_ = nh.subscribe("/map_generator/global_cloud", 100, &EGOPlannerSwarm::pointCloudSubCb, this);
 
-    point_cloud_ex_sub_ = nh.subscribe("/uav1/map_generator/local_cloud", 100, &EGOPlannerSwarm::pointCloudExSubCb, this);
+    point_cloud_ex_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/map_generator/local_cloud", 100, &EGOPlannerSwarm::pointCloudExSubCb, this);
     ///map_generator/global_cloud
 
     tf_sub_ = nh.subscribe("/tf", 10, &EGOPlannerSwarm::tfCb, this);
     tf_static_sub_ = nh.subscribe("/tf_static", 10, &EGOPlannerSwarm::tfStaticCb, this);
-    trajectory_sub_ = nh.subscribe("/uav1/prometheus/trajectory", 10, &EGOPlannerSwarm::trajectoryCb, this);
+    trajectory_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/trajectory", 10, &EGOPlannerSwarm::trajectoryCb, this);
 
-    goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/uav1/prometheus/motion_planning/goal", 100);
+    goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 100);
 
-    uav_mesh_sub_ = nh.subscribe("/uav1/prometheus/uav_mesh",10 , &EGOPlannerSwarm::uavMeshCb, this);
+    uav_mesh_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/uav_mesh",10 , &EGOPlannerSwarm::uavMeshCb, this);
+
+    scan_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/scan",10 , &EGOPlannerSwarm::scanCb, this);
+
+    optimal_traj_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/optimal_list",10 , &EGOPlannerSwarm::optimalTrajCb, this);
+
+    goal_point_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/goal_point",10 , &EGOPlannerSwarm::goalPointCb, this);
+
+    goal_sub_ =  nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 10 , &EGOPlannerSwarm::goalCb, this);
 }
 
 EGOPlannerSwarm::~EGOPlannerSwarm()
@@ -236,7 +244,7 @@ void EGOPlannerSwarm::sendRvizByUdp(int msg_len, std::string target_ip)
 void EGOPlannerSwarm::pointCloudSubCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
 {
     sensor_msgs::PointCloud2 point_cloud = *msg;
-    sendRvizByUdp(encodeRvizMsg(point_cloud),rviz_ip_);
+    sendRvizByUdp(encodeRvizMsg(point_cloud,RvizMsgId::PointClound2),rviz_ip_);
 }
 
 void EGOPlannerSwarm::pointCloudExSubCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
@@ -269,3 +277,38 @@ void EGOPlannerSwarm::uavMeshCb(const visualization_msgs::Marker::ConstPtr &msg)
     sendRvizByUdp(encodeRvizMsg(uav_mesh,RvizMsgId::UAVMesh),rviz_ip_);
 }
 
+void EGOPlannerSwarm::scanCb(const sensor_msgs::LaserScan::ConstPtr &msg)
+{
+    sensor_msgs::LaserScan scan = *msg;
+    sendRvizByUdp(encodeRvizMsg(scan,RvizMsgId::Scan),rviz_ip_);
+}
+
+void EGOPlannerSwarm::optimalTrajCb(const visualization_msgs::Marker::ConstPtr &msg)
+{
+    visualization_msgs::Marker marker = *msg;
+    sendRvizByUdp(encodeRvizMsg(marker,RvizMsgId::OptimalTraj),rviz_ip_);
+}
+
+void EGOPlannerSwarm::goalPointCb(const visualization_msgs::Marker::ConstPtr &msg)
+{
+    visualization_msgs::Marker marker = *msg;
+    int i = 100;
+    while(i > 0)
+    {
+        sendRvizByUdp(encodeRvizMsg(marker,RvizMsgId::GoalPoint),rviz_ip_);
+        i--;
+        usleep(10);
+    }
+}
+
+void EGOPlannerSwarm::goalCb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+{
+    geometry_msgs::PoseStamped goal = *msg;
+    int i = 100;
+    while(i > 0)
+    {
+        sendRvizByUdp(encodeRvizMsg(goal,RvizMsgId::Goal),rviz_ip_);
+        i--;
+        usleep(10);
+    }
+}

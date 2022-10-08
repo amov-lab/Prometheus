@@ -16,6 +16,7 @@
 #include "nav_msgs/Path.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "visualization_msgs/Marker.h"
+#include "sensor_msgs/LaserScan.h"
 
 enum RvizMsgId
 {
@@ -24,7 +25,11 @@ enum RvizMsgId
     TF = 222,
     TFStatic = 223,
     Trajectory = 224,
-    UAVMesh = 225
+    UAVMesh = 225,
+    Scan = 226,
+    OptimalTraj = 227,
+    GoalPoint = 228,
+    Goal = 229
 };
 
 class EGOPlannerSwarm
@@ -56,8 +61,13 @@ private:
 
     void uavMeshCb(const visualization_msgs::Marker::ConstPtr &msg);
 
-    template <typename T>
-    uint8_t getRvizMsgId(T msg);
+    void scanCb(const sensor_msgs::LaserScan::ConstPtr &msg);
+
+    void optimalTrajCb(const visualization_msgs::Marker::ConstPtr &msg);
+
+    void goalPointCb(const visualization_msgs::Marker::ConstPtr &msg);
+
+    void goalCb(const geometry_msgs::PoseStamped::ConstPtr &msg);
 
     template <typename T>
     int encodeRvizMsg(T msg, int msg_id = 0);
@@ -68,7 +78,7 @@ private:
     ros::Subscriber swarm_trajs_sub_, one_traj_sub_;
     ros::Publisher swarm_trajs_pub_, one_traj_pub_;
 
-    ros::Subscriber point_cloud_sub_,point_cloud_ex_sub_,tf_sub_,tf_static_sub_,trajectory_sub_,uav_mesh_sub_;
+    ros::Subscriber point_cloud_sub_,point_cloud_ex_sub_,tf_sub_,tf_static_sub_,trajectory_sub_,uav_mesh_sub_,scan_sub_,optimal_traj_sub_,goal_point_sub_,goal_sub_;
     ros::Publisher goal_pub_;
 
     int drone_id_;
@@ -80,15 +90,6 @@ private:
     int rviz_socket;
     char rviz_recv_buf[BUF_LEN * 500];
 };
-
-template <typename T>
-uint8_t EGOPlannerSwarm::getRvizMsgId(T msg)
-{
-    if (typeid(msg) == typeid(sensor_msgs::PointCloud2))
-        return RvizMsgId::PointClound2;
-    
-    return 0;
-}
 
 //第二个参数适用于要传输的数据类型相同，但是接收端处理的方式不同所以为了区别msg_id采用自定义。一般情况不使用。
 template <typename T>
@@ -117,13 +118,7 @@ int EGOPlannerSwarm::encodeRvizMsg(T msg, int msg_id)
     *((uint32_t *)ptr) = LENGTH;
     ptr += sizeof(uint32_t);
 
-    uint8_t MSG_ID;
-    // MSG_ID
-    if (msg_id == 0)
-        MSG_ID = getRvizMsgId(msg);
-    else
-        MSG_ID = msg_id;
-
+    uint8_t MSG_ID = msg_id;
     *((uint8_t *)ptr) = MSG_ID;
     ptr += sizeof(uint8_t);
 
