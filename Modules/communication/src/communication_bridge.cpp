@@ -145,7 +145,7 @@ void CommunicationBridge::serverFun()
         //目前只有地面站发送TCP消息、所以TCP服务端接收到数据后开始心跳包的发送
         this->is_heartbeat_ready_ = true;
 
-        pubMsg(decodeMsg(tcp_recv_buf));
+        pubMsg(decodeMsg(tcp_recv_buf,Send_Mode::TCP));
         close(recv_sock);
     }
 }
@@ -826,7 +826,7 @@ void CommunicationBridge::multicastUdpFun()
         // std::lock_guard<std::mutex> lg(g_m);
 
         std::cout << "udp valread: " << valread << std::endl;
-        pubMsg(decodeMsg(udp_recv_buf));
+        pubMsg(decodeMsg(udp_recv_buf,Send_Mode::UDP));
     }
 }
 
