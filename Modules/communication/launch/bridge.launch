@@ -2,6 +2,9 @@
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
         <!--组播ip-->
         <param name="multicast_udp_ip" value="224.0.0.88"/>
+	<!--ego planner-->
+        <param name="next_drone_ip" value="127.0.0.1"/>
+	    <param name="broadcast_ip" value="127.0.0.255"/>
         <!-- 地面站ip -->
         <param name="ground_stationt_ip" value="127.0.0.1"/>
         <param name="udp_port" value="8889"/>
@@ -20,6 +23,16 @@
         <param name="user_type" value="1"/>
 
         <!-- 自动启动项 在不使用地面站情况打开对应话题 -->
-        <param name="auto_start" value="true"/>
+        <param name="auto_start" value="false"/>
+
+        <param name="drone_id" value="1"/>
+        <param name="next_drone_ip" value="127.0.0.1"/>
+        <param name="broadcast_ip" value="127.0.0.255"/>
+
+        <param name="trajectory_flag" value="false"/>
+        <param name="trajectory_mode" value="0"/>
+        <param name="trajectory_time" value="0"/>
+
+        <rosparam command="load" file="$(find prometheus_communication_bridge)/../uav_control/launch/uav_control_outdoor.yaml" />
     </node>
 </launch>

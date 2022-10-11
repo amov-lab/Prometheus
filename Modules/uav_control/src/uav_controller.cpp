@@ -141,6 +141,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     // 【服务】重启PX4飞控
     px4_reboot_client = nh.serviceClient<mavros_msgs::CommandLong>("/uav" + std::to_string(uav_id) + "/mavros/cmd/command");
     
+    this->ground_station_info_timer = nh.createTimer(ros::Duration(0.1), &UAV_controller::sendStationTextInfo, this);
+
     control_state = CONTROL_STATE::INIT;
     uav_control_state.failsafe = false;
 
@@ -166,10 +168,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
 
     rc_input.init();
 
-    text_info.header.stamp = ros::Time::now();
     text_info.MessageType = prometheus_msgs::TextInfo::INFO;
     text_info.Message = node_name + " init.";
-    ground_station_info_pub.publish(text_info);
 }
 
 void UAV_controller::mainloop()
@@ -182,12 +182,16 @@ void UAV_controller::mainloop()
         if (safety_flag == -1)
         {
             // 与PX4断开连接，直接返回
+            this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            this->text_info.Message = "Unconnected PX4, Waiting for PX4 connection";
             return;
         }
         else if (safety_flag == 1)
         {
             // 超出geofence，原地降落
             uav_control_state.failsafe = true;
+            this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            this->text_info.Message = "Out of the geo fence, swtich to land control mode！";
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
         else if (safety_flag == 2)
@@ -195,6 +199,8 @@ void UAV_controller::mainloop()
             // 检测到odom失效，快速降落
             quick_land = true;
             uav_control_state.failsafe = true;
+            this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            this->text_info.Message = "Odom invalid, swtich to land control mode!";
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
 
@@ -836,6 +842,8 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
             // odom失效，拒绝进入
             if (!uav_state.odom_valid)
             {
+                this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+                this->text_info.Message = "Reject RC_POS_CONTROL. Odom invalid!";
                 cout << RED << node_name << " Reject RC_POS_CONTROL. Odom invalid! " << TAIL << endl;
                 return;
             }
@@ -866,6 +874,8 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         // odom失效，拒绝进入
         if (!uav_state.odom_valid)
         {
+            this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            this->text_info.Message = "Reject RC_POS_CONTROL. Odom invalid!";
             cout << RED << node_name << " Reject RC_POS_CONTROL. Odom invalid! " << TAIL << endl;
             return;
         }
@@ -1357,11 +1367,15 @@ void UAV_controller::arm_disarm_func(bool on_or_off)
             }
             else
             {
+                this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+                this->text_info.Message = "vehicle disarming, fail!";
                 cout << RED << node_name << " vehicle disarming, fail!" << TAIL << endl;
             }
         }
         else
         {
+            this->text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+            this->text_info.Message = "vehicle already armed";
             cout << YELLOW << node_name << " vehicle already armed" << TAIL << endl;
         }
     }
@@ -1375,11 +1389,15 @@ void UAV_controller::arm_disarm_func(bool on_or_off)
         }
         else
         {
+            this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            this->text_info.Message = "vehicle arming, fail!";
             cout << RED << node_name << "vehicle arming, fail!" << TAIL << endl;
         }
     }
     else
     {
+        this->text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+        this->text_info.Message = "vehicle already disarmed";
         cout << YELLOW << node_name << "vehicle already disarmed" << TAIL << endl;
     }
 }
@@ -1405,7 +1423,9 @@ void UAV_controller::enable_emergency_func()
     emergency_srv.request.param6 = 0.0;
     emergency_srv.request.param7 = 0.0;
     px4_emergency_client.call(emergency_srv);
-    ROS_INFO_STREAM_ONCE("send kill cmd: force disarmed!");
+    cout << RED << node_name << " send kill cmd: force disarmed!" << TAIL << endl;
+    this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+    this->text_info.Message = "send kill cmd: force disarmed!";
 }
 
 void UAV_controller::reboot_PX4()
@@ -1419,4 +1439,23 @@ void UAV_controller::reboot_PX4()
     reboot_srv.request.confirmation = true;
     px4_reboot_client.call(reboot_srv);
     cout << GREEN << node_name << " Reboot PX4!" << TAIL << endl;
+    this->text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+    this->text_info.Message = "Reboot PX4!";
+}
+
+//向地面发送反馈信息,如果重复,将不会发送
+void UAV_controller::sendStationTextInfo(const ros::TimerEvent &e)
+{
+    if(this->text_info.Message == this->last_text_info.Message)
+    {
+        return;
+    }
+    else
+    {
+        this->text_info.header.stamp = ros::Time::now();
+        this->ground_station_info_pub.publish(this->text_info);
+        this->last_text_info = this->text_info;
+        return;
+    }
+    
 }

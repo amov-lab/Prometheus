@@ -36,14 +36,11 @@ public:
     int encodeMsg(int8_t send_mode, T msg);
 
     //解码
-    int decodeMsg(char *buff);
+    int decodeMsg(char *buff,int8_t send_mode);
 
     //根据传入的struct返回对应的MSG_ID
     template <typename T>
     uint8_t getMsgId(T msg);
-
-    template <typename T>
-    T add(T num1,T num2);
 
     // UDP client
     int connectToUdpMulticast(const char *ip, const int port);
@@ -93,6 +90,10 @@ public:
     struct TextInfo recv_text_info_;
     struct GimbalState recv_gimbal_state_;
     struct VisionDiff recv_vision_diff_;
+    struct ParamSettings recv_param_settings_;
+    struct Bspline recv_bspline_;
+    struct MultiBsplines recv_multi_bsplines_;
+    struct Goal recv_goal_;
 };
 
 #endif
