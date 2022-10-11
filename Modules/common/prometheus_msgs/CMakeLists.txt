@@ -54,6 +54,8 @@ add_message_files(
   RheaState.msg
   VisionDiff.msg
   WindowPosition.msg
+	Bspline.msg
+	MultiBsplines.msg
 )
 
 add_action_files(

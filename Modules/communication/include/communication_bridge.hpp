@@ -15,6 +15,7 @@
 #include "autonomous_landing_topic.hpp"
 #include "gimbal_basic_topic.hpp"
 #include "object_tracking_topic.hpp"
+#include "ego_planner_swarm_topic.hpp"
 
 #include <mutex>
 #include <condition_variable>
@@ -50,8 +51,19 @@ public:
     void recvData(struct ImageData image_data);
     void recvData(struct UAVSetup uav_setup);
     void recvData(struct ModeSelection mode_selection);
+    void recvData(struct ParamSettings param_settings);
+    void recvData(struct MultiBsplines multi_bsplines);
+    void recvData(struct Bspline bspline);
+    void recvData(struct CustomDataSegment custom_data_segment);
+    void recvData(struct Goal goal);
 
     void modeSwitch(struct ModeSelection mode_selection);
+
+    bool getParam(struct Param* param);
+
+    void sendControlParam();
+
+    void sendTextInfo(uint8_t message_type,std::string message);
 
     //接收组播地址的数据
     void multicastUdpFun();
@@ -68,6 +80,8 @@ public:
 
     bool deleteMode(struct ModeSelection mode_selection);
 
+    template <typename T>
+    bool setParam(std::string param_name,T param_value);
 private:
     //std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;
@@ -78,6 +92,7 @@ private:
     AutonomousLanding *autonomous_landing_ = NULL;
     GimbalBasic *gimbal_basic_ = NULL;
     ObjectTracking *object_tracking_ = NULL;
+    EGOPlannerSwarm *ego_planner_ = NULL;
 
     int current_mode_ = 0;
 
@@ -87,7 +102,22 @@ private:
     bool is_heartbeat_ready_ = false;
 
     int user_type_;
-
 };
+
+template <typename T>
+bool CommunicationBridge::setParam(std::string param_name,T param_value)
+{
+    nh_.setParam(param_name,param_value);
+    T value;
+    nh_.getParam(param_name,value);
+    if(param_value == value)
+    {
+        return true;
+    }else
+    {
+        return false;
+    }
+    return false;
+}
 
 #endif

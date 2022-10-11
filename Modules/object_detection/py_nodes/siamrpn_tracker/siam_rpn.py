@@ -26,6 +26,7 @@ except ImportError:
 from threading import Lock
 from prometheus_msgs.msg import DetectionInfo, MultiDetectionInfo,WindowPosition
 import math
+import time
 
 
 image_lock = Lock()
@@ -37,38 +38,7 @@ kcf_tracker_h = 1.0
 rospy.init_node('siamrpn_tracker', anonymous=True)
 
 
-'''
-def draw_circle(event, x, y, flags, param):
-    global x1, y1, x2, y2, drawing, init, flag, iamge
-
-    if init is False:
-        #print(init)
-        if event == cv2.EVENT_LBUTTONDOWN and flag == 2:
-            if drawing is True:
-                drawing = False
-                x2, y2 = x, y
-                init = True
-                #flag = 1
-                print(init)
-                print([x1,y1,x2,y2])
-
-        if event == cv2.EVENT_LBUTTONDOWN and flag == 1:
-
-            drawing = True
-            x1, y1 = x, y
-            x2, y2 = -1, -1
-            flag = 2
-        if drawing is True:
-            x2, y2 = x, y
-            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-    if event == cv2.EVENT_MBUTTONDOWN:
-        flag = 1
-        init = False
-        x1, x2, y1, y2 = -1, -1, -1, -1
-'''
-
-
+"""
 def draw_circle(event, x, y, flags, param):
     global x1, y1, x2, y2, drawing, init, flag, g_image, start
 
@@ -102,7 +72,49 @@ def draw_circle(event, x, y, flags, param):
         flag = 1
         init = False
         x1, x2, y1, y2 = -1, -1, -1, -1
+"""
+class MouseInfo:
+    def __init__(self):
+        self.flag = False
+        self.down_xy = [0, 0]
+        self.up_xy = [0, 0]
+        self.cur_draw_xy = [0, 0]
+        self.show_draw = False
+        self.finish = False
+        self.past_ts = time.time()
+        self._r_double_button = False
 
+    def __call__(self, event, x, y, flags, params):
+        self.cur_draw_xy = [x, y]
+        if event == cv2.EVENT_LBUTTONUP:
+            if time.time() - self.past_ts < 0.5:
+                self._r_double_button = True
+                # print("Double Right Button")
+            self.past_ts = time.time()
+
+        if event == cv2.EVENT_LBUTTONDOWN and self.flag == False:
+            self.down_xy = [x, y]
+            self.up_xy = [0, 0]
+            self.flag = not self.flag
+            self.show_draw = True
+
+        if event == cv2.EVENT_LBUTTONUP and self.flag == True:
+            self.up_xy = [x, y]
+            self.flag = not self.flag
+            self.show_draw = False
+            self.finish = True
+
+    def r_double_event(self) -> bool:
+        # 是否完成双击
+        tmp = self._r_double_button
+        self._r_double_button = False
+        return tmp
+
+    def finish_event(self) -> bool:
+        # 是否完成框选
+        tmp = self.finish
+        self.finish = False
+        return tmp
 
 def callback(data):
     global g_image, getim
@@ -128,14 +140,10 @@ def winpos_callback(data):
     
 
 def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
-    global x1, y1, x2, y2, drawing, init, flag, g_image, getim, start
+    global g_image, getim
 
-    flag=1
-    init = False
-    drawing = False
-    getim = False
     start = False
-    x1, x2, y1, y2 = -1, -1, -1, -1
+    getim = False
     flag_lose = False
     count_lose = 0
 
@@ -152,10 +160,10 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
     rospy.Subscriber(subscriber, Image, callback)
     rospy.Subscriber("/detection/bbox_draw",WindowPosition,winpos_callback)
     pub = rospy.Publisher("/uav" + str(uav_id) + '/prometheus/object_detection/siamrpn_tracker', DetectionInfo, queue_size=10)
-    detection_img_pub = rospy.Publisher("/uav" + str(uav_id) + '/prometheus/object_detection/siamrpn_tracker/detection', Image, queue_size=1)
 
     cv2.namedWindow('image')
-    cv2.setMouseCallback('image', draw_circle)
+    draw_bbox = MouseInfo()
+    cv2.setMouseCallback('image', draw_bbox)
     rate = rospy.Rate(50)
     while not rospy.is_shutdown():
         if getim:
@@ -167,13 +175,28 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
             with image_lock:
                 image = g_image.copy()
 
-            if start is False and init is True:
-                target_pos = np.array([int((x1+x2)/2), int((y1+y2)/2)])
-                target_sz = np.array([int(x2-x1), int(y2-y1)])
+            if start is False and draw_bbox.finish_event():
+                mouse_bbox = [
+                    min(draw_bbox.down_xy[0], draw_bbox.up_xy[0]),
+                    min(draw_bbox.down_xy[1], draw_bbox.up_xy[1]),
+                    max(draw_bbox.down_xy[0], draw_bbox.up_xy[0]),
+                    max(draw_bbox.down_xy[1], draw_bbox.up_xy[1]),
+                ]
+                target_pos = np.array([(mouse_bbox[0] + mouse_bbox[2]) / 2, (mouse_bbox[1] + mouse_bbox[3]) / 2])
+                target_sz = np.array([mouse_bbox[2] - mouse_bbox[0], mouse_bbox[3] - mouse_bbox[1]])
+                if (target_sz[0]**2 + target_sz[1]**2) < 100:
+                    continue
                 state = SiamRPN_init(image, target_pos, target_sz, net)
                 start = True
                 flag_lose = False
                 continue
+
+            # 双击取消框选
+            if draw_bbox.r_double_event():
+                d_info.detected = False
+                start = False
+                continue
+
             if start is True:
                 state = SiamRPN_track(state, image)  # track
                 res = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
@@ -200,12 +223,17 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
                     count_lose = 0
                 if count_lose > 4:
                     flag_lose = True
+
+            cv2.putText(image, 'Double click to cancel the selection', (10,20), cv2.FONT_HERSHEY_SIMPLEX , 0.5, (0,0,255), 1)
             if flag_lose is True:
                 cv2.putText(image, 'target lost', (20,40), cv2.FONT_HERSHEY_SIMPLEX , 1, (0,0,255), 2)
                 ## ! 
                 d_info.detected = False
-            if drawing is True:
-                cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+            if draw_bbox.show_draw:
+                cv2.rectangle(
+                    image, draw_bbox.down_xy, draw_bbox.cur_draw_xy, (0, 255, 0), 2
+                )
 
             cx = int(image.shape[1]/2)
             cy = int(image.shape[0]/2)
@@ -214,8 +242,6 @@ def showImage(subscriber, camera_matrix, kcf_tracker_h, uav_id):
             ## ! 
             pub.publish(d_info)
             cv2.imshow('image', image)
-            image_msg = CvBridge().cv2_to_imgmsg(image, encoding='bgr8')
-            detection_img_pub.publish(image_msg)
             cv2.waitKey(10)
 
         rate.sleep()

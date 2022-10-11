@@ -45,7 +45,8 @@ using namespace std;
 #define MOCAP_TIMEOUT 0.35                 
 #define GAZEBO_TIMEOUT 0.1                    
 #define T265_TIMEOUT 0.1
-#define UWB_TIMEOUT 0.1                     
+#define UWB_TIMEOUT 0.1
+#define GPS_TIMEOUT 1.0
 
 class UAV_estimator
 {
@@ -80,12 +81,14 @@ class UAV_estimator
         ros::Timer timer_px4_vision_pub;
         ros::Timer timer_uav_state_pub;
         ros::Timer timer_rviz_pub;
+        ros::Timer ground_station_info_timer;
 
         prometheus_msgs::UAVState uav_state;    // 无人机状态
         nav_msgs::Odometry uav_odom;                 // 无人机里程计
         std::vector<geometry_msgs::PoseStamped> pos_vector;    // 无人机轨迹容器,用于rviz显示
         geometry_msgs::PoseStamped vision_pose;        // vision_pose for px4
         prometheus_msgs::TextInfo text_info;
+        prometheus_msgs::TextInfo last_text_info;
         prometheus_msgs::OffsetPose offset_pose;
 
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
@@ -102,6 +105,7 @@ class UAV_estimator
         ros::Time get_gazebo_stamp{0};
         ros::Time get_t265_stamp{0};
         ros::Time get_uwb_stamp{0};
+        ros::Time get_gps_stamp{0};
 
         // 基本变量
         int uav_id;                   // 无人机编号
@@ -115,6 +119,7 @@ class UAV_estimator
         bool fake_odom;                 // Gazebo是否使用fake_odom
         bool uav_state_update{false};
         bool vision_pose_error{false};
+        bool odom_first_check{true};
 
         void printf_uav_state();
 
@@ -139,6 +144,7 @@ class UAV_estimator
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);
         void timercb_rviz(const ros::TimerEvent &e);
+        void sendStationTextInfo(const ros::TimerEvent &e);
         void check_uav_state();
         int check_uav_odom();
         

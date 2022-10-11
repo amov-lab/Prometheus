@@ -8,11 +8,11 @@ UGVBasic::UGVBasic(ros::NodeHandle &nh,Communication *communication)
 
     //【订阅】rviz 点云
     // this->scan_matched_points2_sub_ = nh.subscribe("/prometheus/pcl_groundtruth", 10, &UGVBasic::scanMatchedPoints2Cb, this);
-    // //【订阅】rviz 激光雷达
+    // // //【订阅】rviz 激光雷达
     // this->scan_sub_ = nh.subscribe("/scan", 10, &UGVBasic::scanCb, this);
-    // //【订阅】rviz tf_static
+    // // //【订阅】rviz tf_static
     // this->tf_static_sub_ = nh.subscribe("/tf_static", 10, &UGVBasic::tfCb, this);
-    // //【订阅】rviz tf
+    // // //【订阅】rviz tf
     // this->tf_sub_ = nh.subscribe("/tf", 10, &UGVBasic::tfCb, this);
     //【订阅】rviz constraint_list
     //this->constraint_list_sub_
