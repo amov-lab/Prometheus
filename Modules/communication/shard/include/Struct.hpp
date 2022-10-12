@@ -13,8 +13,8 @@
 #include <boost/serialization/vector.hpp>
 
 //uav control
-#define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
-// #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
+#define OPENUAVBASIC //"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
+#define CLOSEUAVBASIC //"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
 //rhea control
 #define OPENUGVBASIC ""
 #define CLOSEUGVBASIC ""
@@ -35,7 +35,7 @@
 //分为两种情况  
 //1:杀掉子模块，这种情况不会杀掉uav control节点和通信节点以及master节点。 
 //2:杀掉uav control节点，这种情况下只会保留通信节点以及master节点。
-#define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
+// #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
 #define CLOSEOTHERMODE "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
 
 //重启
@@ -249,9 +249,10 @@ struct ModeSelection
         AUTONOMOUSLANDING = 4,
         OBJECTTRACKING = 5,
         EGOPLANNER = 6,
-        CUSTOMMODE = 7,
-        REBOOTNX = 8,
-        EXITNX = 9
+        TRAJECTOYCONTROL = 7,
+        CUSTOMMODE = 8,
+        REBOOTNX = 9,
+        EXITNX = 10
     };
 //    bool is_simulation;
     std::vector<uint8_t> selectId;
@@ -964,7 +965,8 @@ struct ParamSettings
     enum ParamModule
     {
         UAVCONTROL = 1,
-        SWARMCONTROL = 2
+        UAVCOMMUNICATION = 2,
+        SWARMCONTROL = 3
     };
     std::vector<Param> params;
 

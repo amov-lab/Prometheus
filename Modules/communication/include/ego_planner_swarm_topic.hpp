@@ -29,13 +29,16 @@ enum RvizMsgId
     Scan = 226,
     OptimalTraj = 227,
     GoalPoint = 228,
-    Goal = 229
+    Goal = 229,
+    ReferenceTrajectory = 230
 };
 
 class EGOPlannerSwarm
 {
 public:
     EGOPlannerSwarm(ros::NodeHandle &nh);
+    EGOPlannerSwarm(ros::NodeHandle &nh,int id,std::string ground_stationt_ip);
+
     ~EGOPlannerSwarm();
 
     void swarmTrajPub(struct MultiBsplines multi_bsplines);
@@ -58,6 +61,7 @@ private:
     void tfStaticCb(const tf2_msgs::TFMessage::ConstPtr &msg);
 
     void trajectoryCb(const nav_msgs::Path::ConstPtr &msg);
+    void referenceTrajectoryCb(const nav_msgs::Path::ConstPtr &msg);
 
     void uavMeshCb(const visualization_msgs::Marker::ConstPtr &msg);
 
@@ -81,6 +85,9 @@ private:
     ros::Subscriber point_cloud_sub_,point_cloud_ex_sub_,tf_sub_,tf_static_sub_,trajectory_sub_,uav_mesh_sub_,scan_sub_,optimal_traj_sub_,goal_point_sub_,goal_sub_;
     ros::Publisher goal_pub_;
 
+    //
+    ros::Subscriber ref_trajectory_sub_;
+
     int drone_id_;
     std::string tcp_ip_, udp_ip_,rviz_ip_;
 
@@ -101,7 +108,7 @@ int EGOPlannerSwarm::encodeRvizMsg(T msg, int msg_id)
     ser::OStream stream(buffer.get(), serial_size);
     ser::serialize(stream, msg);
 
-    std::cout << "rviz信息长度:" << serial_size << std::endl;
+    // std::cout << "rviz信息长度:" << serial_size << std::endl;
 
     char *ptr = rviz_recv_buf;
 

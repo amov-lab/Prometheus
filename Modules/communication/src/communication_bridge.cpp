@@ -145,7 +145,7 @@ void CommunicationBridge::serverFun()
         //目前只有地面站发送TCP消息、所以TCP服务端接收到数据后开始心跳包的发送
         this->is_heartbeat_ready_ = true;
 
-        pubMsg(decodeMsg(tcp_recv_buf,Send_Mode::TCP));
+        pubMsg(decodeMsg(tcp_recv_buf, Send_Mode::TCP));
         close(recv_sock);
     }
 }
@@ -163,11 +163,24 @@ void CommunicationBridge::recvData(struct UAVState uav_state)
 }
 void CommunicationBridge::recvData(struct UAVCommand uav_cmd)
 {
-    if (this->uav_basic_ == NULL)
+    //非仿真情况 只有一个UAV
+    if (this->is_simulation_ == 0)
     {
-        return;
+        if (this->uav_basic_ == NULL)
+        {
+            return;
+        }
+        this->uav_basic_->uavCmdPub(uav_cmd);
     }
-    this->uav_basic_->uavCmdPub(uav_cmd);
+    //仿真情况下
+    else
+    {
+        auto it = this->swarm_control_simulation_.find(recv_id);
+        if(it != this->swarm_control_simulation_.end())
+        {
+            (*it).second->uavCmdPub(uav_cmd);
+        }
+    }
 }
 void CommunicationBridge::recvData(struct SwarmCommand swarm_command)
 {
@@ -275,9 +288,12 @@ void CommunicationBridge::recvData(struct ModeSelection mode_selection)
 }
 void CommunicationBridge::recvData(struct ParamSettings param_settings)
 {
-    if(param_settings.params.size() == 0 && (param_settings.param_module == ParamSettings::ParamModule::UAVCONTROL))
+    if (param_settings.params.size() == 0)
     {
-        sendControlParam();
+        if (param_settings.param_module == ParamSettings::ParamModule::UAVCONTROL)
+            sendControlParam();
+        else if (param_settings.param_module == ParamSettings::ParamModule::UAVCOMMUNICATION)
+            sendCommunicationParam();
         return;
     }
     for (int i = 0; i < param_settings.params.size(); i++)
@@ -306,12 +322,18 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         {
             // this->nh_.setParam(param_settings.params[i].param_name,param_settings.params[i].param_value);
             is = setParam(param_settings.params[i].param_name, param_settings.params[i].param_value);
-        }else if (param_settings.params[i].type == param_settings.params[i].BOOLEAN)
+        }
+        else if (param_settings.params[i].type == param_settings.params[i].BOOLEAN)
         {
-            bool value = param_settings.params[i].param_value == "true"?true:false;
+            bool value = param_settings.params[i].param_value == "true" ? true : false;
             is = setParam(param_settings.params[i].param_name, value);
         }
         //反馈消息 表示、设置成功与否 textinfo
+    }
+    if (param_settings.param_module == ParamSettings::ParamModule::UAVCOMMUNICATION)
+    {
+        nh_.getParam("ground_stationt_ip", udp_ip);
+        nh_.getParam("multicast_udp_ip", multicast_udp_ip);
     }
 }
 void CommunicationBridge::recvData(struct MultiBsplines multi_bsplines)
@@ -336,7 +358,7 @@ void CommunicationBridge::recvData(struct CustomDataSegment custom_data_segment)
 }
 void CommunicationBridge::recvData(struct Goal goal)
 {
-    if(this->ego_planner_ != NULL)
+    if (this->ego_planner_ != NULL)
     {
         this->ego_planner_->goalPub(goal);
     }
@@ -654,6 +676,11 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
+        if (this->trajectoy_control_ != NULL)
+        {
+            delete this->trajectoy_control_;
+            this->trajectoy_control_ = NULL;
+        }
         if (this->ego_planner_ == NULL)
         {
             this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
@@ -661,6 +688,20 @@ bool CommunicationBridge::createMode(struct ModeSelection mode_selection)
         text_info.Message = "EGOPlannerSwarm";
         sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
         system(OPENEGOPLANNER);
+    }
+    else if (mode_selection.mode == ModeSelection::Mode::TRAJECTOYCONTROL)
+    {
+        if (this->ego_planner_ != NULL)
+        {
+            delete this->ego_planner_;
+            this->ego_planner_ = NULL;
+        }
+        if (this->trajectoy_control_ == NULL)
+        {
+            this->trajectoy_control_ = new EGOPlannerSwarm(this->nh_, ROBOT_ID, udp_ip);
+        }
+        text_info.Message = "TrajectoyControl";
+        sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
     }
     this->current_mode_ = mode_selection.mode;
     return is;
@@ -826,7 +867,7 @@ void CommunicationBridge::multicastUdpFun()
         // std::lock_guard<std::mutex> lg(g_m);
 
         std::cout << "udp valread: " << valread << std::endl;
-        pubMsg(decodeMsg(udp_recv_buf,Send_Mode::UDP));
+        pubMsg(decodeMsg(udp_recv_buf, Send_Mode::UDP));
     }
 }
 
@@ -947,45 +988,51 @@ void CommunicationBridge::toGroundStationFun()
     }
 }
 
-bool CommunicationBridge::getParam(struct Param* param)
+bool CommunicationBridge::getParam(struct Param *param)
 {
-    if(param->type == Param::Type::INT || param->type == Param::Type::LONG)
+    if (param->type == Param::Type::INT || param->type == Param::Type::LONG)
     {
         int value = 0;
-        if(!nh_.getParam(param->param_name,value))
+        if (!nh_.getParam(param->param_name, value))
         {
             return false;
         }
         param->param_value = std::to_string(value);
-    }else if(param->type == Param::Type::FLOAT)
+    }
+    else if (param->type == Param::Type::FLOAT)
     {
         float value = 0.0;
-        if(!nh_.getParam(param->param_name,value))
+        if (!nh_.getParam(param->param_name, value))
         {
             return false;
         }
         param->param_value = std::to_string(value);
-    }else if(param->type == Param::Type::DOUBLE)
+    }
+    else if (param->type == Param::Type::DOUBLE)
     {
         double value = 0.0;
-        if(!nh_.getParam(param->param_name,value))
+        if (!nh_.getParam(param->param_name, value))
         {
             return false;
         }
         param->param_value = std::to_string(value);
-    }else if(param->type == Param::Type::BOOLEAN)
+    }
+    else if (param->type == Param::Type::BOOLEAN)
     {
         bool value = false;
-        if(!nh_.getParam(param->param_name,value))
+        if (!nh_.getParam(param->param_name, value))
         {
             return false;
         }
-        if(value) param->param_value = "true";
-        else param->param_value = "false";
-    }else if(param->type == Param::Type::STRING)
+        if (value)
+            param->param_value = "true";
+        else
+            param->param_value = "false";
+    }
+    else if (param->type == Param::Type::STRING)
     {
         std::string value = "";
-        if(!nh_.getParam(param->param_name,value))
+        if (!nh_.getParam(param->param_name, value))
         {
             return false;
         }
@@ -996,34 +1043,64 @@ bool CommunicationBridge::getParam(struct Param* param)
 
 void CommunicationBridge::sendControlParam()
 {
-    ///communication_bridge/control/
-    std::string param_name[15] = {"pos_controller","enable_external_control","Takeoff_height","Land_speed","Disarm_height","location_source","maximum_safe_vel_xy","maximum_safe_vel_z","maximum_vel_error_for_vision","x_min","x_max","y_min","y_max","z_min","z_max"};
-    int8_t param_type[15] = {Param::Type::INT,Param::Type::BOOLEAN,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::INT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT,Param::Type::FLOAT};
-    sendTextInfo(TextInfo::INFO,"开始加载参数...");
+    /// communication_bridge/control/
+    std::string param_name[15] = {"pos_controller", "enable_external_control", "Takeoff_height", "Land_speed", "Disarm_height", "location_source", "maximum_safe_vel_xy", "maximum_safe_vel_z", "maximum_vel_error_for_vision", "x_min", "x_max", "y_min", "y_max", "z_min", "z_max"};
+    int8_t param_type[15] = {Param::Type::INT, Param::Type::BOOLEAN, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::INT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT};
+    sendTextInfo(TextInfo::INFO, "开始加载参数...");
     usleep(500);
     struct ParamSettings param_settings;
-    for(int i = 0;i < 15; i++)
+    for (int i = 0; i < 15; i++)
     {
-        if(i < 9) param_name[i] = "/communication_bridge/control/" + param_name[i];
-        else param_name[i] = "/communication_bridge/geo_fence/" + param_name[i];
+        if (i < 9)
+            param_name[i] = "/communication_bridge/control/" + param_name[i];
+        else
+            param_name[i] = "/communication_bridge/geo_fence/" + param_name[i];
         struct Param param;
         param.param_name = param_name[i];
         param.type = param_type[i];
-        if(getParam(&param))
+        if (getParam(&param))
         {
             param_settings.params.push_back(param);
-        }else
+        }
+        else
         {
-            sendTextInfo(TextInfo::INFO,"参数加载失败...");
+            sendTextInfo(TextInfo::INFO, "参数加载失败...");
             return;
         }
     }
     param_settings.param_module = ParamSettings::ParamModule::UAVCONTROL;
     sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
-    sendTextInfo(TextInfo::INFO,"参数加载完成...");
+    sendTextInfo(TextInfo::INFO, "参数加载完成...");
+}
+void CommunicationBridge::sendCommunicationParam()
+{
+    std::string param_name[2] = {"multicast_udp_ip", "ground_stationt_ip"};
+    int8_t param_type[2] = {Param::Type::STRING, Param::Type::STRING};
+    sendTextInfo(TextInfo::INFO, "开始加载参数...");
+    usleep(500);
+    struct ParamSettings param_settings;
+    for (int i = 0; i < 2; i++)
+    {
+        param_name[i] = "/communication_bridge/" + param_name[i];
+        struct Param param;
+        param.param_name = param_name[i];
+        param.type = param_type[i];
+        if (getParam(&param))
+        {
+            param_settings.params.push_back(param);
+        }
+        else
+        {
+            sendTextInfo(TextInfo::INFO, "参数加载失败...");
+            return;
+        }
+    }
+    param_settings.param_module = ParamSettings::ParamModule::UAVCOMMUNICATION;
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
+    sendTextInfo(TextInfo::INFO, "参数加载完成...");
 }
 
-void CommunicationBridge::sendTextInfo(uint8_t message_type,std::string message)
+void CommunicationBridge::sendTextInfo(uint8_t message_type, std::string message)
 {
     struct TextInfo text_info;
     text_info.MessageType = message_type;
