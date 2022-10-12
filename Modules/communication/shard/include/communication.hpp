@@ -33,7 +33,7 @@ public:
 
     //编码
     template <typename T>
-    int encodeMsg(int8_t send_mode, T msg);
+    int encodeMsg(int8_t send_mode, T msg,int id = 0);
 
     //解码
     int decodeMsg(char *buff,int8_t send_mode);
@@ -64,6 +64,7 @@ public:
 
 protected:
     int ROBOT_ID = 0;
+    int recv_id = 0;
 
     // tcp/udp
     struct sockaddr_in tcp_addr, udp_addr;
