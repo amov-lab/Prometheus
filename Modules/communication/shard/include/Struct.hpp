@@ -13,8 +13,8 @@
 #include <boost/serialization/vector.hpp>
 
 //uav control
-#define OPENUAVBASIC //"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
-#define CLOSEUAVBASIC //"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
+#define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
+#define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
 //rhea control
 #define OPENUGVBASIC ""
 #define CLOSEUGVBASIC ""
