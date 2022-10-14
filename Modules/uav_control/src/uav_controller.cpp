@@ -264,10 +264,9 @@ void UAV_controller::mainloop()
 
         if (uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
         {
-            if(!set_landing_des)
+            if(uav_state.armed && uav_state.mode != "AUTO.LAND")
             {
                 set_px4_mode_func("AUTO.LAND");
-                set_landing_des = true;
             }
         }else
         {
