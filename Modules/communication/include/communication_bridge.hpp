@@ -72,14 +72,11 @@ public:
     //给地面站发送心跳包
     void toGroundStationFun();
 
-    void init();
-    //ros::NodeHandle nh;
-
     void createImage(struct ImageData image_data);
 
-    bool createMode(struct ModeSelection mode_selection);
+    void createMode(struct ModeSelection mode_selection);
 
-    bool deleteMode(struct ModeSelection mode_selection);
+    void deleteMode(struct ModeSelection mode_selection);
 
     template <typename T>
     bool setParam(std::string param_name,T param_value);
@@ -103,8 +100,6 @@ private:
     ros::NodeHandle nh_;
 
     bool is_heartbeat_ready_ = false;
-
-    int user_type_;
 };
 
 template <typename T>
