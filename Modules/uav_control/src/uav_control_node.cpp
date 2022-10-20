@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "uav_controller_node");
     ros::NodeHandle nh("~");
-    ros::Rate rate(200.0);
+    ros::Rate rate(20.0);
 
     signal(SIGINT, mySigintHandler);
     ros::Duration(1.0).sleep();
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
         // PCOUT(-1, RED, "Waiting for connect PX4!");
         ROS_ERROR_STREAM_ONCE("Waiting for connect PX4!");
         ros::spinOnce();
-        ros::Duration(4).sleep();
+        ros::Duration(1).sleep();
     }
 
     ros::spinOnce();
