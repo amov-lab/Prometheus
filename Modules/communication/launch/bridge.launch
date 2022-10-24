@@ -31,6 +31,13 @@
         <param name="trajectory_mode" value="0"/>
         <param name="trajectory_time" value="0"/>
 
+        <!-- 是否自启 -->
+        <param name="aotuload" value="false"/>
+        <param name="uav_control_start" value="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
+        <param name="close_uav_control" value="gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"/>
+        <param name="swarm_control_start" value=""/>
+        <param name="close_swarm_control" value=""/>
+
         <rosparam command="load" file="$(find prometheus_communication_bridge)/../uav_control/launch/uav_control_outdoor.yaml" />
     </node>
 </launch>

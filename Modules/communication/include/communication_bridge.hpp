@@ -54,7 +54,8 @@ public:
     void recvData(struct ParamSettings param_settings);
     void recvData(struct MultiBsplines multi_bsplines);
     void recvData(struct Bspline bspline);
-    void recvData(struct CustomDataSegment custom_data_segment);
+    void recvData(struct CustomDataSegment_1 custom_data_segment);
+    // void recvData(struct CustomDataSegment_2 custom_data_segment);
     void recvData(struct Goal goal);
 
     void modeSwitch(struct ModeSelection mode_selection);
@@ -80,6 +81,7 @@ public:
 
     template <typename T>
     bool setParam(std::string param_name,T param_value);
+
 private:
     //std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;
@@ -100,6 +102,8 @@ private:
     ros::NodeHandle nh_;
 
     bool is_heartbeat_ready_ = false;
+
+    std::string OPENUAVBASIC = "", CLOSEUAVBASIC = "" ,OPENSWARMCONTROL = "" , CLOSESWARMCONTROL = "";
 };
 
 template <typename T>
