@@ -1,6 +1,11 @@
 <launch>
 
     <arg name="swarm_num" default="3"/>
+    <arg name="aotuload" default="false"/>
+    <arg name="uav_control_start" default="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
+    <arg name="close_uav_control" default="gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"/>
+    <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
+    <arg name="close_swarm_control" default=""/>
 
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
         <!--组播ip-->
@@ -32,11 +37,11 @@
         <param name="trajectory_time" value="0"/>
 
         <!-- 是否自启 -->
-        <param name="aotuload" value="false"/>
-        <param name="uav_control_start" value="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
-        <param name="close_uav_control" value="gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"/>
-        <param name="swarm_control_start" value=""/>
-        <param name="close_swarm_control" value=""/>
+        <param name="aotuload" value="$(arg aotuload)"/>
+        <param name="uav_control_start" value="$(arg uav_control_start)"/>
+        <param name="close_uav_control" value="$(arg close_uav_control)"/>
+        <param name="swarm_control_start" value="$(arg swarm_control_start)"/>
+        <param name="close_swarm_control" value="$(arg close_swarm_control)"/>
 
         <rosparam command="load" file="$(find prometheus_communication_bridge)/../uav_control/launch/uav_control_outdoor.yaml" />
     </node>
