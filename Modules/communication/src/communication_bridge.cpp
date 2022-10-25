@@ -25,7 +25,7 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     nh.param<int>("try_connect_num", try_connect_num, 3);
 
     bool autoload;
-    nh.param<bool>("aotuload", autoload,false);
+    nh.param<bool>("autoload", autoload,false);
     if(autoload)
     {
         nh.param<std::string>("uav_control_start", OPENUAVBASIC, "");
