@@ -13,14 +13,17 @@ public:
     CustomDataSegment();
     CustomDataSegment(struct CustomDataSegment_1);
 
+    void initCommunication(int id, int udp_port, int tcp_port);
+    void initCommunication(Communication communication);
+
     int indexof(std::string name);
-    bool addValue(std::string name, int type, std::string value);
+    bool addValue(std::string name, BasicDataTypeAndValue::Type type, std::string value);
 
     void setValue(std::string name, int value);
     void setValue(std::string name, float value);
     void setValue(std::string name, double value);
     void setValue(std::string name, bool value);
-    void setValue(std::string name, std::string value);
+    // void setValue(std::string name, std::string value);
     void setValue(std::string name, char* value);
 
     bool getValue(std::string name, int &value);

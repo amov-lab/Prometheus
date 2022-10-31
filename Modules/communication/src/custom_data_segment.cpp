@@ -9,7 +9,17 @@ CustomDataSegment::CustomDataSegment(struct CustomDataSegment_1 datas)
     datas_ = datas;
 }
 
-bool CustomDataSegment::addValue(std::string name, int type, std::string value)
+void CustomDataSegment::initCommunication(int id, int udp_port, int tcp_port)
+{
+    communication_.init(id,udp_port,tcp_port,25555);
+}
+
+void CustomDataSegment::initCommunication(Communication communication)
+{
+    communication_ = communication;
+}
+
+bool CustomDataSegment::addValue(std::string name, BasicDataTypeAndValue::Type type, std::string value)
 {
     int index = indexof(name);
     if (index == -1)
