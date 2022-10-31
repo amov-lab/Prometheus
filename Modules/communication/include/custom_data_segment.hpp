@@ -23,7 +23,7 @@ public:
     void setValue(std::string name, float value);
     void setValue(std::string name, double value);
     void setValue(std::string name, bool value);
-    // void setValue(std::string name, std::string value);
+    void setValue(std::string name, std::string value);
     void setValue(std::string name, char* value);
 
     bool getValue(std::string name, int &value);
