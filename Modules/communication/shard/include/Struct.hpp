@@ -13,14 +13,14 @@
 #include <boost/serialization/vector.hpp>
 
 //uav control
-#define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
-#define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
+// #define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
+// #define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
 //rhea control
 #define OPENUGVBASIC ""
 #define CLOSEUGVBASIC ""
 //集群
-#define OPENSWARMCONTROL ""
-#define CLOSESWARMCONTROL ""
+// #define OPENSWARMCONTROL ""
+// #define CLOSESWARMCONTROL ""
 //自主降落
 #define OPENAUTONOMOUSLANDING ""
 #define CLOSEAUTONOMOUSLANDING ""
@@ -66,6 +66,8 @@ enum MsgId
     PARAMSETTINGS = 110,
     BSPLINE = 111,
     MULTIBSPLINES = 112,
+    CUSTOMDATASEGMENT_1 = 113,
+    CUSTOMDATASEGMENT_2 = 114,
 
     CONNECTSTATE = 201,
     MODESELECTION = 202,
@@ -981,6 +983,7 @@ struct ParamSettings
 
 struct BasicDataTypeAndValue
 {
+    std::string name;
     uint8_t type;
     enum Type
     {
@@ -996,14 +999,14 @@ struct BasicDataTypeAndValue
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
+        ar & name;
         ar & type;
         ar & value;
     }
 };
-
-struct CustomDataSegment
+//自定义消息1：地面站->机载端，此处为固定内容，即不能随意更改结构体
+struct CustomDataSegment_1
 {
-    int flag;
     std::vector<BasicDataTypeAndValue> datas;
 
     friend class boost::serialization::access;
