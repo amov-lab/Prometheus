@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- Set RTSP, RTSP Proxy port and number of sessions -->
+	<arg name="port" 			default="8554"/>
+	<arg name="proxyServerPort" default="8564"/>
+	<arg name="sessionNumber" 	default="2"/>
+	
+	<!-- Subscribe image topic and imgae information -->
+	<arg name="subTopic_0" 		default="/uav1/prometheus/camera/rgb/image_landpad_det"/>
+	<arg name="srcWidth_0" 		default="1280"/>
+	<arg name="srcHeight_0"		default="720"/>
+	<arg name="encode_0" 		default="rgb8"/>
+	<arg name="fps_0" 			default="30"/>
+	<arg name="streamUrl_0" 	default="demo"/>
+
+	<arg name="subTopic_1" 		default="/image_1"/>
+	<arg name="srcWidth_1" 		default="1280"/>
+	<arg name="srcHeight_1"		default="720"/>
+	<arg name="encode_1" 		default="rgb8"/>
+	<arg name="fps_1" 			default="30"/>
+	<arg name="streamUrl_1" 	default="test1"/>
+
+	<node pkg="prometheus_communication_bridge" type="image2rtsp_node" name="image2rtsp_node" output="screen">
+		<param name="port" 	        	type="int" value="$(arg port)"/>
+		<param name="proxyServerPort"	type="int" value="$(arg proxyServerPort)"/>
+		<param name="sessionNumber"		type="int" value="$(arg sessionNumber)"/>
+			
+		<param name="subTopic_0" 		type="str" value="$(arg subTopic_0)"/>
+		<param name="srcWidth_0" 		type="int" value="$(arg srcWidth_0)"/>
+		<param name="srcHeight_0"		type="int" value="$(arg srcHeight_0)"/>
+		<param name="encode_0"			type="str" value="$(arg encode_0)"/>
+		<param name="fps_0"				type="int" value="$(arg fps_0)"/>
+		<param name="streamUrl_0" 		type="str" value="$(arg streamUrl_0)"/>
+
+		<param name="subTopic_1" 		type="str" value="$(arg subTopic_1)"/>
+		<param name="srcWidth_1" 		type="int" value="$(arg srcWidth_1)"/>
+		<param name="srcHeight_1"		type="int" value="$(arg srcHeight_1)"/>
+		<param name="encode_1"			type="str" value="$(arg encode_1)"/>
+		<param name="fps_1"				type="int" value="$(arg fps_1)"/>
+		<param name="streamUrl_1" 		type="str" value="$(arg streamUrl_1)"/>
+    </node>
+</launch>
