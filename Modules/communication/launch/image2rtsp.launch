@@ -6,7 +6,7 @@
 	<arg name="sessionNumber" 	default="2"/>
 	
 	<!-- Subscribe image topic and imgae information -->
-	<arg name="subTopic_0" 		default="/uav1/prometheus/camera/rgb/image_landpad_det"/>
+	<arg name="subTopic_0" 		default="/prometheus/sensor/monocular_down/image_raw"/>
 	<arg name="srcWidth_0" 		default="1280"/>
 	<arg name="srcHeight_0"		default="720"/>
 	<arg name="encode_0" 		default="rgb8"/>
