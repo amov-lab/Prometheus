@@ -4,7 +4,7 @@
         <param name="cam_id" type="int" value="0" />
         <!-- 发布到ros图像话题 -->
         <param name="adv_topic" type="string" value="/prometheus/camera/rgb/image_raw" />
-	    <param name="resize_h" type="int" value="480" />
+	    <param name="resize_h" type="int" value="360" />
         <param name="resize_w" type="int" value="640" />
     </node>
 </launch>

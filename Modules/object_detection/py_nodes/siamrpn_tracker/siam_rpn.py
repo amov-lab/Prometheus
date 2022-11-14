@@ -38,7 +38,7 @@ kcf_tracker_h = 1.0
 rospy.init_node('siamrpn_tracker', anonymous=True)
 
 
-"""
+
 def draw_circle(event, x, y, flags, param):
     global x1, y1, x2, y2, drawing, init, flag, g_image, start
 
@@ -72,7 +72,7 @@ def draw_circle(event, x, y, flags, param):
         flag = 1
         init = False
         x1, x2, y1, y2 = -1, -1, -1, -1
-"""
+
 class MouseInfo:
     def __init__(self):
         self.flag = False
