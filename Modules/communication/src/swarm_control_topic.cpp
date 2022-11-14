@@ -14,6 +14,8 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, int id, int swarm_num,Communicat
     this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(id) + "/prometheus/communication_state", 10);
     //【发布】所有无人机状态
     this->all_uav_state_pub_ = nh.advertise<prometheus_msgs::MultiUAVState>("/prometheus/all_uav_state", 1000);
+    //【订阅】集群控制指令
+    this->swarm_command_sub_ =  nh.subscribe("/prometheus/swarm_command",10 , &SwarmControl::swarmCmdCb, this);
 }
 
 //仿真构造
@@ -35,6 +37,8 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, int swarm_num,Communication *com
     this->all_uav_state_pub_ = nh.advertise<prometheus_msgs::MultiUAVState>("/prometheus/all_uav_state", 1000);
     //【发布】集群控制指令
     this->swarm_command_pub_ = nh.advertise<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command", 1000);
+    //【订阅】集群控制指令
+    this->swarm_command_sub_ =  nh.subscribe("/prometheus/swarm_command",10 , &SwarmControl::swarmCmdCb, this);
 }
 
 SwarmControl::~SwarmControl()
@@ -191,24 +195,38 @@ void SwarmControl::allUAVStatePub(struct MultiUAVState m_multi_uav_state)
     this->all_uav_state_pub_.publish(multi_uav_state);
 }
 
-void SwarmControl::closeTopic()
-{
-    // if(is_simulation_)
-    // {
-        //auto it = simulation_communication_state_pub.begin();
-        //std::cout << "size():"<<simulation_communication_state_pub.;
-        // for(auto it = ; i < simulation_communication_state_pub.size();i++)
-        // {
-        //     std::cout << " i 1: " << i << std::endl;
-        //     simulation_communication_state_pub[i].shutdown();
-        //     std::cout << " i 2: " << i << std::endl;
-        // }
-        // std::cout << "close 2" << std::endl;
-    // }else
-    // {
-    //     this->communication_state_pub_.shutdown();
-    // }
 
-    // this->all_uav_state_pub_.shutdown();
-    // this->swarm_command_pub_.shutdown();
+void SwarmControl::swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg)
+{
+    struct SwarmCommand swarm_command;
+    swarm_command.source = msg->source;
+    swarm_command.Swarm_CMD = msg->Swarm_CMD;
+    swarm_command.swarm_location_source = msg->swarm_location_source;
+    swarm_command.swarm_num = msg->swarm_num;
+    for (int i = 0; i < 2; i++)
+    {
+        swarm_command.leader_pos[i] = msg->leader_pos[i];
+        swarm_command.leader_vel[i] = msg->leader_vel[i];
+    }
+    swarm_command.leader_pos[2] = msg->leader_pos[2];
+
+    swarm_command.swarm_size = msg->swarm_size;
+    swarm_command.swarm_shape = msg->swarm_shape;
+    swarm_command.target_area_x_min = msg->target_area_x_min;
+    swarm_command.target_area_y_min = msg->target_area_y_min;
+    swarm_command.target_area_x_max = msg->target_area_x_max;
+    swarm_command.target_area_y_max = msg->target_area_y_max;
+    for (int i = 0; i < 3; i++)
+    {
+        swarm_command.attack_target_pos[i] = msg->attack_target_pos[i];
+    };
+    for(int i = 0; i < swarm_command.formation_poses.size() ; i++)
+    {
+        struct Point point;
+        point.x = msg->formation_poses[i].x;
+        point.y = msg->formation_poses[i].y;
+        point.z = msg->formation_poses[i].z;
+        swarm_command.formation_poses.push_back(point);
+    }
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,swarm_command),multicast_udp_ip);
 }

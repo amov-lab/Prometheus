@@ -109,12 +109,12 @@ dependencies:
     - mako==1.1.6
     - markdown==3.3.6
     - matplotlib==3.3.4
-    - nvidia-cublas-cu11==2022.3.24
-    - nvidia-cublas-cu116==11.9.2.110
-    - nvidia-cuda-runtime-cu11==2021.12.20
-    - nvidia-cuda-runtime-cu116==11.6.55
-    - nvidia-cudnn-cu11==2022.4.2
-    - nvidia-cudnn-cu115==8.3.3.40
+    - nvidia-cublas-cu11
+    - nvidia-cublas-cu116
+    - nvidia-cuda-runtime-cu11
+    - nvidia-cuda-runtime-cu116
+    - nvidia-cudnn-cu11
+    - nvidia-cudnn-cu115
     - nvidia-pyindex==1.0.9
     - nvidia-tensorrt==8.2.4.2
     - oauthlib==3.2.0
