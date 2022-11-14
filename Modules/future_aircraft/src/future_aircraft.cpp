@@ -364,7 +364,7 @@ int main(int argc, char** argv)
             uav_command.velocity_ref[0] = -0.9 * ellipse_det.sight_angle[0];
             uav_command.velocity_ref[1] = 0.9 * ellipse_det.sight_angle[1];
             uav_command.velocity_ref[2] = 0;
-            uav_command.position_ref[2] = 1.5;
+            uav_command.position_ref[2] = 0;
             uav_command.yaw_ref = 0.0;
             info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
                     << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "
@@ -415,7 +415,7 @@ int main(int argc, char** argv)
             uav_command.velocity_ref[0] = -2.5 * ellipse_det.sight_angle[0];
             uav_command.velocity_ref[1] = 2 * ellipse_det.sight_angle[1];
             uav_command.velocity_ref[2] = 0;
-            uav_command.position_ref[2] = 2.3;
+            uav_command.position_ref[2] = 0;
             uav_command.yaw_ref = 0.0;
             info << "Find object,Go to the target point > velocity_x: " << uav_command.velocity_ref[0] << " [m/s] "
                     << "velocity_y: " << uav_command.velocity_ref[1] << " [m/s] "

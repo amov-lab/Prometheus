@@ -1,4 +1,5 @@
 #include "communication_bridge.hpp"
+#include "custom_data_segment.hpp"
 
 int main(int argc, char **argv)
 {

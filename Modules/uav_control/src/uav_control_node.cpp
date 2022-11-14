@@ -32,7 +32,8 @@ int main(int argc, char **argv)
         // PCOUT(-1, RED, "Waiting for connect PX4!");
         ROS_ERROR_STREAM_ONCE("Waiting for connect PX4!");
         ros::spinOnce();
-        ros::Duration(1).sleep();
+        //此处需设置4或4以上的值,不然将导致uav_control启动失败的BUG
+        ros::Duration(4).sleep();
     }
 
     ros::spinOnce();
