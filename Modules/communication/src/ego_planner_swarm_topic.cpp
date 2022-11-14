@@ -192,7 +192,7 @@ void EGOPlannerSwarm::goalPub(struct Goal goal)
     msg.header.frame_id = goal.frame_id;
     msg.pose.position.x = goal.position_x;
     msg.pose.position.y = goal.position_y;
-    msg.pose.position.z = goal.position_z;
+    msg.pose.position.z = this->current_height;
     msg.pose.orientation.x = goal.orientation_x;
     msg.pose.orientation.y = goal.orientation_y;
     msg.pose.orientation.z = goal.orientation_z;
@@ -292,6 +292,7 @@ void EGOPlannerSwarm::referenceTrajectoryCb(const nav_msgs::Path::ConstPtr &msg)
 void EGOPlannerSwarm::uavMeshCb(const visualization_msgs::Marker::ConstPtr &msg)
 {
     visualization_msgs::Marker uav_mesh = *msg;
+    this->current_height = msg->pose.position.z;
     sendRvizByUdp(encodeRvizMsg(uav_mesh,RvizMsgId::UAVMesh),rviz_ip_);
 }
 

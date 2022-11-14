@@ -42,9 +42,10 @@ using namespace std;
 
 // 宏定义
 #define TRA_WINDOW 40                // 发布轨迹长度
-#define MOCAP_TIMEOUT 0.1                   
+#define MOCAP_TIMEOUT 0.35                 
+#define MOCAP_TIMEOUT 0.35                   
 #define GAZEBO_TIMEOUT 0.1                    
-#define T265_TIMEOUT 0.1
+#define T265_TIMEOUT 0.3
 #define UWB_TIMEOUT 0.1
 #define GPS_TIMEOUT 1.0
 
@@ -61,6 +62,7 @@ class UAV_estimator
         ros::Subscriber px4_attitude_sub;
         ros::Subscriber px4_range_sub;
         ros::Subscriber mocap_sub;
+        ros::Subscriber t265_sub;
         ros::Subscriber gazebo_sub;
         ros::Subscriber uwb_sub;
         ros::Subscriber fake_odom_sub;
