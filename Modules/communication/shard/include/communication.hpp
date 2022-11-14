@@ -95,6 +95,7 @@ public:
     struct Bspline recv_bspline_;
     struct MultiBsplines recv_multi_bsplines_;
     struct Goal recv_goal_;
+    struct CustomDataSegment_1 recv_custom_data_1_;
 };
 
 #endif

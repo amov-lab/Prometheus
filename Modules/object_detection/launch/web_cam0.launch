@@ -1,7 +1,7 @@
 <launch>
     <node pkg="prometheus_detection" type="web_cam" name="web_cam" output="screen">
         <param name="cam_id" type="int" value="0" />
-        <param name="cam_h" type="int" value="480" />
+        <param name="cam_h" type="int" value="360" />
         <param name="cam_w" type="int" value="640" />
         <!-- 发布到ros图像话题 -->
         <param name="adv_topic" type="string" value="/prometheus/camera/rgb/image_raw" />
