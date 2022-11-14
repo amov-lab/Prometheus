@@ -62,6 +62,7 @@ public:
     bool getParam(struct Param* param);
 
     void sendControlParam();
+    void sendCommunicationParam();
 
     void sendTextInfo(uint8_t message_type,std::string message);
 
@@ -71,14 +72,11 @@ public:
     //给地面站发送心跳包
     void toGroundStationFun();
 
-    void init();
-    //ros::NodeHandle nh;
-
     void createImage(struct ImageData image_data);
 
-    bool createMode(struct ModeSelection mode_selection);
+    void createMode(struct ModeSelection mode_selection);
 
-    bool deleteMode(struct ModeSelection mode_selection);
+    void deleteMode(struct ModeSelection mode_selection);
 
     template <typename T>
     bool setParam(std::string param_name,T param_value);
@@ -92,7 +90,9 @@ private:
     AutonomousLanding *autonomous_landing_ = NULL;
     GimbalBasic *gimbal_basic_ = NULL;
     ObjectTracking *object_tracking_ = NULL;
+
     EGOPlannerSwarm *ego_planner_ = NULL;
+    EGOPlannerSwarm *trajectoy_control_ = NULL;
 
     int current_mode_ = 0;
 
@@ -100,8 +100,6 @@ private:
     ros::NodeHandle nh_;
 
     bool is_heartbeat_ready_ = false;
-
-    int user_type_;
 };
 
 template <typename T>

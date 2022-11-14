@@ -264,7 +264,10 @@ void UAV_controller::mainloop()
 
         if (uav_state.location_source == prometheus_msgs::UAVState::GPS || uav_state.location_source == prometheus_msgs::UAVState::RTK)
         {
-            set_px4_mode_func("AUTO.LAND");
+            if(uav_state.armed && uav_state.mode != "AUTO.LAND")
+            {
+                set_px4_mode_func("AUTO.LAND");
+            }
         }else
         {
             // 第一次进入，设置降落的期望位置和速度
@@ -296,6 +299,8 @@ void UAV_controller::mainloop()
         if (!uav_state.armed)
         {
             control_state = CONTROL_STATE::INIT;
+            //控制命令初始化,不初始化将影响setup接口切换command_control模式
+            uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
             set_landing_des = false;
         }
 

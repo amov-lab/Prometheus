@@ -47,6 +47,15 @@ EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
     goal_sub_ =  nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 10 , &EGOPlannerSwarm::goalCb, this);
 }
 
+EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh,int id,std::string ground_stationt_ip):drone_id_(id),rviz_ip_(ground_stationt_ip)
+{
+    tf_sub_ = nh.subscribe("/tf", 10, &EGOPlannerSwarm::tfCb, this);
+    tf_static_sub_ = nh.subscribe("/tf_static", 10, &EGOPlannerSwarm::tfStaticCb, this);
+    uav_mesh_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/uav_mesh",10 , &EGOPlannerSwarm::uavMeshCb, this);
+    trajectory_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/trajectory", 10, &EGOPlannerSwarm::trajectoryCb, this);
+    ref_trajectory_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/reference_trajectory", 10, &EGOPlannerSwarm::referenceTrajectoryCb, this);
+}
+
 EGOPlannerSwarm::~EGOPlannerSwarm()
 {
 
@@ -193,6 +202,9 @@ void EGOPlannerSwarm::goalPub(struct Goal goal)
 
 void EGOPlannerSwarm::sendRvizByUdp(int msg_len, std::string target_ip)
 {
+    //如果是发送给本机，则不需要发送。因为如果话题相同、会一顿一顿的来回跳转、影响流畅性。
+    if(target_ip == "127.0.0.1") return;
+
     //std::cout << "rviz:" << msg_len << std::endl;
     rviz_socket = socket(PF_INET, SOCK_DGRAM, 0);
     if (rviz_socket < 0)
@@ -269,6 +281,12 @@ void EGOPlannerSwarm::trajectoryCb(const nav_msgs::Path::ConstPtr &msg)
 {
     nav_msgs::Path trajectory = *msg;
     sendRvizByUdp(encodeRvizMsg(trajectory,RvizMsgId::Trajectory),rviz_ip_);
+}
+
+void EGOPlannerSwarm::referenceTrajectoryCb(const nav_msgs::Path::ConstPtr &msg)
+{
+    nav_msgs::Path ref_trajectory = *msg;
+    sendRvizByUdp(encodeRvizMsg(ref_trajectory,RvizMsgId::ReferenceTrajectory),rviz_ip_);
 }
 
 void EGOPlannerSwarm::uavMeshCb(const visualization_msgs::Marker::ConstPtr &msg)

@@ -65,7 +65,7 @@ void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
     this->uav_state_.battery_percetage = msg->battery_percetage;
 
     //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_), multicast_udp_ip);
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_,this->robot_id), multicast_udp_ip);
     setTimeStamp(msg->header.stamp.sec);
 }
 
@@ -77,7 +77,7 @@ void UAVBasic::textInfoCb(const prometheus_msgs::TextInfo::ConstPtr &msg)
     this->text_info_.Message = msg->Message;
 
     //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_), multicast_udp_ip);
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_,this->robot_id), multicast_udp_ip);
 }
 
 void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &msg)
@@ -88,7 +88,7 @@ void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &
     this->uav_control_state_.failsafe = msg->failsafe;
 
     //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_), multicast_udp_ip);
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), multicast_udp_ip);
 }
 
 struct UAVState UAVBasic::getUAVState()
@@ -139,7 +139,7 @@ void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
     uav_cmd.latitude = msg->latitude;
     uav_cmd.longitude = msg->longitude;
     uav_cmd.altitude = msg->altitude;
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_cmd),multicast_udp_ip);
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_cmd,this->robot_id),multicast_udp_ip);
 }
 
 void UAVBasic::uavSetupPub(struct UAVSetup uav_setup)
