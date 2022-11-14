@@ -303,7 +303,7 @@
           <material>
             <script>
               <uri>model://texture_aruco/texture.material</uri>
-              <name>aruco_9</name>
+              <name>aruco_10</name>
             </script>
           </material>
         </visual>
