@@ -54,13 +54,16 @@ public:
     void recvData(struct ParamSettings param_settings);
     void recvData(struct MultiBsplines multi_bsplines);
     void recvData(struct Bspline bspline);
-    void recvData(struct CustomDataSegment custom_data_segment);
+    void recvData(struct CustomDataSegment_1 custom_data_segment);
+    // void recvData(struct CustomDataSegment_2 custom_data_segment);
+    void recvData(struct Goal goal);
 
     void modeSwitch(struct ModeSelection mode_selection);
 
     bool getParam(struct Param* param);
 
     void sendControlParam();
+    void sendCommunicationParam();
 
     void sendTextInfo(uint8_t message_type,std::string message);
 
@@ -70,17 +73,15 @@ public:
     //给地面站发送心跳包
     void toGroundStationFun();
 
-    void init();
-    //ros::NodeHandle nh;
-
     void createImage(struct ImageData image_data);
 
-    bool createMode(struct ModeSelection mode_selection);
+    void createMode(struct ModeSelection mode_selection);
 
-    bool deleteMode(struct ModeSelection mode_selection);
+    void deleteMode(struct ModeSelection mode_selection);
 
     template <typename T>
     bool setParam(std::string param_name,T param_value);
+
 private:
     //std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;
@@ -91,7 +92,9 @@ private:
     AutonomousLanding *autonomous_landing_ = NULL;
     GimbalBasic *gimbal_basic_ = NULL;
     ObjectTracking *object_tracking_ = NULL;
+
     EGOPlannerSwarm *ego_planner_ = NULL;
+    EGOPlannerSwarm *trajectoy_control_ = NULL;
 
     int current_mode_ = 0;
 
@@ -100,7 +103,7 @@ private:
 
     bool is_heartbeat_ready_ = false;
 
-    int user_type_;
+    std::string OPENUAVBASIC = "", CLOSEUAVBASIC = "" ,OPENSWARMCONTROL = "" , CLOSESWARMCONTROL = "";
 };
 
 template <typename T>

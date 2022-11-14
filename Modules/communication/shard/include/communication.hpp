@@ -33,17 +33,14 @@ public:
 
     //编码
     template <typename T>
-    int encodeMsg(int8_t send_mode, T msg);
+    int encodeMsg(int8_t send_mode, T msg,int id = 0);
 
     //解码
-    int decodeMsg(char *buff);
+    int decodeMsg(char *buff,int8_t send_mode);
 
     //根据传入的struct返回对应的MSG_ID
     template <typename T>
     uint8_t getMsgId(T msg);
-
-    template <typename T>
-    T add(T num1,T num2);
 
     // UDP client
     int connectToUdpMulticast(const char *ip, const int port);
@@ -67,6 +64,7 @@ public:
 
 protected:
     int ROBOT_ID = 0;
+    int recv_id = 0;
 
     // tcp/udp
     struct sockaddr_in tcp_addr, udp_addr;
@@ -96,6 +94,8 @@ public:
     struct ParamSettings recv_param_settings_;
     struct Bspline recv_bspline_;
     struct MultiBsplines recv_multi_bsplines_;
+    struct Goal recv_goal_;
+    struct CustomDataSegment_1 recv_custom_data_1_;
 };
 
 #endif

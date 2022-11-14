@@ -13,14 +13,14 @@
 #include <boost/serialization/vector.hpp>
 
 //uav control
-#define OPENUAVBASIC "gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_outdoor.launch"
-// #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
+// #define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
+// #define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
 //rhea control
 #define OPENUGVBASIC ""
 #define CLOSEUGVBASIC ""
 //集群
-#define OPENSWARMCONTROL ""
-#define CLOSESWARMCONTROL ""
+// #define OPENSWARMCONTROL ""
+// #define CLOSESWARMCONTROL ""
 //自主降落
 #define OPENAUTONOMOUSLANDING ""
 #define CLOSEAUTONOMOUSLANDING ""
@@ -35,7 +35,7 @@
 //分为两种情况  
 //1:杀掉子模块，这种情况不会杀掉uav control节点和通信节点以及master节点。 
 //2:杀掉uav control节点，这种情况下只会保留通信节点以及master节点。
-#define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
+// #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
 #define CLOSEOTHERMODE "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
 
 //重启
@@ -66,6 +66,8 @@ enum MsgId
     PARAMSETTINGS = 110,
     BSPLINE = 111,
     MULTIBSPLINES = 112,
+    CUSTOMDATASEGMENT_1 = 113,
+    CUSTOMDATASEGMENT_2 = 114,
 
     CONNECTSTATE = 201,
     MODESELECTION = 202,
@@ -79,7 +81,9 @@ enum MsgId
 
     UGVMARKERARRAY = 234,
     UGVMARKERARRAYLANDMARK = 235,
-    UGVMARKERARRAYTRAJECTORY = 236
+    UGVMARKERARRAYTRAJECTORY = 236,
+
+    GOAL = 255
 };
 
 //参考文件： UAVState.msg
@@ -247,9 +251,10 @@ struct ModeSelection
         AUTONOMOUSLANDING = 4,
         OBJECTTRACKING = 5,
         EGOPLANNER = 6,
-        CUSTOMMODE = 7,
-        REBOOTNX = 8,
-        EXITNX = 9
+        TRAJECTOYCONTROL = 7,
+        CUSTOMMODE = 8,
+        REBOOTNX = 9,
+        EXITNX = 10
     };
 //    bool is_simulation;
     std::vector<uint8_t> selectId;
@@ -962,7 +967,8 @@ struct ParamSettings
     enum ParamModule
     {
         UAVCONTROL = 1,
-        SWARMCONTROL = 2
+        UAVCOMMUNICATION = 2,
+        SWARMCONTROL = 3
     };
     std::vector<Param> params;
 
@@ -977,6 +983,7 @@ struct ParamSettings
 
 struct BasicDataTypeAndValue
 {
+    std::string name;
     uint8_t type;
     enum Type
     {
@@ -992,14 +999,14 @@ struct BasicDataTypeAndValue
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
+        ar & name;
         ar & type;
         ar & value;
     }
 };
-
-struct CustomDataSegment
+//自定义消息1：地面站->机载端，此处为固定内容，即不能随意更改结构体
+struct CustomDataSegment_1
 {
-    int flag;
     std::vector<BasicDataTypeAndValue> datas;
 
     friend class boost::serialization::access;
@@ -1020,6 +1027,34 @@ struct ConnectState
     {
         ar & num;
         ar & state;
+    }
+};
+
+struct Goal
+{
+    int seq;
+    std::string frame_id;
+    double position_x;
+    double position_y;
+    double position_z;
+    double orientation_x;
+    double orientation_y;
+    double orientation_z;
+    double orientation_w;
+
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int /* file_version */)
+    {
+        ar & seq;
+        ar & frame_id;
+        ar & position_x;
+        ar & position_y;
+        ar & position_z;
+        ar & orientation_y;
+        ar & orientation_z;
+        ar & orientation_x;
+        ar & orientation_w;
     }
 };
 
