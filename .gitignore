@@ -16,6 +16,7 @@ Modules/object_detection_yolov5tensorrt/
 Modules/object_detection_circlex/
 Modules/data/
 Modules/object_detection_oneshot/
+Modules/object_detection/py_nodes/yolov5_tensorrt_server/build/
 
 
 # pytorch/python/numpy formats
