@@ -45,6 +45,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     else if (location_source == prometheus_msgs::UAVState::T265)
     {
         // 【订阅】T265估计位置
+        t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 1, &UAV_estimator::t265_cb, this);
     }
     else if (location_source == prometheus_msgs::UAVState::GAZEBO)
     {

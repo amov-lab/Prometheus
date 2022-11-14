@@ -52,8 +52,7 @@ public:
     //【发布】所有无人机状态
     void allUAVStatePub(struct MultiUAVState m_multi_uav_state);
 
-    
-    void closeTopic();
+    void swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg);
 
     inline struct MultiUAVState getMultiUAVState(){return this->multi_uav_state_;};
 
@@ -75,6 +74,8 @@ private:
     ros::Publisher swarm_command_pub_;
     //连接是否失效
     ros::Publisher communication_state_pub_;
+
+    ros::Subscriber swarm_command_sub_;
 
 
     //仿真
