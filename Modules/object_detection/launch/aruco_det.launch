@@ -3,7 +3,7 @@
         <param name="camera_topic" type="string" value="/prometheus/camera/rgb/image_raw" />
         <param name="camera_parameters" type="string" value="$(find prometheus_detection)/shell/calib_webcam_640x480.yaml" />
         <param name="output_topic" type="string" value="/prometheus/camera/rgb/image_aruco_det" />
-        <param name="dictionary_type" type="int" value="6" />
+        <param name="dictionary_type" type="int" value="10" />
         <param name="run_state" type="int" value="0" />
         <param name="uav_id" type="int" value="1" />
         <param name="target_marker_length" type="double" value="0.0207" />
