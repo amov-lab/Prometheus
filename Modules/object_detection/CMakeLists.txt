@@ -4,14 +4,6 @@ project(prometheus_detection)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
 
-# set(OpenCV_DIR /usr/local/share/OpenCV)
-
-# Define path of darknet folder here.
-find_path(DARKNET_PATH
-  NAMES "Makefile"
-  HINTS "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_lib/")
-message("Darknet path dir = ${DARKNET_PATH}")
-add_definitions(-DDARKNET_FILE_PATH="${DARKNET_PATH}")
 
 # Find CUDA
 FIND_PACKAGE(CUDA)
@@ -72,90 +64,7 @@ find_package(Boost REQUIRED COMPONENTS
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-# Enable OPENCV in darknet
-add_definitions(-DOPENCV)
-add_definitions(-O4 -g)
 
-################################################
-## Declare ROS messages, services and actions ##
-################################################
-
-## To declare and build messages, services or actions from within this
-## package, follow these steps:
-## * Let MSG_DEP_SET be the set of packages whose message types you use in
-##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
-## * In the file package.xml:
-##   * add a build_depend tag for "message_generation"
-##   * add a build_depend and a exec_depend tag for each package in MSG_DEP_SET
-##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
-##     but can be declared for certainty nonetheless:
-##     * add a exec_depend tag for "message_runtime"
-## * In this file (CMakeLists.txt):
-##   * add "message_generation" and every package in MSG_DEP_SET to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * add "message_runtime" and every package in MSG_DEP_SET to
-##     catkin_package(CATKIN_DEPENDS ...)
-##   * uncomment the add_*_files sections below as needed
-##     and list every .msg/.srv/.action file to be processed
-##   * uncomment the generate_messages entry below
-##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
-
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
-
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
-
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
-
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
-
-################################################
-## Declare ROS dynamic reconfigure parameters ##
-################################################
-
-## To declare and build dynamic reconfigure parameters within this
-## package, follow these steps:
-## * In the file package.xml:
-##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
-## * In this file (CMakeLists.txt):
-##   * add "dynamic_reconfigure" to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * uncomment the "generate_dynamic_reconfigure_options" section below
-##     and list every .cfg file to be processed
-
-## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
-
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if your package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    CATKIN_DEPENDS message_runtime std_msgs
 )
@@ -164,14 +73,9 @@ catkin_package(
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(
   src/kcf_tracker_lib
   src/ellipse_lib
-  src/darknet_lib/src
-  src/darknet_lib/include
-  src/darknet_ros/include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INUCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
@@ -179,138 +83,6 @@ include_directories(
   ../common/include
 )
 
-
-if (CUDA_FOUND)
-
-  link_directories(
-    /usr/local/cuda/lib64
-  )
-
-  cuda_add_library(darknet_ros_lib
-    src/darknet_ros/src/YoloObjectDetector.cpp
-    src/darknet_ros/src/image_interface.c
-
-    src/darknet_lib/src/activation_layer.c        src/darknet_lib/src/im2col.c
-    src/darknet_lib/src/activations.c             src/darknet_lib/src/image.c
-    src/darknet_lib/src/avgpool_layer.c           src/darknet_lib/src/layer.c
-    src/darknet_lib/src/batchnorm_layer.c         src/darknet_lib/src/list.c
-    src/darknet_lib/src/blas.c                    src/darknet_lib/src/local_layer.c
-    src/darknet_lib/src/box.c                     src/darknet_lib/src/lstm_layer.c
-    src/darknet_lib/src/col2im.c                  src/darknet_lib/src/matrix.c
-    src/darknet_lib/src/connected_layer.c         src/darknet_lib/src/maxpool_layer.c
-    src/darknet_lib/src/convolutional_layer.c     src/darknet_lib/src/network.c
-    src/darknet_lib/src/cost_layer.c              src/darknet_lib/src/normalization_layer.c
-    src/darknet_lib/src/crnn_layer.c              src/darknet_lib/src/option_list.c
-    src/darknet_lib/src/crop_layer.c              src/darknet_lib/src/parser.c
-    src/darknet_lib/src/cuda.c                    src/darknet_lib/src/region_layer.c
-    src/darknet_lib/src/data.c                    src/darknet_lib/src/reorg_layer.c
-    src/darknet_lib/src/deconvolutional_layer.c   src/darknet_lib/src/rnn_layer.c
-    src/darknet_lib/src/demo.c                    src/darknet_lib/src/route_layer.c
-    src/darknet_lib/src/detection_layer.c         src/darknet_lib/src/shortcut_layer.c
-    src/darknet_lib/src/dropout_layer.c           src/darknet_lib/src/softmax_layer.c
-    src/darknet_lib/src/gemm.c                    src/darknet_lib/src/tree.c
-    src/darknet_lib/src/gru_layer.c               src/darknet_lib/src/utils.c
-    src/darknet_lib/src/upsample_layer.c          src/darknet_lib/src/logistic_layer.c
-    src/darknet_lib/src/l2norm_layer.c            src/darknet_lib/src/yolo_layer.c
-
-    src/darknet_lib/examples/art.c                src/darknet_lib/examples/lsd.c
-    src/darknet_lib/examples/attention.c          src/darknet_lib/examples/nightmare.c
-    src/darknet_lib/examples/captcha.c            src/darknet_lib/examples/regressor.c
-    src/darknet_lib/examples/cifar.c              src/darknet_lib/examples/rnn.c
-    src/darknet_lib/examples/classifier.c         src/darknet_lib/examples/segmenter.c
-    src/darknet_lib/examples/coco.c               src/darknet_lib/examples/super.c
-    src/darknet_lib/examples/darknet.c            src/darknet_lib/examples/tag.c
-    src/darknet_lib/examples/detector.c           src/darknet_lib/examples/yolo.c
-    src/darknet_lib/examples/go.c
-
-    src/darknet_lib/src/activation_kernels.cu     src/darknet_lib/src/crop_layer_kernels.cu
-    src/darknet_lib/src/avgpool_layer_kernels.cu  src/darknet_lib/src/deconvolutional_kernels.cu
-    src/darknet_lib/src/blas_kernels.cu           src/darknet_lib/src/dropout_layer_kernels.cu
-    src/darknet_lib/src/col2im_kernels.cu         src/darknet_lib/src/im2col_kernels.cu
-    src/darknet_lib/src/convolutional_kernels.cu  src/darknet_lib/src/maxpool_layer_kernels.cu
-  )
-
-  target_link_libraries(darknet_ros_lib
-    m
-    pthread
-    stdc++
-    cuda
-    cudart
-    cublas
-    curand
-    ${Boost_LIBRARIES}
-    ${OpenCV_LIBRARIES}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-  )
-
-  cuda_add_executable(darknet_ros
-    src/darknet_ros/src/yolo_object_detector_node.cpp
-  )
-
-else()
-
-  add_library(darknet_ros_lib
-    src/darknet_ros/src/YoloObjectDetector.cpp
-    src/darknet_ros/src/image_interface.c
-
-    src/darknet_lib/src/activation_layer.c        src/darknet_lib/src/im2col.c
-    src/darknet_lib/src/activations.c             src/darknet_lib/src/image.c
-    src/darknet_lib/src/avgpool_layer.c           src/darknet_lib/src/layer.c
-    src/darknet_lib/src/batchnorm_layer.c         src/darknet_lib/src/list.c
-    src/darknet_lib/src/blas.c                    src/darknet_lib/src/local_layer.c
-    src/darknet_lib/src/box.c                     src/darknet_lib/src/lstm_layer.c
-    src/darknet_lib/src/col2im.c                  src/darknet_lib/src/matrix.c
-    src/darknet_lib/src/connected_layer.c         src/darknet_lib/src/maxpool_layer.c
-    src/darknet_lib/src/convolutional_layer.c     src/darknet_lib/src/network.c
-    src/darknet_lib/src/cost_layer.c              src/darknet_lib/src/normalization_layer.c
-    src/darknet_lib/src/crnn_layer.c              src/darknet_lib/src/option_list.c
-    src/darknet_lib/src/crop_layer.c              src/darknet_lib/src/parser.c
-    src/darknet_lib/src/cuda.c                    src/darknet_lib/src/region_layer.c
-    src/darknet_lib/src/data.c                    src/darknet_lib/src/reorg_layer.c
-    src/darknet_lib/src/deconvolutional_layer.c   src/darknet_lib/src/rnn_layer.c
-    src/darknet_lib/src/demo.c                    src/darknet_lib/src/route_layer.c
-    src/darknet_lib/src/detection_layer.c         src/darknet_lib/src/shortcut_layer.c
-    src/darknet_lib/src/dropout_layer.c           src/darknet_lib/src/softmax_layer.c
-    src/darknet_lib/src/gemm.c                    src/darknet_lib/src/tree.c
-    src/darknet_lib/src/gru_layer.c               src/darknet_lib/src/utils.c
-    src/darknet_lib/src/upsample_layer.c          src/darknet_lib/src/logistic_layer.c
-    src/darknet_lib/src/l2norm_layer.c            src/darknet_lib/src/yolo_layer.c
-
-    src/darknet_lib/examples/art.c                src/darknet_lib/examples/lsd.c
-    src/darknet_lib/examples/attention.c          src/darknet_lib/examples/nightmare.c
-    src/darknet_lib/examples/captcha.c            src/darknet_lib/examples/regressor.c
-    src/darknet_lib/examples/cifar.c              src/darknet_lib/examples/rnn.c
-    src/darknet_lib/examples/classifier.c         src/darknet_lib/examples/segmenter.c
-    src/darknet_lib/examples/coco.c               src/darknet_lib/examples/super.c
-    src/darknet_lib/examples/darknet.c            src/darknet_lib/examples/tag.c
-    src/darknet_lib/examples/detector.c           src/darknet_lib/examples/yolo.c
-    src/darknet_lib/examples/go.c
-  )
-
-  target_link_libraries(darknet_ros_lib
-    m
-    pthread
-    stdc++
-    ${Boost_LIBRARIES}
-    ${OpenCV_LIBRARIES}
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBS}
-  )
-
-  add_executable(darknet_ros
-    src/darknet_ros/src/yolo_object_detector_node.cpp
-  )
-
-endif()
-
-target_link_libraries(darknet_ros
-  darknet_ros_lib
-)
-
-add_dependencies(darknet_ros_lib
-  darknet_ros_msgs_generate_messages_cpp
-)
 
 ## Declare a C++ library
 
@@ -375,22 +147,6 @@ target_link_libraries(ellipse_det ${catkin_LIBRARIES} ${OpenCV_LIBS} yaml-cpp)
 
 
 if(CATKIN_ENABLE_TESTING)
-  # Download yolov3-tiny.weights
-  set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_ros/yolo_network_config/weights")
-  set(FILE "${PATH}/yolov3-tiny.weights")
-  message(STATUS "Checking and downloading yolov3-tiny.weights if needed ...")
-  if (NOT EXISTS "${FILE}")
-    message(STATUS "... file does not exist. Downloading now ...")
-    execute_process(COMMAND wget http://jario.ren/upload/yolov3-tiny.weights -P ${PATH})
-  endif()
-  # Download yolov3-tiny-BDT-best.weights
-  set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/darknet_ros/yolo_network_config/weights")
-  set(FILE "${PATH}/yolov3-tiny-BDT-best.weights")
-  message(STATUS "Checking and downloading yolov3-tiny-BDT-best.weights if needed ...")
-  if (NOT EXISTS "${FILE}")
-    message(STATUS "... file does not exist. Downloading now ...")
-    execute_process(COMMAND wget http://jario.ren/upload/yolov3-tiny-BDT-best.weights -P ${PATH})
-  endif()
   # Download SiamRPNVOT.model
   set(PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/siam_rpn_lib")
   set(FILE "${PATH}/SiamRPNVOT.model")
