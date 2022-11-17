@@ -110,14 +110,14 @@ void onMouse(int event, int x, int y, int, void*)
         selectRect.height = abs(y - origin.y);
         selectRect &= cv::Rect(0, 0, frame_width, frame_height);
     }
-    if (event == CV_EVENT_LBUTTONDOWN)
+    if (event == cv::EVENT_LBUTTONDOWN)
     {
         bBeginKCF = false;  
         select_flag = true; 
         origin = cv::Point(x, y);       
         selectRect = cv::Rect(x, y, 0, 0);  
     }
-    else if (event == CV_EVENT_LBUTTONUP)
+    else if (event == cv::EVENT_LBUTTONUP)
     {
         if (selectRect.width*selectRect.height < 64)
         {

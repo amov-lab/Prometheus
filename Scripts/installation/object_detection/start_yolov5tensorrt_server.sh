@@ -1,2 +1,2 @@
-cd Modules/object_detection_yolov5tensorrt
-python3 yolov5_trt_webcam.py
+cd Modules/object_detection/py_nodes/yolov5_tensorrt_server
+python3 yolov5_trt_siamprn_webcam.py

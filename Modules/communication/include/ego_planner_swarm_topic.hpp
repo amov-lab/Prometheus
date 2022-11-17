@@ -96,6 +96,8 @@ private:
     struct sockaddr_in rviz_addr;
     int rviz_socket;
     char rviz_recv_buf[BUF_LEN * 500];
+
+    float current_height = 1.0;
 };
 
 //第二个参数适用于要传输的数据类型相同，但是接收端处理的方式不同所以为了区别msg_id采用自定义。一般情况不使用。

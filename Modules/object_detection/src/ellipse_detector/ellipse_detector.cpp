@@ -1,7 +1,7 @@
 #include "ellipse_detector.h"
 #include <numeric>
 #include <time.h>
-
+#include <opencv2/imgproc/types_c.h>
 
 using namespace std;
 using namespace cv;
@@ -574,27 +574,21 @@ float _ellipse_normal_angle(float x, float y, float *foci)
 }
 
 
-void cv_canny(const void* srcarr, void* dstarr,
-    void* dxarr, void* dyarr,
+void cv_canny(cv::Mat& src, cv::Mat& dst,
+    cv::Mat& dx, cv::Mat& dy,
     int aperture_size, bool L2gradient, double percent_ne) {
 
     cv::AutoBuffer<char> buffer;
     std::vector<uchar*> stack;
     uchar **stack_top = 0, **stack_bottom = 0;
 
-    CvMat srcstub, *src = cvGetMat(srcarr, &srcstub); // IplImage to cvMat
-    CvMat dststub, *dst = cvGetMat(dstarr, &dststub);
-
-    CvMat dxstub, *dx = cvGetMat(dxarr, &dxstub);
-    CvMat dystub, *dy = cvGetMat(dyarr, &dystub);
-
-    if (CV_MAT_TYPE(src->type) != CV_8UC1 ||
-        CV_MAT_TYPE(dst->type) != CV_8UC1 ||
-        CV_MAT_TYPE(dx->type) != CV_16SC1 ||
-        CV_MAT_TYPE(dy->type) != CV_16SC1)
+    if (CV_MAT_TYPE(src.type()) != CV_8UC1 ||
+        CV_MAT_TYPE(dst.type()) != CV_8UC1 ||
+        CV_MAT_TYPE(dx.type()) != CV_16SC1 ||
+        CV_MAT_TYPE(dy.type()) != CV_16SC1)
         CV_Error(CV_StsUnsupportedFormat, "");
 
-    if (!CV_ARE_SIZES_EQ(src, dst))
+    if (!CV_ARE_SIZES_EQ(&src, &dst))
         CV_Error(CV_StsUnmatchedSizes, "");
 
     aperture_size &= INT_MAX;
@@ -603,11 +597,13 @@ void cv_canny(const void* srcarr, void* dstarr,
 
     int i, j;
     CvSize size;
-    size.width = src->cols;
-    size.height = src->rows;
+    size.width = src.cols;
+    size.height = src.rows;
 
-    cvSobel(src, dx, 1, 0, aperture_size);
-    cvSobel(src, dy, 0, 1, aperture_size);
+    //cv::Sobel(src, dx, 1, 0, aperture_size);
+    //cv::Sobel(src, dy, 0, 1, aperture_size);
+    cv::Sobel(src, dx, CV_16S, 1, 0, aperture_size);
+	cv::Sobel(src, dy, CV_16S, 0, 1, aperture_size);
 
     // double min, max;
     // cv::minMaxLoc(Mat(dx->rows, dx->cols, CV_16SC1, dx->data.fl), &min, &max);
@@ -619,11 +615,12 @@ void cv_canny(const void* srcarr, void* dstarr,
     for (i = 0; i < size.height; ++i)
     {
         float* _pmag = magGrad.ptr<float>(i);
-        const short* _dx = (short*)(dx->data.ptr + dx->step*i);
-        const short* _dy = (short*)(dy->data.ptr + dy->step*i);
+        //const short* _dx = (short*)(dx.data.ptr + dx.step*i);
+        //const short* _dy = (short*)(dy.data.ptr + dy.step*i);
         for (j = 0; j < size.width; ++j)
         {
-            val = float(abs(_dx[j]) + abs(_dy[j]));
+            //val = float(abs(_dx[j]) + abs(_dy[j]));
+            val = float(abs(dx.at<short>(i, j)) + abs(dy.at<short>(i, j)));
             _pmag[j] = val;
             maxGrad = (val > maxGrad) ? val : maxGrad;
         }
@@ -727,8 +724,8 @@ void cv_canny(const void* srcarr, void* dstarr,
     {
         int* _mag = mag_buf[(i > 0) + 1] + 1;
         float* _magf = (float*)_mag;
-        const short* _dx = (short*)(dx->data.ptr + dx->step*i);
-        const short* _dy = (short*)(dy->data.ptr + dy->step*i);
+        //const short* _dx = (short*)(dx->data.ptr + dx->step*i);
+        //const short* _dy = (short*)(dy->data.ptr + dy->step*i);
         uchar* _map;
         int x, y;
         ptrdiff_t magstep1, magstep2;
@@ -740,12 +737,12 @@ void cv_canny(const void* srcarr, void* dstarr,
 
             if (!L2gradient)
                 for (j = 0; j < size.width; j++)
-                    _mag[j] = abs(_dx[j]) + abs(_dy[j]);
+                    _mag[j] = abs(dx.at<short>(i, j)) + abs(dy.at<short>(i, j));
             else
             {
                 for (j = 0; j < size.width; j++)
                 {
-                    x = _dx[j]; y = _dy[j];
+                    x = dx.at<short>(i, j); y = dy.at<short>(i, j);
                     _magf[j] = (float)std::sqrt((double)x*x + (double)y*y);
                 }
             }
@@ -762,8 +759,8 @@ void cv_canny(const void* srcarr, void* dstarr,
         _map[-1] = _map[size.width] = 1;
 
         _mag = mag_buf[1] + 1; // take the central row
-        _dx = (short*)(dx->data.ptr + dx->step*(i - 1));
-        _dy = (short*)(dy->data.ptr + dy->step*(i - 1));
+        //_dx = (short*)(dx->data.ptr + dx->step*(i - 1));
+        //_dy = (short*)(dy->data.ptr + dy->step*(i - 1));
 
         magstep1 = mag_buf[2] - mag_buf[1];
         magstep2 = mag_buf[0] - mag_buf[1];
@@ -782,8 +779,8 @@ void cv_canny(const void* srcarr, void* dstarr,
 
         for (j = 0; j < size.width; j++)
         {
-            x = _dx[j];
-            y = _dy[j];
+            x = dx.at<short>(i, j);
+            y = dy.at<short>(i, j);
             int s = x ^ y; // XOR
             int m = _mag[j];
 
@@ -882,12 +879,12 @@ void cv_canny(const void* srcarr, void* dstarr,
     // the final pass, form the final image
     for (i = 0; i < size.height; i++) {
         const uchar* _map = map + mapstep*(i + 1) + 1;
-        uchar* _dst = dst->data.ptr + dst->step*i;
+        //uchar* _dst = dst->data.ptr + dst->step*i;
 
         for (j = 0; j < size.width; j++) {
             // if (_map[j] == 2)
             //     cout << (int)_map[j] << ", " << (int)(_map[j] >> 1) << ", " << (int)(uchar)-(_map[j] >> 1) << endl;
-            _dst[j] = (uchar)-(_map[j] >> 1);
+            dst.at<uchar>(i, j) = (uchar)-(_map[j] >> 1);
         }
     }
 }
@@ -901,13 +898,13 @@ void _tag_canny(InputArray image, OutputArray _edges,
     _sobel_x.create(src.size(), CV_16S);
     _sobel_y.create(src.size(), CV_16S);
 
-    IplImage c_src = IplImage(src);
-    IplImage c_dst = IplImage(_edges.getMat());
-    IplImage c_dx = IplImage(_sobel_x.getMat());
-    IplImage c_dy = IplImage(_sobel_y.getMat());
+    Mat c_src = src;
+    Mat c_dst = _edges.getMat();
+    Mat c_dx = _sobel_x.getMat();
+    Mat c_dy = _sobel_y.getMat();
 
-    cv_canny(&c_src, &c_dst,
-        &c_dx, &c_dy,
+    cv_canny(c_src, c_dst,
+        c_dx, c_dy,
         apertureSize, L2gradient, percent_ne);
 }
 

@@ -3,7 +3,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import cv2
 
-from utils import get_subwindow_tracking
+from siam_utils import get_subwindow_tracking
 
 
 def generate_anchor(total_stride, scales, ratios, score_size):
