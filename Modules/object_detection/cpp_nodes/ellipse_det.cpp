@@ -105,7 +105,7 @@ int main(int argc, char **argv)
         double t0 = (double)cv::getTickCount();
         ellipse_detector.Detect(frame, ellsCned);
 
-        sensor_msgs::ImagePtr det_output_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
+        
 
         // cv::cvtColor(frame, frame, cv::COLOR_BGR2HSV);
         std::set<std::pair<float, float>, decltype(unique_ell) *> ellipse_set(unique_ell);
@@ -116,6 +116,8 @@ int main(int argc, char **argv)
             if (insert_re.first == ellipse_set.end())
                 continue;
             prometheus_msgs::DetectionInfo info;
+
+            /*
             // NOTE: 如果区分无人机起点和靶标?
             cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8U);
             cv::ellipse(mask, cv::Point(cvRound(ellipse.xc_), cvRound(ellipse.yc_)), cv::Size(cvRound(ellipse.a_), cvRound(ellipse.b_)), ellipse.rad_ * 180 / CV_PI, 0, 360, cv::Scalar(255, 255, 255), -1);
@@ -137,6 +139,8 @@ int main(int argc, char **argv)
                 cv::Size sz = cv::getTextSize(info.object_name, 0, 0.8, 1, tmpi);
                 cv::putText(frame, info.object_name, cv::Point(ellipse.xc_ - sz.width / 2, ellipse.yc_ + sz.height / 2), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(255, 255, 0), 1);
             }
+            */
+
             info.frame = 0;
             info.detected = true;
             // NOTE: 目标位置估计
@@ -156,7 +160,8 @@ int main(int argc, char **argv)
         sprintf(msg, "FPS: %f", 1.f / dt);
         cv::putText(frame, msg, cv::Point(10, 20), cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(0, 0, 255), 1, 4, 0);
 
-        ellipse_detector.DrawDetectedEllipses(frame, ellsCned, 1, 6);
+        ellipse_detector.DrawDetectedEllipses(frame, ellsCned, 10, 6);
+        sensor_msgs::ImagePtr det_output_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
         image_pub.publish(det_output_msg);
         cv::imshow("show", frame);
         cv::waitKey(1);

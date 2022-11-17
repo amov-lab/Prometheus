@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import numpy as np
 import torch
 from torch.autograd import Variable
-from utils import generate_anchor
+from siam_utils import generate_anchor
 import cv2
 
 

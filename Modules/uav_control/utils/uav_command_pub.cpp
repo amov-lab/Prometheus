@@ -22,7 +22,8 @@ prometheus_msgs::UAVControlState uav_control_state;
 prometheus_msgs::UAVCommand agent_command;
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
 
-bool is_ground_station_control = false;
+// 如果要使用地面站PrometheusGround控制，需要将此值改为true，否则改为false
+bool is_ground_station_control = true;
 bool flag = false;
 
 void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
