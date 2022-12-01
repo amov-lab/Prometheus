@@ -43,6 +43,7 @@
         <param name="next_drone_ip" value="127.0.0.1"/>
         <param name="broadcast_ip" value="127.0.0.255"/>
 
+        <param name="trajectory_ground_control" value="false"/>
         <param name="trajectory_flag" value="false"/>
         <param name="trajectory_mode" value="0"/>
         <param name="trajectory_time" value="0"/>
