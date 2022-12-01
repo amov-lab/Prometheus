@@ -23,7 +23,7 @@ prometheus_msgs::UAVCommand agent_command;
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
 
 // 如果要使用地面站PrometheusGround控制，需要将此值改为true，否则改为false
-bool is_ground_station_control = true;
+bool is_ground_station_control = false;
 bool flag = false;
 
 void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
@@ -46,6 +46,7 @@ int main(int argc, char **argv)
     bool sim_mode;
     nh.param("uav_id", uav_id, 1);
     nh.param("sim_mode", sim_mode, true);
+    nh.getParam("/communication_bridge/trajectory_ground_control",is_ground_station_control);
 
     string uav_name = "/uav" + std::to_string(uav_id);
 
