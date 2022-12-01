@@ -1004,7 +1004,7 @@ struct BasicDataTypeAndValue
         ar & value;
     }
 };
-//自定义消息1：地面站->机载端，此处为固定内容，即不能随意更改结构体
+//自定义消息1：地面站->机载端，空中端<--->空中端
 struct CustomDataSegment_1
 {
     std::vector<BasicDataTypeAndValue> datas;
