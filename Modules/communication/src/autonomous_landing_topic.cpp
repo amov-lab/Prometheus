@@ -17,9 +17,7 @@ AutonomousLanding::AutonomousLanding(ros::NodeHandle &nh,Communication *communic
     //【服务】自主降落参数配置
     this->param_set_client_ = nh.serviceClient<mavros_msgs::ParamSet>("/autonomous_landing/ParamSet");
     //【发布】无人车数据
-    this->ugv_state_pub_ = nh.advertise<prometheus_msgs::RheaState>("/ugv1/prometheus/state", 1000);
-
-    
+    this->ugv_state_pub_ = nh.advertise<prometheus_msgs::RheaState>("/ugv1/prometheus/state", 1000);    
 };
 
 AutonomousLanding::~AutonomousLanding()
