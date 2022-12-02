@@ -1,6 +1,6 @@
 <launch>
     <node pkg="prometheus_communication_bridge" type="gstreamer_rtsp_stream.py" name="gstreamer_rtsp_stream" output="screen">
         <param name="camera_topic" value="/prometheus/sensor/monocular_down/image_raw_mouse_left"/>
-        <param name="config_info" value="$(find prometheus_detection)/py_nodes/rtsp_stream/encode_config.yaml"/>
+        <param name="config_info" value="$(find prometheus_communication_bridge)/rtsp_stream/encode_config.yaml"/>
     </node>
 </launch>

@@ -193,6 +193,8 @@ private:
     void arm_disarm_func(bool on_or_off);
     void enable_emergency_func();
     void reboot_PX4();
+
+    void load_communication_param(ros::NodeHandle &nh);
 };
 
 #endif

@@ -152,6 +152,8 @@ class UAV_estimator
         
         void printf_gps_status();
         void printf_param();
+
+        void load_communication_param(ros::NodeHandle &nh);
 };
 
 
