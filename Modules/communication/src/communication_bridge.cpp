@@ -462,7 +462,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         sendTextInfo(TextInfo::MessageTypeGrade::INFO, "UAV" + to_string(ROBOT_ID) + " connection succeeded!!!");
 
                         //打开
-                        // system(OPENUAVBASIC);
+                        system(OPENUAVBASIC.c_str());
                     }
                     else
                         sendTextInfo(TextInfo::MessageTypeGrade::INFO, "UAV" + to_string(ROBOT_ID) + " duplicate connections!!!");

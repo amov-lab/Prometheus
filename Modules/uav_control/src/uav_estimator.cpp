@@ -637,6 +637,7 @@ void UAV_estimator::printf_uav_state()
     case prometheus_msgs::UAVState::RTK:
         cout << GREEN << "Location: [ RTK ] " << TAIL;
         printf_gps_status();
+        break;
     case prometheus_msgs::UAVState::UWB:
         cout << GREEN << "Location: [ UWB ] " << TAIL;
         cout << GREEN << "UWB_pos [X Y Z] : " << pos_drone_uwb[0]  << " [ m ] " << pos_drone_uwb[1] << " [ m ] " << pos_drone_uwb[2] << " [ m ] " << TAIL << endl;
