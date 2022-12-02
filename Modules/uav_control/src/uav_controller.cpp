@@ -28,6 +28,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     nh.param<float>("geo_fence/z_min", uav_geo_fence.z_min, -100.0);
     nh.param<float>("geo_fence/z_max", uav_geo_fence.z_max, 100.0);
 
+    load_communication_param(nh);
+
     // 【函数】打印参数
     printf_param();
     cout << GREEN << node_name << " init! " << TAIL << endl;
@@ -1463,4 +1465,22 @@ void UAV_controller::sendStationTextInfo(const ros::TimerEvent &e)
         return;
     }
     
+}
+
+//加载通信节点的配置参数，可通过地面站进行修改
+void UAV_controller::load_communication_param(ros::NodeHandle &nh)
+{
+    //如果该参数名的参数不存在则不会生效
+    nh.getParam("/communication_bridge/control/pos_controller",pos_controller);
+    nh.getParam("/communication_bridge/control/enable_external_control",enable_external_control);
+    nh.getParam("/communication_bridge/control/Takeoff_height",Takeoff_height);
+    nh.getParam("/communication_bridge/control/Disarm_height",Disarm_height);
+    nh.getParam("/communication_bridge/control/Land_speed",Land_speed);
+
+    nh.getParam("/communication_bridge/geo_fence/x_min",uav_geo_fence.x_min);
+    nh.getParam("/communication_bridge/geo_fence/x_max",uav_geo_fence.x_max);
+    nh.getParam("/communication_bridge/geo_fence/y_min",uav_geo_fence.y_min);
+    nh.getParam("/communication_bridge/geo_fence/y_max",uav_geo_fence.y_max);
+    nh.getParam("/communication_bridge/geo_fence/z_min",uav_geo_fence.z_min);
+    nh.getParam("/communication_bridge/geo_fence/z_max",uav_geo_fence.z_max);
 }

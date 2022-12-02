@@ -810,3 +810,13 @@ void UAV_estimator::sendStationTextInfo(const ros::TimerEvent &e)
     }
     
 }
+
+//加载通信节点的配置参数，可通过地面站进行修改
+void UAV_estimator::load_communication_param(ros::NodeHandle &nh)
+{
+    //如果该参数名的参数不存在则不会生效
+    nh.getParam("/communication_bridge/control/location_source",location_source);
+    nh.getParam("/communication_bridge/control/maximum_safe_vel_xy",maximum_safe_vel_xy);
+    nh.getParam("/communication_bridge/control/maximum_safe_vel_z",maximum_safe_vel_z);
+    nh.getParam("/communication_bridge/control/maximum_vel_error_for_vision",maximum_vel_error_for_vision);
+}

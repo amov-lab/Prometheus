@@ -20,6 +20,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "custom_data_segment.hpp"
+
 enum UserType
 {
     UAV = 1,
@@ -60,12 +62,13 @@ public:
 
     void modeSwitch(struct ModeSelection mode_selection);
 
-    bool getParam(struct Param* param);
+    bool getParam(struct Param *param);
 
     void sendControlParam();
     void sendCommunicationParam();
+    void sendSwarmParam();
 
-    void sendTextInfo(uint8_t message_type,std::string message);
+    void sendTextInfo(uint8_t message_type, std::string message);
 
     //接收组播地址的数据
     void multicastUdpFun();
@@ -80,15 +83,15 @@ public:
     void deleteMode(struct ModeSelection mode_selection);
 
     template <typename T>
-    bool setParam(std::string param_name,T param_value);
+    bool setParam(std::string param_name, T param_value);
 
 private:
-    //std::shared_ptr<SwarmControl> swarm_control_ ;
+    // std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;
     UGVBasic *ugv_basic_ = NULL;
     UAVBasic *uav_basic_ = NULL;
-    //std::vector<UAVBasic*> swarm_control_simulation_;
-    std::map<int,UAVBasic*> swarm_control_simulation_;
+    // std::vector<UAVBasic*> swarm_control_simulation_;
+    std::map<int, UAVBasic *> swarm_control_simulation_;
     AutonomousLanding *autonomous_landing_ = NULL;
     GimbalBasic *gimbal_basic_ = NULL;
     ObjectTracking *object_tracking_ = NULL;
@@ -103,21 +106,25 @@ private:
 
     bool is_heartbeat_ready_ = false;
 
-    std::string OPENUAVBASIC = "", CLOSEUAVBASIC = "" ,OPENSWARMCONTROL = "" , CLOSESWARMCONTROL = "";
+    std::string OPENUAVBASIC = "", CLOSEUAVBASIC = "", OPENSWARMCONTROL = "", CLOSESWARMCONTROL = "";
 };
 
 template <typename T>
-bool CommunicationBridge::setParam(std::string param_name,T param_value)
+bool CommunicationBridge::setParam(std::string param_name, T param_value)
 {
-    nh_.setParam(param_name,param_value);
-    T value;
-    nh_.getParam(param_name,value);
-    if(param_value == value)
+    if (nh_.hasParam(param_name))
     {
-        return true;
-    }else
-    {
-        return false;
+        nh_.setParam(param_name, param_value);
+        T value;
+        nh_.getParam(param_name, value);
+        if (param_value == value)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
     return false;
 }
