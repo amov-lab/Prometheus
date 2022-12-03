@@ -73,7 +73,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
         // 【订阅】UWB
-        uwb_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>("/nlink_linktrack_nodeframe2", 10, &UAV_estimator::uwb_cb, this);
+        uwb_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>(uav_name + "/nlink_linktrack_nodeframe2", 10, &UAV_estimator::uwb_cb, this);
     }
     else
     {
