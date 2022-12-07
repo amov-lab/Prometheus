@@ -11,6 +11,15 @@
     <arg name="is_simulation" default="1"/>
     <arg name="swarm_data_update_timeout" default="5"/>
 
+    <!-- Prometheus功能包路径 -->
+    <arg name="prometheus_moudles_url" default="/home/amov/Prometheus/Modules/"/>
+    <!-- 单机配置文件路径 -->
+    <arg name="uav_control_yaml" default="uav_control/launch/uav_control_outdoor.yaml"/>
+    <!-- 集群配置文件路径 -->
+    <arg name="swarm_control_yaml" default="swarm_control/config/swarm_control_p600.yaml"/>
+    <!-- 轨迹配置文件路径 -->
+    <arg name="uav_command_yaml" default="uav_control/launch/uav_command_pub.yaml"/>
+
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
         <!--组播ip-->
         <param name="multicast_udp_ip" value="$(arg ground_stationt_ip)"/>
@@ -47,6 +56,11 @@
         <param name="swarm_control_start" value="$(arg swarm_control_start)"/>
         <param name="close_swarm_control" value="$(arg close_swarm_control)"/>
 
-        <rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+        <!-- 单机配置文件加载 -->
+        <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_control_yaml)"/>
+        <!-- 集群配置文件加载 -->
+        <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg swarm_control_yaml)"/>
+        <!-- 轨迹配置文件加载 -->
+        <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_command_yaml)"/>
     </node>
 </launch>

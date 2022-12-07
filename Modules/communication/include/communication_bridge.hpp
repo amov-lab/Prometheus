@@ -67,6 +67,7 @@ public:
     void sendControlParam();
     void sendCommunicationParam();
     void sendSwarmParam();
+    void sendCommandPubParam();
 
     void sendTextInfo(uint8_t message_type, std::string message);
 
