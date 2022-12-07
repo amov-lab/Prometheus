@@ -34,6 +34,28 @@ class Controller_Test
             Controller_Test_nh.param<float>("Controller_Test/Step/step_length", step_length, 0.0);
             Controller_Test_nh.param<float>("Controller_Test/Step/step_interval", step_interval, 0.0);
 
+            load_communication_param(Controller_Test_nh);
+
+        }
+
+        //加载地面站参数
+        void load_communication_param(ros::NodeHandle &nh)
+        {
+            nh.getParam("/communication_bridge/Controller_Test/Circle/Center_x", circle_center[0]);
+            nh.getParam("/communication_bridge/Controller_Test/Circle/Center_y", circle_center[1]);
+            nh.getParam("/communication_bridge/Controller_Test/Circle/Center_z", circle_center[2]);
+            nh.getParam("/communication_bridge/Controller_Test/Circle/circle_radius", circle_radius);
+            nh.getParam("/communication_bridge/Controller_Test/Circle/linear_vel", linear_vel);
+            nh.getParam("/communication_bridge/Controller_Test/Circle/direction", direction);
+
+            nh.getParam("/communication_bridge/Controller_Test/Eight/Center_x", eight_origin_[0]);
+            nh.getParam("/communication_bridge/Controller_Test/Eight/Center_y", eight_origin_[1]);
+            nh.getParam("/communication_bridge/Controller_Test/Eight/Center_z", eight_origin_[2]);
+            nh.getParam("/communication_bridge/Controller_Test/Eight/omega", eight_omega_);
+            nh.getParam("/communication_bridge/Controller_Test/Eight/radial", radial);
+
+            nh.getParam("/communication_bridge/Controller_Test/Step/step_length", step_length);
+            nh.getParam("/communication_bridge/Controller_Test/Step/step_interval", step_interval);
         }
 
         //Printf the Controller_Test parameter

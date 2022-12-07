@@ -968,7 +968,8 @@ struct ParamSettings
     {
         UAVCONTROL = 1,
         UAVCOMMUNICATION = 2,
-        SWARMCONTROL = 3
+        SWARMCONTROL = 3,
+        UAVCOMMANDPUB = 4
     };
     std::vector<Param> params;
 

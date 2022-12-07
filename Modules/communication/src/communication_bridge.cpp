@@ -248,6 +248,9 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         case ParamSettings::ParamModule::SWARMCONTROL:
             sendSwarmParam();
             break;
+        case ParamSettings::ParamModule::UAVCOMMANDPUB:
+            sendCommandPubParam();
+            break;
         default:
             break;
         }
@@ -997,7 +1000,7 @@ void CommunicationBridge::sendControlParam()
     std::string param_name[15] = {"pos_controller", "enable_external_control", "Takeoff_height", "Land_speed", "Disarm_height", "location_source", "maximum_safe_vel_xy", "maximum_safe_vel_z", "maximum_vel_error_for_vision", "x_min", "x_max", "y_min", "y_max", "z_min", "z_max"};
     int8_t param_type[15] = {Param::Type::INT, Param::Type::BOOLEAN, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::INT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT};
     sendTextInfo(TextInfo::INFO, "start loading parameters...");
-    usleep(500);
+    usleep(1000);
     struct ParamSettings param_settings;
     for (int i = 0; i < 15; i++)
     {
@@ -1027,7 +1030,7 @@ void CommunicationBridge::sendCommunicationParam()
     std::string param_name[12] = {"ROBOT_ID", "multicast_udp_ip", "ground_stationt_ip", "swarm_num", "autoload", "uav_control_start", "close_uav_control", "swarm_control_start", "close_swarm_control", "is_simulation", "swarm_data_update_timeout", "trajectory_ground_control"};
     int8_t param_type[12] = {Param::Type::INT, Param::Type::STRING, Param::Type::STRING, Param::Type::INT, Param::Type::BOOLEAN, Param::Type::STRING, Param::Type::STRING, Param::Type::STRING, Param::Type::STRING,Param::Type::INT, Param::Type::INT, Param::Type::BOOLEAN};
     sendTextInfo(TextInfo::INFO, "start loading parameters...");
-    usleep(500);
+    usleep(1000);
     struct ParamSettings param_settings;
     for (int i = 0; i < 12; i++)
     {
@@ -1054,7 +1057,7 @@ void CommunicationBridge::sendSwarmParam()
     std::string param_name[4] = {"takeoff_height", "warning_distance", "danger_distance", "setmode_timeout"};
     int8_t param_type[4] = {Param::Type::FLOAT , Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT};
     sendTextInfo(TextInfo::INFO, "start loading parameters...");
-    usleep(500);
+    usleep(1000);
     struct ParamSettings param_settings;
     for (int i = 0; i < 4; i++)
     {
@@ -1073,6 +1076,33 @@ void CommunicationBridge::sendSwarmParam()
         }
     }
     param_settings.param_module = ParamSettings::ParamModule::SWARMCONTROL;
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
+    sendTextInfo(TextInfo::INFO, "parameter loading success...");
+}
+void CommunicationBridge::sendCommandPubParam()
+{
+    std::string param_name[13] = {"Circle/Center_x", "Circle/Center_y", "Circle/Center_z", "Circle/circle_radius", "Circle/direction", "Circle/linear_vel", "Eight/Center_x" , "Eight/Center_y" , "Eight/Center_z", "Eight/omega", "Eight/radial" ,"Step/step_interval" , "Step/step_length"};
+    int8_t param_type[13] = {Param::Type::FLOAT , Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT, Param::Type::FLOAT};
+    sendTextInfo(TextInfo::INFO, "start loading parameters...");
+    usleep(1000);
+    struct ParamSettings param_settings;
+    for (int i = 0; i < 13; i++)
+    {
+        param_name[i] = "/communication_bridge/Controller_Test/" + param_name[i];
+        struct Param param;
+        param.param_name = param_name[i];
+        param.type = param_type[i];
+        if (getParam(&param))
+        {
+            param_settings.params.push_back(param);
+        }
+        else
+        {
+            sendTextInfo(TextInfo::INFO, "parameter loading failed...");
+            return;
+        }
+    }
+    param_settings.param_module = ParamSettings::ParamModule::UAVCOMMANDPUB;
     sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
     sendTextInfo(TextInfo::INFO, "parameter loading success...");
 }
