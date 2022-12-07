@@ -1,13 +1,17 @@
 <launch>
+
+	<!--启动仿真环境 -->
     <include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav.launch">
         <arg name="world" value="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/random_marker.world" />
         <arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf" />
     </include>
 
+	<!--启动prometheus控制器 -->
     <include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
         <arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
     </include>
 
+	<!--检测二维码图像 -->
     <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen" launch-prefix="bash -c 'sleep 1; gnome-terminal --tab -- $0 $@; bash'">
         <!-- <node pkg="prometheus_detection" type="aruco_det" name="aruco_det" output="screen" > -->
         <param name="uav_id" type="int" value="1" />
@@ -18,6 +22,7 @@
         <param name="dictionary_type" type="int" value="10" />
     </node>
 
+	<!--无人机绕圈依次检测 -->
     <node pkg="prometheus_demo" type="find_aruco_marker" name="find_aruco_marker" output="screen" launch-prefix="bash -c 'sleep 2; gnome-terminal --tab -- $0 $@; bash'">
         <param name="uav_id" type="int" value="1" />
         <param name="visual_feedback_topic_name" type="string" value="/uav1/prometheus/object_detection/arucos_det" />
