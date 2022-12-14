@@ -341,6 +341,7 @@ void CommunicationBridge::recvData(struct Bspline bspline)
 void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segment)
 {
     //自定义
+    
 }
 
 void CommunicationBridge::recvData(struct Goal goal)
