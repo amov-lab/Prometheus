@@ -15,6 +15,11 @@
       <direction>0.2 0.2 -0.9</direction>
     </light>
 
+    <scene>
+      <!-- <ambient>1.0 1.0 1.0 1.0</ambient> -->
+      <shadows>0</shadows>
+    </scene>
+    
     <!-- 装饰 -->
     <model name='texture'>
       <static>true</static>
