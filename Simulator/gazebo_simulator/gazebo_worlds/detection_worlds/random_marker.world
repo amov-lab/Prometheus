@@ -515,11 +515,12 @@
     <gravity>0 0 -9.8066</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
     <atmosphere type='adiabatic'/>
+    
     <scene>
-      <ambient>0.4 0.4 0.4 1</ambient>
-      <background>0.7 0.7 0.7 1</background>
-      <shadows>1</shadows>
+      <!-- <ambient>1.0 1.0 1.0 1.0</ambient> -->
+      <shadows>0</shadows>
     </scene>
+
     <audio>
       <device>default</device>
     </audio>
