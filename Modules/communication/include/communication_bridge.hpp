@@ -86,6 +86,8 @@ public:
     template <typename T>
     bool setParam(std::string param_name, T param_value);
 
+    void checkHeartbeatState(const ros::TimerEvent& time_event);
+
 private:
     // std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;
@@ -108,6 +110,10 @@ private:
     bool is_heartbeat_ready_ = false;
 
     std::string OPENUAVBASIC = "", CLOSEUAVBASIC = "", OPENSWARMCONTROL = "", CLOSESWARMCONTROL = "";
+
+    ros::Timer heartbeat_check_timer;
+    bool disconnect_flag = false;
+    long heartbeat_count = 0;
 };
 
 template <typename T>
