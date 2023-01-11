@@ -205,6 +205,9 @@ void UAV_controller::mainloop()
             this->text_info.Message = "Odom invalid, swtich to land control mode!";
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
+        else{
+            uav_control_state.failsafe = false;
+        }
 
         // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
         if (uav_state.mode != "OFFBOARD")
@@ -502,7 +505,7 @@ void UAV_controller::set_command_des()
                 pos_des[2] = uav_command.position_ref[2];
                 vel_des << 0.0, 0.0, 0.0;
                 acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
+                yaw_des = uav_command.yaw_ref+uav_yaw;
             }
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL_BODY)
@@ -521,8 +524,7 @@ void UAV_controller::set_command_des()
                 vel_des[1] = uav_command.velocity_ref[1];
                 vel_des[2] = uav_command.velocity_ref[2];
                 acc_des << 0.0, 0.0, 0.0;
-                yaw_rate_des = uav_command.yaw_rate_ref;
-                yaw_des = uav_command.yaw_ref;
+                yaw_des = uav_command.yaw_ref+uav_yaw;
             }
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS_BODY)
@@ -542,7 +544,7 @@ void UAV_controller::set_command_des()
                 vel_des[1] = uav_command.velocity_ref[1];
                 vel_des[2] = 0.0;
                 acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_command.yaw_ref;
+                yaw_des = uav_command.yaw_ref+uav_yaw;
             }
             
         }

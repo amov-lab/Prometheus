@@ -9,6 +9,12 @@
     <include>
       <uri>model://ground_plane</uri>
     </include>
+
+    <scene>
+      <!-- <ambient>1.0 1.0 1.0 1.0</ambient> -->
+      <shadows>0</shadows>
+    </scene>
+        
     <!-- 装饰 -->
     <model name='texture'>
       <static>true</static>
