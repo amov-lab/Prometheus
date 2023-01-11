@@ -6,6 +6,12 @@
         <pose>-5 0 1 0 0.2 0</pose>
       </camera>
     </gui>
+    
+    <scene>
+      <!-- <ambient>1.0 1.0 1.0 1.0</ambient> -->
+      <shadows>0</shadows>
+    </scene>
+
     <physics name='default_physics' default='0' type='ode'>
       <gravity>0 0 -9.8066</gravity>
       <ode>
