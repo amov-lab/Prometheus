@@ -88,6 +88,11 @@ public:
 
     void checkHeartbeatState(const ros::TimerEvent& time_event);
 
+    //触发安全机制处理
+    void triggerUAV();
+    void triggerSwarmControl();
+    void triggerUGV();
+
 private:
     // std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;

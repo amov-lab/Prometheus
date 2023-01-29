@@ -20,7 +20,7 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     nh.param<int>("tcp_heartbeat_port", TCP_HEARTBEAT_PORT, 55556);
     // nh.param<int>("rviz_port", RVIZ_PORT, 8890);
     nh.param<int>("ROBOT_ID", ROBOT_ID, 1);
-    nh.param<std::string>("ground_stationt_ip", udp_ip, "127.0.0.1");
+    nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     nh.param<int>("try_connect_num", try_connect_num, 3);
 
@@ -797,6 +797,55 @@ void CommunicationBridge::multicastUdpFun()
     }
 }
 
+// 无人机触发安全机制（一般为心跳包丢失） 进行降落
+void CommunicationBridge::triggerUAV()
+{
+    // 触发降落  暂定
+    struct UAVCommand uav_command;
+    uav_command.Agent_CMD = UAVCommand::AgentCMD::Land;
+    uav_command.Move_mode = UAVCommand::MoveMode::XYZ_VEL;
+    uav_command.yaw_ref = 0;
+    uav_command.Yaw_Rate_Mode = true;
+    uav_command.yaw_rate_ref = 0;
+    uav_command.latitude = 0;
+    uav_command.longitude = 0;
+    uav_command.altitude = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        uav_command.position_ref[i] = 0;
+        uav_command.velocity_ref[i] = 0;
+        uav_command.acceleration_ref[i] = 0;
+        uav_command.att_ref[i] = 0;
+    }
+    uav_command.att_ref[3] = 0;
+    this->uav_basic_->uavCmdPub(uav_command);
+}
+// 集群触发安全机制（一般为心跳包丢失）
+void CommunicationBridge::triggerSwarmControl()
+{
+    if (this->is_simulation_ == 0)
+    {
+        this->swarm_control_->communicationStatePub(false);
+    }
+    else
+    {
+        for (int i = 0; i < this->swarm_num_; i++)
+        {
+            this->swarm_control_->communicationStatePub(false, i);
+        }
+    }
+}
+// 无人车触发安全机制（一般为心跳包丢失）
+void CommunicationBridge::triggerUGV()
+{
+    // 停止小车
+    struct RheaControl rhea_control;
+    rhea_control.Mode = RheaControl::Mode::Stop;
+    rhea_control.linear = 0;
+    rhea_control.angular = 0;
+    this->ugv_basic_->rheaControlPub(rhea_control);
+}
+
 // 给地面站发送心跳包,  超时检测
 void CommunicationBridge::toGroundStationFun()
 {
@@ -828,52 +877,19 @@ void CommunicationBridge::toGroundStationFun()
             // 如果是集群模式 由集群模块触发降落
             if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
             {
-                if (this->is_simulation_ == 0)
-                {
-                    this->swarm_control_->communicationStatePub(false);
-                }
-                else
-                {
-                    for (int i = 0; i < this->swarm_num_; i++)
-                    {
-                        this->swarm_control_->communicationStatePub(false, i);
-                    }
-                }
+                triggerSwarmControl();
                 sendTextInfo(TextInfo::MessageTypeGrade::ERROR, "TCP:" + udp_ip + " abnormal communication,triggering swarm control mode to land.");
             }
             // 无人机 触发降落或者返航
             else if (this->uav_basic_ != NULL)
             {
-                // 触发降落  暂定
-                struct UAVCommand uav_command;
-                uav_command.Agent_CMD = UAVCommand::AgentCMD::Land;
-                uav_command.Move_mode = UAVCommand::MoveMode::XYZ_VEL;
-                uav_command.yaw_ref = 0;
-                uav_command.Yaw_Rate_Mode = true;
-                uav_command.yaw_rate_ref = 0;
-                uav_command.latitude = 0;
-                uav_command.longitude = 0;
-                uav_command.altitude = 0;
-                for (int i = 0; i < 3; i++)
-                {
-                    uav_command.position_ref[i] = 0;
-                    uav_command.velocity_ref[i] = 0;
-                    uav_command.acceleration_ref[i] = 0;
-                    uav_command.att_ref[i] = 0;
-                }
-                uav_command.att_ref[3] = 0;
-                this->uav_basic_->uavCmdPub(uav_command);
+                triggerUAV();
                 sendTextInfo(TextInfo::MessageTypeGrade::ERROR, "TCP:" + udp_ip + " abnormal communication,trigger landing.");
             }
             // 无人车  停止小车
             else if (this->ugv_basic_ != NULL)
             {
-                // 停止小车
-                struct RheaControl rhea_control;
-                rhea_control.Mode = RheaControl::Mode::Stop;
-                rhea_control.linear = 0;
-                rhea_control.angular = 0;
-                this->ugv_basic_->rheaControlPub(rhea_control);
+                triggerUGV();
             }
             // 触发机制后 心跳准备标志置为false，停止心跳包的发送 再次接收到地面站指令激活
             this->is_heartbeat_ready_ = false;
@@ -911,15 +927,20 @@ void CommunicationBridge::toGroundStationFun()
                 time_stamp = this->ugv_basic_->getTimeStamp();
             }
             // 拿单机状态时间戳进行比较 如果不相等说明数据在更新
+            static bool flag = true;
             if (time != time_stamp)
             {
                 time = time_stamp;
+                if(time_count > this->swarm_data_update_timeout_)
+                {
+                    sendTextInfo(TextInfo::MessageTypeGrade::INFO, "UAV" + to_string(ROBOT_ID) + " data update returns to normal.");
+                    flag = true;
+                }
                 time_count = 0;
             }
             else // 相等 数据未更新
             {
                 time_count++;
-                static bool flag = true;
                 if (time_count > this->swarm_data_update_timeout_)
                 {
                     if (flag)
@@ -927,14 +948,6 @@ void CommunicationBridge::toGroundStationFun()
                         // 反馈地面站
                         sendTextInfo(TextInfo::MessageTypeGrade::ERROR, "UAV" + to_string(ROBOT_ID) + " data update timeout.");
                         flag = false;
-                    }
-                }
-                else
-                {
-                    if (!flag)
-                    {
-                        sendTextInfo(TextInfo::MessageTypeGrade::INFO, "UAV" + to_string(ROBOT_ID) + " data update returns to normal.");
-                        flag = true;
                     }
                 }
             }
@@ -965,51 +978,18 @@ void CommunicationBridge::checkHeartbeatState(const ros::TimerEvent &time_event)
                 // 如果是集群模式 由集群模块触发降落
                 if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
                 {
-                    if (this->is_simulation_ == 0)
-                    {
-                        this->swarm_control_->communicationStatePub(false);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < this->swarm_num_; i++)
-                        {
-                            this->swarm_control_->communicationStatePub(false, i);
-                        }
-                    }
+                    triggerSwarmControl();
                 }
                 // 无人机 触发降落或者返航
                 else if (this->uav_basic_ != NULL)
                 {
-                    // 触发降落  暂定
-                    struct UAVCommand uav_command;
-                    uav_command.Agent_CMD = UAVCommand::AgentCMD::Land;
-                    uav_command.Move_mode = UAVCommand::MoveMode::XYZ_VEL;
-                    uav_command.yaw_ref = 0;
-                    uav_command.Yaw_Rate_Mode = true;
-                    uav_command.yaw_rate_ref = 0;
-                    uav_command.latitude = 0;
-                    uav_command.longitude = 0;
-                    uav_command.altitude = 0;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        uav_command.position_ref[i] = 0;
-                        uav_command.velocity_ref[i] = 0;
-                        uav_command.acceleration_ref[i] = 0;
-                        uav_command.att_ref[i] = 0;
-                    }
-                    uav_command.att_ref[3] = 0;
-                    this->uav_basic_->uavCmdPub(uav_command);
-                    // sendTextInfo(TextInfo::MessageTypeGrade::ERROR, "TCP:" + udp_ip + " abnormal communication,trigger landing.");
+                    triggerUAV();
                 }
                 // 无人车  停止小车
                 else if (this->ugv_basic_ != NULL)
                 {
                     // 停止小车
-                    struct RheaControl rhea_control;
-                    rhea_control.Mode = RheaControl::Mode::Stop;
-                    rhea_control.linear = 0;
-                    rhea_control.angular = 0;
-                    this->ugv_basic_->rheaControlPub(rhea_control);
+                    triggerUGV();
                 }
             }
         }

@@ -15,8 +15,6 @@
     <arg name="prometheus_moudles_url" default="/home/amov/Prometheus/Modules/"/>
     <!-- 单机配置文件路径 -->
     <arg name="uav_control_yaml" default="uav_control/launch/uav_control_outdoor.yaml"/>
-    <!-- 集群配置文件路径 -->
-    <arg name="swarm_control_yaml" default="swarm_control/config/swarm_control_p600.yaml"/>
     <!-- 轨迹配置文件路径 -->
     <arg name="uav_command_yaml" default="uav_control/launch/uav_command_pub.yaml"/>
 
@@ -59,8 +57,6 @@
 
         <!-- 单机配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_control_yaml)"/>
-        <!-- 集群配置文件加载 -->
-        <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg swarm_control_yaml)"/>
         <!-- 轨迹配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_command_yaml)"/>
     </node>
