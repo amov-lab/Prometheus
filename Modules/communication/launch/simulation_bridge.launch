@@ -6,7 +6,7 @@
     <arg name="close_uav_control" default=""/>
     <arg name="swarm_control_start" default=""/>
     <arg name="close_swarm_control" default=""/>
-    <arg name="ground_stationt_ip" default="127.0.0.1"/>
+    <arg name="ground_station_ip" default="127.0.0.1"/>
     <arg name="uav_id" default="1"/>
     <arg name="is_simulation" default="1"/>
     <arg name="swarm_data_update_timeout" default="5"/>
@@ -18,7 +18,7 @@
         <param name="next_drone_ip" value="127.0.0.1"/>
 	    <param name="broadcast_ip" value="127.0.0.255"/>
         <!-- 地面站ip -->
-        <param name="ground_stationt_ip" value="$(arg ground_stationt_ip)"/>
+        <param name="ground_station_ip" value="$(arg ground_station_ip)"/>
         <param name="udp_port" value="8889"/>
         <param name="tcp_port" value="55555"/>
         <param name="rviz_port" value="8890"/>
