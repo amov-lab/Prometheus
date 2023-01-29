@@ -6,7 +6,7 @@
     <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"/>
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
-    <arg name="ground_stationt_ip" default="127.0.0.1"/>
+    <arg name="ground_stationt_ip" default="192.168.31.116"/>
     <arg name="uav_id" default="1"/>
     <arg name="is_simulation" default="1"/>
     <arg name="swarm_data_update_timeout" default="5"/>
