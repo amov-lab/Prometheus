@@ -3,7 +3,7 @@
 UGVBasic::UGVBasic(ros::NodeHandle &nh,Communication *communication)
 {
     this->communication_ = communication;
-    nh.param<std::string>("ground_stationt_ip", udp_ip, "127.0.0.1");
+    nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
 
     //【订阅】rviz 点云
