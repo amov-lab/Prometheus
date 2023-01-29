@@ -72,7 +72,6 @@ elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
 target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_arm.so boost_serialization)
 endif()
 
-
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
 message( STATUS "Architecture: ${ARCHITECTURE}" )
 
