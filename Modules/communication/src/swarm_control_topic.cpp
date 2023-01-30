@@ -49,7 +49,7 @@ SwarmControl::~SwarmControl()
 
 void SwarmControl::init(ros::NodeHandle &nh, int swarm_num, int id)
 {
-    nh.param<std::string>("ground_stationt_ip", udp_ip, "127.0.0.1");
+    nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     for (int i = 1; i <= swarm_num; i++)
     {

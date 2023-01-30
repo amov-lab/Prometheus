@@ -47,7 +47,7 @@ EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
     goal_sub_ =  nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 10 , &EGOPlannerSwarm::goalCb, this);
 }
 
-EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh,int id,std::string ground_stationt_ip):drone_id_(id),rviz_ip_(ground_stationt_ip)
+EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh,int id,std::string ground_station_ip):drone_id_(id),rviz_ip_(ground_station_ip)
 {
     tf_sub_ = nh.subscribe("/tf", 10, &EGOPlannerSwarm::tfCb, this);
     tf_static_sub_ = nh.subscribe("/tf_static", 10, &EGOPlannerSwarm::tfStaticCb, this);

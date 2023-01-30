@@ -296,7 +296,7 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
     }
     if (param_settings.param_module == ParamSettings::ParamModule::UAVCOMMUNICATION)
     {
-        nh_.getParam("ground_stationt_ip", udp_ip);
+        nh_.getParam("ground_station_ip", udp_ip);
         nh_.getParam("multicast_udp_ip", multicast_udp_ip);
         nh_.getParam("ROBOT_ID", ROBOT_ID);
         nh_.getParam("swarm_num", swarm_num_);
@@ -1082,7 +1082,7 @@ void CommunicationBridge::sendControlParam()
 }
 void CommunicationBridge::sendCommunicationParam()
 {
-    std::string param_name[12] = {"ROBOT_ID", "multicast_udp_ip", "ground_stationt_ip", "swarm_num", "autoload", "uav_control_start", "close_uav_control", "swarm_control_start", "close_swarm_control", "is_simulation", "swarm_data_update_timeout", "trajectory_ground_control"};
+    std::string param_name[12] = {"ROBOT_ID", "multicast_udp_ip", "ground_station_ip", "swarm_num", "autoload", "uav_control_start", "close_uav_control", "swarm_control_start", "close_swarm_control", "is_simulation", "swarm_data_update_timeout", "trajectory_ground_control"};
     int8_t param_type[12] = {Param::Type::INT, Param::Type::STRING, Param::Type::STRING, Param::Type::INT, Param::Type::BOOLEAN, Param::Type::STRING, Param::Type::STRING, Param::Type::STRING, Param::Type::STRING, Param::Type::INT, Param::Type::INT, Param::Type::BOOLEAN};
     sendTextInfo(TextInfo::INFO, "start loading parameters...");
     usleep(1000);
