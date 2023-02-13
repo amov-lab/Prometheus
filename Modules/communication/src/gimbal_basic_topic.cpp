@@ -3,15 +3,17 @@
 GimbalBasic::GimbalBasic(ros::NodeHandle &nh,Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
+    int id;
+    nh.param<int>("ROBOT_ID", id, 1);
     this->communication_ = communication;
     //【订阅】吊舱状态数据
-    this->gimbal_state_sub_ = nh.subscribe("/gimbal/state", 10, &GimbalBasic::stateCb, this);
+    this->gimbal_state_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/gimbal/state", 10, &GimbalBasic::stateCb, this);
     //【订阅】跟踪误差
-    this->vision_diff_sub_ = nh.subscribe("/gimbal/track", 10, &GimbalBasic::trackCb, this);
+    this->vision_diff_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/gimbal/track", 10, &GimbalBasic::trackCb, this);
     //【发布】框选 点击 目标
     this->window_position_pub_ = nh.advertise<prometheus_msgs::WindowPosition>("/detection/bbox_draw", 1000);
     //【发布】吊舱控制
-    this->gimbal_control_pub_ = nh.advertise<prometheus_msgs::GimbalControl>("/gimbal/control", 1000);
+    this->gimbal_control_pub_ = nh.advertise<prometheus_msgs::GimbalControl>("/uav" + std::to_string(id) + "/gimbal/control", 1000);
 }
 
 GimbalBasic::~GimbalBasic()
