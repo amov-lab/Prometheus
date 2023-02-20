@@ -55,6 +55,7 @@ prometheus_msgs::ControlCommand Command_Last;                     //无人机上
 
 Eigen::Vector3d state_sp(0,0,0);
 Eigen::Vector3d state_sp_extra(0,0,0);
+Eigen::Vector3d global_pos_sp(0,0,0);
 double yaw_sp;
 double yaw_rate_sp;
 
@@ -570,7 +571,11 @@ int main(int argc, char **argv)
 
         // 【User_Mode1】 暂空。可进行自定义
         case prometheus_msgs::ControlCommand::User_Mode1:
-            
+            global_pos_sp[0] = Command_Now.Reference_State.latitude;
+            global_pos_sp[1] = Command_Now.Reference_State.longitude;
+            global_pos_sp[2] = Command_Now.Reference_State.altitude;
+            yaw_sp = Command_Now.Reference_State.yaw_ref;
+            _command_to_mavros.send_global_setpoint(global_pos_sp, yaw_sp);
             break;
 
         // 【User_Mode2】 暂空。可进行自定义

@@ -29,6 +29,9 @@ float32[3] velocity_ref          ## [m/s]
 float32[3] acceleration_ref      ## [m/s^2]
 ## float32[3] jerk_ref              ## [m/s^3]
 ## float32[3] snap_ref              ## [m/s^4]
+float64 latitude        ## 无人机经度、纬度、高度                 
+float64 longitude       ## 无人机经度、纬度、高度
+float64 altitude        ## 无人机经度、纬度、高度
 
 ## 角度参考量：偏航角、偏航角速度、偏航角加速度
 bool Yaw_Rate_Mode                      ## True 代表控制偏航角速率
