@@ -1,0 +1,27 @@
+<!-- 本launch进行机载控制时的机载端启动脚本 -->
+<launch>
+	<arg name="uav_id" default="1"/>
+	<arg name="sleep" default="0" />
+        <group ns="/uav$(arg uav_id)">
+		<!-- 启动MAVROS -->
+		<!-- 不同机载电脑,注意修改fcu_url至正确的端口号及波特率 -->
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="/dev/ttyTHS0:921600" />
+			<!--param name="gcs_url" value="udp://@192.168.31.46" / -->
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="1" />
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find mavros)/launch/px4_pluginlists_gps.yaml" />
+			<rosparam command="load" file="$(find mavros)/launch/px4_config_gps.yaml" />
+		</node>
+    </group>
+
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav_id)" output="screen" launch-prefix="bash -c 'sleep $(arg sleep); gnome-terminal --tab -- $0 $@'">
+		<param name="uav_id" value="$(arg uav_id)" />
+        <param name="sim_mode" value="false" />
+		<param name="flag_printf" value="ture" />
+        <param name="control/enable_external_control" value="false" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+	</node>
+</launch>
+
