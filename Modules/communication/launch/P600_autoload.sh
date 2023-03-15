@@ -1,0 +1,1 @@
+gnome-terminal --window -e 'bash -c "source /opt/ros/melodic/setup.bash && source /home/amov/prometheus_mavros/devel/setup.bash && source ~/Prometheus/devel/setup.bash && roslaunch prometheus_communication_bridge P600_communication.launch; exec bash"'

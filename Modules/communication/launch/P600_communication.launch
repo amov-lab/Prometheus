@@ -1,0 +1,38 @@
+<launch>
+
+    <arg name="swarm_num" default="1"/>
+    <arg name="autoload" default="true"/>
+    <arg name="uav_control_start" default="gnome-terminal -- roslaunch prometheus_uav_control P600_onboard.launch"/>
+    <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"/>
+    <arg name="swarm_control_start" default=""/>
+    <arg name="close_swarm_control" default=""/>
+    <arg name="ground_station_ip" default="192.168.1.100"/>
+    <arg name="uav_id" default="1"/>
+    <arg name="is_simulation" default="0"/>
+    <arg name="swarm_data_update_timeout" default="5"/>
+
+    <!-- Prometheus功能包路径 -->
+    <arg name="prometheus_moudles_url" default="/home/amov/Prometheus/Modules/"/>
+    <!-- 单机配置文件路径 -->
+    <arg name="uav_control_yaml" default="uav_control/launch/uav_control_outdoor.yaml"/>
+    <!-- 轨迹配置文件路径 -->
+    <arg name="uav_command_yaml" default="uav_control/launch/terminal_control.yaml"/>
+    <include file="$(find prometheus_communication_bridge)/launch/h16_bridge.launch">
+		
+        <arg name="swarm_num"                 value="$(arg swarm_num)" />
+        <arg name="autoload"                  value="$(arg autoload)" />
+		<arg name="uav_control_start"         value="$(arg uav_control_start)" />
+		<arg name="close_uav_control"         value="$(arg close_uav_control)" />
+		<arg name="swarm_control_start"       value="$(arg swarm_control_start)" />
+		<arg name="close_swarm_control"       value="$(arg close_swarm_control)" />
+        <arg name="ground_station_ip"        value="$(arg ground_station_ip)"/>
+        <arg name="uav_id"                    value="$(arg uav_id)"/>
+        <arg name="is_simulation"             value="$(arg is_simulation)"/>
+        <arg name="swarm_data_update_timeout" value="$(arg swarm_data_update_timeout)"/>
+        <arg name="prometheus_moudles_url"    value="$(arg prometheus_moudles_url)"/>
+        <arg name="uav_control_yaml"          value="$(arg uav_control_yaml)"/>
+        <arg name="uav_command_yaml"        value="$(arg uav_command_yaml)"/>
+	</include>
+    
+</launch>
+
