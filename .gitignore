@@ -17,7 +17,7 @@ Modules/object_detection_circlex/
 Modules/data/
 Modules/object_detection_oneshot/
 Modules/object_detection/py_nodes/yolov5_tensorrt_server/build/
-
+Modules/common/CMakeLists.txt
 
 # pytorch/python/numpy formats
 # *.pth
