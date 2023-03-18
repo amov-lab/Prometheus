@@ -4,8 +4,8 @@
   <arg name="map_size_y" default="50.0"/>
   <arg name="map_origin_x" default="-25.0"/>
   <arg name="map_origin_y" default="-25.0"/>
-  <arg name="map_size_z" default="2.0"/>
-  <arg name="ground_height" default="0.5"/>
+  <arg name="map_size_z" default="1.8"/>
+  <arg name="ground_height" default="0.2"/>
   <arg name="odom_topic" default="prometheus/odom" />
   <arg name="yaw_init" default="0.0"/>
   <arg name="flight_type" default="1"/>
@@ -43,7 +43,7 @@
     <arg name="max_vel" value="0.5" />
     <arg name="max_acc" value="0.5" />
     <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
-    <arg name="planning_horizon" value="7.5" /> 
+    <arg name="planning_horizon" value="37.5" /> 
     <!-- ？ -->
     <arg name="use_distinctive_trajs" value="true" />
     <!-- 1: use 2D Nav Goal to select goal  -->
