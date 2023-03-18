@@ -1,0 +1,9 @@
+<launch>
+    <!-- Rviz config -->
+    <arg name="rviz_enable" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_gazebo)/launch_gfkd/rviz.rviz"/>
+	<!-- 启动Rviz-->
+	<group if="$(arg rviz_enable)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
+</launch>
