@@ -1,5 +1,10 @@
 ## EGO_planner_swarm
 
+## octomap
+
+sudo apt-get install ros-melodic-octomap-rviz-plugins
+
+
 ## 运行
 
 cd Prometheus/Scripts/simulation/ego_planner/

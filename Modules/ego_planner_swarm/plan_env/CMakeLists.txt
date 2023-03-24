@@ -58,3 +58,10 @@ add_executable(obj_generator
 target_link_libraries(obj_generator 
     ${catkin_LIBRARIES}
     )
+
+add_executable(laser_to_pointcloud
+    src/laser_to_pointcloud.cpp 
+)
+target_link_libraries(laser_to_pointcloud 
+    ${catkin_LIBRARIES}
+    )

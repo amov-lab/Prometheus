@@ -56,7 +56,8 @@
     <!-- 地图中的odom话题 -->
     <remap from="~grid_map/odom" to="/uav$(arg uav_id)/$(arg odometry_topic)"/>
     <!-- 地图中点云话题 -->
-    <remap from="~grid_map/cloud" to="/uav$(arg uav_id)/$(arg cloud_topic)"/>
+    <!-- <remap from="~grid_map/cloud" to="/uav$(arg uav_id)/$(arg cloud_topic)"/> -->
+    <remap from="~grid_map/cloud" to="/$(arg cloud_topic)"/>
     <!-- 地图中点云话题 -->
     <remap from="~grid_map/scan" to="/uav$(arg uav_id)/$(arg scan_topic)"/>
     <!-- 地图中相机位姿话题 -->
