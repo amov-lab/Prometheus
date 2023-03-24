@@ -14,6 +14,21 @@
   <arg name="target_y" default="10.0"/>
   <arg name="target_z" default="1.0"/>
 
+	<!-- run the laser_to_pointcloud -->
+  <node pkg="plan_env" type="laser_to_pointcloud" name="laser_to_pointcloud" >
+  </node>
+
+  <!-- 启动octomap建图 -->
+  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+      <param name="resolution" value="0.1" />
+      <!-- 发布地图的坐标系 -->
+      <param name="frame_id" type="string" value="world" />
+      <!-- 传感器最大感知范围 (speedup!) -->
+      <param name="sensor_model/max_range" value="5.0" />
+      <!-- 局部点云输入 -->
+      <remap from="cloud_in" to="/uav1/prometheus/scan_point_cloud" />
+  </node>
+
   <!-- ego_planner 仿真 -->
   <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
     <!-- 无人机编号 -->
@@ -36,10 +51,9 @@
     <arg name="fx" value="387.229248046875"/>
     <arg name="fy" value="387.229248046875"/>
     <!-- 点云信息，仿真中由map_generator产生 -->
-    <!-- <arg name="cloud_topic" value="map_generator/local_cloud"/> -->
-    <arg name="cloud_topic" value="/map_generator/global_cloud"/>
+    <arg name="cloud_topic" value="octomap_point_cloud_centers"/>
     <!-- scan -->
-    <arg name="scan_topic" value="scan"/>
+    <arg name="scan_topic" value="no_scan"/>
     <!-- 最大速度及加速度 -->
     <arg name="max_vel" value="0.5" />
     <arg name="max_acc" value="0.5" />

@@ -140,10 +140,13 @@ void GridMap::initMap(ros::NodeHandle &nh)
   }
 
   // use odometry and point cloud or scan
+  // global pcl
   indep_cloud_sub_ =
       node_.subscribe<sensor_msgs::PointCloud2>("grid_map/cloud", 10, &GridMap::cloudCallback, this);
+  
   indep_odom_sub_ =
       node_.subscribe<nav_msgs::Odometry>("grid_map/odom", 10, &GridMap::odomCallback, this);
+  // local scan
   scan_sub_ =
       node_.subscribe<sensor_msgs::LaserScan>("grid_map/scan", 10, &GridMap::scanCallback, this);
 
@@ -940,7 +943,7 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
     return;
   }
 
-  //ROS_INFO("test 3");
+  // ROS_INFO("test 1");
 
   if (latest_cloud.points.size() == 0)
     return;
@@ -948,6 +951,7 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
   if (isnan(md_.camera_pos_(0)) || isnan(md_.camera_pos_(1)) || isnan(md_.camera_pos_(2)))
     return;
 
+  // reset buffer in local_update_range_
   this->resetBuffer(md_.camera_pos_ - mp_.local_update_range_,
                     md_.camera_pos_ + mp_.local_update_range_);
 
@@ -967,8 +971,10 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
   max_y = mp_.map_min_boundary_(1);
   max_z = mp_.map_min_boundary_(2);
 
+  // ROS_INFO("test 2");
   for (size_t i = 0; i < latest_cloud.points.size(); ++i)
   {
+    // ROS_INFO("test 3");
     pt = latest_cloud.points[i];
     p3d(0) = pt.x, p3d(1) = pt.y, p3d(2) = pt.z;
 
@@ -979,7 +985,7 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
     if (fabs(devi(0)) < mp_.local_update_range_(0) && fabs(devi(1)) < mp_.local_update_range_(1) &&
         fabs(devi(2)) < mp_.local_update_range_(2))
     {
-
+        // ROS_INFO("test 4");
       /* inflate the point */
       for (int x = -inf_step; x <= inf_step; ++x)
         for (int y = -inf_step; y <= inf_step; ++y)
