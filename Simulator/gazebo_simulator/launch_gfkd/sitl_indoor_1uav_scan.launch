@@ -1,7 +1,9 @@
 <launch>
 	<!-- Gazebo configs -->
     <arg name="gazebo_enable" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/planning_test3.world"/>
+	<!-- <arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/planning_test3.world"/> -->
+	<!-- <arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/indoor_worlds/GFKD_room.world"/> -->
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/indoor_worlds/GFKD.world"/>
     <!-- 启动Gazebo -->
     <group if="$(arg gazebo_enable)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
