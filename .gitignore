@@ -18,6 +18,9 @@ Modules/data/
 Modules/object_detection_oneshot/
 Modules/object_detection/py_nodes/yolov5_tensorrt_server/build/
 Modules/common/CMakeLists.txt
+Modules/ego_planner_swarm/CMakeLists.txt
+Modules/motion_planning/CMakeLists.txt
+Modules/simulator_utils/CMakeLists.txt
 
 # pytorch/python/numpy formats
 # *.pth
