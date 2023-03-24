@@ -6,6 +6,7 @@
     <group if="$(arg gazebo_enable)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
             <arg name="world_name" value="$(arg world)"/>
+			<arg name="use_sim_time" value="true"/>
         </include>
     </group>
     
@@ -15,7 +16,10 @@
 	<arg name="uav1_init_x" default="-10.0"/>
     <arg name="uav1_init_y" default="0.0"/>
     <arg name="uav1_init_yaw" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p230_planning/p230_planning.sdf"/>
+	<!-- <arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p230_planning/p230_planning.sdf"/> -->
+
+	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/multi_p230/p230_uav1/p230_uav1.sdf"/>
+	
 	<!-- 1号无人机 -->
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
 		<arg name="uav_id" value="$(arg uav1_id)"/>
