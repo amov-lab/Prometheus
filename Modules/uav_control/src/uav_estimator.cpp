@@ -173,23 +173,26 @@ void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
     uav_state.header.stamp = ros::Time::now();
     uav_state_pub.publish(uav_state);
 
-    // 发布无人机当前odometry(有些节点需要Odometry这个数据类型)
-    uav_odom.header.stamp = ros::Time::now();
-    uav_odom.header.frame_id = "world";
-    uav_odom.child_frame_id = "base_link";
-    uav_odom.pose.pose.position.x = uav_state.position[0];
-    uav_odom.pose.pose.position.y = uav_state.position[1];
-    uav_odom.pose.pose.position.z = uav_state.position[2];
-    // 导航算法规定 高度不能小于0
-    if (uav_odom.pose.pose.position.z <= 0)
+    if(uav_state.odom_valid)
     {
-        uav_odom.pose.pose.position.z = 0.01;
+        // 发布无人机当前odometry(有些节点需要Odometry这个数据类型)
+        uav_odom.header.stamp = ros::Time::now();
+        uav_odom.header.frame_id = "world";
+        uav_odom.child_frame_id = "base_link";
+        uav_odom.pose.pose.position.x = uav_state.position[0];
+        uav_odom.pose.pose.position.y = uav_state.position[1];
+        uav_odom.pose.pose.position.z = uav_state.position[2];
+        // 导航算法规定 高度不能小于0
+        if (uav_odom.pose.pose.position.z <= 0)
+        {
+            uav_odom.pose.pose.position.z = 0.01;
+        }
+        uav_odom.pose.pose.orientation = uav_state.attitude_q;
+        uav_odom.twist.twist.linear.x = uav_state.velocity[0];
+        uav_odom.twist.twist.linear.y = uav_state.velocity[1];
+        uav_odom.twist.twist.linear.z = uav_state.velocity[2];
+        uav_odom_pub.publish(uav_odom);
     }
-    uav_odom.pose.pose.orientation = uav_state.attitude_q;
-    uav_odom.twist.twist.linear.x = uav_state.velocity[0];
-    uav_odom.twist.twist.linear.y = uav_state.velocity[1];
-    uav_odom.twist.twist.linear.z = uav_state.velocity[2];
-    uav_odom_pub.publish(uav_odom);
 }
 
 void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
@@ -244,6 +247,11 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
 
 void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
 {
+    if(!uav_state.odom_valid)
+    {
+        return;
+    }
+
     // 发布无人机运动轨迹，用于rviz显示
     geometry_msgs::PoseStamped uav_pos;
     uav_pos.header.stamp = ros::Time::now();

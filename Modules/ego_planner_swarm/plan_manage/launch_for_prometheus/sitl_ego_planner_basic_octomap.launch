@@ -27,6 +27,26 @@
       <param name="sensor_model/max_range" value="5.0" />
       <!-- 局部点云输入 -->
       <remap from="cloud_in" to="/uav1/prometheus/scan_point_cloud" />
+      <!-- 机器人坐标系 base_link，滤除地面需要该 frame -->
+      <!-- <param name = "base_frame_id" type = "string" value = "base_link" /> -->
+
+      <!-- filter ground plane, distance value should be big! 项目并不需要滤除地面 -->
+      <!-- <param name = "filter_ground" type = "bool" value = "true" /> -->
+      <!-- <param name = "ground_filter/distance" type = "double" value = "1.0" /> -->
+      <!-- 分割地面的 Z 轴阈值 value 值 -->
+      <!-- <param name = "ground_filter/plane_distance" type = "double" value = "0.3" /> -->
+
+      <!-- 直通滤波的 Z 轴范围，保留 [-1.0, 10.0] 范围内的点 -->
+      <param name = "pointcloud_max_z" value = "1.6" />
+      <param name = "pointcloud_min_z" value = "1.4" />
+
+      <!-- <param name = "filter_speckles" type = "bool" value = "true" /> -->
+
+      <!-- 增加了半径滤波器 -->
+      <param name = "outrem_radius" value = "1.0" />
+      <param name = "outrem_neighbors" value = "10" />
+      <!-- when building map, set to false to speed up!!! -->
+      <param name = "latch" value = "false" /> 
   </node>
 
   <!-- ego_planner 仿真 -->
@@ -64,15 +84,27 @@
     <!-- 1: use 2D Nav Goal to select goal  -->
     <!-- 2: use global waypoints below  -->
     <!-- 单机建议直接使用rviz指定目标点,多机情况请预设目标点 -->
-    <arg name="flight_type" value="1" />
+    <arg name="flight_type" value="2" />
     <!-- global waypoints -->
     <!-- It generates a piecewise min-snap traj passing all waypoints -->
-    <arg name="point_num" value="1" />
-    <arg name="point0_x" value="$(arg target_x)" />
-    <arg name="point0_y" value="$(arg target_y)" />
-    <arg name="point0_z" value="$(arg target_z)" />
+    <arg name="point_num" value="4" />
+    <arg name="point0_x" value="-6.0" />
+    <arg name="point0_y" value="-3.0" />
+    <arg name="point0_z" value="1.5" />
+
+    <arg name="point1_x" value="0.0" />
+    <arg name="point1_y" value="3.0" />
+    <arg name="point1_z" value="1.5" />
+
+    <arg name="point2_x" value="3.0" />
+    <arg name="point2_y" value="-3.0" />
+    <arg name="point2_z" value="1.5" />
+
+    <arg name="point3_x" value="6.0" />
+    <arg name="point3_y" value="-7.0" />
+    <arg name="point3_z" value="1.5" />
     <!-- 仿真 -->
-    <arg name="realworld_experiment" value="false" />
+    <arg name="realworld_experiment" value="true" />
   </include>
 
   <!-- trajectory server：由B样条生成轨迹 -->
