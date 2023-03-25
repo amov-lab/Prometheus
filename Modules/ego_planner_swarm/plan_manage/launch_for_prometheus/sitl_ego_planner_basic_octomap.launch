@@ -5,7 +5,7 @@
   <arg name="map_origin_x" default="-25.0"/>
   <arg name="map_origin_y" default="-25.0"/>
   <arg name="map_size_z" default="1.8"/>
-  <arg name="ground_height" default="0.2"/>
+  <arg name="ground_height" default="1.4"/>
   <arg name="odom_topic" default="prometheus/odom" />
   <arg name="yaw_init" default="0.0"/>
   <arg name="flight_type" default="1"/>

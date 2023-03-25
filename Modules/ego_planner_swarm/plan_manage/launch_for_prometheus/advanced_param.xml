@@ -134,7 +134,7 @@
     <param name="grid_map/min_ray_length" value="0.1"/>
     <param name="grid_map/max_ray_length" value="4.5"/>
 
-    <param name="grid_map/virtual_ceil_height"   value="2.9"/>
+    <param name="grid_map/virtual_ceil_height"   value="2.0"/>
     <param name="grid_map/visualization_truncate_height"   value="1.8"/>
     <param name="grid_map/show_occ_time"  value="false"/>
     <!-- pose_type 里程计的类型 -->
