@@ -319,7 +319,6 @@ void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
     uav_state.connected = msg->connected;
     uav_state.armed = msg->armed;
     uav_state.mode = msg->mode;
-    uav_state_update = true;
 }
 
 void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -328,6 +327,7 @@ void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     uav_state.position[0] = msg->pose.position.x + offset_pose.x;
     uav_state.position[1] = msg->pose.position.y + offset_pose.y;
     uav_state.position[2] = msg->pose.position.z;
+    uav_state_update = true;
 }
 
 void UAV_estimator::px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
@@ -391,6 +391,7 @@ void UAV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     gazebo_pose.header = msg->header;
     gazebo_pose.pose = msg->pose.pose;
     get_gazebo_stamp = ros::Time::now(); // 记录时间戳，防止超时
+    cout << YELLOW << "get_gazebo_stamp:[ " << (get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
 }
 
 void UAV_estimator::uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg)
@@ -523,6 +524,9 @@ int UAV_estimator::check_uav_odom()
     // odom失效可能原因1：外部定位数据接收超时
     if (location_source == prometheus_msgs::UAVState::GAZEBO && (time_now - get_gazebo_stamp).toSec() > GAZEBO_TIMEOUT)
     {
+        cout << RED << "time_now:[ " << (time_now).toSec() << " ] s" << TAIL << endl;
+        cout << RED << "get_gazebo_stamp:[ " << (get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
+        cout << RED << "Timeout:[ " << (time_now - get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
         return 1;
     }
     else if (location_source == prometheus_msgs::UAVState::MOCAP && (time_now - get_mocap_stamp).toSec() > MOCAP_TIMEOUT)

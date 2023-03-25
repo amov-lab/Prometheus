@@ -104,6 +104,7 @@
     <param name="grid_map/map_origin_x"   value="$(arg map_origin_x_)" /> 
     <param name="grid_map/map_origin_y"   value="$(arg map_origin_y_)" /> 
     <!-- 地图更新距离 -->
+    <!-- 点云数据会在特定范围内截断，只使用特定范围的信息，超出范围的数据丢弃 -->
     <param name="grid_map/local_update_range_x"  value="5.5" /> 
     <param name="grid_map/local_update_range_y"  value="5.5" /> 
     <param name="grid_map/local_update_range_z"  value="4.5" /> 
