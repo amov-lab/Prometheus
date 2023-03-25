@@ -1,18 +1,5 @@
 <launch>
   <arg name="uav_id" default="1"/>
-  <arg name="map_size_x" default="50.0"/>
-  <arg name="map_size_y" default="50.0"/>
-  <arg name="map_origin_x" default="-25.0"/>
-  <arg name="map_origin_y" default="-25.0"/>
-  <arg name="map_size_z" default="1.8"/>
-  <arg name="ground_height" default="1.4"/>
-  <arg name="odom_topic" default="prometheus/odom" />
-  <arg name="yaw_init" default="0.0"/>
-  <arg name="flight_type" default="1"/>
-  <!-- 预设目标点 -->
-  <arg name="target_x" default="10.0"/>
-  <arg name="target_y" default="10.0"/>
-  <arg name="target_z" default="1.0"/>
 
 	<!-- run the laser_to_pointcloud -->
   <node pkg="plan_env" type="laser_to_pointcloud" name="laser_to_pointcloud" >
@@ -52,17 +39,18 @@
   <!-- ego_planner 仿真 -->
   <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
     <!-- 无人机编号 -->
-    <arg name="uav_id" value="$(arg uav_id)"/>
+    <arg name="uav_id" value="1"/>
     <!-- 地图尺寸 -->
-    <arg name="map_size_x_" value="$(arg map_size_x)"/>
-    <arg name="map_size_y_" value="$(arg map_size_y)"/>
-    <arg name="map_size_z_" value="$(arg map_size_z)"/>
-    <arg name="map_origin_x_" value="$(arg map_origin_x)"/>
-		<arg name="map_origin_y_" value="$(arg map_origin_y)"/>
+    <arg name="map_size_x_" value="50.0"/>
+    <arg name="map_size_y_" value="50.0"/>
+    <arg name="map_size_z_" value="1.6"/>
+    <arg name="map_origin_x_" value="-25.0"/>
+		<arg name="map_origin_y_" value="-25.0"/>
     <!-- 可以通过限制ground_height和map_size_z来使得飞机在特定高度飞行 -->
-    <arg name="ground_height" value="$(arg ground_height)"/>
+    <arg name="ground_height" value="1.4"/>
+    <!-- 虚拟天花板高度要小于等于ground_height+z_size，否则重置该高度 -->
     <!-- 里程计话题 -->
-    <arg name="odometry_topic" value="$(arg odom_topic)"/>
+    <arg name="odometry_topic" value="prometheus/odom"/>
     <!-- 相机及深度信息仿真中没有使用，此处可忽略(真机中使用) -->
     <arg name="camera_pose_topic" value="/depth/no_set"/>
     <arg name="depth_topic" value="/depth/image_rect_raw"/>
@@ -108,6 +96,8 @@
   </include>
 
   <!-- trajectory server：由B样条生成轨迹 -->
+  <!-- 偏航角初始值，重要参数 -->
+  <arg name="yaw_init" default="0.0"/>
   <node pkg="ego_planner" name="uav$(arg uav_id)_traj_server_for_prometheus" type="traj_server_for_prometheus" output="screen">
     <param name="uav_id" value="$(arg uav_id)"/>
     <param name="control_flag" value="0"/>
