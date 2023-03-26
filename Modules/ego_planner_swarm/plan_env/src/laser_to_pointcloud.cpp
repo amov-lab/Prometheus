@@ -5,7 +5,7 @@
 
 using namespace std;
 
-ros::Publisher scan_point_cloud_pub;
+ros::Publisher scan_pub, scan_point_cloud_pub;
 
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr &laser_scan)
 {
@@ -14,7 +14,13 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr &laser_scan)
   laser_geometry::LaserProjection projector_;
   sensor_msgs::PointCloud2 input_laser_scan;
   projector_.projectLaser(*laser_scan, input_laser_scan);
+  
+  input_laser_scan.header.stamp = ros::Time::now(); //时间戳
   scan_point_cloud_pub.publish(input_laser_scan);
+
+  sensor_msgs::LaserScan scan_with_system_time =  *laser_scan;
+  scan_with_system_time.header.stamp = ros::Time::now(); //时间戳
+  scan_pub.publish(scan_with_system_time);
 }
 
 //主函数
@@ -32,6 +38,7 @@ int main(int argc, char** argv)
     
     ros::Subscriber scan_sub = n.subscribe<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + "/scan", 10, scanCallback);
 
+    scan_pub = n.advertise<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + "/prometheus/scan_in_system_time", 10);
     scan_point_cloud_pub = n.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(uav_id) + "/prometheus/scan_point_cloud", 10);
 
     ros::Rate r(100.0);

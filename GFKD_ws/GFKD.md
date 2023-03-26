@@ -6,11 +6,13 @@
   - 无人机起飞点为原点（匹配真实情况）
   - 重新给定目标点，进行仿真测试
   - 了解octomap和ego相关参数，代码是重点
-  - NUC-GPU+ubuntu2004存在gazebo仿真时间的问题
+  - NUC-GPU+ubuntu2004存在gazebo仿真时间的问题(已解决)
   - NUC+ubuntu1804存在gazeboFPS的问题
+  - 突然出现了飞机莫名其妙自己降落，显示为找不到遥控器，且无offboard模式
 
 ## Prometheus代码共性问题
 - 为什么 mavros/state才1Hz? -> 导致prometheus/uav_state更新频率很慢
+- maximum_vel_error_for_vision 这个是最大位置误差，不是速度误差
 
 
 - 为什么uav_estimator中获取ros时间是混乱的，一会是仿真时间，一会是系统时间
@@ -43,8 +45,7 @@ gridmap参考资料：https://blog.csdn.net/weixin_42284263/article/details/1222
 ## 运行
 
 cd Prometheus/GFKD_scripts
-./ego_planner_1uav_gfkd_octomap.sh
-
+./simulation.sh
 
 飞机加载完毕后，检查报错，然后解锁-切换至COMMAND_CONTROL模式(多机模式时，单个遥控器控制所有)，无人机自动起飞
 
