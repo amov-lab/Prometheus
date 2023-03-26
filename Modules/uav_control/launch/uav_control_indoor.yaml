@@ -17,7 +17,7 @@ control:
   maximum_safe_vel_xy : 2.0
   maximum_safe_vel_z : 2.0
   ## 最大vision/px4速度误差
-  maximum_vel_error_for_vision : 1.0
+  maximum_vel_error_for_vision : 100.0
 
 ##　地理围栏
 geo_fence:

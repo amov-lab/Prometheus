@@ -1,18 +1,4 @@
-<launch>
-	<!-- Gazebo configs -->
-    <arg name="gazebo_enable" default="true"/>
-	<!-- <arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/planning_test3.world"/> -->
-	<!-- <arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/indoor_worlds/GFKD_room.world"/> -->
-	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/indoor_worlds/GFKD.world"/>
-    <!-- 启动Gazebo -->
-    <group if="$(arg gazebo_enable)">
-        <include file="$(find gazebo_ros)/launch/empty_world.launch">
-            <arg name="world_name" value="$(arg world)"/>
-			<arg name="use_sim_time" value="true"/>
-			<arg name="gui" value="true"/>
-        </include>
-    </group>
-    
+<launch>  
     <!--无人机编号-->
     <arg name="uav1_id" default="1"/>
 	<!-- 无人机初始位置 -->

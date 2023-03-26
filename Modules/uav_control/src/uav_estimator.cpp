@@ -391,7 +391,7 @@ void UAV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     gazebo_pose.header = msg->header;
     gazebo_pose.pose = msg->pose.pose;
     get_gazebo_stamp = ros::Time::now(); // 记录时间戳，防止超时
-    cout << YELLOW << "get_gazebo_stamp:[ " << (get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
+    // cout << YELLOW << "get_gazebo_stamp:[ " << (get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
 }
 
 void UAV_estimator::uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg)

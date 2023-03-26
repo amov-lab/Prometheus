@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="prometheus_gfkd" type="main" name="main" output="screen">
+  </node>
+</launch>
