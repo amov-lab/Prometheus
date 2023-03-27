@@ -15,6 +15,14 @@
 ## Prometheus代码共性问题
 - 为什么 mavros/state才1Hz? -> 导致prometheus/uav_state更新频率很慢
 - maximum_vel_error_for_vision 这个是最大位置误差，不是速度误差
+- 后续添加到promtheus仿真中的功能
+  - 无人机+真实地图+ego 规划
+  - 多无人机+真实地图+ego 集群规划
+  - 无人机+二维激光雷达+octomap 建图
+  - 无人机+二维激光雷达+octomap+ego 建图+规划
+  - 无人机+D435I+octomap 建图
+  - 无人机+D435I+octomap+ego 建图+规划
+  - 无人机+三维激光雷达+octomap 建图
 
 
 - 为什么uav_estimator中获取ros时间是混乱的，一会是仿真时间，一会是系统时间

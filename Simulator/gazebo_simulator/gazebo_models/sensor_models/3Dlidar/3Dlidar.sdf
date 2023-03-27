@@ -48,9 +48,9 @@
           </ray>
           <plugin name='3D_laser' filename='libgazebo_ros_velodyne_laser.so'>
             <topicName>/uav1/prometheus/sensors/3Dlidar_scan</topicName>
-            <frameName>/velodyne</frameName>
+            <frameName>/uav1/lidar_link</frameName>
             <min_range>0.4</min_range>
-            <max_range>100</max_range>
+            <max_range>20</max_range>
             <gaussianNoise>0.001</gaussianNoise>
           </plugin>
           <always_on>1</always_on>
