@@ -578,7 +578,7 @@ Visualization Manager:
       Cloud min depth (m): 0
       Cloud voxel size (m): 0.009999999776482582
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: RGB8
       Download graph: false
       Download map: false
       Download namespace: rtabmap
@@ -591,7 +591,7 @@ Visualization Manager:
       Name: MapCloud
       Node filtering angle (degrees): 30
       Node filtering radius (m): 0
-      Position Transformer: ""
+      Position Transformer: XYZ
       Queue Size: 10
       Size (Pixels): 3
       Size (m): 0.009999999776482582
@@ -611,14 +611,14 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: ""
+      Color Transformer: RGB8
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
       Name: PointCloud2
-      Position Transformer: ""
+      Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
@@ -628,7 +628,22 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
+    - Alpha: 1
+      Class: rtabmap_ros/MapGraph
+      Enabled: false
+      Global loop closure: 255; 0; 0
+      Landmark: 0; 128; 0
+      Local loop closure: 255; 255; 0
+      Merged neighbor: 255; 170; 0
+      Name: MapGraph
+      Neighbor: 0; 0; 255
+      Queue Size: 10
+      Topic: /rtabmap/mapGraph
+      Unreliable: false
+      User: 255; 0; 0
+      Value: false
+      Virtual: 255; 0; 255
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -662,9 +677,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.39520224928855896
+      Pitch: 0.3952023983001709
       Target Frame: <Fixed Frame>
-      Yaw: 3.269441843032837
+      Yaw: 3.0544400215148926
     Saved: ~
 Window Geometry:
   Displays:
@@ -687,7 +702,7 @@ Window Geometry:
     collapsed: false
   Width: 1917
   X: 1169
-  Y: 211
+  Y: 137
   color:
     collapsed: false
   depth:
