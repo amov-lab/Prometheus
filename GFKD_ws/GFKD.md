@@ -56,12 +56,22 @@ gridmap参考资料：https://blog.csdn.net/weixin_42284263/article/details/1222
 ## 运行
 
 cd Prometheus/GFKD_scripts
-./simulation.sh
+./simulation_xxx.sh
 
 飞机加载完毕后，检查报错，然后解锁-切换至COMMAND_CONTROL模式(多机模式时，单个遥控器控制所有)，无人机自动起飞
 
 飞机稳定后，发布触发话题执行路径规划（此时为执行预设目标点，不能在rviz中设置目标点）
 rostopic pub /uav1/ego_trigger
+
+保存点云地图（未测试）（怎么查看？）
+rosrun pcl_ros pointcloud_to_pcd /input:=/pcl_topic_name
+
+保存octomap（未测试）
+
+sudo apt-get install ros-noetic-octovis-*
+
+rosrun octomap_server octomap_saver -f <filename.bt>
+之后使用octovis filename.ot 查看地图
 
 ## 如何发布目标点
 
