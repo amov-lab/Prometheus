@@ -29,6 +29,8 @@
 - 为什么uav_estimator中获取ros时间是混乱的，一会是仿真时间，一会是系统时间
 
 
+
+
 ## octomap
 
 sudo apt-get install ros-melodic-octomap-rviz-plugins
@@ -36,6 +38,11 @@ sudo apt-get install ros-melodic-octomap-*
 
 
 octomap_server:https://mp.weixin.qq.com/s?__biz=MzUzNjA3ODI1Mw==&mid=2247486171&idx=1&sn=27312d4b333a266d6a991d0c61817f50&chksm=fafaf819cd8d710fd8d67fb8fea47e4aa51fac6ca6ece627ee895f0892655f14371521144443&scene=27
+
+## rtabmap
+
+sudo apt-get install ros-noetic-rtabmap-ros
+
 
 ## 关于地图构建的说明
 
