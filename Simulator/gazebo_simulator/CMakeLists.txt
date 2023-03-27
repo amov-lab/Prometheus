@@ -2,13 +2,16 @@ cmake_minimum_required(VERSION 2.8.3)
 project(prometheus_gazebo)
 
 find_package(catkin REQUIRED COMPONENTS
-    message_generation      
-    roscpp
-    geometry_msgs
-    sensor_msgs
-    std_msgs
-    gazebo_msgs
-    prometheus_msgs
+  gazebo_dev
+  gazebo_msgs
+  gazebo_ros
+  message_generation      
+  roscpp
+  geometry_msgs
+  sensor_msgs
+  std_msgs
+  gazebo_msgs
+  prometheus_msgs
 )
 
 ## System dependencies are found with CMake's conventions

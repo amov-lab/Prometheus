@@ -1,0 +1,20 @@
+<launch>  
+    <!--无人机编号-->
+    <arg name="uav1_id" default="1"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="-10.0"/>
+    <arg name="uav1_init_y" default="0.0"/>
+    <arg name="uav1_init_yaw" default="0.0"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_D435i/p450_D435i.sdf"/>
+	
+	<!-- 1号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="sdf" value="$(arg sdf)"/>
+		<arg name="model" value="p450_uav$(arg uav1_id)"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="$(arg uav1_init_yaw)"/>
+	</include>
+</launch>

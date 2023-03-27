@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   mavros_msgs
   prometheus_msgs
+  tf2_geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions

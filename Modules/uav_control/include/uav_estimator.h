@@ -8,7 +8,7 @@
 #include <Eigen/Eigen>
 #include <mavros/frame_tf.h>
 #include <GeographicLib/Geocentric.hpp>
-
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/TextInfo.h>
 #include <prometheus_msgs/OffsetPose.h>

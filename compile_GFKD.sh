@@ -6,6 +6,7 @@
 catkin_make --source Modules/common --build build/common
 # 编译Gazebo仿真模块
 catkin_make --source Simulator/gazebo_simulator --build build/prometheus_gazebo
+catkin_make --source Simulator/realsense_ros_gazebo --build build/realsense_ros_gazebo
 # 编译控制模块
 catkin_make --source Modules/uav_control --build build/uav_control
 # 编译规划相关模块
