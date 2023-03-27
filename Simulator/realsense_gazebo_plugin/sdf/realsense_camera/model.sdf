@@ -1,0 +1,346 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="realsense_camera">
+    <link name="camera_link">
+      <inertial>
+        <mass>0.0564</mass>
+        <inertia>
+          <ixx>4.1e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>5.9e-06</iyy>
+          <iyz>0</iyz>
+          <izz>5.9e-06</izz>
+        </inertia>
+      </inertial>
+      <self_collide>0</self_collide>
+      <kinematic>0</kinematic>
+      <gravity>1</gravity>
+      <visual name="visual">
+        <geometry>
+         <mesh>
+            <uri>model://realsense_camera/meshes/realsense_d435.stl</uri>
+            <!--uri>model://realsense_camera/meshes/D435i.dae</uri-->
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name='collision'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02505 0.090 0.025</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0</slip1>
+              <slip2>0</slip2>
+            </ode>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>1</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+            </bullet>
+          </contact>
+        </surface>
+      </collision>
+    </link>
+
+    <link name="camera_color_frame">
+      <pose>0.0325 0 0 3.14 -1.57 1.57</pose>
+      <inertial>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <mass>0.0015</mass>
+        <inertia>
+          <ixx>1e-06</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-06</iyy>
+          <iyz>0</iyz>
+          <izz>1e-06</izz>
+        </inertia>
+      </inertial>
+      <sensor name="color" type="camera">
+        <camera name="color">
+          <horizontal_fov>1.211</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>RGB_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>1</visualize>
+      </sensor>
+    </link>
+    <joint name='camera_color_joint' type='revolute'>
+      <child>camera_color_frame</child>
+      <parent>camera_link</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+    <link name="camera_ired1_frame">
+      <pose>0.02 0 0 3.14 -1.57 1.57</pose>
+      <inertial>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <mass>0.0015</mass>
+        <inertia>
+          <ixx>1e-06</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-06</iyy>
+          <iyz>0</iyz>
+          <izz>1e-06</izz>
+        </inertia>
+      </inertial>
+      <sensor name="ired1" type="camera">
+        <camera name="ired1">
+          <horizontal_fov>1.571</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>L_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>0</visualize>
+      </sensor>
+    </link>
+    <joint name='camera_ired1_joint' type='revolute'>
+      <child>camera_ired1_frame</child>
+      <parent>camera_link</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+    <link name="camera_ired2_frame">
+      <pose>-0.03 0 0 3.14 -1.57 1.57</pose>
+      <inertial>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <mass>0.0015</mass>
+        <inertia>
+          <ixx>1e-06</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-06</iyy>
+          <iyz>0</iyz>
+          <izz>1e-06</izz>
+        </inertia>
+      </inertial>
+      <sensor name="ired2" type="camera">
+        <camera name="ired2">
+          <horizontal_fov>1.571</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>L_INT8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>0</visualize>
+      </sensor>
+    </link>
+    <joint name='camera_ired2_joint' type='revolute'>
+      <child>camera_ired2_frame</child>
+      <parent>camera_link</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+    <link name="camera_depth_frame">
+      <pose>0.0325 0 0 3.14 -1.57 1.57</pose>
+      <inertial>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <mass>0.0015</mass>
+        <inertia>
+          <ixx>1e-06</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1e-06</iyy>
+          <iyz>0</iyz>
+          <izz>1e-06</izz>
+        </inertia>
+      </inertial>
+      <sensor name="depth" type="depth">
+        <camera name="depth">
+          <horizontal_fov>1.571</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>30</update_rate>
+        <visualize>0</visualize>
+
+        <!--plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
+          <baseline>0.2</baseline>
+          <alwaysOn>true</alwaysOn>
+          <updateRate>20.0</updateRate>
+          <cameraName>realsense_d435i</cameraName>
+          <imageTopicName>/realsense_d435i/color/image_raw</imageTopicName>
+          <cameraInfoTopicName>/realsense_d435i/color/camera_info</cameraInfoTopicName>
+          <depthImageTopicName>/realsense_d435i/depth/image_raw</depthImageTopicName>
+          <depthImageCameraInfoTopicName>/realsense_d435i/depth/camera_info</depthImageCameraInfoTopicName>
+          <pointCloudTopicName>/realsense_plugin/camera/local_pointclouds</pointCloudTopicName>
+          <frameName>/realsense_camera_link</frameName>
+          <pointCloudCutoff>0.1</pointCloudCutoff>
+          <pointCloudCutoffMax>10.0</pointCloudCutoffMax>
+          <distortionK1>0</distortionK1>
+          <distortionK2>0</distortionK2>
+          <distortionK3>0</distortionK3>
+          <distortionT1>0</distortionT1>
+          <distortionT2>0</distortionT2>
+          <CxPrime>0</CxPrime>
+          <Cx>0</Cx>
+          <Cy>0</Cy>
+          <focalLength>639.997649</focalLength>
+          <hackBaseline>0</hackBaseline>
+        </plugin-->
+      </sensor>
+    </link>
+    <joint name='camera_depth_joint' type='revolute'>
+      <child>camera_depth_frame</child>
+      <parent>camera_link</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+          <effort>0</effort>
+          <velocity>0</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+
+    <plugin name="camera" filename="librealsense_gazebo_plugin.so">
+       <depthUpdateRate>${rate}</depthUpdateRate>
+       <colorUpdateRate>${rate}</colorUpdateRate>
+       <infraredUpdateRate>${rate}</infraredUpdateRate>
+       <depthTopicName>depth/image_raw</depthTopicName>
+       <depthCameraInfoTopicName>depth/camera_info</depthCameraInfoTopicName>
+       <colorTopicName>color/image_raw</colorTopicName>
+       <colorCameraInfoTopicName>color/camera_info</colorCameraInfoTopicName>
+       <infrared1TopicName>infra1/image_raw</infrared1TopicName>
+       <infrared1CameraInfoTopicName>infra1/camera_info</infrared1CameraInfoTopicName>
+       <infrared2TopicName>infra2/image_raw</infrared2TopicName>
+       <infrared2CameraInfoTopicName>infra2/camera_info</infrared2CameraInfoTopicName>
+       <colorOpticalframeName>camera_color_frame</colorOpticalframeName>
+       <depthOpticalframeName>camera_depth_frame</depthOpticalframeName>
+       <infrared1OpticalframeName>camera_ired1_frame</infrared1OpticalframeName>
+       <infrared2OpticalframeName>camera_ired2_frame</infrared2OpticalframeName>
+       <rangeMinDepth>0.2</rangeMinDepth>
+       <rangeMaxDepth>10.0</rangeMaxDepth>
+       <pointCloud>false</pointCloud>
+       <pointCloudTopicName>depth/color/points</pointCloudTopicName>
+       <pointCloudCutoff>0.25</pointCloudCutoff>
+       <pointCloudCutoffMax>9.0</pointCloudCutoffMax>
+     </plugin>
+
+  </model>
+</sdf>

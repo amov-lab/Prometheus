@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="x" default="0"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="1"/>
+    <arg name="R" default="1.57"/>
+    <arg name="P" default="0"/>
+    <arg name="Y" default="1.57"/>
+    <!-- vehicle model and world -->
+    <arg name="sdf" default="$(find realsense_ros_gazebo)/sdf/realsense_camera/model.sdf"/>
+ 
+  <node name="sdf_test" pkg="gazebo_ros" type="spawn_model" output="screen" args="-sdf -file $(arg sdf) -model realsense_camera -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y)"/>
+
+  <!-- simulator -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="false"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="recording" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+</launch>

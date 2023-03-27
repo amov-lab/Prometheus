@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>realsense_ros_gazebo</name>
+  <version>1.2.0</version>
+
+  <description>Intel Realsense Camera Simulations</description>
+
+  <author email="sergey.dorodnicov@intel.com">Sergey Dorodnicov</author>
+  <author email="doron.hirshberg@intel.com">Doron Hirshberg</author>
+  <author email="marton@neorobot.hu">Marton Juhasz</author>
+
+  <license>Apache 2.0</license>
+
+  <maintainer email="marton@neorobot.hu">nilseuropa</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>gazebo_dev</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <depend>gazebo_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>nodelet</depend>
+  <depend>urdf</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+  <depend>rosconsole</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>std_msgs</depend>
+  <depend>gazebo_ros</depend>
+  <depend>image_transport</depend>
+  <depend>camera_info_manager</depend>
+
+  <exec_depend>gazebo</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+<export>
+    <!-- gazebo_ros_paths_plugin automatically adds these to
+        GAZEBO_PLUGIN_PATH and GAZEBO_MODEL_PATH when you do this export inside
+        the package.xml file. You can than use URIs of type model://my_package/stuff. -->
+    <gazebo_ros                                                                 
+        gazebo_plugin_path="${prefix}/lib"
+        gazebo_model_path="${prefix}/.." /> 
+</export>
+
+</package>
