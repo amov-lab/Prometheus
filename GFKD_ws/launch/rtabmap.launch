@@ -6,12 +6,12 @@
         <arg name="visual_odometry"    value="false"/>
         <!-- RGB-D related topics -->
         <arg name="approx_sync"         value="true"/>
-        <arg name="rgb_topic"          value="/realsense_plugin/camera/color/image_raw"/>
-        <arg name="depth_topic"        value="/realsense_plugin/camera/depth/image_raw"/>
-        <arg name="camera_info_topic"  value="/realsense_plugin/camera/color/camera_info"/>
-        <arg name="odom_topic"         value="/prometheus/drone_odom"/> 
+        <arg name="rgb_topic"          value="/camera/color/image_raw"/>
+        <arg name="depth_topic"        value="/camera/depth/image_raw"/>
+        <arg name="camera_info_topic"  value="/camera/color/camera_info"/>
+        <arg name="odom_topic"         value="/uav1/prometheus/odom"/> 
         <!-- 发布地图的坐标系 -->
-        <arg name="map_frame_id"       value="rtabmap"/>   
+        <arg name="map_frame_id"       value="world"/>   
         <!--visualization-->
 		<arg name="rtabmapviz"         value="false"/>
         <arg name="rviz"               value="false"/>
@@ -19,7 +19,7 @@
     
     <!-- Rviz config -->
     <arg name="rviz_enable" default="true"/>
-    <arg name="rivz_config" default="$(find prometheus_gfkd)/launch/visual_mapping.rviz"/>
+    <arg name="rivz_config" default="$(find prometheus_gfkd)/launch/rtab_map.rviz"/>
 	<!-- 启动Rviz-->
 	<group if="$(arg rviz_enable)">
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
