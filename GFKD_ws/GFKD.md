@@ -23,6 +23,7 @@
   - 无人机+D435I+octomap 建图
   - 无人机+D435I+octomap+ego 建图+规划
   - 无人机+三维激光雷达+octomap 建图
+    - 需要对三维激光雷达的mesh模型重新细化做一个
 
 
 - 为什么uav_estimator中获取ros时间是混乱的，一会是仿真时间，一会是系统时间
