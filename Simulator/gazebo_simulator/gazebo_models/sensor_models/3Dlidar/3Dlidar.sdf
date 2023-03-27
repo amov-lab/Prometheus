@@ -16,10 +16,24 @@
         </inertia>
       </inertial>
       <!-- 显示设置 -->
-      <visual name="visual">
+      <visual name="visual1">
         <geometry>
           <mesh>
             <uri>model://3Dlidar/meshes/VLP16_base_1.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="visual2">
+        <geometry>
+          <mesh>
+            <uri>model://3Dlidar/meshes/VLP16_base_2.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="visual3">
+        <geometry>
+          <mesh>
+            <uri>model://3Dlidar/meshes/VLP16_scan.dae</uri>
           </mesh>
         </geometry>
       </visual>
