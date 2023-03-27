@@ -6,6 +6,7 @@
     <group if="$(arg gazebo_enable)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
             <arg name="world_name" value="$(arg world)"/>
+			<arg name="use_sim_time" value="false"/>
         </include>
     </group>
     
