@@ -312,6 +312,28 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     tfs.transform.rotation = uav_state.attitude_q;
     //  |--------- 广播器发布数据
     broadcaster.sendTransform(tfs);
+
+    //q_orig  是原姿态转换的tf的四元数
+    //q_rot   旋转四元数
+    //q_new   旋转后的姿态四元数
+    tf2::Quaternion q_orig, q_rot, q_new;
+
+    // commanded_pose.pose.orientation  这个比如说 是 订阅的别的节点的topic 是一个  姿态的 msg 四元数
+    //通过tf2::convert()  转换成 tf 的四元数
+    tf2::convert(tfs.transform.rotation , q_orig);
+
+    // 设置 绕 x 轴 旋转180度
+    double r=-1.57, p=0, y=-1.57;  
+    q_rot.setRPY(r, p, y);//求得 tf 的旋转四元数
+
+    q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
+    q_new.normalize(); // 归一化
+
+    //  将 旋转后的 tf 四元数 转换 为 msg 四元数
+    tf2::convert(q_new, tfs.transform.rotation);
+    tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
+    //  |--------- 广播器发布数据
+    broadcaster.sendTransform(tfs);
 }
 
 void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
