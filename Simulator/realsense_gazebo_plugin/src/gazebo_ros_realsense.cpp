@@ -72,8 +72,10 @@ void GazeboRosRealsense::OnNewFrame(const rendering::CameraPtr cam,
   // copy data into image
   this->image_msg_.header.frame_id =
       this->cameraParamsMap_[camera_id].optical_frame;
-  this->image_msg_.header.stamp.sec = current_time.sec;
-  this->image_msg_.header.stamp.nsec = current_time.nsec;
+  // this->image_msg_.header.stamp.sec = current_time.sec;
+  // this->image_msg_.header.stamp.nsec = current_time.nsec;
+
+  this->image_msg_.header.stamp = ros::Time::now();
 
   // set image encoding
   const std::map<std::string, std::string> supported_image_encodings = {
@@ -202,8 +204,10 @@ void GazeboRosRealsense::OnNewDepthFrame() {
   this->depth_msg_.header.frame_id =
       this->cameraParamsMap_[DEPTH_CAMERA_NAME].optical_frame;
   ;
-  this->depth_msg_.header.stamp.sec = current_time.sec;
-  this->depth_msg_.header.stamp.nsec = current_time.nsec;
+  // this->depth_msg_.header.stamp.sec = current_time.sec;
+  // this->depth_msg_.header.stamp.nsec = current_time.nsec;
+  // 适配Prometheus
+  this->depth_msg_.header.stamp = ros::Time::now();
 
   // set image encoding
   std::string pixel_format = sensor_msgs::image_encodings::TYPE_16UC1;
@@ -255,6 +259,8 @@ sensor_msgs::CameraInfo cameraInfo(const sensor_msgs::Image &image,
   sensor_msgs::CameraInfo info_msg;
 
   info_msg.header = image.header;
+  // 适配Prometheus
+  info_msg.header.stamp = ros::Time::now(); //时间戳
   info_msg.distortion_model = "plumb_bob";
   info_msg.height = image.height;
   info_msg.width = image.width;
