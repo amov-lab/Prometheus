@@ -4,11 +4,13 @@
 - **更改地图**
   - 符合真实环境
   - 无人机起飞点为原点（匹配真实情况）
+  - 增加待识别的物体
   - 重新给定目标点，进行仿真测试
   - 了解octomap和ego相关参数，代码是重点
   - NUC-GPU+ubuntu2004存在gazebo仿真时间的问题(已解决)
   - NUC+ubuntu1804存在gazeboFPS的问题
-  - 突然出现了飞机莫名其妙自己降落，显示为找不到遥控器，且无offboard模式
+  - 突然出现了飞机莫名其妙自己降落，显示为找不到遥控器，且无offboard模式(ev ght time out)
+    - 这个问题一直没有解决，改用P450+outdoor就不存在问题了，有些奇怪 
 
 ## Prometheus代码共性问题
 - 为什么 mavros/state才1Hz? -> 导致prometheus/uav_state更新频率很慢
