@@ -64,7 +64,8 @@
     <!-- 地图中相机位姿话题 -->
     <remap from="~grid_map/pose"   to = "/uav$(arg uav_id)/$(arg camera_pose_topic)"/> 
     <!-- 地图中相机深度话题 -->
-    <remap from="~grid_map/depth" to = "/uav$(arg uav_id)/$(arg depth_topic)"/>
+    <!-- <remap from="~grid_map/depth" to = "/uav$(arg uav_id)/$(arg depth_topic)"/> -->
+    <remap from="~grid_map/depth" to = "/$(arg depth_topic)"/>
     
     <!-- planning fsm -->
     <!-- 不同的目标点给定方式 -->
@@ -139,7 +140,7 @@
     <param name="grid_map/visualization_truncate_height"   value="1.8"/>
     <param name="grid_map/show_occ_time"  value="false"/>
     <!-- pose_type 里程计的类型 -->
-    <param name="grid_map/pose_type"     value="1"/>  
+    <param name="grid_map/pose_type"     value="2"/>  
     <!-- 地图frame -->
     <param name="grid_map/frame_id"      value="world"/>
 
