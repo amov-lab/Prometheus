@@ -63,13 +63,36 @@ include_directories(
 file(GLOB_RECURSE CURRENT_INCLUDE include/*.hpp include/*.h)
 file(GLOB_RECURSE CURRENT_SOURCE src/*.cpp)
 
+# 获取Ubuntu版本号
+execute_process(
+    COMMAND lsb_release -rs
+    OUTPUT_VARIABLE UBUNTU_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 ## Specify libraries to link a library or executable target against
 add_executable(communication_bridge ${CURRENT_SOURCE} ${CURRENT_INCLUDE})
 add_dependencies(communication_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
-target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_x86_64.so boost_serialization)
+    # 判断Ubuntu版本号
+    if(UBUNTU_VERSION STREQUAL "18.04")
+	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_18_04_x86_64.so boost_serialization)
+    elseif(UBUNTU_VERSION STREQUAL "20.04")
+        target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_x86_64.so boost_serialization)
+    else()
+    	message(STATUS "Detected Ubuntu ${UBUNTU_VERSION}")
+    	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_x86_64.so boost_serialization)
+    endif()
 elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
-target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_arm.so boost_serialization)
+    # 判断Ubuntu版本号
+    if(UBUNTU_VERSION STREQUAL "18.04")
+	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_18_04_arm.so boost_serialization)
+    elseif(UBUNTU_VERSION STREQUAL "20.04")
+        target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_arm.so boost_serialization)
+    else()
+    	message(STATUS "Detected Ubuntu ${UBUNTU_VERSION}")
+    	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_arm.so boost_serialization)
+    endif()
 endif()
 
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
