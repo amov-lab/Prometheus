@@ -8,5 +8,8 @@ catkin_make --source Modules/common --build build/common -j1
 # 编译控制模块
 catkin_make --source Modules/uav_control --build build/uav_control -j1
 
+# 编译通信模块
+catkin_make --source Modules/communication --build build/communication -j1
+
 #编译matlab模块
 catkin_make --source Modules/matlab_bridge --build build/prometheus_matlab -j1
