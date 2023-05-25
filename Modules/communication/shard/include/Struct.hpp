@@ -107,6 +107,10 @@ struct Quaternion
 //MSG 1
 struct UAVState
 {
+    //时间戳
+    uint32_t secs;
+    uint32_t nsecs;
+
     //无人机编号
     uint8_t uav_id;
 
@@ -178,6 +182,8 @@ struct UAVState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
+        ar &secs;
+        ar &nsecs;
         ar & uav_id;
         // ar & state;
         ar & location_source;
@@ -764,6 +770,11 @@ struct ImageData
 
 struct UAVCommand
 {
+    //时间戳
+    uint32_t secs;
+    uint32_t nsecs;
+
+
     //控制命令的模式
     uint8_t Agent_CMD;
     //Agent_CMD 枚举
@@ -810,6 +821,8 @@ struct UAVCommand
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
+        ar & secs;
+        ar & nsecs;
         ar & Agent_CMD;
         ar & Move_mode;
         ar & position_ref;
