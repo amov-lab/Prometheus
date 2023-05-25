@@ -34,6 +34,8 @@ UAVBasic::~UAVBasic()
 
 void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
 {
+    this->uav_state_.secs = msg->header.stamp.sec;
+    this->uav_state_.nsecs = msg->header.stamp.nsec;
     this->uav_state_.uav_id = msg->uav_id;
     // this->uav_state_.state = msg->state;
     this->uav_state_.location_source = msg->location_source;
@@ -99,6 +101,7 @@ struct UAVState UAVBasic::getUAVState()
 void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
 {
     prometheus_msgs::UAVCommand uav_cmd_;
+    uav_cmd_.header.stamp = ros::Time::now();
     uav_cmd_.Agent_CMD = uav_cmd.Agent_CMD;
     uav_cmd_.Move_mode = uav_cmd.Move_mode;
     for(int i = 0; i < 3; i++)
@@ -122,6 +125,8 @@ void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
 void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
 {
     struct UAVCommand uav_cmd;
+    uav_cmd.secs = msg->header.stamp.sec;
+    uav_cmd.nsecs = msg->header.stamp.nsec;
     uav_cmd.Agent_CMD = msg->Agent_CMD;
     uav_cmd.Move_mode = msg->Move_mode;
     for(int i = 0; i < 3; i++)
