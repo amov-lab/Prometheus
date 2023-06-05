@@ -18,7 +18,7 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <sensor_msgs/BatteryState.h>
 #include <sensor_msgs/Range.h>
-
+#include <mavros_msgs/StreamRate.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -32,6 +32,7 @@
 
 #include "math_utils.h"
 #include "printf_utils.h"
+#include "fmt_test.h"
 
 using namespace std;
 
@@ -39,6 +40,7 @@ using namespace std;
 prometheus_msgs::UAVState uav_state;
 bool uav_state_update{false};
 
+void set_stream_rate(ros::NodeHandle& nh, int msg_id, int msg_rate);
 void printf_uav_state();
 void printf_gps_status();
 void fmt_state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -102,7 +104,7 @@ int main(int argc, char** argv)
     ros::init(argc , argv, "fmt_test");
     //创建句柄
     ros::NodeHandle nh;
-    ros::Rate rate(50.0);
+    ros::Rate rate(50.0);    
     
     // 订阅FMT飞控相关信息
     ros::Subscriber fmt_state_sub = nh.subscribe<mavros_msgs::State>("/mavros/state", 1, fmt_state_cb);
@@ -117,6 +119,16 @@ int main(int argc, char** argv)
     // 【订阅】无人机当前真实高度，来自飞控
     ros::Subscriber fmt_rel_alt_sub = nh.subscribe<std_msgs::Float64>("/mavros/global_position/rel_alt", 1, fmt_global_rel_alt_cb);
 
+    // MAVLINK_MSG_ID_HIGHRES_IMU是ID，100是频率
+    set_stream_rate(nh, MAVLINK_MSG_ID_HIGHRES_IMU, 100);
+    set_stream_rate(nh, MAVLINK_MSG_ID_LOCAL_POSITION_NED, 50);
+    set_stream_rate(nh, MAVLINK_MSG_ID_ATTITUDE, 100);
+    set_stream_rate(nh, MAVLINK_MSG_ID_EXTENDED_SYS_STATE, 10);
+    // todo 继续添加其他mavlink消息
+
+    cout << GREEN << "Waiting...." << TAIL << endl;
+    sleep(10.0);
+
     while(ros::ok())
     {
         //调用一次回调函数
@@ -128,6 +140,23 @@ int main(int argc, char** argv)
     return 0;
 }
 
+void set_stream_rate(ros::NodeHandle& nh, int msg_id, int msg_rate)
+{
+    ros::ServiceClient stream_rate_client = nh.serviceClient<mavros_msgs::StreamRate>("/mavros/set_stream_rate");
+
+    mavros_msgs::StreamRate srv;
+    srv.request.stream_id = msg_id;
+    srv.request.message_rate = msg_rate;
+    srv.request.on_off = true;
+
+    if (stream_rate_client.call(srv)) 
+    {
+        cout << GREEN << "Set MAVLINK ID [" << msg_id << "] rate to "<< msg_rate << "Hz successfully!" << TAIL << endl;
+    } else 
+    {
+        cout << RED << "Set MAVLINK ID [" << msg_id << "] rate to "<< msg_rate << "Hz failed!" << TAIL << endl;
+    }
+}
 
 void printf_uav_state()
 {
