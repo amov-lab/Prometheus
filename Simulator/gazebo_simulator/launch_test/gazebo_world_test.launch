@@ -1,0 +1,12 @@
+<launch>
+	<!-- Gazebo configs -->
+    <arg name="gazebo_enable" default="true"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/competition_world_yxc/competition_1.world"/>
+    <!-- 启动Gazebo -->
+    <group if="$(arg gazebo_enable)">
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(arg world)"/>
+        </include>
+    </group>
+
+</launch>
