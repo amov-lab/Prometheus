@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<sdf version='1.6'>
+  <model name='p230_D435i'>
+    <include>
+      <uri>model://p230</uri>
+    </include>
+    <include>
+      <uri>model://D435i</uri>
+      <pose>-0.035 0 -0.11 0.0 0 0.0</pose>
+    </include>
+    <joint name="D435i_joint" type="fixed">
+      <child>D435i::camera_link</child>
+      <parent>p230::base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+  </model>
+</sdf>

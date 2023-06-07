@@ -6,7 +6,7 @@
     </include>
     <include>
       <uri>model://3Dlidar</uri>
-      <pose>0 0 0.25 0 0 0</pose>
+      <pose>0 0 0.2 0 0 0</pose>
     </include>
     <joint name="3Dlidar_joint" type="fixed">
       <child>3Dlidar::link</child>

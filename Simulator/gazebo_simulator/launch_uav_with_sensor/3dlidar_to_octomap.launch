@@ -1,0 +1,33 @@
+<launch>
+	<!-- run the laser_to_pointcloud -->
+  <!-- <node pkg="plan_env" type="laser_to_pointcloud" name="laser_to_pointcloud" output="screen">
+  </node> -->
+
+  <!-- 启动octomap建图 -->
+  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
+      <!-- 地图分辨率 -->
+      <param name="resolution" value="0.1" />
+      <!-- 发布地图的坐标系 -->
+      <param name="frame_id" type="string" value="world" />
+      <!-- 传感器最大感知范围 (speedup!) -->
+      <param name="sensor_model/max_range" value="5.0" />
+      <!-- 局部点云话题输入 -->
+      <remap from="cloud_in" to="/uav1/prometheus/sensors/3Dlidar_scan" />
+      <!-- 直通滤波的 Z 轴范围，保留 [-1.0, 10.0] 范围内的点 -->
+      <param name = "pointcloud_max_z" value = "2.0" />
+      <param name = "pointcloud_min_z" value = "0.0" />
+      <!-- 机器人坐标系 base_link，滤除地面需要该 frame -->
+      <!-- <param name = "base_frame_id" type = "string" value = "base_link" /> -->
+      <!-- filter ground plane, distance value should be big! 项目并不需要滤除地面 -->
+      <!-- <param name = "filter_ground" type = "bool" value = "true" /> -->
+      <!-- <param name = "ground_filter/distance" type = "double" value = "1.0" /> -->
+      <!-- 分割地面的 Z 轴阈值 value 值 -->
+      <!-- <param name = "ground_filter/plane_distance" type = "double" value = "0.3" /> -->
+      <!-- <param name = "filter_speckles" type = "bool" value = "true" /> -->
+      <!-- 增加了半径滤波器 -->
+      <param name = "outrem_radius" value = "1.0" />
+      <param name = "outrem_neighbors" value = "10" />
+      <!-- when building map, set to false to speed up!!! -->
+      <param name = "latch" value = "false" /> 
+  </node>
+</launch>
