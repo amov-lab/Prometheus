@@ -173,23 +173,26 @@ void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
     uav_state.header.stamp = ros::Time::now();
     uav_state_pub.publish(uav_state);
 
-    // 发布无人机当前odometry(有些节点需要Odometry这个数据类型)
-    uav_odom.header.stamp = ros::Time::now();
-    uav_odom.header.frame_id = "world";
-    uav_odom.child_frame_id = "base_link";
-    uav_odom.pose.pose.position.x = uav_state.position[0];
-    uav_odom.pose.pose.position.y = uav_state.position[1];
-    uav_odom.pose.pose.position.z = uav_state.position[2];
-    // 导航算法规定 高度不能小于0
-    if (uav_odom.pose.pose.position.z <= 0)
+    if(uav_state.odom_valid)
     {
-        uav_odom.pose.pose.position.z = 0.01;
+        // 发布无人机当前odometry(有些节点需要Odometry这个数据类型)
+        uav_odom.header.stamp = ros::Time::now();
+        uav_odom.header.frame_id = "world";
+        uav_odom.child_frame_id = "base_link";
+        uav_odom.pose.pose.position.x = uav_state.position[0];
+        uav_odom.pose.pose.position.y = uav_state.position[1];
+        uav_odom.pose.pose.position.z = uav_state.position[2];
+        // 导航算法规定 高度不能小于0
+        if (uav_odom.pose.pose.position.z <= 0)
+        {
+            uav_odom.pose.pose.position.z = 0.01;
+        }
+        uav_odom.pose.pose.orientation = uav_state.attitude_q;
+        uav_odom.twist.twist.linear.x = uav_state.velocity[0];
+        uav_odom.twist.twist.linear.y = uav_state.velocity[1];
+        uav_odom.twist.twist.linear.z = uav_state.velocity[2];
+        uav_odom_pub.publish(uav_odom);
     }
-    uav_odom.pose.pose.orientation = uav_state.attitude_q;
-    uav_odom.twist.twist.linear.x = uav_state.velocity[0];
-    uav_odom.twist.twist.linear.y = uav_state.velocity[1];
-    uav_odom.twist.twist.linear.z = uav_state.velocity[2];
-    uav_odom_pub.publish(uav_odom);
 }
 
 void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
@@ -244,6 +247,11 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
 
 void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
 {
+    if(!uav_state.odom_valid)
+    {
+        return;
+    }
+
     // 发布无人机运动轨迹，用于rviz显示
     geometry_msgs::PoseStamped uav_pos;
     uav_pos.header.stamp = ros::Time::now();
@@ -295,13 +303,36 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     tfs.header.frame_id = "world";       //相对于世界坐标系
     tfs.header.stamp = ros::Time::now(); //时间戳
     //  |----坐标系 ID
-    tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
+    // tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
+    tfs.child_frame_id = "/lidar_link"; //子坐标系，无人机的坐标系
     //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
     tfs.transform.translation.x = uav_state.position[0];
     tfs.transform.translation.y = uav_state.position[1];
     tfs.transform.translation.z = uav_state.position[2];
     //  |--------- 四元数设置
     tfs.transform.rotation = uav_state.attitude_q;
+    //  |--------- 广播器发布数据
+    broadcaster.sendTransform(tfs);
+
+    //q_orig  是原姿态转换的tf的四元数
+    //q_rot   旋转四元数
+    //q_new   旋转后的姿态四元数
+    tf2::Quaternion q_orig, q_rot, q_new;
+
+    // commanded_pose.pose.orientation  这个比如说 是 订阅的别的节点的topic 是一个  姿态的 msg 四元数
+    //通过tf2::convert()  转换成 tf 的四元数
+    tf2::convert(tfs.transform.rotation , q_orig);
+
+    // 设置 绕 x 轴 旋转180度
+    double r=-1.57, p=0, y=-1.57;  
+    q_rot.setRPY(r, p, y);//求得 tf 的旋转四元数
+
+    q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
+    q_new.normalize(); // 归一化
+
+    //  将 旋转后的 tf 四元数 转换 为 msg 四元数
+    tf2::convert(q_new, tfs.transform.rotation);
+    tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
     //  |--------- 广播器发布数据
     broadcaster.sendTransform(tfs);
 }
@@ -311,7 +342,6 @@ void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
     uav_state.connected = msg->connected;
     uav_state.armed = msg->armed;
     uav_state.mode = msg->mode;
-    uav_state_update = true;
 }
 
 void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -320,6 +350,7 @@ void UAV_estimator::px4_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     uav_state.position[0] = msg->pose.position.x + offset_pose.x;
     uav_state.position[1] = msg->pose.position.y + offset_pose.y;
     uav_state.position[2] = msg->pose.position.z;
+    uav_state_update = true;
 }
 
 void UAV_estimator::px4_global_pos_cb(const sensor_msgs::NavSatFix::ConstPtr &msg)
@@ -383,6 +414,7 @@ void UAV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     gazebo_pose.header = msg->header;
     gazebo_pose.pose = msg->pose.pose;
     get_gazebo_stamp = ros::Time::now(); // 记录时间戳，防止超时
+    // cout << YELLOW << "get_gazebo_stamp:[ " << (get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
 }
 
 void UAV_estimator::uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg)
@@ -515,6 +547,9 @@ int UAV_estimator::check_uav_odom()
     // odom失效可能原因1：外部定位数据接收超时
     if (location_source == prometheus_msgs::UAVState::GAZEBO && (time_now - get_gazebo_stamp).toSec() > GAZEBO_TIMEOUT)
     {
+        cout << RED << "time_now:[ " << (time_now).toSec() << " ] s" << TAIL << endl;
+        cout << RED << "get_gazebo_stamp:[ " << (get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
+        cout << RED << "Timeout:[ " << (time_now - get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
         return 1;
     }
     else if (location_source == prometheus_msgs::UAVState::MOCAP && (time_now - get_mocap_stamp).toSec() > MOCAP_TIMEOUT)
