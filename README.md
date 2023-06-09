@@ -47,11 +47,9 @@ Prometheus是一套开源的**自主无人机软件系统平台**，为无人机
 ## Prometheus校园赞助计划
  - 奖励使用Prometheus进行实验并发表相关论文的学生科研工作者。
  
-   > @misc{Prometheus, author = "Amovlab", title = "Prometheus autonomous UAV opensource project", howpublished = "\url{https://github.com/amov-lab/Prometheus }", } 
- 
  - 奖励为Prometheus提供新功能或帮忙进行测试的学生开发者。
 
-- 详情[请戳这里](https://mp.weixin.qq.com/s/zU-iXMKh0An-v6vZXH_Rmg) ！
+- 详情[请戳这里](https://mp.weixin.qq.com/s/i9CpIctu56LfQFIciwzImA) ！
 
 ## 联系我们
 
