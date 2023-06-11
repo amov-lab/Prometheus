@@ -33,7 +33,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【订阅】无人机当前欧拉角 坐标系:ENU系 - 来自飞控
     px4_attitude_sub = nh.subscribe<sensor_msgs::Imu>(uav_name + "/mavros/imu/data", 1, &UAV_estimator::px4_att_cb, this);
 
-     // 【订阅】无人机定高雷达数据 - 来自飞控
+    // 【订阅】无人机定高雷达数据 - 来自飞控
     px4_range_sub = nh.subscribe<sensor_msgs::Range>(uav_name + "/mavros/distance_sensor/hrlv_ez4_pub", 10, &UAV_estimator::px4_range_cb, this);
 
     // 根据设定的定位来源订阅不同的定位数据

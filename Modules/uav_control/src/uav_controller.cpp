@@ -524,7 +524,7 @@ void UAV_controller::set_command_des()
                 vel_des[1] = uav_command.velocity_ref[1];
                 vel_des[2] = uav_command.velocity_ref[2];
                 acc_des << 0.0, 0.0, 0.0;
-		yaw_rate_des = uav_command.yaw_rate_ref;
+		        yaw_rate_des = uav_command.yaw_rate_ref;
                 yaw_des = uav_command.yaw_ref+uav_yaw;
             }
         }
