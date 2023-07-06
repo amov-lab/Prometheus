@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <model name="table_marble">
+    <static>true</static>
+    <pose>0 0 0.648 0 0 0</pose>
+    <link name="link">
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model:///table_marble/meshes/table_lightmap.dae</uri>
+            <scale>0.25 0.25 0.25</scale>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://table_marble/meshes/table_lightmap.dae</uri>
+            <scale>0.25 0.25 0.25</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://table_marble/materials/scripts</uri>
+            <uri>model://table_marble/materials/textures</uri>
+            <name>Table/Marble_Lightmap</name>
+          </script>
+          <lighting>false</lighting>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

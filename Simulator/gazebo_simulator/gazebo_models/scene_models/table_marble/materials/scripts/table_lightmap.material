@@ -1,0 +1,17 @@
+material Table/Marble_Lightmap
+{
+  technique
+  {
+    pass
+    {      
+      texture_unit
+      {
+        texture marble.png
+      }            
+      texture_unit
+      {
+        texture table_lightmap.png      
+      }
+    }
+  }
+}
