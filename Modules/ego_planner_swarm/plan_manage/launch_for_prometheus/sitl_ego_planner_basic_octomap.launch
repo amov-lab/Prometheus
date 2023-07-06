@@ -1,0 +1,108 @@
+<launch>
+  <arg name="uav_id" default="1"/>
+
+	<!-- run the laser_to_pointcloud -->
+  <node pkg="plan_env" type="laser_to_pointcloud" name="laser_to_pointcloud" >
+  </node>
+
+  <!-- 启动octomap建图 -->
+  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+      <param name="resolution" value="0.1" />
+      <!-- 发布地图的坐标系 -->
+      <param name="frame_id" type="string" value="world" />
+      <!-- 传感器最大感知范围 (speedup!) -->
+      <param name="sensor_model/max_range" value="5.0" />
+      <!-- 局部点云输入 -->
+      <remap from="cloud_in" to="/uav1/prometheus/scan_point_cloud" />
+      <!-- 机器人坐标系 base_link，滤除地面需要该 frame -->
+      <!-- <param name = "base_frame_id" type = "string" value = "base_link" /> -->
+
+      <!-- filter ground plane, distance value should be big! 项目并不需要滤除地面 -->
+      <!-- <param name = "filter_ground" type = "bool" value = "true" /> -->
+      <!-- <param name = "ground_filter/distance" type = "double" value = "1.0" /> -->
+      <!-- 分割地面的 Z 轴阈值 value 值 -->
+      <!-- <param name = "ground_filter/plane_distance" type = "double" value = "0.3" /> -->
+
+      <!-- 直通滤波的 Z 轴范围，保留 [-1.0, 10.0] 范围内的点 -->
+      <param name = "pointcloud_max_z" value = "1.6" />
+      <param name = "pointcloud_min_z" value = "1.4" />
+
+      <!-- <param name = "filter_speckles" type = "bool" value = "true" /> -->
+
+      <!-- 增加了半径滤波器 -->
+      <param name = "outrem_radius" value = "1.0" />
+      <param name = "outrem_neighbors" value = "10" />
+      <!-- when building map, set to false to speed up!!! -->
+      <param name = "latch" value = "false" /> 
+  </node>
+
+  <!-- ego_planner 仿真 -->
+  <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
+    <!-- 无人机编号 -->
+    <arg name="uav_id" value="1"/>
+    <!-- 地图尺寸 -->
+    <arg name="map_size_x_" value="50.0"/>
+    <arg name="map_size_y_" value="50.0"/>
+    <arg name="map_size_z_" value="1.6"/>
+    <arg name="map_origin_x_" value="-25.0"/>
+		<arg name="map_origin_y_" value="-25.0"/>
+    <!-- 可以通过限制ground_height和map_size_z来使得飞机在特定高度飞行 -->
+    <arg name="ground_height" value="1.4"/>
+    <!-- 虚拟天花板高度要小于等于ground_height+z_size，否则重置该高度 -->
+    <!-- 里程计话题 -->
+    <arg name="odometry_topic" value="prometheus/odom"/>
+    <!-- 相机及深度信息仿真中没有使用，此处可忽略(真机中使用) -->
+    <arg name="camera_pose_topic" value="/depth/no_set"/>
+    <arg name="depth_topic" value="/depth/image_rect_raw"/>
+    <arg name="cx" value="321.04638671875"/>
+    <arg name="cy" value="243.44969177246094"/>
+    <arg name="fx" value="387.229248046875"/>
+    <arg name="fy" value="387.229248046875"/>
+    <!-- 点云信息，仿真中由map_generator产生 -->
+    <arg name="cloud_topic" value="octomap_point_cloud_centers"/>
+    <!-- scan -->
+    <arg name="scan_topic" value="no_scan"/>
+    <!-- 最大速度及加速度 -->
+    <arg name="max_vel" value="0.5" />
+    <arg name="max_acc" value="0.5" />
+    <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
+    <arg name="planning_horizon" value="37.5" /> 
+    <!-- ？ -->
+    <arg name="use_distinctive_trajs" value="true" />
+    <!-- 1: use 2D Nav Goal to select goal  -->
+    <!-- 2: use global waypoints below  -->
+    <!-- 单机建议直接使用rviz指定目标点,多机情况请预设目标点 -->
+    <arg name="flight_type" value="2" />
+    <!-- global waypoints -->
+    <!-- It generates a piecewise min-snap traj passing all waypoints -->
+    <arg name="point_num" value="4" />
+    <arg name="point0_x" value="-6.0" />
+    <arg name="point0_y" value="-3.0" />
+    <arg name="point0_z" value="1.5" />
+
+    <arg name="point1_x" value="0.0" />
+    <arg name="point1_y" value="3.0" />
+    <arg name="point1_z" value="1.5" />
+
+    <arg name="point2_x" value="3.0" />
+    <arg name="point2_y" value="-3.0" />
+    <arg name="point2_z" value="1.5" />
+
+    <arg name="point3_x" value="6.0" />
+    <arg name="point3_y" value="-7.0" />
+    <arg name="point3_z" value="1.5" />
+    <!-- 仿真 -->
+    <arg name="realworld_experiment" value="true" />
+  </include>
+
+  <!-- trajectory server：由B样条生成轨迹 -->
+  <!-- 偏航角初始值，重要参数 -->
+  <arg name="yaw_init" default="0.0"/>
+  <node pkg="ego_planner" name="uav$(arg uav_id)_traj_server_for_prometheus" type="traj_server_for_prometheus" output="screen">
+    <param name="uav_id" value="$(arg uav_id)"/>
+    <param name="control_flag" value="0"/>
+    <param name="traj_server/time_forward" value="1.0"/>
+    <param name="traj_server/last_yaw" value="$(arg yaw_init)"/>
+  </node>
+
+</launch>

@@ -78,7 +78,7 @@ namespace ego_planner
     }
     else if (target_type_ == TARGET_TYPE::PRESET_TARGET)
     {
-      trigger_sub_ = nh.subscribe("/uav" + std::to_string(planner_manager_->pp_.drone_id) + "/traj_start_trigger", 1, &EGOReplanFSM::triggerCallback, this);
+      trigger_sub_ = nh.subscribe("/uav" + std::to_string(planner_manager_->pp_.drone_id) + "/ego_trigger", 1, &EGOReplanFSM::triggerCallback, this);
 
       ROS_INFO("Wait for 1 second.");
       int count = 0;
@@ -88,8 +88,32 @@ namespace ego_planner
         ros::Duration(0.001).sleep();
       }
 
+      if (waypoint_num_ <= 0)
+      {
+        ROS_ERROR("Wrong waypoint_num_ = %d", waypoint_num_);
+        waypoint_num_ = 1;
+      }
+
+      wps_.resize(waypoint_num_);
+      for (int i = 0; i < waypoint_num_; i++)
+      {
+        wps_[i](0) = waypoints_[i][0];
+        wps_[i](1) = waypoints_[i][1];
+        wps_[i](2) = waypoints_[i][2];
+
+        cout << "Get waypoints: [" << wps_[i](0) << ", "<< wps_[i](1) << ", "<< wps_[i](2) << "] "<< endl;
+      }
+
+      for (size_t i = 0; i < (size_t)waypoint_num_; i++)
+      {
+        // 发布目标点用于显示 "/drone_x_ego_planner_node/goal_point" - [目标点,颜色,大小,id]
+        visualization_->displayGoalPoint(wps_[i], Eigen::Vector4d(0, 0.5, 0.5, 1), 0.3, i);
+        ros::Duration(0.001).sleep();
+      }
+
       ROS_WARN("Waiting for trigger from [n3ctrl] from RC");
 
+      // wati trigger
       while (ros::ok() && (!have_odom_ || !have_trigger_))
       {
         ros::spinOnce();
@@ -105,27 +129,6 @@ namespace ego_planner
   // 读取 预设目标点
   void EGOReplanFSM::readGivenWps()
   {
-    if (waypoint_num_ <= 0)
-    {
-      ROS_ERROR("Wrong waypoint_num_ = %d", waypoint_num_);
-      return;
-    }
-
-    wps_.resize(waypoint_num_);
-    for (int i = 0; i < waypoint_num_; i++)
-    {
-      wps_[i](0) = waypoints_[i][0];
-      wps_[i](1) = waypoints_[i][1];
-      wps_[i](2) = waypoints_[i][2];
-    }
-
-    for (size_t i = 0; i < (size_t)waypoint_num_; i++)
-    {
-      // 发布目标点用于显示 "/drone_x_ego_planner_node/goal_point" - [目标点,颜色,大小,id]
-      visualization_->displayGoalPoint(wps_[i], Eigen::Vector4d(0, 0.5, 0.5, 1), 0.3, i);
-      ros::Duration(0.001).sleep();
-    }
-
     // 执行第一个路径点
     wp_id_ = 0;
     planNextWaypoint(wps_[wp_id_]);

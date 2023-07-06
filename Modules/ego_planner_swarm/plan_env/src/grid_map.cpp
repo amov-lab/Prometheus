@@ -1,8 +1,5 @@
 #include "plan_env/grid_map.h"
 
-// #define current_img_ md_.depth_image_[image_cnt_ & 1]
-// #define last_img_ md_.depth_image_[!(image_cnt_ & 1)]
-
 void GridMap::initMap(ros::NodeHandle &nh)
 {
   node_ = nh;
@@ -10,25 +7,29 @@ void GridMap::initMap(ros::NodeHandle &nh)
   /* get parameter */
   int uav_id;
   double x_size, y_size, z_size, x_origin, y_origin;
-  // 分辨率
+  // 无人机ID，定义同Prometheus
   node_.param("grid_map/uav_id", uav_id, 1);
+  // 地图分辨率
   node_.param("grid_map/resolution", mp_.resolution_, -1.0);
+  // 地图范围
   node_.param("grid_map/map_size_x", x_size, -1.0);
   node_.param("grid_map/map_size_y", y_size, -1.0);
   node_.param("grid_map/map_size_z", z_size, -1.0);
+  // 地图原点，一般设置为map_size_x和map_size_y的一半
   node_.param("grid_map/map_origin_x", x_origin, -1.0);
   node_.param("grid_map/map_origin_y", y_origin, -1.0);
+  // 地图更新距离，当传入的点云数据超过这个范围，则会被舍弃
   node_.param("grid_map/local_update_range_x", mp_.local_update_range_(0), -1.0);
   node_.param("grid_map/local_update_range_y", mp_.local_update_range_(1), -1.0);
   node_.param("grid_map/local_update_range_z", mp_.local_update_range_(2), -1.0);
-  // 膨胀距离
+  // 点云膨胀距离
   node_.param("grid_map/obstacles_inflation", mp_.obstacles_inflation_, -1.0);
-  // 相机参数
+  // 使用深度相机作为输入时，相机参数
   node_.param("grid_map/fx", mp_.fx_, -1.0);
   node_.param("grid_map/fy", mp_.fy_, -1.0);
   node_.param("grid_map/cx", mp_.cx_, -1.0);
   node_.param("grid_map/cy", mp_.cy_, -1.0);
-  // depth filter
+  // 使用深度相机作为输入时，深度滤波范围
   node_.param("grid_map/use_depth_filter", mp_.use_depth_filter_, true);
   node_.param("grid_map/depth_filter_tolerance", mp_.depth_filter_tolerance_, -1.0);
   node_.param("grid_map/depth_filter_maxdist", mp_.depth_filter_maxdist_, -1.0);
@@ -36,7 +37,7 @@ void GridMap::initMap(ros::NodeHandle &nh)
   node_.param("grid_map/depth_filter_margin", mp_.depth_filter_margin_, -1);
   node_.param("grid_map/k_depth_scaling_factor", mp_.k_depth_scaling_factor_, -1.0);
   node_.param("grid_map/skip_pixel", mp_.skip_pixel_, -1);
-  // local fusion
+  // local fusion，此部分暂时不清楚作用
   node_.param("grid_map/p_hit", mp_.p_hit_, 0.70);
   node_.param("grid_map/p_miss", mp_.p_miss_, 0.35);
   node_.param("grid_map/p_min", mp_.p_min_, 0.12);
@@ -45,22 +46,26 @@ void GridMap::initMap(ros::NodeHandle &nh)
   node_.param("grid_map/min_ray_length", mp_.min_ray_length_, -0.1);
   node_.param("grid_map/max_ray_length", mp_.max_ray_length_, -0.1);
 
+  // 地图rviz显示的截断范围（高度）
   node_.param("grid_map/visualization_truncate_height", mp_.visualization_truncate_height_, -0.1);
+  // 地面高度，可以通过这个参数来限制无人机的飞行高度
+  node_.param("grid_map/ground_height", mp_.ground_height_, 0.0);
+  // 虚拟天花板高度，可以通过这个参数来限制无人机的飞行高度
   node_.param("grid_map/virtual_ceil_height", mp_.virtual_ceil_height_, -0.1);
+  // 无用参数
   node_.param("grid_map/virtual_ceil_yp", mp_.virtual_ceil_yp_, -0.1);
   node_.param("grid_map/virtual_ceil_yn", mp_.virtual_ceil_yn_, -0.1);
-
   node_.param("grid_map/show_occ_time", mp_.show_occ_time_, false);
+  // 无人机定位数据格式
   node_.param("grid_map/pose_type", mp_.pose_type_, 1);
-
+  // 发布地图坐标
   node_.param("grid_map/frame_id", mp_.frame_id_, string("world"));
-  // 地图边缘
+  // 局部地图边缘，作用？
   node_.param("grid_map/local_map_margin", mp_.local_map_margin_, 1);
-  // 地面高度
-  node_.param("grid_map/ground_height", mp_.ground_height_, 0.0);
-
+  // 无人机定位数据超时
   node_.param("grid_map/odom_depth_timeout", mp_.odom_depth_timeout_, 1.0);
 
+  // 虚拟天花板高度要小于等于ground_height+z_size，否则重置该高度
   if( mp_.virtual_ceil_height_ - mp_.ground_height_ > z_size)
   {
     // 天花板高度 = 地面高度 + z_size
@@ -90,11 +95,11 @@ void GridMap::initMap(ros::NodeHandle &nh)
   for (int i = 0; i < 3; ++i)
     mp_.map_voxel_num_(i) = ceil(mp_.map_size_(i) / mp_.resolution_);
 
+  // z轴上，地面高度为最小值
   mp_.map_min_boundary_ = mp_.map_origin_;
   mp_.map_max_boundary_ = mp_.map_origin_ + mp_.map_size_;
 
   // initialize data buffers
-
   int buffer_size = mp_.map_voxel_num_(0) * mp_.map_voxel_num_(1) * mp_.map_voxel_num_(2);
 
   md_.occupancy_buffer_ = vector<double>(buffer_size, mp_.clamp_min_log_ - mp_.unknown_flag_);
@@ -116,11 +121,12 @@ void GridMap::initMap(ros::NodeHandle &nh)
                   0.0, -1.0, 0.0, 0.0,
                   0.0, 0.0, 0.0, 1.0;
 
-  /* init callback */
+  // 订阅 深度相机
   depth_sub_.reset(new message_filters::Subscriber<sensor_msgs::Image>(node_, "grid_map/depth", 50));
   // 相机外参
   extrinsic_sub_ = node_.subscribe<nav_msgs::Odometry>("/vins_estimator/extrinsic", 10, &GridMap::extrinsicCallback, this); //sub
 
+  // 订阅无人机定位信息
   if (mp_.pose_type_ == POSE_STAMPED)
   {
     pose_sub_.reset(
@@ -140,17 +146,27 @@ void GridMap::initMap(ros::NodeHandle &nh)
   }
 
   // use odometry and point cloud or scan
+  // 订阅点云数据
+  // 注意：此处点云数据位于惯性系
   indep_cloud_sub_ =
       node_.subscribe<sensor_msgs::PointCloud2>("grid_map/cloud", 10, &GridMap::cloudCallback, this);
+  
+  // 订阅odom数据
   indep_odom_sub_ =
       node_.subscribe<nav_msgs::Odometry>("grid_map/odom", 10, &GridMap::odomCallback, this);
+  
+  // 订阅激光雷达scan数据，暂时弃用，效果不如使用octomap
   scan_sub_ =
       node_.subscribe<sensor_msgs::LaserScan>("grid_map/scan", 10, &GridMap::scanCallback, this);
 
+  // 占据图更新timer，仅用于深度图为输入的情况
   occ_timer_ = node_.createTimer(ros::Duration(0.05), &GridMap::updateOccupancyCallback, this);
+  // rviz显示timer，发布的图
   vis_timer_ = node_.createTimer(ros::Duration(0.11), &GridMap::visCallback, this);
 
+  // 发布未膨胀点云，仅针对使用相机为输入的情况
   map_pub_ = node_.advertise<sensor_msgs::PointCloud2>("grid_map/occupancy", 10);
+  // 发布膨胀点云，仅针对使用相机为输入的情况
   map_inf_pub_ = node_.advertise<sensor_msgs::PointCloud2>("grid_map/occupancy_inflate", 10);
 
   md_.occ_need_update_ = false;
@@ -167,13 +183,9 @@ void GridMap::initMap(ros::NodeHandle &nh)
 
   md_.flag_depth_odom_timeout_ = false;
   md_.flag_use_depth_fusion = false;
-
-  // rand_noise_ = uniform_real_distribution<double>(-0.2, 0.2);
-  // rand_noise2_ = normal_distribution<double>(0, 0.2);
-  // random_device rd;
-  // eng_ = default_random_engine(rd());
 }
 
+// 膨胀地图全部重置
 void GridMap::resetBuffer()
 {
   Eigen::Vector3d min_pos = mp_.map_min_boundary_;
@@ -185,6 +197,7 @@ void GridMap::resetBuffer()
   md_.local_bound_max_ = mp_.map_voxel_num_ - Eigen::Vector3i::Ones();
 }
 
+// 膨胀地图重置函数，参数为重置范围
 void GridMap::resetBuffer(Eigen::Vector3d min_pos, Eigen::Vector3d max_pos)
 {
 
@@ -221,8 +234,10 @@ int GridMap::setCacheOccupancy(Eigen::Vector3d pos, int occ)
   return idx_ctns;
 }
 
+// 将图像坐标系上的点投影至相机坐标系，再通过相机的位姿将相机坐标系上点投影至世界坐标系，最后将所有点存入md.proj_points_这一vector容器中
 void GridMap::projectDepthImage()
 {
+  // 相机深度图转换为proj_points_（点的容器）
   // md_.proj_points_.clear();
   md_.proj_points_cnt = 0;
 
@@ -345,6 +360,11 @@ void GridMap::projectDepthImage()
   md_.last_depth_image_ = md_.depth_image_;
 }
 
+// 这一函数会对md.proj_points中的每一个点进行raycast流程。首先判断每一个点是否超出地图范围，是否超出ray_length，如果超出，就将此点重新赋值为一个允许的射线上最远的点。
+// 如果重新赋值，则利用setCacheOccupancy（）这一函数将md_.count_hit_and_miss_这一容器对应序列上的计数+1次。表示这一free空间被经过了一次。如果这一点是第一次被遍历，则应该把它加入到md_.cache_voxel这一容器中区
+// 如果不需要重新赋值，说明当前点是障碍物，则利用setCacheOccupancy将这一点在md_.count_hit容器中对应序列的位置计数+1。需要说明的是，不管当前点是不是障碍物，md_.count_hit_and_miss_容器对应位置处的计数都会被+1.
+// 当终点被setCache过后，就进入raycast环节，通过raycast.step函数从射线终点开始向相机点步进。并且将每一个中途点都利用setCacheOccupancy函数置一次free。需要注意的是，每一个中途点还利用md_.flag_traverse_容器进行了判断，如果对应序列处的值不是本轮raycast的num,则将其置为b本轮的racastnum.否则说明这一点及之后的点都已经被raycast过了，因此跳出当前射线终点的raycast循环。
+// 当完成md.proj_points容器中所有点的raycast循环后，开始对md_.cache_voxel中的点进行循环判断。首先根据md_.count_hit及md_.count_hit_and_miss中对应位置的值判断当前voxel为障碍物的概率。并且如果当前点的log_odds_update是prob_hit_log，且md_.occupancy_buffer_中对应位置的概率值还没有超过最大值或当前点的log_odds_update是prob_miss_log，且md_.occupancy_buffer_中对应位置的概率值还没有低于最小值。且当前点是在局部地图范围内，则更新md_.occupancy_buffer_中的概率值。
 void GridMap::raycastProcess()
 {
   // if (md_.proj_points_.size() == 0)
@@ -545,6 +565,9 @@ Eigen::Vector3d GridMap::closetPointInMap(const Eigen::Vector3d &pt, const Eigen
   return camera_pt + (min_t - 1e-3) * diff;
 }
 
+// 这一函数首先将局部范围外一圈的点的occupancy_buffer对应值置为：mp_.clamp_min_log_ - mp_.unknown_flag_。
+// 然后将局部地图范围内的地图上一轮的occupancy_buffer_inflate值全部置为0；
+// 紧接着，对局部地图的occupancy_buffer中所有点的值进行一一判断，判断是否超过为障碍物的最低概率mp_.min_occupancy_log_，如若判断，就对该点进行膨胀，并将所有膨胀点的occupancy_buffer_inflate值全部置为1；
 void GridMap::clearAndInflateLocalMap()
 {
   /*clear outside local*/
@@ -676,11 +699,13 @@ void GridMap::clearAndInflateLocalMap()
 
 void GridMap::visCallback(const ros::TimerEvent & /*event*/)
 {
-
+  // 发布膨胀点云
   publishMapInflate(true);
+  // 发布未膨胀点云（仅针对相机是输入的情况）
   publishMap();
 }
 
+// 使用深度相机时，定时更新地图
 void GridMap::updateOccupancyCallback(const ros::TimerEvent & /*event*/)
 {
   if (md_.last_occ_update_time_.toSec() < 1.0 ) md_.last_occ_update_time_ = ros::Time::now();
@@ -703,6 +728,7 @@ void GridMap::updateOccupancyCallback(const ros::TimerEvent & /*event*/)
   // ros::Time t1, t2, t3, t4;
   // t1 = ros::Time::now();
 
+  // 将深度转换为投影点
   projectDepthImage();
   // t2 = ros::Time::now();
   raycastProcess();
@@ -768,9 +794,12 @@ void GridMap::depthPoseCallback(const sensor_msgs::ImageConstPtr &img,
 
 void GridMap::odomCallback(const nav_msgs::OdometryConstPtr &odom)
 {
+  // 默认为false
+  // projectDepthImage触发后，会将该参数设置为true
   if (md_.has_first_depth_)
     return;
 
+  // 无人机位置即相机位置
   md_.camera_pos_(0) = odom->pose.pose.position.x;
   md_.camera_pos_(1) = odom->pose.pose.position.y;
   md_.camera_pos_(2) = odom->pose.pose.position.z;
@@ -782,6 +811,8 @@ void GridMap::odomCallback(const nav_msgs::OdometryConstPtr &odom)
 
 void GridMap::scanCallback(const sensor_msgs::LaserScanConstPtr &laser_scan)
 {
+  // 弃用
+  return;
   // 参考网页:http://wiki.ros.org/laser_geometry
   // sensor_msgs::LaserScan 转为 sensor_msgs::PointCloud2 格式
   laser_geometry::LaserProjection projector_;
@@ -924,23 +955,20 @@ void GridMap::scanCallback(const sensor_msgs::LaserScanConstPtr &laser_scan)
 
 }
 
-
-
 void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
 {
-
+  // 将得到的点云数据转换为PCL的格式
   pcl::PointCloud<pcl::PointXYZ> latest_cloud;
   pcl::fromROSMsg(*img, latest_cloud);
 
   md_.has_cloud_ = true;
 
+  // 没有收到odom数据则退出
   if (!md_.has_odom_)
   {
     std::cout << "no odom!" << std::endl;
     return;
   }
-
-  //ROS_INFO("test 3");
 
   if (latest_cloud.points.size() == 0)
     return;
@@ -948,6 +976,8 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
   if (isnan(md_.camera_pos_(0)) || isnan(md_.camera_pos_(1)) || isnan(md_.camera_pos_(2)))
     return;
 
+  // 重置膨胀地图，重置范围：无人机当前位置、local_update_range_
+  // 含义：使用当前时刻的点云数据来更新无人机特定范围内的地图信息
   this->resetBuffer(md_.camera_pos_ - mp_.local_update_range_,
                     md_.camera_pos_ + mp_.local_update_range_);
 
@@ -976,10 +1006,11 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
     Eigen::Vector3d devi = p3d - md_.camera_pos_;
     Eigen::Vector3i inf_pt;
 
+    // 只使用无人机特定范围内的点云数据，超出范围的数据丢弃
     if (fabs(devi(0)) < mp_.local_update_range_(0) && fabs(devi(1)) < mp_.local_update_range_(1) &&
         fabs(devi(2)) < mp_.local_update_range_(2))
     {
-
+        // ROS_INFO("test 4");
       /* inflate the point */
       for (int x = -inf_step; x <= inf_step; ++x)
         for (int y = -inf_step; y <= inf_step; ++y)
@@ -1004,7 +1035,7 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
               continue;
 
             int idx_inf = toAddress(inf_pt);
-
+            // 更新膨胀点云buffer
             md_.occupancy_buffer_inflate_[idx_inf] = 1;
           }
     }
@@ -1026,8 +1057,11 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
   boundIndex(md_.local_bound_min_);
   boundIndex(md_.local_bound_max_);
 
-  // add virtual ceiling to limit flight height
-  if (mp_.virtual_ceil_height_ > -0.5) {
+  // 虚拟天花板，可以通过这个参数来限制无人机的飞行高度
+  // 疑问：为啥天花板在地图上加了一层，地面却没有加这一层呢？
+  // 并且，即使不加这一层，无人机规划也不会超过地图z轴边缘啊
+  if (mp_.virtual_ceil_height_ > -0.5) 
+  {
     int ceil_id = floor((mp_.virtual_ceil_height_ - mp_.map_origin_(2)) * mp_.resolution_inv_) - 1;
     for (int x = md_.local_bound_min_(0); x <= md_.local_bound_max_(0); ++x)
       for (int y = md_.local_bound_min_(1); y <= md_.local_bound_max_(1); ++y) {
@@ -1038,13 +1072,15 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
 
 void GridMap::publishMap()
 {
-
+  // 发布未膨胀点云（仅针对相机是输入的情况）
+  // 处理方式等同于发布膨胀点云
   if (map_pub_.getNumSubscribers() <= 0)
     return;
 
   pcl::PointXYZ pt;
   pcl::PointCloud<pcl::PointXYZ> cloud;
 
+  // 
   Eigen::Vector3i min_cut = md_.local_bound_min_;
   Eigen::Vector3i max_cut = md_.local_bound_max_;
 
@@ -1113,26 +1149,31 @@ void GridMap::publishMap()
 
 void GridMap::publishMapInflate(bool all_info)
 {
-
+  // 没有订阅的节点，则退出不发布
   if (map_inf_pub_.getNumSubscribers() <= 0)
     return;
 
   pcl::PointXYZ pt;
   pcl::PointCloud<pcl::PointXYZ> cloud;
 
+  // 地图范围？
   Eigen::Vector3i min_cut = md_.local_bound_min_;
   Eigen::Vector3i max_cut = md_.local_bound_max_;
 
+  // 默认all_info为True
   if (all_info)
   {
+    // 扩大地图范围，local_map_margin_默认为10
     int lmm = mp_.local_map_margin_;
     min_cut -= Eigen::Vector3i(lmm, lmm, lmm);
     max_cut += Eigen::Vector3i(lmm, lmm, lmm);
   }
 
+  // 确保min_cut、max_cut在整体地图范围之内
   boundIndex(min_cut);
   boundIndex(max_cut);
 
+  // 遍历，将符合条件的点放入cloud中，并最后发布
   for (int x = min_cut(0); x <= max_cut(0); ++x)
     for (int y = min_cut(1); y <= max_cut(1); ++y)
       for (int z = min_cut(2); z <= max_cut(2); ++z)
@@ -1142,6 +1183,7 @@ void GridMap::publishMapInflate(bool all_info)
 
         Eigen::Vector3d pos;
         indexToPos(Eigen::Vector3i(x, y, z), pos);
+        // 超过截断距离，则不显示该点
         if (pos(2) > mp_.visualization_truncate_height_)
           continue;
 
@@ -1151,7 +1193,7 @@ void GridMap::publishMapInflate(bool all_info)
         cloud.push_back(pt);
       }
 
-  //border x
+  // 添加地图的水平边界，在地图显示为一个矩形边界
   for(int i = 0; i < mp_.map_voxel_num_(0); i++)
   {
     pt.x = mp_.map_min_boundary_(0)+i*mp_.resolution_;
@@ -1164,7 +1206,6 @@ void GridMap::publishMapInflate(bool all_info)
     pt.z = mp_.map_min_boundary_(2);
     cloud.push_back(pt);
   }
-  //border y
   for(int i = 0; i < mp_.map_voxel_num_(1); i++)
   {
     pt.x = mp_.map_min_boundary_(0);
@@ -1185,9 +1226,7 @@ void GridMap::publishMapInflate(bool all_info)
   sensor_msgs::PointCloud2 cloud_msg;
 
   pcl::toROSMsg(cloud, cloud_msg);
-  map_inf_pub_.publish(cloud_msg);
-
-  // ROS_INFO("pub map");
+  map_inf_pub_.publish(cloud_msg); 
 }
 
 bool GridMap::odomValid() { return md_.has_odom_; }
@@ -1219,6 +1258,7 @@ void GridMap::extrinsicCallback(const nav_msgs::OdometryConstPtr &odom)
   md_.cam2body_(3, 3) = 1.0;
 }
 
+// 深度图+odom同时更新
 void GridMap::depthOdomCallback(const sensor_msgs::ImageConstPtr &img,
                                 const nav_msgs::OdometryConstPtr &odom)
 {
@@ -1228,6 +1268,7 @@ void GridMap::depthOdomCallback(const sensor_msgs::ImageConstPtr &img,
                                                  odom->pose.pose.orientation.y,
                                                  odom->pose.pose.orientation.z);
   Eigen::Matrix3d body_r_m = body_q.toRotationMatrix();
+  // 使用vins定位的时候，得到的是相机位置
   Eigen::Matrix4d body2world;
   body2world.block<3, 3>(0, 0) = body_r_m;
   body2world(0, 3) = odom->pose.pose.position.x;
@@ -1235,6 +1276,7 @@ void GridMap::depthOdomCallback(const sensor_msgs::ImageConstPtr &img,
   body2world(2, 3) = odom->pose.pose.position.z;
   body2world(3, 3) = 1.0;
 
+  // 相机位置乘以相机到机体的转换矩阵（相机外参数），则得到无人机的位置
   Eigen::Matrix4d cam_T = body2world * md_.cam2body_;
   md_.camera_pos_(0) = cam_T(0, 3);
   md_.camera_pos_(1) = cam_T(1, 3);
@@ -1248,6 +1290,7 @@ void GridMap::depthOdomCallback(const sensor_msgs::ImageConstPtr &img,
   {
     (cv_ptr->image).convertTo(cv_ptr->image, CV_16UC1, mp_.k_depth_scaling_factor_);
   }
+  // 
   cv_ptr->image.copyTo(md_.depth_image_);
 
   md_.occ_need_update_ = true;
