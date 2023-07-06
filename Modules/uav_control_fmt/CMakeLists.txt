@@ -51,9 +51,18 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
+
+add_executable(fmt_msg_receiver src/fmt_msg_receiver.cpp)
+add_dependencies(fmt_msg_receiver prometheus_uav_control_fmt_gencpp)
+target_link_libraries(fmt_msg_receiver ${catkin_LIBRARIES})
+
 add_executable(fmt_test src/fmt_test.cpp)
 add_dependencies(fmt_test prometheus_uav_control_fmt_gencpp)
 target_link_libraries(fmt_test ${catkin_LIBRARIES})
+
+add_executable(uav_command_pub src/uav_command_pub.cpp)
+add_dependencies(uav_command_pub prometheus_uav_control_fmt_gencpp)
+target_link_libraries(uav_command_pub ${catkin_LIBRARIES})
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

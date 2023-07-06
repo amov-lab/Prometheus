@@ -16,15 +16,22 @@ roslaunch prometheus_gazebo sitl_fmt_mavros.launch
 ## 启动FMT仿真
 cd qemu-vexpress-a9
 ./qemu.sh
-## 启动测试脚本
+## 启动测试脚本1 - 读取fmt数据
+rosrun prometheus_uav_control_fmt fmt_test
+## 启动测试脚本2 - 控制fmt
+rosrun prometheus_uav_control_fmt fmt_test
+## 启动测试脚本3 - 发送任务层指令
 rosrun prometheus_uav_control_fmt fmt_test
 ```
+- 需要在QGC地面站手动解锁
+- mcn echo auto_cmd打印外部控制指令
+
 
 **TODO**
 
-- 在fmt_test.h中完善我们要订阅的所有MAVLINK消息的ID的声明（参考：https://mavlink.io/en/messages/common.html）
-- 在fmt_test.cpp中继续添加MAVLINK消息配置信息
-- 测试Prometheus需要收到所有mavros消息都正常
+- 等待UE4的封装环境
+- 测试FMT在uav_control代码中的biaoxian
+- 等待支持vision_poses
 
 
 **其他TODO**
