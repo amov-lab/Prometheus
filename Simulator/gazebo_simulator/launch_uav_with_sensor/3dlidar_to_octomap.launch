@@ -10,7 +10,7 @@
       <!-- 发布地图的坐标系 -->
       <param name="frame_id" type="string" value="world" />
       <!-- 传感器最大感知范围 (speedup!) -->
-      <param name="sensor_model/max_range" value="5.0" />
+      <param name="sensor_model/max_range" value="8.0" />
       <!-- 局部点云话题输入 -->
       <remap from="cloud_in" to="/uav1/prometheus/sensors/3Dlidar_scan" />
       <!-- 直通滤波的 Z 轴范围，保留 [-1.0, 10.0] 范围内的点 -->
