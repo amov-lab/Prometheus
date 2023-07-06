@@ -15,7 +15,7 @@
         <geometry>
           <cylinder>
             <radius>0.2</radius>
-            <length>2.0</length>
+            <length>3.0</length>
           </cylinder>
         </geometry>
         <material>
@@ -35,7 +35,7 @@
         <geometry>
           <cylinder>
             <radius>0.25</radius>
-            <length>2.0</length>
+            <length>3.0</length>
           </cylinder>
         </geometry>
       </collision>

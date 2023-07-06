@@ -10,11 +10,11 @@
       <!-- 发布地图的坐标系 -->
       <param name="frame_id" type="string" value="world" />
       <!-- 传感器最大感知范围 (speedup!) -->
-      <param name="sensor_model/max_range" value="5.0" />
+      <param name="sensor_model/max_range" value="10.0" />
       <!-- 局部点云话题输入 -->
       <remap from="cloud_in" to="/uav1/prometheus/scan_point_cloud" />
       <!-- 直通滤波的 Z 轴范围，保留 [-1.0, 10.0] 范围内的点 -->
-      <param name = "pointcloud_max_z" value = "1.6" />
+      <param name = "pointcloud_max_z" value = "1.7" />
       <param name = "pointcloud_min_z" value = "1.4" />
       <!-- 机器人坐标系 base_link，滤除地面需要该 frame -->
       <!-- <param name = "base_frame_id" type = "string" value = "base_link" /> -->

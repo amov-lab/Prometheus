@@ -303,8 +303,8 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     tfs.header.frame_id = "world";       //相对于世界坐标系
     tfs.header.stamp = ros::Time::now(); //时间戳
     //  |----坐标系 ID
-    // tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
-    tfs.child_frame_id = "/lidar_link"; //子坐标系，无人机的坐标系
+    tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
+    // tfs.child_frame_id = "/lidar_link"; //子坐标系，无人机的坐标系
     //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
     tfs.transform.translation.x = uav_state.position[0];
     tfs.transform.translation.y = uav_state.position[1];
@@ -567,6 +567,10 @@ int UAV_estimator::check_uav_odom()
     }
     else if ((location_source == prometheus_msgs::UAVState::GPS || location_source == prometheus_msgs::UAVState::RTK) && (time_now - get_gps_stamp).toSec() > GPS_TIMEOUT)
     {
+        cout << RED << "time_now:[ " << (time_now).toSec() << " ] s" << TAIL << endl;
+        cout << RED << "get_gps_stamp:[ " << (get_gps_stamp).toSec() << " ] s" << TAIL << endl;
+        cout << RED << "Timeout:[ " << (time_now - get_gps_stamp).toSec() << " ] s" << TAIL << endl;
+
         return 7;
     }
     
@@ -782,7 +786,7 @@ void UAV_estimator::printf_param()
     }
     else if (location_source == prometheus_msgs::UAVState::RTK)
     {
-        cout << GREEN << "location_source: [GPS] " << TAIL << endl;
+        cout << GREEN << "location_source: [RTK] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
