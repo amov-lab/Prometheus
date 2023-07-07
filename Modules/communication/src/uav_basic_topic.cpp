@@ -44,6 +44,7 @@ void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
     this->uav_state_.connected = msg->connected;
     this->uav_state_.armed = msg->armed;
     this->uav_state_.odom_valid = msg->odom_valid;
+    this->uav_state_.gps_num = msg->gps_num;
 
     for (int i = 0; i < 3; i++)
     {

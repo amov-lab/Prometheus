@@ -7,7 +7,7 @@
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
 
-    <arg name="ground_station_ip" default="192.168.31.127"/>
+    <arg name="ground_station_ip" default="127.0.0.1"/>
 
     <arg name="uav_id" default="1"/>
     <arg name="is_simulation" default="1"/>
@@ -23,7 +23,7 @@
     <arg name="uav_command_yaml" default="uav_control/launch/uav_command_pub.yaml"/>
 
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
-        <!--组播ip-->
+        <!--组播ip 224.0.0.88-->
         <param name="multicast_udp_ip" value="224.0.0.88"/>
 	    <!--ego planner-->
         <param name="next_drone_ip" value="127.0.0.1"/>

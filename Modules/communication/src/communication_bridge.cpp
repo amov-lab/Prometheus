@@ -360,59 +360,59 @@ void CommunicationBridge::pubMsg(int msg_id)
     switch (msg_id)
     {
     case MsgId::UAVSTATE:
-        recvData(recv_uav_state_);
+        recvData(getUAVState());
         break;
     case MsgId::SWARMCOMMAND:
-        recvData(recv_swarm_command_);
+        recvData(getSwarmCommand());
         break;
     case MsgId::CONNECTSTATE:
         // 集群仿真下有效
-        recvData(recv_connect_state_);
+        recvData(getConnectState());
         break;
     case MsgId::GIMBALCONTROL:
-        recvData(recv_gimbal_control_);
+        recvData(getGimbalControl());
         break;
     case MsgId::GIMBALSERVICE:
-        recvData(recv_gimbal_service_);
+        recvData(getGimbalService());
         break;
     case MsgId::GIMBALPARAMSET:
-        recvData(recv_param_set_);
+        recvData(getGimbalParamSet());
         break;
     case MsgId::WINDOWPOSITION:
-        recvData(recv_window_position_);
+        recvData(getWindowPosition());
         break;
     case MsgId::RHEACONTROL:
-        recvData(recv_rhea_control_);
+        recvData(getRheaControl());
         break;
     case MsgId::RHEASTATE:
-        recvData(recv_rhea_state_);
+        recvData(getRheaState());
         break;
     case MsgId::IMAGEDATA:
-        recvData(recv_image_data_);
+        recvData(getImageData());
         break;
     case MsgId::UAVCOMMAND:
-        recvData(recv_uav_cmd_);
+        recvData(getUAVCommand());
         break;
     case MsgId::UAVSETUP:
-        recvData(recv_uav_setup_);
+        recvData(getUAVSetup());
         break;
     case MsgId::MODESELECTION:
-        recvData(recv_mode_selection_);
+        recvData(getModeSelection());
         break;
     case MsgId::PARAMSETTINGS:
-        recvData(recv_param_settings_);
+        recvData(getParamSettings());
         break;
     case MsgId::BSPLINE:
-        recvData(recv_bspline_);
+        recvData(getBspline());
         break;
     case MsgId::MULTIBSPLINES:
-        recvData(recv_multi_bsplines_);
+        recvData(getMultiBsplines());
         break;
     case MsgId::CUSTOMDATASEGMENT_1:
-        recvData(recv_custom_data_1_);
+        recvData(getCustomDataSegment_1());
         break;
     case MsgId::GOAL:
-        recvData(recv_goal_);
+        recvData(getGoal());
         break;
     default:
         break;
