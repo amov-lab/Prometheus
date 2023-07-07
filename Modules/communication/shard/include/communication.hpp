@@ -8,7 +8,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "CRC.h"
 #include "Struct.hpp"
 
 
@@ -29,16 +28,17 @@ public:
     Communication();
     ~Communication();
 
-    void init(int id, int udp_port, int tcp_port, int tcp_heart_port);
+    // 初始化 udp_port组播地址端口号  tcp_port本程序tcp服务端口 
+    void init(int id, int multicast_udp_port, int tcp_server_port, int tcp_send_port,bool is_communication = true);
 
-    //编码
+    // 编码
     template <typename T>
     int encodeMsg(int8_t send_mode, T msg,int id = 0);
 
-    //解码
+    // 解码
     int decodeMsg(char *buff,int8_t send_mode);
 
-    //根据传入的struct返回对应的MSG_ID
+    // 根据传入的struct返回对应的MSG_ID
     template <typename T>
     uint8_t getMsgId(T msg);
 
@@ -62,6 +62,31 @@ public:
 
     unsigned short checksum(char *buff, int len);
 
+    struct UAVState getUAVState();
+    struct TextInfo getTextInfo();
+    struct GimbalState getGimbalState();
+    struct VisionDiff getVisionDiff();
+    struct Heartbeat getHeartbeat();
+    struct RheaState getRheaState();
+    struct MultiDetectionInfo getMultiDetectionInfo();
+    struct UAVControlState getUAVControlState();
+    struct UAVCommand getUAVCommand();
+    struct ParamSettings getParamSettings();
+    struct SwarmCommand getSwarmCommand();
+    
+    struct ConnectState getConnectState();
+    struct GimbalControl getGimbalControl();
+    struct GimbalService getGimbalService();
+    struct GimbalParamSet getGimbalParamSet();
+    struct WindowPosition getWindowPosition();
+    struct RheaControl getRheaControl();
+    struct ImageData getImageData();
+    struct UAVSetup getUAVSetup();
+    struct ModeSelection getModeSelection();
+    struct Bspline getBspline();
+    struct MultiBsplines getMultiBsplines();
+    struct CustomDataSegment_1 getCustomDataSegment_1();
+    struct Goal getGoal();
 protected:
     int ROBOT_ID = 0;
     int recv_id = 0;
@@ -74,9 +99,12 @@ protected:
 
     int try_connect_num = 0, disconnect_num = 0;
 
-public:
+    bool is_communication_node = true;
+
+private:
     struct SwarmCommand recv_swarm_command_;
     struct UAVState recv_uav_state_;
+    struct Heartbeat recv_heartbeat_;
     struct ConnectState recv_connect_state_;
     struct GimbalControl recv_gimbal_control_;
     struct ModeSelection recv_mode_selection_;
@@ -95,6 +123,8 @@ public:
     struct Bspline recv_bspline_;
     struct MultiBsplines recv_multi_bsplines_;
     struct Goal recv_goal_;
+    struct MultiDetectionInfo recv_multi_detection_info_;
+    struct UAVControlState recv_uav_control_state_;
     struct CustomDataSegment_1 recv_custom_data_1_;
 };
 

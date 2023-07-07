@@ -69,6 +69,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         set_local_pose_offset_sub = nh.subscribe<prometheus_msgs::GPSData>(uav_name + "/prometheus/set_local_offset_pose", 1, &UAV_estimator::set_local_pose_offset_cb, this);
         // 【发布】ENU坐标系下的位置偏移量
         local_pose_offset_pub = nh.advertise<prometheus_msgs::OffsetPose>(uav_name + "/prometheus/offset_pose", 1);
+        // 【订阅】GPS卫星数量
+        gps_satellites_sub = nh.subscribe<std_msgs::UInt32>(uav_name + "/mavros/global_position/raw/satellites", 1, &UAV_estimator::gps_satellites_cb, this);
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
@@ -122,6 +124,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     uav_state.location_source = location_source;
     uav_state.odom_valid = false;
     uav_state.gps_status = prometheus_msgs::UAVState::GPS_FIX_TYPE_NO_GPS;
+    uav_state.gps_num = 0;
     uav_state.position[0] = 0.0;
     uav_state.position[1] = 0.0;
     uav_state.position[2] = 0.0;
@@ -832,6 +835,11 @@ void UAV_estimator::set_local_pose_offset_cb(const prometheus_msgs::GPSData::Con
     offset_pose.y += enu_offset[1] - uav_state.position[1] + msg->y;
 
     local_pose_offset_pub.publish(offset_pose);
+}
+
+void UAV_estimator::gps_satellites_cb(const std_msgs::UInt32::ConstPtr &msg)
+{
+    uav_state.gps_num = msg->data;
 }
 
 //向地面发送反馈信息,如果重复,将不会发送

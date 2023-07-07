@@ -35,6 +35,8 @@ uint8 GPS_FIX_TYPE_RTK_FLOATR=5
 uint8 GPS_FIX_TYPE_RTK_FIXEDR=6
 uint8 GPS_FIX_TYPE_STATIC=7
 uint8 GPS_FIX_TYPE_PPP=8
+## GPS卫星数量
+uint8 gps_num
 
 ## 无人机位置、速度、姿态
 float32[3] position                 ## [m]

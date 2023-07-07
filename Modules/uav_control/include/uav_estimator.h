@@ -32,6 +32,7 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/UInt32.h>
 
 #include "tf2_ros/transform_broadcaster.h"  //发布动态坐标关系
 #include "math_utils.h"
@@ -69,6 +70,7 @@ class UAV_estimator
         ros::Subscriber px4_rel_alt_sub;
         ros::Subscriber gps_status_sub;
         ros::Subscriber set_local_pose_offset_sub;
+        ros::Subscriber gps_satellites_sub;
         // 发布话题
         ros::Publisher uav_state_pub;
         ros::Publisher px4_vision_pose_pub;
@@ -141,6 +143,7 @@ class UAV_estimator
         void px4_att_cb(const sensor_msgs::Imu::ConstPtr& msg);
         void gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg);
         void set_local_pose_offset_cb(const prometheus_msgs::GPSData::ConstPtr& msg);
+        void gps_satellites_cb(const std_msgs::UInt32::ConstPtr &msg);
 
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);

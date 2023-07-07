@@ -67,8 +67,7 @@ enum MsgId
     BSPLINE = 111,
     MULTIBSPLINES = 112,
     CUSTOMDATASEGMENT_1 = 113,
-    CUSTOMDATASEGMENT_2 = 114,
-
+    
     CONNECTSTATE = 201,
     MODESELECTION = 202,
 
@@ -163,6 +162,8 @@ struct UAVState
         GPS_FIX_TYPE_STATIC = 7,
         GPS_FIX_TYPE_PPP = 8
     };
+    // GPS卫星数量
+    uint8_t gps_num;
 
     //无人机经度、纬度、高度
     float latitude;
@@ -182,8 +183,8 @@ struct UAVState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar &secs;
-        ar &nsecs;
+        ar & secs;
+        ar & nsecs;
         ar & uav_id;
         // ar & state;
         ar & location_source;
@@ -192,6 +193,7 @@ struct UAVState
         ar & armed;
         ar & odom_valid;
         ar & gps_status;
+        ar & gps_num;
         ar & latitude;
         ar & longitude;
         ar & altitude;
