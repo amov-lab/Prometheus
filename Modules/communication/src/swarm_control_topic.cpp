@@ -62,6 +62,7 @@ void SwarmControl::init(ros::NodeHandle &nh, int swarm_num, int id)
         uav_state.connected = false;
         uav_state.armed = false;
         uav_state.odom_valid = false;
+        uav_state.gps_num = 0;
         for (int j = 0; j < 3; j++)
         {
             uav_state.position[j] = 0;
@@ -169,6 +170,7 @@ void SwarmControl::allUAVStatePub(struct MultiUAVState m_multi_uav_state)
         uav_state.odom_valid = (*it).odom_valid;
         uav_state.location_source = (*it).location_source;
         uav_state.gps_status = (*it).gps_status;
+        uav_state.gps_num = (*it).gps_num;
         for (int i = 0; i < 3; i++)
         {
             uav_state.position[i] = (*it).position[i];
