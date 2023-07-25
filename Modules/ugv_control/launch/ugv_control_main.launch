@@ -1,0 +1,17 @@
+<launch>
+	<arg name="ugv_id" default="1"/>
+    <arg name="sim_mode" default="fales"/>
+    <arg name="flag_printf" default="true"/>
+    <arg name="ugv_control/enable_external_control" value="true" />
+
+    <!-- 启动ugv_control_main -->
+	<node pkg="prometheus_ugv_control" type="ugv_control_main" name="ugv_control_main_$(arg ugv_id)" output="screen">
+		<param name="ugv_id" value="$(arg ugv_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<param name="ugv_control/enable_external_control" value="$(arg ugv_control/enable_external_control)" />
+		<rosparam command="load" file="$(find prometheus_ugv_control)/launch/ugv_control.yaml" />
+	</node>
+
+</launch>
+

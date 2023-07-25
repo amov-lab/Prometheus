@@ -27,6 +27,10 @@ add_message_files(
   UAVSetup.msg
   TextInfo.msg
   GlobalAruco.msg
+  UgvState.msg
+  UgvCommand.msg
+  MultiUGVState.msg
+  
 
   ArucoInfo.msg
   MultiArucoInfo.msg

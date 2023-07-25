@@ -1,0 +1,17 @@
+## parameter for ugv_control
+ugv_control:
+##  控制变量
+  k_p : 2.0
+  k_p_path : 5.0
+  k_aoivd : 0.2
+  k_yaw : 2.0
+  
+##  最大速度
+  max_vel : 2.0
+
+##　地理围栏
+geo_fence:
+  x_min: -100.0
+  x_max: 100.0
+  y_min: -100.0
+  y_max: 100.0
