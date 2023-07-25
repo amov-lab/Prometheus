@@ -37,6 +37,7 @@ uint8 One_column=0
 uint8 Triangle=1
 uint8 Square=2
 uint8 Circular=3
+uint8 around_Circle=4
 
 ## 搜索控制参考量 
 float32 target_area_x_min          ## [m]
