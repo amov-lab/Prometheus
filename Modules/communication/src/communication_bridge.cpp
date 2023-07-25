@@ -360,59 +360,59 @@ void CommunicationBridge::pubMsg(int msg_id)
     switch (msg_id)
     {
     case MsgId::UAVSTATE:
-        recvData(getUAVState());
+        recvData(Communication::getUAVState());
         break;
     case MsgId::SWARMCOMMAND:
-        recvData(getSwarmCommand());
+        recvData(Communication::getSwarmCommand());
         break;
     case MsgId::CONNECTSTATE:
         // 集群仿真下有效
-        recvData(getConnectState());
+        recvData(Communication::getConnectState());
         break;
     case MsgId::GIMBALCONTROL:
-        recvData(getGimbalControl());
+        recvData(Communication::getGimbalControl());
         break;
     case MsgId::GIMBALSERVICE:
-        recvData(getGimbalService());
+        recvData(Communication::getGimbalService());
         break;
     case MsgId::GIMBALPARAMSET:
-        recvData(getGimbalParamSet());
+        recvData(Communication::getGimbalParamSet());
         break;
     case MsgId::WINDOWPOSITION:
-        recvData(getWindowPosition());
+        recvData(Communication::getWindowPosition());
         break;
     case MsgId::RHEACONTROL:
-        recvData(getRheaControl());
+        recvData(Communication::getRheaControl());
         break;
     case MsgId::RHEASTATE:
-        recvData(getRheaState());
+        recvData(Communication::getRheaState());
         break;
     case MsgId::IMAGEDATA:
-        recvData(getImageData());
+        recvData(Communication::getImageData());
         break;
     case MsgId::UAVCOMMAND:
-        recvData(getUAVCommand());
+        recvData(Communication::getUAVCommand());
         break;
     case MsgId::UAVSETUP:
-        recvData(getUAVSetup());
+        recvData(Communication::getUAVSetup());
         break;
     case MsgId::MODESELECTION:
-        recvData(getModeSelection());
+        recvData(Communication::getModeSelection());
         break;
     case MsgId::PARAMSETTINGS:
-        recvData(getParamSettings());
+        recvData(Communication::getParamSettings());
         break;
     case MsgId::BSPLINE:
-        recvData(getBspline());
+        recvData(Communication::getBspline());
         break;
     case MsgId::MULTIBSPLINES:
-        recvData(getMultiBsplines());
+        recvData(Communication::getMultiBsplines());
         break;
     case MsgId::CUSTOMDATASEGMENT_1:
-        recvData(getCustomDataSegment_1());
+        recvData(Communication::getCustomDataSegment_1());
         break;
     case MsgId::GOAL:
-        recvData(getGoal());
+        recvData(Communication::getGoal());
         break;
     default:
         break;
@@ -513,6 +513,12 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
             }
         }
         this->is_heartbeat_ready_ = true;
+        // 加载单机参数
+        sendControlParam();
+        // 加载通信模块参数
+        sendCommunicationParam();
+        // 加载轨迹控制参数
+        sendCommandPubParam();
     }
     else if (mode_selection.mode == ModeSelection::Mode::UGVBASIC)
     {
@@ -569,6 +575,8 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 system(OPENSWARMCONTROL.c_str());
             }
         }
+        // 加载集群参数
+        sendSwarmParam();
     }
     else if (mode_selection.mode == ModeSelection::Mode::AUTONOMOUSLANDING)
     {
@@ -873,7 +881,7 @@ void CommunicationBridge::toGroundStationFun()
         if (disconnect_num >= try_connect_num) // 跟地面站断联后的措施
         {
             disconnect_flag = true;
-            std::cout << "conenect ground station failed!" << std::endl;
+            std::cout << "conenect ground station failed, please check the ground station IP!" << std::endl;
             // 如果是集群模式 由集群模块触发降落
             if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
             {
@@ -974,7 +982,7 @@ void CommunicationBridge::checkHeartbeatState(const ros::TimerEvent &time_event)
             disconnect++;
             if (disconnect > try_connect_num)
             {
-                std::cout << "conenect ground station failed!" << std::endl;
+                std::cout << "conenect ground station failed, please check the ground station IP!" << std::endl;
                 // 如果是集群模式 由集群模块触发降落
                 if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
                 {
