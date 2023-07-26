@@ -8,6 +8,9 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
     nh.param("sim_mode", this->sim_mode, false);
     nh.param("mesh_resource", this->mesh_resource, std::string("package://prometheus_ugv_control/meshes/car.dae"));
 
+
+    this->ugv_name = "/ugv" + std::to_string(this->ugv_id);
+
      if(this->sim_mode)
     {
         // 【订阅】gazebo仿真真值
@@ -21,7 +24,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
         // mocap_vel_sub = nh.subscribe<geometry_msgs::TwistStamped>("/vrpn_client_node"+ ugv_name + "/twist", 1, mocap_vel_cb);
     
         // 【订阅】电池状态(无人车底板电压)
-        this->battery_sub = nh.subscribe<std_msgs::Float32>(ugv_name + "/PowerVoltage", 1, &UGV_estimator::battery_cb, this);
+        this->battery_sub = nh.subscribe<std_msgs::Float32>(this->ugv_name + "/PowerVoltage", 1, &UGV_estimator::battery_cb, this);
     }
 
     // 【发布】无人车状态合集,包括位置\速度\姿态\模式等,供上层节点使用
@@ -42,7 +45,6 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
     // 【定时器】发布RVIZ显示相关话题，5Hz
     ros::Timer timer_rviz_pub = nh.createTimer(ros::Duration(0.2), &UGV_estimator::timercb_rviz, this);
 
-    this->ugv_name = "/ugv" + std::to_string(this->ugv_id);
     
     // 变量初始化
     this->ugv_state.battery = 0.0;
