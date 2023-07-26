@@ -18,6 +18,8 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     nh.param("geo_fence/y_min", this->geo_fence_y[0], -100.0f);
     nh.param("geo_fence/y_max", this->geo_fence_y[1], 100.0f);
 
+    this->ugv_name = "/ugv" + std::to_string(this->ugv_id);
+
      //【订阅】无人车控制指令
     this->command_sub = nh.subscribe<prometheus_msgs::UgvCommand>(this->ugv_name + "/prometheus/ugv_command", 2, &UGV_controller::ugv_command_cb, this);
     //【订阅】本机状态信息
@@ -35,7 +37,7 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     ros::Timer debug_pub = nh.createTimer(ros::Duration(5.0), &UGV_controller::printf_state, this);
 
 
-    this->ugv_name = "/ugv" + std::to_string(this->ugv_id);
+
 
     // 初始化命令
     this->Command_Now.Mode                = prometheus_msgs::UgvCommand::Hold;
