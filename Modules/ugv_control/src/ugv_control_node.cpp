@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ugv_controller_node");
     ros::NodeHandle nh("~");
-    ros::Rate rate(100.0);
+    ros::Rate rate(20.0);
 
     signal(SIGINT, mySigintHandler);
     ros::Duration(1.0).sleep();
@@ -28,10 +28,6 @@ int main(int argc, char **argv)
 
     ros::spinOnce();
     ros::Duration(1.0).sleep();
-
-    ros::Time time_now = ros::Time::now();
-    ros::Time time_last = ros::Time::now();
-    time_last.sec = time_last.sec - 10;
 
     // 主循环
     while (ros::ok())

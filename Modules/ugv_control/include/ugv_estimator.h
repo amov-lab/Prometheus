@@ -37,6 +37,10 @@ public:
     std::vector<geometry_msgs::PoseStamped> posehistory_vector_;    // 无人车轨迹容器
     string mesh_resource;
     ros::Time last_mocap_timestamp;                  // mocap时间戳
+
+    ros::Timer timer_rviz_pub;
+    ros::Timer timer_ugv_state_pub;
+
     bool mocap_first_time;
     float last_position_x, last_position_y, last_position_z, last_time, now_time, dt;
     // 订阅话题

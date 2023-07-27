@@ -39,11 +39,12 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
     // 【发布】mesh，用于RVIZ显示
     this->ugv_mesh_pub =  nh.advertise<visualization_msgs::Marker>(this->ugv_name + "/prometheus/ugv_mesh", 1);
 
+
     // 【定时器】发布ugv_state话题，50Hz
-    ros::Timer timer_ugv_state_pub = nh.createTimer(ros::Duration(0.02), &UGV_estimator::timercb_ugv_state, this);
+    timer_ugv_state_pub = nh.createTimer(ros::Duration(0.02), &UGV_estimator::timercb_ugv_state, this);
 
     // 【定时器】发布RVIZ显示相关话题，5Hz
-    ros::Timer timer_rviz_pub = nh.createTimer(ros::Duration(0.2), &UGV_estimator::timercb_rviz, this);
+    timer_rviz_pub = nh.createTimer(ros::Duration(0.2), &UGV_estimator::timercb_rviz, this);
 
     
     // 变量初始化
@@ -82,6 +83,9 @@ void UGV_estimator::mocap_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg
     this->ugv_state.position[0] = msg->pose.position.x;
     this->ugv_state.position[1] = msg->pose.position.y;
     this->ugv_state.position[2] = msg->pose.position.z;
+
+    cout << RED << this->ugv_state.position[0] << TAIL <<endl;
+	cout << RED << this->ugv_state.position[1] << TAIL <<endl;
 
     //计算速度
     // now_time = get_time_in_sec(ros::Time::now());
@@ -155,18 +159,19 @@ float UGV_estimator::get_time_in_sec(const ros::Time& begin_time)
 void UGV_estimator::timercb_ugv_state(const ros::TimerEvent &e)
 {
     // 如果长时间未收到mocap数据，则一直给飞控发送旧数据，此处显示timeout
-    if(!this->sim_mode && get_time_in_sec(this->last_mocap_timestamp) > TIMEOUT_MAX)
-    {
-        if(this->mocap_first_time)
-        {
-            this->mocap_first_time = false;
-            return;
-        }
-        cout << RED << "Mocap Timeout : " <<  get_time_in_sec(this->last_mocap_timestamp)  << " [ s ]"<< TAIL <<endl; 
-    }
+    // if(!this->sim_mode && get_time_in_sec(this->last_mocap_timestamp) > TIMEOUT_MAX)
+    // {
+    //     if(this->mocap_first_time)
+    //     {
+    //         this->mocap_first_time = false;
+    //         return;
+    //     }
+    //     cout << RED << "Mocap Timeout : " <<  get_time_in_sec(this->last_mocap_timestamp)  << " [ s ]"<< TAIL <<endl; 
+    // }
 
     // 发布无人车状态
     this->ugv_state.header.stamp = ros::Time::now();
+    cout << RED << "ugv_State pubulish!"<< TAIL <<endl; 
     this->ugv_state_pub.publish(this->ugv_state);
 
     // 发布无人车当前odometry
