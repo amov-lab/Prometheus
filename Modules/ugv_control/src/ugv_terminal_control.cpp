@@ -79,6 +79,8 @@ int main(int argc, char **argv)
             ugv_cmd.linear_vel[0] = state_desired[0];
             ugv_cmd.linear_vel[1] = state_desired[1];
             ugv_cmd.yaw_ref = state_desired[2]/180.0*M_PI;
+            cout << ugv_cmd.linear_vel[0]  <<endl;
+            cout << ugv_cmd.linear_vel[1]  <<endl;
             command_pub.publish(ugv_cmd);
             cout << "state_desired [linear angular] : " << state_desired[0] << " [m/s] "<< state_desired[1] << " [m/s] "<< state_desired[2] <<" [deg] "<< endl;
         } 

@@ -96,12 +96,11 @@ void UGV_controller::mainloop()
             this->cmd_vel.angular.y = 0.0;
             this->cmd_vel.angular.z = this->Command_Now.angular_vel;
             this->cmd_pub.publish(this->cmd_vel);
-
             break;
 
         case prometheus_msgs::UgvCommand::Direct_Control_ENU:  //speed control of yaw angle
             
-            this->error_yaw = this->Command_Now.yaw_ref- yaw_ugv;
+            this->error_yaw = this->Command_Now.yaw_ref- this->yaw_ugv;
 
             if(this->error_yaw < -M_PI)
             {
@@ -115,8 +114,8 @@ void UGV_controller::mainloop()
             {
                 float body_x, body_y;
 
-                body_x = this->Command_Now.linear_vel[0] * cos(yaw_ugv) + this->Command_Now.linear_vel[1] * sin(yaw_ugv);
-                body_y = -this->Command_Now.linear_vel[0] * sin(yaw_ugv) + this->Command_Now.linear_vel[1] * cos(yaw_ugv);
+                body_x = this->Command_Now.linear_vel[0] * cos(this->yaw_ugv) + this->Command_Now.linear_vel[1] * sin(this->yaw_ugv);
+                body_y = -this->Command_Now.linear_vel[0] * sin(this->yaw_ugv) + this->Command_Now.linear_vel[1] * cos(this->yaw_ugv);
 
                 this->cmd_vel.linear.x = body_x;
                 this->cmd_vel.linear.y = body_y;
@@ -136,7 +135,6 @@ void UGV_controller::mainloop()
             }
 
             this->cmd_pub.publish(this->cmd_vel);
-
             break;
 
         case prometheus_msgs::UgvCommand::Point_Control:
@@ -198,7 +196,6 @@ void UGV_controller::mainloop()
                 this->cmd_vel.linear.y = -this->max_vel;
             }
             this->cmd_pub.publish(this->cmd_vel);
-
             break;
 
         case prometheus_msgs::UgvCommand::Path_Control:  //more vel_avoid_nei than point control
@@ -267,7 +264,6 @@ void UGV_controller::mainloop()
             Circle_trajectory_generation(test_time);
 
             test_time = test_time + 0.05;       //20Hz
-
             break;
 
         }
@@ -372,7 +368,7 @@ void UGV_controller::Circle_trajectory_generation(float time_from_start)
     this->Command_Now.position_ref[1] = circle_radius * sin_angle + 0.0;
     this->Command_Now.yaw_ref = 0.0;
 
-    this->error_yaw = this->Command_Now.yaw_ref- yaw_ugv;
+    this->error_yaw = this->Command_Now.yaw_ref- this->yaw_ugv;
 
     if(this->error_yaw < -M_PI)
     {
