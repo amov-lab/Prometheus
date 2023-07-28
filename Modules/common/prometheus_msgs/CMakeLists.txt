@@ -27,10 +27,9 @@ add_message_files(
   UAVSetup.msg
   TextInfo.msg
   GlobalAruco.msg
-  UgvState.msg
-  UgvCommand.msg
+  UGVState.msg
+  UGVCommand.msg
   MultiUGVState.msg
-  
 
   ArucoInfo.msg
   MultiArucoInfo.msg
@@ -53,9 +52,6 @@ add_message_files(
   GimbalControl.msg
   GimbalState.msg
   MultiDetectionInfoSub.msg
-  RheaCommunication.msg
-  RheaGPS.msg
-  RheaState.msg
   VisionDiff.msg
   WindowPosition.msg
 	Bspline.msg
