@@ -12,37 +12,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/vector.hpp>
 
-//uav control
-// #define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
-// #define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
-//rhea control
-#define OPENUGVBASIC ""
-#define CLOSEUGVBASIC ""
-//集群
-// #define OPENSWARMCONTROL ""
-// #define CLOSESWARMCONTROL ""
-//自主降落
-#define OPENAUTONOMOUSLANDING ""
-#define CLOSEAUTONOMOUSLANDING ""
-//目标识别与追踪
-#define OPENOBJECTTRACKING ""
-#define CLOSEOBJECTTRACKING ""
-//EGO Planner
-#define OPENEGOPLANNER ""
-#define CLOSEEGOPLANNER ""
-
-//杀掉除了通信节点和主节点的其他节点
-//分为两种情况  
-//1:杀掉子模块，这种情况不会杀掉uav control节点和通信节点以及master节点。 
-//2:杀掉uav control节点，这种情况下只会保留通信节点以及master节点。
-// #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
-#define CLOSEOTHERMODE "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
-
-//重启
-#define REBOOTNXCMD "shutdown -r now"
-//关机
-#define EXITNXCMD "shutdown -h now"
-
 enum MsgId
 {
     UAVSTATE = 1,
@@ -50,7 +19,7 @@ enum MsgId
     GIMBALSTATE = 4,
     VISIONDIFF = 5,
     HEARTBEAT = 6,
-    RHEASTATE = 7,
+    UGVSTATE = 7,
     MULTIDETECTIONINFO = 8,
     UAVCONTROLSTATE = 9,
 
@@ -58,7 +27,7 @@ enum MsgId
     GIMBALCONTROL = 102,
     GIMBALSERVICE = 103,
     WINDOWPOSITION = 104,
-    RHEACONTROL = 105,
+    UGVCOMMAND = 105,
     GIMBALPARAMSET = 106,
     IMAGEDATA = 107,
     UAVCOMMAND = 108,
@@ -67,7 +36,7 @@ enum MsgId
     BSPLINE = 111,
     MULTIBSPLINES = 112,
     CUSTOMDATASEGMENT_1 = 113,
-    
+
     CONNECTSTATE = 201,
     MODESELECTION = 202,
 
@@ -97,10 +66,10 @@ struct Quaternion
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & x;
-        ar & y;
-        ar & z;
-        ar & w;
+        ar &x;
+        ar &y;
+        ar &z;
+        ar &w;
     }
 };
 //MSG 1
@@ -112,17 +81,6 @@ struct UAVState
 
     //无人机编号
     uint8_t uav_id;
-
-    // //无人机状态
-    // uint8_t state;
-    // //enum agent状态枚举
-    // enum State
-    // {
-    //     unknown = 0,
-    //     ready = 1,
-    //     dead = 2,
-    //     lost = 3
-    // };
 
     //无人机定位来源
     uint8_t location_source;
@@ -183,27 +141,27 @@ struct UAVState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & secs;
-        ar & nsecs;
-        ar & uav_id;
-        // ar & state;
-        ar & location_source;
-        ar & connected;
-        ar & mode;
-        ar & armed;
-        ar & odom_valid;
-        ar & gps_status;
-        ar & gps_num;
-        ar & latitude;
-        ar & longitude;
-        ar & altitude;
-        ar & position;
-        ar & velocity;
-        ar & attitude;
-        ar & attitude_q;
-        ar & attitude_rate;
-        ar & battery_state;
-        ar & battery_percetage;
+        ar &secs;
+        ar &nsecs;
+        ar &uav_id;
+        // ar &state;
+        ar &location_source;
+        ar &connected;
+        ar &mode;
+        ar &armed;
+        ar &odom_valid;
+        ar &gps_status;
+        ar &gps_num;
+        ar &latitude;
+        ar &longitude;
+        ar &altitude;
+        ar &position;
+        ar &velocity;
+        ar &attitude;
+        ar &attitude_q;
+        ar &attitude_rate;
+        ar &battery_state;
+        ar &battery_percetage;
     }
 };
 
@@ -215,35 +173,43 @@ struct Heartbeat
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & count;
-        ar & message;
+        ar &count;
+        ar &message;
     }
 };
 
-struct RheaState
+struct UGVState
 {
-    uint8_t rhea_id;
-    double linear;
-    double angular;
-    double yaw;
-    float latitude;
-    float longitude;
-    float altitude;
+    // 时间戳
+    uint32_t secs;
+    uint32_t nsecs;
+
+    // 无人车编号
+    uint8_t ugv_id;
+
+    // 无人车状态量：位置、速度、姿态
     float position[3];
-    float battery_voltage;
+    float velocity[3];
+    float attitude[3];
+
+    // 电池电量
+    float battery;
+
+    // 四元数
+    Quaternion attitude_q;
+    
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & rhea_id;
-        ar & linear;
-        ar & angular;
-        ar & yaw;
-        ar & latitude;
-        ar & longitude;
-        ar & altitude;
-        ar & position;
-        ar & battery_voltage;
+        ar &secs;
+        ar &nsecs;
+        ar &ugv_id;
+        ar &position;
+        ar &velocity;
+        ar &attitude;
+        ar &battery;
+        ar &attitude_q;
     }
 };
 
@@ -255,7 +221,6 @@ struct ModeSelection
         UAVBASIC = 1,
         UGVBASIC = 2,
         SWARMCONTROL = 3,
-        //GIMBAL?
         AUTONOMOUSLANDING = 4,
         OBJECTTRACKING = 5,
         EGOPLANNER = 6,
@@ -271,8 +236,9 @@ struct ModeSelection
     uint8_t use_mode;
     enum UseMode
     {
-        CREATE = 0,
-        DELETE = 1
+        // 可能和其他的一些命名存在一些冲突，所以加前缀
+        UM_CREATE = 0,
+        UM_DELETE = 1
     };
 
     bool is_simulation;
@@ -285,12 +251,12 @@ struct ModeSelection
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & selectId;
-        ar & mode;
-        ar & use_mode;
-        ar & is_simulation;
-        ar & swarm_num;
-        ar & cmd;
+        ar &selectId;
+        ar &mode;
+        ar &use_mode;
+        ar &is_simulation;
+        ar &swarm_num;
+        ar &cmd;
     }
 };
 
@@ -303,9 +269,9 @@ struct Point
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & x;
-        ar & y;
-        ar & z;
+        ar &x;
+        ar &y;
+        ar &z;
     }
 };
 
@@ -374,20 +340,20 @@ struct SwarmCommand
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & source;
-        ar & swarm_num;
-        ar & swarm_location_source;
-        ar & Swarm_CMD;
-        ar & leader_pos;
-        ar & leader_vel;
-        ar & swarm_size;
-        ar & swarm_shape;
-        ar & target_area_x_min;
-        ar & target_area_y_min;
-        ar & target_area_x_max;
-        ar & target_area_y_max;
-        ar & attack_target_pos;
-        ar & formation_poses;
+        ar &source;
+        ar &swarm_num;
+        ar &swarm_location_source;
+        ar &Swarm_CMD;
+        ar &leader_pos;
+        ar &leader_vel;
+        ar &swarm_size;
+        ar &swarm_shape;
+        ar &target_area_x_min;
+        ar &target_area_y_min;
+        ar &target_area_x_max;
+        ar &target_area_y_max;
+        ar &attack_target_pos;
+        ar &formation_poses;
     }
 };
 
@@ -414,9 +380,9 @@ struct TextInfo
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & sec;
-        ar & MessageType;
-        ar & Message;
+        ar &sec;
+        ar &MessageType;
+        ar &Message;
     }
 };
 
@@ -447,16 +413,16 @@ struct GimbalState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & Id;
-        ar & feedbackMode;
-        ar & mode;
-        ar & isRecording;
-        ar & zoomState;
-        ar & zoomVal;
-        ar & imuAngle;
-        ar & rotorAngle;
-        ar & imuAngleVel;
-        ar & rotorAngleTarget;
+        ar &Id;
+        ar &feedbackMode;
+        ar &mode;
+        ar &isRecording;
+        ar &zoomState;
+        ar &zoomVal;
+        ar &imuAngle;
+        ar &rotorAngle;
+        ar &imuAngleVel;
+        ar &rotorAngleTarget;
     }
 };
 //参考文件： VisionDiff.msg
@@ -498,22 +464,22 @@ struct VisionDiff
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & id;
-        ar & objectX;
-        ar & objectY;
-        ar & objectWidth;
-        ar & objectHeight;
-        ar & frameWidth;
-        ar & frameHeight;
-        ar & kp;
-        ar & ki;
-        ar & kd;
-        ar & ctlMode;
-        ar & currSize;
-        ar & maxSize;
-        ar & minSize;
-        ar & trackIgnoreError;
-        ar & autoZoom;
+        ar &id;
+        ar &objectX;
+        ar &objectY;
+        ar &objectWidth;
+        ar &objectHeight;
+        ar &frameWidth;
+        ar &frameHeight;
+        ar &kp;
+        ar &ki;
+        ar &kd;
+        ar &ctlMode;
+        ar &currSize;
+        ar &maxSize;
+        ar &minSize;
+        ar &trackIgnoreError;
+        ar &autoZoom;
     }
 };
 
@@ -568,16 +534,16 @@ struct GimbalControl
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & Id;
-        ar & rpyMode;
-        ar & roll;
-        ar & yaw;
-        ar & pitch;
-        ar & rValue;
-        ar & yValue;
-        ar & pValue;
-        ar & focusMode;
-        ar & zoomMode;
+        ar &Id;
+        ar &rpyMode;
+        ar &roll;
+        ar &yaw;
+        ar &pitch;
+        ar &rValue;
+        ar &yValue;
+        ar &pValue;
+        ar &focusMode;
+        ar &zoomMode;
     }
 };
 
@@ -596,8 +562,8 @@ struct GimbalService
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & service;
-        ar & data;
+        ar &service;
+        ar &data;
     }
 };
 
@@ -609,8 +575,8 @@ struct GimbalParamSet
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & param_id;
-        ar & real;
+        ar &param_id;
+        ar &real;
     }
 };
 
@@ -651,16 +617,16 @@ struct WindowPosition
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & mode;
-        ar & origin_x;
-        ar & origin_y;
-        ar & width;
-        ar & height;
-        ar & window_position_x;
-        ar & window_position_y;
-        ar & track_id;
-        // ar & frame_id;
-        ar & udp_msg;
+        ar &mode;
+        ar &origin_x;
+        ar &origin_y;
+        ar &width;
+        ar &height;
+        ar &window_position_x;
+        ar &window_position_y;
+        ar &track_id;
+        // ar &frame_id;
+        ar &udp_msg;
     }
 };
 
@@ -680,11 +646,11 @@ struct DetectionInfo
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & left;
-        ar & top;
-        ar & bot;
-        ar & right;
-        ar & trackIds;
+        ar &left;
+        ar &top;
+        ar &bot;
+        ar &right;
+        ar &trackIds;
     }
 };
 struct MultiDetectionInfo
@@ -703,57 +669,56 @@ struct MultiDetectionInfo
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & mode;
-        ar & num_objs;
-        ar & detection_infos;
+        ar &mode;
+        ar &num_objs;
+        ar &detection_infos;
     }
 };
 
-struct RheaGPS
+struct UGVCommand
 {
-    double latitude;
-    double longitude;
-    double altitude;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & latitude;
-        ar & longitude;
-        ar & altitude;
-    }
-};
+    // 时间戳
+    uint32_t secs;
+    uint32_t nsecs;
 
-struct RheaControl
-{
+    // 控制命令的编号 防止接收到错误命令， 编号应该逐次递加
+    uint32_t Command_ID;
 
+    // 控制命令的模式
     uint8_t Mode;
-
-    //控制模式类型枚举
-    enum Mode
+    // 控制命令模式的枚举
+    enum MODE
     {
-        Stop = 0,
-        Forward = 1,
-        Left = 2,
-        Right = 3,
-        Back = 4,
-        CMD = 5,
-        Waypoint = 6
+        Hold = 0,
+        Direct_Control_BODY = 1,
+        Direct_Control_ENU = 2,
+        Point_Control = 3,
+        Path_Control = 4,
+        Test = 5
     };
 
-    double linear;
-    double angular;
+    // 期望位置[m]
+    float position_ref[2];
+    // 期望偏航[rad]
+    float yaw_ref;
 
-    std::vector<struct RheaGPS> waypoint;
+    // [m/s]
+    float linear_vel[2];
+    // [rad/s]
+    float angular_vel;
 
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & Mode;
-        ar & linear;
-        ar & angular;
-        ar & waypoint;
+        ar &secs;
+        ar &nsecs;
+        ar &Command_ID;
+        ar &Mode;
+        ar &position_ref;
+        ar &yaw_ref;
+        ar &linear_vel;
+        ar &angular_vel;
     }
 };
 
@@ -765,8 +730,8 @@ struct ImageData
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & name;
-        ar & data;
+        ar &name;
+        ar &data;
     }
 };
 
@@ -775,7 +740,6 @@ struct UAVCommand
     //时间戳
     uint32_t secs;
     uint32_t nsecs;
-
 
     //控制命令的模式
     uint8_t Agent_CMD;
@@ -823,21 +787,21 @@ struct UAVCommand
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & secs;
-        ar & nsecs;
-        ar & Agent_CMD;
-        ar & Move_mode;
-        ar & position_ref;
-        ar & velocity_ref;
-        ar & acceleration_ref;
-        ar & yaw_ref;
-        ar & Yaw_Rate_Mode;
-        ar & yaw_rate_ref;
-        ar & att_ref;
-        ar & Command_ID;
-        ar & latitude;
-        ar & longitude;
-        ar & altitude;
+        ar &secs;
+        ar &nsecs;
+        ar &Agent_CMD;
+        ar &Move_mode;
+        ar &position_ref;
+        ar &velocity_ref;
+        ar &acceleration_ref;
+        ar &yaw_ref;
+        ar &Yaw_Rate_Mode;
+        ar &yaw_rate_ref;
+        ar &att_ref;
+        ar &Command_ID;
+        ar &latitude;
+        ar &longitude;
+        ar &altitude;
     }
 };
 
@@ -862,10 +826,10 @@ struct UAVSetup
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & cmd;
-        ar & arming;
-        ar & px4_mode;
-        ar & control_state;
+        ar &cmd;
+        ar &arming;
+        ar &px4_mode;
+        ar &control_state;
     }
 };
 
@@ -904,10 +868,10 @@ struct UAVControlState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & uav_id;
-        ar & control_state;
-        ar & pos_controller;
-        ar & failsafe;
+        ar &uav_id;
+        ar &control_state;
+        ar &pos_controller;
+        ar &failsafe;
     }
 };
 
@@ -1020,7 +984,7 @@ struct BasicDataTypeAndValue
         ar & value;
     }
 };
-//自定义消息1：地面站->机载端，空中端<--->空中端
+//自定义消息1：地面站->机载端，此处为固定内容，即不能随意更改结构体
 struct CustomDataSegment_1
 {
     std::vector<BasicDataTypeAndValue> datas;
@@ -1041,8 +1005,8 @@ struct ConnectState
     template <class Archive>
     void serialize(Archive &ar, const unsigned int /* file_version */)
     {
-        ar & num;
-        ar & state;
+        ar &num;
+        ar &state;
     }
 };
 

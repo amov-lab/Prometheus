@@ -22,6 +22,37 @@
 
 #include "custom_data_segment.hpp"
 
+//uav control
+// #define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
+// #define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
+//rhea control
+// #define OPENUGVBASIC ""
+// #define CLOSEUGVBASIC ""
+//集群
+// #define OPENSWARMCONTROL ""
+// #define CLOSESWARMCONTROL ""
+//自主降落
+#define OPENAUTONOMOUSLANDING ""
+#define CLOSEAUTONOMOUSLANDING ""
+//目标识别与追踪
+#define OPENOBJECTTRACKING ""
+#define CLOSEOBJECTTRACKING ""
+//EGO Planner
+#define OPENEGOPLANNER ""
+#define CLOSEEGOPLANNER ""
+
+//杀掉除了通信节点和主节点的其他节点
+//分为两种情况  
+//1:杀掉子模块，这种情况不会杀掉uav control节点和通信节点以及master节点。 
+//2:杀掉uav control节点，这种情况下只会保留通信节点以及master节点。
+// #define CLOSEUAVBASIC "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"
+#define CLOSEOTHERMODE "gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /uav_control_main_1 | grep -v /joy_node`"
+
+//重启
+#define REBOOTNXCMD "shutdown -r now"
+//关机
+#define EXITNXCMD "shutdown -h now"
+
 enum UserType
 {
     UAV = 1,
@@ -48,8 +79,8 @@ public:
     void recvData(struct GimbalService gimbal_service);
     void recvData(struct GimbalParamSet param_set);
     void recvData(struct WindowPosition window_position);
-    void recvData(struct RheaControl rhea_control);
-    void recvData(struct RheaState rhea_state);
+    void recvData(struct UGVCommand ugv_command);
+    void recvData(struct UGVState ugv_state);
     void recvData(struct ImageData image_data);
     void recvData(struct UAVSetup uav_setup);
     void recvData(struct ModeSelection mode_selection);
@@ -100,6 +131,7 @@ private:
     UAVBasic *uav_basic_ = NULL;
     // std::vector<UAVBasic*> swarm_control_simulation_;
     std::map<int, UAVBasic *> swarm_control_simulation_;
+    std::map<int, UGVBasic *> swarm_ugv_control_simulation_;
     AutonomousLanding *autonomous_landing_ = NULL;
     GimbalBasic *gimbal_basic_ = NULL;
     ObjectTracking *object_tracking_ = NULL;
@@ -109,12 +141,12 @@ private:
 
     int current_mode_ = 0;
 
-    int is_simulation_, swarm_num_, swarm_data_update_timeout_;
+    int is_simulation_, swarm_num_, swarm_data_update_timeout_,swarm_ugv_num_;
     ros::NodeHandle nh_;
 
     bool is_heartbeat_ready_ = false;
 
-    std::string OPENUAVBASIC = "", CLOSEUAVBASIC = "", OPENSWARMCONTROL = "", CLOSESWARMCONTROL = "";
+    std::string OPENUAVBASIC = "", CLOSEUAVBASIC = "", OPENSWARMCONTROL = "", CLOSESWARMCONTROL = "",OPENUGVBASIC = "" , CLOSEUGVBASIC = "";
 
     ros::Timer heartbeat_check_timer;
     bool disconnect_flag = false;
