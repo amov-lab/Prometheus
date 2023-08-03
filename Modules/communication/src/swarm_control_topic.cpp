@@ -1,44 +1,105 @@
 #include "swarm_control_topic.hpp"
 
-//真机构造
-SwarmControl::SwarmControl(ros::NodeHandle &nh, int id, int swarm_num,Communication *communication) // : UAVBasic(nh, Mode::SWARMCONTROL)
+// 车机协同 真机
+SwarmControl::SwarmControl(ros::NodeHandle &nh , Communication *communication , RobotType type , int id, int swarm_uav_num , int swarm_ugv_num)
 {
-    std::cout << "集群  真机模式" << std::endl;
+    std::cout << "集群：车机协同" << std::endl;
     this->communication_ = communication;
     is_simulation_ = false;
-    init(nh, swarm_num, id);
-
-    //【发布】集群控制指令
+    init(nh,swarm_uav_num,swarm_ugv_num);
+    
+    // 【发布】集群控制指令
     this->swarm_command_pub_ = nh.advertise<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command", 1000);
-    //【发布】连接是否失效
-    this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(id) + "/prometheus/communication_state", 10);
-    //【发布】所有无人机状态
+    // 该通信节点运行的机器类型  无人机或者无人车
+    // 运行在无人机上
+    if(type == RobotType::ROBOT_TYPE_UAV)
+    {
+        // 【发布】连接是否失效
+        this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(id) + "/prometheus/communication_state", 10);
+    // 运行在无人车上
+    }else if(type == RobotType::ROBOT_TYPE_UGV)
+    {
+        // 【发布】连接是否失效
+        this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/ugv" + std::to_string(id) + "/prometheus/communication_state", 10);
+    }
+    // 【发布】所有无人机状态
     this->all_uav_state_pub_ = nh.advertise<prometheus_msgs::MultiUAVState>("/prometheus/all_uav_state", 1000);
-    //【订阅】集群控制指令
-    this->swarm_command_sub_ =  nh.subscribe("/prometheus/swarm_command",10 , &SwarmControl::swarmCmdCb, this);
+    // 【订阅】集群控制指令
+    this->swarm_command_sub_ = nh.subscribe("/prometheus/swarm_command", 10, &SwarmControl::swarmCmdCb, this);
+    // 【发布】所有无人车状态
+    this->all_ugv_state_pub_ = nh.advertise<prometheus_msgs::MultiUGVState>("/prometheus/all_ugv_state", 1000);
 }
 
-//仿真构造
-SwarmControl::SwarmControl(ros::NodeHandle &nh, int swarm_num,Communication *communication) 
+// 车机协同 仿真
+SwarmControl::SwarmControl(ros::NodeHandle &nh , Communication *communication , int swarm_uav_num , int swarm_ugv_num)
 {
-    std::cout << "集群 仿真模式" << std::endl;
+    std::cout << "集群：车机协同——仿真模式" << std::endl;
+    this->communication_ = communication;
+    is_simulation_ = true;
+    init(nh, swarm_uav_num, swarm_ugv_num);
+
+    for (int i = 1; i <= swarm_uav_num; i++)
+    {
+        // 连接是否失效
+        ros::Publisher simulation_communication_state = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(i) + "/prometheus/communication_state", 10);
+        simulation_communication_state_pub.push_back(simulation_communication_state);
+    }
+    for (int i = 1; i <= swarm_ugv_num; i++)
+    {
+        // 连接是否失效
+        ros::Publisher simulation_communication_state = nh.advertise<std_msgs::Bool>("/ugv" + std::to_string(i) + "/prometheus/communication_state", 10);
+        simulation_communication_state_pub.push_back(simulation_communication_state);
+    }
+
+    // 【发布】所有无人机状态
+    this->all_uav_state_pub_ = nh.advertise<prometheus_msgs::MultiUAVState>("/prometheus/all_uav_state", 1000);
+    // 【发布】集群控制指令
+    this->swarm_command_pub_ = nh.advertise<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command", 1000);
+    // 【订阅】集群控制指令
+    this->swarm_command_sub_ = nh.subscribe("/prometheus/swarm_command", 10, &SwarmControl::swarmCmdCb, this);
+    // 【发布】所有无人车状态
+    this->all_ugv_state_pub_ = nh.advertise<prometheus_msgs::MultiUGVState>("/prometheus/all_ugv_state", 1000);
+}
+
+// 真机构造
+SwarmControl::SwarmControl(ros::NodeHandle &nh, int id, int swarm_num, Communication *communication) // : UAVBasic(nh, Mode::SWARMCONTROL)
+{
+    std::cout << "集群：无人机" << std::endl;
+    this->communication_ = communication;
+    is_simulation_ = false;
+    init(nh, swarm_num);
+
+    // 【发布】集群控制指令
+    this->swarm_command_pub_ = nh.advertise<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command", 1000);
+    // 【发布】连接是否失效
+    this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(id) + "/prometheus/communication_state", 10);
+    // 【发布】所有无人机状态
+    this->all_uav_state_pub_ = nh.advertise<prometheus_msgs::MultiUAVState>("/prometheus/all_uav_state", 1000);
+    // 【订阅】集群控制指令
+    this->swarm_command_sub_ = nh.subscribe("/prometheus/swarm_command", 10, &SwarmControl::swarmCmdCb, this);
+}
+
+// 仿真构造
+SwarmControl::SwarmControl(ros::NodeHandle &nh, int swarm_num, Communication *communication)
+{
+    std::cout << "集群：无人机——仿真模式" << std::endl;
     this->communication_ = communication;
     is_simulation_ = true;
     init(nh, swarm_num);
 
     for (int i = 1; i <= swarm_num; i++)
     {
-        //连接是否失效
+        // 连接是否失效
         ros::Publisher simulation_communication_state = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(i) + "/prometheus/communication_state", 10);
         simulation_communication_state_pub.push_back(simulation_communication_state);
     }
 
-    //【发布】所有无人机状态
+    // 【发布】所有无人机状态
     this->all_uav_state_pub_ = nh.advertise<prometheus_msgs::MultiUAVState>("/prometheus/all_uav_state", 1000);
-    //【发布】集群控制指令
+    // 【发布】集群控制指令
     this->swarm_command_pub_ = nh.advertise<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command", 1000);
-    //【订阅】集群控制指令
-    this->swarm_command_sub_ =  nh.subscribe("/prometheus/swarm_command",10 , &SwarmControl::swarmCmdCb, this);
+    // 【订阅】集群控制指令
+    this->swarm_command_sub_ = nh.subscribe("/prometheus/swarm_command", 10, &SwarmControl::swarmCmdCb, this);
 }
 
 SwarmControl::~SwarmControl()
@@ -47,11 +108,12 @@ SwarmControl::~SwarmControl()
     // this->communication_ = nullptr;
 }
 
-void SwarmControl::init(ros::NodeHandle &nh, int swarm_num, int id)
+void SwarmControl::init(ros::NodeHandle &nh, int swarm_num)
 {
     nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
-    for (int i = 1; i <= swarm_num; i++)
+
+    for (int i = 1; i <= swarm_num; ++i)
     {
         struct UAVState uav_state;
         uav_state.uav_id = i;
@@ -84,26 +146,95 @@ void SwarmControl::init(ros::NodeHandle &nh, int swarm_num, int id)
     }
 }
 
+void SwarmControl::init(ros::NodeHandle &nh, int swarm_uav_num,int swarm_ugv_num)
+{
+    nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
+    nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
 
-//更新全部飞机数据
+    for (int i = 1; i <= swarm_uav_num; ++i)
+    {
+        struct UAVState uav_state;
+        uav_state.uav_id = i;
+        // uav_state.state = UAVState::State::unknown;
+        uav_state.location_source = UAVState::LocationSource::MOCAP;
+        uav_state.gps_status = 0;
+        uav_state.mode = "";
+        uav_state.connected = false;
+        uav_state.armed = false;
+        uav_state.odom_valid = false;
+        uav_state.gps_num = 0;
+        for (int j = 0; j < 3; j++)
+        {
+            uav_state.position[j] = 0;
+            uav_state.velocity[j] = 0;
+            uav_state.attitude[j] = 0;
+            uav_state.attitude_rate[j] = 0;
+        }
+        uav_state.latitude = 0;
+        uav_state.longitude = 0;
+        uav_state.altitude = 0;
+
+        uav_state.attitude_q.x = 0;
+        uav_state.attitude_q.y = 0;
+        uav_state.attitude_q.z = 0;
+        uav_state.attitude_q.w = 0;
+        uav_state.battery_state = 0;
+        uav_state.battery_percetage = 0;
+        this->multi_uav_state_.uav_state_all.push_back(uav_state);
+    }
+    for (int i = 1; i <= swarm_ugv_num; ++i)
+    {
+        struct UGVState ugv_state;
+        ugv_state.ugv_id = 1;
+        ugv_state.secs = 0;
+        ugv_state.nsecs = 0;
+        ugv_state.battery = 0;
+        for (int j = 0; j < 3; j++)
+        {
+            ugv_state.position[j] = 0;
+            ugv_state.velocity[j] = 0;
+            ugv_state.attitude[j] = 0;
+        }
+        ugv_state.attitude_q.x = 0;
+        ugv_state.attitude_q.y = 0;
+        ugv_state.attitude_q.z = 0;
+        ugv_state.attitude_q.w = 0;
+        this->multi_ugv_state_.ugv_state_all.push_back(ugv_state);
+    }
+}
+
+// 更新全部无人机数据
 void SwarmControl::updateAllUAVState(struct UAVState uav_state)
 {
-    //更新数据
-    for(int i = 0; i < this->multi_uav_state_.uav_state_all.size(); i++)
+    // 更新数据
+    for (int i = 0; i < this->multi_uav_state_.uav_state_all.size(); i++)
     {
-        if(this->multi_uav_state_.uav_state_all[i].uav_id == uav_state.uav_id)
+        if (this->multi_uav_state_.uav_state_all[i].uav_id == uav_state.uav_id)
         {
             this->multi_uav_state_.uav_state_all[i] = uav_state;
             break;
         }
     }
-    
 }
 
-//【发布】集群控制指令
+// 更新全部无人车数据
+void SwarmControl::updateAllUGVState(struct UGVState ugv_state)
+{
+    // 更新数据
+    for (int i = 0; i < this->multi_ugv_state_.ugv_state_all.size(); i++)
+    {
+        if (this->multi_ugv_state_.ugv_state_all[i].ugv_id == ugv_state.ugv_id)
+        {
+            this->multi_ugv_state_.ugv_state_all[i] = ugv_state;
+            break;
+        }
+    }
+}
+
+// 【发布】集群控制指令
 void SwarmControl::swarmCommandPub(struct SwarmCommand swarm_command)
 {
-    //进行发布
+    // 进行发布
     prometheus_msgs::SwarmCommand m_swarm_command;
     m_swarm_command.source = swarm_command.source;
     m_swarm_command.Swarm_CMD = swarm_command.Swarm_CMD;
@@ -126,7 +257,7 @@ void SwarmControl::swarmCommandPub(struct SwarmCommand swarm_command)
     {
         m_swarm_command.attack_target_pos[i] = swarm_command.attack_target_pos[i];
     };
-    for(int i = 0; i < swarm_command.formation_poses.size() ; i++)
+    for (int i = 0; i < swarm_command.formation_poses.size(); i++)
     {
         geometry_msgs::Point point;
         point.x = swarm_command.formation_poses[i].x;
@@ -137,7 +268,7 @@ void SwarmControl::swarmCommandPub(struct SwarmCommand swarm_command)
     this->swarm_command_pub_.publish(m_swarm_command);
 }
 
-//【发布】连接是否失效
+// 【发布】连接是否失效
 void SwarmControl::communicationStatePub(bool communication)
 {
     std_msgs::Bool communication_state;
@@ -149,11 +280,11 @@ void SwarmControl::communicationStatePub(bool communication, int id)
 {
     std_msgs::Bool communication_state;
     communication_state.data = communication;
-    //this->communication_state_pub_.publish(communication_state);
+    // this->communication_state_pub_.publish(communication_state);
     this->simulation_communication_state_pub[id].publish(communication_state);
 }
 
-//【发布】所有无人机状态
+// 【发布】所有无人机状态
 void SwarmControl::allUAVStatePub(struct MultiUAVState m_multi_uav_state)
 {
     prometheus_msgs::MultiUAVState multi_uav_state;
@@ -179,8 +310,8 @@ void SwarmControl::allUAVStatePub(struct MultiUAVState m_multi_uav_state)
             uav_state.attitude_rate[i] = (*it).attitude_rate[i];
         };
         uav_state.latitude = (*it).latitude;
-        uav_state.longitude = (*it).longitude; 
-        uav_state.altitude = (*it).altitude; 
+        uav_state.longitude = (*it).longitude;
+        uav_state.altitude = (*it).altitude;
 
         uav_state.attitude_q.x = (*it).attitude_q.x;
         uav_state.attitude_q.y = (*it).attitude_q.y;
@@ -193,10 +324,39 @@ void SwarmControl::allUAVStatePub(struct MultiUAVState m_multi_uav_state)
         multi_uav_state.uav_state_all.push_back(uav_state);
     }
 
-    //发布话题
+    // 发布话题
     this->all_uav_state_pub_.publish(multi_uav_state);
 }
 
+// 【发布】所有无人车状态
+void SwarmControl::allUGVStatePub(struct MultiUGVState m_multi_ugv_state)
+{
+    prometheus_msgs::MultiUGVState multi_ugv_state;
+    multi_ugv_state.swarm_num_ugv = 0;
+
+    for (auto it = m_multi_ugv_state.ugv_state_all.begin(); it != m_multi_ugv_state.ugv_state_all.end(); it++)
+    {
+        prometheus_msgs::UGVState ugv_state;
+        ugv_state.ugv_id = (*it).ugv_id;
+        ugv_state.battery = (*it).battery;
+        for (int i = 0; i < 3; i++)
+        {
+            ugv_state.position[i] = (*it).position[i];
+            ugv_state.velocity[i] = (*it).velocity[i];
+            ugv_state.attitude[i] = (*it).attitude[i];
+        };
+        ugv_state.attitude_q.x = (*it).attitude_q.x;
+        ugv_state.attitude_q.y = (*it).attitude_q.y;
+        ugv_state.attitude_q.z = (*it).attitude_q.z;
+        ugv_state.attitude_q.w = (*it).attitude_q.w;
+
+        multi_ugv_state.swarm_num_ugv++;
+        multi_ugv_state.ugv_state_all.push_back(ugv_state);
+    }
+
+    // 发布话题
+    this->all_ugv_state_pub_.publish(multi_ugv_state);
+}
 
 void SwarmControl::swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg)
 {
@@ -222,7 +382,7 @@ void SwarmControl::swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg
     {
         swarm_command.attack_target_pos[i] = msg->attack_target_pos[i];
     };
-    for(int i = 0; i < swarm_command.formation_poses.size() ; i++)
+    for (int i = 0; i < swarm_command.formation_poses.size(); i++)
     {
         struct Point point;
         point.x = msg->formation_poses[i].x;
@@ -230,5 +390,5 @@ void SwarmControl::swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg
         point.z = msg->formation_poses[i].z;
         swarm_command.formation_poses.push_back(point);
     }
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,swarm_command),multicast_udp_ip);
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, swarm_command), multicast_udp_ip);
 }

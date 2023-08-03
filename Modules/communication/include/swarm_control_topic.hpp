@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include "communication.hpp"
 #include "uav_basic_topic.hpp"
+#include "ugv_basic_topic.hpp"
 
 #include "std_msgs/Bool.h"
 
@@ -11,6 +12,7 @@
 #include "prometheus_msgs/SwarmCommand.h"
 #include "prometheus_msgs/UAVState.h"
 #include "prometheus_msgs/OffsetPose.h"
+#include "prometheus_msgs/MultiUGVState.h"
 
 #include <vector>
 
@@ -25,21 +27,45 @@ struct MultiUAVState
     std::vector<UAVState> uav_state_all;
 };
 
+struct MultiUGVState
+{
+    int ugv_num;
+    std::vector<UGVState> ugv_state_all;
+};
+
+enum RobotType
+{
+    ROBOT_TYPE_UAV = 1,
+    ROBOT_TYPE_UGV = 2
+};
+
 class SwarmControl//: public UAVBasic
 {
 public:
-    //真机构造
+    // TODO 车机协同
+    // 真机 
+    SwarmControl(ros::NodeHandle &nh , Communication *communication , RobotType type , int id , int swarm_uav_num , int swarm_ugv_num);
+
+    SwarmControl(ros::NodeHandle &nh , Communication *communication , int swarm_uav_num , int swarm_ugv_num);
+
+    // 无人机
+    // 真机构造
     SwarmControl(ros::NodeHandle &nh, int id, int swarm_num,Communication *communication);
 
-    //仿真构造
+    // 仿真构造
     SwarmControl(ros::NodeHandle &nh, int swarm_num,Communication *communication);
 
     ~SwarmControl();
 
-    void init(ros::NodeHandle &nh, int swarm_num,int id = 1);
+    void init(ros::NodeHandle &nh, int swarm_num);
+    void init(ros::NodeHandle &nh, int swarm_uav_num,int swarm_ugv_num);
 
-    //更新全部飞机数据
+
+    // 更新全部无人机数据
     void updateAllUAVState(struct UAVState uav_state);
+
+    // 更新全部无人车数据
+    void updateAllUGVState(struct UGVState ugv_state);
 
     //【发布】集群控制指令
     void swarmCommandPub(struct SwarmCommand swarm_command);
@@ -52,16 +78,22 @@ public:
     //【发布】所有无人机状态
     void allUAVStatePub(struct MultiUAVState m_multi_uav_state);
 
+    //【发布】所有无人车状态
+    void allUGVStatePub(struct MultiUGVState m_multi_ugv_state);
+
     void swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg);
 
     inline struct MultiUAVState getMultiUAVState(){return this->multi_uav_state_;};
 
-    inline prometheus_msgs::UAVState getUAVStateMsg(){return this->uav_state_msg_;};
+    inline struct MultiUGVState getMultiUGVState(){return this->multi_ugv_state_;};
 
+    inline prometheus_msgs::UAVState getUAVStateMsg(){return this->uav_state_msg_;};
 
 private:
 
     struct MultiUAVState multi_uav_state_;
+
+    struct MultiUGVState multi_ugv_state_;
 
     Communication *communication_ = NULL;
 
@@ -70,6 +102,8 @@ private:
     
     //集群全部uav 状态
     ros::Publisher all_uav_state_pub_;
+    //集群全部ugv 状态
+    ros::Publisher all_ugv_state_pub_;
     //控制指令
     ros::Publisher swarm_command_pub_;
     //连接是否失效

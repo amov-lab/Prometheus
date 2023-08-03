@@ -17,7 +17,7 @@ AutonomousLanding::AutonomousLanding(ros::NodeHandle &nh,Communication *communic
     //【服务】自主降落参数配置
     this->param_set_client_ = nh.serviceClient<mavros_msgs::ParamSet>("/autonomous_landing/ParamSet");
     //【发布】无人车数据
-    this->ugv_state_pub_ = nh.advertise<prometheus_msgs::RheaState>("/ugv1/prometheus/state", 1000);    
+    // this->ugv_state_pub_ = nh.advertise<prometheus_msgs::RheaState>("/ugv1/prometheus/state", 1000);    
 };
 
 AutonomousLanding::~AutonomousLanding()
@@ -53,22 +53,4 @@ void AutonomousLanding::gimbalParamSetServer(struct GimbalParamSet param_set)
     srv.request.param_id = param_set.param_id;
     srv.request.value.real = param_set.real;
     this->param_set_client_.call(srv);
-}
-
-void AutonomousLanding::rheaStatePub(struct RheaState rhea_state)
-{
-    prometheus_msgs::RheaState rhea_state_;
-    rhea_state_.rhea_id = rhea_state.rhea_id;
-    rhea_state_.angular = rhea_state.angular;
-    rhea_state_.linear = rhea_state.linear;
-    rhea_state_.yaw = rhea_state.yaw;
-    rhea_state_.latitude = rhea_state.latitude;
-    rhea_state_.longitude = rhea_state.longitude;
-    rhea_state_.battery_voltage = rhea_state.battery_voltage;
-    rhea_state_.altitude = rhea_state.altitude;
-    for(int i = 0; i < 3; i++)
-    {
-        rhea_state_.position[i] = rhea_state.position[i];
-    }
-    this->ugv_state_pub_.publish(rhea_state_);
 }

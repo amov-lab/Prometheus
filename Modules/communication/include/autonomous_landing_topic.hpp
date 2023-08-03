@@ -8,7 +8,6 @@
 
 #include "std_srvs/SetBool.h"
 #include "mavros_msgs/ParamSet.h"
-#include "prometheus_msgs/RheaState.h"
 
 
 class AutonomousLanding
@@ -26,8 +25,6 @@ public:
     void gimbalTrackModeServer(bool is);
 
     void gimbalParamSetServer(struct GimbalParamSet param_set);
-
-    void rheaStatePub(struct RheaState rhea_state);
 
 private:
 

@@ -1,13 +1,14 @@
 <launch>
 
     <arg name="swarm_num" default="3"/>
+    <arg name="swarm_ugv_num" default="0"/>
     <arg name="autoload" default="false"/>
     <arg name="uav_control_start" default="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
     <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"/>
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
 
-    <arg name="ground_station_ip" default="192.168.31.22"/>
+    <arg name="ground_station_ip" default="192.168.31.58"/>
 
     <arg name="uav_id" default="1"/>
     <arg name="is_simulation" default="1"/>
@@ -23,11 +24,12 @@
     <arg name="uav_command_yaml" default="uav_control/launch/uav_command_pub.yaml"/>
 
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
-        <!--组播ip-->
+        <!-- 组播ip -->
         <param name="multicast_udp_ip" value="224.0.0.88"/>
-	    <!--ego planner-->
+	    <!-- ego planner -->
         <param name="next_drone_ip" value="127.0.0.1"/>
 	    <param name="broadcast_ip" value="127.0.0.255"/>
+        <param name="drone_id" value="1"/>
         <!-- 地面站ip -->
         <param name="ground_station_ip" value="$(arg ground_station_ip)"/>
         <param name="udp_port" value="8889"/>
@@ -36,18 +38,15 @@
         <param name="ROBOT_ID" value="$(arg uav_id)"/>
         <param name="try_connect_num" value="5"/>
         <param name="tcp_heartbeat_port" value="55556"/>
-        <!--是否仿真模式  1为是  0为否-->
+        <!-- 是否仿真模式  1为是  0为否 -->
         <param name="is_simulation" value="$(arg is_simulation)"/>
-        <!--集群数量，如果不是集群模式值为0-->
+        <!-- 集群数量，如果不是集群模式值为0 -->
         <param name="swarm_num" value="$(arg swarm_num)"/>
         <!-- 集群模式下，数据超时情况，多久判断其失联且回传地面站 -->
         <param name="swarm_data_update_timeout" value="$(arg swarm_data_update_timeout)"/>
 
-        <param name="drone_id" value="1"/>
-        <param name="next_drone_ip" value="127.0.0.1"/>
-        <param name="broadcast_ip" value="127.0.0.255"/>
-
-        <param name="trajectory_ground_control" value="false"/>
+        <!-- 轨迹控制相关设置 -->
+        <param name="trajectory_ground_control" value="true"/>
         <param name="trajectory_flag" value="false"/>
         <param name="trajectory_mode" value="0"/>
         <param name="trajectory_time" value="0"/>
