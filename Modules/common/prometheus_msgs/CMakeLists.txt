@@ -30,6 +30,7 @@ add_message_files(
   UGVState.msg
   UGVCommand.msg
   MultiUGVState.msg
+  CollaborationFormation.msg
 
   ArucoInfo.msg
   MultiArucoInfo.msg

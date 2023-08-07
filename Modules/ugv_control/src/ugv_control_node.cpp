@@ -6,7 +6,7 @@
 
 void mySigintHandler(int sig)
 {
-    ROS_INFO("[uav_controller_node] exit...");
+    ROS_INFO("[ugv_controller_node] exit...");
     ros::shutdown();
 }
 

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <bitset>
 #include <Eigen/Eigen>
-#include <prometheus_msgs/UgvState.h>
+#include <prometheus_msgs/UGVState.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -32,7 +32,7 @@ public:
     int ugv_id;                                           // 无人车编号
     string ugv_name;                            // 无人车名字(话题前缀)
     bool sim_mode;
-    prometheus_msgs::UgvState ugv_state;    // 无人车状态
+    prometheus_msgs::UGVState ugv_state;    // 无人车状态
     nav_msgs::Odometry ugv_odom;                // 无人车odom
     std::vector<geometry_msgs::PoseStamped> posehistory_vector_;    // 无人车轨迹容器
     string mesh_resource;

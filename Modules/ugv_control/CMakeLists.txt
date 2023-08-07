@@ -57,6 +57,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ../common/include
+  ../swarm_control/include
 )
 
 
