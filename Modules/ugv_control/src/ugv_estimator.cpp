@@ -28,7 +28,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
     }
 
     // 【发布】无人车状态合集,包括位置\速度\姿态\模式等,供上层节点使用
-    this->ugv_state_pub = nh.advertise<prometheus_msgs::UgvState>(this->ugv_name + "/prometheus/ugv_state", 1);
+    this->ugv_state_pub = nh.advertise<prometheus_msgs::UGVState>(this->ugv_name + "/prometheus/ugv_state", 1);
 
     // 【发布】无人车里程计
     this->ugv_odom_pub = nh.advertise<nav_msgs::Odometry>(this->ugv_name + "/prometheus/ugv_odom", 1);
