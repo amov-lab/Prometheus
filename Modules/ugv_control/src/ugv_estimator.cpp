@@ -49,6 +49,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
     
     // 变量初始化
     this->ugv_state.battery = 0.0;
+    this->ugv_state.ugv_id = this->ugv_id;
     this->ugv_state.position[0] = 0.0;
     this->ugv_state.position[1] = 0.0;
     this->ugv_state.position[2] = 0.0;
@@ -83,9 +84,6 @@ void UGV_estimator::mocap_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg
     this->ugv_state.position[0] = msg->pose.position.x;
     this->ugv_state.position[1] = msg->pose.position.y;
     this->ugv_state.position[2] = msg->pose.position.z;
-
-    cout << RED << this->ugv_state.position[0] << TAIL <<endl;
-	cout << RED << this->ugv_state.position[1] << TAIL <<endl;
 
     //计算速度
     // now_time = get_time_in_sec(ros::Time::now());
@@ -171,7 +169,6 @@ void UGV_estimator::timercb_ugv_state(const ros::TimerEvent &e)
 
     // 发布无人车状态
     this->ugv_state.header.stamp = ros::Time::now();
-    cout << RED << "ugv_State pubulish!"<< TAIL <<endl; 
     this->ugv_state_pub.publish(this->ugv_state);
 
     // 发布无人车当前odometry
