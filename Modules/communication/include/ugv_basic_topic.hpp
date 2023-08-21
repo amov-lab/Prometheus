@@ -11,7 +11,7 @@ using namespace std;
 class UGVBasic
 {
 public:
-    UGVBasic(ros::NodeHandle &nh,Communication *communication);
+    UGVBasic(ros::NodeHandle &nh,int id,Communication *communication);
 
     ~UGVBasic();
 
@@ -23,12 +23,15 @@ public:
 
     uint getTimeStamp();
 
+    struct UGVState getUGVState();
 private:
     //
     ros::Publisher ugv_cmd_pub_;
     ros::Subscriber ugv_state_sub_;
 
     Communication* communication_ = NULL;
+
+    struct UGVState ugv_state_;
 
     int robot_id;
     std::string udp_ip;

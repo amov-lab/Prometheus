@@ -541,7 +541,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     }
                 }
                 // 创建并存入
-                this->swarm_ugv_control_simulation_[mode_selection.selectId[i]] = new UGVBasic(this->nh_, (Communication *)this);
+                this->swarm_ugv_control_simulation_[mode_selection.selectId[i]] = new UGVBasic(this->nh_, mode_selection.selectId[i], (Communication *)this);
                 // 如果id与通信节点相同则存入uav_basic_
                 if (ROBOT_ID == mode_selection.selectId[i])
                 {
@@ -568,7 +568,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     this->is_heartbeat_ready_ = true;
                     if (this->ugv_basic_ == NULL)
                     {
-                        this->ugv_basic_ = new UGVBasic(this->nh_, (Communication *)this);
+                        this->ugv_basic_ = new UGVBasic(this->nh_, ROBOT_ID, (Communication *)this);
                         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ROBOT_ID) + " connection succeeded!!!");
 
                         // 打开
@@ -589,7 +589,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
     // 集群模式
     else if (mode_selection.mode == ModeSelection::Mode::SWARMCONTROL)
     {
-        if (this->swarm_num_ != mode_selection.selectId.size())
+        if (this->swarm_num_ != mode_selection.selectId.size() && this->swarm_ugv_num_ != mode_selection.selectId.size() && this->swarm_num_ + this->swarm_ugv_num_ != mode_selection.selectId.size())
         {
             sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The number of ground stations is inconsistent with the number of communication nodes.");
         }
@@ -602,21 +602,31 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
-                if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0)
+                if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0 && this->swarm_ugv_control_simulation_.count(mode_selection.selectId[i]) == 0)
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UAV" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, Robot" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
                     return;
                 }
             }
             if (this->swarm_control_ == NULL)
             {
-                if (this->swarm_ugv_num_ == 0)
+                // 如果 预设无人机数量和地面站创建的无人机数量一致 并且无人车为空 说明只有无人机
+                if (this->swarm_num_ == this->swarm_control_simulation_.size() && this->swarm_ugv_control_simulation_.empty())
                 {
-                    this->swarm_control_ = new SwarmControl(this->nh_, this->swarm_num_, (Communication *)this);
+                    // 无人机集群
+                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
                 }
-                else
+                // 如果 预设无人车数量和地面站创建的无人车数量一致 并且无人机为空  说明只有无人车
+                else if (this->swarm_ugv_num_ == this->swarm_ugv_control_simulation_.size() && this->swarm_control_simulation_.empty())
                 {
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, this->swarm_num_, this->swarm_ugv_num_);
+                    // 无人车集群
+                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
+                }
+                // 如果 预设无人车数量、无人机数量和地面站创建的无人机车数量一致并且不为空 说明该集群为车机协同
+                else if (this->swarm_ugv_num_ == this->swarm_ugv_control_simulation_.size() && this->swarm_num_ == this->swarm_control_simulation_.size() && !this->swarm_ugv_control_simulation_.empty() && !this->swarm_control_simulation_.empty())
+                {
+                    // 车机协同
+                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control simulation mode.");
                 system(OPENSWARMCONTROL.c_str());
@@ -632,10 +642,25 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
 
             if (this->swarm_control_ == NULL)
             {
-                if (this->swarm_ugv_num_ == 0)
-                    this->swarm_control_ = new SwarmControl(this->nh_, ROBOT_ID, this->swarm_num_, (Communication *)this);
-                else
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, RobotType::ROBOT_TYPE_UAV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
+                // 开启集群的数量跟无人机数量一致 并且无人车数量为0 进入 无人机集群
+                if (this->swarm_num_ == mode_selection.swarm_num && this->swarm_ugv_num_ == 0)
+                {
+                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, ROBOT_ID, this->swarm_num_);
+                }
+                // 开启集群的数量跟无人车数量一致 并且无人机数量为0 进入 无人车集群
+                else if (this->swarm_ugv_num_ == mode_selection.swarm_num && this->swarm_num_ == 0)
+                {
+                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, ROBOT_ID, this->swarm_ugv_num_);
+                }
+                // 开启集群的数量跟无人车和无人机总数量一致 进入 机车协同
+                else if (this->swarm_num_ + this->swarm_ugv_num_ == mode_selection.swarm_num)
+                {
+                    if (this->uav_basic_ != NULL)
+                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
+                    else if (this->ugv_basic_ != NULL)
+                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
+                }
+
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control mode.");
                 system(OPENSWARMCONTROL.c_str());
             }
@@ -843,7 +868,7 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
 // 接收组播地址的数据
 void CommunicationBridge::multicastUdpFun()
 {
-    if (this->swarm_num_ == 0)
+    if (this->swarm_num_ == 0 && this->swarm_ugv_num_ == 0)
     {
         return;
     }
@@ -859,6 +884,17 @@ void CommunicationBridge::multicastUdpFun()
             {
                 this->swarm_control_->updateAllUAVState(it->second->getUAVState());
                 this->swarm_control_->allUAVStatePub(this->swarm_control_->getMultiUAVState());
+            }
+        }
+
+        // std::lock_guard<std::mutex> lg_uav_basic(g_uav_basic);
+        for (auto it = this->swarm_ugv_control_simulation_.begin(); it != this->swarm_ugv_control_simulation_.end(); it++)
+        {
+            std::lock_guard<std::mutex> lg(g_m);
+            if (this->swarm_control_ != NULL)
+            {
+                this->swarm_control_->updateAllUGVState(it->second->getUGVState());
+                this->swarm_control_->allUGVStatePub(this->swarm_control_->getMultiUGVState());
             }
         }
     }

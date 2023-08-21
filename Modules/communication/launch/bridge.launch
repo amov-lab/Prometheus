@@ -1,7 +1,7 @@
 <launch>
 
-    <arg name="swarm_num" default="3"/>
-    <arg name="swarm_ugv_num" default="0"/>
+    <arg name="swarm_num" default="0"/>
+    <arg name="swarm_ugv_num" default="3"/>
     <arg name="autoload" default="false"/>
     <arg name="uav_control_start" default="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
     <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"/>
@@ -42,6 +42,7 @@
         <param name="is_simulation" value="$(arg is_simulation)"/>
         <!-- 集群数量，如果不是集群模式值为0 -->
         <param name="swarm_num" value="$(arg swarm_num)"/>
+        <param name="swarm_ugv_num" value="$(arg swarm_ugv_num)"/>
         <!-- 集群模式下，数据超时情况，多久判断其失联且回传地面站 -->
         <param name="swarm_data_update_timeout" value="$(arg swarm_data_update_timeout)"/>
 
