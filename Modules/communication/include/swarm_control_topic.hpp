@@ -33,33 +33,68 @@ struct MultiUGVState
     std::vector<UGVState> ugv_state_all;
 };
 
+enum SwarmMode
+{
+    ONLY_UAV = 1,
+    ONLY_UGV = 2,
+    UAV_AND_UGV = 3
+};
+
+// 集群模式-载体
 enum RobotType
 {
     ROBOT_TYPE_UAV = 1,
-    ROBOT_TYPE_UGV = 2
+    ROBOT_TYPE_UGV = 2,
+    ROBOT_TYPE_SIMULATION = 3
 };
 
 class SwarmControl//: public UAVBasic
 {
 public:
-    // TODO 车机协同
-    // 真机 
-    SwarmControl(ros::NodeHandle &nh , Communication *communication , RobotType type , int id , int swarm_uav_num , int swarm_ugv_num);
+    // 真机构造函数
+    // 真机：无人机或者无人车集群
+    /**
+     * @brief 构造函数，真机集群：无人机集群、无人车集群
+     * 
+     * @param nh ros节点句柄
+     * @param communication 通信模块
+     * @param mode 集群模式，枚举值
+     * @param id 当前robot_id
+     * @param swarm_num 集群数量
+     */
+    SwarmControl(ros::NodeHandle &nh, Communication *communication, SwarmMode mode, int id, int swarm_num);
+    // 真机：机车协同
+    /**
+     * @brief 构造函数，真机集群：机车协同
+     * 
+     * @param nh ros节点句柄
+     * @param communication 通信模块
+     * @param mode 集群模式，枚举值
+     * @param type 机器类型，枚举值
+     * @param id 当前robot_id
+     * @param swarm_uav_num 集群中无人机数量
+     * @param swarm_ugv_num 集群中无人车数量
+     */
+    SwarmControl(ros::NodeHandle &nh, Communication *communication, SwarmMode mode, RobotType type, int id, int swarm_uav_num, int swarm_ugv_num);
 
-    SwarmControl(ros::NodeHandle &nh , Communication *communication , int swarm_uav_num , int swarm_ugv_num);
-
-    // 无人机
-    // 真机构造
-    SwarmControl(ros::NodeHandle &nh, int id, int swarm_num,Communication *communication);
-
-    // 仿真构造
-    SwarmControl(ros::NodeHandle &nh, int swarm_num,Communication *communication);
+    // 仿真构造函数
+    // 仿真：无人机或者无人车集群、机车协同
+    /**
+     * @brief 构造函数，仿真集群：无人机或者无人车集群、机车协同
+     * 
+     * @param nh ros节点句柄
+     * @param communication 通信模块
+     * @param mode 集群模式，枚举值
+     * @param type 机器类型，枚举值
+     * @param swarm_uav_num 集群中无人机数量
+     * @param swarm_ugv_num 集群中无人车数量
+     */
+    SwarmControl(ros::NodeHandle &nh, Communication *communication, SwarmMode mode, RobotType type, int swarm_uav_num, int swarm_ugv_num);
 
     ~SwarmControl();
 
-    void init(ros::NodeHandle &nh, int swarm_num);
-    void init(ros::NodeHandle &nh, int swarm_uav_num,int swarm_ugv_num);
-
+    void init(ros::NodeHandle &nh, SwarmMode mode, int swarm_num);
+    void init(ros::NodeHandle &nh, SwarmMode mode, int swarm_uav_num,int swarm_ugv_num);
 
     // 更新全部无人机数据
     void updateAllUAVState(struct UAVState uav_state);
@@ -110,7 +145,6 @@ private:
     ros::Publisher communication_state_pub_;
 
     ros::Subscriber swarm_command_sub_;
-
 
     //仿真
     std::vector<ros::Publisher> simulation_communication_state_pub;
