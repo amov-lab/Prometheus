@@ -22,6 +22,8 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     nh.param<int>("tcp_heartbeat_port", TCP_HEARTBEAT_PORT, 55556);
     // nh.param<int>("rviz_port", RVIZ_PORT, 8890);
     nh.param<int>("ROBOT_ID", ROBOT_ID, 1);
+    nh.param<int>("uav_id", uav_id, 0);
+    nh.param<int>("ugv_id", ugv_id, 0);
     nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     nh.param<int>("try_connect_num", try_connect_num, 3);
@@ -156,7 +158,6 @@ void CommunicationBridge::recvData(struct ConnectState connect_state)
     if (this->is_simulation_ == 0)
         return;
     if (!connect_state.state || connect_state.num < this->swarm_num_)
-        // this->swarm_control_->closeUAVState(connect_state.num);
         // 触发降落信号
         this->swarm_control_->communicationStatePub(connect_state.state, connect_state.num);
 }
@@ -208,11 +209,24 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
 }
 void CommunicationBridge::recvData(struct UGVCommand ugv_command)
 {
-    if (this->ugv_basic_ == NULL)
+    // 非仿真情况 只有一个UAV
+    if (this->is_simulation_ == 0)
     {
-        return;
+        if (this->ugv_basic_ == NULL)
+        {
+            return;
+        }
+        this->ugv_basic_->ugvCmdPub(ugv_command);
     }
-    this->ugv_basic_->ugvCmdPub(ugv_command);
+    // 仿真情况下 可能存在多个UAV 找到对应ID进行发布对应的控制命令
+    else
+    {
+        auto it = this->swarm_ugv_control_simulation_.find(Communication::getRecvID() - swarm_num_);
+        if (it != this->swarm_ugv_control_simulation_.end())
+        {
+            (*it).second->ugvCmdPub(ugv_command);
+        }
+    }
 }
 void CommunicationBridge::recvData(struct UGVState ugv_state)
 {
@@ -501,7 +515,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     this->is_heartbeat_ready_ = true;
                     if (this->uav_basic_ == NULL)
                     {
-                        this->uav_basic_ = new UAVBasic(this->nh_, ROBOT_ID, (Communication *)this);
+                        this->uav_basic_ = new UAVBasic(this->nh_, uav_id, (Communication *)this);
                         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " connection succeeded!!!");
 
                         // 打开
@@ -512,7 +526,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 }
                 else
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "UAV" + to_string(mode_selection.selectId[i]) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(mode_selection.selectId[i]) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
                     return;
                 }
             }
@@ -531,17 +545,28 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
+                //
+                int id = mode_selection.selectId[i] - swarm_num_;
+                if (id < 0)
+                {
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Please check the parameters --- swarm_num");
+                    return;
+                }
+
                 // 判断是否已经存在
                 if (!this->swarm_ugv_control_simulation_.empty())
                 {
-                    if (this->swarm_ugv_control_simulation_.find(mode_selection.selectId[i]) != this->swarm_ugv_control_simulation_.end())
+                    if (this->swarm_ugv_control_simulation_.find(id) != this->swarm_ugv_control_simulation_.end())
                     {
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(mode_selection.selectId[i]) + " duplicate connections!!!");
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " duplicate connections!!!");
                         continue;
                     }
                 }
+                //
+
+                this->swarm_ugv_control_simulation_[id] = new UGVBasic(this->nh_, id, (Communication *)this);
                 // 创建并存入
-                this->swarm_ugv_control_simulation_[mode_selection.selectId[i]] = new UGVBasic(this->nh_, mode_selection.selectId[i], (Communication *)this);
+                // this->swarm_ugv_control_simulation_[mode_selection.selectId[i]] = new UGVBasic(this->nh_, mode_selection.selectId[i], (Communication *)this);
                 // 如果id与通信节点相同则存入uav_basic_
                 if (ROBOT_ID == mode_selection.selectId[i])
                 {
@@ -550,12 +575,12 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         delete this->ugv_basic_;
                         this->ugv_basic_ = NULL;
                     }
-                    this->ugv_basic_ = this->swarm_ugv_control_simulation_[mode_selection.selectId[i]];
+                    this->ugv_basic_ = this->swarm_ugv_control_simulation_[id];
 
                     // 打开
                     system(OPENUGVBASIC.c_str());
                 }
-                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UGV" + to_string(mode_selection.selectId[i]) + " connection succeeded!!!");
+                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UGV" + to_string(id) + " connection succeeded!!!");
             }
         }
         else
@@ -568,18 +593,18 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     this->is_heartbeat_ready_ = true;
                     if (this->ugv_basic_ == NULL)
                     {
-                        this->ugv_basic_ = new UGVBasic(this->nh_, ROBOT_ID, (Communication *)this);
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ROBOT_ID) + " connection succeeded!!!");
+                        this->ugv_basic_ = new UGVBasic(this->nh_, ugv_id, (Communication *)this);
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ugv_id) + " connection succeeded!!!");
 
                         // 打开
                         system(OPENUGVBASIC.c_str());
                     }
                     else
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ROBOT_ID) + " duplicate connections!!!");
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ugv_id) + " duplicate connections!!!");
                 }
                 else
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "UGV" + to_string(mode_selection.selectId[i]) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(mode_selection.selectId[i]) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
                     return;
                 }
             }
@@ -602,11 +627,30 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
-                if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0 && this->swarm_ugv_control_simulation_.count(mode_selection.selectId[i]) == 0)
+                // 按照顺序来判断 先无人机后无人车
+                if (i < swarm_num_)
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, Robot" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
-                    return;
+                    if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0)
+                    {
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UAV" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
+                        return;
+                    }
                 }
+                else
+                {
+                    int id = mode_selection.selectId[i] - swarm_num_;
+                    if (this->swarm_ugv_control_simulation_.count(id) == 0)
+                    {
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UGV" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
+                        return;
+                    }
+                }
+
+                // if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0 && this->swarm_ugv_control_simulation_.count(mode_selection.selectId[i]) == 0)
+                // {
+                //     sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, Robot" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
+                //     return;
+                // }
             }
             if (this->swarm_control_ == NULL)
             {
@@ -1051,6 +1095,7 @@ void CommunicationBridge::toGroundStationFun()
         if (this->uav_basic_ != NULL || this->ugv_basic_ != NULL)
         {
             uint time_stamp = 0;
+            std::string type = "UAV";
             if (this->uav_basic_ != NULL)
             {
                 time_stamp = this->uav_basic_->getTimeStamp();
@@ -1058,6 +1103,7 @@ void CommunicationBridge::toGroundStationFun()
             else if (this->ugv_basic_ != NULL)
             {
                 time_stamp = this->ugv_basic_->getTimeStamp();
+                type = "UGV";
             }
             // 拿单机状态时间戳进行比较 如果不相等说明数据在更新
             static bool flag = true;
@@ -1066,7 +1112,7 @@ void CommunicationBridge::toGroundStationFun()
                 time = time_stamp;
                 if (time_count > this->swarm_data_update_timeout_)
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " data update returns to normal.");
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, type + to_string(ROBOT_ID) + " data update returns to normal.");
                     flag = true;
                 }
                 time_count = 0;
@@ -1079,7 +1125,7 @@ void CommunicationBridge::toGroundStationFun()
                     if (flag)
                     {
                         // 反馈地面站
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, "UAV" + to_string(ROBOT_ID) + " data update timeout.");
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, type + to_string(ROBOT_ID) + " data update timeout.");
                         flag = false;
                     }
                 }
