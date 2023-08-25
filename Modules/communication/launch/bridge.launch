@@ -1,16 +1,23 @@
 <launch>
 
-    <arg name="swarm_num" default="0"/>
-    <arg name="swarm_ugv_num" default="3"/>
     <arg name="autoload" default="false"/>
     <arg name="uav_control_start" default="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
     <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"/>
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
 
-    <arg name="ground_station_ip" default="192.168.31.45"/>
+    <arg name="ground_station_ip" default="127.0.0.1"/>
 
+    <!-- robot id为唯一标识符，如果是集群(无人机集群、无人车集群、机车协同)，该值不能重复 -->
+    <arg name="robot_id" default="1"/>
+    <!-- 根据实际情况进行输入该参数，该载体为无人车时，该值必须设置为0-->
     <arg name="uav_id" default="1"/>
+    <!-- 根据实际情况进行输入该参数，该载体为无人机时，该值必须设置为0-->
+    <arg name="ugv_id" default="1"/>
+    <!-- 如果不是仿真或集群，将该值设置为0-->
+    <arg name="swarm_num" default="3"/>
+    <arg name="swarm_ugv_num" default="3"/>
+
     <arg name="is_simulation" default="1"/>
     <arg name="swarm_data_update_timeout" default="5"/>
 
@@ -35,7 +42,9 @@
         <param name="udp_port" value="8889"/>
         <param name="tcp_port" value="55555"/>
         <param name="rviz_port" value="8890"/>
-        <param name="ROBOT_ID" value="$(arg uav_id)"/>
+        <param name="ROBOT_ID" value="$(arg robot_id)"/>
+        <param name="uav_id" value="$(arg uav_id)"/>
+        <param name="ugv_id" value="$(arg ugv_id)"/>
         <param name="try_connect_num" value="5"/>
         <param name="tcp_heartbeat_port" value="55556"/>
         <!-- 是否仿真模式  1为是  0为否 -->
