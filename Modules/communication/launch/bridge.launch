@@ -11,14 +11,14 @@
     <!-- robot id为唯一标识符，如果是集群(无人机集群、无人车集群、机车协同)，该值不能重复 -->
     <arg name="robot_id" default="1"/>
     <!-- 根据实际情况进行输入该参数，该载体为无人车时，该值必须设置为0-->
-    <arg name="uav_id" default="1"/>
+    <arg name="uav_id" default="0"/>
     <!-- 根据实际情况进行输入该参数，该载体为无人机时，该值必须设置为0-->
     <arg name="ugv_id" default="1"/>
     <!-- 如果不是仿真或集群，将该值设置为0-->
-    <arg name="swarm_num" default="3"/>
+    <arg name="swarm_num" default="0"/>
     <arg name="swarm_ugv_num" default="3"/>
 
-    <arg name="is_simulation" default="1"/>
+    <arg name="is_simulation" default="0"/>
     <arg name="swarm_data_update_timeout" default="5"/>
 
     <!-- Prometheus功能包路径 -->
