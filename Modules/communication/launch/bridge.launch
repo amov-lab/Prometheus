@@ -13,7 +13,7 @@
     <!-- 根据实际情况进行输入该参数，该载体为无人车时，该值必须设置为0-->
     <arg name="uav_id" default="0"/>
     <!-- 根据实际情况进行输入该参数，该载体为无人机时，该值必须设置为0-->
-    <arg name="ugv_id" default="1"/>
+    <arg name="ugv_id" default="0"/>
     <!-- 如果不是仿真或集群，将该值设置为0-->
     <arg name="swarm_num" default="0"/>
     <arg name="swarm_ugv_num" default="3"/>
