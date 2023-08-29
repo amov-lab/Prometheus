@@ -142,6 +142,7 @@ private:
     int current_mode_ = 0;
 
     int is_simulation_, swarm_num_, swarm_data_update_timeout_,swarm_ugv_num_;
+    int uav_id,ugv_id;
     ros::NodeHandle nh_;
 
     bool is_heartbeat_ready_ = false;
