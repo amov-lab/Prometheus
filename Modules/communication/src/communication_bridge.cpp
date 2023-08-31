@@ -115,7 +115,7 @@ void CommunicationBridge::serverFun()
 
 void CommunicationBridge::recvData(struct UAVState uav_state)
 {
-    if (this->swarm_control_ != NULL)
+    if (this->swarm_control_ != NULL && this->swarm_num_ != 0)
     {
         // 融合到所有无人机状态然后发布话题
         this->swarm_control_->updateAllUAVState(uav_state);
@@ -209,7 +209,7 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
 }
 void CommunicationBridge::recvData(struct UGVCommand ugv_command)
 {
-    // 非仿真情况 只有一个UAV
+    // 非仿真情况 只有一个UGV
     if (this->is_simulation_ == 0)
     {
         if (this->ugv_basic_ == NULL)
@@ -218,7 +218,7 @@ void CommunicationBridge::recvData(struct UGVCommand ugv_command)
         }
         this->ugv_basic_->ugvCmdPub(ugv_command);
     }
-    // 仿真情况下 可能存在多个UAV 找到对应ID进行发布对应的控制命令
+    // 仿真情况下 可能存在多个UGV 找到对应ID进行发布对应的控制命令
     else
     {
         auto it = this->swarm_ugv_control_simulation_.find(Communication::getRecvID() - swarm_num_);
@@ -703,6 +703,10 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
                     else if (this->ugv_basic_ != NULL)
                         this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
+                }else
+                {
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The number of ground stations is inconsistent with the number of communication nodes.");
+                    return;
                 }
 
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control mode.");
