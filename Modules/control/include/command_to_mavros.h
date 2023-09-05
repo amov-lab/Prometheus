@@ -185,6 +185,9 @@ public:
     //发送位置期望值至飞控（输入：期望xyz,期望yaw）
     void send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_sp);
 
+    //发送位置期望值至飞控（输入：期望xyz,期望yaw）
+    void send_pos_setpoint_yaw_rate(const Eigen::Vector3d &pos_sp, float yaw_rate_sp);
+
     //发送速度期望值至飞控（输入：期望vxvyvz,期望yaw）
     void send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_sp);
 
@@ -334,6 +337,31 @@ void command_to_mavros::send_pos_setpoint(const Eigen::Vector3d &pos_sp, float y
     pos_setpoint.position.z = pos_sp[2];
 
     pos_setpoint.yaw = yaw_sp;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+
+    // 检查飞控是否收到控制量
+    // cout <<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>command_to_mavros<<<<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    // cout << "Pos_target [X Y Z] : " << pos_drone_fcu_target[0] << " [ m ] "<< pos_drone_fcu_target[1]<<" [ m ] "<<pos_drone_fcu_target[2]<<" [ m ] "<<endl;
+    // cout << "Yaw_target : " << euler_fcu_target[2] * 180/M_PI<<" [deg] "<<endl;
+}
+
+//发送位置期望值至飞控（输入：期望xyz,期望yaw_rate）
+void command_to_mavros::send_pos_setpoint_yaw_rate(const Eigen::Vector3d &pos_sp, float yaw_rate_sp)
+{
+    mavros_msgs::PositionTarget pos_setpoint;
+    //Bitmask toindicate which dimensions should be ignored (1 means ignore,0 means not ignore; Bit 10 must set to 0)
+    //Bit 1:x, bit 2:y, bit 3:z, bit 4:vx, bit 5:vy, bit 6:vz, bit 7:ax, bit 8:ay, bit 9:az, bit 10:is_force_sp, bit 11:yaw, bit 12:yaw_rate
+    //Bit 10 should set to 0, means is not force sp
+    pos_setpoint.type_mask = 0b010111111000; // 010 111 111 000  xyz + yaw_rate
+
+    pos_setpoint.coordinate_frame = 1;
+
+    pos_setpoint.position.x = pos_sp[0];
+    pos_setpoint.position.y = pos_sp[1];
+    pos_setpoint.position.z = pos_sp[2];
+
+    pos_setpoint.yaw_rate = yaw_rate_sp;
 
     setpoint_raw_local_pub.publish(pos_setpoint);
 

@@ -508,7 +508,14 @@ int main(int argc, char **argv)
 
             if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_POS )
             {
-                _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+                if(Command_Now.Reference_State.Yaw_Rate_Mode)
+                {
+                    yaw_rate_sp = Command_Now.Reference_State.yaw_rate_ref;
+                    _command_to_mavros.send_pos_setpoint_yaw_rate(state_sp, yaw_rate_sp);
+                }else
+                {
+                    _command_to_mavros.send_pos_setpoint(state_sp, yaw_sp);
+                }
             }else if( Command_Now.Reference_State.Move_mode  == prometheus_msgs::PositionReference::XYZ_VEL )
             {
                 if(Command_Now.Reference_State.Yaw_Rate_Mode)

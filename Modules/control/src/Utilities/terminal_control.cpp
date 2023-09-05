@@ -250,6 +250,8 @@ void mainloop1()
                     Command_to_pub.source = NODE_NAME;
                     Command_to_pub.Reference_State.Move_mode  = Move_mode;
                     Command_to_pub.Reference_State.Move_frame = Move_frame;
+                    // yaw_rate control
+                    // Command_to_pub.Reference_State.Yaw_Rate_Mode = 1;
                     Command_to_pub.Reference_State.time_from_start = -1;
                     generate_com(Move_mode, state_desired);
         
@@ -672,8 +674,12 @@ void generate_com(int Move_mode, float state_desired[4])
     Command_to_pub.Reference_State.acceleration_ref[1] = 0;
     Command_to_pub.Reference_State.acceleration_ref[2] = 0;
 
-
-    Command_to_pub.Reference_State.yaw_ref = state_desired[3]/180.0*M_PI;
+    if(Command_to_pub.Reference_State.Yaw_Rate_Mode == 1)
+    {
+        Command_to_pub.Reference_State.yaw_rate_ref = state_desired[3];
+    }else{
+        Command_to_pub.Reference_State.yaw_ref = state_desired[3]/180.0*M_PI;
+    }
 }
 
 void Draw_in_rviz(const prometheus_msgs::PositionReference& pos_ref, bool draw_trajectory)
