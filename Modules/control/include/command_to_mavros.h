@@ -38,6 +38,7 @@
 #include <bitset>
 #include <prometheus_msgs/AttitudeReference.h>
 #include <prometheus_msgs/DroneState.h>
+#include <mavros_msgs/GlobalPositionTarget.h>
 using namespace std;
 
 class command_to_mavros
@@ -76,6 +77,9 @@ public:
         // 【发布】位置/速度/加速度期望值 坐标系 ENU系
         //  本话题要发送至飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp发送), 对应Mavlink消息为SET_POSITION_TARGET_LOCAL_NED (#84), 对应的飞控中的uORB消息为position_setpoint_triplet.msg
         setpoint_raw_local_pub = command_nh.advertise<mavros_msgs::PositionTarget>(uav_name + "/mavros/setpoint_raw/local", 10);
+
+        // 【发布】经纬度以及高度位置 坐标系:WGS84坐标系
+        setpoint_raw_global_pub = command_nh.advertise<mavros_msgs::GlobalPositionTarget>(uav_name + "/mavros/setpoint_raw/global", 10);
 
         // 【发布】角度/角速度期望值 坐标系 ENU系
         //  本话题要发送至飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp发送), 对应Mavlink消息为SET_ATTITUDE_TARGET (#82), 对应的飞控中的uORB消息为vehicle_attitude_setpoint.msg（角度） 或vehicle_rates_setpoint.msg（角速度）
@@ -125,6 +129,9 @@ public:
         // 【发布】位置/速度/加速度期望值 坐标系 ENU系
         //  本话题要发送至飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp发送), 对应Mavlink消息为SET_POSITION_TARGET_LOCAL_NED (#84), 对应的飞控中的uORB消息为position_setpoint_triplet.msg
         setpoint_raw_local_pub = command_nh.advertise<mavros_msgs::PositionTarget>(uav_name + "/mavros/setpoint_raw/local", 10);
+
+        // 【发布】经纬度以及高度位置 坐标系:WGS84坐标系
+        setpoint_raw_global_pub = command_nh.advertise<mavros_msgs::GlobalPositionTarget>(uav_name + "/mavros/setpoint_raw/global", 10);
 
         // 【发布】角度/角速度期望值 坐标系 ENU系
         //  本话题要发送至飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp发送), 对应Mavlink消息为SET_ATTITUDE_TARGET (#82), 对应的飞控中的uORB消息为vehicle_attitude_setpoint.msg（角度） 或vehicle_rates_setpoint.msg（角速度）
@@ -221,6 +228,9 @@ public:
     //发送云台控制指令
     void send_mount_control_command(const Eigen::Vector3d &gimbal_att_sp);
 
+    //发送经纬高数据
+    void send_global_setpoint(const Eigen::Vector3d &global_pos_sp, float yaw_sp);
+
 private:
     ros::NodeHandle command_nh;
 
@@ -229,6 +239,7 @@ private:
     ros::Subscriber actuator_target_sub;
 
     ros::Publisher setpoint_raw_local_pub;
+    ros::Publisher setpoint_raw_global_pub;
     ros::Publisher setpoint_raw_attitude_pub;
     ros::Publisher actuator_setpoint_pub;
     ros::Publisher mount_control_pub;
@@ -270,6 +281,25 @@ void command_to_mavros::send_mount_control_command(const Eigen::Vector3d &gimbal
     mount_setpoint.yaw = gimbal_att_sp[2];   // Gimbal  Yaw
 
     mount_control_pub.publish(mount_setpoint);
+}
+
+// 发送经纬度以及高度期望值至飞控(输入,期望lat/lon/alt,期望yaw)
+void command_to_mavros::send_global_setpoint(const Eigen::Vector3d &global_pos_sp, float yaw_sp)
+{
+    mavros_msgs::GlobalPositionTarget global_setpoint;
+    //该话题支持三个坐标系:
+    //FRAME_GLOBAL_INT 高度数据为海拔高度
+    //FRAME_GLOBAL_REL_ALT 高度数据为相对起始位置的高度,HOME点的高度为0
+    //FRAME_GLOBAL_TERRAIN_ALT 具有 AGL 高度的全球 (WGS84) 坐标系（在航路点坐标处）。第一个值/x：以度为单位的纬度，第二个值/y：以度为单位的经度，第三个值/z：以米为单位的正高度，0 表示地形模型中的地平面。
+    //在仿真中测试使用后,FRAME_GLOBAL_REL_ALT使用比较方便推荐使用该坐标系
+    //https://mavlink.io/en/messages/common.html#MAV_FRAME_GLOBAL_INT  坐标系的详细介绍
+    global_setpoint.coordinate_frame = mavros_msgs::GlobalPositionTarget::FRAME_GLOBAL_INT;
+    global_setpoint.type_mask = 0b100111111000;
+    global_setpoint.latitude = global_pos_sp[0];
+    global_setpoint.longitude = global_pos_sp[1];
+    global_setpoint.altitude = global_pos_sp[2];
+    global_setpoint.yaw = yaw_sp;
+    setpoint_raw_global_pub.publish(global_setpoint);
 }
 
 void command_to_mavros::takeoff()

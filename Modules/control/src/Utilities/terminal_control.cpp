@@ -272,6 +272,11 @@ void mainloop1()
                 Command_to_pub.Mode = prometheus_msgs::ControlCommand::User_Mode1;
                 Command_to_pub.Command_ID = Command_to_pub.Command_ID + 1;
                 Command_to_pub.source = NODE_NAME;
+                Command_to_pub.Reference_State.latitude = 47.3977431;
+                Command_to_pub.Reference_State.longitude = 8.5456771;
+                Command_to_pub.Reference_State.altitude = 510;
+                Command_to_pub.Reference_State.yaw_ref = 0/180.0*M_PI;
+
                 move_pub.publish(Command_to_pub);
                 break;
             
@@ -643,7 +648,6 @@ void generate_com(int Move_mode, float state_desired[4])
     {
         cout << "ACC control not support yet." <<endl;
     }
-
     if((Move_mode & 0b10) == 0) //xy channel
     {
         Command_to_pub.Reference_State.position_ref[0] = state_desired[0];
