@@ -25,6 +25,8 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->uav_setup_pub_ = nh.advertise<prometheus_msgs::UAVSetup>("/uav" + std::to_string(this->robot_id) + "/prometheus/setup", 1);
     //【订阅】uav控制信息
     this->uav_cmd_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/command",10,&UAVBasic::uavCmdCb,this);
+    //【发布】跟踪目标
+    this->uav_target_pub_ = nh.advertise<prometheus_msgs::Control>("/uav" + std::to_string(this->robot_id) + "/spirecv/control", 1);
 }
 
 UAVBasic::~UAVBasic()
@@ -166,4 +168,13 @@ void UAVBasic::setTimeStamp(uint time)
 uint UAVBasic::getTimeStamp()
 {
     return this->time_stamp_;
+}
+
+void UAVBasic::uavTargetPub(struct WindowPosition window_position)
+{
+    prometheus_msgs::Control cmd;
+    cmd.mouse = window_position.track_id == -1?prometheus_msgs::Control::MOUSE_LEFT:prometheus_msgs::Control::MOUSE_RIGHT;
+    cmd.x = window_position.origin_x/(float)window_position.window_position_x;
+    cmd.y = window_position.origin_y/(float)window_position.window_position_y;
+    this->uav_target_pub_.publish(cmd);
 }
