@@ -9,7 +9,7 @@
 #include "prometheus_msgs/UAVCommand.h"
 #include "prometheus_msgs/UAVSetup.h"
 #include "prometheus_msgs/UAVControlState.h"
-
+#include "prometheus_msgs/Control.h"
 
 class UAVBasic
 {
@@ -41,6 +41,8 @@ public:
 
     uint getTimeStamp();
 
+    void uavTargetPub(struct WindowPosition window_position);
+
 private:
     ros::Subscriber uav_state_sub_;
 
@@ -54,6 +56,8 @@ private:
     ros::Publisher uav_setup_pub_;
 
     ros::Subscriber uav_cmd_sub_;
+
+    ros::Publisher uav_target_pub_;
 
     int current_mode_;
 

@@ -192,10 +192,6 @@ void CommunicationBridge::recvData(struct GimbalParamSet param_set)
 }
 void CommunicationBridge::recvData(struct WindowPosition window_position)
 {
-    if (this->gimbal_basic_ == NULL)
-    {
-        return;
-    }
     // 如果udp_msg数据不为空 则向udo端口发送数据。否则发布ros话题
     if (!window_position.udp_msg.empty())
     {
@@ -204,6 +200,10 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
     }
     else
     {
+        if (this->gimbal_basic_ == NULL)
+        {
+            return;
+        }
         this->gimbal_basic_->gimbalWindowPositionPub(window_position);
     }
 }

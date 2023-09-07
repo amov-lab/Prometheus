@@ -56,6 +56,7 @@ add_message_files(
   WindowPosition.msg
 	Bspline.msg
 	MultiBsplines.msg
+  Control.msg
 )
 
 add_action_files(
