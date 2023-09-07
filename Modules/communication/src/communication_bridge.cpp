@@ -200,6 +200,10 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
     }
     else
     {
+        if(window_position.mode == WindowPosition::Mode::POINT && window_position.track_id < 0)
+        {
+            this->uav_basic_->uavTargetPub(window_position);
+        }
         if (this->gimbal_basic_ == NULL)
         {
             return;
