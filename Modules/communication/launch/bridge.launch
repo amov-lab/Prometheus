@@ -6,17 +6,17 @@
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
 
-    <arg name="ground_station_ip" default="192.168.31.24"/>
+    <arg name="ground_station_ip" default="192.168.2.109"/>
 
     <!-- robot id为唯一标识符，如果是集群(无人机集群、无人车集群、机车协同)，该值不能重复 -->
     <arg name="robot_id" default="1"/>
     <!-- 根据实际情况进行输入该参数，该载体为无人车时，该值必须设置为0-->
-    <arg name="uav_id" default="0"/>
+    <arg name="uav_id" default="1"/>
     <!-- 根据实际情况进行输入该参数，该载体为无人机时，该值必须设置为0-->
     <arg name="ugv_id" default="0"/>
     <!-- 如果不是仿真或集群，将该值设置为0-->
     <arg name="swarm_num" default="0"/>
-    <arg name="swarm_ugv_num" default="3"/>
+    <arg name="swarm_ugv_num" default="0"/>
 
     <arg name="is_simulation" default="0"/>
     <arg name="swarm_data_update_timeout" default="5"/>
@@ -70,8 +70,7 @@
 
         <!-- 单机配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_control_yaml)"/>
-        <!-- 集群配置文件加载 -->
-        <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg swarm_control_yaml)"/>
+       
         <!-- 轨迹配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_command_yaml)"/>
     </node>
