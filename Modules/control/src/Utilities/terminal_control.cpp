@@ -568,7 +568,7 @@ void mainloop2()
           Command_to_pub.source = NODE_NAME;
           Command_to_pub.Reference_State.Move_mode       = prometheus_msgs::PositionReference::XYZ_POS;
           Command_to_pub.Reference_State.Move_frame      = prometheus_msgs::PositionReference::BODY_FRAME;
-          Command_to_pub.Reference_State.yaw_ref             = YAW_STEP_SIZE;
+          Command_to_pub.Reference_State.yaw_ref             -= YAW_STEP_SIZE;
           move_pub.publish(Command_to_pub);
           
           cout << " " <<endl;
