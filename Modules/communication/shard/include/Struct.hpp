@@ -8,9 +8,7 @@
 #include <fstream>
 #include <string>
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/vector.hpp>
+#define PROTOCOL_VERSION 1
 
 enum MsgId
 {
@@ -62,15 +60,6 @@ struct Quaternion
     double y;
     double z;
     double w;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &x;
-        ar &y;
-        ar &z;
-        ar &w;
-    }
 };
 //MSG 1
 struct UAVState
@@ -136,46 +125,12 @@ struct UAVState
     float attitude_rate[3];  // [rad/s]
     float battery_state;     // 电池状态[v]
     float battery_percetage; // [0-1]
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &secs;
-        ar &nsecs;
-        ar &uav_id;
-        // ar &state;
-        ar &location_source;
-        ar &connected;
-        ar &mode;
-        ar &armed;
-        ar &odom_valid;
-        ar &gps_status;
-        ar &gps_num;
-        ar &latitude;
-        ar &longitude;
-        ar &altitude;
-        ar &position;
-        ar &velocity;
-        ar &attitude;
-        ar &attitude_q;
-        ar &attitude_rate;
-        ar &battery_state;
-        ar &battery_percetage;
-    }
 };
 
 struct Heartbeat
 {
     uint32_t count;
     std::string message;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &count;
-        ar &message;
-    }
 };
 
 struct UGVState
@@ -197,20 +152,6 @@ struct UGVState
 
     // 四元数
     Quaternion attitude_q;
-    
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &secs;
-        ar &nsecs;
-        ar &ugv_id;
-        ar &position;
-        ar &velocity;
-        ar &attitude;
-        ar &battery;
-        ar &attitude_q;
-    }
 };
 
 struct ModeSelection
@@ -246,18 +187,6 @@ struct ModeSelection
     int swarm_num;
 
     std::string cmd;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &selectId;
-        ar &mode;
-        ar &use_mode;
-        ar &is_simulation;
-        ar &swarm_num;
-        ar &cmd;
-    }
 };
 
 struct Point
@@ -265,14 +194,6 @@ struct Point
     double x;
     double y;
     double z;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &x;
-        ar &y;
-        ar &z;
-    }
 };
 
 // SwarmCommand.msg
@@ -335,26 +256,6 @@ struct SwarmCommand
     float attack_target_pos[3]; // [m]
 
     std::vector<struct Point> formation_poses;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &source;
-        ar &swarm_num;
-        ar &swarm_location_source;
-        ar &Swarm_CMD;
-        ar &leader_pos;
-        ar &leader_vel;
-        ar &swarm_size;
-        ar &swarm_shape;
-        ar &target_area_x_min;
-        ar &target_area_y_min;
-        ar &target_area_x_max;
-        ar &target_area_y_max;
-        ar &attack_target_pos;
-        ar &formation_poses;
-    }
 };
 
 // StationFeedback.msg
@@ -376,14 +277,6 @@ struct TextInfo
     int sec;
     uint8_t MessageType;
     std::string Message;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &sec;
-        ar &MessageType;
-        ar &Message;
-    }
 };
 
 //参考文件： GimbalState.msg
@@ -409,21 +302,6 @@ struct GimbalState
     float imuAngleVel[3];
     //rpy_tgt 目标角度
     float rotorAngleTarget[3];
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &Id;
-        ar &feedbackMode;
-        ar &mode;
-        ar &isRecording;
-        ar &zoomState;
-        ar &zoomVal;
-        ar &imuAngle;
-        ar &rotorAngle;
-        ar &imuAngleVel;
-        ar &rotorAngleTarget;
-    }
 };
 //参考文件： VisionDiff.msg
 //订阅话题： ~/gimbal/track
@@ -459,28 +337,6 @@ struct VisionDiff
 
     float trackIgnoreError;
     bool autoZoom;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &id;
-        ar &objectX;
-        ar &objectY;
-        ar &objectWidth;
-        ar &objectHeight;
-        ar &frameWidth;
-        ar &frameHeight;
-        ar &kp;
-        ar &ki;
-        ar &kd;
-        ar &ctlMode;
-        ar &currSize;
-        ar &maxSize;
-        ar &minSize;
-        ar &trackIgnoreError;
-        ar &autoZoom;
-    }
 };
 
 //参考文件： GimbalControl.msg
@@ -530,21 +386,6 @@ struct GimbalControl
         zoomOut = 2,
         zoomIn = 3
     };
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &Id;
-        ar &rpyMode;
-        ar &roll;
-        ar &yaw;
-        ar &pitch;
-        ar &rValue;
-        ar &yValue;
-        ar &pValue;
-        ar &focusMode;
-        ar &zoomMode;
-    }
 };
 
 struct GimbalService
@@ -558,26 +399,12 @@ struct GimbalService
     };
 
     bool data;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &service;
-        ar &data;
-    }
 };
 
 struct GimbalParamSet
 {
     std::string param_id;
     double real;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &param_id;
-        ar &real;
-    }
 };
 
 struct WindowPosition
@@ -612,22 +439,6 @@ struct WindowPosition
     // int32_t frame_id;
 
     std::string udp_msg;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &mode;
-        ar &origin_x;
-        ar &origin_y;
-        ar &width;
-        ar &height;
-        ar &window_position_x;
-        ar &window_position_y;
-        ar &track_id;
-        // ar &frame_id;
-        ar &udp_msg;
-    }
 };
 
 //ROS话题: "/deepsort_ros/object_detection_result"
@@ -641,17 +452,6 @@ struct DetectionInfo
 
     //TRACK TARGET
     int32_t trackIds;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &left;
-        ar &top;
-        ar &bot;
-        ar &right;
-        ar &trackIds;
-    }
 };
 struct MultiDetectionInfo
 {
@@ -664,15 +464,6 @@ struct MultiDetectionInfo
     //每个目标的检测结果
     //DetectionInfo[] detection_infos;
     std::vector<DetectionInfo> detection_infos;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &mode;
-        ar &num_objs;
-        ar &detection_infos;
-    }
 };
 
 struct UGVCommand
@@ -706,33 +497,12 @@ struct UGVCommand
     float linear_vel[2];
     // [rad/s]
     float angular_vel;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &secs;
-        ar &nsecs;
-        ar &Command_ID;
-        ar &Mode;
-        ar &position_ref;
-        ar &yaw_ref;
-        ar &linear_vel;
-        ar &angular_vel;
-    }
 };
 
 struct ImageData
 {
     std::string name;
     std::string data;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &name;
-        ar &data;
-    }
 };
 
 struct UAVCommand
@@ -781,28 +551,7 @@ struct UAVCommand
     double altitude;           // 无人机经度、纬度、高度
 
     // 控制命令的编号 防止接收到错误命令， 编号应该逐次递加
-    uint Command_ID;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &secs;
-        ar &nsecs;
-        ar &Agent_CMD;
-        ar &Move_mode;
-        ar &position_ref;
-        ar &velocity_ref;
-        ar &acceleration_ref;
-        ar &yaw_ref;
-        ar &Yaw_Rate_Mode;
-        ar &yaw_rate_ref;
-        ar &att_ref;
-        ar &Command_ID;
-        ar &latitude;
-        ar &longitude;
-        ar &altitude;
-    }
+    uint32_t Command_ID;
 };
 
 struct UAVSetup
@@ -821,16 +570,6 @@ struct UAVSetup
     // http://wiki.ros.org/mavros/CustomModes ,可参考该网址设置模式名,常用模式名:OFFBOARD,AUTO.LAND,AUTO.RTL,POSCTL
     std::string px4_mode;
     std::string control_state;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &cmd;
-        ar &arming;
-        ar &px4_mode;
-        ar &control_state;
-    }
 };
 
 struct UAVControlState
@@ -863,16 +602,6 @@ struct UAVControlState
 
     // 无人机安全保护触发标志量
     bool failsafe;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &uav_id;
-        ar &control_state;
-        ar &pos_controller;
-        ar &failsafe;
-    }
 };
 
 struct Bspline
@@ -885,34 +614,12 @@ struct Bspline
     std::vector<Point> pos_pts;
     std::vector<double> yaw_pts;
     double yaw_dt;
-    
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & drone_id;
-        ar & order;
-        ar & traj_id;
-        ar & sec;
-        ar & knots;
-        ar & pos_pts;
-        ar & yaw_pts;
-        ar & yaw_dt;
-    }
 };
 
 struct MultiBsplines
 {
     int drone_id_from;
     std::vector<Bspline> traj;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & drone_id_from;
-        ar & traj;
-    }
 };
 
 struct Param
@@ -929,15 +636,6 @@ struct Param
     };
     std::string param_name;
     std::string param_value;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & type;
-        ar & param_name;
-        ar & param_value;
-    }
 };
 
 struct ParamSettings
@@ -951,14 +649,6 @@ struct ParamSettings
         UAVCOMMANDPUB = 4
     };
     std::vector<Param> params;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & param_module;
-        ar & params;
-    }
 };
 
 struct BasicDataTypeAndValue
@@ -974,40 +664,17 @@ struct BasicDataTypeAndValue
         STRING = 5
     };
     std::string value;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & name;
-        ar & type;
-        ar & value;
-    }
 };
 //自定义消息1：地面站->机载端，此处为固定内容，即不能随意更改结构体
 struct CustomDataSegment_1
 {
     std::vector<BasicDataTypeAndValue> datas;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & datas;
-    }
 };
 
 struct ConnectState
 {
     uint8_t num;
     bool state;
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar &num;
-        ar &state;
-    }
 };
 
 struct Goal
@@ -1021,21 +688,6 @@ struct Goal
     double orientation_y;
     double orientation_z;
     double orientation_w;
-
-    friend class boost::serialization::access;
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /* file_version */)
-    {
-        ar & seq;
-        ar & frame_id;
-        ar & position_x;
-        ar & position_y;
-        ar & position_z;
-        ar & orientation_y;
-        ar & orientation_z;
-        ar & orientation_x;
-        ar & orientation_w;
-    }
 };
 
 #endif

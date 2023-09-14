@@ -51,6 +51,7 @@ include_directories(
   image2rtsp/include
   ${catkin_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/shard/include
+  ${PROJECT_SOURCE_DIR}/shard/include/json/include
 
   ${x264_INCLUDE_DIR}
 
@@ -74,25 +75,9 @@ execute_process(
 add_executable(communication_bridge ${CURRENT_SOURCE} ${CURRENT_INCLUDE})
 add_dependencies(communication_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
-    # 判断Ubuntu版本号
-    if(UBUNTU_VERSION STREQUAL "18.04")
-	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_18_04_x86_64.so boost_serialization)
-    elseif(UBUNTU_VERSION STREQUAL "20.04")
-        target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_x86_64.so boost_serialization)
-    else()
-    	message(STATUS "Detected Ubuntu ${UBUNTU_VERSION}")
-    	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_x86_64.so boost_serialization)
-    endif()
+    target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_x86_64.so)
 elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
-    # 判断Ubuntu版本号
-    if(UBUNTU_VERSION STREQUAL "18.04")
-	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_18_04_arm.so boost_serialization)
-    elseif(UBUNTU_VERSION STREQUAL "20.04")
-        target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_arm.so boost_serialization)
-    else()
-    	message(STATUS "Detected Ubuntu ${UBUNTU_VERSION}")
-    	target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_20_04_arm.so boost_serialization)
-    endif()
+    target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_aarch64.so)
 endif()
 
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
