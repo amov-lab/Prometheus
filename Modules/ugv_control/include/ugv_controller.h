@@ -45,7 +45,8 @@ public:
     bool flag_printf;                                      // 是否打印
     float error_yaw;
     geometry_msgs::Twist cmd_vel;      // 底层速度指令   
-
+    float circle_radius;
+    float linear_vel;
     Eigen::Vector2f vel_avoid_nei;
 
 
