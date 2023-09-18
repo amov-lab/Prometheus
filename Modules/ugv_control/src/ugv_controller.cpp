@@ -4,6 +4,8 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
 {
     nh.param("ugv_id", this->ugv_id, 0);
     nh.param("swarm_num_ugv", this->swarm_num_ugv, 3);
+    nh.param("circle_radius", this->circle_radius, 5.0f);
+    nh.param("linear_vel", this->linear_vel, 1.0f);
     // 控制变量
     nh.param("k_p", this->k_p, 2.0f);
     nh.param("k_p_path", this->k_p_path, 5.0f);
@@ -288,19 +290,17 @@ void UGV_controller::Circle_trajectory_generation(float time_from_start, int id)
 {
     float init_angle;
     float omega;
-    float linear_vel = 0.3;
-    float circle_radius = 1.0;
+    float direction = -1;
+    omega = fabs(this->linear_vel / this->circle_radius);
 
-    omega = fabs(linear_vel / circle_radius);
+    init_angle = (id * 2 - 2.0) / this->swarm_num_ugv * M_PI; 
 
-    init_angle = (id * 2 - 2.0) / 3 * M_PI; 
-
-    const float angle = time_from_start * omega;
+    const float angle = time_from_start * omega *  direction;
     const float cos_angle = cos(init_angle + angle);
     const float sin_angle = sin(init_angle + angle);
 
-    this->Command_Now.position_ref[0] = circle_radius * cos_angle + 0.5;
-    this->Command_Now.position_ref[1] = circle_radius * sin_angle + 0.0;
+    this->Command_Now.position_ref[0] = this->circle_radius * cos_angle + 0.5;
+    this->Command_Now.position_ref[1] = this->circle_radius * sin_angle + 0.0;
     this->Command_Now.yaw_ref = 0.0;
     
     CalErrorYaw();

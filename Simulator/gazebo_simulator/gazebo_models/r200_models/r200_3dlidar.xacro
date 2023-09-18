@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot name="r200" xmlns:xacro="http://www.ros.org/wiki/xacro">
+	<!--robot-->
+	<xacro:include filename="$(find r200_simulation)/models/r200.xacro" />
+	<!--3D plidar-->
+	<xacro:include filename="$(find r200_simulation)/models/3d_lidar.xacro" />
+	<!--depth_camera-->
+  <xacro:include filename="$(find r200_simulation)/models/depth_camera.xacro" />
+
+	<!--lidar args-->
+	<xacro:property name="rplidar_offset_x" value="0" />
+	<xacro:property name="rplidar_offset_y" value="0" />
+	<xacro:property name="rplidar_offset_z" value="0.355" />
+
+	<!--depth_camera args-->
+  <xacro:property name="camera_offset_x" value="0.22" />
+  <xacro:property name="camera_offset_y" value="0" />
+  <xacro:property name="camera_offset_z" value="0.28" />
+
+	<!--3d_lidar joint-->
+	<joint name="rplidar_joint" type="fixed">
+		<origin xyz="${rplidar_offset_x} ${rplidar_offset_y} ${rplidar_offset_z}" rpy="0 0 0" />
+		<parent link="base_link"/>
+		<child link="laser"/>
+	</joint>
+	<xacro:lidar prefix="3d_lidar"/>
+
+	<!--depth_camera joint-->
+    <joint name="kinect_frame_joint" type="fixed">
+        <origin xyz="${camera_offset_x} ${camera_offset_y} ${camera_offset_z}" rpy="0 0 0" />
+        <parent link="base_link"/>
+        <child link="camera_link"/>
+    </joint>
+    <xacro:depth_camera prefix="camera"/>
+
+</robot>

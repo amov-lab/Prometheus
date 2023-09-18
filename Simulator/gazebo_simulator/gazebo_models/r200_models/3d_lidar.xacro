@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="laser">
+
+	<xacro:macro name="lidar" params="prefix:=lidar">
+		<link name="laser">
+			<inertial>
+				<mass value="0.1" />
+				<origin xyz="0 0 0" />
+				<inertia ixx="0.01" ixy="0.0" ixz="0.0"
+						 iyy="0.01" iyz="0.0"
+						 izz="0.01" />
+			</inertial>
+
+			<visual>
+				<origin xyz=" 0 0 0 " rpy="0 0 0" />
+				<geometry>
+					<cylinder length="0.06" radius="0.05"/>
+				</geometry>
+				<material name="White"/>
+			</visual>
+
+			<collision>
+				<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+				<geometry>
+					<cylinder length="0.06" radius="0.05"/>
+				</geometry>
+			</collision>
+		</link>
+
+	 <gazebo reference="laser">
+				<material>Gazebo/White</material>
+        <sensor type="ray" name="rplidar">
+          <pose>0 0 0 0 0 0</pose>
+          <visualize>false</visualize>
+          <update_rate>30</update_rate>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>-3.14</min_angle>
+                <max_angle>3.14</max_angle>
+              </horizontal>
+							<vertical>
+                <samples>16</samples>
+                <resolution>1</resolution>
+                <min_angle>-0.2616666</min_angle>
+                <max_angle>0.2616666</max_angle>
+              </vertical>
+						</scan>
+            <range>
+              <min>0.10</min>
+              <max>70.0</max>
+              <resolution>0.02</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+               <mean>0.0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+          </ray>
+            <plugin name="velodyne_plugin" filename="libgazebo_ros_velodyne_laser.so">
+            	<topicName>pointcloud</topicName>
+            	<frameName>laser</frameName>
+							<min_range>0.1</min_range>
+							<max_range>70</max_range>
+							<gaussianNoise>0.008</gaussianNoise>
+        	</plugin>
+        </sensor>
+      </gazebo>
+	</xacro:macro>
+
+</robot>

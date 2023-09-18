@@ -1,6 +1,6 @@
 <launch>
 	<arg name="ugv_id" default="1"/>
-    <arg name="sim_mode" default="fales"/>
+    <arg name="sim_mode" default="false"/>
     <arg name="flag_printf" default="true"/>
     <arg name="ugv_control/enable_external_control" value="true" />
 
