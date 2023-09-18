@@ -42,6 +42,11 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         // 【订阅】mocap估计位置
         mocap_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node" + uav_name + "/pose", 1, &UAV_estimator::mocap_cb, this);
     }
+    else if (location_source == prometheus_msgs::UAVState::VINS)
+    {
+        // 【订阅】VINS估计位置
+        vins_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vins_estimator/imu_propagate", 1, &UAV_estimator::vins_cb, this);
+    }
     else if (location_source == prometheus_msgs::UAVState::T265)
     {
         // 【订阅】T265估计位置
@@ -102,7 +107,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【发布】运行状态信息(-> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
-    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB)
+    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB|| location_source == prometheus_msgs::UAVState::VINS)
     {
         // 【定时器】当需要使用外部定位设备时，需要定时发送vision信息至飞控,并保证一定频率
         timer_px4_vision_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_vision_pose, this);
@@ -224,6 +229,10 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
         vision_pose.pose.orientation.y = q_uwb.y();
         vision_pose.pose.orientation.z = q_uwb.z();
         vision_pose.pose.orientation.w = q_uwb.w();
+    }
+    else if (location_source == prometheus_msgs::UAVState::VINS)
+    {
+        vision_pose = vins_pose;
     }
     else
     {
@@ -412,6 +421,12 @@ void UAV_estimator::mocap_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
     get_mocap_stamp = ros::Time::now(); // 记录时间戳，防止超时
 }
 
+void UAV_estimator::vins_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+{
+    vins_pose = *msg;
+    get_vins_stamp = ros::Time::now(); // 记录时间戳，防止超时
+}
+
 void UAV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
     gazebo_pose.header = msg->header;
@@ -568,6 +583,10 @@ int UAV_estimator::check_uav_odom()
     {
         return 1;
     }
+    else if (location_source == prometheus_msgs::UAVState::VINS && (time_now - get_vins_stamp).toSec() > VINS_TIMEOUT)
+    {
+        return 1;
+    }
     else if ((location_source == prometheus_msgs::UAVState::GPS || location_source == prometheus_msgs::UAVState::RTK) && (time_now - get_gps_stamp).toSec() > GPS_TIMEOUT)
     {
         cout << RED << "time_now:[ " << (time_now).toSec() << " ] s" << TAIL << endl;
@@ -685,6 +704,10 @@ void UAV_estimator::printf_uav_state()
         cout << GREEN << "Location: [ UWB ] " << TAIL;
         cout << GREEN << "UWB_pos [X Y Z] : " << pos_drone_uwb[0]  << " [ m ] " << pos_drone_uwb[1] << " [ m ] " << pos_drone_uwb[2] << " [ m ] " << TAIL << endl;
         break;
+    case prometheus_msgs::UAVState::VINS:
+        cout << GREEN << "Location: [ VINS ] " << TAIL << endl;
+        cout << GREEN << "VINS_pos [X Y Z] : " << vins_pose.pose.position.x << " [ m ] " << vins_pose.pose.position.y << " [ m ] " << vins_pose.pose.position.z << " [ m ] " << TAIL << endl;
+        break;
     }
 
     if (uav_state.odom_valid)
@@ -794,6 +817,10 @@ void UAV_estimator::printf_param()
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
         cout << GREEN << "location_source: [UWB] " << TAIL << endl;
+    }
+    else if (location_source == prometheus_msgs::UAVState::VINS)
+    {
+        cout << GREEN << "location_source: [VINS] " << TAIL << endl;
     }
     else
     {
