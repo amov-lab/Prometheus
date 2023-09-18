@@ -6,6 +6,9 @@ ugv_control:
   k_aoivd : 0.2
   k_yaw : 2.0
   
+##  跑圆参数
+  circle_radius : 5.0
+  linear_vel : 1.0
 ##  最大速度
   max_vel : 2.0
 

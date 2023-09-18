@@ -7,8 +7,7 @@
 #include <netinet/in.h>
 #include <iostream>
 #include <sstream>
-// 包含数据的结构体、结构体对应的ID信息等
-#include "Struct.hpp"
+#include "jsonconverter.h"
 
 #define BUF_LEN 1024 * 10 // 1024*10 bytes
 #define SERV_PORT 20168
@@ -20,6 +19,18 @@ enum Send_Mode
 {
     TCP = 1,
     UDP = 2
+};
+
+struct DecodeState
+{
+    uint8_t state;
+    enum State
+    {
+        NORMAL = 0,
+        EXCEPTION = 1,
+        UNKNOW = 2
+    };
+    int msg_id;
 };
 
 class Communication
@@ -153,6 +164,13 @@ public:
     int getRecvID();
 
     /**
+     * @brief 返回接收到的数据解码状态
+     * 
+     * @return struct DecodeState 返回解码状态
+     */
+    struct DecodeState getDecodeState();
+
+    /**
      * @brief 返回接收到的解码后的结构体
      * 
      * @return 返回各类型的结构体
@@ -207,6 +225,9 @@ protected:
 
     // 是否是通信节点(机载端)，初始值为true
     bool is_communication_node = true;
+
+    // 记录上一次解码状态，正常、异常、未知
+    DecodeState decode_state;
 
 private:
     // 接收到数据，解码后保存的数据

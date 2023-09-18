@@ -37,6 +37,8 @@ public:
     Eigen::Vector3d pos_ugv;                      // 无人车位置
     Eigen::Vector3d vel_ugv;                      // 无人车速度
 
+    Eigen::Vector3d ugv_circle_pos_;
+
 
 
     float yaw_ugv;                                          // 无人车偏航角
@@ -45,7 +47,8 @@ public:
     bool flag_printf;                                      // 是否打印
     float error_yaw;
     geometry_msgs::Twist cmd_vel;      // 底层速度指令   
-
+    float circle_radius;
+    float linear_vel;
     Eigen::Vector2f vel_avoid_nei;
 
 
@@ -71,7 +74,7 @@ private:
     void ugv_command_cb(const prometheus_msgs::UGVCommand::ConstPtr& msg);
     void ugv_state_cb(const prometheus_msgs::UGVState::ConstPtr& msg);
     // void add_apf_vel();
-    void Circle_trajectory_generation(float time_from_start, int id);
+    //Eigen::Vector3d around_Circle_trajectory(float time_from_start, int id, float lin_vel, float circle_r, int ugv_num);
     void printf_state(const ros::TimerEvent &e);
     int check_failsafe();
     void CalErrorYaw();
@@ -79,5 +82,23 @@ private:
 
 };
 
+Eigen::Vector3d around_Circle_trajectory(float time_from_start, int id, float lin_vel, float circle_r, int ugv_num)
+{
+    float init_angle;
+    float omega;
+    float direction = -1;
+    Eigen::Vector3d ugv_circle_pos_;
+    omega = fabs(lin_vel / circle_r);
 
+    init_angle = (id * 2 - 2.0) / ugv_num * M_PI; 
+
+    const float angle = time_from_start * omega *  direction;
+    const float cos_angle = cos(init_angle + angle);
+    const float sin_angle = sin(init_angle + angle);
+
+    ugv_circle_pos_[0] = circle_r * cos_angle + 0.5;
+    ugv_circle_pos_[1] = circle_r * sin_angle + 0.0;
+    ugv_circle_pos_[2] = 0.0;
+    return ugv_circle_pos_;
+}
 #endif
