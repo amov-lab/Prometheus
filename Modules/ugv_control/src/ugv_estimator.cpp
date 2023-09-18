@@ -14,7 +14,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
      if(this->sim_mode)
     {
         // 【订阅】gazebo仿真真值
-        this->gazebo_odom_sub = nh.subscribe<nav_msgs::Odometry>(this->ugv_name + "/prometheus/fake_odom", 1, &UGV_estimator::gazebo_cb, this);
+        this->gazebo_odom_sub = nh.subscribe<nav_msgs::Odometry>(this->ugv_name + "/odom", 1, &UGV_estimator::gazebo_cb, this);
     }else
     {
         // 【订阅】mocap估计位置

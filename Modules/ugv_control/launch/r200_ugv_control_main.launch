@@ -1,0 +1,54 @@
+<launch>
+    <arg name="x" default="5"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="0"/>
+    <arg name="R" default="0"/>
+    <arg name="P" default="0"/>
+    <arg name="Y" default="0"/>
+    <arg name="ugv1_name" default="ugv1"/>
+
+    <!--ugv_control-->
+	<arg name="ugv_id" default="1"/>
+    <arg name="sim_mode" default="true"/>
+    <arg name="flag_printf" default="true"/>
+    <arg name="ugv_control/enable_external_control" value="true" />
+
+
+    <group ns="$(arg ugv1_name)">
+		<!--gazebo model xacro-->
+		<arg name="model" default="$(find xacro)/xacro --inorder '$(find prometheus_gazebo)/gazebo_models/r200_models/r200.xacro'"/>
+		<param name="robot_description" command="$(arg model)"/>
+		<node name="$(arg ugv1_name)_urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model r200_$(arg ugv1_name) -x $(arg x) -y $(arg y) -Y $(arg Y)  -param robot_description"/>
+
+		<!--robot_state_publisher-->
+		<node name="robot_state_publisher_$(arg ugv1_name)" pkg="robot_state_publisher" type="robot_state_publisher"/>
+    </group>
+
+	    <!-- 启动ugv_control_main -->
+	<node pkg="prometheus_ugv_control" type="ugv_control_main" name="ugv_control_main_$(arg ugv_id)" output="screen">
+		<param name="ugv_id" value="$(arg ugv_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<param name="ugv_control/enable_external_control" value="$(arg ugv_control/enable_external_control)" />
+		<rosparam command="load" file="$(find prometheus_ugv_control)/launch/ugv_control.yaml" />
+	</node>
+	
+	    <!--Gazebo-->
+	<!-- Gazebo configs -->
+    <arg name="gui"            default="true"/>
+    <arg name="debug"          default="false"/>
+    <arg name="verbose"        default="false"/>
+    <arg name="paused"         default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+	<arg name="world"          default="$(find prometheus_gazebo)/gazebo_worlds/prometheus_empty.world"/>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui"            value="$(arg gui)"/>
+        <arg name="debug"          value="$(arg debug)"/>
+        <arg name="verbose"        value="$(arg verbose)"/>
+        <arg name="paused"         value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+        <arg name="world_name"     value="$(arg world)"/>
+    </include>
+	
+</launch>

@@ -1,0 +1,451 @@
+<?xml version="1.0" ?>
+<robot name="r200" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+		<!--color setting-->
+    <material name="Black">
+      <color rgba="0 0 0 1"/>
+    </material>
+
+    <material name="Gray">
+      <color rgba="0.75 0.75 0.75 1"/>
+    </material>
+
+    <material name="White">
+      <color rgba="1 1 1 0.9"/>
+    </material>
+
+    <material name="Yellow">
+      <color rgba="255 255 0 0.9"/>
+    </material>
+
+		<!--base link-->
+    <link name="base_link">
+      <inertial>
+        <mass value="0.855"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="2.2" ixy="0.0" ixz="0.0" iyy="30" iyz="0.0" izz="30" />
+      </inertial>
+      <visual>
+        <origin xyz=" 0 0 0" rpy="0 0 0"/>
+         <geometry>
+           <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/base_link.stl"/>
+         </geometry>
+         <material name="Black"/>
+      </visual>
+      <collision>
+       <origin xyz=" 0 0 0.1" rpy="0 0 0"/>
+         <geometry>
+           <box size="1.0074 0.5709 0.2675"/>
+         </geometry>
+      </collision>
+    </link>
+
+		<gazebo reference="base_link">
+			<material>Gazebo/Black</material>
+   	</gazebo>
+
+		<link name="base_footprint">
+			<visual>
+				<origin xyz="0 0 0" rpy="0 0 0"/>
+				<geometry>
+					<box size="0.001 0.001 0.001"/>
+				</geometry>
+			</visual>
+		</link>
+
+		<joint name="base_footprint_joint" type="fixed">
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<parent link ="base_footprint"/>
+			<child link="base_link"/>
+		</joint>
+
+    <!-- Top Plate -->
+		<link name="top_plate">
+			<visual>
+        <origin xyz=" 0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/top_plate.stl"/>
+        </geometry>
+        <material name="Yellow"/>
+      </visual>
+		</link>
+
+    <gazebo reference="top_plate">
+			<material>Gazebo/Yellow</material>
+    </gazebo>
+
+		<joint name="top_plate_joint" type="fixed">
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<parent link="base_link"/>
+			<child link="top_plate"/>
+		</joint>
+
+    <!-- Front Bumper -->
+		<link name="front_bumper">
+			<visual>
+        <origin xyz="0.47 0 0.091" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/bumper.stl"/>
+        </geometry>
+        <material name="Black"/>
+      </visual>
+		</link>
+
+    <gazebo reference="front_bumper">
+      <material>Gazebo/Black</material>
+    </gazebo>
+
+		<joint name="front_bumper_joint" type="fixed">
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<parent link="base_link"/>
+			<child link="front_bumper"/>
+		</joint>
+
+    <!-- Top Board -->
+		<link name="top_board">
+			<visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.5 0.4 0.02"/>
+        </geometry>
+        <material name="Black"/>
+      </visual>
+		</link>
+
+    <gazebo reference="top_board">
+      <material>Gazebo/Black</material>
+    </gazebo>
+
+		<joint name="top_board_joint" type="fixed">
+			<origin xyz="0 0 0.235" rpy="0 0 0"/>
+			<parent link="base_link"/>
+			<child link="top_board"/>
+		</joint>
+
+    <!-- Lidar Board -->
+		<link name="lidar_board">
+			<visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.2 0.2 0.005"/>
+        </geometry>
+        <material name="Yellow"/>
+      </visual>
+		</link>
+
+    <gazebo reference="lidar_board">
+      <material>Gazebo/Yellow</material>
+    </gazebo>
+
+		<joint name="lidar_board_joint" type="fixed">
+			<origin xyz="0 0 0.09" rpy="0 0 0"/>
+			<parent link="top_board"/>
+			<child link="lidar_board"/>
+		</joint>
+
+    <!-- Lidar Pillar1 -->
+		<link name="lidar_pillar1">
+			<visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="0.09" radius="0.004"/>
+        </geometry>
+        <material name="Grey"/>
+      </visual>
+		</link>
+
+    <gazebo reference="lidar_pillar1">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+		<joint name="lidar_pillar1_joint" type="fixed">
+			<origin xyz="0.08 0.08 -0.045" rpy="0 0 0"/>
+			<parent link="lidar_board"/>
+			<child link="lidar_pillar1"/>
+		</joint>
+
+    <!-- Lidar Pillar2 -->
+		<link name="lidar_pillar2">
+			<visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="0.09" radius="0.004"/>
+        </geometry>
+        <material name="Grey"/>
+      </visual>
+		</link>
+
+    <gazebo reference="lidar_pillar2">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+		<joint name="lidar_pillar2_joint" type="fixed">
+			<origin xyz="0.08 -0.08 -0.045" rpy="0 0 0"/>
+			<parent link="lidar_board"/>
+			<child link="lidar_pillar2"/>
+		</joint>
+
+    <!-- Lidar Pillar3 -->
+		<link name="lidar_pillar3">
+			<visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="0.09" radius="0.004"/>
+        </geometry>
+        <material name="Grey"/>
+      </visual>
+		</link>
+
+    <gazebo reference="lidar_pillar3">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+		<joint name="lidar_pillar3_joint" type="fixed">
+			<origin xyz="-0.08 -0.08 -0.045" rpy="0 0 0"/>
+			<parent link="lidar_board"/>
+			<child link="lidar_pillar3"/>
+		</joint>
+
+    <!-- Lidar Pillar4 -->
+		<link name="lidar_pillar4">
+			<visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder length="0.09" radius="0.004"/>
+        </geometry>
+        <material name="Grey"/>
+      </visual>
+		</link>
+
+    <gazebo reference="lidar_pillar4">
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+		<joint name="lidar_pillar4_joint" type="fixed">
+			<origin xyz="-0.08 0.08 -0.045" rpy="0 0 0"/>
+			<parent link="lidar_board"/>
+			<child link="lidar_pillar4"/>
+		</joint>
+
+    <!-- Rear Bumper -->
+		<link name="rear_bumper">
+			<visual>
+        <origin xyz="-0.47 0 0.091" rpy="0 0 3.141"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/bumper.stl"/>
+        </geometry>
+        <material name="Black"/>
+      </visual>
+		</link>
+
+    <gazebo reference="rear_bumper">
+      <material>Gazebo/Black</material>
+    </gazebo>
+
+		<joint name="rear_bumper_joint" type="fixed">
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<parent link="base_link"/>
+			<child link="rear_bumper"/>
+		</joint>
+
+    <!-- User Rail -->
+		<link name="user_rail">
+			<visual>
+        <origin xyz="0.272 0 0.245" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/user_rail.stl"/>
+        </geometry>
+        <material name="Gray"/>
+      </visual>
+		</link>
+
+		<gazebo reference="user_rail">
+      <material>Gazebo/Gray</material>
+    </gazebo>
+
+		<joint name="user_rail_joint" type="fixed">
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<parent link="base_link"/>
+			<child link="user_rail"/>
+		</joint>
+
+    <!-- Back Left Wheel -->
+		<link name="back_left_wheel">
+      <inertial>
+        <mass value="0.26357"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.1" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="-3.14159 0 0"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/wheel.stl"/>
+        </geometry>
+        <material name="Black"/>
+      </visual>
+      <collision>
+        <origin xyz=" 0 0 0" rpy="1.5707 0 0"/>
+        <geometry>
+          <cylinder radius="0.17775" length="0.1143"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <gazebo reference="back_left_wheel">
+      <material>Gazebo/Gray</material>
+    </gazebo>
+
+		<joint name="back_left_joint" type="fixed">
+      <origin xyz="-0.256 0.285475 0.035" rpy="0 0 0"/>
+      <parent link="base_link"/>
+      <child link="back_left_wheel"/>
+			<axis xyz="0 1 0"/>
+    </joint>
+
+    <!-- Back Right Wheel -->
+		<link name="back_right_wheel">
+      <inertial>
+        <mass value="0.26357"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.1" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="-3.14159 0 0"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/wheel.stl"/>
+        </geometry>
+       	<material name="Black"/>
+      </visual>
+      <collision>
+        <origin xyz=" 0 0 0" rpy="1.5707 0 0"/>
+        <geometry>
+          <cylinder radius="0.17775" length="0.1143"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <gazebo reference="back_right_wheel">
+      <material>Gazebo/Gray</material>
+    </gazebo>
+
+		<joint name="back_right_joint" type="fixed">
+      <origin xyz="-0.256 -0.285475 0.035" rpy="0 0 0"/>
+      <parent link="base_link"/>
+      <child link="back_right_wheel"/>
+			<axis xyz="0 1 0"/>
+    </joint>
+
+    <!-- Front Left Wheel -->
+		<link name="front_left_wheel">
+      <inertial>
+        <mass value="0.26357"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.1" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="-3.14159 0 0"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/wheel.stl"/>
+        </geometry>
+        <material name="Black"/>
+      </visual>
+      <collision>
+        <origin xyz=" 0 0 0" rpy="1.5707 0 0"/>
+        <geometry>
+          <cylinder radius="0.17775" length="0.1143"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <gazebo reference="front_left_wheel">
+      <material>Gazebo/Gray</material>
+    </gazebo>
+
+		<joint name="front_left_joint" type="fixed">
+      <origin xyz="0.256 0.285475 0.035" rpy="0 0 0"/>
+      <parent link="base_link"/>
+      <child link="front_left_wheel"/>
+			<axis xyz="0 1 0"/>
+    </joint>
+
+    <!-- Front Right Wheel -->
+		<link name="front_right_wheel">
+      <inertial>
+        <mass value="0.26357"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.1" />
+     	</inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="-3.14159 0 0"/>
+        <geometry>
+          <mesh filename="package://prometheus_gazebo/gazebo_models/r200_models/meshes/wheel.stl"/>
+        </geometry>
+        <material name="Black"/>
+      </visual>
+      <collision>
+        <origin xyz=" 0 0 0" rpy="-1.5707 0 0"/>
+        <geometry>
+          <cylinder radius="0.17775" length="0.1143"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <gazebo reference="front_right_wheel">
+      <material>Gazebo/Gray</material>
+    </gazebo>
+
+		<joint name="front_right_joint" type="fixed">
+      <origin xyz="0.256 -0.285475 0.035" rpy="0 0 0"/>
+      <parent link="base_link"/>
+      <child link="front_right_wheel"/>
+			<axis xyz="0 1 0"/>
+    </joint>
+
+		<!--IMU Link-->
+		<link name="imu_link">
+      <inertial>
+        <mass value="0.015"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="1e-05" ixy="0.0" ixz="0.0" iyy="1e-05" iyz="0.0" izz="1e-05" />
+      </inertial>
+    </link>
+
+		<joint name="amovCar/imu_joint" type="fixed">
+      <origin xyz="0.095 0 0.10625" rpy="0 0 0"/>
+      <parent link="base_link"/>
+      <child link="imu_link"/>
+    </joint>
+
+		<!--gazebo plugin-->
+		<gazebo>
+    	<plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+      	<commandTopic>cmd_vel</commandTopic>
+      	<odometryTopic>odom</odometryTopic>
+      	<odometryFrame>odom</odometryFrame>
+      	<odometryRate>20.0</odometryRate>
+      	<robotBaseFrame>base_footprint</robotBaseFrame>
+    	</plugin>
+  	</gazebo>
+
+  <gazebo reference="imu_link">
+    <gravity>true</gravity>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>50</update_rate>
+      <visualize>true</visualize>
+      <topic>imu</topic>
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+        <topicName>imu</topicName>
+        <bodyName>base_link</bodyName>
+        <updateRateHZ>50.0</updateRateHZ>
+        <gaussianNoise>0.0</gaussianNoise>
+        <xyzOffset> 0 0</xyzOffset>
+        <rpyOffset>0 0 0</rpyOffset>
+        <frameName>imu_link</frameName>
+      </plugin>
+      <pose>0 0 0 0 0 0</pose>
+    </sensor>
+  </gazebo>
+
+</robot>
+
