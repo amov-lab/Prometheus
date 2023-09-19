@@ -54,9 +54,21 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     recv_multicast_thd.detach();
     ros::Duration(1).sleep(); // wait
 
-    boost::thread to_ground_station_thd(&CommunicationBridge::toGroundStationFun, this);
-    to_ground_station_thd.detach();
-    ros::Duration(1).sleep(); // wait
+
+    heartbeat.message = "OK";
+    heartbeat.count = 0;
+
+    for(int i = 0; i < this->swarm_num_; i++)
+    {
+        swarm_control_time.push_back(0);
+        swarm_control_timeout_count.push_back(0);
+    }
+
+    // boost::thread to_ground_station_thd(&CommunicationBridge::toGroundStationFun, this);
+    // to_ground_station_thd.detach();
+    // ros::Duration(1).sleep(); // wait
+
+    to_ground_heartbeat_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::toGroundHeartbeat, this);
 
     heartbeat_check_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::checkHeartbeatState, this);
 }
@@ -200,7 +212,7 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
     }
     else
     {
-        if(this->uav_basic_ != NULL && window_position.mode == WindowPosition::Mode::POINT && window_position.track_id < 0)
+        if (this->uav_basic_ != NULL && window_position.mode == WindowPosition::Mode::POINT && window_position.track_id < 0)
         {
             this->uav_basic_->uavTargetPub(window_position);
         }
@@ -707,7 +719,8 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
                     else if (this->ugv_basic_ != NULL)
                         this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
-                }else
+                }
+                else
                 {
                     sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The number of ground stations is inconsistent with the number of communication nodes.");
                     return;
@@ -1034,17 +1047,17 @@ void CommunicationBridge::triggerUGV()
 // 给地面站发送心跳包,  超时检测
 void CommunicationBridge::toGroundStationFun()
 {
-    struct Heartbeat heartbeat;
-    heartbeat.message = "OK";
-    heartbeat.count = 0;
+    // struct Heartbeat hearbeat;
+    // heartbeat.message = "OK";
+    // heartbeat.count = 0;
 
     // 记录 集群数据刷新的时间戳
-    uint swarm_control_time[this->swarm_num_] = {0};
-    // 记录 未刷新的次数
-    uint swarm_control_timeout_count[this->swarm_num_] = {0};
-    // 记录 无人机或无人车的时间戳
-    uint time = 0;
-    uint time_count = 0;
+    // uint swarm_control_time[this->swarm_num_] = {0};
+    // // 记录 未刷新的次数
+    // uint swarm_control_timeout_count[this->swarm_num_] = {0};
+    // // 记录 无人机或无人车的时间戳
+    // uint time = 0;
+    // uint time_count = 0;
     while (true)
     {
         if (!this->is_heartbeat_ready_)
@@ -1141,6 +1154,108 @@ void CommunicationBridge::toGroundStationFun()
         }
 
         sleep(1);
+    }
+}
+
+void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
+{
+    // 记录 集群数据刷新的时间戳
+    // uint swarm_control_time[this->swarm_num_] = {0};
+    // 记录 未刷新的次数
+    // uint swarm_control_timeout_count[this->swarm_num_] = {0};
+    
+
+    if (!this->is_heartbeat_ready_)
+    {
+        return;
+    }
+    // std::cout << disconnect_num << std::endl;
+    sendMsgByTcp(encodeMsg(Send_Mode::TCP, heartbeat), udp_ip);
+    heartbeat_count++;
+    heartbeat.count = heartbeat_count;
+    if (disconnect_num >= try_connect_num) // 跟地面站断联后的措施
+    {
+        disconnect_flag = true;
+        std::cout << "conenect ground station failed, please check the ground station IP!" << std::endl;
+        // 如果是集群模式 由集群模块触发降落
+        if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
+        {
+            triggerSwarmControl();
+            sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, "TCP:" + udp_ip + " abnormal communication,triggering swarm control mode to land.");
+        }
+        // 无人机 触发降落或者返航
+        else if (this->uav_basic_ != NULL)
+        {
+            triggerUAV();
+            sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, "TCP:" + udp_ip + " abnormal communication,trigger landing.");
+        }
+        // 无人车  停止小车
+        else if (this->ugv_basic_ != NULL)
+        {
+            triggerUGV();
+        }
+        // 触发机制后 心跳准备标志置为false，停止心跳包的发送 再次接收到地面站指令激活
+        this->is_heartbeat_ready_ = false;
+    }
+    else if (disconnect_flag)
+    {
+        disconnect_flag = false;
+        if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
+        {
+            if (this->is_simulation_ == 0)
+            {
+                this->swarm_control_->communicationStatePub(true);
+            }
+            else
+            {
+                for (int i = 0; i < this->swarm_num_; i++)
+                {
+                    this->swarm_control_->communicationStatePub(true, i);
+                }
+            }
+        }
+        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "TCP:" + udp_ip + " communication returns to normal.");
+    }
+
+    // 无人机数据或者无人车数据是否超时
+    if (this->uav_basic_ != NULL || this->ugv_basic_ != NULL)
+    {
+        uint time_stamp = 0;
+        std::string type = "UAV";
+        if (this->uav_basic_ != NULL)
+        {
+            time_stamp = this->uav_basic_->getTimeStamp();
+        }
+        else if (this->ugv_basic_ != NULL)
+        {
+            time_stamp = this->ugv_basic_->getTimeStamp();
+            type = "UGV";
+        }
+        // 拿单机状态时间戳进行比较 如果不相等说明数据在更新
+        static bool flag = true;
+        if (time != time_stamp)
+        {
+            time = time_stamp;
+            if (time_count > this->swarm_data_update_timeout_)
+            {
+                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, type + to_string(ROBOT_ID) + " data update returns to normal.");
+                flag = true;
+            }
+            time_count = 0;
+        }
+        else // 相等 数据未更新
+        {
+            time_count++;
+            if (time_count > this->swarm_data_update_timeout_)
+            {
+                if (flag)
+                {
+                    // 反馈地面站
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, type + to_string(ROBOT_ID) + " data update timeout.");
+                    flag = false;
+                }
+            }
+        }
     }
 }
 

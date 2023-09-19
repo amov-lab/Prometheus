@@ -118,6 +118,7 @@ public:
     bool setParam(std::string param_name, T param_value);
 
     void checkHeartbeatState(const ros::TimerEvent& time_event);
+    void toGroundHeartbeat(const ros::TimerEvent& time_event);
 
     //触发安全机制处理
     void triggerUAV();
@@ -152,6 +153,15 @@ private:
     ros::Timer heartbeat_check_timer;
     bool disconnect_flag = false;
     long heartbeat_count = 0;
+
+    // 心跳包数据
+    ros::Timer to_ground_heartbeat_timer;
+    struct Heartbeat heartbeat;
+    // 记录 无人机或无人车的时间戳
+    uint time = 0;
+    uint time_count = 0;
+    std::vector<uint> swarm_control_time;
+    std::vector<uint> swarm_control_timeout_count;
 };
 
 template <typename T>
