@@ -189,8 +189,6 @@ namespace ego_planner
 
   void EGOReplanFSM::waypointCallback(const geometry_msgs::PoseStampedPtr &msg)
   {
-    // 恒定高度
-    msg->pose.position.z = 1.5;
     cout << "EGO: Get goal:" << msg->pose.position.x << "[m]" << msg->pose.position.y<< "[m]" << msg->pose.position.z << "[m]" << endl;
     
     if (msg->pose.position.z < -0.1)

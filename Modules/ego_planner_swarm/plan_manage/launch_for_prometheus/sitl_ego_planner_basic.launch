@@ -4,11 +4,15 @@
   <arg name="map_size_y" default="50.0"/>
   <arg name="map_origin_x" default="-25.0"/>
   <arg name="map_origin_y" default="-25.0"/>
-  <arg name="map_size_z" default="2.0"/>
+  <arg name="map_size_z" default="1.8"/>
   <arg name="ground_height" default="0.2"/>
   <arg name="odom_topic" default="prometheus/odom" />
   <arg name="yaw_init" default="0.0"/>
   <arg name="flight_type" default="1"/>
+  <!-- 预设目标点 -->
+  <arg name="target_x" default="10.0"/>
+  <arg name="target_y" default="10.0"/>
+  <arg name="target_z" default="1.0"/>
 
   <!-- ego_planner 仿真 -->
   <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
@@ -49,22 +53,10 @@
     <arg name="flight_type" value="1" />
     <!-- global waypoints -->
     <!-- It generates a piecewise min-snap traj passing all waypoints -->
-    <arg name="point_num" value="4" />
-    <arg name="point0_x" value="-6.0" />
-    <arg name="point0_y" value="-3.0" />
-    <arg name="point0_z" value="1.5" />
-
-    <arg name="point1_x" value="0.0" />
-    <arg name="point1_y" value="3.0" />
-    <arg name="point1_z" value="1.5" />
-
-    <arg name="point2_x" value="3.0" />
-    <arg name="point2_y" value="-3.0" />
-    <arg name="point2_z" value="1.5" />
-
-    <arg name="point3_x" value="6.0" />
-    <arg name="point3_y" value="-7.0" />
-    <arg name="point3_z" value="1.5" />
+    <arg name="point_num" value="1" />
+    <arg name="point0_x" value="$(arg target_x)" />
+    <arg name="point0_y" value="$(arg target_y)" />
+    <arg name="point0_z" value="$(arg target_z)" />
     <!-- 仿真 -->
     <arg name="realworld_experiment" value="false" />
   </include>

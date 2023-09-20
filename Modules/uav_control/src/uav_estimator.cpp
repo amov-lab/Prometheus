@@ -336,7 +336,8 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     tf2::convert(tfs.transform.rotation , q_orig);
 
     // 设置 绕 x 轴 旋转180度
-    double r=-1.57, p=0, y=-1.57;  
+    // double r=-1.57, p=0, y=-1.57;
+    double r=0, p=0, y=0;  
     q_rot.setRPY(r, p, y);//求得 tf 的旋转四元数
 
     q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
@@ -344,7 +345,8 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
 
     //  将 旋转后的 tf 四元数 转换 为 msg 四元数
     tf2::convert(q_new, tfs.transform.rotation);
-    tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
+    // tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
+    tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
     //  |--------- 广播器发布数据
     broadcaster.sendTransform(tfs);
 }
