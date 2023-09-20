@@ -1,6 +1,6 @@
  <launch>
 	<!-- 无人机集群数量 -->
-	<arg name="swarm_num_uav" default="4"/>
+	<arg name="swarm_num_uav" default="1"/>
     <!-- 无人机预设目标点 -->
     <arg name="uav1_target_x" default="10.0"/>
     <arg name="uav1_target_y" default="3.0"/>
