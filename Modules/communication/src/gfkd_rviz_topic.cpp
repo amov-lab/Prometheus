@@ -18,7 +18,7 @@ GFKD::GFKD(ros::NodeHandle &nh)
     tf_static_sub_ = nh.subscribe("/tf_static", 10, &GFKD::tfStaticCb, this);
     trajectory_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/trajectory", 10, &GFKD::trajectoryCb, this);
 
-    // goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 100);
+    //goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 100);
 
     uav_mesh_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/uav_mesh",10 , &GFKD::uavMeshCb, this);
 
@@ -28,9 +28,11 @@ GFKD::GFKD(ros::NodeHandle &nh)
 
     goal_point_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/goal_point",10 , &GFKD::goalPointCb, this);
 
-    goal_sub_ =  nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 10 , &GFKD::goalCb, this);
+    //goal_sub_ =  nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 10 , &GFKD::goalCb, this);
 
     occupancy_inflate_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/grid_map/occupancy_inflate", 10 , &GFKD::occupancyInflateCb, this);
+
+   // camera_depth_color_points_sub_ = nh.subscribe("/camera/depth/color/points",10, &GFKD::cameraDepthColorPointsCb, this);
 }
 
 GFKD::GFKD(ros::NodeHandle &nh,int id,std::string ground_station_ip):drone_id_(id),rviz_ip_(ground_station_ip)
@@ -198,4 +200,10 @@ void GFKD::occupancyInflateCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
 {
     sensor_msgs::PointCloud2 point_cloud = *msg;
     sendRvizByUdp(encodeRvizMsg(point_cloud,GFKDRvizMsgId::GFKD_OccupancyInflate),rviz_ip_);
+}
+
+void GFKD::cameraDepthColorPointsCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
+{
+    sensor_msgs::PointCloud2 point_cloud = *msg;
+    sendRvizByUdp(encodeRvizMsg(point_cloud,GFKDRvizMsgId::CameraDepthColorPoints),rviz_ip_);
 }

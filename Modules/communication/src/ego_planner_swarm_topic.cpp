@@ -13,8 +13,9 @@ EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
     // odom_msg_.reset(new nav_msgs::Odometry);
     // stop_msg_.reset(new std_msgs::Empty);
     // bspline_msg_.reset(new tprometheus_msgs::Bspline);
-    std::string sub_traj_topic_name = std::string("/uav") + std::to_string(drone_id_) + std::string("_planning/swarm_trajs");
-    swarm_trajs_sub_ = nh.subscribe(sub_traj_topic_name.c_str(), 10, &EGOPlannerSwarm::multitrajSubTcpCb, this, ros::TransportHints().tcpNoDelay());
+
+    // std::string sub_traj_topic_name = std::string("/uav") + std::to_string(drone_id_) + std::string("_planning/swarm_trajs");
+    // swarm_trajs_sub_ = nh.subscribe(sub_traj_topic_name.c_str(), 10, &EGOPlannerSwarm::multitrajSubTcpCb, this, ros::TransportHints().tcpNoDelay());
 
     if (drone_id_ >= 2)
     {
@@ -22,29 +23,29 @@ EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh)
         swarm_trajs_pub_ = nh.advertise<prometheus_msgs::MultiBsplines>(pub_traj_topic_name.c_str(), 10);
     }
 
-    one_traj_sub_ = nh.subscribe("/broadcast_bspline", 100, &EGOPlannerSwarm::oneTrajSubUdpCb, this, ros::TransportHints().tcpNoDelay());
-    one_traj_pub_ = nh.advertise<prometheus_msgs::Bspline>("/broadcast_bspline2", 100);
+    // one_traj_sub_ = nh.subscribe("/broadcast_bspline", 100, &EGOPlannerSwarm::oneTrajSubUdpCb, this, ros::TransportHints().tcpNoDelay());
+    // one_traj_pub_ = nh.advertise<prometheus_msgs::Bspline>("/broadcast_bspline2", 100);
 
-    point_cloud_sub_ = nh.subscribe("/map_generator/global_cloud", 100, &EGOPlannerSwarm::pointCloudSubCb, this);
+    // point_cloud_sub_ = nh.subscribe("/map_generator/global_cloud", 100, &EGOPlannerSwarm::pointCloudSubCb, this);
 
-    point_cloud_ex_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/map_generator/local_cloud", 100, &EGOPlannerSwarm::pointCloudExSubCb, this);
-    ///map_generator/global_cloud
+    // point_cloud_ex_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/map_generator/local_cloud", 100, &EGOPlannerSwarm::pointCloudExSubCb, this);
+    // ///map_generator/global_cloud
 
-    tf_sub_ = nh.subscribe("/tf", 10, &EGOPlannerSwarm::tfCb, this);
-    tf_static_sub_ = nh.subscribe("/tf_static", 10, &EGOPlannerSwarm::tfStaticCb, this);
-    trajectory_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/trajectory", 10, &EGOPlannerSwarm::trajectoryCb, this);
+    // tf_sub_ = nh.subscribe("/tf", 10, &EGOPlannerSwarm::tfCb, this);
+    // tf_static_sub_ = nh.subscribe("/tf_static", 10, &EGOPlannerSwarm::tfStaticCb, this);
+    // trajectory_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/trajectory", 10, &EGOPlannerSwarm::trajectoryCb, this);
 
     goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 100);
 
-    uav_mesh_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/uav_mesh",10 , &EGOPlannerSwarm::uavMeshCb, this);
+    // uav_mesh_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/uav_mesh",10 , &EGOPlannerSwarm::uavMeshCb, this);
 
-    scan_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/scan",10 , &EGOPlannerSwarm::scanCb, this);
+    // scan_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/scan",10 , &EGOPlannerSwarm::scanCb, this);
 
-    optimal_traj_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/optimal_list",10 , &EGOPlannerSwarm::optimalTrajCb, this);
+    // optimal_traj_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/optimal_list",10 , &EGOPlannerSwarm::optimalTrajCb, this);
 
-    goal_point_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/goal_point",10 , &EGOPlannerSwarm::goalPointCb, this);
+    // goal_point_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/goal_point",10 , &EGOPlannerSwarm::goalPointCb, this);
 
-    goal_sub_ =  nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 10 , &EGOPlannerSwarm::goalCb, this);
+    // goal_sub_ =  nh.subscribe("/uav" + std::to_string(drone_id_) + "/prometheus/motion_planning/goal", 10 , &EGOPlannerSwarm::goalCb, this);
 }
 
 EGOPlannerSwarm::EGOPlannerSwarm(ros::NodeHandle &nh,int id,std::string ground_station_ip):drone_id_(id),rviz_ip_(ground_station_ip)
@@ -192,7 +193,7 @@ void EGOPlannerSwarm::goalPub(struct Goal goal)
     msg.header.frame_id = goal.frame_id;
     msg.pose.position.x = goal.position_x;
     msg.pose.position.y = goal.position_y;
-    msg.pose.position.z = this->current_height;
+    msg.pose.position.z = goal.position_z;
     msg.pose.orientation.x = goal.orientation_x;
     msg.pose.orientation.y = goal.orientation_y;
     msg.pose.orientation.z = goal.orientation_z;
