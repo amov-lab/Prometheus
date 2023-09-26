@@ -71,6 +71,8 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     to_ground_heartbeat_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::toGroundHeartbeat, this);
 
     heartbeat_check_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::checkHeartbeatState, this);
+
+    this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
 }
 
 CommunicationBridge::~CommunicationBridge()
