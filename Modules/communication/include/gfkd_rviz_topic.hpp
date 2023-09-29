@@ -24,7 +24,11 @@ enum GFKDRvizMsgId
     GFKD_OptimalList = 227,
     GFKD_GoalPoint = 228,
     GFKD_Goal = 229,
-    GFKD_OccupancyInflate = 230
+    GFKD_OccupancyInflate = 230,
+
+    // /camera/depth/color/points
+    CameraDepthColorPoints = 231
+    
 };
 
 class GFKD
@@ -58,6 +62,8 @@ private:
 
     void occupancyInflateCb(const sensor_msgs::PointCloud2::ConstPtr &msg);
 
+    void cameraDepthColorPointsCb(const sensor_msgs::PointCloud2::ConstPtr &msg);
+
     template <typename T>
     int encodeRvizMsg(T msg, int msg_id = 0);
 
@@ -65,7 +71,8 @@ private:
 
 private:
     ros::Subscriber octomap_point_cloud_centers_sub_,tf_sub_,tf_static_sub_,goal_sub_,scan_sub_,scan_point_cloud_sub_,trajectory_sub_,uav_mesh_sub_,goal_point_sub_,occupancy_inflate_sub_,optimal_list_sub_;
-    // ros::Publisher goal_pub_;
+    ros::Subscriber camera_depth_color_points_sub_;
+    ros::Publisher goal_pub_;
 
     //
     // ros::Subscriber ref_trajectory_sub_;
