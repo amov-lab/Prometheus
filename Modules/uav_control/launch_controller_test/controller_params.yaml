@@ -11,7 +11,7 @@ control:
   Land_speed : 0.2
   ##　上锁高度
   Disarm_height : 0.1
-  ## 定位源: 0 for MOCAP, 1 for T265, 2 for GAZEBO, 3 for FAKE_ODOM, 4 for GPS, 5 for RTK, 6 for UWB
+  ## 定位源: 0 for MOCAP, 1 for T265, 2 for GAZEBO, 3 for FAKE_ODOM, 4 for GPS, 5 for RTK, 6 for UWB, 7 for VINS, 8 for OpticalFlow
   location_source : 2
   ## 最大安全速度
   maximum_safe_vel_xy : 4.0
