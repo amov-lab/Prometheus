@@ -9,9 +9,6 @@ catkin_make --source Simulator/gazebo_simulator --build build/prometheus_gazebo
 catkin_make --source Simulator/realsense_gazebo_plugin --build build/realsense_gazebo_plugin
 catkin_make --source Simulator/velodyne_gazebo_plugins --build build/velodyne_gazebo_plugins
 
-catkin_make --source Simulator/wheeltec_robot_gazebo/wheeltec_gazebo_control --build build/wheeltec_robot_gazebo/wheeltec_gazebo_control
-catkin_make --source Simulator/wheeltec_robot_gazebo/wheeltec_description --build build/wheeltec_robot_gazebo/wheeltec_description
-catkin_make --source Simulator/wheeltec_robot_gazebo/wheeltec_gazebo_function --build build/wheeltec_robot_gazebo/wheeltec_gazebo_function
 # 编译控制模块
 catkin_make --source Modules/uav_control --build build/uav_control
 # 编译demo模块
