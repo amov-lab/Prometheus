@@ -3,24 +3,24 @@
   <model name='p230_uav1'>
     <!-- p230 body -->
     <link name='base_link'>
-      <pose>0 0 0 0 -0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <mass>1.5</mass>
+        <mass>1.47</mass>
         <inertia>
-          <ixx>0.166667</ixx>
+          <ixx>0.011</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.166667</iyy>
+          <iyy>0.015</iyy>
           <iyz>0</iyz>
-          <izz>0.166667</izz>
+          <izz>0.021</izz>
         </inertia>
       </inertial>
       <collision name='base_link_inertia_collision'>
-        <pose>0 0 0.02 0 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.1 0.1 -0.05</size>
+            <size>0.10 0.10 0.09</size>
           </box>
         </geometry>
         <surface>
@@ -40,7 +40,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p2301/meshes/P230.stl</uri>
+            <uri>model://p230_matlab/p230_uav1/meshes/P230.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -58,7 +58,7 @@
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <mass>0.05</mass>
+        <mass>0.015</mass>
         <inertia>
           <ixx>1e-05</ixx>
           <ixy>0</ixy>
@@ -88,17 +88,17 @@
       </axis>
     </joint>
     <link name='rotor_0'>
-			<pose>0.0895 -0.087 0.143 0 -0 0</pose>
+			<pose>0.088388 -0.088388 0.143 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <mass>0.05</mass>
+        <mass>0.005</mass>
         <inertia>
-          <ixx>0.166667</ixx>
+          <ixx>9.75e-07</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.166667</iyy>
+          <iyy>0.000273104</iyy>
           <iyz>0</iyz>
-          <izz>0.166667</izz>
+          <izz>0.000274004</izz>
         </inertia>
       </inertial>
       <collision name='rotor_0_collision'>
@@ -123,7 +123,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p2301/meshes/1and2.stl</uri>
+            <uri>model://p230_matlab/p230_uav1/meshes/1and2.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -154,17 +154,17 @@
       </axis>
     </joint>
     <link name='rotor_1'>
-			<pose>-0.0895 0.087 0.143 0 -0 0</pose>
+			<pose>-0.088388 0.088388 0.143 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <mass>0.05</mass>
+        <mass>0.005</mass>
         <inertia>
-          <ixx>0.166667</ixx>
+          <ixx>9.75e-07</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.166667</iyy>
+          <iyy>0.000273104</iyy>
           <iyz>0</iyz>
-          <izz>0.166667</izz>
+          <izz>0.000274004</izz>
         </inertia>
       </inertial>
       <collision name='rotor_1_collision'>
@@ -189,7 +189,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p2301/meshes/1and2.stl</uri>
+            <uri>model://p230_matlab/p230_uav1/meshes/1and2.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -220,17 +220,17 @@
       </axis>
     </joint>
     <link name='rotor_2'>
-			<pose>0.0895 0.087 0.143 0 -0 0</pose>
+			<pose>0.088388 0.088388 0.143 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <mass>0.05</mass>
+        <mass>0.005</mass>
         <inertia>
-          <ixx>0.166667</ixx>
+          <ixx>9.75e-07</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.166667</iyy>
+          <iyy>0.000273104</iyy>
           <iyz>0</iyz>
-          <izz>0.166667</izz>
+          <izz>0.000274004</izz>
         </inertia>
       </inertial>
       <collision name='rotor_2_collision'>
@@ -255,7 +255,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p2301/meshes/3and4.stl</uri>
+            <uri>model://p230_matlab/p230_uav1/meshes/3and4.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -286,17 +286,17 @@
       </axis>
     </joint>
     <link name='rotor_3'>
-			<pose>-0.0895 -0.087 0.143 0 0 0</pose>
+			<pose>-0.088388 -0.088388 0.143 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
-        <mass>0.05</mass>
+        <mass>0.005</mass>
         <inertia>
-          <ixx>0.166667</ixx>
+          <ixx>9.75e-07</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.166667</iyy>
+          <iyy>0.000273104</iyy>
           <iyz>0</iyz>
-          <izz>0.166667</izz>
+          <izz>0.000274004</izz>
         </inertia>
       </inertial>
       <collision name='rotor_3_collision'>
@@ -321,7 +321,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p2301/meshes/3and4.stl</uri>
+            <uri>model://p230_matlab/p230_uav1/meshes/3and4.stl</uri>
           </mesh>
         </geometry>
         <material>
@@ -456,12 +456,14 @@
       <magSubTopic>/mag</magSubTopic>
       <baroSubTopic>/baro</baroSubTopic>
       <mavlink_addr>INADDR_ANY</mavlink_addr>
-      <mavlink_tcp_port>4560</mavlink_tcp_port>
+      <mavlink_udp_port>14560</mavlink_udp_port>
       <serialEnabled>false</serialEnabled>
       <serialDevice>/dev/ttyACM0</serialDevice>
       <baudRate>921600</baudRate>
       <qgc_addr>INADDR_ANY</qgc_addr>
-      <qgc_udp_port>14550</qgc_udp_port>
+      <!-- mavlink_tcp_port: 4560 + ID-1 -->
+      <mavlink_tcp_port>4560</mavlink_tcp_port>
+      <!-- <mavlink_udp_port>14560</mavlink_udp_port> -->
       <hil_mode>false</hil_mode>
       <hil_state_level>false</hil_state_level>
       <enable_lockstep>true</enable_lockstep>
@@ -529,14 +531,68 @@
       <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>
 
-    <!-- 激光雷达 -->
-    <include>
-      <uri>model://hokuyo_ust_20lx</uri>
-      <pose>0 0 0.3 0 0 0</pose>
-    </include>
+    <!-- 激光雷达 默认0.4 -->
+    <link name="lidar_link">
+      <pose>0 0 0.05 0 0.0 0</pose>
+      <!-- 物理参数设置 -->
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>4.15e-6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.407e-6</iyy>
+          <iyz>0</iyz>
+          <izz>2.407e-6</izz>
+        </inertia>
+      </inertial>
+      <!-- 显示参数设置 -->
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.03</size>
+          </box>
+        </geometry>
+      </visual>
+      <!-- 传感器参数设置 -->
+      <sensor name="2Dlaser" type="ray">
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <!-- UST-20LX 视场为270度 -->
+              <min_angle>-3.14</min_angle>
+              <max_angle>3.14</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.5</min>
+            <max>5</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.000</stddev>
+          </noise>
+        </ray>
+        <plugin name="laser" filename="libRayPlugin.so" />
+        <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
+          <topicName>/uav1/scan</topicName>
+          <frameName>/uav1/lidar_link</frameName>
+        </plugin>
+        <always_on>1</always_on>
+        <!-- 更新频率 -->
+        <update_rate>20</update_rate>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+
     <joint name="2Dlidar_joint" type="fixed">
-      <child>hokuyo_ust_20lx::link</child>
-      <parent>p450::base_link</parent>
+      <child>lidar_link</child>
+      <parent>base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
@@ -545,5 +601,6 @@
         </limit>
       </axis>
     </joint>
+
   </model>
 </sdf>
