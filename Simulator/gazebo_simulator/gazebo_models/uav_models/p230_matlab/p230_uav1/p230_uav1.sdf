@@ -2,7 +2,7 @@
 <sdf version='1.6'>
   <model name='p230_uav1'>
     <!-- p230 body -->
-    <link name='base_link'>
+ <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
@@ -17,7 +17,7 @@
         </inertia>
       </inertial>
       <collision name='base_link_inertia_collision'>
-        <pose>0 0 0 0 0 0</pose>
+        <pose>0 0 0.05 0 0 0</pose>
         <geometry>
           <box>
             <size>0.10 0.10 0.09</size>
@@ -40,9 +40,15 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p250/meshes/p250.stl</uri>
+            <uri>model://p600/meshes/p600.stl</uri>
           </mesh>
         </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Grey</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -82,7 +88,7 @@
       </axis>
     </joint>
     <link name='rotor_0'>
-			<pose>0.088388 -0.088388 0.143 0 0 0</pose>
+			<pose>0.212132 -0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -117,9 +123,15 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p250/meshes/p250_ccw.stl</uri>
+            <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -142,7 +154,7 @@
       </axis>
     </joint>
     <link name='rotor_1'>
-			<pose>-0.088388 0.088388 0.143 0 0 0</pose>
+			<pose>-0.212132 0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -177,10 +189,22 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p250/meshes/p250_ccw.stl</uri>
+            <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       <gravity>1</gravity>
       <velocity_decay/>
       <self_collide>0</self_collide>
@@ -202,7 +226,7 @@
       </axis>
     </joint>
     <link name='rotor_2'>
-			<pose>0.088388 0.088388 0.143 0 0 0</pose>
+			<pose>0.212132 0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -237,9 +261,15 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p250/meshes/p250_cw.stl</uri>
+            <uri>model://p600/meshes/p600_cw.dae</uri>
           </mesh>
         </geometry>
+        <!-- <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material> -->
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -262,7 +292,7 @@
       </axis>
     </joint>
     <link name='rotor_3'>
-			<pose>-0.088388 -0.088388 0.143 0 0 0</pose>
+			<pose>-0.212132 -0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -297,9 +327,15 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p250/meshes/p250_cw.stl</uri>
+            <uri>model://p600/meshes/p600_cw.dae</uri>
           </mesh>
         </geometry>
+        <!-- <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material> -->
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
