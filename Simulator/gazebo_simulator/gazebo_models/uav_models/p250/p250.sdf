@@ -40,7 +40,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p250/meshes/p250.stl</uri>
+            <uri>model://p250/meshes/p250.dae</uri>
           </mesh>
         </geometry>
       </visual>
