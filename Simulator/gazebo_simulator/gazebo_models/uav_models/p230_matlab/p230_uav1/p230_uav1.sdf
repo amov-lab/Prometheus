@@ -40,15 +40,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p230_matlab/p230_uav1/meshes/P230.stl</uri>
+            <uri>model://p250/meshes/p250.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -123,15 +117,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p230_matlab/p230_uav1/meshes/1and2.stl</uri>
+            <uri>model://p250/meshes/p250_ccw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -189,15 +177,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p230_matlab/p230_uav1/meshes/1and2.stl</uri>
+            <uri>model://p250/meshes/p250_ccw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -255,15 +237,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p230_matlab/p230_uav1/meshes/3and4.stl</uri>
+            <uri>model://p250/meshes/p250_cw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -321,15 +297,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p230_matlab/p230_uav1/meshes/3and4.stl</uri>
+            <uri>model://p250/meshes/p250_cw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
