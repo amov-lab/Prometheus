@@ -998,7 +998,7 @@ void CommunicationBridge::multicastUdpFun()
             continue;
         }
 
-        // std::lock_guard<std::mutex> lg(g_m);
+        std::lock_guard<std::mutex> lg(g_m);
 
         std::cout << "udp valread: " << valread << std::endl;
         pubMsg(decodeMsg(udp_recv_buf, Send_Mode::UDP));
