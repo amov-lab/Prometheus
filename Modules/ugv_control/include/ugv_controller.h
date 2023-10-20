@@ -14,6 +14,13 @@
 #include "angles/angles.h"  // vinson: shortest_angular_distance
 #include "printf_utils.h"
 
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
+#include <std_msgs/UInt8.h>
+#include <geometry_msgs/Point.h>
+#include <ros/time.h>
+#include <ros/duration.h>
+
 // 宏定义
 #define NUM_POINT 2                             // 打印小数点
 using namespace std;
@@ -51,13 +58,22 @@ public:
     float linear_vel;
     Eigen::Vector2f vel_avoid_nei;
 
+    std_msgs::UInt8 matlab_ugv_cmd_mode_;
+    geometry_msgs::Point matlab_ugv_cmd;
+    geometry_msgs::Twist cmd_msg;
+    prometheus_msgs::UGVCommand ugv_command;
+
 
     // 订阅
     ros::Subscriber command_sub;
     ros::Subscriber ugv_state_sub;
+    ros::Subscriber matlab_ugv_cmd_mode_sub;
+    ros::Subscriber matlab_ugv_cmd_sub;
+
     
     // 发布
     ros::Publisher cmd_pub;
+    ros::Publisher matlab_ugv_cmd_mode_pub;
 
     double dist,direct,yaw_error;
     bool only_rotate;
@@ -69,10 +85,24 @@ public:
     float delta_t{0.1};
     float ugv_arr_circle_t_{0};
 
+ enum MatlabUGVState
+    {
+        HOLD = 0,
+        Direct_Control_BODY = 1,
+        Direct_Control_ENU = 2,
+        Point_Control = 3,
+        Path_Control = 4,
+        Test = 5
+    };
+
 
 private:
     void ugv_command_cb(const prometheus_msgs::UGVCommand::ConstPtr& msg);
     void ugv_state_cb(const prometheus_msgs::UGVState::ConstPtr& msg);
+    void matlab_ugv_cmd_mode_cb(const std_msgs::UInt8::ConstPtr &msg);
+    void matlab_ugv_cmd_cb(const geometry_msgs::Point::ConstPtr &msg);
+
+
     // void add_apf_vel();
     //Eigen::Vector3d around_Circle_trajectory(float time_from_start, int id, float lin_vel, float circle_r, int ugv_num);
     void printf_state(const ros::TimerEvent &e);
