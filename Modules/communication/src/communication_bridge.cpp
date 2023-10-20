@@ -981,10 +981,13 @@ void CommunicationBridge::multicastUdpFun()
 
     while (true)
     {
-        std::lock_guard<std::mutex> lg(g_m);
-        if (this->swarm_control_ == NULL)
         {
-            continue;
+            usleep(10);
+            std::lock_guard<std::mutex> lg(g_m);
+            if (this->swarm_control_ == NULL)
+            {
+                continue;
+            }
         }
 
         valread = recvfrom(udp_socket, udp_recv_buf, BUF_LEN, 0, (struct sockaddr *)&srv_Addr, &addr_len);
