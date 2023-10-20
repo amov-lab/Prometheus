@@ -82,7 +82,7 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, Communication *communication, Sw
     is_simulation_ = true;
     if (mode == SwarmMode::ONLY_UAV)
     {
-        std::cout << "仿真：集群模式-无人车 开启" << std::endl;
+        std::cout << "仿真：集群模式-无人机 开启" << std::endl;
         init(nh, mode, swarm_uav_num);
         for (int i = 1; i <= swarm_uav_num; i++)
         {
