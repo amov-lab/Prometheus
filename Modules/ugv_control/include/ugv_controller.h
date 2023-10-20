@@ -18,8 +18,7 @@
 #include <nav_msgs/Path.h>
 #include <std_msgs/UInt8.h>
 #include <geometry_msgs/Point.h>
-#include <ros/time.h>
-#include <ros/duration.h>
+
 
 // 宏定义
 #define NUM_POINT 2                             // 打印小数点
@@ -60,7 +59,6 @@ public:
 
     std_msgs::UInt8 matlab_ugv_cmd_mode_;
     geometry_msgs::Point matlab_ugv_cmd;
-    geometry_msgs::Twist cmd_msg;
     prometheus_msgs::UGVCommand ugv_command;
 
 
