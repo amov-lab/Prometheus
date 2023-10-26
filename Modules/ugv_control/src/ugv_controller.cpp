@@ -54,6 +54,8 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     this->vel_avoid_nei<<0,0;
 
     this->test_time = 0.0;
+    
+    this->matlab_reciver_flag_ = false;
 
     this->only_rotate = true;
     this->error_yaw = 0.0;
@@ -77,51 +79,53 @@ void UGV_controller::mainloop()
             this->Command_Now.Mode = prometheus_msgs::UGVCommand::Hold;  //stop
         }
 
+        if(this->matlab_reciver_flag_)
+        {
+            // Matlab_mode 控制模式选择
+            if(matlab_ugv_cmd_mode_.data == MatlabUGVState::HOLD)
+            {
+                Command_Now.Mode = prometheus_msgs::UGVCommand::Hold;
+            
+            }
 
-        // Matlab_mode 控制模式选择
-        if(matlab_ugv_cmd_mode_.data == MatlabUGVState::HOLD)
-        {
-            Command_Now.Mode = prometheus_msgs::UGVCommand::Hold;
-        
-        }
-
-        //Matlab输入数据BODY坐标系linear_vel速度控制赋值
-        else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Direct_Control_BODY)
-        {
-            this->Command_Now.Mode = prometheus_msgs::UGVCommand::Direct_Control_BODY;
-            this->Command_Now.linear_vel[0] = matlab_ugv_cmd.x;
-            this->Command_Now.linear_vel[1] = matlab_ugv_cmd.y;
-            this->Command_Now.angular_vel = matlab_ugv_cmd.z;
-        }
-        //Matlab输入数据ENU坐标系linear_vel速度控制赋值
-        else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Direct_Control_ENU)
-        {
-            this->Command_Now.Mode = prometheus_msgs::UGVCommand::Direct_Control_ENU;
-            this->Command_Now.linear_vel[0] = matlab_ugv_cmd.x;
-            this->Command_Now.linear_vel[1] = matlab_ugv_cmd.y;
-            this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
-        }
-        //Matlab输入数据position位置控制赋值
-        else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Point_Control)
-        {
-            this->Command_Now.Mode = prometheus_msgs::UGVCommand::Point_Control;
-            this->Command_Now.position_ref[0] = matlab_ugv_cmd.x;
-            this->Command_Now.position_ref[1] = matlab_ugv_cmd.y;
-            this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
-        }
-        //Matlab输入数据Path_position位置控制赋值
-        else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Path_Control)
-        {
-            this->Command_Now.Mode = prometheus_msgs::UGVCommand::Path_Control;
-            this->Command_Now.position_ref[0] = matlab_ugv_cmd.x;
-            this->Command_Now.position_ref[1] = matlab_ugv_cmd.y;
-            this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
-        }
-        //Matlab输入数据测试赋值
-         else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Test)
-        {
-            this->Command_Now.Mode = prometheus_msgs::UGVCommand::Test;
-           
+            //Matlab输入数据BODY坐标系linear_vel速度控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Direct_Control_BODY)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Direct_Control_BODY;
+                this->Command_Now.linear_vel[0] = matlab_ugv_cmd.x;
+                this->Command_Now.linear_vel[1] = matlab_ugv_cmd.y;
+                this->Command_Now.angular_vel = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据ENU坐标系linear_vel速度控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Direct_Control_ENU)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Direct_Control_ENU;
+                this->Command_Now.linear_vel[0] = matlab_ugv_cmd.x;
+                this->Command_Now.linear_vel[1] = matlab_ugv_cmd.y;
+                this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据position位置控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Point_Control)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Point_Control;
+                this->Command_Now.position_ref[0] = matlab_ugv_cmd.x;
+                this->Command_Now.position_ref[1] = matlab_ugv_cmd.y;
+                this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据Path_position位置控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Path_Control)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Path_Control;
+                this->Command_Now.position_ref[0] = matlab_ugv_cmd.x;
+                this->Command_Now.position_ref[1] = matlab_ugv_cmd.y;
+                this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据测试赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Test)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Test;
+            
+            }
         }
 
         switch (this->Command_Now.Mode)
@@ -678,6 +682,8 @@ void UGV_controller::matlab_ugv_cmd_mode_cb(const std_msgs::UInt8::ConstPtr &msg
 {
 
        this->matlab_ugv_cmd_mode_ = *msg;
+       this->matlab_reciver_flag_ = true;
+
      // ros::Rate loop_rate(50);  // 设置循环频率，这里为50Hz
       // while (ros::ok()) {
         // 原有的逻辑代码
