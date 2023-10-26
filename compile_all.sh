@@ -4,6 +4,10 @@
 
 # 编译基础模块
 catkin_make --source Modules/common --build build/common
+
+# 编译通信模块
+catkin_make --source Modules/communication --build build/communication
+
 # 编译Gazebo仿真模块
 catkin_make --source Simulator/gazebo_simulator --build build/prometheus_gazebo
 catkin_make --source Simulator/realsense_gazebo_plugin --build build/realsense_gazebo_plugin
