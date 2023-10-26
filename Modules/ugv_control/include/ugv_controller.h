@@ -56,6 +56,7 @@ public:
     float circle_radius;
     float linear_vel;
     Eigen::Vector2f vel_avoid_nei;
+    float matlab_reciver_flag_;
 
     std_msgs::UInt8 matlab_ugv_cmd_mode_;
     geometry_msgs::Point matlab_ugv_cmd;
