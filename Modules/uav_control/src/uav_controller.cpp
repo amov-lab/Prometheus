@@ -846,9 +846,9 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
             cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
         }
 
-        if (rc_input.enter_RC_POS_CONTROL)
+        if (rc_input.enter_rc_pos_control)
         {
-            rc_input.enter_RC_POS_CONTROL = false;
+            rc_input.enter_rc_pos_control = false;
             // odom失效，拒绝进入
             if (!uav_state.odom_valid)
             {
@@ -879,9 +879,9 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
     }
 
     // 收到进入RC_POS_CONTROL指令，且不在RC_POS_CONTROL模式时
-    if (rc_input.enter_RC_POS_CONTROL && control_state != CONTROL_STATE::RC_POS_CONTROL)
+    if (rc_input.enter_rc_pos_control && control_state != CONTROL_STATE::RC_POS_CONTROL)
     {
-        rc_input.enter_RC_POS_CONTROL = false;
+        rc_input.enter_rc_pos_control = false;
         // odom失效，拒绝进入
         if (!uav_state.odom_valid)
         {
