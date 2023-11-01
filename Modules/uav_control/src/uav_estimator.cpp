@@ -220,6 +220,7 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
         vision_pose.header = uav_state.header;
+	vision_pose.header.stamp = ros::Time::now();
         // vision_pose = uwb_pose;
         vision_pose.pose.position.x = pos_drone_uwb[0];
         vision_pose.pose.position.y = pos_drone_uwb[1];
@@ -253,7 +254,6 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     {
         vision_pose_error = false;
     }
-
     px4_vision_pose_pub.publish(vision_pose);
 }
 
