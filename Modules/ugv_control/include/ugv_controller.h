@@ -106,6 +106,7 @@ private:
     //Eigen::Vector3d around_Circle_trajectory(float time_from_start, int id, float lin_vel, float circle_r, int ugv_num);
     void printf_state(const ros::TimerEvent &e);
     int check_failsafe();
+    void ReachTargetPoint();
     void CalErrorYaw();
     void VelLimit();
 
