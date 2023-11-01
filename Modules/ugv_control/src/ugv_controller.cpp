@@ -415,12 +415,12 @@ void UGV_controller::VelLimit()
 
 void UGV_controller::ReachTargetPoint()
 {   
-    if(abs(this->Command_Now.position_ref[0] - this->pos_ugv[0]) < 0.05)
+    if(abs(this->Command_Now.position_ref[0] - this->pos_ugv[0]) < 0.2)
     {
         this->cmd_vel.linear.x = 0;
     }
 
-    if(abs(this->Command_Now.position_ref[1] - this->pos_ugv[1]) < 0.05)
+    if(abs(this->Command_Now.position_ref[1] - this->pos_ugv[1]) < 0.2)
     {
         this->cmd_vel.linear.y = 0;
     }    
