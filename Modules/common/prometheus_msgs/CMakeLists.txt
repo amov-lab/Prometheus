@@ -30,6 +30,10 @@ add_message_files(
   UGVState.msg
   UGVCommand.msg
   MultiUGVState.msg
+  PositionReference.msg
+  StationCommand.msg
+  Case2Result.msg
+  Case3Result.msg
 
   ArucoInfo.msg
   MultiArucoInfo.msg

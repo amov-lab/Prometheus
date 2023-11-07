@@ -1,0 +1,48 @@
+<launch>
+	<arg name="swarm_num_ugv" default="1"/>
+	<!-- 参数 -->
+	<arg name="ugv_id" default="1"/>
+	<arg name="sim_mode" default="true"/>
+    <arg name="flag_printf" default="true"/>
+    <arg name="ugv_control/enable_external_control" value="true" />
+    <!-- 启动ugv_control_main -->
+	<node pkg="prometheus_ugv_control" type="ugv_control_main" name="ugv_control_main_$(arg ugv_id)" output="screen">
+		<param name="ugv_id" value="$(arg ugv_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<param name="ugv_control/enable_external_control" value="$(arg ugv_control/enable_external_control)" />
+		<rosparam command="load" file="$(find prometheus_ugv_control)/launch/ugv_control_wheel.yaml" />
+	</node>
+
+	<!-- 启动全局规划算法 -->
+    <node pkg="prometheus_case2_ugv" type="case2_ugv_main" name="case2_main_$(arg ugv_id)" output="screen">
+		<!-- 0 for 全局点云，1 for 局部点云，2 for laserscan  -->
+		<param name="case2_ugv/map_input_source" value="1" type="int"/>
+        <remap from="/ugv$(arg ugv_id)/prometheus/case2/global_pcl" to="/map_generator/global_cloud" />
+		<remap from="/ugv$(arg ugv_id)/prometheus/case2/local_pcl" to="/ugv$(arg ugv_id)/map_generator/local_cloud" />
+		<remap from="/ugv$(arg ugv_id)/prometheus/case2/laser_scan" to="/ugv$(arg ugv_id)/sensor/2Dlidar_scan" />
+		<param name="case2_ugv/swarm_num_ugv" value="$(arg swarm_num_ugv)"/>
+		<param name="case2_ugv/ugv_id" value="$(arg ugv_id)" />
+		<param name="case2_ugv/ugv_height" value="0.0" />
+		<param name="case2_ugv/sim_mode" value="true" type="bool"/>
+		<!-- 手动给定目标点模式 -->
+		<param name="case2_ugv/manual_mode" value="true" type="bool"/>
+		<!-- 重规划间隔 -->
+		<param name="case2_ugv/replan_time" value="0.2" type="double"/>
+		<!-- path track间隔 -->
+		<param name="case2_ugv/track_frequency" value="0.1" type="double"/>
+		<!-- 地图参数 -->
+        <param name="map/origin_x" value="-20.0" type="double"/>
+        <param name="map/origin_y" value="-20.0" type="double"/>
+        <param name="map/map_size_x" value="40.0" type="double"/>
+        <param name="map/map_size_y" value="40.0" type="double"/>
+		<param name="map/queue_size" value="1" type="int"/>
+		<param name="map/border" value="true" type="bool"/>
+		<param name="map/resolution" value="0.2" type="double"/>
+		<param name="map/inflate" value="0.2" type="double"/>
+		<param name="case2_ugv/odom_inflate" value="0.3" type="double"/>
+		<!-- costmap -->
+		<param name="case2_ugv/cost_inflate" value="2" type="int"/>
+		<param name="astar/lambda_cost" value="10.0" type="double"/>
+    </node>
+</launch>
