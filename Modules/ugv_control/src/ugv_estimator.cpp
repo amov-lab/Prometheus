@@ -28,7 +28,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
 
     }
     // 【发布】mocap--matlab
-    this->mocap_matlab_pub = nh.advertise<geometry_msgs::PoseStamped>(this->ugv_name + "/vrpn_matlab_odom", 1);
+    this->mocap_matlab_pub = nh.advertise<geometry_msgs::PoseStamped>(this->ugv_name + "/mocap_ground_truth", 1);
      
     // 【发布】无人车状态合集,包括位置\速度\姿态\模式等,供上层节点使用
     this->ugv_state_pub = nh.advertise<prometheus_msgs::UGVState>(this->ugv_name + "/prometheus/ugv_state", 1);
@@ -44,7 +44,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
 
 
     // 【定时器】发布ugv_state话题，50Hz
-    timer_ugv_state_pub = nh.createTimer(ros::Duration(0.02), &UGV_estimator::timercb_ugv_state, this);
+    timer_ugv_state_pub = nh.createTimer(ros::Duration(0.05), &UGV_estimator::timercb_ugv_state, this);
 
     // 【定时器】发布RVIZ显示相关话题，5Hz
     timer_rviz_pub = nh.createTimer(ros::Duration(0.2), &UGV_estimator::timercb_rviz, this);
