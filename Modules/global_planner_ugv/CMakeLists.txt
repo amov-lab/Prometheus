@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(prometheus_case2_ugv)
+project(prometheus_global_planner_ugv)
 
 find_package(Eigen3 REQUIRED)
 find_package(PCL 1.7 REQUIRED)
@@ -39,16 +39,16 @@ add_library(occupy_map src/occupy_map.cpp)
 target_link_libraries(occupy_map ${PCL_LIBRARIES})
 add_library(A_star src/A_star.cpp)
 target_link_libraries(A_star occupy_map)
-add_library(case2_fsm_ugv src/case2_fsm_ugv.cpp)
-target_link_libraries(case2_fsm_ugv A_star)
-target_link_libraries(case2_fsm_ugv ${catkin_LIBRARIES})
-target_link_libraries(case2_fsm_ugv ${PCL_LIBRARIES})
+add_library(global_planner_ugv src/global_planner_ugv.cpp)
+target_link_libraries(global_planner_ugv A_star)
+target_link_libraries(global_planner_ugv ${catkin_LIBRARIES})
+target_link_libraries(global_planner_ugv ${PCL_LIBRARIES})
 
-add_executable(case2_ugv_main src/case2_ugv_node.cpp)
-add_dependencies(case2_ugv_main prometheus_case2_ugv_gencpp)
-target_link_libraries(case2_ugv_main ${catkin_LIBRARIES})
-target_link_libraries(case2_ugv_main ${PCL_LIBRARIES})
-target_link_libraries(case2_ugv_main case2_fsm_ugv)
+add_executable(global_planner_ugv_main src/global_planner_ugv_node.cpp)
+add_dependencies(global_planner_ugv_main prometheus_global_planner_ugv_gencpp)
+target_link_libraries(global_planner_ugv_main ${catkin_LIBRARIES})
+target_link_libraries(global_planner_ugv_main ${PCL_LIBRARIES})
+target_link_libraries(global_planner_ugv_main global_planner_ugv)
 
 
 ## Mark cpp header files for installation

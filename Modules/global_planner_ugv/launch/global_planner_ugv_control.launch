@@ -1,0 +1,39 @@
+<launch>
+	<arg name="swarm_num_ugv" default="1"/>
+	<!-- 参数 -->
+	<arg name="ugv_id" default="1"/>
+	<arg name="sim_mode" default="false"/>
+
+
+	<!-- 启动全局规划算法 -->
+    <node pkg="prometheus_global_planner_ugv" type="global_planner_ugv_main" name="global_planner_ugv_main_$(arg ugv_id)" output="screen">
+		<!-- 0 for 全局点云，1 for 局部点云，2 for laserscan  -->
+		<param name="global_planner_ugv/map_input_source" value="2" type="int"/>
+        <remap from="/ugv$(arg ugv_id)/prometheus/global_planner_ugv/global_pcl" to="/map_generator/global_cloud" />
+		<remap from="/ugv$(arg ugv_id)/prometheus/global_planner_ugv/local_pcl" to="/ugv$(arg ugv_id)/map_generator/local_cloud" />
+		<remap from="/ugv$(arg ugv_id)/prometheus/global_planner_ugv/laser_scan" to="/ugv$(arg ugv_id)/sensor/2Dlidar_scan" />
+		<param name="global_planner_ugv/swarm_num_ugv" value="$(arg swarm_num_ugv)"/>
+		<param name="global_planner_ugv/ugv_id" value="$(arg ugv_id)" />
+		<param name="global_planner_ugv/ugv_height" value="0.0" />
+		<param name="global_planner_ugv/sim_mode" value="$(arg sim_mode)" type="bool"/>
+		<!-- 手动给定目标点模式 -->
+		<param name="global_planner_ugv/manual_mode" value="true" type="bool"/>
+		<!-- 重规划间隔 -->
+		<param name="global_planner_ugv/replan_time" value="0.2" type="double"/>
+		<!-- path track间隔 -->
+		<param name="global_planner_ugv/track_frequency" value="0.1" type="double"/>
+		<!-- 地图参数 -->
+        <param name="map/origin_x" value="-20.0" type="double"/>
+        <param name="map/origin_y" value="-20.0" type="double"/>
+        <param name="map/map_size_x" value="40.0" type="double"/>
+        <param name="map/map_size_y" value="40.0" type="double"/>
+		<param name="map/queue_size" value="1" type="int"/>
+		<param name="map/border" value="true" type="bool"/>
+		<param name="map/resolution" value="0.2" type="double"/>
+		<param name="map/inflate" value="0.2" type="double"/>
+		<param name="global_planner_ugv/odom_inflate" value="0.3" type="double"/>
+		<!-- costmap -->
+		<param name="global_planner_ugv/cost_inflate" value="2" type="int"/>
+		<param name="astar/lambda_cost" value="10.0" type="double"/>
+    </node>
+</launch>

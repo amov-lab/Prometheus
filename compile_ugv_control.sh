@@ -14,7 +14,7 @@ catkin_make --source Simulator/velodyne_gazebo_plugins --build build/velodyne_ga
 # 编译小车控制模块
 catkin_make --source Modules/ugv_control --build build/ugv_control
 
-catkin_make --source Modules/prometheus_case2_ugv --build build/prometheus_case2_ugv
+catkin_make --source Modules/global_planner_ugv --build build/global_planner_ugv
 # 编译demo模块
 catkin_make --source Modules/tutorial_demo --build build/tutorial_demo
 

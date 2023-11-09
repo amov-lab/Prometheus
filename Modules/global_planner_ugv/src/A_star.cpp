@@ -3,7 +3,7 @@
 using namespace std;
 using namespace Eigen;
 
-namespace prometheus_case2_ugv
+namespace global_planner_ugv
 {
 
 Astar::~Astar()

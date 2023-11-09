@@ -17,7 +17,7 @@
 
 using namespace std;
 
-namespace prometheus_case2_ugv
+namespace global_planner_ugv
 {
 
 #define IN_CLOSE_SET 'a'

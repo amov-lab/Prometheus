@@ -25,7 +25,7 @@
 #include "printf_utils.h"
 using namespace std;
 
-namespace prometheus_case2_ugv
+namespace global_planner_ugv
 {
 
 class Occupy_map

@@ -1,5 +1,5 @@
-#ifndef CASE2_FSM_UGV
-#define CASE2_FSM_UGV
+#ifndef GLOBAL_PLANNER_UGV
+#define GLOBAL_PLANNER_UGV
 
 #include <ros/ros.h>
 #include <boost/format.hpp>
@@ -23,7 +23,6 @@
 #include "prometheus_msgs/UGVCommand.h"
 #include "prometheus_msgs/ArucoInfo.h"
 #include "prometheus_msgs/Case2Result.h"
-#include "prometheus_msgs/Case3Result.h"
 #include "prometheus_msgs/StationCommand.h"
 #include "prometheus_msgs/MultiDetectionInfo.h"
 
@@ -38,10 +37,10 @@ using namespace std;
 
 #define MIN_DIS 0.1
 
-namespace prometheus_case2_ugv
+namespace global_planner_ugv
 {
 
-class Case2FSM_UGV
+class GlobalPlannerUGV
 {
 
 private:
@@ -59,16 +58,12 @@ private:
     ros::Subscriber Gpointcloud_sub;
     ros::Subscriber Lpointcloud_sub;
     ros::Subscriber laserscan_sub;
-    // 【订阅】识别结果
-    ros::Subscriber detection_sub, detection_sub_real;
     // 【发布】控制指令
     ros::Publisher command_pub;
     // 【发布】规划路径
     ros::Publisher path_cmd_pub;
-    // 【发布】检测结果至其他无人车、无人车、地面站
-    ros::Publisher case2_result_pub;
     // 【定时器】主循环定时器、路径追踪定时器、目标追踪定时器
-    ros::Timer mainloop_timer, track_path_timer, object_tracking_timer, send_nei_odom_timer;
+    ros::Timer mainloop_timer, track_path_timer, send_nei_odom_timer;
     // 五种状态机
     enum EXEC_STATE
     {
@@ -76,7 +71,6 @@ private:
       WAIT_GOAL,
       PLAN,
       PATH_TRACKING,
-      OBEJECT_TRACKING,
       RETURN,
       STOP
     };
@@ -85,7 +79,6 @@ private:
     int swarm_num_ugv;     
     // 无人车名字                             
     string ugv_name;    
-    bool follow_target;
     float k_p,k_aoivd; 
     // 是否仿真模式
     bool sim_mode;    
@@ -153,20 +146,6 @@ private:
     geometry_msgs::PoseStamped target_pos;
     // 上一条轨迹开始时间
     ros::Time tra_start_time;    
-
-    // 检测相关状态量
-    bool detected_by_myself;
-    bool detected_by_others;
-    
-    // 是否丢失目标
-    bool lost_object;
-    int num_count_vision_lost;
-    int num_count_vision_get;
-    // 目标位置
-    Eigen::Vector3d object_pos_body,object_pos_enu;
-    double dis_to_object;
-    // 检测范围
-    Eigen::Vector2d detection_range_x,detection_range_y;
     
     // 回调函数
     void goal_cb(const geometry_msgs::PoseStampedConstPtr& msg);
@@ -174,15 +153,12 @@ private:
     void Gpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
     void Lpointcloud_cb(const sensor_msgs::PointCloud2ConstPtr &msg);
     void laser_cb(const sensor_msgs::LaserScanConstPtr &msg);
-    void detection_cb(const prometheus_msgs::ArucoInfoConstPtr &msg);
-    void detection_cb_real(const prometheus_msgs::MultiDetectionInfoConstPtr &msg);
     void cmd_cb(const prometheus_msgs::StationCommandConstPtr& msg);
     void nei_odom_cb(const nav_msgs::Odometry::ConstPtr& odom, int id);
 
     void send_nei_odom_cb(const ros::TimerEvent& e);
     void mainloop_cb(const ros::TimerEvent& e);
     void track_path_cb(const ros::TimerEvent& e);
-    void object_tracking_cb(const ros::TimerEvent& e);
    
     // 【获取当前时间函数】 单位：秒
     float get_time_in_sec(const ros::Time& begin_time);
@@ -195,10 +171,10 @@ private:
 
     
 public:
-    Case2FSM_UGV(/* args */)
+    GlobalPlannerUGV(/* args */)
     {    
     }
-    ~Case2FSM_UGV()
+    ~GlobalPlannerUGV()
     {
     }
 
