@@ -2,7 +2,7 @@
 <sdf version='1.6'>
   <model name='p600'>
     <!-- p600 body -->
- <link name='base_link'>
+    <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
@@ -17,10 +17,10 @@
         </inertia>
       </inertial>
       <collision name='base_link_inertia_collision'>
-        <pose>0 0 0.05 0 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.10 0.10 0.09</size>
+						<size>0.30 0.30 0.09</size>
           </box>
         </geometry>
         <surface>
@@ -40,15 +40,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p600/meshes/p600.stl</uri>
+            <uri>model://p600/meshes/p600.dae</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -106,7 +100,7 @@
         <geometry>
           <cylinder>
             <length>0.005</length>
-            <radius>0.06</radius>
+            <radius>0.128</radius>
           </cylinder>
         </geometry>
         <surface>
@@ -172,7 +166,7 @@
         <geometry>
           <cylinder>
             <length>0.005</length>
-            <radius>0.06</radius>
+            <radius>0.128</radius>
           </cylinder>
         </geometry>
         <surface>
@@ -199,12 +193,6 @@
           </script>
         </material>
       </visual>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       <gravity>1</gravity>
       <velocity_decay/>
       <self_collide>0</self_collide>
@@ -244,7 +232,7 @@
         <geometry>
           <cylinder>
             <length>0.005</length>
-            <radius>0.06</radius>
+            <radius>0.128</radius>
           </cylinder>
         </geometry>
         <surface>
@@ -264,12 +252,6 @@
             <uri>model://p600/meshes/p600_cw.dae</uri>
           </mesh>
         </geometry>
-        <!-- <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material> -->
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -310,7 +292,7 @@
         <geometry>
           <cylinder>
             <length>0.005</length>
-            <radius>0.06</radius>
+            <radius>0.128</radius>
           </cylinder>
         </geometry>
         <surface>
@@ -330,12 +312,7 @@
             <uri>model://p600/meshes/p600_cw.dae</uri>
           </mesh>
         </geometry>
-        <!-- <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material> -->
+
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -359,7 +336,7 @@
     </joint>
     <include>
       <uri>model://gps</uri>
-      <pose>0.0 0 0.05 0 0 0</pose>
+      <pose>0.0 0 0.1 0 0 0</pose>
       <name>gps</name>
     </include>
     <joint name='gps_joint' type='fixed'>
@@ -462,14 +439,12 @@
       <magSubTopic>/mag</magSubTopic>
       <baroSubTopic>/baro</baroSubTopic>
       <mavlink_addr>INADDR_ANY</mavlink_addr>
-      <mavlink_udp_port>14560</mavlink_udp_port>
+      <mavlink_tcp_port>4560</mavlink_tcp_port>
       <serialEnabled>false</serialEnabled>
       <serialDevice>/dev/ttyACM0</serialDevice>
       <baudRate>921600</baudRate>
       <qgc_addr>INADDR_ANY</qgc_addr>
-      <!-- mavlink_tcp_port: 4560 + ID-1 -->
-      <mavlink_tcp_port>4560</mavlink_tcp_port>
-      <!-- <mavlink_udp_port>14560</mavlink_udp_port> -->
+      <qgc_udp_port>14550</qgc_udp_port>
       <hil_mode>false</hil_mode>
       <hil_state_level>false</hil_state_level>
       <enable_lockstep>true</enable_lockstep>
@@ -536,5 +511,6 @@
       <xyzOffsets>0 0 0</xyzOffsets>
       <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>
+
   </model>
 </sdf>
