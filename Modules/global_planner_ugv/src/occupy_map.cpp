@@ -1,18 +1,18 @@
 #include <occupy_map.h>
 
-namespace prometheus_case2_ugv
+namespace global_planner_ugv
 {
 // 初始化函数
 void Occupy_map::init(ros::NodeHandle& nh)
 {
     // 集群数量
-    nh.param("case2_ugv/swarm_num_ugv", swarm_num_ugv, 1);
+    nh.param("global_planner_ugv/swarm_num_ugv", swarm_num_ugv, 1);
     // 无人机编号 1号无人机则为1
-    nh.param("case2_ugv/ugv_id", ugv_id, 0);
-    nh.param("case2_ugv/ugv_height", ugv_height, 0.1);
-    nh.param("case2_ugv/sim_mode", sim_mode, true);
-    nh.param("case2_ugv/odom_inflate", odom_inflate_, 0.6);
-    nh.param("case2_ugv/cost_inflate", cost_inflate, 5);
+    nh.param("global_planner_ugv/ugv_id", ugv_id, 0);
+    nh.param("global_planner_ugv/ugv_height", ugv_height, 0.1);
+    nh.param("global_planner_ugv/sim_mode", sim_mode, true);
+    nh.param("global_planner_ugv/odom_inflate", odom_inflate_, 0.6);
+    nh.param("global_planner_ugv/cost_inflate", cost_inflate, 5);
     // 地图原点
     nh.param("map/origin_x", origin_(0), -5.0);
     nh.param("map/origin_y", origin_(1), -5.0);
