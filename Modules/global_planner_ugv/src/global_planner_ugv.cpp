@@ -139,7 +139,7 @@ void GlobalPlannerUGV::goal_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 {
     // 2D定高飞行
     goal_pos << msg->pose.position.x, msg->pose.position.y, ugv_height;
-        
+    yaw_ref = msg->pose.orientation.w;    
     goal_vel.setZero();
 
     get_goal = true;
