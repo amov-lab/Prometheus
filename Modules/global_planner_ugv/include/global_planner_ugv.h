@@ -21,10 +21,7 @@
 #include "prometheus_msgs/PositionReference.h"
 #include "prometheus_msgs/UGVState.h"
 #include "prometheus_msgs/UGVCommand.h"
-#include "prometheus_msgs/ArucoInfo.h"
-#include "prometheus_msgs/Case2Result.h"
 #include "prometheus_msgs/StationCommand.h"
-#include "prometheus_msgs/MultiDetectionInfo.h"
 
 #include "A_star.h"
 #include "occupy_map.h"
