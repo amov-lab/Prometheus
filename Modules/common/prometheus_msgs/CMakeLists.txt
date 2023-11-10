@@ -32,13 +32,10 @@ add_message_files(
   MultiUGVState.msg
   PositionReference.msg
   StationCommand.msg
-  Case2Result.msg
-  Case3Result.msg
 
   ArucoInfo.msg
   MultiArucoInfo.msg
   DetectionInfo.msg
-  MultiDetectionInfo.msg
   BoundingBox.msg
   BoundingBoxes.msg
 
