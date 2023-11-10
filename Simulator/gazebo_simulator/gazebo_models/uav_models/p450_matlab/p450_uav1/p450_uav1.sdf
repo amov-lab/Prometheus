@@ -40,15 +40,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450.stl</uri>
+            <uri>model://p450/meshes/p450.dae</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -126,12 +120,7 @@
             <uri>model://p450/meshes/p450_ccw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
+
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -192,12 +181,7 @@
             <uri>model://p450/meshes/p450_ccw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
+
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -258,12 +242,7 @@
             <uri>model://p450/meshes/p450_cw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
+
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -324,12 +303,7 @@
             <uri>model://p450/meshes/p450_cw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
+
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
