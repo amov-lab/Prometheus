@@ -5,7 +5,8 @@ ugv_control:
   k_p_path : 5.0
   k_aoivd : 0.2
   k_yaw : 2.0
-  
+  k_i : 0.01
+  d_t : 0.01  
 ##  跑圆参数
   circle_radius : 5.0
   linear_vel : 1.0

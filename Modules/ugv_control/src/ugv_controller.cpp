@@ -11,6 +11,8 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     nh.param("k_p_path", this->k_p_path, 5.0f);
     nh.param("k_aoivd", this->k_aoivd, 0.2f); 
     nh.param("k_yaw", this->k_yaw, 2.0f);
+    nh.param("k_i", this->k_i, 0.02f);
+    nh.param("k_i", this->d_t, 0.01f);
     nh.param("max_vel", this->max_vel, 2.0f);
     // 是否打印消息
     nh.param("flag_printf", this->flag_printf, false);
@@ -198,8 +200,10 @@ void UGV_controller::mainloop()
             if( abs(this->error_yaw) < 5.0/180.0 * M_PI)
             {
                 float enu_x,enu_y;
-                enu_x = this->k_p*(this->Command_Now.position_ref[0] - this->pos_ugv[0]);
-                enu_y = this->k_p*(this->Command_Now.position_ref[1] - this->pos_ugv[1]);
+                integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
+                integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
+                enu_x = this->k_p*(this->Command_Now.position_ref[0] - this->pos_ugv[0]) + integral[0];
+                enu_y = this->k_p*(this->Command_Now.position_ref[1] - this->pos_ugv[1]) + integral[1];
                 float body_x, body_y;
                 body_x = enu_x * cos(this->yaw_ugv) + enu_y * sin(this->yaw_ugv);
                 body_y = -enu_x * sin(this->yaw_ugv) + enu_y * cos(this->yaw_ugv);
@@ -233,8 +237,10 @@ void UGV_controller::mainloop()
             if( abs(this->error_yaw) < 5.0/180.0 * M_PI)
             {
                 float enu_x,enu_y;
-                enu_x = this->k_p_path*(this->Command_Now.position_ref[0] - this->pos_ugv[0]);
-                enu_y = this->k_p_path*(this->Command_Now.position_ref[1] - this->pos_ugv[1]);
+                integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
+                integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
+                enu_x = this->k_p_path*(this->Command_Now.position_ref[0] - this->pos_ugv[0]) + integral[0];
+                enu_y = this->k_p_path*(this->Command_Now.position_ref[1] - this->pos_ugv[1]) + integral[1];
                 // cal vel_avoid_nei
                 //add_apf_vel();
                 enu_x = enu_x + this->vel_avoid_nei[0];

@@ -48,8 +48,10 @@ public:
 
 
     float yaw_ugv;                                          // 无人车偏航角
-    float k_p,k_p_path,k_yaw,k_aoivd;                                      // 速度控制参数
-    float max_vel;                                          // 无人车最大速度
+    float k_p,k_p_path,k_yaw,k_aoivd,k_i;                                      // 速度控制参数
+    float max_vel;               // 无人车最大速度
+    Eigen::Vector2f integral;              //
+    float d_t{0.01};
     bool flag_printf;                                      // 是否打印
     float error_yaw;
     geometry_msgs::Twist cmd_vel;      // 底层速度指令   
