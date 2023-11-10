@@ -30,7 +30,8 @@
 		<param name="map/queue_size" value="1" type="int"/>
 		<param name="map/border" value="true" type="bool"/>
 		<param name="map/resolution" value="0.2" type="double"/>
-		<param name="map/inflate" value="0.2" type="double"/>
+		<!--地图膨胀距离 单位：米 -->
+		<param name="map/inflate" value="0.3" type="double"/>
 		<param name="global_planner_ugv/odom_inflate" value="0.3" type="double"/>
 		<!-- costmap -->
 		<param name="global_planner_ugv/cost_inflate" value="2" type="int"/>
