@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='p600_uav2'>
+  <model name='p600_uav1'>
     <!-- p600 body -->
     <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
@@ -43,7 +43,6 @@
             <uri>model://p600/meshes/p600.dae</uri>
           </mesh>
         </geometry>
-
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -121,7 +120,12 @@
             <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
-
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -182,7 +186,12 @@
             <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
-
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -240,10 +249,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p600/meshes/p600_cw.stl</uri>
+            <uri>model://p600/meshes/p600_cw.dae</uri>
           </mesh>
         </geometry>
-
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -301,7 +309,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p600/meshes/p600_cw.stl</uri>
+            <uri>model://p600/meshes/p600_cw.dae</uri>
           </mesh>
         </geometry>
 
@@ -431,7 +439,7 @@
       <magSubTopic>/mag</magSubTopic>
       <baroSubTopic>/baro</baroSubTopic>
       <mavlink_addr>INADDR_ANY</mavlink_addr>
-      <mavlink_tcp_port>4561</mavlink_tcp_port>
+      <mavlink_tcp_port>4560</mavlink_tcp_port>
       <serialEnabled>false</serialEnabled>
       <serialDevice>/dev/ttyACM0</serialDevice>
       <baudRate>921600</baudRate>
@@ -497,7 +505,7 @@
       <updateRate>50.0</updateRate>
       <bodyName>base_link</bodyName>
       <!-- 默认是1号机 -->
-      <topicName>/uav2/prometheus/ground_truth</topicName>
+      <topicName>/uav1/prometheus/ground_truth</topicName>
       <gaussianNoise>0.00</gaussianNoise>
       <frameName>world</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
