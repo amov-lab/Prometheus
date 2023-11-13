@@ -248,7 +248,7 @@ void CommunicationBridge::recvData(struct UGVCommand ugv_command)
     // 仿真情况下 可能存在多个UGV 找到对应ID进行发布对应的控制命令
     else
     {
-        auto it = this->swarm_ugv_control_simulation_.find(Communication::getRecvID() - swarm_num_);
+        auto it = this->swarm_ugv_control_simulation_.find(abs(Communication::getRecvID()));
         if (it != this->swarm_ugv_control_simulation_.end())
         {
             (*it).second->ugvCmdPub(ugv_command);
