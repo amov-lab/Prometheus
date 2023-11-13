@@ -120,12 +120,7 @@
             <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
+ 
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -186,12 +181,7 @@
             <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
+ 
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -249,7 +239,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p600/meshes/p600_cw.dae</uri>
+            <uri>model://p600/meshes/p600_cw.stl</uri>
           </mesh>
         </geometry>
       </visual>
@@ -309,7 +299,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p600/meshes/p600_cw.dae</uri>
+            <uri>model://p600/meshes/p600_cw.stl</uri>
           </mesh>
         </geometry>
 
