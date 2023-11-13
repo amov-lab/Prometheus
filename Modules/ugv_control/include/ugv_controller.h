@@ -63,6 +63,7 @@ public:
     std_msgs::UInt8 matlab_ugv_cmd_mode_;
     geometry_msgs::Point matlab_ugv_cmd;
     prometheus_msgs::UGVCommand ugv_command;
+    prometheus_msgs::UGVState all_ugv_states_[10];
 
 
     // 订阅
@@ -70,6 +71,7 @@ public:
     ros::Subscriber ugv_state_sub;
     ros::Subscriber matlab_ugv_cmd_mode_sub;
     ros::Subscriber matlab_ugv_cmd_sub;
+    ros::Subscriber all_ugv_state_sub_;
 
     
     // 发布
@@ -102,9 +104,10 @@ private:
     void ugv_state_cb(const prometheus_msgs::UGVState::ConstPtr& msg);
     void matlab_ugv_cmd_mode_cb(const std_msgs::UInt8::ConstPtr &msg);
     void matlab_ugv_cmd_cb(const geometry_msgs::Point::ConstPtr &msg);
+    void allUGVStateCb(const prometheus_msgs::MultiUGVState::ConstPtr &msg);
 
 
-    // void add_apf_vel();
+    void add_apf_vel();
     //Eigen::Vector3d around_Circle_trajectory(float time_from_start, int id, float lin_vel, float circle_r, int ugv_num);
     void printf_state(const ros::TimerEvent &e);
     int check_failsafe();

@@ -50,6 +50,8 @@ target_link_libraries(global_planner_ugv_main ${catkin_LIBRARIES})
 target_link_libraries(global_planner_ugv_main ${PCL_LIBRARIES})
 target_link_libraries(global_planner_ugv_main global_planner_ugv)
 
+add_executable(ground_station_ugv src/ground_station_ugv.cpp)
+target_link_libraries(ground_station_ugv ${catkin_LIBRARIES})
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

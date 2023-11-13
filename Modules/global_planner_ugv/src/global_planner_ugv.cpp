@@ -50,17 +50,18 @@ void GlobalPlannerUGV::init(ros::NodeHandle& nh)
     ugv_state_sub = nh.subscribe<prometheus_msgs::UGVState>(ugv_name + "/prometheus/ugv_state", 10, &GlobalPlannerUGV::ugv_state_cb, this);
 
     // 【订阅】其他无人车位置
-    for(int i = 1; i <= swarm_num_ugv; i++)
-    {
-        if(i == ugv_id)
-        {
-            continue;
-        }
-        get_nei_odom[i] = false;
-        odom_nei[i] << 99.9,99.9,99.9;
-        nei_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/ugv"+std::to_string(i)+"/prometheus/ugv_odom", 10, boost::bind(&GlobalPlannerUGV::nei_odom_cb,this,_1,i));
-    }
-
+    // for(int i = 1; i <= swarm_num_ugv; i++)
+    // {
+    //     if(i == ugv_id)
+    //     {
+    //         continue;
+    //     }
+    //     get_nei_odom[i] = false;
+    //     odom_nei[i] << 99.9,99.9,99.9;
+    //     nei_odom_sub[i] = nh.subscribe<nav_msgs::Odometry>("/ugv"+std::to_string(i)+"/prometheus/ugv_odom", 10, boost::bind(&GlobalPlannerUGV::nei_odom_cb,this,_1,i));
+    // }
+    
+    all_ugv_state_sub_ = nh.subscribe<prometheus_msgs::MultiUGVState>("/prometheus/all_ugv_state", 1, &GlobalPlannerUGV::allUGVStateCb, this);
     // 【地面站交互】地面站控制指令
     station_cmd_sub = nh.subscribe<prometheus_msgs::StationCommand>(ugv_name + "/ground_station/ugv_cmd", 1, &GlobalPlannerUGV::cmd_cb, this);
     
@@ -109,30 +110,47 @@ void GlobalPlannerUGV::init(ros::NodeHandle& nh)
     Command_Now.Command_ID = 0;
 }
 
+void GlobalPlannerUGV::allUGVStateCb(const prometheus_msgs::MultiUGVState::ConstPtr &msg)
+{
+
+    this->swarm_num_ugv = msg->swarm_num_ugv;
+
+    for(int i = 0; i < this->swarm_num_ugv; i++)
+    {
+        this->all_ugv_states_[i] = msg->ugv_state_all[i];
+        get_nei_state[i] = false;
+        state_nei[i] << 99.9,99.9,99.9;
+    }
+}
+
 void GlobalPlannerUGV::nei_odom_cb(const nav_msgs::Odometry::ConstPtr& odom, int id) 
 {
-    odom_nei[id] << odom->pose.pose.position.x, odom->pose.pose.position.y, ugv_height; 
+    //odom_nei[id] << odom->pose.pose.position.x, odom->pose.pose.position.y, ugv_height; 
+    state_nei[id][0] = all_ugv_states_[id - 1].position[0];
+    state_nei[id][1] = all_ugv_states_[id - 1].position[1];
+    state_nei[id][0] = ugv_height;
+
 
     // 距离大于最大距离的其他无人车不考虑
     if(sim_mode)
     {
-        if((start_pos-odom_nei[id]).norm() > 5.0 /*米*/ )
+        if((start_pos-state_nei[id]).norm() > 5.0 /*米*/ )
         {
-            get_nei_odom[id] = false;
+            get_nei_state[id] = false;
         }else
         {
-            get_nei_odom[id] = true;
+            get_nei_state[id] = true;
         }
     }
     else
     {
-        get_nei_odom[id] = true;
+        get_nei_state[id] = true;
     }
 }
 
 void GlobalPlannerUGV::send_nei_odom_cb(const ros::TimerEvent& e)
 {
-    Astar_ptr->Occupy_map_ptr->ugv_pcl_update(odom_nei, get_nei_odom);
+    Astar_ptr->Occupy_map_ptr->ugv_pcl_update(state_nei, get_nei_state);
 }
 
 void GlobalPlannerUGV::goal_cb(const geometry_msgs::PoseStampedConstPtr& msg)
@@ -151,8 +169,8 @@ void GlobalPlannerUGV::goal_cb(const geometry_msgs::PoseStampedConstPtr& msg)
 
 void GlobalPlannerUGV::cmd_cb(const prometheus_msgs::StationCommandConstPtr& msg)
 {
-    // 将无人车ID与FLAG进行比较，判断是否执行本次任务
-    if(msg->flag == 1 && msg->Command == prometheus_msgs::StationCommand::Start)
+    // 将判断是否执行本次任务
+    if(msg->Command == prometheus_msgs::StationCommand::Start)
     {
         if(!station_ready)
         {
