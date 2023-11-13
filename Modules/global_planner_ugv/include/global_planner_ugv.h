@@ -22,6 +22,7 @@
 #include "prometheus_msgs/UGVState.h"
 #include "prometheus_msgs/UGVCommand.h"
 #include "prometheus_msgs/StationCommand.h"
+#include "prometheus_msgs/MultiUGVState.h"
 
 #include "A_star.h"
 #include "occupy_map.h"
@@ -55,6 +56,8 @@ private:
     ros::Subscriber Gpointcloud_sub;
     ros::Subscriber Lpointcloud_sub;
     ros::Subscriber laserscan_sub;
+    // 【订阅】所有无人车状态
+    ros::Subscriber all_ugv_state_sub_;
     // 【发布】控制指令
     ros::Publisher command_pub;
     // 【发布】规划路径
@@ -94,9 +97,11 @@ private:
     double track_frequency;
     int counter_search;
     // 其他无人车位置
-    nav_msgs::Odometry nei_odom[21];
-    Eigen::Vector3d odom_nei[21];
-    bool get_nei_odom[21];
+    prometheus_msgs::UGVState all_ugv_states_[10];
+    Eigen::Vector3d state_nei[10];
+    bool get_nei_state[10];
+
+
     // A星规划器
     Astar::Ptr Astar_ptr;
     // A星规划器状态
@@ -152,6 +157,7 @@ private:
     void laser_cb(const sensor_msgs::LaserScanConstPtr &msg);
     void cmd_cb(const prometheus_msgs::StationCommandConstPtr& msg);
     void nei_odom_cb(const nav_msgs::Odometry::ConstPtr& odom, int id);
+    void allUGVStateCb(const prometheus_msgs::MultiUGVState::ConstPtr &msg);
 
     void send_nei_odom_cb(const ros::TimerEvent& e);
     void mainloop_cb(const ros::TimerEvent& e);

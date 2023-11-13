@@ -1,10 +1,7 @@
 std_msgs/Header header
 
-## 启动标志位
-uint8 flag
-
 ## 中途点
-geometry_msgs/PoseStamped first_goal
+#geometry_msgs/PoseStamped first_goal
 
 ## 目标点
 geometry_msgs/PoseStamped goal

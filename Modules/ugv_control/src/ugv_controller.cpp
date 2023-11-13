@@ -29,6 +29,7 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     //【订阅】本机状态信息
     this->ugv_state_sub = nh.subscribe<prometheus_msgs::UGVState>(this->ugv_name + "/prometheus/ugv_state", 2, &UGV_controller::ugv_state_cb, this);
     
+    all_ugv_state_sub_ = nh.subscribe<prometheus_msgs::MultiUGVState>("/prometheus/all_ugv_state", 1, &UGV_controller::allUGVStateCb, this);
 
     //【订阅】matlab模式指令
     this->matlab_ugv_cmd_mode_sub = nh.subscribe<std_msgs::UInt8>(this->ugv_name + "/prometheus/cmd_mode", 10, &UGV_controller::matlab_ugv_cmd_mode_cb, this);
@@ -200,10 +201,10 @@ void UGV_controller::mainloop()
             if( abs(this->error_yaw) < 5.0/180.0 * M_PI)
             {
                 float enu_x,enu_y;
-                integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
-                integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
-                enu_x = this->k_p*(this->Command_Now.position_ref[0] - this->pos_ugv[0]) + integral[0];
-                enu_y = this->k_p*(this->Command_Now.position_ref[1] - this->pos_ugv[1]) + integral[1];
+                //integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
+                //integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
+                enu_x = this->k_p*(this->Command_Now.position_ref[0] - this->pos_ugv[0]);
+                enu_y = this->k_p*(this->Command_Now.position_ref[1] - this->pos_ugv[1]);
                 float body_x, body_y;
                 body_x = enu_x * cos(this->yaw_ugv) + enu_y * sin(this->yaw_ugv);
                 body_y = -enu_x * sin(this->yaw_ugv) + enu_y * cos(this->yaw_ugv);
@@ -237,10 +238,10 @@ void UGV_controller::mainloop()
             if( abs(this->error_yaw) < 5.0/180.0 * M_PI)
             {
                 float enu_x,enu_y;
-                integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
-                integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
-                enu_x = this->k_p_path*(this->Command_Now.position_ref[0] - this->pos_ugv[0]) + integral[0];
-                enu_y = this->k_p_path*(this->Command_Now.position_ref[1] - this->pos_ugv[1]) + integral[1];
+                //integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
+                //integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
+                enu_x = this->k_p_path*(this->Command_Now.position_ref[0] - this->pos_ugv[0]);
+                enu_y = this->k_p_path*(this->Command_Now.position_ref[1] - this->pos_ugv[1]);
                 // cal vel_avoid_nei
                 //add_apf_vel();
                 enu_x = enu_x + this->vel_avoid_nei[0];
@@ -357,31 +358,31 @@ void UGV_controller::ugv_state_cb(const prometheus_msgs::UGVState::ConstPtr& msg
 }
 
 
-// void UGV_controller::add_apf_vel()
-// {
-//     this->vel_avoid_nei << 0.0,0.0;
-//     float R = 1.2;
-//     float r = 0.5;
+void UGV_controller::add_apf_vel()
+{
+    this->vel_avoid_nei << 0.0,0.0;
+    float R = 1.2;
+    float r = 0.5;
 
-//     // 增加无人车之间的局部躲避
-//     for(int i = 1; i <= this->swarm_num_ugv; i++)
-//     {
-//         if(i == this->ugv_id)
-//         {
-//             continue;
-//         }
-
-//         float distance_to_nei = (pos_ugv - this->all_ugv_vel_[i-1]).norm();
-//         if(distance_to_nei  > R )
-//         {
-//             continue;
-//         }else if(distance_to_nei  > r)
-//         {
-//             this->vel_avoid_nei[0] = this->vel_avoid_nei[0] +  k_aoivd * (this->pos_ugv[0] - this->all_ugv_vel_[i-1][0]);
-//             this->vel_avoid_nei[1] = this->vel_avoid_nei[1] +  k_aoivd * (this->pos_ugv[1] - this->all_ugv_vel_[i-1][1]);
-//         }
-//     }
-// }
+    // 增加无人车之间的局部躲避
+    for(int i = 1; i <= this->swarm_num_ugv; i++)
+    {
+        if(i == this->ugv_id)
+        {
+            continue;
+        }
+        float distance_to_nei = sqrtf((pow(this->pos_ugv[0] - this->all_ugv_states_[i-1].position[0],2) 
+                                    + pow(this->pos_ugv[1] - this->all_ugv_states_[i-1].position[1],2)));
+        if(distance_to_nei  > R )
+        {
+            continue;
+        }else if(distance_to_nei  > r)
+        {
+            this->vel_avoid_nei[0] = this->vel_avoid_nei[0] +  k_aoivd * (this->pos_ugv[0] - this->all_ugv_states_[i-1].position[0]);
+            this->vel_avoid_nei[1] = this->vel_avoid_nei[1] +  k_aoivd * (this->pos_ugv[1] - this->all_ugv_states_[i-1].position[1]);
+        }
+    }
+}
 
 
 
@@ -500,6 +501,17 @@ int UGV_controller::check_failsafe()
     else
     {
         return 0;
+    }
+}
+
+void UGV_controller::allUGVStateCb(const prometheus_msgs::MultiUGVState::ConstPtr &msg)
+{
+
+    this->swarm_num_ugv = msg->swarm_num_ugv;
+
+    for(int i = 0; i < this->swarm_num_ugv; i++)
+    {
+        this->all_ugv_states_[i] = msg->ugv_state_all[i];
     }
 }
 
