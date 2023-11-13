@@ -173,7 +173,7 @@ struct ModeSelection
         EXITNX = 10
     };
 //    bool is_simulation;
-    std::vector<uint8_t> selectId;
+    std::vector<int8_t> selectId;
     // uint8_t swarm_num;
 
     uint8_t use_mode;

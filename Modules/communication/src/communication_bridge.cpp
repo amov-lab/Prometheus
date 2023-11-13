@@ -72,7 +72,16 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
 
     heartbeat_check_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::checkHeartbeatState, this);
 
-    this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
+    // this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
+
+    // 真机 双车
+    // this->ugv_basic_ = new UGVBasic(this->nh_,ugv_id,(Communication *)this);
+    // this->swarm_control_ = this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, ROBOT_ID, this->swarm_ugv_num_);
+    // 仿真 双车  id为 1 和 2  
+    // this->swarm_ugv_control_simulation_[1] = new UGVBasic(this->nh_, 1, (Communication *)this);
+    // this->ugv_basic_ = this->swarm_ugv_control_simulation_[1];
+    // this->swarm_ugv_control_simulation_[2] = new UGVBasic(this->nh_, 2, (Communication *)this);
+    // this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
 }
 
 CommunicationBridge::~CommunicationBridge()
@@ -248,6 +257,8 @@ void CommunicationBridge::recvData(struct UGVCommand ugv_command)
 }
 void CommunicationBridge::recvData(struct UGVState ugv_state)
 {
+
+
     if (this->swarm_control_ != NULL && this->swarm_ugv_num_ != 0)
     {
         // 融合到所有无人车状态然后发布话题
@@ -394,6 +405,8 @@ void CommunicationBridge::recvData(struct Goal goal)
 // 根据协议中MSG_ID的值，将数据段数据转化为正确的结构体
 void CommunicationBridge::pubMsg(int msg_id)
 {
+    // std::cout << "recv_id: " << getRecvID() << std::endl;
+
     switch (msg_id)
     {
     case MsgId::UAVSTATE:
@@ -564,7 +577,11 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
                 //
-                int id = mode_selection.selectId[i] - swarm_num_;
+                int id = abs(mode_selection.selectId[i]);
+                // int id = abs(getRecvID());
+
+                // std::cout << "ugv_id: " << id << std::endl;
+
                 if (id < 0)
                 {
                     sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Please check the parameters --- swarm_num");
@@ -586,7 +603,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 // 创建并存入
                 // this->swarm_ugv_control_simulation_[mode_selection.selectId[i]] = new UGVBasic(this->nh_, mode_selection.selectId[i], (Communication *)this);
                 // 如果id与通信节点相同则存入uav_basic_
-                if (ROBOT_ID == mode_selection.selectId[i])
+                if (ROBOT_ID == id)
                 {
                     if (this->ugv_basic_ != NULL)
                     {
@@ -605,24 +622,27 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
+                int id = abs(mode_selection.selectId[i]);
+                // int id = abs(getRecvID());
+
                 // 如果id与通信节点相同则存入uav_basic_
-                if (mode_selection.selectId[i] == ROBOT_ID)
+                if (id == ROBOT_ID || id == ugv_id)
                 {
                     this->is_heartbeat_ready_ = true;
                     if (this->ugv_basic_ == NULL)
                     {
-                        this->ugv_basic_ = new UGVBasic(this->nh_, ugv_id, (Communication *)this);
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ugv_id) + " connection succeeded!!!");
+                        this->ugv_basic_ = new UGVBasic(this->nh_, id, (Communication *)this);
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " connection succeeded!!!");
 
                         // 打开
                         system(OPENUGVBASIC.c_str());
                     }
                     else
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ugv_id) + " duplicate connections!!!");
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " duplicate connections!!!");
                 }
                 else
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(mode_selection.selectId[i]) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(id) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
                     return;
                 }
             }
@@ -646,7 +666,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
                 // 按照顺序来判断 先无人机后无人车
-                if (i < swarm_num_)
+                if (mode_selection.selectId[i] > 0)
                 {
                     if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0)
                     {
@@ -654,9 +674,9 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         return;
                     }
                 }
-                else
+                else if(mode_selection.selectId[i] < 0)
                 {
-                    int id = mode_selection.selectId[i] - swarm_num_;
+                    int id = abs(mode_selection.selectId[i]);
                     if (this->swarm_ugv_control_simulation_.count(id) == 0)
                     {
                         sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UGV" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
@@ -859,12 +879,12 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
                 // std::lock_guard<std::mutex> lg_uav_basic(g_uav_basic);
-                if (this->swarm_ugv_control_simulation_.find(mode_selection.selectId[i]) != this->swarm_ugv_control_simulation_.end())
+                if (this->swarm_ugv_control_simulation_.find(abs(mode_selection.selectId[i])) != this->swarm_ugv_control_simulation_.end())
                 {
-                    delete this->swarm_ugv_control_simulation_[mode_selection.selectId[i]];
-                    this->swarm_ugv_control_simulation_.erase(this->swarm_ugv_control_simulation_.find(mode_selection.selectId[i]));
+                    delete this->swarm_ugv_control_simulation_[abs(mode_selection.selectId[i])];
+                    this->swarm_ugv_control_simulation_.erase(this->swarm_ugv_control_simulation_.find(abs(mode_selection.selectId[i])));
 
-                    if (ROBOT_ID == mode_selection.selectId[i])
+                    if (ROBOT_ID == abs(mode_selection.selectId[i]))
                     {
                         this->is_heartbeat_ready_ = false;
                         // delete this->uav_basic_;
