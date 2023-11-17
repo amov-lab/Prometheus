@@ -36,6 +36,7 @@ add_message_files(
   ArucoInfo.msg
   MultiArucoInfo.msg
   DetectionInfo.msg
+  MultiDetectionInfo.msg
   BoundingBox.msg
   BoundingBoxes.msg
 
@@ -55,8 +56,8 @@ add_message_files(
   MultiDetectionInfoSub.msg
   VisionDiff.msg
   WindowPosition.msg
-	Bspline.msg
-	MultiBsplines.msg
+  Bspline.msg
+  MultiBsplines.msg
   Control.msg
 )
 

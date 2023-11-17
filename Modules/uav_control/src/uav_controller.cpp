@@ -205,6 +205,13 @@ void UAV_controller::mainloop()
             this->text_info.Message = "Odom invalid, swtich to land control mode!";
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
+        else if(safety_flag == 3)
+        {
+            uav_control_state.failsafe = true;
+            text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            text_info.Message = "remote control disconnected!";
+            control_state = CONTROL_STATE::LAND_CONTROL;
+        }
         else{
             uav_control_state.failsafe = false;
         }
@@ -921,6 +928,13 @@ int UAV_controller::check_failsafe()
     {
         cout << RED << uav_name << ":----> Failsafe: Waiting for PX4 connection！" << TAIL << endl;
         return -1;
+    }
+
+    // 检查接收PX4遥控器数据的是否超时，超时说明遥控器断联
+    if ((ros::Time::now() - rc_input.rcv_stamp).toSec() > 1.5 /* 秒 */)
+    {
+        cout << RED << uav_name << ":----> Failsafe: Remote control disconnected！" << TAIL << endl;
+        return 3;
     }
 
     if (uav_state.position[0] < uav_geo_fence.x_min || uav_state.position[0] > uav_geo_fence.x_max ||
