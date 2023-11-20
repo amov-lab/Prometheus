@@ -1,0 +1,103 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <scene>
+      <!-- <ambient>1.0 1.0 1.0 1.0</ambient> -->
+      <shadows>0</shadows>
+    </scene>
+     <!-- 初始视角 -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>-13.0 0.0 12.0 0 0.75 0.0</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>       
+    <!-- 装饰 -->
+    <model name='texture'>
+      <static>true</static>
+      <link name="prometheus_logo">
+        <pose> 0.0 0.0 0.0 0.0 0.0 0.0</pose>
+        <visual name="visual">
+            <cast_shadows>false</cast_shadows>
+            <geometry>
+              <box>
+                <size>10.0 10.0 0.01</size>
+              </box>
+            </geometry>
+            <material>
+              <script>
+                <uri>model://prometheus_texture/texture.material</uri>
+                <name>prometheus_logo2</name>
+              </script>
+            </material>
+        </visual>
+      </link>
+    </model>
+    <model name='kkcar_air0'>
+      <include>
+        <uri>model://kkcar_air</uri>
+	      <pose> 1 2 0 0 0 0 </pose>
+      </include>
+    </model>
+        <model name='kkcar_air1'>
+      <include>
+        <uri>model://kkcar_air1</uri>
+	      <pose> 0.8 2 0 0 0  0 </pose>
+      </include>
+    </model>
+    <model name='kkcar_air2'>
+      <include>
+        <uri>model://kkcar_air2</uri>
+	      <pose> 1.8 0.2 0 0 0 0 </pose>
+      </include>
+    </model>
+    <model name='kkcar_air3'>
+      <include>
+        <uri>model://kkcar_air3</uri>
+	      <pose> 1.8 1.2 0 0 0 0 </pose>
+      </include>
+    </model>
+    <model name='kkcar_air4'>
+      <include>
+        <uri>model://kkcar_air4</uri>
+	      <pose> 1.8 1.52 0 0 0 0 </pose>
+      </include>
+    </model>
+    <model name='kkcar_air5'>
+      <include>
+        <uri>model://kkcar_air5</uri>
+	      <pose> 1.8 2.5 0 0 0 0 </pose>
+      </include>
+    </model>
+    <physics name='default_physics' default='0' type='ode'>
+      <gravity>0 0 -9.8066</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>1000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1000.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+      <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
+    </physics>
+  </world>
+</sdf>
