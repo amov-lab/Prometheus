@@ -719,20 +719,20 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 // 开启集群的数量跟无人机数量一致 并且无人车数量为0 进入 无人机集群
                 if (this->swarm_num_ == mode_selection.swarm_num && this->swarm_ugv_num_ == 0)
                 {
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, ROBOT_ID, this->swarm_num_);
+                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, this->uav_id, this->swarm_num_);
                 }
                 // 开启集群的数量跟无人车数量一致 并且无人机数量为0 进入 无人车集群
                 else if (this->swarm_ugv_num_ == mode_selection.swarm_num && this->swarm_num_ == 0)
                 {
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, ROBOT_ID, this->swarm_ugv_num_);
+                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, this->ugv_id, this->swarm_ugv_num_);
                 }
                 // 开启集群的数量跟无人车和无人机总数量一致 进入 机车协同
                 else if (this->swarm_num_ + this->swarm_ugv_num_ == mode_selection.swarm_num)
                 {
                     if (this->uav_basic_ != NULL)
-                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
+                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, this->uav_id, this->swarm_num_, this->swarm_ugv_num_);
                     else if (this->ugv_basic_ != NULL)
-                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, ROBOT_ID, this->swarm_num_, this->swarm_ugv_num_);
+                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, this->ugv_id, this->swarm_num_, this->swarm_ugv_num_);
                 }
                 else
                 {
