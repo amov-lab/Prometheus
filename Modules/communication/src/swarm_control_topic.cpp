@@ -57,10 +57,8 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, Communication *communication, Sw
     // 运行在无人车上
     else if (type == RobotType::ROBOT_TYPE_UGV)
     {
-        int offset;
-        nh.param<int>("swarm_num", offset, 0);
         // 【发布】连接是否失效
-        this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/ugv" + std::to_string(id - offset) + "/prometheus/communication_state", 10);
+        this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/ugv" + std::to_string(id) + "/prometheus/communication_state", 10);
     }
     // 【发布】所有无人机状态
     this->all_uav_state_pub_ = nh.advertise<prometheus_msgs::MultiUAVState>("/prometheus/all_uav_state", 1000);
