@@ -205,14 +205,21 @@ void UAV_controller::mainloop()
             this->text_info.Message = "Odom invalid, swtich to land control mode!";
             control_state = CONTROL_STATE::LAND_CONTROL;
         }
+        else if(safety_flag == 3)
+        {
+            uav_control_state.failsafe = true;
+            text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            text_info.Message = "remote control disconnected!";
+            control_state = CONTROL_STATE::LAND_CONTROL;
+        }
         else{
             uav_control_state.failsafe = false;
         }
 
-        // 检查是否满足维持在HOVER_CONTROL的条件，不满足则自动退出
+        // 检查是否满足维持在RC_POS_CONTROL的条件，不满足则自动退出
         if (uav_state.mode != "OFFBOARD")
         {
-            // 进入HOVER_CONTROL，需启动OFFBOARD模式
+            // 进入RC_POS_CONTROL，需启动OFFBOARD模式
             set_px4_mode_func("OFFBOARD");
         }
     }
@@ -330,7 +337,7 @@ void UAV_controller::mainloop()
     // 此时需要满足两个条件:
     // 1, 无人机有稳定准确的定位,由uav_state_cb()函数获得 
     // 2, 无人机知道自己要去哪，即期望位置pos_des等
-    // HOVER_CONTROL和LAND_CONTROL的指令信息由程序根据当前状态计算得到，COMMAND_CONTROL的指令信息由uav_cmd_cb()函数获得
+    // RC_POS_CONTROL和LAND_CONTROL的指令信息由程序根据当前状态计算得到，COMMAND_CONTROL的指令信息由uav_cmd_cb()函数获得
 
     // 发送控制指令 -> Mavros -> PX4
     if (pos_controller == POS_CONTOLLER::PX4_ORIGIN)
@@ -818,7 +825,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         return;
     }
 
-    // 自动降落，条件: 必须在HOVER_CONTROL或者COMMAND_CONTROL模式才可以触发
+    // 自动降落，条件: 必须在RC_POS_CONTROL或者COMMAND_CONTROL模式才可以触发
     bool if_in_hover_or_command_mode =
         control_state == CONTROL_STATE::RC_POS_CONTROL || control_state == CONTROL_STATE::COMMAND_CONTROL;
     if (rc_input.toggle_land && if_in_hover_or_command_mode)
@@ -857,11 +864,11 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
                 cout << RED << node_name << " Reject RC_POS_CONTROL. Odom invalid! " << TAIL << endl;
                 return;
             }
-            // 切换至HOVER_CONTROL
+            // 切换至RC_POS_CONTROL
             control_state = CONTROL_STATE::RC_POS_CONTROL;
             // 初始化默认的UAVCommand
             uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-            // 进入HOVER_CONTROL，需设置初始悬停点
+            // 进入RC_POS_CONTROL，需设置初始悬停点
             set_hover_pose_with_odom();
             cout << GREEN << node_name << " Switch to RC_POS_CONTROL" << TAIL << endl;
             return;
@@ -878,6 +885,7 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
     }
 
+    // 收到进入RC_POS_CONTROL指令，且不在RC_POS_CONTROL模式时
     if (rc_input.enter_rc_pos_control && control_state != CONTROL_STATE::RC_POS_CONTROL)
     {
         rc_input.enter_rc_pos_control = false;
@@ -889,17 +897,17 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
             cout << RED << node_name << " Reject RC_POS_CONTROL. Odom invalid! " << TAIL << endl;
             return;
         }
-        // 切换至HOVER_CONTROL
+        // 切换至RC_POS_CONTROL
         control_state = CONTROL_STATE::RC_POS_CONTROL;
         // 初始化默认的UAVCommand
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
-        // 进入HOVER_CONTROL，需设置初始悬停点
+        // 进入RC_POS_CONTROL，需设置初始悬停点
         set_hover_pose_with_odom();
         cout << GREEN << node_name << " Switch to RC_POS_CONTROL" << TAIL << endl;
         return;
     }
 
-    // 必须从HOVER_CONTROL模式切入（确保odom和offboard模式正常）
+    // 必须从RC_POS_CONTROL模式切入（确保odom和offboard模式正常）
     if (rc_input.enter_command_control && control_state == CONTROL_STATE::RC_POS_CONTROL && uav_state.mode == "OFFBOARD")
     {
         // 标志位重置
@@ -920,6 +928,13 @@ int UAV_controller::check_failsafe()
     {
         cout << RED << uav_name << ":----> Failsafe: Waiting for PX4 connection！" << TAIL << endl;
         return -1;
+    }
+
+    // 检查接收PX4遥控器数据的是否超时，超时说明遥控器断联
+    if ((ros::Time::now() - rc_input.rcv_stamp).toSec() > 1.5 /* 秒 */)
+    {
+        cout << RED << uav_name << ":----> Failsafe: Remote control disconnected！" << TAIL << endl;
+        return 3;
     }
 
     if (uav_state.position[0] < uav_geo_fence.x_min || uav_state.position[0] > uav_geo_fence.x_max ||

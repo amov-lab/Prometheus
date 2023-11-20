@@ -30,7 +30,7 @@
         <param name="sim_mode" value="$(arg sim_mode)" />
 		<param name="flag_printf" value="$(arg flag_printf)" />
 		<param name="ugv_control/enable_external_control" value="$(arg ugv_control/enable_external_control)" />
-		<rosparam command="load" file="$(find prometheus_ugv_control)/launch/ugv_control.yaml" />
+		<rosparam command="load" file="$(find prometheus_ugv_control)/launch/ugv_control_wheel.yaml" />
 	</node>
 	
 	    <!--Gazebo-->

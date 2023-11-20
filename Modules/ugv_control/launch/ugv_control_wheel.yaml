@@ -1,16 +1,18 @@
 ## parameter for ugv_control
 ugv_control:
 ##  控制变量
-  k_p : 2.0
+  k_p : 0.2
   k_p_path : 5.0
   k_aoivd : 0.2
   k_yaw : 2.0
+  k_i : 0.01
+  d_t : 0.01
   
 ##  跑圆参数
   circle_radius : 5.0
   linear_vel : 1.0
 ##  最大速度
-  max_vel : 2.0
+  max_vel : 1.0
 
 ##　地理围栏
 geo_fence:

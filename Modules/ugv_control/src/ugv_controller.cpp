@@ -11,6 +11,8 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     nh.param("k_p_path", this->k_p_path, 5.0f);
     nh.param("k_aoivd", this->k_aoivd, 0.2f); 
     nh.param("k_yaw", this->k_yaw, 2.0f);
+    nh.param("k_i", this->k_i, 0.02f);
+    nh.param("k_i", this->d_t, 0.01f);
     nh.param("max_vel", this->max_vel, 2.0f);
     // 是否打印消息
     nh.param("flag_printf", this->flag_printf, false);
@@ -27,9 +29,16 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     //【订阅】本机状态信息
     this->ugv_state_sub = nh.subscribe<prometheus_msgs::UGVState>(this->ugv_name + "/prometheus/ugv_state", 2, &UGV_controller::ugv_state_cb, this);
     
+    all_ugv_state_sub_ = nh.subscribe<prometheus_msgs::MultiUGVState>("/prometheus/all_ugv_state", 1, &UGV_controller::allUGVStateCb, this);
+
+    //【订阅】matlab模式指令
+    this->matlab_ugv_cmd_mode_sub = nh.subscribe<std_msgs::UInt8>(this->ugv_name + "/prometheus/cmd_mode", 10, &UGV_controller::matlab_ugv_cmd_mode_cb, this);
+
+    //【订阅】matlab控制指令
+    this->matlab_ugv_cmd_sub = nh.subscribe<geometry_msgs::Point>(this->ugv_name + "/prometheus/cmd", 10, &UGV_controller::matlab_ugv_cmd_cb, this);  
 
     
-    //【发布】底层控制指令
+    //【发布】底层控制指令(/matlab控制)
     this->cmd_pub = nh.advertise<geometry_msgs::Twist>(this->ugv_name + "/cmd_vel", 10);
 
     // 【定时器】
@@ -48,6 +57,8 @@ UGV_controller::UGV_controller(ros::NodeHandle &nh)
     this->vel_avoid_nei<<0,0;
 
     this->test_time = 0.0;
+    
+    this->matlab_reciver_flag_ = false;
 
     this->only_rotate = true;
     this->error_yaw = 0.0;
@@ -71,6 +82,55 @@ void UGV_controller::mainloop()
             this->Command_Now.Mode = prometheus_msgs::UGVCommand::Hold;  //stop
         }
 
+        if(this->matlab_reciver_flag_)
+        {
+            // Matlab_mode 控制模式选择
+            if(matlab_ugv_cmd_mode_.data == MatlabUGVState::HOLD)
+            {
+                Command_Now.Mode = prometheus_msgs::UGVCommand::Hold;
+            
+            }
+
+            //Matlab输入数据BODY坐标系linear_vel速度控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Direct_Control_BODY)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Direct_Control_BODY;
+                this->Command_Now.linear_vel[0] = matlab_ugv_cmd.x;
+                this->Command_Now.linear_vel[1] = matlab_ugv_cmd.y;
+                this->Command_Now.angular_vel = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据ENU坐标系linear_vel速度控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Direct_Control_ENU)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Direct_Control_ENU;
+                this->Command_Now.linear_vel[0] = matlab_ugv_cmd.x;
+                this->Command_Now.linear_vel[1] = matlab_ugv_cmd.y;
+                this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据position位置控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Point_Control)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Point_Control;
+                this->Command_Now.position_ref[0] = matlab_ugv_cmd.x;
+                this->Command_Now.position_ref[1] = matlab_ugv_cmd.y;
+                this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据Path_position位置控制赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Path_Control)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Path_Control;
+                this->Command_Now.position_ref[0] = matlab_ugv_cmd.x;
+                this->Command_Now.position_ref[1] = matlab_ugv_cmd.y;
+                this->Command_Now.yaw_ref = matlab_ugv_cmd.z;
+            }
+            //Matlab输入数据测试赋值
+            else if(matlab_ugv_cmd_mode_.data == MatlabUGVState::Test)
+            {
+                this->Command_Now.Mode = prometheus_msgs::UGVCommand::Test;
+            
+            }
+        }
+
         switch (this->Command_Now.Mode)
         {
         // 【Start】 
@@ -83,6 +143,7 @@ void UGV_controller::mainloop()
             this->cmd_vel.angular.y = 0.0;
             this->cmd_vel.angular.z = 0.0;
             this->cmd_pub.publish(this->cmd_vel);
+          
             break;
 
         case prometheus_msgs::UGVCommand::Direct_Control_BODY:  //speed control by vx,vy
@@ -95,6 +156,7 @@ void UGV_controller::mainloop()
             this->cmd_vel.angular.y = 0.0;
             this->cmd_vel.angular.z = this->Command_Now.angular_vel;
             this->cmd_pub.publish(this->cmd_vel);
+            
             break;
 
         case prometheus_msgs::UGVCommand::Direct_Control_ENU:  //speed control of yaw angle
@@ -139,6 +201,8 @@ void UGV_controller::mainloop()
             if( abs(this->error_yaw) < 5.0/180.0 * M_PI)
             {
                 float enu_x,enu_y;
+                //integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
+                //integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
                 enu_x = this->k_p*(this->Command_Now.position_ref[0] - this->pos_ugv[0]);
                 enu_y = this->k_p*(this->Command_Now.position_ref[1] - this->pos_ugv[1]);
                 float body_x, body_y;
@@ -163,16 +227,19 @@ void UGV_controller::mainloop()
             }
 
             VelLimit();
+            ReachTargetPoint();
             this->cmd_pub.publish(this->cmd_vel);
             break;
 
-        case prometheus_msgs::UGVCommand::Path_Control:  //more vel_avoid_nei than point control
+      case prometheus_msgs::UGVCommand::Path_Control:  //more vel_avoid_nei than point control
 
             CalErrorYaw();
 
             if( abs(this->error_yaw) < 5.0/180.0 * M_PI)
             {
                 float enu_x,enu_y;
+                //integral[0] += this->k_i*(this->Command_Now.position_ref[0] - this->pos_ugv[0])*d_t;
+                //integral[1] += this->k_i*(this->Command_Now.position_ref[1] - this->pos_ugv[1])*d_t;
                 enu_x = this->k_p_path*(this->Command_Now.position_ref[0] - this->pos_ugv[0]);
                 enu_y = this->k_p_path*(this->Command_Now.position_ref[1] - this->pos_ugv[1]);
                 // cal vel_avoid_nei
@@ -202,7 +269,9 @@ void UGV_controller::mainloop()
 
             VelLimit();
             this->cmd_pub.publish(this->cmd_vel);
+           
             break;
+            
 
         case prometheus_msgs::UGVCommand::Test:  //测试程序：走圆
             
@@ -238,7 +307,7 @@ void UGV_controller::mainloop()
 
             VelLimit();
 
-            this->cmd_pub.publish(this->cmd_vel);
+            this->cmd_pub.publish(this->cmd_vel);       
             test_time = test_time + 0.05;       //20Hz
             break;
 
@@ -289,31 +358,31 @@ void UGV_controller::ugv_state_cb(const prometheus_msgs::UGVState::ConstPtr& msg
 }
 
 
-// void UGV_controller::add_apf_vel()
-// {
-//     this->vel_avoid_nei << 0.0,0.0;
-//     float R = 1.2;
-//     float r = 0.5;
+void UGV_controller::add_apf_vel()
+{
+    this->vel_avoid_nei << 0.0,0.0;
+    float R = 1.2;
+    float r = 0.5;
 
-//     // 增加无人车之间的局部躲避
-//     for(int i = 1; i <= this->swarm_num_ugv; i++)
-//     {
-//         if(i == this->ugv_id)
-//         {
-//             continue;
-//         }
-
-//         float distance_to_nei = (pos_ugv - this->all_ugv_vel_[i-1]).norm();
-//         if(distance_to_nei  > R )
-//         {
-//             continue;
-//         }else if(distance_to_nei  > r)
-//         {
-//             this->vel_avoid_nei[0] = this->vel_avoid_nei[0] +  k_aoivd * (this->pos_ugv[0] - this->all_ugv_vel_[i-1][0]);
-//             this->vel_avoid_nei[1] = this->vel_avoid_nei[1] +  k_aoivd * (this->pos_ugv[1] - this->all_ugv_vel_[i-1][1]);
-//         }
-//     }
-// }
+    // 增加无人车之间的局部躲避
+    for(int i = 1; i <= this->swarm_num_ugv; i++)
+    {
+        if(i == this->ugv_id)
+        {
+            continue;
+        }
+        float distance_to_nei = sqrtf((pow(this->pos_ugv[0] - this->all_ugv_states_[i-1].position[0],2) 
+                                    + pow(this->pos_ugv[1] - this->all_ugv_states_[i-1].position[1],2)));
+        if(distance_to_nei  > R )
+        {
+            continue;
+        }else if(distance_to_nei  > r)
+        {
+            this->vel_avoid_nei[0] = this->vel_avoid_nei[0] +  k_aoivd * (this->pos_ugv[0] - this->all_ugv_states_[i-1].position[0]);
+            this->vel_avoid_nei[1] = this->vel_avoid_nei[1] +  k_aoivd * (this->pos_ugv[1] - this->all_ugv_states_[i-1].position[1]);
+        }
+    }
+}
 
 
 
@@ -349,6 +418,20 @@ void UGV_controller::VelLimit()
     {
         this->cmd_vel.linear.y = -this->max_vel;
     }
+}
+
+void UGV_controller::ReachTargetPoint()
+{   
+    if(abs(this->Command_Now.position_ref[0] - this->pos_ugv[0]) < 0.2)
+    {
+        this->cmd_vel.linear.x = 0;
+    }
+
+    if(abs(this->Command_Now.position_ref[1] - this->pos_ugv[1]) < 0.2)
+    {
+        this->cmd_vel.linear.y = 0;
+    }    
+
 }
 
 void UGV_controller::printf_state(const ros::TimerEvent &e)
@@ -420,3 +503,35 @@ int UGV_controller::check_failsafe()
         return 0;
     }
 }
+
+void UGV_controller::allUGVStateCb(const prometheus_msgs::MultiUGVState::ConstPtr &msg)
+{
+
+    this->swarm_num_ugv = msg->swarm_num_ugv;
+
+    for(int i = 0; i < this->swarm_num_ugv; i++)
+    {
+        this->all_ugv_states_[i] = msg->ugv_state_all[i];
+    }
+}
+
+
+//matlab_msg数据处理
+void UGV_controller::matlab_ugv_cmd_cb(const geometry_msgs::Point::ConstPtr &msg)
+
+{
+       matlab_ugv_cmd.x = msg->x;
+       matlab_ugv_cmd.y = msg->y;
+       matlab_ugv_cmd.z = msg->z;
+}
+
+void UGV_controller::matlab_ugv_cmd_mode_cb(const std_msgs::UInt8::ConstPtr &msg)
+{
+
+       this->matlab_ugv_cmd_mode_ = *msg;
+       this->matlab_reciver_flag_ = true;
+
+}
+
+
+

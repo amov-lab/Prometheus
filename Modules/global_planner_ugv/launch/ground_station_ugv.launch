@@ -1,0 +1,22 @@
+<launch>
+	<arg name="swarm_num_ugv" default="1"/>
+	<!-- 参数 -->
+	<arg name="ugv_id" default="1"/>
+	<arg name="manual_goal" default="false"/>
+	<arg name="ugv_height" default="0.0"/>
+	<arg name="goal_pos_x" default="0.0"/>
+	<arg name="goal_pos_y" default="0.0"/>
+	<arg name="goal_yaw" default="1.0"/>
+
+	<node pkg="prometheus_global_planner_ugv" type="ground_station_ugv" name="ground_station_ugv$(arg ugv_id)" output="screen">
+		<param name="ugv_id" value="$(arg ugv_id)" />
+		<param name="manual_goal" value="$(arg manual_goal)" />
+		<param name="ugv_height" value="$(arg ugv_height)" />
+		<param name="goal_pos_x" value="$(arg goal_pos_x)" />
+		<param name="goal_pos_y" value="$(arg goal_pos_y)" />
+		<param name="goal_yaw" value="$(arg goal_yaw)" />
+		
+	</node>
+
+
+</launch>

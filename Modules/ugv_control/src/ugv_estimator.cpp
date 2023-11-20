@@ -21,12 +21,15 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
         this->mocap_pos_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node"+ this->ugv_name + "/pose", 1, &UGV_estimator::mocap_pos_cb, this);
 
         // 【订阅】mocap估计速度
-        // mocap_vel_sub = nh.subscribe<geometry_msgs::TwistStamped>("/vrpn_client_node"+ ugv_name + "/twist", 1, mocap_vel_cb);
+        this->mocap_vel_sub = nh.subscribe<geometry_msgs::TwistStamped>("/vrpn_client_node"+ this->ugv_name + "/twist", 1, &UGV_estimator::mocap_vel_cb, this);
     
         // 【订阅】电池状态(无人车底板电压)
         this->battery_sub = nh.subscribe<std_msgs::Float32>(this->ugv_name + "/PowerVoltage", 1, &UGV_estimator::battery_cb, this);
-    }
 
+    }
+    // 【发布】mocap--matlab
+    this->mocap_matlab_pub = nh.advertise<geometry_msgs::PoseStamped>(this->ugv_name + "/mocap_ground_truth", 1);
+     
     // 【发布】无人车状态合集,包括位置\速度\姿态\模式等,供上层节点使用
     this->ugv_state_pub = nh.advertise<prometheus_msgs::UGVState>(this->ugv_name + "/prometheus/ugv_state", 1);
 
@@ -41,7 +44,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
 
 
     // 【定时器】发布ugv_state话题，50Hz
-    timer_ugv_state_pub = nh.createTimer(ros::Duration(0.02), &UGV_estimator::timercb_ugv_state, this);
+    timer_ugv_state_pub = nh.createTimer(ros::Duration(0.05), &UGV_estimator::timercb_ugv_state, this);
 
     // 【定时器】发布RVIZ显示相关话题，5Hz
     timer_rviz_pub = nh.createTimer(ros::Duration(0.2), &UGV_estimator::timercb_rviz, this);
@@ -51,12 +54,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
     this->ugv_state.battery = 0.0;
     this->ugv_state.ugv_id = this->ugv_id;
     this->ugv_state.position[0] = 0.0;
-    this->ugv_state.position[1] = 0.0;
-    this->ugv_state.position[2] = 0.0;
-    this->ugv_state.velocity[0] = 0.0;
-    this->ugv_state.velocity[1] = 0.0;
-    this->ugv_state.velocity[2] = 0.0;
-    this->ugv_state.attitude[0] = 0.0;
+    this->ugv_state.position[1] = 0.0;  
     this->ugv_state.attitude[1] = 0.0;
     this->ugv_state.attitude[2] = 0.0;
     this->ugv_state.attitude_q.x = 0.0;
@@ -110,6 +108,16 @@ void UGV_estimator::mocap_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg
 
     // 记录收到mocap的时间戳
     this->last_mocap_timestamp = ros::Time::now();
+
+   // 转发消息给mocap_matlab_pub
+    geometry_msgs::PoseStamped pose_msg;
+    pose_msg.header = msg->header;
+    pose_msg.pose.position.x = this->ugv_state.position[0];
+    pose_msg.pose.position.y = this->ugv_state.position[1];
+    pose_msg.pose.position.z = this->ugv_state.position[2];
+    pose_msg.pose.orientation = this->ugv_state.attitude_q;
+
+    this->mocap_matlab_pub.publish(pose_msg);
 }
 
 void UGV_estimator::mocap_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
@@ -144,6 +152,7 @@ void UGV_estimator::gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     this->ugv_state.attitude[1] = euler_gazebo[1];
     this->ugv_state.attitude[2] = euler_gazebo[2];
 }
+
 
 // 【获取当前时间函数】 单位：秒
 float UGV_estimator::get_time_in_sec(const ros::Time& begin_time)
