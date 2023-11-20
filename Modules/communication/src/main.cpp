@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 
     CommunicationBridge communication_bridge_(nh);
 
-    GFKD gfkd(nh);
+    // GFKD gfkd(nh);
 
     ros::spin();
 

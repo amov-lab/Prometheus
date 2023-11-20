@@ -6,7 +6,7 @@
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
 
-    <arg name="ground_station_ip" default="192.168.31.23"/>
+    <arg name="ground_station_ip" default="127.0.0.1"/>
 
     <!-- robot id为唯一标识符，如果是集群(无人机集群、无人车集群、机车协同)，该值不能重复 -->
     <arg name="robot_id" default="1"/>
@@ -18,7 +18,7 @@
     <arg name="swarm_num" default="0"/>
     <arg name="swarm_ugv_num" default="0"/>
 
-    <arg name="is_simulation" default="0"/>
+    <arg name="is_simulation" default="1"/>
     <arg name="swarm_data_update_timeout" default="5"/>
 
     <!-- Prometheus功能包路径 -->

@@ -531,6 +531,7 @@ public:
       tv.tv_usec = 0;
       sensor_msgs::Joy joy_msg; // Here because we want to reset it on device close.
       double val;               // Temporary variable to hold event values
+      int joy_fd_test;// 用于判断遥控器是否存在，因为遥控不存在后，会默认把值清空，从而导致无人机进入急停。添加该变量用于退出循环。
       while (nh_.ok())
       {
         ros::spinOnce();
@@ -570,6 +571,20 @@ public:
 
         if (FD_ISSET(joy_fd, &set))
         {
+          // 判断能不能打开遥控器端口，能打开表示存在，不能则表示不存在   这里用重复打开关闭,参考上面第一个循环中的代码
+          joy_fd_test = open(joy_dev_.c_str(), O_RDONLY);
+          if(joy_fd_test != -1)
+          {
+            close(joy_fd_test);
+            joy_fd_test = open(joy_dev_.c_str(), O_RDONLY);
+          }
+          if(joy_fd_test != -1)
+          {
+            close(joy_fd_test);
+          }else{
+            break;
+          }
+
           if (read(joy_fd, &event, sizeof(js_event)) == -1 && errno != EAGAIN)
           {
             break; // Joystick is probably closed. Definitely occurs.

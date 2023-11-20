@@ -30,6 +30,8 @@ add_message_files(
   UGVState.msg
   UGVCommand.msg
   MultiUGVState.msg
+  PositionReference.msg
+  StationCommand.msg
 
   ArucoInfo.msg
   MultiArucoInfo.msg
@@ -54,8 +56,8 @@ add_message_files(
   MultiDetectionInfoSub.msg
   VisionDiff.msg
   WindowPosition.msg
-	Bspline.msg
-	MultiBsplines.msg
+  Bspline.msg
+  MultiBsplines.msg
   Control.msg
 )
 

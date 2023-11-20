@@ -83,7 +83,9 @@ struct UAVState
         FAKE_ODOM = 3,
         GPS = 4,
         RTK = 5,
-        UWB = 6
+        UWB = 6,
+        VINS = 7,
+        OPTICAL_FLOW = 8
     };
 
     // PX4飞控当前飞行模式  int8
@@ -171,7 +173,7 @@ struct ModeSelection
         EXITNX = 10
     };
 //    bool is_simulation;
-    std::vector<uint8_t> selectId;
+    std::vector<int8_t> selectId;
     // uint8_t swarm_num;
 
     uint8_t use_mode;
@@ -228,6 +230,9 @@ struct SwarmCommand
         Hold = 3,
         Stop = 4,
         Formation = 5,
+        Col_Around_Circle = 6,
+        Col_Follow_UAV = 7,
+        Col_Follow_UGV = 8,
         Follow = 11,
         Search = 12,
         Attack = 13
@@ -243,7 +248,8 @@ struct SwarmCommand
         One_column = 0,
         Triangle = 1,
         Square = 2,
-        Circular = 3
+        Circular = 3,
+        around_Circle = 4
     };
 
     // 搜索控制参考量
