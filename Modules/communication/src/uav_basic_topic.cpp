@@ -8,6 +8,8 @@ UAVBasic::UAVBasic()
 UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
+    nh.param<int>("uav_basic_hz", send_hz, 10);
+
     this->robot_id = id;
     this->offset_pose_.x = 0;
     this->offset_pose_.y = 0;
@@ -27,6 +29,11 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->uav_cmd_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/command",10,&UAVBasic::uavCmdCb,this);
     //【发布】跟踪目标
     this->uav_target_pub_ = nh.advertise<prometheus_msgs::Control>("/uav" + std::to_string(this->robot_id) + "/spirecv/control", 1);
+
+    if(send_hz > 0)
+    {
+        send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &UAVBasic::send, this);
+    }
 }
 
 UAVBasic::~UAVBasic()
@@ -69,8 +76,8 @@ void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
     this->uav_state_.battery_state = msg->battery_state;
     this->uav_state_.battery_percetage = msg->battery_percetage;
 
-    //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_,this->robot_id), multicast_udp_ip);
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_,this->robot_id), multicast_udp_ip);
+    else uav_state_ready = true;
     setTimeStamp(msg->header.stamp.sec);
 }
 
@@ -93,7 +100,8 @@ void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &
     this->uav_control_state_.failsafe = msg->failsafe;
 
     //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), multicast_udp_ip);
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), multicast_udp_ip);
+    else uav_control_state_ready = true;
 }
 
 struct UAVState UAVBasic::getUAVState()
@@ -127,27 +135,27 @@ void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
 
 void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
 {
-    struct UAVCommand uav_cmd;
-    uav_cmd.secs = msg->header.stamp.sec;
-    uav_cmd.nsecs = msg->header.stamp.nsec;
-    uav_cmd.Agent_CMD = msg->Agent_CMD;
-    uav_cmd.Move_mode = msg->Move_mode;
+    uav_command_.secs = msg->header.stamp.sec;
+    uav_command_.nsecs = msg->header.stamp.nsec;
+    uav_command_.Agent_CMD = msg->Agent_CMD;
+    uav_command_.Move_mode = msg->Move_mode;
     for(int i = 0; i < 3; i++)
     {
-        uav_cmd.position_ref[i] = msg->position_ref[i];
-        uav_cmd.velocity_ref[i] = msg->velocity_ref[i];
-        uav_cmd.acceleration_ref[i] = msg->acceleration_ref[i];
-        uav_cmd.att_ref[i] = msg->att_ref[i];
+        uav_command_.position_ref[i] = msg->position_ref[i];
+        uav_command_.velocity_ref[i] = msg->velocity_ref[i];
+        uav_command_.acceleration_ref[i] = msg->acceleration_ref[i];
+        uav_command_.att_ref[i] = msg->att_ref[i];
     }
-    uav_cmd.att_ref[3] = msg->att_ref[3];
-    uav_cmd.yaw_ref = msg->yaw_ref;
-    uav_cmd.Yaw_Rate_Mode = msg->Yaw_Rate_Mode;
-    uav_cmd.yaw_rate_ref = msg->yaw_rate_ref;
-    uav_cmd.Command_ID = msg->Command_ID;
-    uav_cmd.latitude = msg->latitude;
-    uav_cmd.longitude = msg->longitude;
-    uav_cmd.altitude = msg->altitude;
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_cmd,this->robot_id),multicast_udp_ip);
+    uav_command_.att_ref[3] = msg->att_ref[3];
+    uav_command_.yaw_ref = msg->yaw_ref;
+    uav_command_.Yaw_Rate_Mode = msg->Yaw_Rate_Mode;
+    uav_command_.yaw_rate_ref = msg->yaw_rate_ref;
+    uav_command_.Command_ID = msg->Command_ID;
+    uav_command_.latitude = msg->latitude;
+    uav_command_.longitude = msg->longitude;
+    uav_command_.altitude = msg->altitude;
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),multicast_udp_ip);
+    else uav_command_ready = true;
 }
 
 void UAVBasic::uavSetupPub(struct UAVSetup uav_setup)
@@ -177,4 +185,24 @@ void UAVBasic::uavTargetPub(struct WindowPosition window_position)
     cmd.x = window_position.origin_x/(float)window_position.window_position_x;
     cmd.y = window_position.origin_y/(float)window_position.window_position_y;
     this->uav_target_pub_.publish(cmd);
+}
+
+void UAVBasic::send(const ros::TimerEvent &time_event)
+{
+    // std::cout << "uav_basic: " << uav_state_ready << " " << uav_command_ready << " " << uav_control_state_ready << std::endl;
+    if(uav_state_ready)
+    {
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_,this->robot_id), multicast_udp_ip);
+        this->uav_state_ready = false;
+    }
+    if(uav_command_ready)
+    {
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->uav_command_,this->robot_id),multicast_udp_ip);
+        this->uav_command_ready = false;
+    }
+    if(uav_control_state_ready)
+    {
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), multicast_udp_ip);
+        this->uav_control_state_ready = false;
+    }
 }

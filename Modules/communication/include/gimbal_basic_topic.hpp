@@ -23,6 +23,8 @@ public:
 
     void gimbalControlPub(struct GimbalControl gimbal_control);
 
+    void send(const ros::TimerEvent &time_event);
+
 protected:
     ros::Subscriber gimbal_state_sub_;
     ros::Subscriber vision_diff_sub_;
@@ -34,6 +36,13 @@ protected:
 
     Communication* communication_ = NULL;
     std::string multicast_udp_ip;
+
+    // 只控制 gimbal_state、vision_diff 的发送频率
+    ros::Timer send_timer;
+    int send_hz;
+    // 下列变量仅在发送定时器中有效，为判断当前数据是否刷新
+    bool gimbal_state_ready = false;
+    bool vision_diff_ready = false;
 };
 
 #endif

@@ -43,6 +43,8 @@ public:
 
     void uavTargetPub(struct WindowPosition window_position);
 
+    void send(const ros::TimerEvent &time_event);
+
 private:
     ros::Subscriber uav_state_sub_;
 
@@ -66,6 +68,7 @@ private:
     struct UAVState uav_state_;
     struct TextInfo text_info_;
     struct UAVControlState uav_control_state_;
+    struct UAVCommand uav_command_;
 
     prometheus_msgs::OffsetPose offset_pose_;
 
@@ -74,6 +77,14 @@ private:
     std::string multicast_udp_ip;
 
     uint time_stamp_ = 0;
+
+    // 只控制 uav_state、uav_command 和 uav_control_state 的发送频率
+    ros::Timer send_timer;
+    int send_hz;
+    // 下列变量仅在发送定时器中有效，为判断当前数据是否刷新
+    bool uav_state_ready = false;
+    bool uav_control_state_ready = false;
+    bool uav_command_ready = false;
 };
 
 #endif

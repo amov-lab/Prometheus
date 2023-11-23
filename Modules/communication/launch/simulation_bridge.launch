@@ -13,6 +13,14 @@
     <arg name="is_simulation" default="1"/>
     <arg name="swarm_data_update_timeout" default="5"/>
 
+    <!-- 控制一些数据的转发给地面站或其他机器的频率 -->
+    <!-- 无人机状态和无人机控制状态发送频率，设置为0则以订阅频率发送，不能超过订阅频率 -->
+    <arg name="uav_basic_hz" default="10"/>
+    <!-- 无人车状态发送频率，设置为0则以订阅频率发送 -->
+    <arg name="ugv_basic_hz" default="10"/>
+    <!-- 吊舱状态发送频率，设置为0则以订阅频率发送 -->
+    <arg name="gimbal_basic_hz" default="0"/>
+
     <!-- Prometheus功能包路径 -->
     <arg name="prometheus_moudles_url" default="/home/amov/Prometheus/Modules/"/>
     <!-- 单机配置文件路径 -->
@@ -58,6 +66,11 @@
         <param name="close_uav_control" value="$(arg close_uav_control)"/>
         <param name="swarm_control_start" value="$(arg swarm_control_start)"/>
         <param name="close_swarm_control" value="$(arg close_swarm_control)"/>
+
+        <!-- 发送频率 -->
+        <param name="uav_basic_hz" value="$(arg uav_basic_hz)"/>
+        <param name="ugv_basic_hz" value="$(arg ugv_basic_hz)"/>
+        <param name="gimbal_basic_hz" value="$(arg gimbal_basic_hz)"/>
 
         <!-- 单机配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_control_yaml)"/>
