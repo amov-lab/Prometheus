@@ -9,10 +9,10 @@ ugv_control:
   d_t : 0.01
   
 ##  跑圆参数
-  circle_radius : 5.0
-  linear_vel : 1.0
+circle_radius : 1.5
+linear_vel : 1.0
 ##  最大速度
-  max_vel : 1.0
+max_vel : 0.5
 
 ##　地理围栏
 geo_fence:

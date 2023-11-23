@@ -4,10 +4,10 @@
 UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
 {
      // 读取参数
-    nh.param("ugv_id", this->ugv_id, 0);
-    nh.param("sim_mode", this->sim_mode, false);
-    nh.param("mesh_resource", this->mesh_resource, std::string("package://prometheus_ugv_control/meshes/car.dae"));
-
+    nh.param<int>("ugv_id", this->ugv_id, 0);
+    nh.param<bool>("sim_mode", this->sim_mode, false);
+    nh.param<string>("mesh_resource", this->mesh_resource, std::string("package://prometheus_ugv_control/meshes/car.dae"));
+    nh.param<int>("location_source", this->location_source, UGVLocationSource::MOCAP);
 
     this->ugv_name = "/ugv" + std::to_string(this->ugv_id);
 
@@ -17,12 +17,21 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
         this->gazebo_odom_sub = nh.subscribe<nav_msgs::Odometry>(this->ugv_name + "/odom", 1, &UGV_estimator::gazebo_cb, this);
     }else
     {
-        // 【订阅】mocap估计位置
-        this->mocap_pos_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node"+ this->ugv_name + "/pose", 1, &UGV_estimator::mocap_pos_cb, this);
+        if (this->location_source == UGVLocationSource::MOCAP)
+        {
+            // 【订阅】mocap估计位置
+            this->mocap_pos_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node"+ this->ugv_name + "/pose", 1, &UGV_estimator::mocap_pos_cb, this);
 
-        // 【订阅】mocap估计速度
-        this->mocap_vel_sub = nh.subscribe<geometry_msgs::TwistStamped>("/vrpn_client_node"+ this->ugv_name + "/twist", 1, &UGV_estimator::mocap_vel_cb, this);
-    
+            // 【订阅】mocap估计速度
+            this->mocap_vel_sub = nh.subscribe<geometry_msgs::TwistStamped>("/vrpn_client_node"+ this->ugv_name + "/twist", 1, &UGV_estimator::mocap_vel_cb, this);
+        
+        }
+        else if (this->location_source == UGVLocationSource::GPS)
+        {
+            // 【订阅】飞控本地位置数据
+            this->gps_pos_sub = nh.subscribe<geometry_msgs::PoseStamped>(ugv_name + "/mavros/local_position/pose", 1, &UGV_estimator::gps_pos_cb, this);
+        }
+        
         // 【订阅】电池状态(无人车底板电压)
         this->battery_sub = nh.subscribe<std_msgs::Float32>(this->ugv_name + "/PowerVoltage", 1, &UGV_estimator::battery_cb, this);
 
@@ -118,6 +127,36 @@ void UGV_estimator::mocap_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg
     pose_msg.pose.orientation = this->ugv_state.attitude_q;
 
     this->mocap_matlab_pub.publish(pose_msg);
+}
+void UGV_estimator::gps_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+{
+    // ugv_state赋值 - 位置
+    this->ugv_state.position[0] = msg->pose.position.x;
+    this->ugv_state.position[1] = msg->pose.position.y;
+    this->ugv_state.position[2] = msg->pose.position.z;
+
+    //计算速度
+    // now_time = get_time_in_sec(ros::Time::now());
+    // dt = now_time - last_time;
+    this->dt  = 0.01;
+    this->ugv_state.velocity[0] = (ugv_state.position[0] - last_position_x) / dt;
+    this->ugv_state.velocity[1] = (ugv_state.position[1] - last_position_y) / dt;
+    this->ugv_state.velocity[2] = (ugv_state.position[2] - last_position_z) / dt;
+
+    //保存当前信息为上一时刻
+    this->last_position_x = this->ugv_state.position[0];
+    this->last_position_y = this->ugv_state.position[1];
+    this->last_position_z = this->ugv_state.position[2];
+    // last_time = now_time;
+
+    // ugv_state赋值 - 四元数
+    this->ugv_state.attitude_q = msg->pose.orientation;
+    // ugv_state赋值 - 欧拉角
+    Eigen::Quaterniond q_gps = Eigen::Quaterniond(msg->pose.orientation.w, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z);
+    Eigen::Vector3d euler_gps = quaternion_to_euler(q_gps);
+    this->ugv_state.attitude[0] = euler_gps[0];
+    this->ugv_state.attitude[1] = euler_gps[1];
+    this->ugv_state.attitude[2] = euler_gps[2];
 }
 
 void UGV_estimator::mocap_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
