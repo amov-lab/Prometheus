@@ -98,7 +98,6 @@ public:
         Test = 5
     };
 
-
 private:
     void ugv_command_cb(const prometheus_msgs::UGVCommand::ConstPtr& msg);
     void ugv_state_cb(const prometheus_msgs::UGVState::ConstPtr& msg);

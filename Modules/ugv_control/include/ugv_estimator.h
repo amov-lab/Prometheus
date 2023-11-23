@@ -40,6 +40,7 @@ public:
     int ugv_id;                                           // 无人车编号
     string ugv_name;                            // 无人车名字(话题前缀)
     bool sim_mode;
+    int location_source;     //无人车定位来源
     prometheus_msgs::UGVState ugv_state;    // 无人车状态
     prometheus_msgs::UGVCommand ugv_command;
     nav_msgs::Odometry ugv_odom;                // 无人车odom
@@ -62,6 +63,7 @@ public:
     ros::Subscriber mocap_pos_sub;
     ros::Subscriber mocap_vel_sub;
     ros::Subscriber battery_sub;
+    ros::Subscriber gps_pos_sub;
    
     // 发布话题
     ros::Publisher ugv_state_pub;
@@ -69,21 +71,19 @@ public:
     ros::Publisher ugv_mesh_pub;
     ros::Publisher trajectory_pub;
     ros::Publisher mocap_matlab_pub;
-    
-    enum MatlabUGVState
+
+    enum UGVLocationSource
     {
-        HOLD = 0,
-        Direct_Control_BODY = 1,
-        Direct_Control_ENU = 2,
-        Point_Control = 3,
-        Path_Control = 4,
-        Test = 5
+        MOCAP = 0,
+        GPS = 1
     };
+
 
 
 private:
     void mocap_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
     void mocap_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
+    void gps_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
     void battery_cb(const std_msgs::Float32::ConstPtr &msg);
     void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg);
     float get_time_in_sec(const ros::Time& begin_time);

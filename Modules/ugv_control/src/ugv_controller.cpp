@@ -215,6 +215,8 @@ void UGV_controller::mainloop()
                 this->cmd_vel.angular.x = 0.0;
                 this->cmd_vel.angular.y = 0.0;
                 this->cmd_vel.angular.z = this->k_yaw*this->error_yaw;
+
+                VelLimit();
             }else
             {
                 // 先调整yaw
@@ -225,8 +227,6 @@ void UGV_controller::mainloop()
                 this->cmd_vel.angular.y = 0.0;
                 this->cmd_vel.angular.z = this->k_yaw*this->error_yaw;
             }
-
-            VelLimit();
             ReachTargetPoint();
             this->cmd_pub.publish(this->cmd_vel);
             break;
@@ -243,7 +243,7 @@ void UGV_controller::mainloop()
                 enu_x = this->k_p_path*(this->Command_Now.position_ref[0] - this->pos_ugv[0]);
                 enu_y = this->k_p_path*(this->Command_Now.position_ref[1] - this->pos_ugv[1]);
                 // cal vel_avoid_nei
-                //add_apf_vel();
+                add_apf_vel();
                 enu_x = enu_x + this->vel_avoid_nei[0];
                 enu_y = enu_y + this->vel_avoid_nei[1];
                 float body_x, body_y;
@@ -268,6 +268,7 @@ void UGV_controller::mainloop()
             }
 
             VelLimit();
+            ReachTargetPoint();
             this->cmd_pub.publish(this->cmd_vel);
            
             break;
@@ -306,7 +307,6 @@ void UGV_controller::mainloop()
             }
 
             VelLimit();
-
             this->cmd_pub.publish(this->cmd_vel);       
             test_time = test_time + 0.05;       //20Hz
             break;
