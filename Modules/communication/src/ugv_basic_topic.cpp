@@ -7,13 +7,15 @@ UGVBasic::UGVBasic(ros::NodeHandle &nh, int id, Communication *communication)
     this->robot_id = -id;
     nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
-
-    int offset;
-    nh.param<int>("swarm_num", offset, 0);
-    // this->robot_id = id + offset;
+    nh.param<int>("ugv_basic_hz", send_hz, 10);
 
     this->ugv_cmd_pub_ = nh.advertise<prometheus_msgs::UGVCommand>("/ugv" + to_string(id) + "/prometheus/ugv_command", 1000);
     this->ugv_state_sub_ = nh.subscribe("/ugv" + to_string(id) + "/prometheus/ugv_state", 10, &UGVBasic::stateCb, this);
+
+    if(send_hz > 0)
+    {
+        send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &UGVBasic::send, this);
+    }
 }
 
 UGVBasic::~UGVBasic()
@@ -54,7 +56,8 @@ void UGVBasic::stateCb(const prometheus_msgs::UGVState::ConstPtr &msg)
     this->ugv_state_.attitude_q.z = msg->attitude_q.z;
     this->ugv_state_.attitude_q.w = msg->attitude_q.w;
 
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, ugv_state_, robot_id), multicast_udp_ip);
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, ugv_state_, robot_id), multicast_udp_ip);
+    else ugv_state_ready = true;
     setTimeStamp(msg->header.stamp.sec);
 }
 
@@ -71,4 +74,13 @@ uint UGVBasic::getTimeStamp()
 struct UGVState UGVBasic::getUGVState()
 {
     return this->ugv_state_;
+}
+
+void UGVBasic::send(const ros::TimerEvent &time_event)
+{
+    if(ugv_state_ready)
+    {
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, ugv_state_, robot_id), multicast_udp_ip);
+        ugv_state_ready = false;
+    }
 }

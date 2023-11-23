@@ -24,6 +24,8 @@ public:
     uint getTimeStamp();
 
     struct UGVState getUGVState();
+
+    void send(const ros::TimerEvent &time_event);
 private:
     //
     ros::Publisher ugv_cmd_pub_;
@@ -38,6 +40,12 @@ private:
     std::string multicast_udp_ip;
 
     uint time_stamp_ = 0;
+
+    // 只控制 ugv_state 的发送频率
+    ros::Timer send_timer;
+    int send_hz;
+    // 下列变量仅在发送定时器中有效，为判断当前数据是否刷新
+    bool ugv_state_ready = false;
 };
 
 #endif

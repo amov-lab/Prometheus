@@ -5,6 +5,7 @@ GimbalBasic::GimbalBasic(ros::NodeHandle &nh,Communication *communication)
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     int id;
     nh.param<int>("ROBOT_ID", id, 1);
+    nh.param<int>("gimbal_basic_hz", send_hz, 10);
     this->communication_ = communication;
     //【订阅】吊舱状态数据
     this->gimbal_state_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/gimbal/state", 10, &GimbalBasic::stateCb, this);
@@ -14,6 +15,11 @@ GimbalBasic::GimbalBasic(ros::NodeHandle &nh,Communication *communication)
     this->window_position_pub_ = nh.advertise<prometheus_msgs::WindowPosition>("/detection/bbox_draw", 1000);
     //【发布】吊舱控制
     this->gimbal_control_pub_ = nh.advertise<prometheus_msgs::GimbalControl>("/uav" + std::to_string(id) + "/gimbal/control", 1000);
+
+    if(send_hz > 0)
+    {
+        send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &GimbalBasic::send, this);
+    }
 }
 
 GimbalBasic::~GimbalBasic()
@@ -37,7 +43,8 @@ void GimbalBasic::stateCb(const prometheus_msgs::GimbalState::ConstPtr &msg)
         this->gimbal_state_.rotorAngleTarget[i] = msg->rotorAngleTarget[i];
     }
     //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->gimbal_state_),multicast_udp_ip);
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->gimbal_state_),multicast_udp_ip);
+    else gimbal_state_ready = true;
 }
 
 void GimbalBasic::trackCb(const prometheus_msgs::VisionDiff::ConstPtr &msg)
@@ -60,7 +67,8 @@ void GimbalBasic::trackCb(const prometheus_msgs::VisionDiff::ConstPtr &msg)
     this->vision_diff_.trackIgnoreError = msg->trackIgnoreError;
     this->vision_diff_.autoZoom = msg->autoZoom;
     //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->vision_diff_),multicast_udp_ip);
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->vision_diff_),multicast_udp_ip);
+    else vision_diff_ready = true;
 }
 
 void GimbalBasic::gimbalWindowPositionPub(struct WindowPosition window_position)
@@ -92,4 +100,18 @@ void GimbalBasic::gimbalControlPub(struct GimbalControl gimbal_control)
     gimbal_control_.zoomMode = gimbal_control.zoomMode;
     //发布话题
     this->gimbal_control_pub_.publish(gimbal_control_);
+}
+
+void GimbalBasic::send(const ros::TimerEvent &time_event)
+{
+    if(gimbal_state_ready)
+    {
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->gimbal_state_),multicast_udp_ip);
+        gimbal_state_ready = false;
+    }
+    if(vision_diff_ready)
+    {
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->vision_diff_),multicast_udp_ip);
+        vision_diff_ready = false;
+    }
 }
