@@ -130,6 +130,19 @@ void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
     uav_cmd_.latitude = uav_cmd.latitude;
     uav_cmd_.longitude = uav_cmd.longitude;
     uav_cmd_.altitude = uav_cmd.altitude;
+
+    // test
+    uav_cmd_.Control_Level = prometheus_msgs::UAVCommand::DEFAULT_CONTROL;
+    if(uav_cmd_.Agent_CMD == 5)
+    {
+        uav_cmd_.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
+        uav_cmd_.Control_Level = prometheus_msgs::UAVCommand::ABSOLUTE_CONTROL;
+    }else if(uav_cmd_.Agent_CMD == 6)
+    {
+        uav_cmd_.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
+        uav_cmd_.Control_Level = prometheus_msgs::UAVCommand::EXIT_ABSOLUTE_CONTROL;
+    }
+
     this->uav_cmd_pub_.publish(uav_cmd_);
 }
 

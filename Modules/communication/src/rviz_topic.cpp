@@ -1,4 +1,4 @@
-#include "gfkd_rviz_topic.hpp"
+#include "rviz_topic.hpp"
 
 GFKD::GFKD(ros::NodeHandle &nh)
 {

@@ -9,6 +9,13 @@ uint8 Land=3
 uint8 Move=4
 uint8 User_Mode1=5
 
+## 控制等级 
+uint8 Control_Level
+# Control_Level 枚举
+uint8 DEFAULT_CONTROL=0        ### 默认控制
+uint8 ABSOLUTE_CONTROL=1       ### 绝对控制，在该控制等级下不在响应 默认控制 下任何指令，持续的Move模式应谨慎使用该优先级
+uint8 EXIT_ABSOLUTE_CONTROL=2  ### 退出绝对控制控制，在该控制下，会响应上述两种控制的指令
+
 ## 移动命令下的子模式
 uint8 Move_mode
 ## 移动命令下的子模式枚举

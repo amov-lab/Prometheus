@@ -11,6 +11,7 @@
 #include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/UAVControlState.h>
 #include <nav_msgs/Path.h>
+#include <std_msgs/Bool.h>
 
 #include "controller_test.h"
 #include "printf_utils.h"
@@ -21,6 +22,7 @@ prometheus_msgs::UAVState uav_state;
 prometheus_msgs::UAVControlState uav_control_state;
 prometheus_msgs::UAVCommand agent_command;
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
+std_msgs::Bool stop_control_state;
 
 // 如果要使用地面站PrometheusGround控制，需要将此值改为true，否则改为false
 bool is_ground_station_control = false;
@@ -34,6 +36,11 @@ void uav_state_cb(const prometheus_msgs::UAVState::ConstPtr &msg)
 void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg)
 {
     uav_control_state = *msg;
+}
+
+void stop_control_state_cb(const std_msgs::Bool::ConstPtr &msg)
+{
+    stop_control_state = *msg;
 }
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>主 函 数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -62,12 +69,17 @@ int main(int argc, char **argv)
     //【发布】UAVCommand
     ros::Publisher uav_command_pub = nh.advertise<prometheus_msgs::UAVCommand>(uav_name + "/prometheus/command", 1);
 
+    //【订阅】无人机停止控制状态
+    ros::Subscriber stop_control_state_sub = nh.subscribe<std_msgs::Bool>(uav_name + "/prometheus/stop_control_state", 1, stop_control_state_cb);
+
     //用于控制器测试的类，功能例如：生成圆形轨迹，8字轨迹等
     Controller_Test Controller_Test;
     Controller_Test.printf_param();
 
     int CMD = 0;
     float state_desired[4];
+
+    stop_control_state.data = false;
 
     agent_command.header.stamp = ros::Time::now();
     agent_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
@@ -215,6 +227,11 @@ int main(int argc, char **argv)
 
             while (time_trajectory < trajectory_total_time)
             {
+                ros::spinOnce();
+                // 如果是停止控制状态为正，则不在继续规划路径
+                if(stop_control_state.data){
+                    continue;
+                }
 
                 if (Trjectory_mode == 0)
                 {

@@ -1,6 +1,6 @@
 #include "communication_bridge.hpp"
 #include "custom_data_segment.hpp"
-#include "gfkd_rviz_topic.hpp"
+#include "rviz_topic.hpp"
 
 int main(int argc, char **argv)
 {
