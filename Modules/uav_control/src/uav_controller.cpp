@@ -131,6 +131,9 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     //【发布】运行状态信息(本节点 -> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
+    //【发布】触发绝对悬停后，向其他程序发布停止控制状态(本节点 -> 其他循环发送控制指令程序)
+    stop_control_state_pub = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(uav_id) + "/prometheus/stop_control_state", 1);
+
     // 【服务】解锁/上锁
     px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav" + std::to_string(uav_id) + "/mavros/cmd/arming");
 
@@ -677,6 +680,24 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg
         return;
     }
 
+    // 如果当前处于绝对控制下并且接收的这条命令不为绝对控制
+    if(uav_command.Control_Level == prometheus_msgs::UAVCommand::ABSOLUTE_CONTROL &&
+        msg->Control_Level != prometheus_msgs::UAVCommand::ABSOLUTE_CONTROL
+    )
+    {
+        // 如果不是解除绝对控制，其他指令不响应
+        if(msg->Control_Level != prometheus_msgs::UAVCommand::EXIT_ABSOLUTE_CONTROL)
+        {
+            // 这里可以触发一个信号，用于告诉其他程序(轨迹控制等)停止规划等。
+            stop_control_state.data = true;
+            stop_control_state_pub.publish(stop_control_state);
+            return;
+        }
+        // 如果程序运行到这里说明执行了退出绝对控制，这里也触发一个信号，用于告诉其他程序继续规划
+        stop_control_state.data = false;
+        stop_control_state_pub.publish(stop_control_state);
+    }
+
     uav_command = *msg;
 }
 
@@ -706,7 +727,8 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
     if (control_state == CONTROL_STATE::COMMAND_CONTROL)
     {
         if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Init_Pos_Hover ||
-            uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover)
+            uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover
+            )
         {
             send_pos_setpoint(pos_des, yaw_des);
         }

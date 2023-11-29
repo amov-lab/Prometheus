@@ -28,7 +28,6 @@ enum GFKDRvizMsgId
 
     // /camera/depth/color/points
     CameraDepthColorPoints = 231
-    
 };
 
 class GFKD

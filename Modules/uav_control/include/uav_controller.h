@@ -15,6 +15,8 @@
 #include <mavros_msgs/CommandLong.h>
 #include <mavros_msgs/CommandHome.h>
 
+#include <std_msgs/Bool.h>
+
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/UAVControlState.h>
@@ -55,6 +57,7 @@ public:
     ros::Publisher px4_setpoint_raw_attitude_pub;
     ros::Publisher uav_control_state_pub;
     ros::Publisher ground_station_info_pub;
+    ros::Publisher stop_control_state_pub;
     // 服务
     ros::ServiceClient px4_arming_client;
     ros::ServiceClient px4_set_mode_client;
@@ -70,6 +73,8 @@ public:
     prometheus_msgs::TextInfo text_info;
     prometheus_msgs::TextInfo last_text_info;
     prometheus_msgs::OffsetPose offset_pose;
+
+    std_msgs::Bool stop_control_state;
 
     RC_Input rc_input;
 
