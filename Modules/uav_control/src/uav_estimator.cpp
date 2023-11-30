@@ -312,7 +312,7 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     static tf2_ros::TransformBroadcaster broadcaster;
     geometry_msgs::TransformStamped tfs;
     //  |----头设置
-    tfs.header.frame_id = "world";       //相对于世界坐标系
+    tfs.header.frame_id = "base_link";       //相对于世界坐标系
     tfs.header.stamp = ros::Time::now(); //时间戳
     //  |----坐标系 ID
     tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
@@ -337,7 +337,7 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
 
     // 设置 绕 x 轴 旋转180度
     // double r=-1.57, p=0, y=-1.57;
-    double r=0, p=0, y=0;  
+    double r=0, p=0.349, y=0;  
     q_rot.setRPY(r, p, y);//求得 tf 的旋转四元数
 
     q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
@@ -345,8 +345,13 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
 
     //  将 旋转后的 tf 四元数 转换 为 msg 四元数
     tf2::convert(q_new, tfs.transform.rotation);
-    // tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
-    tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
+    tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
+    // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
+    //  |--------- 广播器发布数据
+    broadcaster.sendTransform(tfs);
+
+    tfs.child_frame_id = "/t265_link"; //子坐标系，无人机的坐标系
+    // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
     //  |--------- 广播器发布数据
     broadcaster.sendTransform(tfs);
 }
