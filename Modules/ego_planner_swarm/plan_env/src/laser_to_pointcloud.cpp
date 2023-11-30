@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     ros::param::get("~uav_id", uav_id);
     uav_id = 1;
     
-    ros::Subscriber scan_sub = n.subscribe<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + "/scan", 10, scanCallback);
+    ros::Subscriber scan_sub = n.subscribe<sensor_msgs::LaserScan>("/scan_filtered", 10, scanCallback);
 
     scan_pub = n.advertise<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + "/prometheus/scan_in_system_time", 10);
     scan_point_cloud_pub = n.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(uav_id) + "/prometheus/scan_point_cloud", 10);
