@@ -272,7 +272,7 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/goal_point
           Name: goal_point_uav1
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -304,7 +304,7 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/optimal_list
           Name: optimal_traj_uav1
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -527,7 +527,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 12.875259399414062
+      Distance: 28.1563720703125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -535,17 +535,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 1.151947259902954
-        Y: -1.9054487943649292
-        Z: 2.0008840560913086
+        X: 0.38798582553863525
+        Y: -1.8761192560195923
+        Z: -0.3502359390258789
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6902021765708923
+      Pitch: 1.5147963762283325
       Target Frame: <Fixed Frame>
-      Yaw: 3.899448871612549
+      Yaw: 3.633082151412964
     Saved: ~
 Window Geometry:
   Displays:

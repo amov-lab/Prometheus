@@ -12,7 +12,7 @@
     <arg name="map_origin_x_" value="-25.0"/>
 		<arg name="map_origin_y_" value="-25.0"/>
     <!-- 可以通过限制ground_height和map_size_z来使得飞机在特定高度飞行 -->
-    <arg name="ground_height" value="1.4"/>
+    <arg name="ground_height" value="0.5"/>
     <!-- 虚拟天花板高度要小于等于ground_height+z_size，否则重置该高度 -->
     <!-- 里程计话题 -->
     <arg name="odometry_topic" value="prometheus/odom"/>
@@ -28,10 +28,10 @@
     <!-- scan -->
     <arg name="scan_topic" value="no_scan"/>
     <!-- 最大速度及加速度 -->
-    <arg name="max_vel" value="0.5" />
-    <arg name="max_acc" value="0.5" />
+    <arg name="max_vel" value="1" />
+    <arg name="max_acc" value="1" />
     <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
-    <arg name="planning_horizon" value="37.5" /> 
+    <arg name="planning_horizon" value="15" /> 
     <!-- ？ -->
     <arg name="use_distinctive_trajs" value="true" />
     <!-- 1: use 2D Nav Goal to select goal  -->
