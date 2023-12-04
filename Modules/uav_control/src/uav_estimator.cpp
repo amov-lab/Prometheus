@@ -318,11 +318,14 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
     // tfs.child_frame_id = "/lidar_link"; //子坐标系，无人机的坐标系
     //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
-    tfs.transform.translation.x = uav_state.position[0];
-    tfs.transform.translation.y = uav_state.position[1];
-    tfs.transform.translation.z = uav_state.position[2];
+    tfs.transform.translation.x = 0.00;
+    tfs.transform.translation.y = 0.00;
+    tfs.transform.translation.z = 0.00;
     //  |--------- 四元数设置
-    tfs.transform.rotation = uav_state.attitude_q;
+    tfs.transform.rotation.x = 0.00;
+    tfs.transform.rotation.y = 0.00;
+    tfs.transform.rotation.z = 0.00;
+    tfs.transform.rotation.w = 1.00;
     //  |--------- 广播器发布数据
     broadcaster.sendTransform(tfs);
 
@@ -345,15 +348,21 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
 
     //  将 旋转后的 tf 四元数 转换 为 msg 四元数
     tf2::convert(q_new, tfs.transform.rotation);
+    // tfs.transform.translation.x = 0.1;
     tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
     // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
     //  |--------- 广播器发布数据
     broadcaster.sendTransform(tfs);
 
-    tfs.child_frame_id = "/t265_link"; //子坐标系，无人机的坐标系
-    // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
-    //  |--------- 广播器发布数据
-    broadcaster.sendTransform(tfs);
+    // if(location_source == prometheus_msgs::UAVState::T265)
+    // {
+    //     tfs.transform.translation.x = 0.08;
+    //     tfs.transform.translation.z = -0.09;
+    //     tfs.child_frame_id = "/t265_link"; //子坐标系，无人机的坐标系
+    //     // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
+    //     //  |--------- 广播器发布数据
+    //     broadcaster.sendTransform(tfs);
+    // }
 }
 
 void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
