@@ -16,6 +16,7 @@
 		<param name="flag_printf" value="$(arg flag_printf)" />
         <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
+        <rosparam command="load" file="$(find prometheus_uav_control)/launch/sensor_tf_offset.yaml" />
 	</node>
 
     <!-- 2号飞机 -->
@@ -25,6 +26,7 @@
         <param name="flag_printf" value="$(arg flag_printf)" />
         <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
+        <rosparam command="load" file="$(find prometheus_uav_control)/launch/sensor_tf_offset.yaml" />
 	</node>
 
     <!-- 3号飞机 -->
@@ -34,6 +36,7 @@
         <param name="flag_printf" value="$(arg flag_printf)" />
         <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
+        <rosparam command="load" file="$(find prometheus_uav_control)/launch/sensor_tf_offset.yaml" />
 	</node>
 
     <!-- 4号飞机 -->
@@ -43,6 +46,7 @@
         <param name="flag_printf" value="$(arg flag_printf)" />
         <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_indoor.yaml" />
+        <rosparam command="load" file="$(find prometheus_uav_control)/launch/sensor_tf_offset.yaml" />
 	</node>
 
     <!-- 启动虚拟摇杆驱动 -->

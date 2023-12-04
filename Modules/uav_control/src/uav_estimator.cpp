@@ -11,6 +11,30 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     nh.param<float>("control/maximum_safe_vel_z", maximum_safe_vel_z, 3.0f);
     // 【参数】最大vision/px4速度误差
     nh.param<float>("control/maximum_vel_error_for_vision", maximum_vel_error_for_vision, 1.0f);
+ 
+    // 【参数】D435i tf相对于base_link偏移量
+    nh.param<float>("D435i/offset_x", d435i_offset.x, 0.0);
+    nh.param<float>("D435i/offset_y", d435i_offset.y, 0.0);
+    nh.param<float>("D435i/offset_z", d435i_offset.z, 0.0);
+    nh.param<float>("D435i/offset_roll", d435i_offset.roll, 0.0);
+    nh.param<float>("D435i/offset_pitch", d435i_offset.pitch, 0.0);
+    nh.param<float>("D435i/offset_yaw", d435i_offset.yaw, 0.0);
+
+    // 【参数】lidar tf相对于base_link偏移量
+    nh.param<float>("Lidar/offset_x", lidar_offset.x, 0.0);
+    nh.param<float>("Lidar/offset_y", lidar_offset.y, 0.0);
+    nh.param<float>("Lidar/offset_z", lidar_offset.z, 0.0);
+    nh.param<float>("Lidar/offset_roll", lidar_offset.roll, 0.0);
+    nh.param<float>("Lidar/offset_pitch", lidar_offset.pitch, 0.0);
+    nh.param<float>("Lidar/offset_yaw", lidar_offset.yaw, 0.0);
+
+    // 【参数】T265 tf相对于base_link偏移量
+    nh.param<float>("T265/offset_x", t265_offset.x, 0.0);
+    nh.param<float>("T265/offset_y", t265_offset.y, 0.0);
+    nh.param<float>("T265/offset_z", t265_offset.z, 0.0);
+    nh.param<float>("T265/offset_roll", t265_offset.roll, 0.0);
+    nh.param<float>("T265/offset_pitch", t265_offset.pitch, 0.0);
+    nh.param<float>("T265/offset_yaw", t265_offset.yaw, 0.0);
 
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);
@@ -318,51 +342,86 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     tfs.child_frame_id = uav_name + "/lidar_link"; //子坐标系，无人机的坐标系
     // tfs.child_frame_id = "/lidar_link"; //子坐标系，无人机的坐标系
     //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
-    tfs.transform.translation.x = 0.00;
-    tfs.transform.translation.y = 0.00;
-    tfs.transform.translation.z = 0.00;
+    tfs.transform.translation.x = lidar_offset.x;
+    tfs.transform.translation.y = lidar_offset.y;
+    tfs.transform.translation.z = lidar_offset.z;
     //  |--------- 四元数设置
     tfs.transform.rotation.x = 0.00;
     tfs.transform.rotation.y = 0.00;
     tfs.transform.rotation.z = 0.00;
     tfs.transform.rotation.w = 1.00;
-    //  |--------- 广播器发布数据
-    broadcaster.sendTransform(tfs);
 
     //q_orig  是原姿态转换的tf的四元数
     //q_rot   旋转四元数
     //q_new   旋转后的姿态四元数
     tf2::Quaternion q_orig, q_rot, q_new;
-
-    // commanded_pose.pose.orientation  这个比如说 是 订阅的别的节点的topic 是一个  姿态的 msg 四元数
-    //通过tf2::convert()  转换成 tf 的四元数
     tf2::convert(tfs.transform.rotation , q_orig);
 
-    // 设置 绕 x 轴 旋转180度
-    // double r=-1.57, p=0, y=-1.57;
-    double r=0, p=0.349, y=0;  
-    q_rot.setRPY(r, p, y);//求得 tf 的旋转四元数
+    q_rot.setRPY(lidar_offset.roll, lidar_offset.pitch, lidar_offset.yaw);//求得 tf 的旋转四元数
 
     q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
     q_new.normalize(); // 归一化
 
     //  将 旋转后的 tf 四元数 转换 为 msg 四元数
     tf2::convert(q_new, tfs.transform.rotation);
-    // tfs.transform.translation.x = 0.1;
+
+    //  |--------- 广播器发布数据
+    broadcaster.sendTransform(tfs);
+
+    //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
+    tfs.transform.translation.x = d435i_offset.x;
+    tfs.transform.translation.y = d435i_offset.y;
+    tfs.transform.translation.z = d435i_offset.z;
+
+    //  |--------- 四元数设置
+    tfs.transform.rotation.x = 0.00;
+    tfs.transform.rotation.y = 0.00;
+    tfs.transform.rotation.z = 0.00;
+    tfs.transform.rotation.w = 1.00;
+
+    tf2::convert(tfs.transform.rotation , q_orig);
+
+    q_rot.setRPY(d435i_offset.roll, d435i_offset.pitch, d435i_offset.yaw);//求得 tf 的旋转四元数
+
+    q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
+    q_new.normalize(); // 归一化
+
+    //  将 旋转后的 tf 四元数 转换 为 msg 四元数
+    tf2::convert(q_new, tfs.transform.rotation);
+
     tfs.child_frame_id = uav_name + "/camera_link"; //子坐标系，无人机的坐标系
     // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
     //  |--------- 广播器发布数据
     broadcaster.sendTransform(tfs);
 
-    // if(location_source == prometheus_msgs::UAVState::T265)
-    // {
-    //     tfs.transform.translation.x = 0.08;
-    //     tfs.transform.translation.z = -0.09;
-    //     tfs.child_frame_id = "/t265_link"; //子坐标系，无人机的坐标系
-    //     // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
-    //     //  |--------- 广播器发布数据
-    //     broadcaster.sendTransform(tfs);
-    // }
+    if(location_source == prometheus_msgs::UAVState::T265)
+    {
+        //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
+        tfs.transform.translation.x = t265_offset.x;
+        tfs.transform.translation.y = t265_offset.y;
+        tfs.transform.translation.z = t265_offset.z;
+
+        //  |--------- 四元数设置
+        tfs.transform.rotation.x = 0.00;
+        tfs.transform.rotation.y = 0.00;
+        tfs.transform.rotation.z = 0.00;
+        tfs.transform.rotation.w = 1.00;
+
+        tf2::convert(tfs.transform.rotation , q_orig);
+
+        q_rot.setRPY(t265_offset.roll, t265_offset.pitch, t265_offset.yaw);//求得 tf 的旋转四元数
+
+        q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
+        q_new.normalize(); // 归一化
+
+        //  将 旋转后的 tf 四元数 转换 为 msg 四元数
+        tf2::convert(q_new, tfs.transform.rotation);
+
+        tfs.child_frame_id = "/t265_link"; //子坐标系，无人机的坐标系
+        // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
+        //  |--------- 广播器发布数据
+        broadcaster.sendTransform(tfs);
+    }
 }
 
 void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
