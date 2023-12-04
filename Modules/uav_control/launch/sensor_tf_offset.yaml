@@ -1,0 +1,23 @@
+## 传感器相对于飞控(base_link)的偏移量 
+D435i:
+  offset_x: 0.0      ## m
+  offset_y: 0.0      ## m
+  offset_z: 0.0      ## m
+  offset_r: 0.0      ## rad
+  offset_p: 0.0      ## rad
+  offset_y: 0.0      ## rad
+Lidar:
+  offset_x: 0.0      ## m
+  offset_y: 0.0      ## m
+  offset_z: 0.0      ## m
+  offset_r: 0.0      ## rad
+  offset_p: 0.0      ## rad
+  offset_y: 0.0      ## rad
+T265:
+  offset_x: 0.0      ## m
+  offset_y: 0.0      ## m
+  offset_z: 0.0      ## m
+  offset_r: 0.0      ## rad
+  offset_p: 0.0      ## rad
+  offset_y: 0.0      ## rad
+

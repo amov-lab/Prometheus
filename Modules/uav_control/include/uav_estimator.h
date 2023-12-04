@@ -50,6 +50,19 @@ using namespace std;
 #define GPS_TIMEOUT 1.0
 #define VINS_TIMEOUT 0.35
 
+// 传感器相对于飞控(base_link)的位置偏移量、姿态偏移量
+struct Sensor_TF_Offset
+{
+    // 位置偏移量
+    float x;
+    float y;
+    float z;
+    // 姿态偏移量
+    float roll;
+    float pitch;
+    float yaw;
+};
+
 class UAV_estimator
 {
     public:
@@ -95,6 +108,10 @@ class UAV_estimator
         prometheus_msgs::TextInfo text_info;
         prometheus_msgs::TextInfo last_text_info;
         prometheus_msgs::OffsetPose offset_pose;
+
+        Sensor_TF_Offset d435i_offset;
+        Sensor_TF_Offset lidar_offset;
+        Sensor_TF_Offset t265_offset;
 
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose
