@@ -50,13 +50,13 @@
         <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
           <!-- <topicName>/uav1/scan</topicName>
           <frameName>/uav1/lidar_link</frameName> -->
-          <topicName>/uav1/scan</topicName>
+          <topicName>/scan</topicName>
           <frameName>/uav1/lidar_link</frameName>
         </plugin>
         <always_on>1</always_on>
         <!-- 更新频率 10HZ -->
         <update_rate>10</update_rate>
-        <visualize>false</visualize>
+        <visualize>true</visualize>
       </sensor>
     </link>
   </model>
