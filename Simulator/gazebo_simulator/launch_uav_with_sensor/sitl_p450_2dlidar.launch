@@ -26,7 +26,7 @@
 	<arg name="uav1_init_x" default="0.0"/>
     <arg name="uav1_init_y" default="0.0"/>
     <arg name="uav1_init_yaw" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_rplidar_monocular_d435i/p450_rplidar_monocular_d435i.sdf"/>
+	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_hokuyo_2Dlidar/p450_hokuyo_2Dlidar.sdf"/>
 	
 	<!-- 1号无人机 -->
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
