@@ -83,9 +83,7 @@ struct UAVState
         FAKE_ODOM = 3,
         GPS = 4,
         RTK = 5,
-        UWB = 6,
-        VINS = 7,
-        OPTICAL_FLOW = 8
+        UWB = 6
     };
 
     // PX4飞控当前飞行模式  int8
@@ -127,6 +125,9 @@ struct UAVState
     float attitude_rate[3];  // [rad/s]
     float battery_state;     // 电池状态[v]
     float battery_percetage; // [0-1]
+
+    // 话题名
+    std::string topic_name;
 };
 
 struct Heartbeat
@@ -154,6 +155,9 @@ struct UGVState
 
     // 四元数
     Quaternion attitude_q;
+
+    // 话题名
+    std::string topic_name;
 };
 
 struct ModeSelection
@@ -230,9 +234,6 @@ struct SwarmCommand
         Hold = 3,
         Stop = 4,
         Formation = 5,
-        Col_Around_Circle = 6,
-        Col_Follow_UAV = 7,
-        Col_Follow_UGV = 8,
         Follow = 11,
         Search = 12,
         Attack = 13
@@ -248,8 +249,7 @@ struct SwarmCommand
         One_column = 0,
         Triangle = 1,
         Square = 2,
-        Circular = 3,
-        around_Circle = 4
+        Circular = 3
     };
 
     // 搜索控制参考量
@@ -262,6 +262,9 @@ struct SwarmCommand
     float attack_target_pos[3]; // [m]
 
     std::vector<struct Point> formation_poses;
+
+    // 话题名
+    std::string topic_name;
 };
 
 // StationFeedback.msg
@@ -283,6 +286,9 @@ struct TextInfo
     int sec;
     uint8_t MessageType;
     std::string Message;
+
+    // 话题名
+    std::string topic_name;
 };
 
 //参考文件： GimbalState.msg
@@ -308,6 +314,9 @@ struct GimbalState
     float imuAngleVel[3];
     //rpy_tgt 目标角度
     float rotorAngleTarget[3];
+
+    // 话题名
+    std::string topic_name;
 };
 //参考文件： VisionDiff.msg
 //订阅话题： ~/gimbal/track
@@ -343,6 +352,9 @@ struct VisionDiff
 
     float trackIgnoreError;
     bool autoZoom;
+    
+    // 话题名
+    std::string topic_name;
 };
 
 //参考文件： GimbalControl.msg
@@ -392,6 +404,9 @@ struct GimbalControl
         zoomOut = 2,
         zoomIn = 3
     };
+
+    // 话题名
+    std::string topic_name;
 };
 
 struct GimbalService
@@ -445,6 +460,8 @@ struct WindowPosition
     // int32_t frame_id;
 
     std::string udp_msg;
+
+    std::string topic_name;
 };
 
 //ROS话题: "/deepsort_ros/object_detection_result"
@@ -503,6 +520,9 @@ struct UGVCommand
     float linear_vel[2];
     // [rad/s]
     float angular_vel;
+
+    // 话题名
+    std::string topic_name;
 };
 
 struct ImageData
@@ -527,6 +547,16 @@ struct UAVCommand
         Land = 3,
         Move = 4,
         User_Mode1 = 5
+    };
+
+    // 控制等级 
+    uint8_t Control_Level;
+    // Control_Level 枚举
+    enum ControlLevel
+    {
+        DEFAULT_CONTROL = 0,        // 默认控制
+        ABSOLUTE_CONTROL = 1,       // 绝对控制，在该控制等级下不在响应 默认控制 下任何指令，持续的Move模式应谨慎使用该优先级
+        EXIT_ABSOLUTE_CONTROL = 2   // 退出绝对控制控制，在该控制下，会响应上述两种控制的指令
     };
 
     //移动命令下的子模式
@@ -558,6 +588,9 @@ struct UAVCommand
 
     // 控制命令的编号 防止接收到错误命令， 编号应该逐次递加
     uint32_t Command_ID;
+
+    // 话题名
+    std::string topic_name;
 };
 
 struct UAVSetup
@@ -576,6 +609,8 @@ struct UAVSetup
     // http://wiki.ros.org/mavros/CustomModes ,可参考该网址设置模式名,常用模式名:OFFBOARD,AUTO.LAND,AUTO.RTL,POSCTL
     std::string px4_mode;
     std::string control_state;
+
+    std::string topic_name;
 };
 
 struct UAVControlState
@@ -608,6 +643,9 @@ struct UAVControlState
 
     // 无人机安全保护触发标志量
     bool failsafe;
+
+    // 话题名
+    std::string topic_name;
 };
 
 struct Bspline

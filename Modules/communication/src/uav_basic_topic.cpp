@@ -122,6 +122,7 @@ void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
         uav_cmd_.acceleration_ref[i] = uav_cmd.acceleration_ref[i];
         uav_cmd_.att_ref[i] = uav_cmd.att_ref[i];
     }
+    uav_cmd_.Control_Level = uav_cmd.Control_Level;
     uav_cmd_.att_ref[3] = uav_cmd.att_ref[3];
     uav_cmd_.yaw_ref = uav_cmd.yaw_ref;
     uav_cmd_.Yaw_Rate_Mode = uav_cmd.Yaw_Rate_Mode;
@@ -130,18 +131,6 @@ void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
     uav_cmd_.latitude = uav_cmd.latitude;
     uav_cmd_.longitude = uav_cmd.longitude;
     uav_cmd_.altitude = uav_cmd.altitude;
-
-    // test
-    uav_cmd_.Control_Level = prometheus_msgs::UAVCommand::DEFAULT_CONTROL;
-    if(uav_cmd_.Agent_CMD == 5)
-    {
-        uav_cmd_.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
-        uav_cmd_.Control_Level = prometheus_msgs::UAVCommand::ABSOLUTE_CONTROL;
-    }else if(uav_cmd_.Agent_CMD == 6)
-    {
-        uav_cmd_.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
-        uav_cmd_.Control_Level = prometheus_msgs::UAVCommand::EXIT_ABSOLUTE_CONTROL;
-    }
 
     this->uav_cmd_pub_.publish(uav_cmd_);
 }
