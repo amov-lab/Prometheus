@@ -184,91 +184,91 @@
 
     <model name='cylinder4_clone_14'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>2.02671 5.11168 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_15'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>2.02671 5.11168 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_16'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>1.547 -0.460893 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_17'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>-1.00318 -3.92453 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_18'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>-3.97554 -3.89536 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_19'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>-4.01198 -0.900726 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_20'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>-3.99798 4.28559 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_3'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>-0.02147 -2 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_4'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>1.91528 1.99383 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_5'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>3.98158 3.97316 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_clone'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>6.07287 0.13588 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_clone_0'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>4.15022 -4.06495 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder3_clone_1'>
       <include>
-        <uri>model://obs_cylinder_small</uri>
+        <uri>model://obs_cylinder_large</uri>
         <pose>8.06445 -0.95966 1.5 0 -0 0</pose>
       </include>
     </model>
