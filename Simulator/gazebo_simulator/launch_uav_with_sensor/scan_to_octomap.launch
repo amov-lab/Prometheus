@@ -17,10 +17,12 @@
       <!-- <param name = "pointcloud_max_z" value = "1.7" />
       <param name = "pointcloud_min_z" value = "1.4" /> -->
       <!-- 机器人坐标系 base_link，滤除地面需要该 frame -->
-      <!-- <param name = "base_frame_id" type = "string" value = "base_link" /> -->
+      <param name = "base_frame_id" type = "string" value = "world" />
       <!-- filter ground plane, distance value should be big! 项目并不需要滤除地面 -->
-      <!-- <param name = "filter_ground" type = "bool" value = "true" /> -->
-      <!-- <param name = "ground_filter/distance" type = "double" value = "1.0" /> -->
+      <param name = "filter_ground" type = "bool" value = "true" />
+      <param name = "ground_filter/distance" type = "double" value = "0.5" />
+      <param name = "ground_filter/angle" type = "double" value = "0.7853" />
+      <param name = "ground_filter/plane_distance" type = "double" value = "0.5" />
       <!-- 分割地面的 Z 轴阈值 value 值 -->
       <!-- <param name = "ground_filter/plane_distance" type = "double" value = "0.3" /> -->
       <!-- <param name = "filter_speckles" type = "bool" value = "true" /> -->
