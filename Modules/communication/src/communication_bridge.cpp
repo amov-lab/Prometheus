@@ -58,11 +58,11 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     heartbeat.message = "OK";
     heartbeat.count = 0;
 
-    for(int i = 0; i < this->swarm_num_; i++)
-    {
-        swarm_control_time.push_back(0);
-        swarm_control_timeout_count.push_back(0);
-    }
+    // for(int i = 0; i < this->swarm_num_; i++)
+    // {
+    //     swarm_control_time.push_back(0);
+    //     swarm_control_timeout_count.push_back(0);
+    // }
 
     // boost::thread to_ground_station_thd(&CommunicationBridge::toGroundStationFun, this);
     // to_ground_station_thd.detach();
@@ -976,6 +976,7 @@ void CommunicationBridge::multicastUdpFun()
                 this->swarm_control_->allUGVStatePub(this->swarm_control_->getMultiUGVState());
             }
         }
+        usleep(10);
     }
     int valread;
     if (waitConnectionFromMulticast(UDP_PORT) < 0)
