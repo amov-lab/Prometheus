@@ -2,7 +2,7 @@
 <sdf version="1.6">
   <model name="D435i">
     <link name="camera_link">
-      <pose>0.16 0 0.13 1.57 0.0 1.57</pose>
+      <pose>-0.02 0 0.12 1.57 0.0 1.57</pose>
       <inertial>
         <mass>0.0564</mass>
         <inertia>
@@ -122,7 +122,7 @@
     </joint>
 
     <link name="camera_color_frame">
-      <pose>0.16 0 0.13 0.0 0.0 0.0</pose>
+      <pose>0 0 0.12 0 0 0</pose>
       <inertial>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <mass>0.0015</mass>
@@ -155,7 +155,7 @@
         </camera>
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>1</visualize>
+        <visualize>0</visualize>
       </sensor>
     </link>
     <joint name='camera_color_joint' type='revolute'>
@@ -178,7 +178,7 @@
     </joint>
 
     <link name="camera_ired1_frame">
-      <pose>0.02 0 0 0.0 0.0 0.0</pose>
+      <pose>0 0.03 0.12 0 0 0</pose>
       <inertial>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <mass>0.0015</mass>
@@ -211,7 +211,7 @@
         </camera>
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>0</visualize>
+        <visualize>1</visualize>
       </sensor>
     </link>
     <joint name='camera_ired1_joint' type='revolute'>
@@ -234,7 +234,7 @@
     </joint>
 
     <link name="camera_ired2_frame">
-      <pose>-0.03 0 0 0.0 0.0 0.0</pose>
+      <pose>0 -0.03 0.12 0 0 0</pose>
       <inertial>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <mass>0.0015</mass>
@@ -267,7 +267,7 @@
         </camera>
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>0</visualize>
+        <visualize>1</visualize>
       </sensor>
     </link>
     <joint name='camera_ired2_joint' type='revolute'>
@@ -290,7 +290,7 @@
     </joint>
 
     <link name="camera_depth_frame">
-      <pose>0.16 0 0.13 0.0 0.0 0.0</pose>
+      <pose>0 0 0.12 0.0 0.0 0.0</pose>
       <inertial>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <mass>0.0015</mass>
@@ -322,7 +322,7 @@
         </camera>
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>0</visualize>
+        <visualize>1</visualize>
 
         <!--plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
           <baseline>0.2</baseline>
@@ -382,7 +382,7 @@
        <infrared2TopicName>infra2/image_raw</infrared2TopicName>
        <infrared2CameraInfoTopicName>infra2/camera_info</infrared2CameraInfoTopicName>
        <colorOpticalframeName>/uav1/camera_link</colorOpticalframeName>
-       <depthOpticalframeName>/uav1/camera_link</depthOpticalframeName>
+       <depthOpticalframeName>camera_depth_frame</depthOpticalframeName>
        <infrared1OpticalframeName>camera_ired1_frame</infrared1OpticalframeName>
        <infrared2OpticalframeName>camera_ired2_frame</infrared2OpticalframeName>
        <rangeMinDepth>0.2</rangeMinDepth>

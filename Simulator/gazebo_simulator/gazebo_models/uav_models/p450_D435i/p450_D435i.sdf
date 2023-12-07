@@ -6,7 +6,7 @@
     </include>
     <include>
       <uri>model://D435i</uri>
-      <pose>0.0 0 0.0 0.0 0 0.0</pose>
+      <pose>0.095 0 0 0 0.35 0</pose>
     </include>
     <joint name="D435i_joint" type="fixed">
       <child>D435i::camera_link</child>
