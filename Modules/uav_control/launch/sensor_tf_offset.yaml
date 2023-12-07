@@ -4,7 +4,7 @@ D435i:
   offset_y: 0.0      ## m
   offset_z: 0.0      ## m
   offset_roll: 0.0      ## rad
-  offset_pitch: 0.0      ## rad
+  offset_pitch: 0.35      ## rad
   offset_yaw: 0.0      ## rad
 Lidar:
   offset_x: 0.0      ## m

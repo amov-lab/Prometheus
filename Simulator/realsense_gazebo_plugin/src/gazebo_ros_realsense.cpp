@@ -228,7 +228,7 @@ void GazeboRosRealsense::OnNewDepthFrame() {
     // 增加仿真时间戳，适配Prometheus
     this->pointcloud_msg_.header.stamp = ros::Time::now(); //时间戳
     // 修改Frame，适配Prometheus
-    this->pointcloud_msg_.header.frame_id = "uav1/camera_link"; 
+    this->pointcloud_msg_.header.frame_id = "d435i_link"; 
     this->pointcloud_msg_.width = this->depthCam->ImageWidth();
     this->pointcloud_msg_.height = this->depthCam->ImageHeight();
     this->pointcloud_msg_.row_step =
