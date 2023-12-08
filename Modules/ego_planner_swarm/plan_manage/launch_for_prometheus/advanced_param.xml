@@ -64,7 +64,7 @@
     <!-- 地图中相机位姿话题 -->
     <remap from="~grid_map/pose"   to = "/uav$(arg uav_id)/$(arg camera_pose_topic)"/> 
     <!-- 地图中相机深度话题 -->
-    <remap from="~grid_map/depth" to = "/uav$(arg uav_id)/$(arg depth_topic)"/>
+    <remap from="~grid_map/depth" to = "$(arg depth_topic)"/>
     
     <!-- planning fsm -->
     <!-- 不同的目标点给定方式 -->
@@ -109,7 +109,7 @@
     <param name="grid_map/local_update_range_y"  value="5.5" /> 
     <param name="grid_map/local_update_range_z"  value="4.5" /> 
     <!-- 膨胀距离 -->
-    <param name="grid_map/obstacles_inflation"     value="0.3" /> 
+    <param name="grid_map/obstacles_inflation"     value="0.15" /> 
     <param name="grid_map/local_map_margin" value="10"/>
     <!-- ground_height -->
     <param name="grid_map/ground_height"        value="$(arg ground_height)"/>

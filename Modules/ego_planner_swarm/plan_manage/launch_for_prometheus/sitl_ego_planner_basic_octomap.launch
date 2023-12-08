@@ -31,7 +31,7 @@
     <arg name="max_vel" value="0.8" />
     <arg name="max_acc" value="6" />
     <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
-    <arg name="planning_horizon" value="15" /> 
+    <arg name="planning_horizon" value="7.5" /> 
     <!-- ？ -->
     <arg name="use_distinctive_trajs" value="true" />
     <!-- 1: use 2D Nav Goal to select goal  -->
