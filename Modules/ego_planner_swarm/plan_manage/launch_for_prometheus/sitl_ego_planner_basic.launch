@@ -37,14 +37,14 @@
     <arg name="fy" value="387.229248046875"/>
     <!-- 点云信息，仿真中由map_generator产生 -->
     <!-- <arg name="cloud_topic" value="map_generator/local_cloud"/> -->
-    <arg name="cloud_topic" value="/map_generator/global_cloud"/>
+    <arg name="cloud_topic" value="octomap_point_cloud_centers"/>
     <!-- scan -->
-    <arg name="scan_topic" value="scan"/>
+    <arg name="scan_topic" value=""/>
     <!-- 最大速度及加速度 -->
-    <arg name="max_vel" value="0.5" />
-    <arg name="max_acc" value="0.5" />
+    <arg name="max_vel" value="0.8" />
+    <arg name="max_acc" value="6" />
     <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
-    <arg name="planning_horizon" value="37.5" /> 
+    <arg name="planning_horizon" value="13.5" /> 
     <!-- ？ -->
     <arg name="use_distinctive_trajs" value="true" />
     <!-- 1: use 2D Nav Goal to select goal  -->

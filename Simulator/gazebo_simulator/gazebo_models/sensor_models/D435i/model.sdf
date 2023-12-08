@@ -211,7 +211,7 @@
         </camera>
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>1</visualize>
+        <visualize>0</visualize>
       </sensor>
     </link>
     <joint name='camera_ired1_joint' type='revolute'>
@@ -267,7 +267,7 @@
         </camera>
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>1</visualize>
+        <visualize>0</visualize>
       </sensor>
     </link>
     <joint name='camera_ired2_joint' type='revolute'>
@@ -322,7 +322,7 @@
         </camera>
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>1</visualize>
+        <visualize>0</visualize>
 
         <!--plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
           <baseline>0.2</baseline>
