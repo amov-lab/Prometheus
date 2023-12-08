@@ -708,7 +708,8 @@ void GridMap::visCallback(const ros::TimerEvent & /*event*/)
 // 使用深度相机时，定时更新地图
 void GridMap::updateOccupancyCallback(const ros::TimerEvent & /*event*/)
 {
-  if (md_.last_occ_update_time_.toSec() < 1.0 ) md_.last_occ_update_time_ = ros::Time::now();
+  // if (md_.last_occ_update_time_.toSec() < 1.0 ) md_.last_occ_update_time_ = ros::Time::now();
+  md_.last_occ_update_time_ = ros::Time::now();
   
   if (!md_.occ_need_update_)
   {
