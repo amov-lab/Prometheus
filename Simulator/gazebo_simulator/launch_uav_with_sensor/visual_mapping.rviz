@@ -11,6 +11,7 @@ Panels:
         - /ego_planner1/点云地图 - 膨胀后1
         - /TF1/Frames1
         - /octomap1
+        - /octomap1/OccupancyGrid1
         - /realsense1
       Splitter Ratio: 0.5161290168762207
     Tree Height: 493
@@ -249,7 +250,7 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/goal_point
           Name: goal_point_uav1
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -281,7 +282,7 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/optimal_list
           Name: optimal_traj_uav1
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -434,7 +435,7 @@ Visualization Manager:
       Color: 114; 159; 207
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
@@ -449,7 +450,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Class: rviz/TF
       Enabled: true
       Filter (blacklist): ""
@@ -506,7 +507,7 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 2.950000047683716
+            Max Value: 2.8499999046325684
             Min Value: 0.550000011920929
             Value: true
           Axis: Z
@@ -627,7 +628,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 16.7888240814209
+      Distance: 17.743572235107422
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -643,9 +644,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2347973585128784
+      Pitch: 0.7047969698905945
       Target Frame: <Fixed Frame>
-      Yaw: 3.109497308731079
+      Yaw: 3.016371250152588
     Saved: ~
 Window Geometry:
   Displays:

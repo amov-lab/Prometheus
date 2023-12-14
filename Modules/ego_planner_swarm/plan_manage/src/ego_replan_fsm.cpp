@@ -746,7 +746,7 @@ namespace ego_planner
           }
           else
           {
-            //ROS_WARN("current traj in collision, replan.");
+            ROS_WARN("current traj in collision, replan.");
             changeFSMExecState(REPLAN_TRAJ, "SAFETY");
           }
           return;
