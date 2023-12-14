@@ -41,5 +41,5 @@
 
 	<!-- TF for world and map-->
 	<node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i"
-          	args="0 0 0 -1.57 0 -1.57 /uav1/camera_link /d435i_link 100"/>
+          	args="0 0 0 0 0 0 /uav1/camera_link /d435i_link 100"/>
 </launch>

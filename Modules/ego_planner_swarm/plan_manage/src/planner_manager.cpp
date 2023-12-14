@@ -62,10 +62,10 @@ namespace ego_planner
   {
     static int count = 0;
     // comment
-    // printf("\033[47;30m\n[drone  no.%d , replan %d times]====================================\033[0m\n", pp_.drone_id, count++);
-    // cout.precision(3);
-    // cout << "start: " << start_pt.transpose() << ", " << start_vel.transpose() << "\ngoal:" << local_target_pt.transpose() << ", " << local_target_vel.transpose()
-    //      << endl;
+    printf("\033[47;30m\n[drone  no.%d , replan %d times]====================================\033[0m\n", pp_.drone_id, count++);
+    cout.precision(3);
+    cout << "start: " << start_pt.transpose() << ", " << start_vel.transpose() << "\ngoal:" << local_target_pt.transpose() << ", " << local_target_vel.transpose()
+         << endl;
 
     if ((start_pt - local_target_pt).norm() < 0.2)
     {
@@ -252,7 +252,7 @@ namespace ego_planner
         if (bspline_optimizer_->BsplineOptimizeTrajRebound(ctrl_pts_temp, final_cost, trajs[i], ts))
         {
           //comment
-          // cout << "traj " << trajs.size() - i << " success." << endl;
+          cout << "traj " << trajs.size() - i << " success." << endl;
 
           flag_step_1_success = true;
           if (final_cost < min_cost)

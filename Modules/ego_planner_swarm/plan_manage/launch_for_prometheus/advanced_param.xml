@@ -139,7 +139,7 @@
     <param name="grid_map/visualization_truncate_height"   value="1.8"/>
     <param name="grid_map/show_occ_time"  value="false"/>
     <!-- pose_type 里程计的类型 -->
-    <param name="grid_map/pose_type"     value="1"/>  
+    <param name="grid_map/pose_type"     value="2"/>  
     <!-- 地图frame -->
     <param name="grid_map/frame_id"      value="world"/>
 

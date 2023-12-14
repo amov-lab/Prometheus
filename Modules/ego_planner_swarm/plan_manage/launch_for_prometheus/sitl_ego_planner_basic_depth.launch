@@ -27,7 +27,7 @@
     <!-- 里程计话题 -->
     <arg name="odometry_topic" value="prometheus/odom"/>
     <!-- 仿真中相机及深度信息 -->
-    <arg name="camera_pose_topic" value="/mavros/local_position/pose"/>
+    <arg name="camera_pose_topic" value="prometheus/odom"/>
     <arg name="depth_topic" value="/camera/depth/image_raw"/>
     <arg name="cx" value="320.0"/>
     <arg name="cy" value="240.0"/>
