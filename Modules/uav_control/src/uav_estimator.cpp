@@ -122,6 +122,9 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【发布】无人机里程计,主要用于RVIZ显示
     uav_odom_pub = nh.advertise<nav_msgs::Odometry>(uav_name + "/prometheus/odom", 1);
 
+    // 【发布】相机里程计,主要用于RVIZ显示
+    camera_odom_pub = nh.advertise<nav_msgs::Odometry>(uav_name + "/prometheus/camera_odom", 1);
+
     // 【发布】无人机运动轨迹,主要用于RVIZ显示
     uav_trajectory_pub = nh.advertise<nav_msgs::Path>(uav_name + "/prometheus/trajectory", 1);
 
@@ -224,6 +227,28 @@ void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
         uav_odom.twist.twist.linear.y = uav_state.velocity[1];
         uav_odom.twist.twist.linear.z = uav_state.velocity[2];
         uav_odom_pub.publish(uav_odom);
+
+        // 发布无人机d435i当前odometry(有些节点需要Odometry这个数据类型)
+        camera_odom.header.frame_id = "world";
+        camera_odom.header.stamp = ros::Time::now();
+        camera_odom.child_frame_id = uav_name + "/camera_link";
+        camera_odom.pose.pose.position.x = uav_odom.pose.pose.position.x + d435i_offset.x;
+        camera_odom.pose.pose.position.y = uav_odom.pose.pose.position.y + d435i_offset.y;
+        camera_odom.pose.pose.position.z = uav_odom.pose.pose.position.z + d435i_offset.z;
+
+        tf2::Quaternion q_orig, q_rot, q_new;
+        tf2::convert(uav_odom.pose.pose.orientation , q_orig);
+
+        q_rot.setRPY(d435i_offset.roll,d435i_offset.pitch,d435i_offset.yaw);//求得 tf 的旋转四元数
+
+        q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
+        q_new.normalize(); // 归一化
+
+        //  将 旋转后的 tf 四元数 转换 为 msg 四元数
+        tf2::convert(q_new, camera_odom.pose.pose.orientation);
+    
+        camera_odom.twist.twist.linear = uav_odom.twist.twist.linear;
+        camera_odom_pub.publish(camera_odom);
     }
 }
 
