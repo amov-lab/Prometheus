@@ -1,6 +1,5 @@
 #include "communication_bridge.hpp"
-#include "custom_data_segment.hpp"
-#include "rviz_topic.hpp"
+#include "rviz_reduce_the_frequency.hpp"
 
 int main(int argc, char **argv)
 {
@@ -11,7 +10,7 @@ int main(int argc, char **argv)
 
     CommunicationBridge communication_bridge_(nh);
 
-    // GFKD gfkd(nh);
+    ReduceTheFrequency reduce_the_frequency_(nh);
 
     ros::spin();
 
