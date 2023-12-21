@@ -48,17 +48,9 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  image2rtsp/include
   ${catkin_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/shard/include
   ${PROJECT_SOURCE_DIR}/shard/include/json/include
-
-  ${x264_INCLUDE_DIR}
-
-  ${CMAKE_CURRENT_SOURCE_DIR}image2rtsp/include/live555/BasicUsageEnvironment
-  ${CMAKE_CURRENT_SOURCE_DIR}image2rtsp/include/live555/groupsock
-  ${CMAKE_CURRENT_SOURCE_DIR}image2rtsp/include/live555/liveMedia
-  ${CMAKE_CURRENT_SOURCE_DIR}image2rtsp/include/live555/UsageEnvironment
 )
 
 file(GLOB_RECURSE CURRENT_INCLUDE include/*.hpp include/*.h)
@@ -80,36 +72,6 @@ elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
     target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_aarch64.so)
 endif()
 
-EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
-message( STATUS "Architecture: ${ARCHITECTURE}" )
 
-if( ${ARCHITECTURE} STREQUAL "aarch64" )
-    set( LIVE555_LIBRARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/image2rtsp/lib/arm_64" )
-else()
-    set( LIVE555_LIBRARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/image2rtsp/lib/x86_64" )
-endif()
 
-link_directories(
-  ${x264_LIBRARY_DIR}
-  ${LIVE555_LIBRARY_DIR}
-)
 
-add_executable(image2rtsp_node image2rtsp/src/node.cpp)
-
-set_target_properties(image2rtsp_node PROPERTIES OUTPUT_NAME image2rtsp_node PREFIX "")
-
-target_link_libraries(image2rtsp_node
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-  
-  x264
-  swscale
-  avformat
-  avcodec
-  avutil
-
-  groupsock
-  liveMedia
-  BasicUsageEnvironment
-  UsageEnvironment
-)

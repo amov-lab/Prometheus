@@ -59,6 +59,18 @@ enum UserType
     UGV = 2
 };
 
+typedef struct CPUPACKED
+{
+    char name[20];
+    unsigned int user;
+    unsigned int nice;
+    unsigned int system;
+    unsigned int idle;
+    unsigned int lowait;
+    unsigned int irq;
+    unsigned int softirq;
+} CPU_OCCUPY;
+
 class CommunicationBridge : public Communication
 {
 public:
@@ -125,6 +137,8 @@ public:
     void triggerSwarmControl();
     void triggerUGV();
 
+    //获取当前CPU使用率
+    double getCPUUsage();
 private:
     // std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;
