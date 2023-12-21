@@ -789,6 +789,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
     else if (mode_selection.mode == ModeSelection::Mode::CUSTOMMODE)
     {
         system(mode_selection.cmd.c_str());
+        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
