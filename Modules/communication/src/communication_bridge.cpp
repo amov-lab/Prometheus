@@ -1183,11 +1183,19 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
     // 记录 未刷新的次数
     // uint swarm_control_timeout_count[this->swarm_num_] = {0};
     
+    std::string message = "CPUUsage:" + to_string(getCPUUsage());
+
+    ros::V_string v_nodes;
+    ros::master::getNodes(v_nodes);
+    for (auto elem : v_nodes) {
+        message += ",rosnode:" + elem;
+    }
 
     if (!this->is_heartbeat_ready_)
     {
         return;
     }
+    heartbeat.message = message;
     // std::cout << disconnect_num << std::endl;
     sendMsgByTcp(encodeMsg(Send_Mode::TCP, heartbeat), udp_ip);
     heartbeat_count++;
@@ -1496,4 +1504,43 @@ void CommunicationBridge::sendTextInfo(uint8_t message_type, std::string message
     text_info.Message = message;
     text_info.sec = ros::Time::now().sec;
     sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
+}
+
+double CommunicationBridge::getCPUUsage()
+{
+    static CPU_OCCUPY old_cpu_occupy;
+
+    FILE *fd;
+    char buff[256];
+    CPU_OCCUPY cpu_occupy;
+    double cpu_usage = 0.0;
+
+    fd = fopen("/proc/stat", "r");
+
+    if (fd != NULL)
+    {
+        fgets(buff, sizeof(buff), fd);
+        if (strstr(buff, "cpu") != NULL)
+        {
+            sscanf(buff, "%s %u %u %u %u %u %u %u",
+                   cpu_occupy.name, &cpu_occupy.user, &cpu_occupy.nice, &cpu_occupy.system,
+                   &cpu_occupy.idle, &cpu_occupy.lowait, &cpu_occupy.irq, &cpu_occupy.softirq);
+
+            double total = (cpu_occupy.user + cpu_occupy.nice + cpu_occupy.system +
+                            cpu_occupy.idle + cpu_occupy.lowait + cpu_occupy.irq +
+                            cpu_occupy.softirq) -
+                           (old_cpu_occupy.user + old_cpu_occupy.nice + old_cpu_occupy.system +
+                            old_cpu_occupy.idle + old_cpu_occupy.lowait + old_cpu_occupy.irq +
+                            old_cpu_occupy.softirq);
+
+            double idle = cpu_occupy.idle - old_cpu_occupy.idle;
+
+            cpu_usage = (total - idle) / total * 100;
+
+            old_cpu_occupy = cpu_occupy;
+        }
+    }
+
+    fclose(fd);
+    return cpu_usage;
 }
