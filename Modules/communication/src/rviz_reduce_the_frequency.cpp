@@ -57,6 +57,7 @@ void ReduceTheFrequency::send1000MS(const ros::TimerEvent &time_event)
 {
     if(octomap_point_cloud_ready)
     {
+        octomap_compressed_point_cloud = compressed(*msg);
         octomap_pub_.publish(octomap_point_cloud);
         octomap_compressed_pub_.publish(octomap_compressed_point_cloud);
         octomap_point_cloud_ready = false;
@@ -64,6 +65,8 @@ void ReduceTheFrequency::send1000MS(const ros::TimerEvent &time_event)
     usleep(100000);
     if(occupancy_inflate_ready)
     {
+        occupancy_inflate_filtered_point_cloud = filtered(*msg);
+        occupancy_inflate_compressed_point_cloud = compressed(*msg);
         occupancy_inflate_pub_.publish(occupancy_inflate_point_cloud);
         occupancy_inflate_filtered_pub_.publish(occupancy_inflate_filtered_point_cloud);
         occupancy_inflate_compressed_pub_.publish(occupancy_inflate_compressed_point_cloud);
@@ -119,7 +122,6 @@ void ReduceTheFrequency::send50MS(const ros::TimerEvent &time_event)
 void ReduceTheFrequency::octomapPointCloudCentersCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
 {
     octomap_point_cloud = *msg;
-    octomap_compressed_point_cloud = compressed(*msg);
     octomap_point_cloud_ready = true;
 }
 
@@ -144,8 +146,6 @@ void ReduceTheFrequency::scanFilteredCb(const sensor_msgs::LaserScan::ConstPtr &
 void ReduceTheFrequency::occupancyInflateCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
 {
     occupancy_inflate_point_cloud = *msg;
-    occupancy_inflate_filtered_point_cloud = filtered(*msg);
-    occupancy_inflate_compressed_point_cloud = compressed(*msg);
     occupancy_inflate_ready = true;
 }
 
