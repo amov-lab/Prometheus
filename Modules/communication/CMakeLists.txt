@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(prometheus_communication_bridge)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++14, supported in ROS Kinetic and newer
+add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_msgs
   prometheus_msgs
 )
-
+find_package(PCL 1.7 REQUIRED)
 
 generate_messages(
   DEPENDENCIES
@@ -51,7 +51,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/shard/include
   ${PROJECT_SOURCE_DIR}/shard/include/json/include
+  ${PCL_INCLUDE_DIRS}
 )
+link_directories(${PCL_LIBRARY_DIRS})
 
 file(GLOB_RECURSE CURRENT_INCLUDE include/*.hpp include/*.h)
 file(GLOB_RECURSE CURRENT_SOURCE src/*.cpp)
@@ -63,13 +65,14 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+#add_definitions(${PCL_DEFINITIONS})
 ## Specify libraries to link a library or executable target against
 add_executable(communication_bridge ${CURRENT_SOURCE} ${CURRENT_INCLUDE})
 add_dependencies(communication_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
-    target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_x86_64.so)
+    target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_x86_64.so ${PCL_LIBRARIES})
 elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
-    target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_aarch64.so)
+    target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_aarch64.so ${PCL_LIBRARIES})
 endif()
 
 
