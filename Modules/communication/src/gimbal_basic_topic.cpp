@@ -5,7 +5,7 @@ GimbalBasic::GimbalBasic(ros::NodeHandle &nh,Communication *communication)
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     int id;
     nh.param<int>("ROBOT_ID", id, 1);
-    nh.param<int>("gimbal_basic_hz", send_hz, 10);
+    nh.param<int>("gimbal_basic_hz", send_hz, 0);
     this->communication_ = communication;
     //【订阅】吊舱状态数据
     this->gimbal_state_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/gimbal/state", 10, &GimbalBasic::stateCb, this);

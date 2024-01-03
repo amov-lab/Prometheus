@@ -8,7 +8,7 @@ UAVBasic::UAVBasic()
 UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
-    nh.param<int>("uav_basic_hz", send_hz, 10);
+    nh.param<int>("uav_basic_hz", send_hz, 0);
 
     this->robot_id = id;
     this->offset_pose_.x = 0;
