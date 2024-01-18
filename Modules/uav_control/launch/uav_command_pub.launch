@@ -1,6 +1,7 @@
 <launch>
 	<!-- run the uav_command_pub.cpp -->
 	<node pkg="prometheus_uav_control" type="uav_command_pub" name="uav_command_pub" output="screen" launch-prefix="gnome-terminal --">	
+		<param name="uav_id" value="1" />
 		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_command_pub.yaml" />
 	</node>	
 </launch>
