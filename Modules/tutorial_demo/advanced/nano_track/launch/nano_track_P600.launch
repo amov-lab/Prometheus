@@ -1,0 +1,40 @@
+<launch>
+	<!-- 启动仿真环境 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav_P600.launch">
+		<arg name="uav1_init_x" value="-3" />
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/KKSwarmCar/kkcarair.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p600_monocular/p600_monocular.sdf" />
+		
+	</include>
+
+	<!-- 启动prometheus控制器 -->
+	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
+		<arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
+	</include>
+
+
+
+	<!-- 启动跟踪程序 -->
+	<node pkg="prometheus_demo" type="nano_track" name="nano_track" output="screen" launch-prefix="bash -c 'sleep 2; gnome-terminal --tab -- $0 $@; bash'">
+		<param name="uav_id" value="1" />
+
+		<!-- 追踪控制参数 -->
+		<param name="kpx_detect" value="0.5" />
+		<param name="kpy_detect" value="0.8" />
+		<param name="kpz_detect" value="0.8" />
+		<!-- 相机安装偏差 -->
+		<param name="camera_offset_x" value="0.0" />
+		<param name="camera_offset_y" value="0.0" />
+		<param name="camera_offset_z" value="-0.1" />
+		<!-- 跟踪距离保持 -->
+		<param name="keep_x_distance" value="2.5" />
+		<param name="keep_y_distance" value="0.0" />
+		<param name="keep_z_distance" value="0.7" />
+
+		<!-- 地面跟踪高度判断距离 -->
+		<param name="ground_distance" value="2.5" />
+
+	</node>
+
+	<node pkg="rqt_image_view" type="rqt_image_view" name="rqt_image_view"></node>
+</launch>
