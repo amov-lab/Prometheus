@@ -1,0 +1,49 @@
+<launch>
+    <arg name="map_size_x" default="28.0"/>
+    <arg name="map_size_y" default="40.0"/>
+    <arg name="map_size_z" default=" 4.0"/>
+
+    <!-- map generator -->
+    <node pkg ="map_generator" name ="random_forest_new" type ="random_forest_new" output = "screen">
+        <param name="swarm_num"                 value="2" /> 
+        <param name="swarm_num_ugv"             value="0" /> 
+        <param name="map_generator/map_flag"    value="2" />    
+        <param name="map_generator/x_size"      value="$(arg map_size_x)" />
+        <param name="map_generator/y_size"      value="$(arg map_size_y)" />
+        <param name="map_generator/z_size"      value="$(arg map_size_z)" />
+        <param name="map_generator/resolution"  value="0.1"/>        
+        
+        <param name="map_generator/cylinder_num"    value="20"/>
+        <param name="map_generator/sqaure_num" value="10"/>
+        <param name="map_generator/cylinder_radius" value="0.2"/>
+        <param name="map_generator/cylinder_height" value="3.0"/>
+        <param name="map_generator/sqaure_size" value="0.3"/>        
+
+        <param name="map_generator/sensing_range" value="5.0"/>        
+        <param name="map_generator/sense_rate" value="30.0"/>        
+        <param name="map_generator/min_distance" value="1.5"/>  
+    </node>
+
+    <arg name="visualization" default="true"/>
+    <group if="$(arg visualization)">
+          <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/launch_ego_planner/ego.rviz" />
+    </group>
+
+	<!-- 启动Gazebo -->
+	<!-- Gazebo configs -->
+    <arg name="gui" default="true"/>
+    <arg name="debug" default="false"/>
+    <arg name="verbose" default="false"/>
+    <arg name="paused" default="false"/>
+    <arg name="respawn_gazebo" default="false"/>
+	<arg name="world" default="$(find prometheus_gazebo)/worlds/map_2.world"/>
+    <!-- Gazebo sim -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="debug" value="$(arg debug)"/>
+        <arg name="verbose" value="$(arg verbose)"/>
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="respawn_gazebo" value="$(arg respawn_gazebo)"/>
+        <arg name="world_name" value="$(arg world)"/>
+    </include>
+</launch>
