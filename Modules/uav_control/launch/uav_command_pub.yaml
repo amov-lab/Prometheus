@@ -1,4 +1,5 @@
 ## parameter for uav_command_pub
+uav_id: 1
 Controller_Test:
   Circle:
     Center_x: 0.0

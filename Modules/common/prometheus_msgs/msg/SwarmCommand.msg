@@ -28,6 +28,9 @@ uint8 Col_Around_Circle=6
 uint8 Col_Follow_UAV=7
 uint8 Col_Follow_UGV=8
 
+uint8 InitPlanner=9
+uint8 SwarmFormationPlanner=10
+
 uint8 Follow=11
 uint8 Search=12
 uint8 Attack=13
