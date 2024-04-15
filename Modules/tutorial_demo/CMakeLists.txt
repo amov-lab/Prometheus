@@ -110,6 +110,8 @@ target_link_libraries(find_aruco_marker ${catkin_LIBRARIES})
 add_executable(yolov5_tracking advanced/yolov5_tracking/src/yolov5_tracking.cpp)
 target_link_libraries(yolov5_tracking ${catkin_LIBRARIES})
 
+add_executable(aruco_tracking advanced/aruco_tracking/src/aruco_tracking.cpp)
+target_link_libraries(aruco_tracking ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

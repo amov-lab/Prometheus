@@ -1,7 +1,7 @@
 <launch>  
 	<!-- Gazebo configs -->
     <arg name="gazebo_enable" default="true"/>
-	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/multi_person.world"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/Tracking_QR/Tracking_QR.world"/>
     <!-- 启动Gazebo -->
     <group if="$(arg gazebo_enable)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">

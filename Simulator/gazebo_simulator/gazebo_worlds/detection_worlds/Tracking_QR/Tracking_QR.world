@@ -135,7 +135,7 @@
     <model name='land_move'>
       <include>
         <uri>model://land_move</uri>
-	      <pose> 1.8 2 0 -1.569526 0 1.570796 </pose>
+	      <pose> 1.8 2 0 0 1.570796 0.707 </pose>
       </include>
     </model>
     <physics name='default_physics' default='0' type='ode'>
