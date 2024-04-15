@@ -1,0 +1,15 @@
+material Cube/land_move
+{
+  receive_shadows off
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture land_move.png
+      }
+    }
+  }
+}
+  

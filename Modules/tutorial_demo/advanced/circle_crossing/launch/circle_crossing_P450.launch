@@ -1,0 +1,43 @@
+<launch>
+	<!-- 启动仿真环境 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav_P450.launch">
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/ReadCircle/ReadCircle.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_monocular/p450_monocular.sdf" />
+	</include>
+
+	<!-- 启动prometheus控制器 -->
+	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
+		<arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
+	</include>
+
+
+
+	<!-- 启动跟踪程序 -->
+	<node pkg="prometheus_demo" type="circle_crossing" name="circle_crossing" output="screen" launch-prefix="bash -c 'sleep 2; gnome-terminal --tab -- $0 $@; bash'">
+		<param name="uav_id" value="1" />
+
+		<!-- 相机安装偏差 -->
+		<param name="camera_offset_x" value="0.0" />
+		<param name="camera_offset_y" value="0.0" />
+		<param name="camera_offset_z" value="-0.15" />
+		<!-- 追踪控制参数 -->
+		<param name="kpx_detect" value="0.3" />
+		<param name="kpy_detect" value="0.4" />
+		<param name="kpz_detect" value="0.4" />
+         <!-- 穿圆判断距离参数 -->
+		<param name="cx_distance" value="0.46" />
+		<param name="cy_distance" value="0.15" />
+		<param name="cz_distance" value="0.15" />
+		<!-- 穿圆速度参数 -->
+		<param name="cx_velocity" value="0.3" />
+		<param name="cy_velocity" value="0.0" />
+		<param name="cz_velocity" value="-0.07" />
+
+		<!-- 能检测到圆框的最近距离 -->
+		<param name="Detection_distance" value="0.37" />
+		<!-- 穿圆飞行距离 -->
+		<param name="circle distanced" value="2.0" />
+	</node>
+
+	<node pkg="rqt_image_view" type="rqt_image_view" name="rqt_image_view"></node>
+</launch>

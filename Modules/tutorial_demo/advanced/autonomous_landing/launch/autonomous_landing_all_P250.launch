@@ -1,0 +1,36 @@
+<launch>
+	<!-- 启动仿真环境 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav_P250.launch">
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/landing_pad.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p250_monocular/p250_monocular.sdf" />
+	</include>
+
+	<!-- 启动prometheus控制器 -->
+	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
+		<arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
+	</include>
+
+
+
+	<!-- 启动降落程序 -->
+	<node pkg="prometheus_demo" type="autonomous_landing" name="autonomous_landing" output="screen" launch-prefix="bash -c 'sleep 2; gnome-terminal --tab -- $0 $@; bash'">
+		<param name="uav_id" value="1" />
+		<!-- 是否使用降落板绝对高度 -->
+		<param name="use_pad_height" value="true" />
+		<param name="pad_height" value="0.01" />
+		<!-- 最大高度 -->
+		<param name="max_height" value="10.0" />
+		<!-- 相机安装偏差 -->
+		<param name="camera_offset_x" value="0.0" />
+		<param name="camera_offset_y" value="0.0" />
+		<param name="camera_offset_z" value="-0.1" />
+		<!-- 追踪控制参数 -->
+		<param name="kpx_land" value="0.2" />
+		<param name="kpy_land" value="0.2" />
+		<param name="kpz_land" value="0.2" />
+		<param name="arm_height_to_ground" value="0.05" />
+		<param name="arm_distance_to_pad" value="0.1" />
+	</node>
+
+	<node pkg="rqt_image_view" type="rqt_image_view" name="rqt_image_view"></node>
+</launch>

@@ -1,0 +1,36 @@
+<launch>
+	<!-- 启动仿真环境 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav_P450.launch">
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/multi_person.world" />
+		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_D435i/p450_D435i.sdf" />
+	</include>
+
+	<!-- 启动prometheus控制器 -->
+	<include file="$(find prometheus_uav_control)/launch/uav_control_main_outdoor.launch">
+		<arg name="launch_prefix" default="bash -c 'gnome-terminal --tab -- $0 $@'" />
+	</include>
+
+
+    	<!-- 启动跟踪程序 -->
+    	<node pkg="prometheus_demo" type="yolov5_tracking" name="yolov5_tracking" output="screen">
+		<param name="uav_id" value="1" />
+		<!-- 视觉丢失次数阈值 -->
+		<param name="Thres_vision" value="10" />
+
+		<!-- 跟踪到前后间隔 -->
+		<param name="tracking_delta_x" value="2" />
+		<param name="tracking_delta_y" value="0" />
+		<param name="tracking_delta_z" value="0" />
+
+		<!-- 相机相对于无人机偏移 -->
+		<param name="camera_offset_x" value="0" />
+		<param name="camera_offset_y" value="0" />
+		<param name="camera_offset_z" value="0" />
+
+		<!-- 跟踪系数 -->
+		<param name="kpx_track" value="8000" />
+		<param name="kpy_track" value="8000" />
+		<param name="kpz_track" value="8000" />
+		
+	</node>
+</launch>
