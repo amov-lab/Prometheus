@@ -455,5 +455,5 @@ void SwarmControl::swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg
         point.z = msg->formation_poses[i].z;
         swarm_command.formation_poses.push_back(point);
     }
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, swarm_command), multicast_udp_ip);
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, swarm_command), udp_ip);
 }
