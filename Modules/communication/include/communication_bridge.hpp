@@ -139,6 +139,8 @@ public:
 
     //获取当前CPU使用率
     double getCPUUsage();
+    //获取当前CPU温度
+    double getCPUTemperature();
 private:
     // std::shared_ptr<SwarmControl> swarm_control_ ;
     SwarmControl *swarm_control_ = NULL;

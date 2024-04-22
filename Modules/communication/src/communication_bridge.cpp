@@ -1189,7 +1189,7 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
     // uint swarm_control_timeout_count[this->swarm_num_] = {0};
     
     std::string message = "CPUUsage:" + to_string(getCPUUsage());
-
+    message += ",CPUTemperature:" + to_string(getCPUTemperature());
     ros::V_string v_nodes;
     ros::master::getNodes(v_nodes);
     for (auto elem : v_nodes) {
@@ -1548,4 +1548,18 @@ double CommunicationBridge::getCPUUsage()
 
     fclose(fd);
     return cpu_usage;
+}
+
+double CommunicationBridge::getCPUTemperature()
+{
+    std::ifstream file("/sys/class/thermal/thermal_zone0/temp");
+    if (!file.is_open()) {
+        std::cerr << "无法打开温度文件！" << std::endl;
+        return -1;
+    }
+    int temperature;
+    file >> temperature;
+    file.close();
+
+    return temperature / 1000.0; // 温度值通常以千分之一摄氏度为单位
 }
