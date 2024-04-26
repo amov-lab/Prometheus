@@ -10,6 +10,8 @@
 #include "prometheus_msgs/UAVSetup.h"
 #include "prometheus_msgs/UAVControlState.h"
 #include "prometheus_msgs/Control.h"
+#include "mavros_msgs/PositionTarget.h"
+#include "mavros_msgs/AttitudeTarget.h"
 
 class UAVBasic
 {
@@ -45,6 +47,8 @@ public:
 
     void send(const ros::TimerEvent &time_event);
 
+    void px4PosTargetCb(const mavros_msgs::PositionTarget::ConstPtr &msg);
+    void px4AttTargetCb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
 private:
     ros::Subscriber uav_state_sub_;
 
@@ -61,6 +65,9 @@ private:
 
     ros::Publisher uav_target_pub_;
 
+    ros::Subscriber px4_position_target_sub_;
+    ros::Subscriber px4_attitude_target_sub_;
+
     int current_mode_;
 
     int robot_id;
@@ -75,6 +82,7 @@ private:
     Communication *communication_ = NULL;
 
     std::string multicast_udp_ip;
+    std::string ground_station_ip;
 
     uint time_stamp_ = 0;
 

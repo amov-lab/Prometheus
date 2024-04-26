@@ -383,7 +383,12 @@ void CommunicationBridge::recvData(struct Bspline bspline)
 // 此处为 地面站-->机载端 机载端<->机载端
 void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segment)
 {
-    // 自定义
+    // 自定义 测试代码
+    // for(int i = 0; i < custom_data_segment.datas.size();i++)
+    // {
+    //     struct BasicDataTypeAndValue basic = custom_data_segment.datas[i];
+    //     std::cout << "类型:" << (int)basic.type << " 变量名:" << basic.name << " 变量值:" << basic.value << std::endl;
+    // }
 }
 
 void CommunicationBridge::recvData(struct Goal goal)
@@ -1184,7 +1189,7 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
     // uint swarm_control_timeout_count[this->swarm_num_] = {0};
     
     std::string message = "CPUUsage:" + to_string(getCPUUsage());
-
+    message += ",CPUTemperature:" + to_string(getCPUTemperature());
     ros::V_string v_nodes;
     ros::master::getNodes(v_nodes);
     for (auto elem : v_nodes) {
@@ -1408,7 +1413,7 @@ void CommunicationBridge::sendControlParam()
         }
     }
     param_settings.param_module = ParamSettings::ParamModule::UAVCONTROL;
-    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), udp_ip);
     usleep(1000);
     sendTextInfo(TextInfo::MTG_INFO, "uav control node parameter loading success...");
 }
@@ -1436,7 +1441,7 @@ void CommunicationBridge::sendCommunicationParam()
         }
     }
     param_settings.param_module = ParamSettings::ParamModule::UAVCOMMUNICATION;
-    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), udp_ip);
     usleep(1000);
     sendTextInfo(TextInfo::MTG_INFO, "communication node parameter loading success...");
 }
@@ -1464,7 +1469,7 @@ void CommunicationBridge::sendSwarmParam()
         }
     }
     param_settings.param_module = ParamSettings::ParamModule::SWARMCONTROL;
-    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), udp_ip);
     usleep(1000);
     sendTextInfo(TextInfo::MTG_INFO, "swarm control node parameter loading success...");
 }
@@ -1492,7 +1497,7 @@ void CommunicationBridge::sendCommandPubParam()
         }
     }
     param_settings.param_module = ParamSettings::ParamModule::UAVCOMMANDPUB;
-    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), multicast_udp_ip);
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, param_settings), udp_ip);
     usleep(1000);
     sendTextInfo(TextInfo::MTG_INFO, "uav control traject node parameter loading success...");
 }
@@ -1503,7 +1508,7 @@ void CommunicationBridge::sendTextInfo(uint8_t message_type, std::string message
     text_info.MessageType = message_type;
     text_info.Message = message;
     text_info.sec = ros::Time::now().sec;
-    sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), multicast_udp_ip);
+    sendMsgByUdp(encodeMsg(Send_Mode::UDP, text_info), udp_ip);
 }
 
 double CommunicationBridge::getCPUUsage()
@@ -1543,4 +1548,18 @@ double CommunicationBridge::getCPUUsage()
 
     fclose(fd);
     return cpu_usage;
+}
+
+double CommunicationBridge::getCPUTemperature()
+{
+    std::ifstream file("/sys/class/thermal/thermal_zone0/temp");
+    if (!file.is_open()) {
+        std::cerr << "无法打开温度文件！" << std::endl;
+        return -1;
+    }
+    int temperature;
+    file >> temperature;
+    file.close();
+
+    return temperature / 1000.0; // 温度值通常以千分之一摄氏度为单位
 }

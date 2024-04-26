@@ -2,6 +2,7 @@
 <sdf version='1.6'>
   <model name='p600_uav4'>
     <!-- p600 body -->
+    
     <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>

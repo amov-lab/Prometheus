@@ -8,6 +8,7 @@ UAVBasic::UAVBasic()
 UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
+    nh.param<std::string>("ground_station_ip", ground_station_ip, "127.0.0.1");
     nh.param<int>("uav_basic_hz", send_hz, 0);
 
     this->robot_id = id;
@@ -29,6 +30,10 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->uav_cmd_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/command",10,&UAVBasic::uavCmdCb,this);
     //【发布】跟踪目标
     this->uav_target_pub_ = nh.advertise<prometheus_msgs::Control>("/uav" + std::to_string(this->robot_id) + "/spirecv/control", 1);
+    //【订阅】PX4中无人机的位置/速度/加速度设定值 坐标系:ENU系
+    this->px4_position_target_sub_ = nh.subscribe<mavros_msgs::PositionTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_local",1,&UAVBasic::px4PosTargetCb, this);
+    //【订阅】PX4中无人机的姿态设定值 坐标系:ENU系
+    this->px4_attitude_target_sub_ = nh.subscribe<mavros_msgs::AttitudeTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_attitude",1,&UAVBasic::px4AttTargetCb, this);
 
     if(send_hz > 0)
     {
@@ -88,8 +93,8 @@ void UAVBasic::textInfoCb(const prometheus_msgs::TextInfo::ConstPtr &msg)
     this->text_info_.MessageType = msg->MessageType;
     this->text_info_.Message = msg->Message;
 
-    //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_,this->robot_id), multicast_udp_ip);
+    //发送到地面站
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_,this->robot_id), ground_station_ip);
 }
 
 void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &msg)
@@ -99,8 +104,8 @@ void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &
     this->uav_control_state_.pos_controller = msg->pos_controller;
     this->uav_control_state_.failsafe = msg->failsafe;
 
-    //发送到组播地址
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), multicast_udp_ip);
+    //发送到地面站
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), ground_station_ip);
     else uav_control_state_ready = true;
 }
 
@@ -141,13 +146,15 @@ void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
     uav_command_.nsecs = msg->header.stamp.nsec;
     uav_command_.Agent_CMD = msg->Agent_CMD;
     uav_command_.Move_mode = msg->Move_mode;
-    for(int i = 0; i < 3; i++)
-    {
-        uav_command_.position_ref[i] = msg->position_ref[i];
-        uav_command_.velocity_ref[i] = msg->velocity_ref[i];
-        uav_command_.acceleration_ref[i] = msg->acceleration_ref[i];
-        uav_command_.att_ref[i] = msg->att_ref[i];
-    }
+    if(uav_command_.Move_mode == UAVCommand::MoveMode::XYZ_POS_BODY)
+        uav_command_.Move_mode = UAVCommand::MoveMode::XYZ_POS;
+    // for(int i = 0; i < 3; i++)
+    // {
+    //     uav_command_.position_ref[i] = msg->position_ref[i];
+    //     uav_command_.velocity_ref[i] = msg->velocity_ref[i];
+    //     uav_command_.acceleration_ref[i] = msg->acceleration_ref[i];
+    //     uav_command_.att_ref[i] = msg->att_ref[i];
+    // }
     uav_command_.att_ref[3] = msg->att_ref[3];
     uav_command_.yaw_ref = msg->yaw_ref;
     uav_command_.Yaw_Rate_Mode = msg->Yaw_Rate_Mode;
@@ -156,7 +163,34 @@ void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
     uav_command_.latitude = msg->latitude;
     uav_command_.longitude = msg->longitude;
     uav_command_.altitude = msg->altitude;
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),multicast_udp_ip);
+
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),ground_station_ip);
+    else uav_command_ready = true;
+}
+
+void UAVBasic::px4PosTargetCb(const mavros_msgs::PositionTarget::ConstPtr &msg)
+{
+    uav_command_.position_ref[0] = msg->position.x;
+    uav_command_.position_ref[1] = msg->position.y;
+    uav_command_.position_ref[2] = msg->position.z;
+    uav_command_.velocity_ref[0] = msg->velocity.x;
+    uav_command_.velocity_ref[1] = msg->velocity.y;
+    uav_command_.velocity_ref[2] = msg->velocity.z;
+
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),ground_station_ip);
+    else uav_command_ready = true;
+}
+
+void UAVBasic::px4AttTargetCb(const mavros_msgs::AttitudeTarget::ConstPtr &msg)
+{
+    uav_command_.att_ref[0] = msg->orientation.x;
+    uav_command_.att_ref[1] = msg->orientation.y;
+    uav_command_.att_ref[2] = msg->orientation.z;
+    uav_command_.att_ref[3] = msg->orientation.w;
+    // 油门？
+    // px4_thrust_target = msg->thrust;
+
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),ground_station_ip);
     else uav_command_ready = true;
 }
 
@@ -199,12 +233,12 @@ void UAVBasic::send(const ros::TimerEvent &time_event)
     }
     if(uav_command_ready)
     {
-        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->uav_command_,this->robot_id),multicast_udp_ip);
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->uav_command_,this->robot_id),ground_station_ip);
         this->uav_command_ready = false;
     }
     if(uav_control_state_ready)
     {
-        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), multicast_udp_ip);
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), ground_station_ip);
         this->uav_control_state_ready = false;
     }
 }
