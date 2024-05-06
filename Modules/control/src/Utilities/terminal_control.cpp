@@ -66,6 +66,11 @@ int main(int argc, char **argv)
     //　【发布】　参考轨迹
     ref_trajectory_pub = nh.advertise<nav_msgs::Path>("/prometheus/reference_trajectory", 10);
     
+    // 【请求服务】  解锁
+    ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
+    mavros_msgs::CommandBool arm_cmd;
+    arm_cmd.request.value = true;
+
     //用于控制器测试的类，功能例如：生成圆形轨迹，８字轨迹等
     Controller_Test Controller_Test;    // 打印参数
     Controller_Test.printf_param();

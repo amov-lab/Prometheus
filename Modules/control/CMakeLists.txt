@@ -138,6 +138,11 @@ add_dependencies(terminal_control prometheus_control_gencpp)
 target_link_libraries(terminal_control ${catkin_LIBRARIES})
 target_link_libraries(terminal_control KeyboardEvent)
 
+add_executable(terminal_control_comb src/terminal_control_comb.cpp)
+add_dependencies(terminal_control_comb prometheus_control_gencpp)
+target_link_libraries(terminal_control_comb ${catkin_LIBRARIES})
+target_link_libraries(terminal_control_comb KeyboardEvent)
+
 add_executable(terminal_control_rover src/Utilities/terminal_control_rover.cpp)
 add_dependencies(terminal_control_rover prometheus_control_gencpp)
 target_link_libraries(terminal_control_rover ${catkin_LIBRARIES})
