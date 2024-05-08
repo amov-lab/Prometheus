@@ -64,7 +64,7 @@
     
     <joint name="2Dlidar_joint" type="fixed">
       <child>lidar_link</child>
-      <parent>base_link</parent>
+      <parent>uav2/base_link</parent>
       <axis>
         <xyz>0 0 0</xyz>
         <limit>
@@ -74,7 +74,7 @@
       </axis>
     </joint>
     <!-- p450 body -->
-    <link name='base_link'>
+    <link name='uav2/base_link'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
@@ -137,7 +137,7 @@
     </link>
     <joint name='imu_joint' type='revolute'>
       <child>imu_link</child>
-      <parent>base_link</parent>
+      <parent>uav2/base_link</parent>
       <axis>
         <xyz>1 0 0</xyz>
         <limit>
@@ -199,7 +199,7 @@
     </link>
     <joint name='rotor_0_joint' type='revolute'>
       <child>rotor_0</child>
-      <parent>base_link</parent>
+      <parent>uav2/base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
@@ -259,7 +259,7 @@
     </link>
     <joint name='rotor_1_joint' type='revolute'>
       <child>rotor_1</child>
-      <parent>base_link</parent>
+      <parent>uav2/base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
@@ -319,7 +319,7 @@
     </link>
     <joint name='rotor_2_joint' type='revolute'>
       <child>rotor_2</child>
-      <parent>base_link</parent>
+      <parent>uav2/base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
@@ -379,7 +379,7 @@
     </link>
     <joint name='rotor_3_joint' type='revolute'>
       <child>rotor_3</child>
-      <parent>base_link</parent>
+      <parent>uav2/base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
@@ -400,11 +400,11 @@
     </include>
     <joint name='gps_joint' type='fixed'>
       <child>gps::link</child>
-      <parent>base_link</parent>
+      <parent>uav2/base_link</parent>
     </joint>
     <plugin name='rosbag' filename='libgazebo_multirotor_base_plugin.so'>
       <robotNamespace></robotNamespace>
-      <linkName>base_link</linkName>
+      <linkName>uav2/base_link</linkName>
       <rotorVelocitySlowdownSim>10</rotorVelocitySlowdownSim>
     </plugin>
     <plugin name='front_right_motor_model' filename='libgazebo_motor_model.so'>
@@ -563,7 +563,7 @@
     <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
       <alwaysOn>true</alwaysOn>
       <updateRate>50.0</updateRate>
-      <bodyName>base_link</bodyName>
+      <bodyName>uav2/base_link</bodyName>
       <!-- 默认是1号机 -->
       <topicName>/uav2/prometheus/ground_truth</topicName>
       <gaussianNoise>0.00</gaussianNoise>

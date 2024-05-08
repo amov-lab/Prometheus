@@ -21,7 +21,7 @@
     </physics>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-10.3297 7.81815 125.638 0 1.40579 -1.71914</pose>
+        <pose>-3.68071 -3.80624 48.6982 0 1.3858 -0.059197</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -2569,12 +2569,12 @@
       <pose>-6.0504 10.1763 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>682 372000000</sim_time>
-      <real_time>294 538296209</real_time>
-      <wall_time>1713431438 52287520</wall_time>
-      <iterations>73519</iterations>
+      <sim_time>932 392000000</sim_time>
+      <real_time>102 447288390</real_time>
+      <wall_time>1714105656 201714985</wall_time>
+      <iterations>25595</iterations>
       <model name='cylinder1'>
-        <pose>9.02255 19.85 0 0 -0 0</pose>
+        <pose>9.0226 19.85 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
           <pose>12.0226 19.85 1.5 0 -0 0</pose>
@@ -2594,7 +2594,7 @@
         </link>
       </model>
       <model name='cylinder3'>
-        <pose>7.14337 -20.5448 0 0 -0 0</pose>
+        <pose>7.1434 -20.5448 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
           <pose>12.1434 -22.5448 1.5 0 -0 0</pose>
@@ -2604,7 +2604,7 @@
         </link>
       </model>
       <model name='cylinder3_clone'>
-        <pose>5.25577 -13.1614 0 0 -0 0</pose>
+        <pose>5.25573 -13.1614 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
           <pose>11.3286 -13.0255 1.5 0 -0 0</pose>
@@ -2624,7 +2624,7 @@
         </link>
       </model>
       <model name='cylinder3_clone_1'>
-        <pose>-20.2103 -17.6269 0 0 -0 0</pose>
+        <pose>-20.2103 -17.6268 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
           <pose>-12.1459 -18.5865 1.5 0 -0 0</pose>
@@ -2634,10 +2634,10 @@
         </link>
       </model>
       <model name='cylinder3_clone_10'>
-        <pose>1.91063 -1.75782 0 0 -0 0</pose>
+        <pose>6.88579 -25.7884 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>4.94406 -8.66722 1.5 0 -0 0</pose>
+          <pose>9.91922 -32.6978 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -2664,20 +2664,20 @@
         </link>
       </model>
       <model name='cylinder3_clone_13'>
-        <pose>-0.56771 -1.72929 0 0 -0 0</pose>
+        <pose>-1.88921 -3.28731 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-5.54704 -6.75519 1.5 0 -0 0</pose>
+          <pose>-6.86854 -8.31321 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder3_clone_14'>
-        <pose>6.64018 -1.397 0 0 -0 0</pose>
+        <pose>6.8163 2.89267 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>12.6077 3.60755 1.5 0 -0 0</pose>
+          <pose>12.7839 7.89722 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -2694,17 +2694,17 @@
         </link>
       </model>
       <model name='cylinder3_clone_3'>
-        <pose>4.55789 -7.53841 0 0 -0 0</pose>
+        <pose>-12.6791 -29.8524 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>6.58044 -11.5399 1.5 0 -0 0</pose>
+          <pose>-10.6566 -33.8539 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder3_clone_4'>
-        <pose>-13.0229 -13.1395 0 0 -0 0</pose>
+        <pose>-13.0228 -13.1395 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
           <pose>-12.8441 -11.0823 1.5 0 -0 0</pose>
@@ -2714,57 +2714,57 @@
         </link>
       </model>
       <model name='cylinder3_clone_5'>
-        <pose>-5.28073 4.74651 0 0 -0 0</pose>
+        <pose>0.16806 2.09006 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-7.13802 6.84429 1.5 0 -0 0</pose>
+          <pose>-1.68923 4.18784 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder3_clone_6'>
-        <pose>-14.1805 -8.61686 0 0 -0 0</pose>
+        <pose>-13.3371 -9.62586 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-18.1663 -7.55895 1.5 0 -0 0</pose>
+          <pose>-17.323 -8.56795 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder3_clone_7'>
-        <pose>2.62809 -2.53631 0 0 -0 0</pose>
+        <pose>13.2544 -26.9443 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>8.68457 -8.41359 1.5 0 -0 0</pose>
+          <pose>19.3109 -32.8216 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder3_clone_8'>
-        <pose>10.5514 7.40233 0 0 -0 0</pose>
+        <pose>26.6549 -5.41625 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>14.6751 1.49708 1.5 0 -0 0</pose>
+          <pose>30.7787 -11.3215 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder3_clone_9'>
-        <pose>0.46462 -2.76553 0 0 -0 0</pose>
+        <pose>-3.0485 -28.8006 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>1.49981 -8.56257 1.5 0 -0 0</pose>
+          <pose>-2.01331 -34.5976 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder4'>
-        <pose>-15.8568 -1.65671 0 0 -0 0</pose>
+        <pose>-15.8569 -1.65671 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
           <pose>-17.8569 -1.65671 1.5 0 -0 0</pose>
@@ -2784,20 +2784,20 @@
         </link>
       </model>
       <model name='cylinder4_clone_1'>
-        <pose>-2.12103 -0.64898 0 0 -0 0</pose>
+        <pose>-1.81173 1.66661 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-4.07743 -2.66488 1.5 0 -0 0</pose>
+          <pose>-3.76813 -0.34929 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder4_clone_10'>
-        <pose>17.1803 2.31613 0 0 -0 0</pose>
+        <pose>14.9292 -7.18549 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>24.1868 -1.70138 1.5 0 -0 0</pose>
+          <pose>21.9357 -11.203 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -2814,10 +2814,10 @@
         </link>
       </model>
       <model name='cylinder4_clone_11_clone'>
-        <pose>-13.8369 7.94093 0 0 -0 0</pose>
+        <pose>-13.786 7.94688 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-4.7715 8.0242 1.5 0 -0 0</pose>
+          <pose>-4.72056 8.03015 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -2844,10 +2844,10 @@
         </link>
       </model>
       <model name='cylinder4_clone_11_clone_10'>
-        <pose>-22.7732 -10 0 0 -0 0</pose>
+        <pose>-36.1665 -9.47199 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-13.7078 -9.91673 1.5 0 -0 0</pose>
+          <pose>-27.1011 -9.38872 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3394,10 +3394,10 @@
         </link>
       </model>
       <model name='cylinder4_clone_11_clone_6'>
-        <pose>-23.2072 7.06333 0 0 -0 0</pose>
+        <pose>-25.6502 8.35447 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-14.1418 7.1466 1.5 0 -0 0</pose>
+          <pose>-16.5848 8.43774 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3434,20 +3434,20 @@
         </link>
       </model>
       <model name='cylinder4_clone_12'>
-        <pose>2.91865 -2.40378 0 0 -0 0</pose>
+        <pose>24.5866 10.4494 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>12.0082 -5.31532 1.5 0 -0 0</pose>
+          <pose>33.6762 7.53787 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder4_clone_13'>
-        <pose>-11.1013 -7.09542 0 0 -0 0</pose>
+        <pose>-1.50814 -19.6511 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>-8.08998 -9.13393 1.5 0 -0 0</pose>
+          <pose>1.50321 -21.6896 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3464,20 +3464,20 @@
         </link>
       </model>
       <model name='cylinder4_clone_15'>
-        <pose>11.0891 2.04095 0 0 -0 0</pose>
+        <pose>29.4346 -21.4647 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
-          <pose>13.1158 7.15264 1.5 0 -0 0</pose>
+          <pose>31.4613 -16.353 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder4_clone_16'>
-        <pose>0.48551 -11.4395 0 0 -0 0</pose>
+        <pose>-13.3105 21.4087 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
-          <pose>2.03251 -11.9004 1.5 0 -0 0</pose>
+          <pose>-11.7635 20.9478 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3724,20 +3724,20 @@
         </link>
       </model>
       <model name='cylinder4_clone_19'>
-        <pose>-2.96651 3.43484 0 0 -0 0</pose>
+        <pose>9.35839 -34.1114 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
-          <pose>-6.97849 2.53411 1.5 0 -0 0</pose>
+          <pose>5.34641 -35.0121 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cylinder4_clone_20'>
-        <pose>0.04669 1.93218 0 0 -0 0</pose>
+        <pose>-29.9379 -1.49916 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
-          <pose>-3.95129 6.21777 1.5 0 -0 0</pose>
+          <pose>-33.9359 2.78643 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3754,10 +3754,10 @@
         </link>
       </model>
       <model name='cylinder4_clone_21_clone'>
-        <pose>-3.23739 6.39211 0 0 -0 0</pose>
+        <pose>21.9412 -30.4343 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
-          <pose>-7.23537 10.6777 1.5 0 -0 0</pose>
+          <pose>17.9432 -26.1487 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3774,10 +3774,10 @@
         </link>
       </model>
       <model name='cylinder4_clone_4'>
-        <pose>17.7981 6.55076 0 0 -0 0</pose>
+        <pose>30.5165 -5.67243 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_large::link'>
-          <pose>19.7133 8.54459 1.5 0 -0 0</pose>
+          <pose>32.4318 -3.6786 1.5 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3834,10 +3834,10 @@
         </link>
       </model>
       <model name='cylinder9'>
-        <pose>11.6281 3.30308 0 0 -0 0</pose>
+        <pose>8.9225 5.15263 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='obs_cylinder_small::link'>
-          <pose>22.6281 6.30308 2 0 -0 0</pose>
+          <pose>19.9225 8.15263 2 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -3854,151 +3854,13 @@
         </link>
       </model>
       <model name='texture'>
-        <pose>-0.057435 -0.037806 0 0 -0 0</pose>
+        <pose>-0.022154 0.017687 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='prometheus_logo'>
-          <pose>-0.057435 -0.037806 0 0 -0 0</pose>
+          <pose>-0.022154 0.017687 0 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='uav1'>
-        <pose>-1e-06 -0.000139 0.044482 0.003213 -0 2e-06</pose>
-        <scale>1 1 1</scale>
-        <link name='base_link'>
-          <pose>-1e-06 -0.000139 0.044482 0.003213 -0 2e-06</pose>
-          <velocity>-3e-06 -6e-06 1.2e-05 0.000138 -6.7e-05 -0</velocity>
-          <acceleration>-0.0016 -5.7e-05 -0.000109 0.001272 -0.035327 -8.1e-05</acceleration>
-          <wrench>-0.002352 -8.4e-05 -0.000161 0 -0 0</wrench>
-        </link>
-        <link name='gps::link'>
-          <pose>0 -0.000487 0.144481 0.003102 -4e-06 2e-06</pose>
-          <velocity>-0.000244 -1.9e-05 1.2e-05 0.000139 0.000859 3.3e-05</velocity>
-          <acceleration>-0.232486 9e-06 -0.000254 4.2e-05 0.924957 0.016987</acceleration>
-          <wrench>-0.003487 0 -4e-06 0 -0 0</wrench>
-        </link>
-        <link name='imu_link'>
-          <pose>-1e-06 -0.00014 0.044481 0.003218 -0 2e-06</pose>
-          <velocity>-1.7e-05 -6e-06 1.2e-05 0.000136 -0.000142 3.2e-05</velocity>
-          <acceleration>-0.008323 1.2e-05 -0.000282 0.000447 -0.069933 0.014976</acceleration>
-          <wrench>-0.000125 0 -4e-06 0 -0 0</wrench>
-        </link>
-        <link name='rotor_0'>
-          <pose>0.212132 -0.213052 0.286797 0.003218 -0 2e-06</pose>
-          <velocity>-4.5e-05 -3.2e-05 1.3e-05 0.000136 -0.000142 -1e-06</velocity>
-          <acceleration>-0.016555 0.00147 0.011127 0.000857 -0.054053 -0.000174</acceleration>
-          <wrench>-8.3e-05 7e-06 5.6e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_1'>
-          <pose>-0.212133 0.211209 0.288163 0.003218 -0 2e-06</pose>
-          <velocity>-5.8e-05 -4.6e-05 1e-05 0.000137 -0.000143 -1e-06</velocity>
-          <acceleration>-0.019902 -0.002028 -0.011467 0.001046 -0.054304 -0.000175</acceleration>
-          <wrench>-0.0001 -1e-05 -5.7e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_2'>
-          <pose>0.212131 0.21121 0.288163 0.003218 -0 2e-06</pose>
-          <velocity>-5.8e-05 -3.3e-05 7.1e-05 0.000138 -0.000141 -1e-06</velocity>
-          <acceleration>-0.019723 0.001258 0.011502 0.001391 -0.053758 -0.000174</acceleration>
-          <wrench>-9.9e-05 6e-06 5.8e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_3'>
-          <pose>-0.212132 -0.213053 0.286798 0.003217 -0 2e-06</pose>
-          <velocity>-4.4e-05 -4.6e-05 -4.7e-05 0.000139 -0.00014 -1e-06</velocity>
-          <acceleration>-0.016389 -0.002002 -0.011829 0.001456 -0.053337 -0.000172</acceleration>
-          <wrench>-8.2e-05 -1e-05 -5.9e-05 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='uav2'>
-        <pose>3 9.99986 0.044478 0.003188 -0 1e-06</pose>
-        <scale>1 1 1</scale>
-        <link name='base_link'>
-          <pose>3 9.99986 0.044478 0.003188 -0 1e-06</pose>
-          <velocity>3e-06 -6e-06 1.2e-05 0.000134 6.8e-05 0</velocity>
-          <acceleration>0.001531 4.5e-05 7.9e-05 -0.000991 0.033813 7.7e-05</acceleration>
-          <wrench>0.002251 6.6e-05 0.000116 0 -0 0</wrench>
-        </link>
-        <link name='gps::link'>
-          <pose>3 9.99952 0.144477 0.003078 -6e-06 0</pose>
-          <velocity>0.00021 -1.9e-05 1.3e-05 0.00014 -0.000725 -2.8e-05</velocity>
-          <acceleration>0.113501 -5.1e-05 0.000224 0.000345 -0.395934 -0.01524</acceleration>
-          <wrench>0.001703 -1e-06 3e-06 0 -0 0</wrench>
-        </link>
-        <link name='imu_link'>
-          <pose>3 9.99986 0.044478 0.003194 1e-06 1e-06</pose>
-          <velocity>1.5e-05 -6e-06 1.3e-05 0.000135 0.000131 -2.7e-05</velocity>
-          <acceleration>0.007977 -2.5e-05 0.000252 -9.2e-05 0.068409 -0.014899</acceleration>
-          <wrench>0.00012 -0 4e-06 0 -0 0</wrench>
-        </link>
-        <link name='rotor_0'>
-          <pose>3.21213 9.78695 0.286799 0.003194 1e-06 1e-06</pose>
-          <velocity>4.1e-05 -4.5e-05 -4.4e-05 0.000135 0.000131 1e-06</velocity>
-          <acceleration>0.015169 -0.001279 -0.010304 -0.000631 0.049737 0.000159</acceleration>
-          <wrench>7.6e-05 -6e-06 -5.2e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_1'>
-          <pose>2.78787 10.2112 0.288154 0.003193 -0 1e-06</pose>
-          <velocity>5.3e-05 -3.3e-05 6.9e-05 0.000134 0.000132 1e-06</velocity>
-          <acceleration>0.018023 0.001699 0.010559 -0.000791 0.049949 0.00016</acceleration>
-          <wrench>9e-05 8e-06 5.3e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_2'>
-          <pose>3.21213 10.2112 0.288154 0.003193 -0 1e-06</pose>
-          <velocity>5.2e-05 -4.4e-05 1.3e-05 0.000133 0.00013 1e-06</velocity>
-          <acceleration>0.01787 -0.001099 -0.010573 -0.001084 0.049485 0.000158</acceleration>
-          <wrench>8.9e-05 -5e-06 -5.3e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_3'>
-          <pose>2.78787 9.78695 0.286799 0.003193 -0 1e-06</pose>
-          <velocity>4.1e-05 -3.3e-05 1.2e-05 0.000133 0.000129 1e-06</velocity>
-          <acceleration>0.015026 0.001676 0.010816 -0.001138 0.049124 0.000157</acceleration>
-          <wrench>7.5e-05 8e-06 5.4e-05 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='uav3'>
-        <pose>7 -4.00014 0.044485 0.003234 0 -1e-06</pose>
-        <scale>1 1 1</scale>
-        <link name='base_link'>
-          <pose>7 -4.00014 0.044485 0.003234 0 -1e-06</pose>
-          <velocity>3e-06 -6e-06 1.2e-05 0.000134 6.8e-05 0</velocity>
-          <acceleration>0.001531 4.5e-05 7.9e-05 -0.000991 0.033817 7.8e-05</acceleration>
-          <wrench>0.002251 6.6e-05 0.000116 0 -0 0</wrench>
-        </link>
-        <link name='gps::link'>
-          <pose>7 -4.00049 0.144484 0.003124 -6e-06 -1e-06</pose>
-          <velocity>0.000212 -1.9e-05 1.3e-05 0.00014 -0.000733 -2.8e-05</velocity>
-          <acceleration>0.113381 -5.1e-05 0.000224 0.000343 -0.395405 -0.015254</acceleration>
-          <wrench>0.001701 -1e-06 3e-06 0 -0 0</wrench>
-        </link>
-        <link name='imu_link'>
-          <pose>7 -4.00014 0.044485 0.00324 1e-06 -1e-06</pose>
-          <velocity>1.5e-05 -6e-06 1.3e-05 0.000135 0.000132 -2.7e-05</velocity>
-          <acceleration>0.007976 -2.5e-05 0.000252 -9.6e-05 0.068402 -0.014893</acceleration>
-          <wrench>0.00012 -0 4e-06 0 -0 0</wrench>
-        </link>
-        <link name='rotor_0'>
-          <pose>7.21213 -4.21306 0.286796 0.00324 1e-06 -1e-06</pose>
-          <velocity>4.1e-05 -4.5e-05 -4.4e-05 0.000135 0.000132 1e-06</velocity>
-          <acceleration>0.015186 -0.001283 -0.010314 -0.000649 0.049785 0.000162</acceleration>
-          <wrench>7.6e-05 -6e-06 -5.2e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_1'>
-          <pose>6.78787 -3.7888 0.28817 0.003239 -0 -1e-06</pose>
-          <velocity>5.3e-05 -3.3e-05 6.9e-05 0.000134 0.000133 1e-06</velocity>
-          <acceleration>0.018049 0.001703 0.010569 -0.000811 0.049998 0.000162</acceleration>
-          <wrench>9e-05 9e-06 5.3e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_2'>
-          <pose>7.21213 -3.7888 0.28817 0.003239 -0 -1e-06</pose>
-          <velocity>5.2e-05 -4.4e-05 1.3e-05 0.000133 0.000131 1e-06</velocity>
-          <acceleration>0.017895 -0.001103 -0.010583 -0.001104 0.049532 0.000161</acceleration>
-          <wrench>8.9e-05 -6e-06 -5.3e-05 0 -0 0</wrench>
-        </link>
-        <link name='rotor_3'>
-          <pose>6.78787 -4.21306 0.286796 0.003239 -0 -1e-06</pose>
-          <velocity>4.1e-05 -3.3e-05 1.2e-05 0.000133 0.000129 1e-06</velocity>
-          <acceleration>0.015043 0.00168 0.010827 -0.001158 0.049171 0.00016</acceleration>
-          <wrench>7.5e-05 8e-06 5.4e-05 0 -0 0</wrench>
         </link>
       </model>
       <light name='sun'>

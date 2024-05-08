@@ -11,4 +11,4 @@ catkin_make --source Simulator/velodyne_gazebo_plugins --build build/velodyne_ga
 # 编译控制模块
 catkin_make --source Modules/uav_control --build build/uav_control
 # 编译demo模块
-catkin_make --source Modules/tutorial_demo --build build/tutorial_demo
+#catkin_make --source Modules/tutorial_demo --build build/tutorial_demo
