@@ -22,6 +22,9 @@
 
 #include "custom_data_segment.hpp"
 
+#include "mavros_msgs/Waypoint.h"
+#include "mavros_msgs/WaypointList.h"
+
 //uav control
 // #define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
 // #define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"

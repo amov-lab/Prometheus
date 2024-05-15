@@ -29,7 +29,8 @@
 using namespace gazebo;
 
 /////////////////////////////////////////////////
-RealSensePlugin::RealSensePlugin() {
+RealSensePlugin::RealSensePlugin()
+{
   this->depthCam = nullptr;
   this->ired1Cam = nullptr;
   this->ired2Cam = nullptr;
@@ -42,7 +43,8 @@ RealSensePlugin::RealSensePlugin() {
 RealSensePlugin::~RealSensePlugin() {}
 
 /////////////////////////////////////////////////
-void RealSensePlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
+void RealSensePlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+{
 
   // Output the name of the model
 
@@ -58,8 +60,10 @@ void RealSensePlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   cameraParamsMap_.insert(std::make_pair(IRED1_CAMERA_NAME, CameraParams()));
   cameraParamsMap_.insert(std::make_pair(IRED2_CAMERA_NAME, CameraParams()));
 
-  do {
+  do
+  {
     std::string name = _sdf->GetName();
+
     if (name == "depthUpdateRate")
       _sdf->GetValue()->Get(depthUpdateRate_);
     else if (name == "colorUpdateRate")
@@ -133,48 +137,99 @@ void RealSensePlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   // Sensors Manager
   sensors::SensorManager *smanager = sensors::SensorManager::Instance();
 
-  // Get Cameras Renderers
-  this->depthCam = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(
-                       smanager->GetSensor(prefix + DEPTH_CAMERA_NAME))
-                       ->DepthCamera();
+  // 获取所有传感器
+  const auto &sensors = smanager->GetSensors();
 
-  this->ired1Cam = std::dynamic_pointer_cast<sensors::CameraSensor>(
-                       smanager->GetSensor(prefix + IRED1_CAMERA_NAME))
-                       ->Camera();
-  this->ired2Cam = std::dynamic_pointer_cast<sensors::CameraSensor>(
-                       smanager->GetSensor(prefix + IRED2_CAMERA_NAME))
-                       ->Camera();
-  this->colorCam = std::dynamic_pointer_cast<sensors::CameraSensor>(
-                       smanager->GetSensor(prefix + COLOR_CAMERA_NAME))
-                       ->Camera();
+  bool color = false;
+  // Get Cameras Renderers
+  // 在d435i的sdf文件中加载过程中color_camera传感器需要再depth_camera传感器之前加载
+  // 因为depth_camera传感器默认名字一致，无法做出有效判断，所有可以通过判断color_camera之后的下一个depth_camer即为正确的depth_camera
+  for (int i = 0; i < sensors.size(); ++i)
+  {
+    const auto &sensor = sensors[i];
+    if (sensor->Name() == prefix + DEPTH_CAMERA_NAME)
+    {
+      if(color)
+      {
+        this->depthCam = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(sensor)->DepthCamera();
+        color = false;
+      }
+    }
+    else if (sensor->Name() == prefix + IRED1_CAMERA_NAME)
+    {
+      std::string name = std::dynamic_pointer_cast<sensors::CameraSensor>(sensor)->Camera()->Name();
+      if(name.find(_model->GetName()) != std::string::npos)
+      {
+        this->ired1Cam = std::dynamic_pointer_cast<sensors::CameraSensor>(sensor)->Camera();
+      }
+    }
+    else if (sensor->Name() == prefix + IRED2_CAMERA_NAME)
+    {
+      std::string name = std::dynamic_pointer_cast<sensors::CameraSensor>(sensor)->Camera()->Name();
+      if(name.find(_model->GetName()) != std::string::npos)
+      {
+        this->ired2Cam = std::dynamic_pointer_cast<sensors::CameraSensor>(sensor)->Camera();
+      }
+    }
+    else if (sensor->Name() == prefix + COLOR_CAMERA_NAME)
+    {
+      std::string name = std::dynamic_pointer_cast<sensors::CameraSensor>(sensor)->Camera()->Name();
+      if(name.find(_model->GetName()) != std::string::npos)
+      {
+        this->colorCam = std::dynamic_pointer_cast<sensors::CameraSensor>(sensor)->Camera();
+        color = true;
+      }
+    }
+  }
+  // 原先赋值方式
+  // this->depthCam = std::dynamic_pointer_cast<sensors::DepthCameraSensor>(
+  //                      smanager->GetSensor(prefix + DEPTH_CAMERA_NAME))
+  //                      ->DepthCamera();
+
+  // this->ired1Cam = std::dynamic_pointer_cast<sensors::CameraSensor>(
+  //                      smanager->GetSensor(prefix + IRED1_CAMERA_NAME))
+  //                      ->Camera();
+  // this->ired2Cam = std::dynamic_pointer_cast<sensors::CameraSensor>(
+  //                      smanager->GetSensor(prefix + IRED2_CAMERA_NAME))
+  //                      ->Camera();
+  // this->colorCam = std::dynamic_pointer_cast<sensors::CameraSensor>(
+  //                      smanager->GetSensor(prefix + COLOR_CAMERA_NAME))
+  //                      ->Camera();
 
   // Check if camera renderers have been found successfuly
-  if (!this->depthCam) {
+  if (!this->depthCam)
+  {
     std::cerr << "RealSensePlugin: Depth Camera has not been found"
               << std::endl;
     return;
   }
-  if (!this->ired1Cam) {
+  if (!this->ired1Cam)
+  {
     std::cerr << "RealSensePlugin: InfraRed Camera 1 has not been found"
               << std::endl;
     return;
   }
-  if (!this->ired2Cam) {
+  if (!this->ired2Cam)
+  {
     std::cerr << "RealSensePlugin: InfraRed Camera 2 has not been found"
               << std::endl;
     return;
   }
-  if (!this->colorCam) {
+  if (!this->colorCam)
+  {
     std::cerr << "RealSensePlugin: Color Camera has not been found"
               << std::endl;
     return;
   }
 
   // Resize Depth Map dimensions
-  try {
+  try
+  {
     this->depthMap.resize(this->depthCam->ImageWidth() *
                           this->depthCam->ImageHeight());
-  } catch (std::bad_alloc &e) {
+  }
+  catch (std::bad_alloc &e)
+  {
     std::cerr << "RealSensePlugin: depthMap allocation failed: " << e.what()
               << std::endl;
     return;
@@ -210,16 +265,15 @@ void RealSensePlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   this->newColorFrameConn = this->colorCam->ConnectNewImageFrame(std::bind(
       &RealSensePlugin::OnNewFrame, this, this->colorCam, this->colorPub));
 
-
   // Listen to the update event
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&RealSensePlugin::OnUpdate, this));
-
 }
 
 /////////////////////////////////////////////////
 void RealSensePlugin::OnNewFrame(const rendering::CameraPtr cam,
-                                 const transport::PublisherPtr pub) {
+                                 const transport::PublisherPtr pub)
+{
   msgs::ImageStamped msg;
 
   // Set Simulation Time
@@ -244,7 +298,8 @@ void RealSensePlugin::OnNewFrame(const rendering::CameraPtr cam,
 }
 
 /////////////////////////////////////////////////
-void RealSensePlugin::OnNewDepthFrame() {
+void RealSensePlugin::OnNewDepthFrame()
+{
   // Get Depth Map dimensions
   unsigned int imageSize =
       this->depthCam->ImageWidth() * this->depthCam->ImageHeight();
@@ -254,14 +309,18 @@ void RealSensePlugin::OnNewDepthFrame() {
 
   // Convert Float depth data to RealSense depth data
   const float *depthDataFloat = this->depthCam->DepthData();
-  for (unsigned int i = 0; i < imageSize; ++i) {
+  for (unsigned int i = 0; i < imageSize; ++i)
+  {
     // Check clipping and overflow
     if (depthDataFloat[i] < rangeMinDepth_ ||
         depthDataFloat[i] > rangeMaxDepth_ ||
         depthDataFloat[i] > DEPTH_SCALE_M * UINT16_MAX ||
-        depthDataFloat[i] < 0) {
+        depthDataFloat[i] < 0)
+    {
       this->depthMap[i] = 0;
-    } else {
+    }
+    else
+    {
       this->depthMap[i] = (uint16_t)(depthDataFloat[i] / DEPTH_SCALE_M);
     }
   }

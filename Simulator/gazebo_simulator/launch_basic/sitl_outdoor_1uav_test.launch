@@ -1,0 +1,68 @@
+<launch>
+	<!-- Gazebo configs -->
+    <arg name="gazebo_enable" default="true"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/prometheus_empty.world"/>
+    <!-- 启动Gazebo -->
+    <group if="$(arg gazebo_enable)">
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(arg world)"/>
+			<arg name="use_sim_time" value="true"/>
+        </include>
+    </group>
+    
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="p450_2Dlidar"/>
+  
+    <!--无人机编号-->
+    <arg name="uav1_id" default="1"/>
+	<!--无人机编号-->
+    <arg name="uav2_id" default="2"/>
+	<!--无人机编号-->
+    <arg name="uav3_id" default="3"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="0.0"/>
+    <arg name="uav1_init_y" default="0.0"/>
+    <arg name="uav1_init_yaw" default="0.0"/>
+	
+	<!-- 1号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor_test.launch">
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="vehicle" value="$(arg vehicle)"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="$(arg uav1_init_yaw)"/>
+	</include>
+
+	<!-- 2号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor_test.launch">
+		<arg name="uav_id" value="$(arg uav2_id)"/>
+		<arg name="vehicle" value="$(arg vehicle)"/>
+		<arg name="uav_init_x" value="2"/>
+		<arg name="uav_init_y" value="2"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- 3号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor_test.launch">
+		<arg name="uav_id" value="$(arg uav3_id)"/>
+		<arg name="vehicle" value="$(arg vehicle)"/>
+		<arg name="uav_init_x" value="-2"/>
+		<arg name="uav_init_y" value="-2"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="0.0"/>
+	</include>
+
+	<!-- TF for world and map-->
+	<node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav1_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav1_id)/camera_link /uav$(arg uav1_id)/d435i_link 100"/>
+
+	<!-- TF for world and map-->
+	<node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav2_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav2_id)/camera_link /uav$(arg uav2_id)/d435i_link 100"/>
+
+	<!-- TF for world and map-->
+	<node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav3_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav3_id)/camera_link /uav$(arg uav3_id)/d435i_link 100"/>
+</launch>

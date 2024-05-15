@@ -40,7 +40,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450.dae</uri>
+            <uri>model://p450/meshes/p450.stl</uri>
           </mesh>
         </geometry>
       </visual>
@@ -334,6 +334,23 @@
       <child>gps::link</child>
       <parent>base_link</parent>
     </joint>
+
+    <include>
+      <uri>model://D435i</uri>
+      <pose>0.095 0 0 0 0.35 0</pose>
+    </include>
+    <joint name="D435i_joint" type="fixed">
+      <child>D435i::camera_link</child>
+      <parent>base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+
     <plugin name='rosbag' filename='libgazebo_multirotor_base_plugin.so'>
       <robotNamespace></robotNamespace>
       <linkName>base_link</linkName>

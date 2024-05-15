@@ -54,7 +54,6 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     recv_multicast_thd.detach();
     ros::Duration(1).sleep(); // wait
 
-
     heartbeat.message = "OK";
     heartbeat.count = 0;
 
@@ -72,8 +71,7 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
 
     heartbeat_check_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::checkHeartbeatState, this);
 
-
-    //this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
+    // this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
 }
 
 CommunicationBridge::~CommunicationBridge()
@@ -250,7 +248,6 @@ void CommunicationBridge::recvData(struct UGVCommand ugv_command)
 void CommunicationBridge::recvData(struct UGVState ugv_state)
 {
 
-
     if (this->swarm_control_ != NULL && this->swarm_ugv_num_ != 0)
     {
         // 融合到所有无人车状态然后发布话题
@@ -389,6 +386,38 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
     //     struct BasicDataTypeAndValue basic = custom_data_segment.datas[i];
     //     std::cout << "类型:" << (int)basic.type << " 变量名:" << basic.name << " 变量值:" << basic.value << std::endl;
     // }
+
+    // DEMO示例，这里将地面站航线经纬度发布出来
+    CustomDataSegment test(custom_data_segment);
+    // 获取数据段名或者标识符用于区分不同数据
+    std::string name;
+    test.getValue("name", name);
+    if (name == "polyline")
+    {
+        int count;
+        test.getValue("count", count);
+        // 创建句柄
+        static ros::Publisher waypoint_pub = nh_.advertise<mavros_msgs::WaypointList>("/uav1/prometheus/set_waypoints", 10);
+        mavros_msgs::WaypointList waypointList;
+        for (int i = 0; i < count; i++)
+        {
+            mavros_msgs::Waypoint way_point;
+            way_point.frame = mavros_msgs::Waypoint::FRAME_GLOBAL_REL_ALT;
+            way_point.command = 22;
+            way_point.is_current = true;
+            way_point.autocontinue = true;
+            way_point.param1 = 0;
+            way_point.param2 = 0;
+            way_point.param3 = 0;
+            way_point.param4 = 0;
+            test.getValue("point" + to_string(i + 1) + "_lng", way_point.y_long);
+            test.getValue("point" + to_string(i + 1) + "_lat", way_point.x_lat);
+            test.getValue("point" + to_string(i + 1) + "_alt", way_point.z_alt);
+            // std::cout << "way_point: " << way_point.x_lat << " " << way_point.y_long << std::endl;
+            waypointList.waypoints.push_back(way_point);
+        }
+        waypoint_pub.publish(waypointList);
+    }
 }
 
 void CommunicationBridge::recvData(struct Goal goal)
@@ -671,7 +700,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         return;
                     }
                 }
-                else if(mode_selection.selectId[i] < 0)
+                else if (mode_selection.selectId[i] < 0)
                 {
                     int id = abs(mode_selection.selectId[i]);
                     if (this->swarm_ugv_control_simulation_.count(id) == 0)
@@ -1187,12 +1216,13 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
     // uint swarm_control_time[this->swarm_num_] = {0};
     // 记录 未刷新的次数
     // uint swarm_control_timeout_count[this->swarm_num_] = {0};
-    
+
     std::string message = "CPUUsage:" + to_string(getCPUUsage());
     message += ",CPUTemperature:" + to_string(getCPUTemperature());
     ros::V_string v_nodes;
     ros::master::getNodes(v_nodes);
-    for (auto elem : v_nodes) {
+    for (auto elem : v_nodes)
+    {
         message += ",rosnode:" + elem;
     }
 
@@ -1553,7 +1583,8 @@ double CommunicationBridge::getCPUUsage()
 double CommunicationBridge::getCPUTemperature()
 {
     std::ifstream file("/sys/class/thermal/thermal_zone0/temp");
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         std::cerr << "无法打开温度文件！" << std::endl;
         return -1;
     }

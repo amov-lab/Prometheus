@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_eigen
   mavros_msgs
   prometheus_msgs
-  spirecv_msgs
+  #spirecv_msgs
 )
 
 ##  System dependencies are found with CMake's conventions
@@ -95,23 +95,26 @@ target_link_libraries(body_xyz_pos_control ${catkin_LIBRARIES})
 add_executable(circular_trajectory_control basic/circular_trajectory_control/src/circular_trajectory_control.cpp)
 target_link_libraries(circular_trajectory_control ${catkin_LIBRARIES})
 
-add_executable(formation_control advanced/formation_control/src/formation_control.cpp)
-target_link_libraries(formation_control ${catkin_LIBRARIES})
+add_executable(waypoint_pos_control basic/waypoint_pos_control/src/waypoint_pos_control.cpp)
+target_link_libraries(waypoint_pos_control ${catkin_LIBRARIES})
 
-add_executable(autonomous_landing advanced/autonomous_landing/src/autonomous_landing.cpp)
-target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
+# add_executable(formation_control advanced/formation_control/src/formation_control.cpp)
+# target_link_libraries(formation_control ${catkin_LIBRARIES})
 
-add_executable(siamrpn_track advanced/siamrpn_track/src/siamrpn_track.cpp)
-target_link_libraries(siamrpn_track ${catkin_LIBRARIES})
+# add_executable(autonomous_landing advanced/autonomous_landing/src/autonomous_landing.cpp)
+# target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
 
-add_executable(find_aruco_marker advanced/find_aruco_marker/src/find_aruco_marker.cpp)
-target_link_libraries(find_aruco_marker ${catkin_LIBRARIES})
+# add_executable(siamrpn_track advanced/siamrpn_track/src/siamrpn_track.cpp)
+# target_link_libraries(siamrpn_track ${catkin_LIBRARIES})
 
-add_executable(yolov5_tracking advanced/yolov5_tracking/src/yolov5_tracking.cpp)
-target_link_libraries(yolov5_tracking ${catkin_LIBRARIES})
+# add_executable(find_aruco_marker advanced/find_aruco_marker/src/find_aruco_marker.cpp)
+# target_link_libraries(find_aruco_marker ${catkin_LIBRARIES})
 
-add_executable(aruco_tracking advanced/aruco_tracking/src/aruco_tracking.cpp)
-target_link_libraries(aruco_tracking ${catkin_LIBRARIES})
+# add_executable(yolov5_tracking advanced/yolov5_tracking/src/yolov5_tracking.cpp)
+# target_link_libraries(yolov5_tracking ${catkin_LIBRARIES})
+
+# add_executable(aruco_tracking advanced/aruco_tracking/src/aruco_tracking.cpp)
+# target_link_libraries(aruco_tracking ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

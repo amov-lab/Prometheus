@@ -360,6 +360,26 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     // 发布TF用于RVIZ显示（用于lidar）
     static tf2_ros::TransformBroadcaster broadcaster;
     geometry_msgs::TransformStamped tfs;
+
+    //  |----头设置
+    tfs.header.frame_id = "world";       //相对于世界坐标系
+    tfs.header.stamp = ros::Time::now(); //时间戳
+    //  |----坐标系 ID
+    tfs.child_frame_id = uav_name + "/base_link"; //子坐标系，无人机的坐标系
+    // tfs.child_frame_id = "/lidar_link"; //子坐标系，无人机的坐标系
+    //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
+    tfs.transform.translation.x = uav_state.position[0];
+    tfs.transform.translation.y = uav_state.position[1];
+    tfs.transform.translation.z = uav_state.position[2];
+    //  |--------- 四元数设置
+    tfs.transform.rotation.x = uav_state.attitude_q.x;
+    tfs.transform.rotation.y = uav_state.attitude_q.y;
+    tfs.transform.rotation.z = uav_state.attitude_q.z;
+    tfs.transform.rotation.w = uav_state.attitude_q.w;
+
+    //  |--------- 广播器发布数据
+    broadcaster.sendTransform(tfs);
+
     //  |----头设置
     tfs.header.frame_id = uav_name + "/base_link";       //相对于世界坐标系
     tfs.header.stamp = ros::Time::now(); //时间戳

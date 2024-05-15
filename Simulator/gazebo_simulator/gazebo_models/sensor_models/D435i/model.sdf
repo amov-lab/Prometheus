@@ -70,7 +70,7 @@
       </collision>
     </link>
 
-    <link name="imu_link">
+    <!-- <link name="imu_link">
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose frame=''>0 0 0 0 -0 0</pose>
@@ -119,7 +119,7 @@
         </dynamics>
         <use_parent_model_frame>1</use_parent_model_frame>
       </axis>
-    </joint>
+    </joint> -->
 
     <link name="camera_color_frame">
       <pose>0 0 0.12 0 0 0</pose>
@@ -369,7 +369,7 @@
       </axis>
     </joint>
 
-    <plugin name="camera" filename="librealsense_gazebo_plugin.so">
+    <!-- <plugin name="camera" filename="librealsense_gazebo_plugin.so">
        <depthUpdateRate>30</depthUpdateRate>
        <colorUpdateRate>30</colorUpdateRate>
        <infraredUpdateRate>30</infraredUpdateRate>
@@ -391,7 +391,7 @@
        <pointCloudTopicName>depth/color/points</pointCloudTopicName>
        <pointCloudCutoff>0.25</pointCloudCutoff>
        <pointCloudCutoffMax>9.0</pointCloudCutoffMax>
-     </plugin>
+     </plugin> -->
 
   </model>
 </sdf>

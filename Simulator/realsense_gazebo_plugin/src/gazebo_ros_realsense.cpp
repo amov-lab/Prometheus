@@ -61,6 +61,7 @@ void GazeboRosRealsense::OnNewFrame(const rendering::CameraPtr cam,
 
   // identify camera
   std::string camera_id = extractCameraName(cam->Name());
+
   const std::map<std::string, image_transport::CameraPublisher *>
       camera_publishers = {
           {COLOR_CAMERA_NAME, &(this->color_pub_)},
@@ -227,8 +228,17 @@ void GazeboRosRealsense::OnNewDepthFrame() {
     this->pointcloud_msg_.header = this->depth_msg_.header;
     // 增加仿真时间戳，适配Prometheus
     this->pointcloud_msg_.header.stamp = ros::Time::now(); //时间戳
+
+    // 读取无人机ID前缀
+    std::string namespace_prefix = this->pointcloud_pub_.getTopic();
+    // 查找第一个斜杠字符的位置
+    size_t pos = namespace_prefix.find('/');
+    // 截取从找到的斜杠字符位置之后，到下一个斜杠字符位置之前的子字符串
+    std::string sub_str = namespace_prefix.substr(pos + 1, namespace_prefix.find('/', pos + 1) - (pos + 1));
+    
     // 修改Frame，适配Prometheus
-    this->pointcloud_msg_.header.frame_id = "d435i_link"; 
+    this->pointcloud_msg_.header.frame_id = sub_str + "/d435i_link";
+
     this->pointcloud_msg_.width = this->depthCam->ImageWidth();
     this->pointcloud_msg_.height = this->depthCam->ImageHeight();
     this->pointcloud_msg_.row_step =
