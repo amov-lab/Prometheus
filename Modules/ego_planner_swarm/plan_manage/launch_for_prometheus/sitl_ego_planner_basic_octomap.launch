@@ -4,7 +4,7 @@
   <!-- ego_planner 仿真 -->
   <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
     <!-- 无人机编号 -->
-    <arg name="uav_id" value="1"/>
+    <arg name="uav_id" value="$(arg uav_id)"/>
     <!-- 地图尺寸 -->
     <arg name="map_size_x_" value="50.0"/>
     <arg name="map_size_y_" value="50.0"/>
@@ -24,7 +24,7 @@
     <arg name="fx" value="387.229248046875"/>
     <arg name="fy" value="387.229248046875"/>
     <!-- 点云信息，仿真中由map_generator产生 -->
-    <arg name="cloud_topic" value="octomap_point_cloud_centers"/>
+    <arg name="cloud_topic" value="/uav$(arg uav_id)/octomap_point_cloud_centers"/>
     <!-- scan -->
     <arg name="scan_topic" value="no_scan"/>
     <!-- 最大速度及加速度 -->

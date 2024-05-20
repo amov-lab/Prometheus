@@ -39,7 +39,7 @@
 
   <arg name="obj_num_set"/>
 
-  <arg name="drone_id"/>
+  <arg name="drone_id" value="$(arg uav_id)"/>
 
 
   <!-- main node -->

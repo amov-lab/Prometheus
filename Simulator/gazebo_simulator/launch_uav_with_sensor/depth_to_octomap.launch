@@ -1,6 +1,11 @@
 <launch>
+  <arg name="uav_id" default="1"/>
   <!-- 启动octomap建图 -->
-  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
+  <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_$(arg uav_id)" output="screen">
+      <remap from="/octomap_point_cloud_centers" to="/uav$(arg uav_id)/octomap_point_cloud_centers"/>
+      <remap from="/octomap_full" to="/uav$(arg uav_id)/octomap_full"/>
+      <remap from="/octomap_binary" to="/uav$(arg uav_id)/octomap_binary"/>
+
       <!-- 地图分辨率 -->
       <param name="resolution" value="0.1" />
       <!-- 发布地图的坐标系 -->
@@ -8,7 +13,7 @@
       <!-- 传感器最大感知范围 (speedup!) -->
       <param name="sensor_model/max_range" value="5.0" />
       <!-- 局部点云话题输入 -->
-      <remap from="cloud_in" to="/camera/depth/color/points" />
+      <remap from="cloud_in" to="/uav$(arg uav_id)/camera/depth/color/points" />
       <!-- 直通滤波的 Z 轴范围，保留 [-1.0, 10.0] 范围内的点 -->
       <param name = "pointcloud_max_z" value = "3.0" />
       <param name = "pointcloud_min_z" value = "0.5" />

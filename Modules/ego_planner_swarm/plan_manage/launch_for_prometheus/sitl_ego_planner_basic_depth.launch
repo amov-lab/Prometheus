@@ -14,7 +14,7 @@
   <!-- ego_planner 仿真 -->
   <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
     <!-- 无人机编号 -->
-    <arg name="uav_id" value="1"/>
+    <arg name="uav_id" value="$(arg uav_id)"/>
     <!-- 地图尺寸 -->
     <arg name="map_size_x_" value="50.0"/>
     <arg name="map_size_y_" value="50.0"/>
@@ -28,7 +28,7 @@
     <arg name="odometry_topic" value="prometheus/odom"/>
     <!-- 仿真中相机及深度信息 -->
     <arg name="camera_pose_topic" value="prometheus/odom"/>
-    <arg name="depth_topic" value="/camera/depth/image_raw"/>
+    <arg name="depth_topic" value="/uav$(arg uav_id)/camera/depth/image_raw"/>
     <arg name="cx" value="320.0"/>
     <arg name="cy" value="240.0"/>
     <arg name="fx" value="319.9348449707031"/>

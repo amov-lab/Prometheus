@@ -1,5 +1,8 @@
 <launch>
-  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter">
+  <arg name="uav_id" default="1"/>
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_$(arg uav_id)">
     <rosparam command="load" file="$(find prometheus_gazebo)/config/filter_lidar.yaml"/>
+    <remap from="/scan" to="/uav$(arg uav_id)/scan"/>
+    <remap from="/scan_filtered" to="/uav$(arg uav_id)/scan_filtered"/>
   </node>
 </launch>

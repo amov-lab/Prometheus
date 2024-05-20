@@ -6,15 +6,17 @@
     <group if="$(arg gazebo_enable)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
             <arg name="world_name" value="$(arg world)"/>
-			<!-- 使用激光雷达需要设置为true -->
+			<!-- 如果选择含雷达的模型，该值需要为true -->
 			<arg name="use_sim_time" value="true"/>
         </include>
     </group>
 
 	<!-- 模型文件，参考值如下： -->
-	<!-- p600：只有p600模型无人机 -->
-	<!-- p600_2Dlidar：p600模型无人机和2D雷达传感器(含雷达数据) -->
-	<arg name="vehicle" default="p600"/>
+	<!-- p450：只有p450模型无人机 -->
+	<!-- p450_2Dlidar：p450模型无人机和2D雷达传感器(含雷达数据) -->
+	<!-- p450_D435i：p450模型无人机和深度相机D435i(含深度相机相关数据) -->
+	<!-- p450_2Dlidar_D435i：p450模型无人机、2D雷达传感器(含雷达数据)、深度相机D435i(含深度相机相关数据) -->
+	<arg name="vehicle" default="p450"/>
 
     <!--无人机编号-->
     <arg name="uav1_id" default="1"/>
@@ -36,7 +38,7 @@
 	<arg name="uav4_init_yaw" default="0.0"/>
 
 	<!-- 1号无人机 -->
-	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
 		<arg name="uav_id" value="$(arg uav1_id)"/>
 		<arg name="vehicle" value="$(arg vehicle)"/>
 		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
@@ -46,7 +48,7 @@
 	</include>
 
 	<!-- 2号无人机 -->
-	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
 		<arg name="uav_id" value="$(arg uav2_id)"/>
 		<arg name="vehicle" value="$(arg vehicle)"/>
 		<arg name="uav_init_x" value="$(arg uav2_init_x)"/>
@@ -56,7 +58,7 @@
 	</include>
 
 	<!-- 3号无人机 -->
-	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
 		<arg name="uav_id" value="$(arg uav3_id)"/>
 		<arg name="vehicle" value="$(arg vehicle)"/>
 		<arg name="uav_init_x" value="$(arg uav3_init_x)"/>
@@ -66,7 +68,7 @@
 	</include>
 
 	<!-- 4号无人机 -->
-	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_indoor.launch">
 		<arg name="uav_id" value="$(arg uav4_id)"/>
 		<arg name="vehicle" value="$(arg vehicle)"/>
 		<arg name="uav_init_x" value="$(arg uav4_init_x)"/>
@@ -74,5 +76,19 @@
 		<arg name="uav_init_z" value="0.15"/>
 		<arg name="uav_init_yaw" value="$(arg uav4_init_yaw)"/>
 	</include>
+
+	<!-- TF for world and map-->
+	<!-- 如果模型中使用了D435i，将下列TF转换打开 -->
+    <!-- <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav1_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav1_id)/camera_link /uav$(arg uav1_id)/d435i_link 100"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav2_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav2_id)/camera_link /uav$(arg uav2_id)/d435i_link 100"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav3_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav3_id)/camera_link /uav$(arg uav3_id)/d435i_link 100"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav4_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav4_id)/camera_link /uav$(arg uav4_id)/d435i_link 100"/> -->
 </launch>
 

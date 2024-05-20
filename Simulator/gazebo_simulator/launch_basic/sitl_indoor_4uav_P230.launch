@@ -6,16 +6,16 @@
     <group if="$(arg gazebo_enable)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
             <arg name="world_name" value="$(arg world)"/>
-			<!-- 使用激光雷达需要设置为true -->
+			<!-- 室内定位gazebo需要为true -->
 			<arg name="use_sim_time" value="true"/>
         </include>
     </group>
 
 	<!-- 模型文件，参考值如下： -->
-	<!-- p600：只有p600模型无人机 -->
-	<!-- p600_2Dlidar：p600模型无人机和2D雷达传感器(含雷达数据) -->
-	<arg name="vehicle" default="p600"/>
-
+	<!-- p230：只有p230模型无人机 -->
+	<!-- p230_D435i：p450模型无人机和深度相机D435i(含深度相机相关数据) -->
+    <!-- 如果选择了含D435i模型的模型文件，需要将本文件最下方的TF转换注释代码打开，否则将导致TF树出现问题 -->
+	<arg name="vehicle" default="p230"/>
     <!--无人机编号-->
     <arg name="uav1_id" default="1"/>
     <arg name="uav2_id" default="2"/>
@@ -74,5 +74,19 @@
 		<arg name="uav_init_z" value="0.15"/>
 		<arg name="uav_init_yaw" value="$(arg uav4_init_yaw)"/>
 	</include>
+
+	<!-- TF for world and map-->
+	<!-- 如果模型中使用了D435i，将下列TF转换打开 -->
+    <!-- <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav1_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav1_id)/camera_link /uav$(arg uav1_id)/d435i_link 100"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav2_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav2_id)/camera_link /uav$(arg uav2_id)/d435i_link 100"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav3_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav3_id)/camera_link /uav$(arg uav3_id)/d435i_link 100"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="tf_camera_d435i_$(arg uav4_id)"
+        args="0 0 0 0 0 0 /uav$(arg uav4_id)/camera_link /uav$(arg uav4_id)/d435i_link 100"/> -->
 </launch>
 

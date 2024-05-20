@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='p450_2Dlidar'>
+  <model name='p450_2Dlidar_D435i'>
     <!-- p450 body -->
     <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
@@ -20,7 +20,7 @@
         <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
-						<size>0.30 0.30 0.09</size>
+		        <size>0.30 0.30 0.09</size>
           </box>
         </geometry>
         <surface>
@@ -43,6 +43,12 @@
             <uri>model://p450/meshes/p450.dae</uri>
           </mesh>
         </geometry>
+        <!-- <material>
+          <script>
+            <name>Gazebo/Grey</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material> -->
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -333,6 +339,47 @@
     <joint name='gps_joint' type='fixed'>
       <child>gps::link</child>
       <parent>base_link</parent>
+    </joint>
+    
+    <include>
+      <uri>model://D435i</uri>
+      <pose>0.095 0 0 0 0.35 0</pose>
+      <!-- <name>D435i</name> -->
+      <!-- <prefix></prefix> -->
+      <plugin name="/" filename="librealsense_gazebo_plugin.so">
+       <depthUpdateRate>30</depthUpdateRate>
+       <colorUpdateRate>30</colorUpdateRate>
+       <infraredUpdateRate>30</infraredUpdateRate>
+       <depthTopicName>/uav{{ mavlink_id }}/camera/depth/image_raw</depthTopicName>
+       <depthCameraInfoTopicName>/uav{{ mavlink_id }}/camera/depth/camera_info</depthCameraInfoTopicName>
+       <colorTopicName>/uav{{ mavlink_id }}/camera/color/image_raw</colorTopicName>
+       <colorCameraInfoTopicName>/uav{{ mavlink_id }}/camera/color/camera_info</colorCameraInfoTopicName>
+       <infrared1TopicName>/uav{{ mavlink_id }}/camera/infra1/image_raw</infrared1TopicName>
+       <infrared1CameraInfoTopicName>/uav{{ mavlink_id }}/camera/infra1/camera_info</infrared1CameraInfoTopicName>
+       <infrared2TopicName>/uav{{ mavlink_id }}/camera/infra2/image_raw</infrared2TopicName>
+       <infrared2CameraInfoTopicName>/uav{{ mavlink_id }}/camera/infra2/camera_info</infrared2CameraInfoTopicName>
+       <colorOpticalframeName>/uav{{ mavlink_id }}/camera_link</colorOpticalframeName>
+       <depthOpticalframeName>/uav{{ mavlink_id }}/camera_depth_frame</depthOpticalframeName>
+       <infrared1OpticalframeName>/uav{{ mavlink_id }}/camera_ired1_frame</infrared1OpticalframeName>
+       <infrared2OpticalframeName>/uav{{ mavlink_id }}/camera_ired2_frame</infrared2OpticalframeName>
+       <rangeMinDepth>0.2</rangeMinDepth>
+       <rangeMaxDepth>10.0</rangeMaxDepth>
+       <pointCloud>true</pointCloud>
+       <pointCloudTopicName>/uav{{ mavlink_id }}/camera/depth/color/points</pointCloudTopicName>
+       <pointCloudCutoff>0.25</pointCloudCutoff>
+       <pointCloudCutoffMax>9.0</pointCloudCutoffMax>
+     </plugin>
+    </include>
+    <joint name="D435i_joint" type="fixed">
+      <child>D435i::camera_link</child>
+      <parent>base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
     </joint>
     
     <!--lidar-->

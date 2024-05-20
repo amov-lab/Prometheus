@@ -20,19 +20,25 @@
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
     </group>
 
+	<!-- 模型文件，参考值如下： -->
+	<!-- p450：只有p450模型无人机 -->
+	<!-- p450_2Dlidar：p450模型无人机和2D雷达传感器(含雷达数据) -->
+	<!-- p450_D435i：p450模型无人机和深度相机D435i(含深度相机相关数据) -->
+	<!-- p450_2Dlidar_D435i：p450模型无人机、2D雷达传感器(含雷达数据)、深度相机D435i(含深度相机相关数据) -->
+    <!-- 如果选择了含D435i模型的模型文件，需要将本文件最下方的TF转换注释代码打开，否则将导致TF树出现问题 -->
+	<arg name="vehicle" default="p450_2Dlidar"/>
+
     <!--无人机编号-->
     <arg name="uav1_id" default="1"/>
 	<!-- 无人机初始位置 -->
 	<arg name="uav1_init_x" default="0.0"/>
     <arg name="uav1_init_y" default="0.0"/>
     <arg name="uav1_init_yaw" default="0.0"/>
-	<arg name="sdf" default="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_hokuyo_2Dlidar/p450_hokuyo_2Dlidar.sdf"/>
-	
+
 	<!-- 1号无人机 -->
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
 		<arg name="uav_id" value="$(arg uav1_id)"/>
-		<arg name="sdf" value="$(arg sdf)"/>
-		<arg name="model" value="p450_uav$(arg uav1_id)"/>
+		<arg name="vehicle" value="$(arg vehicle)"/>
 		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
 		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
 		<arg name="uav_init_z" value="0.15"/>

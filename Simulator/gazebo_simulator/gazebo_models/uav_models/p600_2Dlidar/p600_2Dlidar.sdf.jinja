@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='p450_2Dlidar'>
-    <!-- p450 body -->
+  <model name='p600_2Dlidar'>
+    <!-- p600 body -->
     <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
@@ -40,7 +40,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450.dae</uri>
+            <uri>model://p600/meshes/p600.dae</uri>
           </mesh>
         </geometry>
       </visual>
@@ -82,7 +82,7 @@
       </axis>
     </joint>
     <link name='rotor_0'>
-			<pose>0.1465 -0.147 0.151 0 0 0</pose>
+			<pose>0.212132 -0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -117,10 +117,10 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450_ccw.stl</uri>
+            <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
-
+ 
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -143,7 +143,7 @@
       </axis>
     </joint>
     <link name='rotor_1'>
-			<pose>-0.1465 0.147 0.151 0 0 0</pose>
+			<pose>-0.212132 0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -178,10 +178,10 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450_ccw.stl</uri>
+            <uri>model://p600/meshes/p600_ccw.stl</uri>
           </mesh>
         </geometry>
-
+ 
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -204,7 +204,7 @@
       </axis>
     </joint>
     <link name='rotor_2'>
-			<pose>0.1465 0.147 0.151 0 0 0</pose>
+			<pose>0.212132 0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -239,10 +239,9 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450_cw.stl</uri>
+            <uri>model://p600/meshes/p600_cw.stl</uri>
           </mesh>
         </geometry>
-
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -265,7 +264,7 @@
       </axis>
     </joint>
     <link name='rotor_3'>
-			<pose>-0.1465 -0.147 0.151 0 0 0</pose>
+			<pose>-0.212132 -0.212132 0.243 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -300,7 +299,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450_cw.stl</uri>
+            <uri>model://p600/meshes/p600_cw.stl</uri>
           </mesh>
         </geometry>
 
@@ -334,7 +333,7 @@
       <child>gps::link</child>
       <parent>base_link</parent>
     </joint>
-    
+
     <!--lidar-->
    <link name="lidar_link">
    	<pose>0 0 0.3 0 0 0</pose>
