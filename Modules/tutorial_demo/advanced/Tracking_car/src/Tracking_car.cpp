@@ -10,9 +10,9 @@
 
 
 //引用spireCV相关头文件，在Cmakeists中加入spirecv_msgs
-#include <spirecv_msgs/TargetsInFrame.h>
-#include <spirecv_msgs/Target.h>
-#include <spirecv_msgs/ROI.h>
+#include <prometheus_msgs/TargetsInFrame.h>
+#include <prometheus_msgs/Target.h>
+#include <prometheus_msgs/ROI.h>
 
 #include "printf_utils.h"
 
@@ -35,7 +35,7 @@ Eigen::Matrix3f g_R_Body_to_ENU;      // 无人机机体系至惯性系转换矩
 
 
 //定义视觉检测结果及相关参数定义
-spirecv_msgs::Target g_Detection_raw; 
+prometheus_msgs::Target g_Detection_raw; 
 Eigen::Vector3f pos_body_frame;
 Eigen::Vector3f pos_enu_frame;
 Eigen::Vector3f att_enu_frame;
@@ -67,7 +67,7 @@ EXEC_STATE exec_state;
 
 //---------------------------------------Output---------------------------------------------
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void TrackCarCb(const spirecv_msgs::TargetsInFrame::ConstPtr &msg)
+void TrackCarCb(const prometheus_msgs::TargetsInFrame::ConstPtr &msg)
 {
     g_Detection_raw.category = "TrackCar";
 
@@ -148,7 +148,7 @@ inline void topicSub(ros::NodeHandle &nh)
 {
     
     //【订阅】摄像头视觉获取小车位置数据
-    static ros::Subscriber TrackCar_sub = nh.subscribe<spirecv_msgs::TargetsInFrame>("/uav" + std::to_string(g_uav_id) + "/spirecv/car_detection_with_tracking", 10, TrackCarCb);
+    static ros::Subscriber TrackCar_sub = nh.subscribe<prometheus_msgs::TargetsInFrame>("/uav" + std::to_string(g_uav_id) + "/spirecv/car_detection_with_tracking", 10, TrackCarCb);
 
     // 无人机状态
     static ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(g_uav_id) + "/prometheus/state", 10, droneStateCb);

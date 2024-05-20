@@ -5,12 +5,9 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/UAVControlState.h>
-#include <spirecv_msgs/TargetsInFrame.h>
-#include <spirecv_msgs/Target.h>
-#include <spirecv_msgs/ROI.h>
-// #include <prometheus_msgs/Target.h>
-// #include <prometheus_msgs/TargetsInFrame.h>
-// #include <prometheus_msgs/ROI.h>
+#include <prometheus_msgs/TargetsInFrame.h>
+#include <prometheus_msgs/Target.h>
+#include <prometheus_msgs/ROI.h>
 #include <mission_utils.h>
 #include "printf_utils.h"
 
@@ -20,7 +17,7 @@ using namespace Eigen;
 prometheus_msgs::UAVState g_UAVState;
 Eigen::Vector3f g_drone_pos;
 prometheus_msgs::UAVControlState g_uavcontrol_state; //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
-spirecv_msgs::Target g_Detection_raw;      //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
+prometheus_msgs::Target g_Detection_raw;      //目标位置[机体系下：前方x为正，右方y为正，下方z为正]
 prometheus_msgs::UAVCommand g_command_now; //发送给控制模块的命令
 Eigen::Vector3f pos_body_frame;
 Eigen::Vector3f pos_body_enu_frame;    //原点位于质心，x轴指向前方，y轴指向左，z轴指向上的坐标系
@@ -35,7 +32,7 @@ float distance_to_setpoint;
 Eigen::Vector3f tracking_delta;
 Eigen::Vector3d car_pose_;
 int car_id;
-spirecv_msgs::TargetsInFrame det;
+prometheus_msgs::TargetsInFrame det;
 std::ostringstream info;
 void droneStateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
 {
@@ -45,7 +42,7 @@ void droneStateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
     g_drone_pos[2] = g_UAVState.position[2];
 }
 
-void VisionCb(const spirecv_msgs::TargetsInFrame::ConstPtr &msg)
+void VisionCb(const prometheus_msgs::TargetsInFrame::ConstPtr &msg)
 {
     det = *msg;
     car_id = det.frame_id;
@@ -91,7 +88,7 @@ int main(int argc, char **argv)
     // 获取 无人机ENU下的位置
     ros::Subscriber curr_pos_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(g_uav_id) + "/prometheus/state", 10, droneStateCb);
     // 获取视觉反馈
-    ros::Subscriber vision_sub = nh.subscribe<spirecv_msgs::TargetsInFrame>("/uav" + std::to_string(g_uav_id) + "/spirecv/car_detection_with_tracking", 10, VisionCb);
+    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::TargetsInFrame>("/uav" + std::to_string(g_uav_id) + "/spirecv/car_detection_with_tracking", 10, VisionCb);
     // 【发布】发送给prometheus_uav_control的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(g_uav_id) + "/prometheus/command", 10);
     // 获取遥控器状态

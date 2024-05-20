@@ -13,9 +13,9 @@
 
 
 //引用spireCV相关头文件，在Cmakeists中加入spirecv_msgs
-#include <spirecv_msgs/TargetsInFrame.h>
-#include <spirecv_msgs/Target.h>
-#include <spirecv_msgs/ROI.h>
+#include <prometheus_msgs/TargetsInFrame.h>
+#include <prometheus_msgs/Target.h>
+#include <prometheus_msgs/ROI.h>
 #include "mission_utils.h"
 
 using namespace std;
@@ -28,7 +28,7 @@ prometheus_msgs::UAVState uav_state;
 prometheus_msgs::UAVControlState uav_control_state;
 //prometheus_msgs::ArucoInfo now_arucos_info;
 
-spirecv_msgs::Target g_Detection_raw; 
+prometheus_msgs::Target g_Detection_raw; 
 Eigen::Vector3f pos_body_enu_frame;
 bool is_detected = false;              // 是否检测到目标标志
 int num_count_vision_lost = 0;         //视觉丢失计数器
@@ -65,7 +65,7 @@ void get_circular_property(float time, int rate, float radius)
 }
 
 // 视觉回调函数获取视觉检测数据
-void visualFeedbackCallback(const spirecv_msgs::TargetsInFrame::ConstPtr &msg)
+void visualFeedbackCallback(const prometheus_msgs::TargetsInFrame::ConstPtr &msg)
 {
 
 
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
                                                                                           { uav_control_state = *msg; });
 
     // 订阅视觉反馈
-    static ros::Subscriber visual_feedback_sub = n.subscribe<spirecv_msgs::TargetsInFrame>("/uav" + std::to_string(uav_id) + "/spirecv/aruco_detection", 10, visualFeedbackCallback);
+    static ros::Subscriber visual_feedback_sub = n.subscribe<prometheus_msgs::TargetsInFrame>("/uav" + std::to_string(uav_id) + "/spirecv/aruco_detection", 10, visualFeedbackCallback);
 
     //ros::Subscriber visual_feedback_sub = n.subscribe<prometheus_msgs::MultiArucoInfo>(visual_feedback_topic_name, 20, visualFeedbackCallback);
 

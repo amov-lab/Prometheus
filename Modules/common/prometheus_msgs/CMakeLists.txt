@@ -59,6 +59,11 @@ add_message_files(
   Bspline.msg
   MultiBsplines.msg
   Control.msg
+
+  #spirecv-ros msg
+  ROI.msg
+  Target.msg
+  TargetsInFrame.msg
 )
 
 add_action_files(

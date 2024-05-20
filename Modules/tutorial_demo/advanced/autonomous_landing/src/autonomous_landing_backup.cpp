@@ -8,9 +8,9 @@
 
 
 //引用spireCV相关头文件，在Cmakeists中加入spirecv_msgs
-#include <spirecv_msgs/TargetsInFrame.h>
-#include <spirecv_msgs/Target.h>
-#include <spirecv_msgs/ROI.h>
+#include <prometheus_msgs/TargetsInFrame.h>
+#include <prometheus_msgs/Target.h>
+#include <prometheus_msgs/ROI.h>
 
 #include "printf_utils.h"
 
@@ -39,7 +39,7 @@ nav_msgs::Odometry g_GroundTruth; // 降落板真实位置（仿真中由Gazebo�
 //Detection_result g_landpad_det;   // 检测结果
 
 //定义视觉检测结果及相关参数定义
-spirecv_msgs::Target g_Detection_raw; 
+prometheus_msgs::Target g_Detection_raw; 
 Eigen::Vector3f pos_body_frame;
 Eigen::Vector3f pos_enu_frame;
 Eigen::Vector3f att_enu_frame;
@@ -67,7 +67,7 @@ float g_arm_height_to_ground;
 float g_arm_distance_to_pad;
 //---------------------------------------Output---------------------------------------------
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>回调函数<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void landpadDetCb(const spirecv_msgs::TargetsInFrame::ConstPtr &msg)
+void landpadDetCb(const prometheus_msgs::TargetsInFrame::ConstPtr &msg)
 {
     g_Detection_raw.category = "landpad";
     for(auto &target : msg->targets)
@@ -160,7 +160,7 @@ inline void topicSub(ros::NodeHandle &nh)
     //【订阅】降落板与无人机的相对位置及相对偏航角  单位：米   单位：弧度
     //  方向定义： 识别算法发布的目标位置位于相机坐标系（从相机往前看，物体在相机右方x为正，下方y为正，前方z为正）
     //  标志位：   detected 用作标志位 ture代表识别到目标 false代表丢失目标
-    static ros::Subscriber landpad_det_sub = nh.subscribe<spirecv_msgs::TargetsInFrame>("/uav" + std::to_string(g_uav_id) + "/spirecv/aruco_detection", 10, landpadDetCb);
+    static ros::Subscriber landpad_det_sub = nh.subscribe<prometheus_msgs::TargetsInFrame>("/uav" + std::to_string(g_uav_id) + "/spirecv/aruco_detection", 10, landpadDetCb);
 
     // 无人机状态
     static ros::Subscriber drone_state_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(g_uav_id) + "/prometheus/state", 10, droneStateCb);
