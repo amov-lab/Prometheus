@@ -34,3 +34,6 @@ float32 yaw_a
 
 ## detection(false/0) or tracked(true/1)
 bool mode
+
+## CosineSimilarity
+float32 sim_score
