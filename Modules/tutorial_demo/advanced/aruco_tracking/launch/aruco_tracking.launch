@@ -2,7 +2,7 @@
 	<!-- 启动仿真环境 -->
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav_P450.launch">
 		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/Tracking_QR/Tracking_QR.world" />
-		<arg name="sdf" value="$(find prometheus_gazebo)/gazebo_models/uav_models/p450_D435i/p450_D435i.sdf" />
+		<arg name="vehicle" value="p450_D435i" />
 	</include>
 
 	<!-- 启动prometheus控制器 -->
