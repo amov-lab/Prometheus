@@ -176,24 +176,60 @@ void CommunicationBridge::recvData(struct ConnectState connect_state)
 }
 void CommunicationBridge::recvData(struct GimbalControl gimbal_control)
 {
-    if (this->gimbal_basic_ == NULL)
+    // 非仿真情况 只有一个UAV
+    if (this->is_simulation_ == 0)
     {
-        return;
+        if (this->uav_basic_ == NULL)
+        {
+            return;
+        }
+        this->uav_basic_->gimbalControlPub(gimbal_control);
     }
-    this->gimbal_basic_->gimbalControlPub(gimbal_control);
+    // 仿真情况下 可能存在多个UAV 找到对应ID进行发布对应的控制命令
+    else
+    {
+        auto it = this->swarm_control_simulation_.find(recv_id);
+        if (it != this->swarm_control_simulation_.end())
+        {
+            (*it).second->gimbalControlPub(gimbal_control);
+        }
+    }
+    // if (this->gimbal_basic_ == NULL)
+    // {
+    //     return;
+    // }
+    // this->gimbal_basic_->gimbalControlPub(gimbal_control);
 }
 void CommunicationBridge::recvData(struct GimbalService gimbal_service)
 {
-    if (this->autonomous_landing_ == NULL)
+    // 非仿真情况 只有一个UAV
+    if (this->is_simulation_ == 0)
     {
-        return;
+        if (this->uav_basic_ == NULL)
+        {
+            return;
+        }
+        this->uav_basic_->gimbalServer(gimbal_service);
     }
-    if (gimbal_service.service == gimbal_service.search)
-        this->autonomous_landing_->gimbalSearchServer(gimbal_service.data);
-    else if (gimbal_service.service == gimbal_service.record_video)
-        this->autonomous_landing_->gimbalRecordVideoServer(gimbal_service.data);
-    else if (gimbal_service.service == gimbal_service.track_mode)
-        this->autonomous_landing_->gimbalTrackModeServer(gimbal_service.data);
+    // 仿真情况下 可能存在多个UAV 找到对应ID进行发布对应的控制命令
+    else
+    {
+        auto it = this->swarm_control_simulation_.find(recv_id);
+        if (it != this->swarm_control_simulation_.end())
+        {
+            (*it).second->gimbalServer(gimbal_service);
+        }
+    }
+    // if (this->autonomous_landing_ == NULL)
+    // {
+    //     return;
+    // }
+    // if (gimbal_service.service == gimbal_service.search)
+    //     this->autonomous_landing_->gimbalSearchServer(gimbal_service.data);
+    // else if (gimbal_service.service == gimbal_service.record_video)
+    //     this->autonomous_landing_->gimbalRecordVideoServer(gimbal_service.data);
+    // else if (gimbal_service.service == gimbal_service.track_mode)
+    //     this->autonomous_landing_->gimbalTrackModeServer(gimbal_service.data);
 }
 void CommunicationBridge::recvData(struct GimbalParamSet param_set)
 {

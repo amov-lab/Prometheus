@@ -34,7 +34,20 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->px4_position_target_sub_ = nh.subscribe<mavros_msgs::PositionTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_local",1,&UAVBasic::px4PosTargetCb, this);
     //【订阅】PX4中无人机的姿态设定值 坐标系:ENU系
     this->px4_attitude_target_sub_ = nh.subscribe<mavros_msgs::AttitudeTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_attitude",1,&UAVBasic::px4AttTargetCb, this);
-
+    //【发布】吊舱控制
+    this->gimbal_control_pub_ = nh.advertise<prometheus_msgs::GimbalControl>("/uav" + std::to_string(this->robot_id) + "/gimbal/control", 1);
+    //【服务】吊舱回中
+    this->gimbal_home_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/gimbal_server");
+    //【服务】吊舱拍照,图片保存在吊舱SD卡中
+    this->gimbal_take_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/gimbal_take_server");
+    //【服务】本地拍照,图片保存在机载电脑中
+    this->local_take_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/local_take_server");
+    //【服务】吊舱录制视频,图片保存在吊舱SD卡中
+    this->gimbal_record_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/gimbal_record_server");
+    //【服务】本地录制视频,图片保存在机载电脑中
+    this->local_record_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/local_record_server");
+    //【订阅】吊舱状态信息
+    this->gimbal_state_sub_ = nh.subscribe("/uav" + std::to_string(this->robot_id) + "/gimbal/state", 10, &UAVBasic::gimbalStateCb, this);
     if(send_hz > 0)
     {
         send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &UAVBasic::send, this);
@@ -221,6 +234,91 @@ void UAVBasic::uavTargetPub(struct WindowPosition window_position)
     cmd.x = window_position.origin_x/(float)window_position.window_position_x;
     cmd.y = window_position.origin_y/(float)window_position.window_position_y;
     this->uav_target_pub_.publish(cmd);
+}
+
+void UAVBasic::gimbalControlPub(struct GimbalControl gimbal_control)
+{
+    // 判断控制模式
+    if(gimbal_control.rpyMode == GimbalControl::RPYMode::manual)
+    {
+        prometheus_msgs::GimbalControl gimbal_control_;
+        if(gimbal_control.roll == GimbalControl::ControlMode::angleCtl && gimbal_control.pitch == GimbalControl::ControlMode::angleCtl 
+            && gimbal_control.yaw == GimbalControl::ControlMode::angleCtl)
+        {
+            gimbal_control_.mode = 2;
+            gimbal_control_.angle[0] = gimbal_control.rValue;
+            gimbal_control_.angle[1] = gimbal_control.pValue;
+            gimbal_control_.angle[2] = gimbal_control.yValue;
+            gimbal_control_.speed[0] = 0;
+            gimbal_control_.speed[1] = 0;
+            gimbal_control_.speed[2] = 0;
+        }else if(gimbal_control.roll == GimbalControl::ControlMode::velocityCtl && gimbal_control.pitch == GimbalControl::ControlMode::velocityCtl 
+            && gimbal_control.yaw == GimbalControl::ControlMode::velocityCtl)
+        {
+            gimbal_control_.mode = 1;
+            gimbal_control_.angle[0] = 0;
+            gimbal_control_.angle[1] = 0;
+            gimbal_control_.angle[2] = 0;
+            gimbal_control_.speed[0] = gimbal_control.rValue;
+            gimbal_control_.speed[1] = gimbal_control.pValue;
+            gimbal_control_.speed[2] = gimbal_control.yValue;
+        }else return;
+        this->gimbal_control_pub_.publish(gimbal_control_);
+    }else if(gimbal_control.rpyMode == GimbalControl::RPYMode::home)
+    {
+        // 回中
+        std_srvs::SetBool set_home;
+        set_home.request.data = true;
+        this->gimbal_home_client_.call(set_home);
+    }
+}
+
+void UAVBasic::gimbalServer(struct GimbalService gimbal_service)
+{
+    std_srvs::SetBool set;
+    set.request.data = gimbal_service.data;
+    switch (gimbal_service.service)
+    {
+    case GimbalService::GimbalTakePhoto:
+        this->gimbal_take_client_.call(set);
+        break;
+    case GimbalService::LocalTakePhoto:
+        this->local_take_client_.call(set);
+        break;
+    case GimbalService::GimbalRecord:
+        this->gimbal_record_client_.call(set);
+        break;
+    case GimbalService::LocalRecord:
+        this->local_record_client_.call(set);
+        break;
+    default:
+        break;
+    }
+}
+
+void UAVBasic::gimbalStateCb(const prometheus_msgs::GimbalState::ConstPtr &msg)
+{
+    struct GimbalState gimbal_state;
+    gimbal_state.Id = robot_id;
+    gimbal_state.mode = msg->moveMode;
+    gimbal_state.isRecording = msg->isRec;
+    gimbal_state.imuAngle[0] = msg->angleRT[0];
+    gimbal_state.imuAngle[1] = msg->angleRT[1];
+    gimbal_state.imuAngle[2] = msg->angleRT[2];
+    gimbal_state.imuAngleVel[0] = msg->angleRTRate[0];
+    gimbal_state.imuAngleVel[1] = msg->angleRTRate[1];
+    gimbal_state.imuAngleVel[2] = msg->angleRTRate[2];
+    gimbal_state.feedbackMode = 0;
+    gimbal_state.zoomState = 0;
+    gimbal_state.zoomVal = 0;
+    gimbal_state.rotorAngle[0] = 0;
+    gimbal_state.rotorAngle[1] = 0;
+    gimbal_state.rotorAngle[2] = 0;
+    gimbal_state.rotorAngleTarget[0] = 0;
+    gimbal_state.rotorAngleTarget[1] = 0;
+    gimbal_state.rotorAngleTarget[2] = 0;
+    //发送到组播地址
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,gimbal_state),ground_station_ip);
 }
 
 void UAVBasic::send(const ros::TimerEvent &time_event)

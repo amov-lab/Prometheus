@@ -9,9 +9,14 @@
 #include "prometheus_msgs/UAVCommand.h"
 #include "prometheus_msgs/UAVSetup.h"
 #include "prometheus_msgs/UAVControlState.h"
-#include "prometheus_msgs/Control.h"
+
 #include "mavros_msgs/PositionTarget.h"
 #include "mavros_msgs/AttitudeTarget.h"
+// 吊舱,图像相关控制
+#include "std_srvs/SetBool.h"
+#include "prometheus_msgs/GimbalState.h"
+#include "prometheus_msgs/Control.h"
+#include "prometheus_msgs/GimbalControl.h"
 
 class UAVBasic
 {
@@ -49,6 +54,10 @@ public:
 
     void px4PosTargetCb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4AttTargetCb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
+
+    void gimbalControlPub(struct GimbalControl gimbal_control);
+    void gimbalServer(struct GimbalService gimbal_service);
+    void gimbalStateCb(const prometheus_msgs::GimbalState::ConstPtr &msg);
 private:
     ros::Subscriber uav_state_sub_;
 
@@ -65,8 +74,18 @@ private:
 
     ros::Publisher uav_target_pub_;
 
+    ros::Publisher gimbal_control_pub_;
+    
     ros::Subscriber px4_position_target_sub_;
     ros::Subscriber px4_attitude_target_sub_;
+
+    ros::Subscriber gimbal_state_sub_;
+
+    ros::ServiceClient gimbal_home_client_;
+    ros::ServiceClient gimbal_take_client_;
+    ros::ServiceClient local_take_client_;
+    ros::ServiceClient gimbal_record_client_;
+    ros::ServiceClient local_record_client_;
 
     int current_mode_;
 

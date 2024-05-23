@@ -414,9 +414,10 @@ struct GimbalService
     uint8_t service;
     enum Service
     {
-        search = 1,
-        record_video = 2,
-        track_mode = 3
+        GimbalTakePhoto = 1,
+        LocalTakePhoto = 2,
+        GimbalRecord = 3,
+        LocalRecord = 4
     };
 
     bool data;
