@@ -58,6 +58,8 @@ public:
     void gimbalControlPub(struct GimbalControl gimbal_control);
     void gimbalServer(struct GimbalService gimbal_service);
     void gimbalStateCb(const prometheus_msgs::GimbalState::ConstPtr &msg);
+
+    void gimbalControlPubTimer(const ros::TimerEvent &time_event);
 private:
     ros::Subscriber uav_state_sub_;
 
@@ -112,6 +114,10 @@ private:
     bool uav_state_ready = false;
     bool uav_control_state_ready = false;
     bool uav_command_ready = false;
+
+    // 吊舱控制 定时器持续发送
+    ros::Timer gimbal_control_pub_timer;
+    prometheus_msgs::GimbalControl gimbal_control_;
 };
 
 #endif

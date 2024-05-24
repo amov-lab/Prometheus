@@ -52,6 +52,9 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     {
         send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &UAVBasic::send, this);
     }
+
+    // 10hz
+    gimbal_control_pub_timer = nh.createTimer(ros::Duration(0.1), &UAVBasic::gimbalControlPubTimer, this);
 }
 
 UAVBasic::~UAVBasic()
@@ -241,29 +244,28 @@ void UAVBasic::gimbalControlPub(struct GimbalControl gimbal_control)
     // 判断控制模式
     if(gimbal_control.rpyMode == GimbalControl::RPYMode::manual)
     {
-        prometheus_msgs::GimbalControl gimbal_control_;
+        // prometheus_msgs::GimbalControl gimbal_control_;
         if(gimbal_control.roll == GimbalControl::ControlMode::angleCtl && gimbal_control.pitch == GimbalControl::ControlMode::angleCtl 
             && gimbal_control.yaw == GimbalControl::ControlMode::angleCtl)
         {
-            gimbal_control_.mode = 2;
-            gimbal_control_.angle[0] = gimbal_control.rValue;
-            gimbal_control_.angle[1] = gimbal_control.pValue;
-            gimbal_control_.angle[2] = gimbal_control.yValue;
-            gimbal_control_.speed[0] = 0;
-            gimbal_control_.speed[1] = 0;
-            gimbal_control_.speed[2] = 0;
+            this->gimbal_control_.mode = 2;
+            this->gimbal_control_.angle[0] = gimbal_control.rValue;
+            this->gimbal_control_.angle[1] = gimbal_control.pValue;
+            this->gimbal_control_.angle[2] = gimbal_control.yValue;
+            this->gimbal_control_.speed[0] = 0;
+            this->gimbal_control_.speed[1] = 0;
+            this->gimbal_control_.speed[2] = 0;
         }else if(gimbal_control.roll == GimbalControl::ControlMode::velocityCtl && gimbal_control.pitch == GimbalControl::ControlMode::velocityCtl 
             && gimbal_control.yaw == GimbalControl::ControlMode::velocityCtl)
         {
-            gimbal_control_.mode = 1;
-            gimbal_control_.angle[0] = 0;
-            gimbal_control_.angle[1] = 0;
-            gimbal_control_.angle[2] = 0;
-            gimbal_control_.speed[0] = gimbal_control.rValue;
-            gimbal_control_.speed[1] = gimbal_control.pValue;
-            gimbal_control_.speed[2] = gimbal_control.yValue;
+            this->gimbal_control_.mode = 1;
+            this->gimbal_control_.angle[0] = 0;
+            this->gimbal_control_.angle[1] = 0;
+            this->gimbal_control_.angle[2] = 0;
+            this->gimbal_control_.speed[0] = gimbal_control.rValue;
+            this->gimbal_control_.speed[1] = gimbal_control.pValue;
+            this->gimbal_control_.speed[2] = gimbal_control.yValue;
         }else return;
-        this->gimbal_control_pub_.publish(gimbal_control_);
     }else if(gimbal_control.rpyMode == GimbalControl::RPYMode::home)
     {
         // 回中
@@ -339,4 +341,9 @@ void UAVBasic::send(const ros::TimerEvent &time_event)
         this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), ground_station_ip);
         this->uav_control_state_ready = false;
     }
+}
+
+void UAVBasic::gimbalControlPubTimer(const ros::TimerEvent &time_event)
+{
+    this->gimbal_control_pub_.publish(this->gimbal_control_);
 }
