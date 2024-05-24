@@ -115,9 +115,7 @@ private:
     bool uav_control_state_ready = false;
     bool uav_command_ready = false;
 
-    // 吊舱控制 定时器持续发送
-    ros::Timer gimbal_control_pub_timer;
-    prometheus_msgs::GimbalControl gimbal_control_;
+    int gimbal_type = 0;
 };
 
 #endif
