@@ -1,12 +1,11 @@
 <launch>
-
     <arg name="autoload" default="false"/>
     <arg name="uav_control_start" default="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
     <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"/>
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
 
-    <arg name="ground_station_ip" default="192.168.2.204"/>
+    <arg name="ground_station_ip" default="192.168.2.139"/>
 
     <!-- robot id为唯一标识符，如果是集群(无人机集群、无人车集群、机车协同)，该值不能重复 -->
     <arg name="robot_id" default="1"/>
@@ -83,7 +82,8 @@
 
         <!-- 单机配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_control_yaml)"/>
-       
+        <!-- 集群配置文件加载 -->
+        <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg swarm_control_yaml)"/>	
         <!-- 轨迹配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_command_yaml)"/>
     </node>

@@ -36,6 +36,8 @@ public:
 
     void controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &msg);
 
+    void offsetPoseCb(const prometheus_msgs::OffsetPose::ConstPtr &msg);
+
     struct UAVState getUAVState();
 
     void uavCmdPub(struct UAVCommand uav_cmd);
@@ -83,6 +85,8 @@ private:
 
     ros::Subscriber gimbal_state_sub_;
 
+    ros::Subscriber offset_pose_sub_;
+
     ros::ServiceClient gimbal_home_client_;
     ros::ServiceClient gimbal_take_client_;
     ros::ServiceClient local_take_client_;
@@ -97,8 +101,6 @@ private:
     struct TextInfo text_info_;
     struct UAVControlState uav_control_state_;
     struct UAVCommand uav_command_;
-
-    prometheus_msgs::OffsetPose offset_pose_;
 
     Communication *communication_ = NULL;
 
@@ -115,7 +117,12 @@ private:
     bool uav_control_state_ready = false;
     bool uav_command_ready = false;
 
+    // 吊舱类型 
     int gimbal_type = 0;
+    // 吊舱控制 定时器持续发送
+    ros::Timer gimbal_control_pub_timer;
+    prometheus_msgs::GimbalControl gimbal_control_;
+    prometheus_msgs::OffsetPose offset_pose_;
 };
 
 #endif

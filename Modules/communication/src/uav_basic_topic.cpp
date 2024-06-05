@@ -48,6 +48,8 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->local_record_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/local_record_server");
     //【订阅】吊舱状态信息
     this->gimbal_state_sub_ = nh.subscribe("/uav" + std::to_string(this->robot_id) + "/gimbal/state", 10, &UAVBasic::gimbalStateCb, this);
+    //【订阅】GPS位置偏移数据(用于户外多机飞行)
+    this->offset_pose_sub_ = nh.subscribe<prometheus_msgs::OffsetPose>("/uav" + std::to_string(this->robot_id) + "/prometheus/offset_pose",1,&UAVBasic::offsetPoseCb, this);
     if(send_hz > 0)
     {
         send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &UAVBasic::send, this);
@@ -79,8 +81,8 @@ void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
         this->uav_state_.attitude[i] = msg->attitude[i];
         this->uav_state_.attitude_rate[i] = msg->attitude_rate[i];
     };
-    this->uav_state_.position[0] = msg->position[0] + offset_pose_.x;
-    this->uav_state_.position[1] = msg->position[1] + offset_pose_.y;
+    this->uav_state_.position[0] = msg->position[0];
+    this->uav_state_.position[1] = msg->position[1];
     this->uav_state_.position[2] = msg->position[2];
 
     this->uav_state_.latitude = msg->latitude;
@@ -120,6 +122,14 @@ void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &
     //发送到地面站
     if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), ground_station_ip);
     else uav_control_state_ready = true;
+}
+
+void UAVBasic::offsetPoseCb(const prometheus_msgs::OffsetPose::ConstPtr &msg)
+{
+    if(uav_state_.location_source == UAVState::LocationSource::GPS || uav_state_.location_source == UAVState::LocationSource::RTK)
+    {
+        offset_pose_ = *msg;
+    }
 }
 
 struct UAVState UAVBasic::getUAVState()
@@ -183,8 +193,8 @@ void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
 
 void UAVBasic::px4PosTargetCb(const mavros_msgs::PositionTarget::ConstPtr &msg)
 {
-    uav_command_.position_ref[0] = msg->position.x;
-    uav_command_.position_ref[1] = msg->position.y;
+    uav_command_.position_ref[0] = msg->position.x + this->offset_pose_.x;
+    uav_command_.position_ref[1] = msg->position.y + this->offset_pose_.y;
     uav_command_.position_ref[2] = msg->position.z;
     uav_command_.velocity_ref[0] = msg->velocity.x;
     uav_command_.velocity_ref[1] = msg->velocity.y;
