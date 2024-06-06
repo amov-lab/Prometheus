@@ -454,6 +454,30 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
         }
         waypoint_pub.publish(waypointList);
     }
+    else if(name == "swarm_formation_cmd")
+    {
+        int swarm_formation_value = 0;
+        prometheus_msgs::SwarmCommand swarm_formation_command_;
+        // 【发布】集群控制指令
+        static ros::Publisher swarm_formation_command_pub_ = nh_.advertise<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command", 10);
+        test.getValue("swarm_formation_cmd", swarm_formation_value);
+        switch (swarm_formation_value)
+        {
+        case 0:
+            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Stop;
+            break;
+        case 1:
+            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Hold;
+            break;
+        case 2:
+            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::InitPlanner;
+            break;
+        case 3:
+            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::SwarmFormationPlanner;
+            break;
+        }
+        swarm_formation_command_pub_.publish(swarm_formation_command_);
+    }
 }
 
 void CommunicationBridge::recvData(struct Goal goal)
