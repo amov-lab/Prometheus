@@ -49,7 +49,7 @@ add_message_files(
   LinktrackNode2.msg
   LinktrackNodeframe2.msg
 
-#communication
+  #communication
   DetectionInfoSub.msg
   GimbalControl.msg
   GimbalState.msg
@@ -59,6 +59,8 @@ add_message_files(
   Bspline.msg
   MultiBsplines.msg
   Control.msg
+  BasicDataTypeAndValue.msg
+  CustomDataSegment.msg
 
   #spirecv-ros msg
   ROI.msg

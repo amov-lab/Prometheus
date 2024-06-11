@@ -50,6 +50,10 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     this->gimbal_state_sub_ = nh.subscribe("/uav" + std::to_string(this->robot_id) + "/gimbal/state", 10, &UAVBasic::gimbalStateCb, this);
     //【订阅】GPS位置偏移数据(用于户外多机飞行)
     this->offset_pose_sub_ = nh.subscribe<prometheus_msgs::OffsetPose>("/uav" + std::to_string(this->robot_id) + "/prometheus/offset_pose",1,&UAVBasic::offsetPoseCb, this);
+    //【订阅】订阅自定义消息转发到其他设备(无人机、地面站等)
+    this->custom_data_segment_sub_ = nh.subscribe<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(this->robot_id) + "/prometheus/set_customdatasegment", 10, &UAVBasic::customDataSegmentCb, this);
+    //【发布】发布该ROS节点中，用于接收到其他设备(无人机、地面站等)发过来的自定义消息后转为ROS话题
+    this->custom_data_segment_pub_ = nh.advertise<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(this->robot_id) + "/prometheus/customdatasegment", 1);
     if(send_hz > 0)
     {
         send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &UAVBasic::send, this);
@@ -336,6 +340,97 @@ void UAVBasic::gimbalStateCb(const prometheus_msgs::GimbalState::ConstPtr &msg)
     this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,gimbal_state),ground_station_ip);
 }
 
+void UAVBasic::customDataSegmentCb(const prometheus_msgs::CustomDataSegment::ConstPtr &msg)
+{
+    int size = msg->datas.size();
+    CustomDataSegment data;
+    for(int i = 0; i < size; i++)
+    {
+        prometheus_msgs::BasicDataTypeAndValue basic_data = msg->datas[i];
+        switch (basic_data.type)
+        {
+        case prometheus_msgs::BasicDataTypeAndValue::INTEGER:
+            data.setValue(basic_data.name, basic_data.integer_value);
+            break;
+        case prometheus_msgs::BasicDataTypeAndValue::BOOLEAN:
+            data.setValue(basic_data.name, basic_data.boolean_value);
+            break;
+        case prometheus_msgs::BasicDataTypeAndValue::FLOAT:
+            data.setValue(basic_data.name, basic_data.float_value);
+            break;
+        case prometheus_msgs::BasicDataTypeAndValue::DOUBLE:
+            data.setValue(basic_data.name, basic_data.double_value);
+            break;
+        case prometheus_msgs::BasicDataTypeAndValue::STRING:
+            data.setValue(basic_data.name, basic_data.string_value);
+            break;
+        default:
+            break;
+        }
+    }
+    custom_data_segment_.datas.clear();
+    custom_data_segment_ = data.getCustomDataSegment();
+
+    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->custom_data_segment_,this->robot_id), multicast_udp_ip);
+    else custom_data_segment_ready = true;
+}
+
+void UAVBasic::customDataSegmentPub(struct CustomDataSegment_1 custom_data_segment)
+{
+    int size = custom_data_segment.datas.size();
+    prometheus_msgs::CustomDataSegment msg;
+    CustomDataSegment datas(custom_data_segment);
+    for(int i = 0; i < size; i++)
+    {
+        prometheus_msgs::BasicDataTypeAndValue data;
+        
+        std::string name = custom_data_segment.datas[i].name;
+        uint8_t type = custom_data_segment.datas[i].type;
+
+        data.name = name;
+
+        int integer_value = std::numeric_limits<float>::quiet_NaN();
+        bool boolean_value = false;
+        float float_value = std::numeric_limits<float>::quiet_NaN();
+        double double_value = std::numeric_limits<float>::quiet_NaN();
+        std::string string_value = "";
+
+        switch (type)
+        {
+        case BasicDataTypeAndValue::Type::INTEGER:
+            data.type = prometheus_msgs::BasicDataTypeAndValue::INTEGER;
+            datas.getValue(name,integer_value);
+            break;
+        case BasicDataTypeAndValue::Type::BOOLEAN:
+            data.type = prometheus_msgs::BasicDataTypeAndValue::BOOLEAN;
+            datas.getValue(name,boolean_value);
+            break;
+        case BasicDataTypeAndValue::Type::FLOAT:
+            data.type = prometheus_msgs::BasicDataTypeAndValue::FLOAT;
+            datas.getValue(name,float_value);
+            break;
+        case BasicDataTypeAndValue::Type::DOUBLE:
+            data.type = prometheus_msgs::BasicDataTypeAndValue::DOUBLE;
+            datas.getValue(name,double_value);
+            break;
+        case BasicDataTypeAndValue::Type::STRING:
+            data.type = prometheus_msgs::BasicDataTypeAndValue::STRING;
+            datas.getValue(name,string_value);
+            break;
+        default:
+            break;
+        }
+        data.integer_value = integer_value;
+        data.boolean_value = boolean_value;
+        data.float_value = float_value;
+        data.double_value = double_value;
+        data.string_value = string_value;
+
+        msg.datas.push_back(data);
+    }
+    this->custom_data_segment_pub_.publish(msg);
+}
+
 void UAVBasic::send(const ros::TimerEvent &time_event)
 {
     // std::cout << "uav_basic: " << uav_state_ready << " " << uav_command_ready << " " << uav_control_state_ready << std::endl;
@@ -353,5 +448,10 @@ void UAVBasic::send(const ros::TimerEvent &time_event)
     {
         this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), ground_station_ip);
         this->uav_control_state_ready = false;
+    }
+    if(custom_data_segment_ready)
+    {
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->custom_data_segment_,this->robot_id), multicast_udp_ip);
+        this->custom_data_segment_ready = false;
     }
 }

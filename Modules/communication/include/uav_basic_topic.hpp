@@ -17,6 +17,10 @@
 #include "prometheus_msgs/GimbalState.h"
 #include "prometheus_msgs/Control.h"
 #include "prometheus_msgs/GimbalControl.h"
+// 自定义消息
+#include "prometheus_msgs/CustomDataSegment.h"
+#include "prometheus_msgs/BasicDataTypeAndValue.h"
+#include "custom_data_segment.hpp"
 
 class UAVBasic
 {
@@ -61,6 +65,9 @@ public:
     void gimbalServer(struct GimbalService gimbal_service);
     void gimbalStateCb(const prometheus_msgs::GimbalState::ConstPtr &msg);
 
+    void customDataSegmentCb(const prometheus_msgs::CustomDataSegment::ConstPtr &msg);
+    void customDataSegmentPub(struct CustomDataSegment_1 custom_data_segment);
+
     void gimbalControlPubTimer(const ros::TimerEvent &time_event);
 private:
     ros::Subscriber uav_state_sub_;
@@ -69,23 +76,20 @@ private:
     ros::Subscriber text_info_sub_;
     //控制状态
     ros::Subscriber uav_control_state_sub_;
-
     ros::Publisher uav_cmd_pub_;
-
     ros::Publisher uav_setup_pub_;
-
     ros::Subscriber uav_cmd_sub_;
-
     ros::Publisher uav_target_pub_;
-
     ros::Publisher gimbal_control_pub_;
-    
     ros::Subscriber px4_position_target_sub_;
     ros::Subscriber px4_attitude_target_sub_;
 
     ros::Subscriber gimbal_state_sub_;
 
     ros::Subscriber offset_pose_sub_;
+
+    ros::Subscriber custom_data_segment_sub_;
+    ros::Publisher custom_data_segment_pub_;
 
     ros::ServiceClient gimbal_home_client_;
     ros::ServiceClient gimbal_take_client_;
@@ -101,6 +105,7 @@ private:
     struct TextInfo text_info_;
     struct UAVControlState uav_control_state_;
     struct UAVCommand uav_command_;
+    struct CustomDataSegment_1 custom_data_segment_;
 
     Communication *communication_ = NULL;
 
@@ -116,6 +121,7 @@ private:
     bool uav_state_ready = false;
     bool uav_control_state_ready = false;
     bool uav_command_ready = false;
+    bool custom_data_segment_ready = false;
 
     // 吊舱类型 
     int gimbal_type = 0;

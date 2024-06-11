@@ -423,6 +423,11 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
     //     std::cout << "类型:" << (int)basic.type << " 变量名:" << basic.name << " 变量值:" << basic.value << std::endl;
     // }
 
+    if(this->uav_basic_)
+    {
+        this->uav_basic_->customDataSegmentPub(custom_data_segment);
+    }
+
     // DEMO示例，这里将地面站航线经纬度发布出来
     CustomDataSegment test(custom_data_segment);
     // 获取数据段名或者标识符用于区分不同数据
