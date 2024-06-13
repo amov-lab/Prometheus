@@ -7,14 +7,17 @@
  ******************************************************************************/
 
 #include <ros/ros.h>
+#include <Eigen/Eigen>
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVControlState.h>
-#include <mavros_msgs/Waypoint.h>
-#include <mavros_msgs/WaypointList.h>
+#include <prometheus_msgs/BasicDataTypeAndValue.h>
+#include <prometheus_msgs/CustomDataSegment.h>
+#include "custom_data_segment_msg.hpp"
 #include <unistd.h>
 #include "printf_utils.h"
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
@@ -22,8 +25,9 @@ using namespace std;
 prometheus_msgs::UAVCommand uav_command;
 prometheus_msgs::UAVState uav_state;
 prometheus_msgs::UAVControlState uav_control_state;
-mavros_msgs::WaypointList waypoint_list;
 constexpr double kEarthRadius = 6371000.0; // 地球半径，单位：米
+std::vector<Eigen::Vector3d> waypoint_list;
+int waypoint_list_current = 0;
 
 // 将角度从度数转换为弧度
 double toRadians(double degrees) {
@@ -41,10 +45,29 @@ void uav_control_state_cb(const prometheus_msgs::UAVControlState::ConstPtr &msg)
     uav_control_state = *msg;
 }
 
-void uav_set_waypoints_cb(const mavros_msgs::WaypointList::ConstPtr &msg)
+void uav_set_waypoints_cb(const prometheus_msgs::CustomDataSegment::ConstPtr &msg)
 {
-    waypoint_list = *msg;
-    waypoint_list.current_seq = 0;
+    waypoint_list.clear();
+    CustomDataSegmentMSG custom_data_segment(*msg);
+
+    std::string name;
+    custom_data_segment.getValue("name",name);
+    if(name == "polyline")
+    {
+        int count;
+        custom_data_segment.getValue("count",count);
+        for (int i = 0; i < count; i++)
+        {
+            double lng,lat,alt;
+            custom_data_segment.getValue("point" + to_string(i + 1) + "_lng",lng);
+            custom_data_segment.getValue("point" + to_string(i + 1) + "_lat",lat);
+            custom_data_segment.getValue("point" + to_string(i + 1) + "_alt",alt);
+            std::cout << lat << " " << lng << " " << alt << std::endl;
+            Eigen::Vector3d goal_pos(lng,lat,alt);
+            waypoint_list.push_back(goal_pos);
+        }
+    }
+    waypoint_list_current = 0;
 }
 
 // 使用Haversine公式计算球面上两点之间的距离
@@ -113,7 +136,7 @@ int main(int argc, char **argv)
     // 创建无人机控制状态命令订阅者
     ros::Subscriber uav_control_state_sub = n.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 10, uav_control_state_cb);
     // 创建无人机航点订阅者
-    ros::Subscriber waypoints_list_sub = n.subscribe<mavros_msgs::WaypointList>("/uav" + std::to_string(uav_id) + "/prometheus/set_waypoints", 10, uav_set_waypoints_cb);
+    ros::Subscriber waypoints_list_sub = n.subscribe<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(uav_id) + "/prometheus/customdatasegment", 10, uav_set_waypoints_cb);
     // 循环频率设置为1HZ
     ros::Rate r(1);
     // 创建命令发布标志位,命令发布则为true;初始化为false
@@ -137,7 +160,7 @@ int main(int argc, char **argv)
     sleep(1);
     cout << GREEN << " Please use the RC SWA to armed, and the SWB to switch the drone to [COMMAND_CONTROL] mode  " << TAIL << endl;
 
-    waypoint_list.current_seq = 0;
+    waypoint_list_current = 0;
     int point_count = 0;
 
     while (ros::ok())
@@ -150,14 +173,14 @@ int main(int argc, char **argv)
             // 检测控制命令是否发布,没有发布则进行命令的发布
             if (!cmd_pub_flag)
             {
-                if (waypoint_list.waypoints.empty())
+                if (waypoint_list.empty())
                 {
                     cout << YELLOW << " Waiting waypoint publish " << TAIL << endl;
                     r.sleep();
                     continue;
                 }
-                point_count = waypoint_list.waypoints.size();
-                if (waypoint_list.current_seq < point_count)
+                point_count = waypoint_list.size();
+                if (waypoint_list_current < point_count)
                 {
                     // 时间戳
                     uav_command.header.stamp = ros::Time::now();
@@ -168,9 +191,9 @@ int main(int argc, char **argv)
                     // Move_mode
                     uav_command.Move_mode = prometheus_msgs::UAVCommand::LAT_LON_ALT;
                     // 在无人机当前经纬度飞到5米高度
-                    uav_command.latitude = waypoint_list.waypoints[waypoint_list.current_seq].x_lat;
-                    uav_command.longitude = waypoint_list.waypoints[waypoint_list.current_seq].y_long;
-                    uav_command.altitude = waypoint_list.waypoints[waypoint_list.current_seq].z_alt;
+                    uav_command.latitude = waypoint_list[waypoint_list_current][1];
+                    uav_command.longitude = waypoint_list[waypoint_list_current][0];
+                    uav_command.altitude = waypoint_list[waypoint_list_current][2];
                     uav_command.yaw_ref = calculateHeading(uav_state.latitude,uav_state.longitude,uav_command.latitude,uav_command.longitude);
                     // 发布的命令ID加1
                     uav_command.Command_ID += 1;
@@ -184,8 +207,8 @@ int main(int argc, char **argv)
                     cout << GREEN << " [YAW] command publish " << uav_command.yaw_ref << TAIL << endl;
                 }else
                 {
-                    waypoint_list.waypoints.clear();
-                    waypoint_list.current_seq = 0;
+                    waypoint_list.clear();
+                    waypoint_list_current = 0;
                 }
             }
             else
@@ -195,9 +218,9 @@ int main(int argc, char **argv)
                 // 当无人机跟目标点的位置小于等于阈值范围内时认为任务完成并准备下一个目标点
                 if (distance <= threshold)
                 {
-                    cout << GREEN << " Point " << waypoint_list.current_seq + 1 << " success arrived " << TAIL << endl;
+                    cout << GREEN << " Point " << waypoint_list_current + 1 << " success arrived " << TAIL << endl;
                     sleep(1);
-                    waypoint_list.current_seq++;
+                    waypoint_list_current++;
                     cmd_pub_flag = false;
                 }
                 else

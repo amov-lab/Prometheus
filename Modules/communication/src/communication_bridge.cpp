@@ -427,62 +427,6 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
     {
         this->uav_basic_->customDataSegmentPub(custom_data_segment);
     }
-
-    // DEMO示例，这里将地面站航线经纬度发布出来
-    CustomDataSegment test(custom_data_segment);
-    // 获取数据段名或者标识符用于区分不同数据
-    std::string name;
-    test.getValue("name", name);
-    if (name == "polyline")
-    {
-        int count;
-        test.getValue("count", count);
-        // 创建句柄
-        static ros::Publisher waypoint_pub = nh_.advertise<mavros_msgs::WaypointList>("/uav1/prometheus/set_waypoints", 10);
-        mavros_msgs::WaypointList waypointList;
-        for (int i = 0; i < count; i++)
-        {
-            mavros_msgs::Waypoint way_point;
-            way_point.frame = mavros_msgs::Waypoint::FRAME_GLOBAL_REL_ALT;
-            way_point.command = 22;
-            way_point.is_current = true;
-            way_point.autocontinue = true;
-            way_point.param1 = 0;
-            way_point.param2 = 0;
-            way_point.param3 = 0;
-            way_point.param4 = 0;
-            test.getValue("point" + to_string(i + 1) + "_lng", way_point.y_long);
-            test.getValue("point" + to_string(i + 1) + "_lat", way_point.x_lat);
-            test.getValue("point" + to_string(i + 1) + "_alt", way_point.z_alt);
-            // std::cout << "way_point: " << way_point.x_lat << " " << way_point.y_long << std::endl;
-            waypointList.waypoints.push_back(way_point);
-        }
-        waypoint_pub.publish(waypointList);
-    }
-    else if(name == "swarm_formation_cmd")
-    {
-        int swarm_formation_value = 0;
-        prometheus_msgs::SwarmCommand swarm_formation_command_;
-        // 【发布】集群控制指令
-        static ros::Publisher swarm_formation_command_pub_ = nh_.advertise<prometheus_msgs::SwarmCommand>("/prometheus/swarm_command", 10);
-        test.getValue("swarm_formation_cmd", swarm_formation_value);
-        switch (swarm_formation_value)
-        {
-        case 0:
-            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Stop;
-            break;
-        case 1:
-            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::Hold;
-            break;
-        case 2:
-            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::InitPlanner;
-            break;
-        case 3:
-            swarm_formation_command_.Swarm_CMD = prometheus_msgs::SwarmCommand::SwarmFormationPlanner;
-            break;
-        }
-        swarm_formation_command_pub_.publish(swarm_formation_command_);
-    }
 }
 
 void CommunicationBridge::recvData(struct Goal goal)

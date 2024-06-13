@@ -55,6 +55,7 @@ include_directories(
   advanced/autonomous_landing/include
   ${catkin_INCLUDE_DIRS}
   ../common/include
+  basic/waypoint_pos_control/include
 )
 
 

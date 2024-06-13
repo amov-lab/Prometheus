@@ -9,16 +9,6 @@ CustomDataSegment::CustomDataSegment(struct CustomDataSegment_1 datas)
     datas_ = datas;
 }
 
-void CustomDataSegment::initCommunication(int id, int udp_port, int tcp_port)
-{
-    communication_.init(id,udp_port,tcp_port,25555);
-}
-
-void CustomDataSegment::initCommunication(Communication communication)
-{
-    communication_ = communication;
-}
-
 bool CustomDataSegment::addValue(std::string name, BasicDataTypeAndValue::Type type, std::string value)
 {
     int index = indexof(name);
@@ -185,14 +175,4 @@ bool CustomDataSegment::getValue(std::string name, std::string &value)
 struct CustomDataSegment_1 CustomDataSegment::getCustomDataSegment()
 {
     return datas_;
-}
-
-void CustomDataSegment::sendUdp(std::string udp_ip)
-{
-    communication_.sendMsgByUdp(communication_.encodeMsg(Send_Mode::UDP,datas_),udp_ip);
-}
-
-void CustomDataSegment::sendTcp(std::string tcp_ip)
-{
-    communication_.sendMsgByUdp(communication_.encodeMsg(Send_Mode::TCP,datas_),tcp_ip);
 }
