@@ -12,6 +12,11 @@ int main(int argc, char **argv)
 
     ReduceTheFrequency reduce_the_frequency_(nh);
 
+    //
+    ros::AsyncSpinner spinner(4);
+    spinner.start();
+    ros::waitForShutdown();
+
     ros::spin();
 
     return 0;

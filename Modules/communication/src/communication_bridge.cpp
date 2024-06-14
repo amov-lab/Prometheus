@@ -70,7 +70,7 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     to_ground_heartbeat_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::toGroundHeartbeat, this);
 
     heartbeat_check_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::checkHeartbeatState, this);
-
+    
     // this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
 }
 
@@ -416,14 +416,14 @@ void CommunicationBridge::recvData(struct Bspline bspline)
 // 此处为 地面站-->机载端 机载端<->机载端
 void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segment)
 {
-    // 自定义 测试代码
+    // 测试代码
     // for(int i = 0; i < custom_data_segment.datas.size();i++)
     // {
     //     struct BasicDataTypeAndValue basic = custom_data_segment.datas[i];
     //     std::cout << "类型:" << (int)basic.type << " 变量名:" << basic.name << " 变量值:" << basic.value << std::endl;
     // }
 
-    if(this->uav_basic_)
+    if (this->uav_basic_)
     {
         this->uav_basic_->customDataSegmentPub(custom_data_segment);
     }
@@ -1109,23 +1109,27 @@ void CommunicationBridge::triggerUGV()
 // 给地面站发送心跳包,  超时检测
 void CommunicationBridge::toGroundStationFun()
 {
-    // struct Heartbeat hearbeat;
-    // heartbeat.message = "OK";
-    // heartbeat.count = 0;
-
-    // 记录 集群数据刷新的时间戳
-    // uint swarm_control_time[this->swarm_num_] = {0};
-    // // 记录 未刷新的次数
-    // uint swarm_control_timeout_count[this->swarm_num_] = {0};
-    // // 记录 无人机或无人车的时间戳
-    // uint time = 0;
-    // uint time_count = 0;
     while (true)
     {
+        // 记录 集群数据刷新的时间戳
+        // uint swarm_control_time[this->swarm_num_] = {0};
+        // 记录 未刷新的次数
+        // uint swarm_control_timeout_count[this->swarm_num_] = {0};
+
+        std::string message = "CPUUsage:" + to_string(getCPUUsage());
+        message += ",CPUTemperature:" + to_string(getCPUTemperature());
+        ros::V_string v_nodes;
+        ros::master::getNodes(v_nodes);
+        for (auto elem : v_nodes)
+        {
+            message += ",rosnode:" + elem;
+        }
+
         if (!this->is_heartbeat_ready_)
         {
-            continue;
+            return;
         }
+        heartbeat.message = message;
         // std::cout << disconnect_num << std::endl;
         sendMsgByTcp(encodeMsg(Send_Mode::TCP, heartbeat), udp_ip);
         heartbeat_count++;
@@ -1240,7 +1244,7 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
         return;
     }
     heartbeat.message = message;
-    // std::cout << disconnect_num << std::endl;
+    // std::cout << "disconnect_num:" << disconnect_num << std::endl;
     sendMsgByTcp(encodeMsg(Send_Mode::TCP, heartbeat), udp_ip);
     heartbeat_count++;
     heartbeat.count = heartbeat_count;
