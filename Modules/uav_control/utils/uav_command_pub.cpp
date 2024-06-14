@@ -10,6 +10,7 @@
 #include <mavros_msgs/RCIn.h>
 #include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/UAVControlState.h>
+#include <prometheus_msgs/TextInfo.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/Bool.h>
 
@@ -21,6 +22,7 @@ using namespace std;
 prometheus_msgs::UAVState uav_state;
 prometheus_msgs::UAVControlState uav_control_state;
 prometheus_msgs::UAVCommand agent_command;
+prometheus_msgs::TextInfo text_info;
 std::vector<geometry_msgs::PoseStamped> posehistory_vector_;
 std_msgs::Bool stop_control_state;
 
@@ -71,6 +73,9 @@ int main(int argc, char **argv)
 
     //【订阅】无人机停止控制状态
     ros::Subscriber stop_control_state_sub = nh.subscribe<std_msgs::Bool>(uav_name + "/prometheus/stop_control_state", 1, stop_control_state_cb);
+
+    //【发布】UAVCommand
+    ros::Publisher text_info_pub = nh.advertise<prometheus_msgs::TextInfo>(uav_name + "/prometheus/text_info", 1);
 
     //用于控制器测试的类，功能例如：生成圆形轨迹，8字轨迹等
     Controller_Test Controller_Test;
@@ -214,16 +219,23 @@ int main(int argc, char **argv)
                 {
                     nh.getParam("/communication_bridge/trajectory_flag", flag);
                     if (flag){
+                        // 重新加载圆心、速度等通信节点修改后的参数
+                        Controller_Test.update_communication_param();
+                        Controller_Test.printf_param();
                         break;
                     }
                     usleep(10);
                 }
                 nh.getParam("/communication_bridge/trajectory_mode", Trjectory_mode);
                 nh.getParam("/communication_bridge/trajectory_time", trajectory_total_time);
-                nh.setParam("/communication_bridge/trajectory_flag",false);
+                nh.setParam("/communication_bridge/trajectory_flag", false);
             }
 
             time_trajectory = 0.0;
+
+            text_info.MessageType = prometheus_msgs::TextInfo::INFO;
+            text_info.Message = uav_name + " start trajectory control!";
+            text_info_pub.publish(text_info);
 
             while (time_trajectory < trajectory_total_time)
             {
@@ -232,6 +244,9 @@ int main(int argc, char **argv)
                 if(stop_control_state.data){
                     continue;
                 }
+
+                // 可以更新速度和半径等
+                Controller_Test.real_time_update_communication_param();
 
                 if (Trjectory_mode == 0)
                 {
@@ -281,6 +296,10 @@ int main(int argc, char **argv)
 
                 ros::Duration(0.01).sleep();
             }
+            
+            text_info.Message = uav_name + " stop trajectory control!";
+            text_info_pub.publish(text_info);
+            
             break;
         case 6:
 

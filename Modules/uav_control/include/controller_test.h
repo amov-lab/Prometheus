@@ -58,6 +58,25 @@ class Controller_Test
             nh.getParam("/communication_bridge/Controller_Test/Step/step_interval", step_interval);
         }
 
+        // 更新/重新加载全部参数
+        void update_communication_param()
+        {
+            load_communication_param(Controller_Test_nh);
+        }
+
+        // 实时更新参数 只会重新更新速度、半径等
+        void real_time_update_communication_param()
+        {
+            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Circle/circle_radius", circle_radius);
+            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Circle/linear_vel", linear_vel);
+
+            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Eight/omega", eight_omega_);
+            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Eight/radial", radial);
+
+            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Step/step_length", step_length);
+            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Step/step_interval", step_interval);
+        }
+
         //Printf the Controller_Test parameter
         void printf_param();
 
