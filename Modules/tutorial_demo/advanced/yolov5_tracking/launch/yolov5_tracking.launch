@@ -1,7 +1,7 @@
 <launch>
 	<!-- 启动仿真环境 -->
 	<include file="$(find prometheus_gazebo)/launch_basic/sitl_outdoor_1uav_P450.launch">
-		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/multi_person.world" />
+		<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/detection_worlds/KKSwarmCar/kkcarair.world" />
 		<arg name="vehicle" value="p450_D435i" />
 	</include>
 

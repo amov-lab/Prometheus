@@ -7,7 +7,7 @@
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
             <arg name="world_name" value="$(arg world)"/>
 			<!-- 如果选择含雷达的模型，该值需要为true -->
-			<arg name="use_sim_time" value="true"/>
+			<arg name="use_sim_time" value="false"/>
         </include>
     </group>
 
