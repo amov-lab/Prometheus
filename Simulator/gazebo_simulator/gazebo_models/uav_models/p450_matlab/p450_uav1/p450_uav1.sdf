@@ -40,7 +40,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p450/meshes/p450.dae</uri>
+            <uri>model://p450/meshes/p450.stl</uri>
           </mesh>
         </geometry>
       </visual>

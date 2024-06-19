@@ -40,7 +40,7 @@
         <geometry>
           <mesh>
             <scale>1 1 1</scale>
-            <uri>model://p600/meshes/p600.dae</uri>
+            <uri>model://p600/meshes/p600.stl</uri>
           </mesh>
         </geometry>
       </visual>
