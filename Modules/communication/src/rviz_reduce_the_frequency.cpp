@@ -6,7 +6,7 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh)
     nh.param("ROBOT_ID", drone_id_, 1);
 
     // 订阅需要降低频率的话题 /camera/depth/color/points
-    octomap_point_cloud_centers_sub_ = nh.subscribe("/octomap_point_cloud_centers", 100, &ReduceTheFrequency::octomapPointCloudCentersCb, this);
+    octomap_point_cloud_centers_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "/octomap_point_cloud_centers", 100, &ReduceTheFrequency::octomapPointCloudCentersCb, this);
     occupancy_inflate_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/grid_map/occupancy_inflate", 10 , &ReduceTheFrequency::occupancyInflateCb, this);
     scan_sub_ = nh.subscribe("/scan",10 , &ReduceTheFrequency::scanCb, this);
     scan_filtered_sub_ = nh.subscribe("/scan_filtered",10 , &ReduceTheFrequency::scanFilteredCb, this);
@@ -21,9 +21,14 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh)
 
     optimal_list_sub_ = nh.subscribe("/uav" + std::to_string(drone_id_) + "_ego_planner_node/optimal_list", 10 , &ReduceTheFrequency::optimalListCb, this);
 
+    // 无人车相关
+    ugv_point_cloud_sub_ = nh.subscribe("/ugv" + std::to_string(drone_id_) + "/cloud_registered",10,&ReduceTheFrequency::ugvPointCloudCb, this);
+    ugv_odom_sub_ = nh.subscribe("/ugv" + std::to_string(drone_id_) + "/Odometry",10,&ReduceTheFrequency::ugvOdomCb, this);
+    ugv_path_sub_ = nh.subscribe("/ugv" + std::to_string(drone_id_) + "/path",10,&ReduceTheFrequency::ugvPathCb, this);
+
     // 发布降低频率后的话题
-    octomap_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/octomap_point_cloud_centers/reduce_the_frequency", 100);
-    octomap_compressed_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/octomap_point_cloud_centers/reduce_the_frequency/compressed", 100);
+    octomap_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(drone_id_) + "/octomap_point_cloud_centers/reduce_the_frequency", 100);
+    octomap_compressed_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(drone_id_) + "/octomap_point_cloud_centers/reduce_the_frequency/compressed", 100);
     // 点云数据降低频率
     occupancy_inflate_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(drone_id_) + "_ego_planner_node/grid_map/occupancy_inflate/reduce_the_frequency", 100);
     // 点云数据降低频率并过滤
@@ -37,6 +42,11 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh)
     tf_pub_ = nh.advertise<tf2_msgs::TFMessage>("/tf/reduce_the_frequency", 100);
     uav_mesh_pub_ = nh.advertise<visualization_msgs::Marker>("/uav" + std::to_string(drone_id_) + "/prometheus/uav_mesh/reduce_the_frequency", 100);
     optimal_list_pub_ = nh.advertise<visualization_msgs::Marker>("/uav" + std::to_string(drone_id_) + "_ego_planner_node/optimal_list/reduce_the_frequency", 100);
+
+    // 无人车相关
+    ugv_point_cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/ugv" + std::to_string(drone_id_) + "/cloud_registered/reduce_the_frequency/compressed", 100);
+    ugv_odom_pub_ = nh.advertise<nav_msgs::Odometry>("/ugv" + std::to_string(drone_id_) + "/Odometry/reduce_the_frequency", 100);
+    ugv_path_pub_ = nh.advertise<nav_msgs::Path>("/ugv" + std::to_string(drone_id_) + "/path/reduce_the_frequency", 100);
 
     send_timer_1000MS = nh.createTimer(ros::Duration(1.0), &ReduceTheFrequency::send1000MS, this);
     usleep(10000);
@@ -84,6 +94,13 @@ void ReduceTheFrequency::send1000MS(const ros::TimerEvent &time_event)
         scan_filtered_pub_.publish(scan_filtered);
         scan_filtered_ready = false;
     }
+    usleep(100000);
+    if(ugv_point_cloud_ready)
+    {
+        ugv_compressed_point_cloud = compressed(ugv_point_cloud);
+        ugv_point_cloud_pub_.publish(ugv_compressed_point_cloud);
+        ugv_point_cloud_ready = false;
+    }
 }
 
 void ReduceTheFrequency::send500MS(const ros::TimerEvent &time_event)
@@ -98,6 +115,18 @@ void ReduceTheFrequency::send500MS(const ros::TimerEvent &time_event)
     {
         uav_mesh_pub_.publish(uav_mesh);
         uav_mesh_ready = false;
+    }
+    usleep(100000);
+    if(ugv_odom_ready)
+    {
+        ugv_odom_pub_.publish(ugv_odom);
+        ugv_odom_ready = false;
+    }
+     usleep(100000);
+    if(ugv_path_ready)
+    {
+        ugv_path_pub_.publish(ugv_path);
+        ugv_path_ready = false;
     }
 }
 
@@ -184,6 +213,24 @@ void ReduceTheFrequency::optimalListCb(const visualization_msgs::Marker::ConstPt
 {
     optimal_list = *msg;
     optimal_list_ready = true;
+}
+
+void ReduceTheFrequency::ugvPointCloudCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
+{
+    ugv_point_cloud = *msg;
+    ugv_point_cloud_ready = true;
+}
+
+void ReduceTheFrequency::ugvOdomCb(const nav_msgs::Odometry::ConstPtr &msg)
+{
+    ugv_odom = *msg;
+    ugv_odom_ready = true;
+}
+
+void ReduceTheFrequency::ugvPathCb(const nav_msgs::Path::ConstPtr &msg)
+{
+    ugv_path = *msg;
+    ugv_path_ready = true;
 }
 
 sensor_msgs::PointCloud2 ReduceTheFrequency::filtered(const sensor_msgs::PointCloud2 msg)

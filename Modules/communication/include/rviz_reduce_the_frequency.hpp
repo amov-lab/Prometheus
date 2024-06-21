@@ -41,6 +41,10 @@ private:
 
     void optimalListCb(const visualization_msgs::Marker::ConstPtr &msg);
 
+    void ugvPointCloudCb(const sensor_msgs::PointCloud2::ConstPtr &msg);
+    void ugvOdomCb(const nav_msgs::Odometry::ConstPtr &msg);
+    void ugvPathCb(const nav_msgs::Path::ConstPtr &msg);
+
     void send1000MS(const ros::TimerEvent &time_event);
 
     void send500MS(const ros::TimerEvent &time_event);
@@ -55,13 +59,15 @@ private:
 
 private:
     ros::Subscriber octomap_point_cloud_centers_sub_,occupancy_inflate_sub_,scan_sub_,
-        scan_filtered_sub_,trajectory_sub_,odom_sub_,tf_sub_,uav_mesh_sub_,optimal_list_sub_;
+        scan_filtered_sub_,trajectory_sub_,odom_sub_,tf_sub_,uav_mesh_sub_,optimal_list_sub_,
+        ugv_point_cloud_sub_,ugv_odom_sub_,ugv_path_sub_;
 
     // 1000ms
     ros::Publisher octomap_pub_,occupancy_inflate_pub_,scan_pub_,scan_filtered_pub_,
-        occupancy_inflate_filtered_pub_,occupancy_inflate_compressed_pub_,octomap_compressed_pub_;
+        occupancy_inflate_filtered_pub_,occupancy_inflate_compressed_pub_,octomap_compressed_pub_,
+        ugv_point_cloud_pub_;
     // 500ms
-    ros::Publisher trajectory_pub_,uav_mesh_pub_;
+    ros::Publisher trajectory_pub_,uav_mesh_pub_,ugv_path_pub_,ugv_odom_pub_;
     // 200ms
     ros::Publisher odom_pub_,tf_pub_,optimal_list_pub_;
 
@@ -75,13 +81,17 @@ private:
     bool odom_ready = false;
     bool uav_mesh_ready = false;
     bool optimal_list_ready = false;
+    bool ugv_point_cloud_ready = false;
+    bool ugv_odom_ready = false;
+    bool ugv_path_ready = false;
 
     sensor_msgs::PointCloud2 octomap_point_cloud,octomap_compressed_point_cloud;
-    sensor_msgs::PointCloud2 occupancy_inflate_point_cloud,occupancy_inflate_filtered_point_cloud,occupancy_inflate_compressed_point_cloud;
+    sensor_msgs::PointCloud2 occupancy_inflate_point_cloud,occupancy_inflate_filtered_point_cloud,
+                        occupancy_inflate_compressed_point_cloud,ugv_point_cloud,ugv_compressed_point_cloud;
     sensor_msgs::LaserScan scan;
     sensor_msgs::LaserScan scan_filtered;
-    nav_msgs::Path trajectory;
-    nav_msgs::Odometry odom;
+    nav_msgs::Path trajectory,ugv_path;
+    nav_msgs::Odometry odom,ugv_odom;
     tf2_msgs::TFMessage tf;
     visualization_msgs::Marker uav_mesh;
     visualization_msgs::Marker optimal_list;
