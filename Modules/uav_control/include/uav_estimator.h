@@ -114,6 +114,8 @@ class UAV_estimator
         Sensor_TF_Offset d435i_offset;
         Sensor_TF_Offset lidar_offset;
         Sensor_TF_Offset t265_offset;
+        Sensor_TF_Offset uwb_offset;
+        int j=0;
 
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose

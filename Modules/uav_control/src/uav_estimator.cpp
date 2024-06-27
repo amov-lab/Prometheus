@@ -36,6 +36,10 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     nh.param<float>("T265/offset_pitch", t265_offset.pitch, 0.0);
     nh.param<float>("T265/offset_yaw", t265_offset.yaw, 0.0);
 
+    // 【参数】UWB tf相对于A0基站端偏移量
+    nh.param<float>("UWB/offset_x", uwb_offset.x, 0.0);
+    nh.param<float>("UWB/offset_y", uwb_offset.y, 0.0);
+    
     // 【变量】无人机名字
     uav_name = "/uav" + std::to_string(uav_id);
     // 【变量】节点名字
@@ -268,11 +272,24 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
+ 	//j作为计数变量，初始值为0，这里循环6次为了排除初始UWB位置值不准，以第6次为准，测试下来在LinkTrack S型号UWB是没有问题的
+        if(j<6)
+        {
+        
+        uwb_offset.x = pos_drone_uwb[0];
+        uwb_offset.y = pos_drone_uwb[1];
+        j+=1;
+        
+        }
+
         vision_pose.header = uav_state.header;
 	vision_pose.header.stamp = ros::Time::now();
         // vision_pose = uwb_pose;
-        vision_pose.pose.position.x = pos_drone_uwb[0];
-        vision_pose.pose.position.y = pos_drone_uwb[1];
+        //这里如果不减去初始位置offset值，按照UWB的坐标系，地面电脑A0基站位置是原点，用户可能产生混乱
+        //因为无人机基本都是按照上电位置为原点（0，0，0），所以这样减去。如果不需要，那么不减去直接赋值UWB就可以了
+        //这里之所以只针对xy做offset偏移，z不做，是因为在LinkTrack S下z轴高度数据是激光雷达提供
+        vision_pose.pose.position.x = pos_drone_uwb[0] - uwb_offset.x;
+        vision_pose.pose.position.y = pos_drone_uwb[1] - uwb_offset.y;
         vision_pose.pose.position.z = uav_state.range;
 
         vision_pose.pose.orientation.x = q_uwb.x();
@@ -822,6 +839,7 @@ void UAV_estimator::printf_uav_state()
         break;
     case prometheus_msgs::UAVState::UWB:
         cout << GREEN << "Location: [ UWB ] " << TAIL;
+        cout << GREEN << " uwb_offset [X Y Z] : " << uwb_offset.x << " [ m ] " << uwb_offset.y << " [ m ] " << TAIL << endl;
         cout << GREEN << "UWB_pos [X Y Z] : " << pos_drone_uwb[0]  << " [ m ] " << pos_drone_uwb[1] << " [ m ] " << pos_drone_uwb[2] << " [ m ] " << TAIL << endl;
         break;
     case prometheus_msgs::UAVState::VINS:
