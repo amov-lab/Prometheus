@@ -20,6 +20,7 @@ catkin_make --source Modules/communication --build build/communication
 catkin_make --source Simulator/gazebo_simulator --build build/prometheus_gazebo
 catkin_make --source Simulator/realsense_gazebo_plugin --build build/realsense_gazebo_plugin
 catkin_make --source Simulator/velodyne_gazebo_plugins --build build/velodyne_gazebo_plugins
+catkin_make --source Simulator/livox_laser_gazebo_plugins --build build/livox_laser_gazebo_plugins
 
 # 编译控制模块
 catkin_make --source Modules/uav_control --build build/uav_control

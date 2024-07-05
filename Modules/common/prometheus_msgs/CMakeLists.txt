@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(PCL REQUIRED)
 add_message_files(
   DIRECTORY msg
   FILES
@@ -66,6 +66,10 @@ add_message_files(
   ROI.msg
   Target.msg
   TargetsInFrame.msg
+
+  #livox mid360 msg
+  LivoxCustomMsg.msg
+  LivoxCustomPoint.msg
 )
 
 add_action_files(
@@ -74,7 +78,7 @@ add_action_files(
   CheckForObjects.action
 )
 
-generate_messages(
+generate_messages(DEPENDENCIES
   DEPENDENCIES
   actionlib_msgs
   geometry_msgs 
@@ -95,6 +99,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 
