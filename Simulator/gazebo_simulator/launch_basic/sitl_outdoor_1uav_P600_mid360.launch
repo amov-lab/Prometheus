@@ -32,4 +32,6 @@
 		<arg name="uav_init_z" value="0.15"/>
 		<arg name="uav_init_yaw" value="$(arg uav1_init_yaw)"/>
 	</include>
+	<!-- This node launches rviz -->
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find prometheus_gazebo)/launch_basic/prometheus.rviz" />
 </launch>
