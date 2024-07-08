@@ -1,0 +1,35 @@
+<launch>
+	<!-- Gazebo configs -->
+    <arg name="gazebo_enable" default="true"/>
+	<arg name="world" default="$(find prometheus_gazebo)/gazebo_worlds/planning_worlds/planning_easy.world"/>
+    <!-- 启动Gazebo -->
+    <group if="$(arg gazebo_enable)">
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(arg world)"/>
+			<!-- 使用激光雷达需要设置为true -->
+			<arg name="use_sim_time" value="true"/>
+        </include>
+    </group>
+
+	<!-- 模型文件，参考值如下： -->
+	<!-- p600：只有p600模型无人机 -->
+	<!-- p600_2Dlidar：p600模型无人机和2D雷达传感器(含雷达数据) -->
+	<!-- p600_mid360：p600模型无人机和Livox MID360雷达传感器(含雷达数据) -->
+	<arg name="vehicle" default="p600_mid360"/>
+  
+    <!--无人机编号-->
+    <arg name="uav1_id" default="1"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="0.0"/>
+    <arg name="uav1_init_y" default="0.0"/>
+    <arg name="uav1_init_yaw" default="0.0"/>
+	<!-- 1号无人机 -->
+	<include file="$(find prometheus_gazebo)/launch_basic/sitl_px4_outdoor.launch">
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="vehicle" value="$(arg vehicle)"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="$(arg uav1_init_yaw)"/>
+	</include>
+</launch>

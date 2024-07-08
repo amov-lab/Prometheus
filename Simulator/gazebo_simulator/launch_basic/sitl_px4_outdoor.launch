@@ -9,7 +9,7 @@
     <arg name="vehicle" default="p450"/>
 
 	<!-- 仿真模型，对应不同的模型文件 -->
-	<env name="PX4_SIM_MODEL" value="p450" />
+	<env name="PX4_SIM_MODEL" value="$(arg vehicle)" />
 	<!-- ekf2 使用GPS作为定位来源-->
     <env name="PX4_ESTIMATOR" value="ekf2" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
