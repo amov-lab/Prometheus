@@ -25,6 +25,7 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh)
     ugv_point_cloud_sub_ = nh.subscribe("/ugv" + std::to_string(drone_id_) + "/cloud_registered",10,&ReduceTheFrequency::ugvPointCloudCb, this);
     ugv_odom_sub_ = nh.subscribe("/ugv" + std::to_string(drone_id_) + "/Odometry",10,&ReduceTheFrequency::ugvOdomCb, this);
     ugv_path_sub_ = nh.subscribe("/ugv" + std::to_string(drone_id_) + "/path",10,&ReduceTheFrequency::ugvPathCb, this);
+    ugv_optimal_list_sub_ = nh.subscribe("/ugv" + std::to_string(drone_id_) + "_ego_planner_node/optimal_list", 10 , &ReduceTheFrequency::ugvOptimalListCb, this);
 
     // 发布降低频率后的话题
     octomap_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(drone_id_) + "/octomap_point_cloud_centers/reduce_the_frequency", 100);
@@ -47,6 +48,7 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh)
     ugv_point_cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>("/ugv" + std::to_string(drone_id_) + "/cloud_registered/reduce_the_frequency/compressed", 100);
     ugv_odom_pub_ = nh.advertise<nav_msgs::Odometry>("/ugv" + std::to_string(drone_id_) + "/Odometry/reduce_the_frequency", 100);
     ugv_path_pub_ = nh.advertise<nav_msgs::Path>("/ugv" + std::to_string(drone_id_) + "/path/reduce_the_frequency", 100);
+    ugv_optimal_list_pub_ = nh.advertise<visualization_msgs::Marker>("/ugv" + std::to_string(drone_id_) + "_ego_planner_node/optimal_list/reduce_the_frequency", 100);
 
     send_timer_1000MS = nh.createTimer(ros::Duration(1.0), &ReduceTheFrequency::send1000MS, this);
     usleep(10000);
@@ -146,6 +148,12 @@ void ReduceTheFrequency::send50MS(const ros::TimerEvent &time_event)
         optimal_list_pub_.publish(optimal_list);
         optimal_list_ready = false;
     }
+    usleep(100000);
+    if(ugv_optimal_list_ready)
+    {
+        ugv_optimal_list_pub_.publish(ugv_optimal_list);
+        ugv_optimal_list_ready = false;
+    }
 }
 
 void ReduceTheFrequency::octomapPointCloudCentersCb(const sensor_msgs::PointCloud2::ConstPtr &msg)
@@ -231,6 +239,12 @@ void ReduceTheFrequency::ugvPathCb(const nav_msgs::Path::ConstPtr &msg)
 {
     ugv_path = *msg;
     ugv_path_ready = true;
+}
+
+void ReduceTheFrequency::ugvOptimalListCb(const visualization_msgs::Marker::ConstPtr &msg)
+{
+    ugv_optimal_list = *msg;
+    ugv_optimal_list_ready = true;
 }
 
 sensor_msgs::PointCloud2 ReduceTheFrequency::filtered(const sensor_msgs::PointCloud2 msg)

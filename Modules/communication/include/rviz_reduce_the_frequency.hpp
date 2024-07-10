@@ -41,6 +41,8 @@ private:
 
     void optimalListCb(const visualization_msgs::Marker::ConstPtr &msg);
 
+    void ugvOptimalListCb(const visualization_msgs::Marker::ConstPtr &msg);
+
     void ugvPointCloudCb(const sensor_msgs::PointCloud2::ConstPtr &msg);
     void ugvOdomCb(const nav_msgs::Odometry::ConstPtr &msg);
     void ugvPathCb(const nav_msgs::Path::ConstPtr &msg);
@@ -60,7 +62,7 @@ private:
 private:
     ros::Subscriber octomap_point_cloud_centers_sub_,occupancy_inflate_sub_,scan_sub_,
         scan_filtered_sub_,trajectory_sub_,odom_sub_,tf_sub_,uav_mesh_sub_,optimal_list_sub_,
-        ugv_point_cloud_sub_,ugv_odom_sub_,ugv_path_sub_;
+        ugv_point_cloud_sub_,ugv_odom_sub_,ugv_path_sub_,ugv_optimal_list_sub_;
 
     // 1000ms
     ros::Publisher octomap_pub_,occupancy_inflate_pub_,scan_pub_,scan_filtered_pub_,
@@ -69,7 +71,7 @@ private:
     // 500ms
     ros::Publisher trajectory_pub_,uav_mesh_pub_,ugv_path_pub_,ugv_odom_pub_;
     // 200ms
-    ros::Publisher odom_pub_,tf_pub_,optimal_list_pub_;
+    ros::Publisher odom_pub_,tf_pub_,optimal_list_pub_,ugv_optimal_list_pub_;
 
     double uav_position_x = 0,uav_position_y = 0;
 
@@ -84,6 +86,7 @@ private:
     bool ugv_point_cloud_ready = false;
     bool ugv_odom_ready = false;
     bool ugv_path_ready = false;
+    bool ugv_optimal_list_ready = false;
 
     sensor_msgs::PointCloud2 octomap_point_cloud,octomap_compressed_point_cloud;
     sensor_msgs::PointCloud2 occupancy_inflate_point_cloud,occupancy_inflate_filtered_point_cloud,
@@ -94,7 +97,7 @@ private:
     nav_msgs::Odometry odom,ugv_odom;
     tf2_msgs::TFMessage tf;
     visualization_msgs::Marker uav_mesh;
-    visualization_msgs::Marker optimal_list;
+    visualization_msgs::Marker optimal_list, ugv_optimal_list;
 
     ros::Timer send_timer_1000MS,send_timer_200MS,send_timer_500MS,send_timer_50MS;
 };

@@ -83,7 +83,7 @@
         <!-- 单机配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_control_yaml)"/>
         <!-- 集群配置文件加载 -->
-        <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg swarm_control_yaml)"/>	
+        <!-- <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg swarm_control_yaml)"/>	 -->
         <!-- 轨迹配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_command_yaml)"/>
     </node>
