@@ -1,0 +1,11 @@
+scan_filter_chain:
+- name: box
+  type: laser_filters/LaserScanBoxFilter
+  params:
+    box_frame: uav2/lidar_link
+    min_x: -0.3
+    max_x: 0.3
+    min_y: -0.3
+    max_y: 0.3
+    min_z: -0.3
+    max_z: 0.3

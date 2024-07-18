@@ -64,3 +64,6 @@ target_link_libraries(pub_goal ${catkin_LIBRARIES})
 
 add_executable(pub_preset_goal src_for_prometheus/pub_preset_goal.cpp)
 target_link_libraries(pub_preset_goal ${catkin_LIBRARIES})
+
+add_executable(motion_goal_swarm src_for_prometheus/motion_goal_swarm.cpp)
+target_link_libraries(motion_goal_swarm ${catkin_LIBRARIES})

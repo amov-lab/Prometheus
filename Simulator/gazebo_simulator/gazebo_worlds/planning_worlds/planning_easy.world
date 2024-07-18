@@ -199,32 +199,25 @@
     <model name='cylinder4_clone_16'>
       <include>
         <uri>model://obs_cylinder_large</uri>
-        <pose>1.547 -0.460893 1.5 0 -0 0</pose>
+        <pose>-1.00318 -3.92453 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_17'>
       <include>
         <uri>model://obs_cylinder_large</uri>
-        <pose>-1.00318 -3.92453 1.5 0 -0 0</pose>
+        <pose>-3.97554 -3.89536 1.5 0 -0 0</pose>
       </include>
     </model>
 
     <model name='cylinder4_clone_18'>
       <include>
         <uri>model://obs_cylinder_large</uri>
-        <pose>-3.97554 -3.89536 1.5 0 -0 0</pose>
-      </include>
-    </model>
-
-    <model name='cylinder4_clone_19'>
-      <include>
-        <uri>model://obs_cylinder_large</uri>
         <pose>-4.01198 -0.900726 1.5 0 -0 0</pose>
       </include>
     </model>
 
-    <model name='cylinder4_clone_20'>
+    <model name='cylinder4_clone_19'>
       <include>
         <uri>model://obs_cylinder_large</uri>
         <pose>-3.99798 4.28559 1.5 0 -0 0</pose>

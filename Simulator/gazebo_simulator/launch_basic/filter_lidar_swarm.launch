@@ -1,0 +1,31 @@
+<launch>
+  <arg name="uav1_id" default="1"/>
+  <arg name="uav2_id" default="2"/>
+  <arg name="uav3_id" default="3"/>
+  <!--arg name="uav4_id" default="4"/-->
+  
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_$(arg uav1_id)">
+    <rosparam command="load" file="$(find prometheus_gazebo)/config/filter_lidar.yaml"/>
+    <remap from="/scan" to="/uav$(arg uav1_id)/scan"/>
+    <remap from="/scan_filtered" to="/uav$(arg uav1_id)/scan_filtered"/>
+  </node>
+  
+    <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_$(arg uav2_id)">
+    <rosparam command="load" file="$(find prometheus_gazebo)/config/filter_lidar_2.yaml"/>
+    <remap from="/scan" to="/uav$(arg uav2_id)/scan"/>
+    <remap from="/scan_filtered" to="/uav$(arg uav2_id)/scan_filtered"/>
+  </node>
+  
+    <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_$(arg uav3_id)">
+    <rosparam command="load" file="$(find prometheus_gazebo)/config/filter_lidar_3.yaml"/>
+    <remap from="/scan" to="/uav$(arg uav3_id)/scan"/>
+    <remap from="/scan_filtered" to="/uav$(arg uav3_id)/scan_filtered"/>
+  </node>
+  
+    <!--node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_$(arg uav4_id)">
+    <rosparam command="load" file="$(find prometheus_gazebo)/config/filter_lidar_4.yaml"/>
+    <remap from="/scan" to="/uav$(arg uav4_id)/scan"/>
+    <remap from="/scan_filtered" to="/uav$(arg uav4_id)/scan_filtered"/>
+  </node-->
+  
+</launch>

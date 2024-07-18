@@ -1,0 +1,93 @@
+<launch>
+  <arg name="uav1_id" default="1"/>
+  <arg name="uav2_id" default="2"/>
+  <arg name="uav3_id" default="3"/>
+  <!--arg name="uav4_id" default="4"/-->
+  
+  <!-- ego_planner 仿真 -->
+  <include file="$(find ego_planner)/launch_for_prometheus/advanced_param_swarm.xml">
+    <!-- 无人机编号 -->
+    <arg name="uav1_id" value="$(arg uav1_id)"/>
+    <arg name="uav2_id" value="$(arg uav2_id)"/>
+    <arg name="uav3_id" value="$(arg uav3_id)"/>
+    <!--arg name="uav4_id" value="$(arg uav4_id)"/-->
+    <!-- 地图尺寸 -->
+    <arg name="map_size_x_" value="50.0"/>
+    <arg name="map_size_y_" value="50.0"/>
+    <arg name="map_size_z_" value="4.0"/>
+    <arg name="map_origin_x_" value="-25.0"/>
+    <arg name="map_origin_y_" value="-25.0"/>
+    <!-- 可以通过限制ground_height和map_size_z来使得飞机在特定高度飞行 -->
+    <arg name="ground_height" value="0.5"/>
+    <!-- 虚拟天花板高度要小于等于ground_height+z_size，否则重置该高度 -->
+    <!-- 里程计话题 -->
+    <arg name="odometry_topic" value="/mavros/local_position/odom"/>
+    <!-- 相机及深度信息仿真中没有使用，此处可忽略(真机中使用) -->
+    <arg name="camera_pose_topic" value="/depth/no_set"/>
+    <arg name="depth1_topic" value="/uav$(arg uav1_id)/depth/image_rect_raw"/>
+    <arg name="depth2_topic" value="/uav$(arg uav2_id)/depth/image_rect_raw"/>
+    <arg name="depth3_topic" value="/uav$(arg uav3_id)/depth/image_rect_raw"/>
+    
+    <arg name="cx" value="321.04638671875"/>
+    <arg name="cy" value="243.44969177246094"/>
+    <arg name="fx" value="387.229248046875"/>
+    <arg name="fy" value="387.229248046875"/>
+    <!-- 点云信息，仿真中由map_generator产生 -->
+    <arg name="cloud1_topic" value="/uav$(arg uav1_id)/octomap_point_cloud_centers"/>
+    <arg name="cloud2_topic" value="/uav$(arg uav2_id)/octomap_point_cloud_centers"/>
+    <arg name="cloud3_topic" value="/uav$(arg uav3_id)/octomap_point_cloud_centers"/>
+    <!--arg name="cloud4_topic" value="/uav$(arg uav4_id)/octomap_point_cloud_centers"/-->
+    
+    <!-- scan -->
+    <arg name="scan_topic" value="no_scan"/>
+    <!-- 最大速度及加速度 -->
+    <!--arg name="max_vel" value="0.8" /-->
+    <!--arg name="max_acc" value="6" /-->
+    <arg name="max_vel" value="0.8" />
+    <arg name="max_acc" value="3" />
+    <!-- 规划的范围，一般设置为感知范围的1.5倍 7.5-->
+    <arg name="planning_horizon" value="7.5" /> 
+    <!-- ？ -->
+    <arg name="use_distinctive_trajs" value="true" />
+    <!-- 1: use 2D Nav Goal to select goal  -->
+    <!-- 2: use global waypoints below  -->
+    <!-- 单机建议直接使用rviz指定目标点,多机情况请预设目标点 -->
+    <arg name="flight_type" value="1" />
+    <!-- global waypoints -->
+    <!-- It generates a piecewise min-snap traj passing all waypoints -->
+    <arg name="point_num" value="1" />
+    <arg name="point0_x" value="7.0" />
+    <arg name="point0_y" value="0.0" />
+    <arg name="point0_z" value="1.5" />
+    
+    <!-- 仿真 -->
+    <arg name="realworld_experiment" value="true" />
+  </include>
+
+  <!-- trajectory server：由B样条生成轨迹 -->
+  <!-- 偏航角初始值，重要参数 -->
+  <arg name="yaw_init" default="0.0"/>
+  <node pkg="ego_planner" name="uav$(arg uav1_id)_traj_server_for_prometheus" type="traj_server_for_prometheus" output="screen">
+    <param name="uav_id" value="$(arg uav1_id)"/>
+    <param name="control_flag" value="0"/>
+    <param name="traj_server/time_forward" value="1.0"/>
+    <param name="traj_server/last_yaw" value="$(arg yaw_init)"/>
+  </node>
+  
+    <node pkg="ego_planner" name="uav$(arg uav2_id)_traj_server_for_prometheus" type="traj_server_for_prometheus" output="screen">
+    <param name="uav_id" value="$(arg uav2_id)"/>
+    <param name="control_flag" value="0"/>
+    <param name="traj_server/time_forward" value="1.0"/>
+    <param name="traj_server/last_yaw" value="$(arg yaw_init)"/>
+  </node>
+  
+    <node pkg="ego_planner" name="uav$(arg uav3_id)_traj_server_for_prometheus" type="traj_server_for_prometheus" output="screen">
+    <param name="uav_id" value="$(arg uav3_id)"/>
+    <param name="control_flag" value="0"/>
+    <param name="traj_server/time_forward" value="1.0"/>
+    <param name="traj_server/last_yaw" value="$(arg yaw_init)"/>
+  </node>
+  <node pkg="ego_planner" name="motion_goal_swarm" type="motion_goal_swarm" output="screen"/>
+  
+
+</launch>

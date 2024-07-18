@@ -202,7 +202,11 @@ void GridMap::resetBuffer(Eigen::Vector3d min_pos, Eigen::Vector3d max_pos)
 {
 
   Eigen::Vector3i min_id, max_id;
+  posToIndex(min_pos, min_id);
+  posToIndex(max_pos, max_id);
 
+  boundIndex(min_id);
+  boundIndex(max_id);
   /* reset occ and dist buffer */
   for (int x = min_id(0); x <= max_id(0); ++x)
     for (int y = min_id(1); y <= max_id(1); ++y)
@@ -986,7 +990,7 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
   Eigen::Vector3d p3d, p3d_inf;
 
   int inf_step = ceil(mp_.obstacles_inflation_ / mp_.resolution_);
-  int inf_step_z = 10;
+  int inf_step_z = 4;
 
   double max_x, max_y, max_z, min_x, min_y, min_z;
 
