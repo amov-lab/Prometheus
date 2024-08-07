@@ -1,5 +1,4 @@
 #include "communication_bridge.hpp"
-#include "rviz_reduce_the_frequency.hpp"
 
 int main(int argc, char **argv)
 {
@@ -10,9 +9,6 @@ int main(int argc, char **argv)
 
     CommunicationBridge communication_bridge_(nh);
 
-    ReduceTheFrequency reduce_the_frequency_(nh);
-
-    //
     ros::AsyncSpinner spinner(4);
     spinner.start();
     ros::waitForShutdown();

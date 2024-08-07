@@ -6,6 +6,8 @@
 #include "prometheus_msgs/UGVCommand.h"
 #include "prometheus_msgs/UGVState.h"
 
+#include "rviz_reduce_the_frequency.hpp"
+
 using namespace std;
 
 class UGVBasic
@@ -46,6 +48,8 @@ private:
     int send_hz;
     // 下列变量仅在发送定时器中有效，为判断当前数据是否刷新
     bool ugv_state_ready = false;
+
+    ReduceTheFrequency *reduce_the_frequency_;
 };
 
 #endif

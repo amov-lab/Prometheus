@@ -9,6 +9,9 @@ UGVBasic::UGVBasic(ros::NodeHandle &nh, int id, Communication *communication)
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     nh.param<int>("ugv_basic_hz", send_hz, 0);
 
+    // rviz显示数据相关，进行降频处理、数据压缩等
+    reduce_the_frequency_ = new ReduceTheFrequency(nh, ReduceTheFrequencyType::ReduceTheFrequencyType_UGV, id);
+
     this->ugv_cmd_pub_ = nh.advertise<prometheus_msgs::UGVCommand>("/ugv" + to_string(id) + "/prometheus/ugv_command", 1000);
     this->ugv_state_sub_ = nh.subscribe("/ugv" + to_string(id) + "/prometheus/ugv_state", 10, &UGVBasic::stateCb, this);
 
@@ -21,6 +24,7 @@ UGVBasic::UGVBasic(ros::NodeHandle &nh, int id, Communication *communication)
 UGVBasic::~UGVBasic()
 {
     // delete this->communication_;
+    delete reduce_the_frequency_;
 }
 
 void UGVBasic::ugvCmdPub(struct UGVCommand ugv_command)

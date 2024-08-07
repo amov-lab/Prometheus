@@ -22,6 +22,8 @@
 #include "prometheus_msgs/BasicDataTypeAndValue.h"
 #include "custom_data_segment.hpp"
 
+#include "rviz_reduce_the_frequency.hpp"
+
 class UAVBasic
 {
 public:
@@ -129,6 +131,9 @@ private:
     ros::Timer gimbal_control_pub_timer;
     prometheus_msgs::GimbalControl gimbal_control_;
     prometheus_msgs::OffsetPose offset_pose_;
+
+    // 
+    ReduceTheFrequency *reduce_the_frequency_;
 };
 
 #endif

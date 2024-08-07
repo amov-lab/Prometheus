@@ -16,6 +16,8 @@
 
 #include <vector>
 
+#include "rviz_reduce_the_frequency.hpp"
+
 using namespace std;
 
 //订阅: /prometheus/formation_assign/result
@@ -154,6 +156,9 @@ private:
     std::string udp_ip, multicast_udp_ip;
 
     std::string user_type_ = "";
+
+    // 
+    ReduceTheFrequency *reduce_the_frequency_;
 };
 
 #endif

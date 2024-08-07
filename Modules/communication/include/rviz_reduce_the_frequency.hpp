@@ -7,6 +7,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "nav_msgs/Path.h"
 #include "visualization_msgs/Marker.h"
+#include "visualization_msgs/MarkerArray.h"
 #include "nav_msgs/Odometry.h"
 
 #include <ros/serialization.h>
@@ -19,10 +20,20 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
 
+enum ReduceTheFrequencyType
+{
+    ReduceTheFrequencyType_UAV = 1,
+    ReduceTheFrequencyType_UGV = 2,
+    ReduceTheFrequencyType_SWARM = 3
+};
+
 class ReduceTheFrequency
 {
 public:
     ReduceTheFrequency(ros::NodeHandle &nh);
+
+    ReduceTheFrequency(ros::NodeHandle &nh, ReduceTheFrequencyType type, int id = 1);
+
     ~ReduceTheFrequency();
 
 private:
@@ -47,6 +58,8 @@ private:
     void ugvOdomCb(const nav_msgs::Odometry::ConstPtr &msg);
     void ugvPathCb(const nav_msgs::Path::ConstPtr &msg);
 
+    void swarmGraphVisualCb(const visualization_msgs::MarkerArray::ConstPtr &msg);
+
     void send1000MS(const ros::TimerEvent &time_event);
 
     void send500MS(const ros::TimerEvent &time_event);
@@ -62,14 +75,15 @@ private:
 private:
     ros::Subscriber octomap_point_cloud_centers_sub_,occupancy_inflate_sub_,scan_sub_,
         scan_filtered_sub_,trajectory_sub_,odom_sub_,tf_sub_,uav_mesh_sub_,optimal_list_sub_,
-        ugv_point_cloud_sub_,ugv_odom_sub_,ugv_path_sub_,ugv_optimal_list_sub_;
+        ugv_point_cloud_sub_,ugv_odom_sub_,ugv_path_sub_,ugv_optimal_list_sub_,
+        swarm_graph_visual_sub_;
 
     // 1000ms
     ros::Publisher octomap_pub_,occupancy_inflate_pub_,scan_pub_,scan_filtered_pub_,
         occupancy_inflate_filtered_pub_,occupancy_inflate_compressed_pub_,octomap_compressed_pub_,
         ugv_point_cloud_pub_;
     // 500ms
-    ros::Publisher trajectory_pub_,uav_mesh_pub_,ugv_path_pub_,ugv_odom_pub_;
+    ros::Publisher trajectory_pub_,uav_mesh_pub_,ugv_path_pub_,ugv_odom_pub_, swarm_graph_visual_pub_;
     // 200ms
     ros::Publisher odom_pub_,tf_pub_,optimal_list_pub_,ugv_optimal_list_pub_;
 
@@ -87,6 +101,7 @@ private:
     bool ugv_odom_ready = false;
     bool ugv_path_ready = false;
     bool ugv_optimal_list_ready = false;
+    bool swarm_graph_visual_ready = false;
 
     sensor_msgs::PointCloud2 octomap_point_cloud,octomap_compressed_point_cloud;
     sensor_msgs::PointCloud2 occupancy_inflate_point_cloud,occupancy_inflate_filtered_point_cloud,
@@ -98,6 +113,14 @@ private:
     tf2_msgs::TFMessage tf;
     visualization_msgs::Marker uav_mesh;
     visualization_msgs::Marker optimal_list, ugv_optimal_list;
+    visualization_msgs::MarkerArray swarm_graph_visual;
+
+    // 仿真集群考虑
+    std::vector<ros::Subscriber> swarm_optimal_list_sub_, swarm_occupancy_inflate_sub_, swarm_occupancy_sub_;
+    std::vector<ros::Publisher> swarm_optimal_list_pub_, swarm_occupancy_inflate_pub_, swarm_occupancy_pub_;
+    std::vector<sensor_msgs::PointCloud2> swarm_occupancy, swarm_occupancy_inflate;
+    std::vector<visualization_msgs::Marker> swarm_optimal_list;
+    std::vector<bool> swarm_occupancy_ready, swarm_occupancy_inflate_ready, swarm_optimal_list_ready;
 
     ros::Timer send_timer_1000MS,send_timer_200MS,send_timer_500MS,send_timer_50MS;
 };
