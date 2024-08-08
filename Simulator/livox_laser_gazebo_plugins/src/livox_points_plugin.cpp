@@ -76,7 +76,7 @@ void LivoxPointsPlugin::Load(gazebo::sensors::SensorPtr _parent, sdf::ElementPtr
 
     raySensor = _parent;
     auto sensor_pose = raySensor->Pose();
-    SendRosTf(sensor_pose, raySensor->ParentName(), raySensor->Name());
+    //SendRosTf(sensor_pose, raySensor->ParentName(), raySensor->Name());
 
     node = transport::NodePtr(new transport::Node());
     node->Init(raySensor->WorldName());
@@ -151,7 +151,7 @@ void LivoxPointsPlugin::OnNewLaserScans() {
         rayShape->Update();
 
         msgs::Set(laserMsg.mutable_time(), world->SimTime());
-	SendRosTf(parentEntity->WorldPose(), world->Name(), raySensor->ParentName());
+	//SendRosTf(parentEntity->WorldPose(), world->Name(), raySensor->ParentName());
 
         switch (publishPointCloudType) {
             case SENSOR_MSG_POINT_CLOUD:
@@ -548,7 +548,7 @@ void LivoxPointsPlugin::PublishLivoxROSDriverCustomMsg(std::vector<std::pair<int
 
     msgs::LaserScan *scan = laserMsg.mutable_scan();
     InitializeScan(scan);
-    // SendRosTf(parentEntity->WorldPose(), world->Name(), raySensor->ParentName());
+    //SendRosTf(parentEntity->WorldPose(), world->Name(), raySensor->ParentName());
 
     sensor_msgs::PointCloud2 scan_point;
 
