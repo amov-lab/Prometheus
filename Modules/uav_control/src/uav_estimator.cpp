@@ -80,6 +80,11 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         // 【订阅】T265估计位置
         t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 1, &UAV_estimator::t265_cb, this);
     }
+    else if (location_source == prometheus_msgs::UAVState::MID360)
+    {
+        // 【订阅】MID360估计位置    
+        mid360_sub = nh.subscribe<nav_msgs::Odometry>("/Odometry", 1, &UAV_estimator::mid360_cb, this);
+    }
     else if (location_source == prometheus_msgs::UAVState::GAZEBO)
     {
         // 【订阅】gazebo仿真真值
@@ -138,7 +143,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
     // 【发布】运行状态信息(-> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
-    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB|| location_source == prometheus_msgs::UAVState::VINS)
+    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB|| location_source == prometheus_msgs::UAVState::VINS || location_source == prometheus_msgs::UAVState::MID360)
     {
         // 【定时器】当需要使用外部定位设备时，需要定时发送vision信息至飞控,并保证一定频率
         timer_px4_vision_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_vision_pose, this);
@@ -270,6 +275,10 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     {
         vision_pose = t265_pose;
     }
+    else if (location_source == prometheus_msgs::UAVState::MID360)
+    {
+        vision_pose = mid360_pose;
+    }
     else if (location_source == prometheus_msgs::UAVState::UWB)
     {
  	//j作为计数变量，初始值为0，这里循环6次为了排除初始UWB位置值不准，以第6次为准，测试下来在LinkTrack S型号UWB是没有问题的
@@ -329,7 +338,7 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     {
         return;
     }
-
+    
     // 发布无人机运动轨迹，用于rviz显示
     geometry_msgs::PoseStamped uav_pos;
     uav_pos.header.stamp = ros::Time::now();
@@ -343,6 +352,7 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
     {
         pos_vector.pop_back();
     }
+    
     nav_msgs::Path uav_trajectory;
     uav_trajectory.header.stamp = ros::Time::now();
     uav_trajectory.header.frame_id = "world";
@@ -589,7 +599,15 @@ void UAV_estimator::t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
     t265_pose.pose = msg->pose.pose;
     get_t265_stamp = ros::Time::now(); // 记录时间戳，防止超时
 }
+void UAV_estimator::mid360_cb(const nav_msgs::Odometry::ConstPtr &msg)
+{
+    mid360_pose.header.frame_id = msg->header.frame_id;
+    mid360_pose.header.stamp = ros::Time::now();
+    mid360_pose.pose = msg->pose.pose;
 
+    get_mid360_stamp = ros::Time::now(); // 记录时间戳，防止超时
+   
+}
 void UAV_estimator::fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
     // uav_state 直接赋值
@@ -640,6 +658,7 @@ void UAV_estimator::check_uav_state()
     {
         text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
         text_info.Message = "Odom invalid: Velocity too large!";
+
         cout << RED << node_name << "--->  Odom invalid: Velocity too large! " << TAIL << endl;
     }
     else if (odom_state == 3 && last_odom_state != 3)
@@ -702,9 +721,6 @@ int UAV_estimator::check_uav_odom()
     // odom失效可能原因1：外部定位数据接收超时
     if (location_source == prometheus_msgs::UAVState::GAZEBO && (time_now - get_gazebo_stamp).toSec() > GAZEBO_TIMEOUT)
     {
-        cout << RED << "time_now:[ " << (time_now).toSec() << " ] s" << TAIL << endl;
-        cout << RED << "get_gazebo_stamp:[ " << (get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
-        cout << RED << "Timeout:[ " << (time_now - get_gazebo_stamp).toSec() << " ] s" << TAIL << endl;
         return 1;
     }
     else if (location_source == prometheus_msgs::UAVState::MOCAP && (time_now - get_mocap_stamp).toSec() > MOCAP_TIMEOUT)
@@ -712,6 +728,10 @@ int UAV_estimator::check_uav_odom()
         return 1;
     }
     else if (location_source == prometheus_msgs::UAVState::T265 && (time_now - get_t265_stamp).toSec() > T265_TIMEOUT)
+    {
+        return 1;
+    }
+    else if (location_source == prometheus_msgs::UAVState::MID360 && (time_now - get_mid360_stamp).toSec() > MID360_TIMEOUT)
     {
         return 1;
     }
@@ -726,10 +746,6 @@ int UAV_estimator::check_uav_odom()
     }
     else if ((location_source == prometheus_msgs::UAVState::GPS || location_source == prometheus_msgs::UAVState::RTK) && (time_now - get_gps_stamp).toSec() > GPS_TIMEOUT)
     {
-        cout << RED << "time_now:[ " << (time_now).toSec() << " ] s" << TAIL << endl;
-        cout << RED << "get_gps_stamp:[ " << (get_gps_stamp).toSec() << " ] s" << TAIL << endl;
-        cout << RED << "Timeout:[ " << (time_now - get_gps_stamp).toSec() << " ] s" << TAIL << endl;
-
         return 7;
     }
     
@@ -821,6 +837,10 @@ void UAV_estimator::printf_uav_state()
     case prometheus_msgs::UAVState::T265:
         cout << GREEN << "Location: [ T265 ] " << TAIL << endl;
         cout << GREEN << "T265_pos [X Y Z] : " << t265_pose.pose.position.x << " [ m ] " << t265_pose.pose.position.y << " [ m ] " << t265_pose.pose.position.z << " [ m ] " << TAIL << endl;
+        break;
+    case prometheus_msgs::UAVState::MID360:
+        cout << GREEN << "Location: [ MID360 ] " << TAIL << endl;
+        cout << GREEN << "MID360_pos [X Y Z] : " << mid360_pose.pose.position.x << " [ m ] " << mid360_pose.pose.position.y << " [ m ] " << mid360_pose.pose.position.z << " [ m ] " << TAIL << endl;
         break;
     case prometheus_msgs::UAVState::GAZEBO:
         cout << GREEN << "Location: [ GAZEBO ] " << TAIL << endl;
@@ -939,6 +959,10 @@ void UAV_estimator::printf_param()
     else if (location_source == prometheus_msgs::UAVState::T265)
     {
         cout << GREEN << "location_source: [T265] " << TAIL << endl;
+    }
+    else if (location_source == prometheus_msgs::UAVState::MID360)
+    {
+        cout << GREEN << "location_source: [MID360] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::FAKE_ODOM)
     {

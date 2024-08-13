@@ -21,7 +21,7 @@ uint8 RTK = 5
 uint8 UWB = 6
 uint8 VINS = 7
 uint8 OPTICAL_FLOW = 8
-
+uint8 MID360 = 9
 ## odom标志位
 bool odom_valid
 
