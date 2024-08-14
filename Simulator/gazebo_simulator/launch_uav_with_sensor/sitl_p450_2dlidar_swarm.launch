@@ -8,7 +8,7 @@
             <arg name="world_name" value="$(arg world)"/>
             <!--arg name="world_name" value="/home/amov/Prometheus/Simulator/gazebo_simulator/gazebo_worlds/planning_worlds/gazebo_wall1.word"/-->
 			<!-- 设置为false，使用系统时间 -->
-			<arg name="use_sim_time" value="true"/>
+			<arg name="use_sim_time" value="false"/>
 			<arg name="gui" value="true"/>
         </include>
     </group>

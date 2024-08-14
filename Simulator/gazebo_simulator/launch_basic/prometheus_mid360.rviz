@@ -8,12 +8,16 @@ Panels:
         - /无人机 - 11
         - /无人机 - 11/无人机位置 - odom1/Shape1
         - /无人机 - 11/无人机位置 - fake_odom1/Shape1
-        - /global_planner1
+        - /无人机 - 11/无人机位置 - 模型1
+        - /无人机 - 11/无人机位置 - 模型1/Namespaces1
+        - /global_planner1/点云地图 - 膨胀后1
         - /local_planner1/desired_vel1
+        - /ego_planner1/点云地图 - 膨胀后1
         - /三维激光雷达1
         - /三维激光雷达1/PointCloud21
+        - /三维激光雷达1/env1
       Splitter Ratio: 0.7441176176071167
-    Tree Height: 1145
+    Tree Height: 593
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -28,7 +32,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: 点云地图 - 膨胀后
   - Class: rviz/Help
     Name: Help
 Preferences:
@@ -196,7 +200,7 @@ Visualization Manager:
           Marker Topic: /uav1/prometheus/uav_mesh
           Name: 无人机位置 - 模型
           Namespaces:
-            {}
+            mesh: true
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -363,7 +367,7 @@ Visualization Manager:
           Color: 115; 210; 22
           Color Transformer: FlatColor
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Min Color: 0; 0; 0
@@ -372,14 +376,14 @@ Visualization Manager:
           Queue Size: 10
           Selectable: true
           Size (Pixels): 3
-          Size (m): 0.10000000149011612
+          Size (m): 0.05000000074505806
           Style: Flat Squares
           Topic: /uav1/prometheus/global_planning/global_inflate_pcl
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
-      Enabled: true
+          Value: false
+      Enabled: false
       Name: global_planner
     - Class: rviz/Group
       Displays:
@@ -400,7 +404,7 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/goal_point
           Name: goal_point
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -408,20 +412,20 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/optimal_list
           Name: optimal_traj
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 10
-            Min Value: -10
+            Max Value: 2.450000047683716
+            Min Value: 0.5
             Value: true
           Axis: Z
           Channel Name: intensity
           Class: rviz/PointCloud2
           Color: 206; 92; 0
-          Color Transformer: FlatColor
+          Color Transformer: AxisColor
           Decay Time: 0
           Enabled: true
           Invert Rainbow: false
@@ -432,7 +436,7 @@ Visualization Manager:
           Queue Size: 1
           Selectable: true
           Size (Pixels): 3
-          Size (m): 0.10000000149011612
+          Size (m): 0.07999999821186066
           Style: Flat Squares
           Topic: /uav1_ego_planner_node/grid_map/occupancy_inflate
           Unreliable: false
@@ -446,8 +450,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 3.4231786727905273
-            Min Value: -0.3009117841720581
+            Max Value: 2.4118669033050537
+            Min Value: 0.5953959226608276
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -458,14 +462,44 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Min Color: 0; 0; 0
+          Min Color: 238; 238; 236
           Name: PointCloud2
           Position Transformer: XYZ
-          Queue Size: 10
-          Selectable: true
+          Queue Size: 1
+          Selectable: false
           Size (Pixels): 3
-          Size (m): 0.05000000074505806
+          Size (m): 0.07999999821186066
           Style: Flat Squares
+          Topic: /uav1/octomap_point_cloud_centers
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
+        - Alpha: 0.5
+          Autocompute Intensity Bounds: false
+          Autocompute Value Bounds:
+            Max Value: 2.4233431816101074
+            Min Value: 0.5215856432914734
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 255; 255; 255
+          Color Transformer: AxisColor
+          Decay Time: 1000
+          Enabled: true
+          Invert Rainbow: true
+          Max Color: 255; 255; 255
+          Max Intensity: 100
+          Min Color: 0; 0; 0
+          Min Intensity: 100
+          Name: env
+          Position Transformer: XYZ
+          Queue Size: 100000
+          Selectable: true
+          Size (Pixels): 1
+          Size (m): 0.07999999821186066
+          Style: Points
           Topic: /uav1/octomap_point_cloud_centers
           Unreliable: false
           Use Fixed Frame: true
@@ -473,9 +507,18 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: 三维激光雷达
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 1
+      Name: Axes
+      Radius: 0.10000000149011612
+      Reference Frame: <Fixed Frame>
+      Show Trail: false
+      Value: true
   Enabled: true
   Global Options:
-    Background Color: 255; 255; 255
+    Background Color: 238; 238; 236
     Default Light: true
     Fixed Frame: world
     Frame Rate: 30
@@ -492,7 +535,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 6.783106327056885
+      Distance: 48.065765380859375
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -500,27 +543,27 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.7583028674125671
-        Y: -1.9764117002487183
-        Z: 2.036322832107544
+        X: 10.441462516784668
+        Y: -0.04599444568157196
+        Z: 2.5718696117401123
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8397971391677856
+      Pitch: 0.814796507358551
       Target Frame: <Fixed Frame>
-      Yaw: 3.1775925159454346
+      Yaw: 2.6925880908966064
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1536
+  Height: 984
   Help:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000015600000540fc020000001cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000540000000c900fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007300000002500000012f0000005c00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000800480065006c0070000000044e000000c20000006e00fffffffb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000000000010000010f00000342fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000342000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000009b800000060fc0100000002fb0000000800540069006d00650100000000000009b8000003bc00fffffffb0000000800540069006d006501000000000000045000000000000000000000085c0000054000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000015600000318fc020000001cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000318000000c900fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007300000002500000012f0000005c00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000800480065006c0070000000044e000000c20000006e00fffffffb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000fb0000000a006400650070007400680000000000ffffffff0000000000000000000000010000010f00000342fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000342000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000041800000060fc0100000002fb0000000800540069006d0065010000000000000418000003bc00fffffffb0000000800540069006d00650100000000000004500000000000000000000002bc0000031800000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -529,6 +572,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 2488
+  Width: 1048
   X: 72
   Y: 27

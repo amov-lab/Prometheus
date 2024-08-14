@@ -12,14 +12,11 @@
 	<param name="filter_size_map" type="double" value="0.5" />
 	<param name="cube_side_length" type="double" value="1000" />
 	<param name="runtime_pos_log_enable" type="bool" value="0" />
-	<remap from="/cloud_registered" to="/uav$(arg uav_id)/octomap_point_cloud_centers"/>
+	<remap from="/cloud_registered" to="/uav$(arg uav_id)/mid_point_cloud_centers"/>
     <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping" output="screen" /> 
-
-	<group if="$(arg rviz)">
-	<node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find fast_lio)/rviz_cfg/loam_livox.rviz" />
-	</group>
-	<!--node pkg = "fast_lio" name = "prometheus_2_livox" type = "prometheus_2_livox" output = "screen"/-->
-	<!-- <node pkg="tf" type="static_transform_publisher" name="lidar_link_base_link" args="0 0 0 0 0 0 /uav1/base_link /uav1/lidar_link 100"/> -->
-
-	<node pkg="tf" type="static_transform_publisher" name="fastlio_world" args="0 0 0 0 0.35 0 world camera_init 100"/>
+    <node pkg="fast_lio" type="fliter_points" name="fliter_points" output="screen" /> 
+	<!-- <group if="$(arg rviz)">
+	<node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz2" args="-d $(find fast_lio)/rviz_cfg/loam_livox.rviz" />
+	</group> -->
+	<node pkg="tf" type="static_transform_publisher" name="fastlio_world" args="0 0 0 0 0 0 world camera_init 100"/>
 </launch>
