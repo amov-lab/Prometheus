@@ -831,8 +831,28 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
     }
     else if (mode_selection.mode == ModeSelection::Mode::CUSTOMMODE)
     {
-        system(mode_selection.cmd.c_str());
-        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
+        std::string prefix = "mavlink_console";
+
+        if(mode_selection.cmd.length() > prefix.length())
+        {
+            if(mode_selection.cmd.compare(0,prefix.length(),prefix) == 0)
+            {
+                if(this->uav_basic_ != NULL)
+                {
+                    std::string cmd = mode_selection.cmd.substr(prefix.length() + 1,mode_selection.cmd.length());
+                    this->uav_basic_->serialControlPub(cmd);
+                }
+            }else
+            {
+                system(mode_selection.cmd.c_str());
+                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
+            }
+        }
+        else
+        {
+            system(mode_selection.cmd.c_str());
+            sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
+        }
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
@@ -861,6 +881,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         }
         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current trajectoy control mode.");
     }
+    
     this->current_mode_ = mode_selection.mode;
 }
 

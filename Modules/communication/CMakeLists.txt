@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   prometheus_msgs
 )
 find_package(PCL 1.7 REQUIRED)
+find_package(mavlink REQUIRED)
 
 generate_messages(
   DEPENDENCIES
@@ -52,6 +53,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/shard/include
   ${PROJECT_SOURCE_DIR}/shard/include/json/include
   ${PCL_INCLUDE_DIRS}
+  ${mavlink_INCLUDE_DIRS}
 )
 link_directories(${PCL_LIBRARY_DIRS})
 

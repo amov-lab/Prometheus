@@ -2,10 +2,9 @@
 
 UAVBasic::UAVBasic()
 {
-
 }
 
-UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
+UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     nh.param<std::string>("ground_station_ip", ground_station_ip, "127.0.0.1");
@@ -19,47 +18,51 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh,int id,Communication *communication)
     // rviz显示数据相关，进行降频处理、数据压缩等
     reduce_the_frequency_ = new ReduceTheFrequency(nh, ReduceTheFrequencyType::ReduceTheFrequencyType_UAV, id);
 
-    //【订阅】uav状态信息
+    // 【订阅】uav状态信息
     this->uav_state_sub_ = nh.subscribe("/uav" + std::to_string(this->robot_id) + "/prometheus/state", 10, &UAVBasic::stateCb, this);
-    //【订阅】uav反馈信息
+    // 【订阅】uav反馈信息
     this->text_info_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/text_info", 10, &UAVBasic::textInfoCb, this);
-    //【订阅】uav控制状态信息
+    // 【订阅】uav控制状态信息
     this->uav_control_state_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/control_state", 10, &UAVBasic::controlStateCb, this);
-    //【发布】底层控制指令(-> uav_control.cpp)
+    // 【发布】底层控制指令(-> uav_control.cpp)
     this->uav_cmd_pub_ = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(id) + "/prometheus/command", 1);
-    //【发布】mavros接口调用指令(-> uav_control.cpp)
+    // 【发布】mavros接口调用指令(-> uav_control.cpp)
     this->uav_setup_pub_ = nh.advertise<prometheus_msgs::UAVSetup>("/uav" + std::to_string(this->robot_id) + "/prometheus/setup", 1);
-    //【订阅】uav控制信息
-    this->uav_cmd_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/command",10,&UAVBasic::uavCmdCb,this);
-    //【发布】跟踪目标
+    // 【订阅】uav控制信息
+    this->uav_cmd_sub_ = nh.subscribe("/uav" + std::to_string(id) + "/prometheus/command", 10, &UAVBasic::uavCmdCb, this);
+    // 【发布】跟踪目标
     this->uav_target_pub_ = nh.advertise<prometheus_msgs::Control>("/uav" + std::to_string(this->robot_id) + "/spirecv/control", 1);
-    //【订阅】PX4中无人机的位置/速度/加速度设定值 坐标系:ENU系
-    this->px4_position_target_sub_ = nh.subscribe<mavros_msgs::PositionTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_local",1,&UAVBasic::px4PosTargetCb, this);
-    //【订阅】PX4中无人机的姿态设定值 坐标系:ENU系
-    this->px4_attitude_target_sub_ = nh.subscribe<mavros_msgs::AttitudeTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_attitude",1,&UAVBasic::px4AttTargetCb, this);
-    //【发布】吊舱控制
+    // 【订阅】PX4中无人机的位置/速度/加速度设定值 坐标系:ENU系
+    this->px4_position_target_sub_ = nh.subscribe<mavros_msgs::PositionTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_local", 1, &UAVBasic::px4PosTargetCb, this);
+    // 【订阅】PX4中无人机的姿态设定值 坐标系:ENU系
+    this->px4_attitude_target_sub_ = nh.subscribe<mavros_msgs::AttitudeTarget>("/uav" + std::to_string(this->robot_id) + "/mavros/setpoint_raw/target_attitude", 1, &UAVBasic::px4AttTargetCb, this);
+    // 【发布】吊舱控制
     this->gimbal_control_pub_ = nh.advertise<prometheus_msgs::GimbalControl>("/uav" + std::to_string(this->robot_id) + "/gimbal/control", 1);
-    //【服务】吊舱回中
+    // 【服务】吊舱回中
     this->gimbal_home_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/gimbal_server");
-    //【服务】吊舱拍照,图片保存在吊舱SD卡中
+    // 【服务】吊舱拍照,图片保存在吊舱SD卡中
     this->gimbal_take_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/gimbal_take_server");
-    //【服务】本地拍照,图片保存在机载电脑中
+    // 【服务】本地拍照,图片保存在机载电脑中
     this->local_take_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/local_take_server");
-    //【服务】吊舱录制视频,图片保存在吊舱SD卡中
+    // 【服务】吊舱录制视频,图片保存在吊舱SD卡中
     this->gimbal_record_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/gimbal_record_server");
-    //【服务】本地录制视频,图片保存在机载电脑中
+    // 【服务】本地录制视频,图片保存在机载电脑中
     this->local_record_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(this->robot_id) + "/local_record_server");
-    //【订阅】吊舱状态信息
+    // 【订阅】吊舱状态信息
     this->gimbal_state_sub_ = nh.subscribe("/uav" + std::to_string(this->robot_id) + "/gimbal/state", 10, &UAVBasic::gimbalStateCb, this);
-    //【订阅】GPS位置偏移数据(用于户外多机飞行)
-    this->offset_pose_sub_ = nh.subscribe<prometheus_msgs::OffsetPose>("/uav" + std::to_string(this->robot_id) + "/prometheus/offset_pose",1,&UAVBasic::offsetPoseCb, this);
-    //【订阅】订阅自定义消息转发到其他设备(无人机、地面站等)
+    // 【订阅】GPS位置偏移数据(用于户外多机飞行)
+    this->offset_pose_sub_ = nh.subscribe<prometheus_msgs::OffsetPose>("/uav" + std::to_string(this->robot_id) + "/prometheus/offset_pose", 1, &UAVBasic::offsetPoseCb, this);
+    // 【订阅】订阅自定义消息转发到其他设备(无人机、地面站等)
     this->custom_data_segment_sub_ = nh.subscribe<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(this->robot_id) + "/prometheus/set_customdatasegment", 10, &UAVBasic::customDataSegmentCb, this);
-    //【发布】发布该ROS节点中，用于接收到其他设备(无人机、地面站等)发过来的自定义消息后转为ROS话题
+    // 【发布】发布该ROS节点中，用于接收到其他设备(无人机、地面站等)发过来的自定义消息后转为ROS话题
     this->custom_data_segment_pub_ = nh.advertise<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(this->robot_id) + "/prometheus/customdatasegment", 1);
-    if(send_hz > 0)
+    //
+    this->serial_control_sub_ = nh.subscribe<mavros_msgs::Mavlink>("/uav" + std::to_string(this->robot_id) + "/mavlink/from", 10, &UAVBasic::serialControlCb, this);
+    this->serial_control_pub_ = nh.advertise<mavros_msgs::Mavlink>("/uav" + std::to_string(this->robot_id) + "/mavlink/to", 10);
+    
+    if (send_hz > 0)
     {
-        send_timer = nh.createTimer(ros::Duration(1.0/send_hz), &UAVBasic::send, this);
+        send_timer = nh.createTimer(ros::Duration(1.0 / send_hz), &UAVBasic::send, this);
     }
 }
 
@@ -104,20 +107,22 @@ void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
     this->uav_state_.battery_state = msg->battery_state;
     this->uav_state_.battery_percetage = msg->battery_percetage;
 
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_,this->robot_id), multicast_udp_ip);
-    else uav_state_ready = true;
+    if (send_hz <= 0)
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_, this->robot_id), multicast_udp_ip);
+    else
+        uav_state_ready = true;
     setTimeStamp(msg->header.stamp.sec);
 }
 
-//【回调】uav反馈信息
+// 【回调】uav反馈信息
 void UAVBasic::textInfoCb(const prometheus_msgs::TextInfo::ConstPtr &msg)
 {
     this->text_info_.sec = msg->header.stamp.sec;
     this->text_info_.MessageType = msg->MessageType;
     this->text_info_.Message = msg->Message;
 
-    //发送到地面站
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_,this->robot_id), ground_station_ip);
+    // 发送到地面站
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_, this->robot_id), ground_station_ip);
 }
 
 void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &msg)
@@ -127,14 +132,16 @@ void UAVBasic::controlStateCb(const prometheus_msgs::UAVControlState::ConstPtr &
     this->uav_control_state_.pos_controller = msg->pos_controller;
     this->uav_control_state_.failsafe = msg->failsafe;
 
-    //发送到地面站
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), ground_station_ip);
-    else uav_control_state_ready = true;
+    // 发送到地面站
+    if (send_hz <= 0)
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_, this->robot_id), ground_station_ip);
+    else
+        uav_control_state_ready = true;
 }
 
 void UAVBasic::offsetPoseCb(const prometheus_msgs::OffsetPose::ConstPtr &msg)
 {
-    if(uav_state_.location_source == UAVState::LocationSource::GPS || uav_state_.location_source == UAVState::LocationSource::RTK)
+    if (uav_state_.location_source == UAVState::LocationSource::GPS || uav_state_.location_source == UAVState::LocationSource::RTK)
     {
         offset_pose_ = *msg;
     }
@@ -151,7 +158,7 @@ void UAVBasic::uavCmdPub(struct UAVCommand uav_cmd)
     uav_cmd_.header.stamp = ros::Time::now();
     uav_cmd_.Agent_CMD = uav_cmd.Agent_CMD;
     uav_cmd_.Move_mode = uav_cmd.Move_mode;
-    for(int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         uav_cmd_.position_ref[i] = uav_cmd.position_ref[i];
         uav_cmd_.velocity_ref[i] = uav_cmd.velocity_ref[i];
@@ -177,7 +184,7 @@ void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
     uav_command_.nsecs = msg->header.stamp.nsec;
     uav_command_.Agent_CMD = msg->Agent_CMD;
     uav_command_.Move_mode = msg->Move_mode;
-    if(uav_command_.Move_mode == UAVCommand::MoveMode::XYZ_POS_BODY)
+    if (uav_command_.Move_mode == UAVCommand::MoveMode::XYZ_POS_BODY)
         uav_command_.Move_mode = UAVCommand::MoveMode::XYZ_POS;
     // for(int i = 0; i < 3; i++)
     // {
@@ -195,8 +202,10 @@ void UAVBasic::uavCmdCb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
     uav_command_.longitude = msg->longitude;
     uav_command_.altitude = msg->altitude;
 
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),ground_station_ip);
-    else uav_command_ready = true;
+    if (send_hz <= 0)
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, uav_command_, this->robot_id), ground_station_ip);
+    else
+        uav_command_ready = true;
 }
 
 void UAVBasic::px4PosTargetCb(const mavros_msgs::PositionTarget::ConstPtr &msg)
@@ -208,8 +217,10 @@ void UAVBasic::px4PosTargetCb(const mavros_msgs::PositionTarget::ConstPtr &msg)
     uav_command_.velocity_ref[1] = msg->velocity.y;
     uav_command_.velocity_ref[2] = msg->velocity.z;
 
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),ground_station_ip);
-    else uav_command_ready = true;
+    if (send_hz <= 0)
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, uav_command_, this->robot_id), ground_station_ip);
+    else
+        uav_command_ready = true;
 }
 
 void UAVBasic::px4AttTargetCb(const mavros_msgs::AttitudeTarget::ConstPtr &msg)
@@ -221,8 +232,10 @@ void UAVBasic::px4AttTargetCb(const mavros_msgs::AttitudeTarget::ConstPtr &msg)
     // 油门？
     // px4_thrust_target = msg->thrust;
 
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,uav_command_,this->robot_id),ground_station_ip);
-    else uav_command_ready = true;
+    if (send_hz <= 0)
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, uav_command_, this->robot_id), ground_station_ip);
+    else
+        uav_command_ready = true;
 }
 
 void UAVBasic::uavSetupPub(struct UAVSetup uav_setup)
@@ -248,20 +261,19 @@ uint UAVBasic::getTimeStamp()
 void UAVBasic::uavTargetPub(struct WindowPosition window_position)
 {
     prometheus_msgs::Control cmd;
-    cmd.mouse = window_position.track_id == -1?prometheus_msgs::Control::MOUSE_LEFT:prometheus_msgs::Control::MOUSE_RIGHT;
-    cmd.x = window_position.origin_x/(float)window_position.window_position_x;
-    cmd.y = window_position.origin_y/(float)window_position.window_position_y;
+    cmd.mouse = window_position.track_id == -1 ? prometheus_msgs::Control::MOUSE_LEFT : prometheus_msgs::Control::MOUSE_RIGHT;
+    cmd.x = window_position.origin_x / (float)window_position.window_position_x;
+    cmd.y = window_position.origin_y / (float)window_position.window_position_y;
     this->uav_target_pub_.publish(cmd);
 }
 
 void UAVBasic::gimbalControlPub(struct GimbalControl gimbal_control)
 {
     // 判断控制模式
-    if(gimbal_control.rpyMode == GimbalControl::RPYMode::manual)
+    if (gimbal_control.rpyMode == GimbalControl::RPYMode::manual)
     {
         prometheus_msgs::GimbalControl gimbal_control_;
-        if(gimbal_control.roll == GimbalControl::ControlMode::angleCtl && gimbal_control.pitch == GimbalControl::ControlMode::angleCtl 
-            && gimbal_control.yaw == GimbalControl::ControlMode::angleCtl)
+        if (gimbal_control.roll == GimbalControl::ControlMode::angleCtl && gimbal_control.pitch == GimbalControl::ControlMode::angleCtl && gimbal_control.yaw == GimbalControl::ControlMode::angleCtl)
         {
             gimbal_control_.mode = 2;
             gimbal_control_.angle[0] = gimbal_control.rValue;
@@ -270,8 +282,8 @@ void UAVBasic::gimbalControlPub(struct GimbalControl gimbal_control)
             gimbal_control_.speed[0] = 0;
             gimbal_control_.speed[1] = 0;
             gimbal_control_.speed[2] = 0;
-        }else if(gimbal_control.roll == GimbalControl::ControlMode::velocityCtl && gimbal_control.pitch == GimbalControl::ControlMode::velocityCtl 
-            && gimbal_control.yaw == GimbalControl::ControlMode::velocityCtl)
+        }
+        else if (gimbal_control.roll == GimbalControl::ControlMode::velocityCtl && gimbal_control.pitch == GimbalControl::ControlMode::velocityCtl && gimbal_control.yaw == GimbalControl::ControlMode::velocityCtl)
         {
             gimbal_control_.mode = 1;
             gimbal_control_.angle[0] = 0;
@@ -279,14 +291,17 @@ void UAVBasic::gimbalControlPub(struct GimbalControl gimbal_control)
             gimbal_control_.angle[2] = 0;
             gimbal_control_.speed[0] = gimbal_control.rValue;
             gimbal_control_.speed[1] = gimbal_control.pValue;
-            if(gimbal_type == 3)
+            if (gimbal_type == 3)
                 gimbal_control_.speed[2] = -gimbal_control.yValue;
-            else 
+            else
                 gimbal_control_.speed[2] = gimbal_control.yValue;
-        }else return;
+        }
+        else
+            return;
 
         this->gimbal_control_pub_.publish(gimbal_control_);
-    }else if(gimbal_control.rpyMode == GimbalControl::RPYMode::home)
+    }
+    else if (gimbal_control.rpyMode == GimbalControl::RPYMode::home)
     {
         // 回中
         std_srvs::SetBool set_home;
@@ -340,15 +355,15 @@ void UAVBasic::gimbalStateCb(const prometheus_msgs::GimbalState::ConstPtr &msg)
     gimbal_state.rotorAngleTarget[0] = 0;
     gimbal_state.rotorAngleTarget[1] = 0;
     gimbal_state.rotorAngleTarget[2] = 0;
-    //发送到组播地址
-    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,gimbal_state),ground_station_ip);
+    // 发送到组播地址
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, gimbal_state), ground_station_ip);
 }
 
 void UAVBasic::customDataSegmentCb(const prometheus_msgs::CustomDataSegment::ConstPtr &msg)
 {
     int size = msg->datas.size();
     CustomDataSegment data;
-    for(int i = 0; i < size; i++)
+    for (int i = 0; i < size; i++)
     {
         prometheus_msgs::BasicDataTypeAndValue basic_data = msg->datas[i];
         switch (basic_data.type)
@@ -375,8 +390,10 @@ void UAVBasic::customDataSegmentCb(const prometheus_msgs::CustomDataSegment::Con
     custom_data_segment_.datas.clear();
     custom_data_segment_ = data.getCustomDataSegment();
 
-    if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->custom_data_segment_,this->robot_id), multicast_udp_ip);
-    else custom_data_segment_ready = true;
+    if (send_hz <= 0)
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->custom_data_segment_, this->robot_id), multicast_udp_ip);
+    else
+        custom_data_segment_ready = true;
 }
 
 void UAVBasic::customDataSegmentPub(struct CustomDataSegment_1 custom_data_segment)
@@ -384,10 +401,10 @@ void UAVBasic::customDataSegmentPub(struct CustomDataSegment_1 custom_data_segme
     int size = custom_data_segment.datas.size();
     prometheus_msgs::CustomDataSegment msg;
     CustomDataSegment datas(custom_data_segment);
-    for(int i = 0; i < size; i++)
+    for (int i = 0; i < size; i++)
     {
         prometheus_msgs::BasicDataTypeAndValue data;
-        
+
         std::string name = custom_data_segment.datas[i].name;
         uint8_t type = custom_data_segment.datas[i].type;
 
@@ -403,23 +420,23 @@ void UAVBasic::customDataSegmentPub(struct CustomDataSegment_1 custom_data_segme
         {
         case BasicDataTypeAndValue::Type::INTEGER:
             data.type = prometheus_msgs::BasicDataTypeAndValue::INTEGER;
-            datas.getValue(name,integer_value);
+            datas.getValue(name, integer_value);
             break;
         case BasicDataTypeAndValue::Type::BOOLEAN:
             data.type = prometheus_msgs::BasicDataTypeAndValue::BOOLEAN;
-            datas.getValue(name,boolean_value);
+            datas.getValue(name, boolean_value);
             break;
         case BasicDataTypeAndValue::Type::FLOAT:
             data.type = prometheus_msgs::BasicDataTypeAndValue::FLOAT;
-            datas.getValue(name,float_value);
+            datas.getValue(name, float_value);
             break;
         case BasicDataTypeAndValue::Type::DOUBLE:
             data.type = prometheus_msgs::BasicDataTypeAndValue::DOUBLE;
-            datas.getValue(name,double_value);
+            datas.getValue(name, double_value);
             break;
         case BasicDataTypeAndValue::Type::STRING:
             data.type = prometheus_msgs::BasicDataTypeAndValue::STRING;
-            datas.getValue(name,string_value);
+            datas.getValue(name, string_value);
             break;
         default:
             break;
@@ -435,27 +452,100 @@ void UAVBasic::customDataSegmentPub(struct CustomDataSegment_1 custom_data_segme
     this->custom_data_segment_pub_.publish(msg);
 }
 
+void UAVBasic::serialControlPub(const std::string &cmd)
+{
+    if (cmd.empty())
+        return;
+
+    // 准备要发送的命令
+    std::string command = cmd;
+    if (cmd.back() != '\n')
+    {
+        command += '\n';
+    }
+
+    std::vector<uint8_t> data(70, 0);
+    std::copy(command.begin(), command.end(), data.begin());
+
+    // 创建序列控制消息
+    mavlink_serial_control_t msg;
+    msg.device = SERIAL_CONTROL_DEV_SHELL;
+    msg.flags = (SERIAL_CONTROL_FLAG_RESPOND |
+                 SERIAL_CONTROL_FLAG_EXCLUSIVE |
+                 SERIAL_CONTROL_FLAG_MULTI);
+    msg.timeout = 1000;
+    msg.baudrate = 0;
+    msg.count = command.length();
+    std::copy(data.begin(), data.end(), msg.data);
+
+    // 将 mavlink_serial_control_t 消息编码为 mavlink_message_t 消息
+    mavlink_message_t mavlink_msg;
+    mavlink_msg_serial_control_encode(1, 240, &mavlink_msg, &msg); // 1 是系统ID，240 是组件ID
+
+    // 将 mavlink_message_t 转换为 mavros_msgs::Mavlink
+    mavros_msgs::Mavlink ros_msg;
+    message_convert::convert(mavlink_msg, ros_msg);
+
+    // 发布消息
+    this->serial_control_pub_.publish(ros_msg);
+}
+
+void UAVBasic::serialControlCb(const mavros_msgs::Mavlink::ConstPtr &msg)
+{
+    if (msg->msgid == MAVLINK_MSG_ID_SERIAL_CONTROL)
+    { // 检查消息类型
+        
+        // 首先将 mavros_msgs::Mavlink 转换为 mavlink_message_t
+        mavlink_message_t mavlink_msg;
+        message_convert::convert(*msg, mavlink_msg);
+        // 将 mavlink_message_t 消息解码为 mavlink_serial_control_t 消息
+        mavlink_serial_control_t serial_control_msg;
+        mavlink_msg_serial_control_decode(&mavlink_msg, &serial_control_msg);
+
+        // 处理 payload
+        if (serial_control_msg.count > 0)
+        {
+            std::vector<uint8_t> payload_data(serial_control_msg.data, serial_control_msg.data + serial_control_msg.count);
+            std::string feedback_string(payload_data.begin(), payload_data.end());
+            feedback_string.erase(std::remove(feedback_string.begin(), feedback_string.end(), '\0'), feedback_string.end());
+
+            // ROS_INFO("Feedback from device: %s", feedback_string.c_str());
+
+            // 发送到地面站
+            struct TextInfo text_info;
+            text_info.MessageType = TextInfo::MTG_INFO;
+            text_info.Message = feedback_string;
+            // 发送到地面站
+            this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, text_info, this->robot_id), ground_station_ip);
+        }
+        else
+        {
+            ROS_WARN("Received empty payload in MAVLink message.");
+        }
+    }
+}
+
 void UAVBasic::send(const ros::TimerEvent &time_event)
 {
     // std::cout << "uav_basic: " << uav_state_ready << " " << uav_command_ready << " " << uav_control_state_ready << std::endl;
-    if(uav_state_ready)
+    if (uav_state_ready)
     {
-        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_,this->robot_id), multicast_udp_ip);
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_state_, this->robot_id), multicast_udp_ip);
         this->uav_state_ready = false;
     }
-    if(uav_command_ready)
+    if (uav_command_ready)
     {
-        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP,this->uav_command_,this->robot_id),ground_station_ip);
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_command_, this->robot_id), ground_station_ip);
         this->uav_command_ready = false;
     }
-    if(uav_control_state_ready)
+    if (uav_control_state_ready)
     {
-        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_,this->robot_id), ground_station_ip);
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->uav_control_state_, this->robot_id), ground_station_ip);
         this->uav_control_state_ready = false;
     }
-    if(custom_data_segment_ready)
+    if (custom_data_segment_ready)
     {
-        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->custom_data_segment_,this->robot_id), multicast_udp_ip);
+        this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->custom_data_segment_, this->robot_id), multicast_udp_ip);
         this->custom_data_segment_ready = false;
     }
 }

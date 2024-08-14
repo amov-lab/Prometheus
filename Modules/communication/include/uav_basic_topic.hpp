@@ -24,6 +24,8 @@
 
 #include "rviz_reduce_the_frequency.hpp"
 
+#include "message_convert.hpp"
+
 class UAVBasic
 {
 public:
@@ -71,12 +73,18 @@ public:
     void customDataSegmentPub(struct CustomDataSegment_1 custom_data_segment);
 
     void gimbalControlPubTimer(const ros::TimerEvent &time_event);
+
+    // MAVLINK 消息： SERIAL_CONTROL(126)的发布/接收 
+    // 这里主要模拟一个QGC终端 MAVLINK CONSOLE 的实现
+    void serialControlPub(const std::string &cmd);
+    void serialControlCb(const mavros_msgs::Mavlink::ConstPtr &msg);
+
 private:
     ros::Subscriber uav_state_sub_;
 
-    //反馈信息
+    // 反馈信息
     ros::Subscriber text_info_sub_;
-    //控制状态
+    // 控制状态
     ros::Subscriber uav_control_state_sub_;
     ros::Publisher uav_cmd_pub_;
     ros::Publisher uav_setup_pub_;
@@ -90,8 +98,13 @@ private:
 
     ros::Subscriber offset_pose_sub_;
 
+    // 自定义消息
     ros::Subscriber custom_data_segment_sub_;
     ros::Publisher custom_data_segment_pub_;
+
+    // SERIAL_CONTROL(126)
+    ros::Subscriber serial_control_sub_;
+    ros::Publisher serial_control_pub_;
 
     ros::ServiceClient gimbal_home_client_;
     ros::ServiceClient gimbal_take_client_;
