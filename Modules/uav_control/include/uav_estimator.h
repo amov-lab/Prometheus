@@ -46,6 +46,7 @@ using namespace std;
 #define MOCAP_TIMEOUT 0.35                 
 #define GAZEBO_TIMEOUT 0.1                    
 #define T265_TIMEOUT 0.3
+#define VIOBOT_TIMEOUT 0.3
 #define MID360_TIMEOUT 1.0
 #define UWB_TIMEOUT 0.1
 #define GPS_TIMEOUT 1.0
@@ -78,6 +79,7 @@ class UAV_estimator
         ros::Subscriber px4_range_sub;
         ros::Subscriber mocap_sub;
         ros::Subscriber t265_sub;
+        ros::Subscriber viobot_sub;
         ros::Subscriber mid360_sub;
         ros::Subscriber gazebo_sub;
         ros::Subscriber uwb_sub;
@@ -122,18 +124,26 @@ class UAV_estimator
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose
         geometry_msgs::PoseStamped t265_pose;          // t265 pose
-        geometry_msgs::PoseStamped mid360_pose;          // t265 pose
+        geometry_msgs::PoseStamped viobot_pose;         // viobot pose
+        geometry_msgs::PoseStamped mid360_pose;          // mid360 pose
         // geometry_msgs::PoseStamped uwb_pose;           // uwb pose
         geometry_msgs::PoseStamped vins_pose;           // vins pose
         //---------------------------------------UWB定位相关------------------------------------------
         Eigen::Vector3d pos_drone_uwb; //无人机当前位置 (UWB)
         Eigen::Quaterniond q_uwb;
         Eigen::Vector3d Euler_uwb; //无人机当前姿态 (UWB)
+
+        Eigen::Quaterniond q_viobot;
+        Eigen::Vector3d Euler_viobot; //无人机当前姿态 (viobot)
+
+
         int odom_state,last_odom_state{10};
+
         
         ros::Time get_mocap_stamp{0};
         ros::Time get_gazebo_stamp{0};
         ros::Time get_t265_stamp{0};
+        ros::Time get_viobot_stamp{0};
         ros::Time get_mid360_stamp{0};
         ros::Time get_uwb_stamp{0};
         ros::Time get_gps_stamp{0};
@@ -162,6 +172,7 @@ class UAV_estimator
         void uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg);
         void fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void t265_cb(const nav_msgs::Odometry::ConstPtr &msg);
+        void viobot_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void mid360_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void vins_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
         void px4_state_cb(const mavros_msgs::State::ConstPtr &msg);
