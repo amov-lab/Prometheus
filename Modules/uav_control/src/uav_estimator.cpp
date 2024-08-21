@@ -80,6 +80,10 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh)
         // 【订阅】T265估计位置
         t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 1, &UAV_estimator::t265_cb, this);
     }
+    else if (location_source == prometheus_msgs::UAVState::OPTICAL_FLOW)
+    {
+        // 光流定位直连飞控，飞控积分获得位置，在Prometheus中并不做操作
+    }
     else if (location_source == prometheus_msgs::UAVState::viobot)
     {
         // 【订阅】viobot估计位置
@@ -881,6 +885,9 @@ void UAV_estimator::printf_uav_state()
     case prometheus_msgs::UAVState::T265:
         cout << GREEN << "Location: [ T265 ] " << TAIL << endl;
         cout << GREEN << "T265_pos [X Y Z] : " << t265_pose.pose.position.x << " [ m ] " << t265_pose.pose.position.y << " [ m ] " << t265_pose.pose.position.z << " [ m ] " << TAIL << endl;
+    case prometheus_msgs::UAVState::OPTICAL_FLOW:
+        cout << GREEN << "Location: [ OPTICAL_FLOW ] " << TAIL << endl;
+        cout << GREEN << "OPTICAL_FLOW_pos [X Y Z] : " << uav_state.position[0] << " [ m ] " << uav_state.position[1] << " [ m ] " << uav_state.position[2] << " [ m ] " << TAIL << endl;
         break;
     case prometheus_msgs::UAVState::viobot:
         cout << GREEN << "Location: [ viobot ] " << TAIL << endl;
@@ -1008,6 +1015,10 @@ void UAV_estimator::printf_param()
     else if (location_source == prometheus_msgs::UAVState::T265)
     {
         cout << GREEN << "location_source: [T265] " << TAIL << endl;
+    }
+    else if (location_source == prometheus_msgs::UAVState::OPTICAL_FLOW)
+    {
+        cout << GREEN << "location_source: [OPTICAL_FLOW] " << TAIL << endl;
     }
     else if (location_source == prometheus_msgs::UAVState::viobot)
     {
