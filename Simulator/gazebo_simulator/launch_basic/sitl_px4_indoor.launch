@@ -9,7 +9,7 @@
     <arg name="vehicle" default="p230"/>
 
 	<!-- 仿真模型，对应不同的模型文件 -->
-	<env name="PX4_SIM_MODEL" value="$(arg vehicle)" />
+	<env name="PX4_SIM_MODEL" value="$(arg vehicle)_indoor" />
 	<!-- ekf2_vision 使用外部输入（gazebo真值、slam等，即无GPS情况）作为定位来源-->
     <env name="PX4_ESTIMATOR" value="ekf2_vision" />
 	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->

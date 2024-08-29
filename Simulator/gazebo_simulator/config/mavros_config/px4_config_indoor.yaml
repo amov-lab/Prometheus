@@ -22,6 +22,7 @@ time:
   time_ref_source: "fcu"  # time_reference source
   timesync_mode: MAVLINK
   timesync_avg_alpha: 0.6 # timesync averaging factor
+  publish_sim_time: false
 
 # --- mavros plugins (alphabetical order) ---
 
@@ -68,7 +69,7 @@ imu:
 local_position:
   frame_id: "map"
   tf:
-    send: true
+    send: false
     frame_id: "map"
     child_frame_id: "map_base_link"
     send_fcu: false

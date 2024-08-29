@@ -7,7 +7,7 @@
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
             <arg name="world_name" value="$(arg world)"/>
 			<!-- 使用激光雷达需要设置为true -->
-			<arg name="use_sim_time" value="false"/>
+			<arg name="use_sim_time" value="true"/>
         </include>
     </group>
 
