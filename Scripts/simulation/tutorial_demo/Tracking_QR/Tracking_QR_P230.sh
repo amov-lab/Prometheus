@@ -12,7 +12,7 @@ PROMETHEUS_GAZEBO_PATH=$(rospack find prometheus_gazebo)
 WORLD_FILE="$PROMETHEUS_GAZEBO_PATH/gazebo_worlds/detection_worlds/Tracking_QR/Tracking_QR.world"
 
 gnome-terminal --window -e 'bash -c "roscore; exec bash"' \
---tab -e 'bash -c "sleep 3; roslaunch prometheus_gazebo sitl_indoor_1uav_P450.launch vehicle:='p450_D435i' d435i_enable:=true world:='$WORLD_FILE'; exec bash"' \
+--tab -e 'bash -c "sleep 3; roslaunch prometheus_gazebo sitl_indoor_1uav_P230.launch vehicle:='p230_D435i' d435i_enable:=true world:='$WORLD_FILE'; exec bash"' \
 --tab -e 'bash -c "sleep 6; roslaunch prometheus_uav_control uav_control_main_indoor.launch; exec bash"' \
 --tab -e 'bash -c "sleep 8; roslaunch prometheus_demo aruco_tracking_control.launch; exec bash"' \
 

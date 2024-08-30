@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
-  <model name='p230_D435i'>
+  <model name='p230_matlab'>
     <!-- p230 body -->
     <link name='base_link'>
       <pose>0 0 0 0 0 0</pose>
@@ -17,7 +17,7 @@
         </inertia>
       </inertial>
       <collision name='base_link_inertia_collision'>
-        <pose>0 0 0.05 0 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <geometry>
           <box>
             <size>0.10 0.10 0.09</size>
@@ -88,7 +88,7 @@
       </axis>
     </joint>
     <link name='rotor_0'>
-			<pose>0.088388 -0.088388 0.143 0 0 0</pose>
+			<pose>0.0825 -0.08 0.1 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -126,6 +126,12 @@
             <uri>model://p230/meshes/p230_ccw.stl</uri>
           </mesh>
         </geometry>
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -148,7 +154,7 @@
       </axis>
     </joint>
     <link name='rotor_1'>
-			<pose>-0.088388 0.088388 0.143 0 0 0</pose>
+			<pose>-0.0825 0.08 0.1 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -186,6 +192,12 @@
             <uri>model://p230/meshes/p230_ccw.stl</uri>
           </mesh>
         </geometry>
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -208,7 +220,7 @@
       </axis>
     </joint>
     <link name='rotor_2'>
-			<pose>0.088388 0.088388 0.143 0 0 0</pose>
+			<pose>0.0825 0.08 0.1 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -246,6 +258,12 @@
             <uri>model://p230/meshes/p230_cw.stl</uri>
           </mesh>
         </geometry>
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -268,7 +286,7 @@
       </axis>
     </joint>
     <link name='rotor_3'>
-			<pose>-0.088388 -0.088388 0.143 0 0 0</pose>
+			<pose>-0.0825 -0.08 0.1 0 0 0</pose>
       <inertial>
         <pose>0 0 0 0 0 0</pose>
         <mass>0.005</mass>
@@ -306,6 +324,12 @@
             <uri>model://p230/meshes/p230_cw.stl</uri>
           </mesh>
         </geometry>
+        <material>
+          <script>
+            <name>Gazebo/FlatBlack</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
       </visual>
       <gravity>1</gravity>
       <velocity_decay/>
@@ -336,46 +360,6 @@
       <child>gps::link</child>
       <parent>base_link</parent>
     </joint>
-
-    <include>
-      <uri>model://D435i</uri>
-      <pose>0.07 0.0 -0.015 0.0 0.35 0.0</pose>
-      <plugin name="/" filename="librealsense_gazebo_plugin.so">
-       <depthUpdateRate>30</depthUpdateRate>
-       <colorUpdateRate>30</colorUpdateRate>
-       <infraredUpdateRate>30</infraredUpdateRate>
-       <depthTopicName>/uav{{ mavlink_id }}/camera/depth/image_raw</depthTopicName>
-       <depthCameraInfoTopicName>/uav{{ mavlink_id }}/camera/depth/camera_info</depthCameraInfoTopicName>
-       <colorTopicName>/uav{{ mavlink_id }}/camera/color/image_raw</colorTopicName>
-       <colorCameraInfoTopicName>/uav{{ mavlink_id }}/camera/color/camera_info</colorCameraInfoTopicName>
-       <infrared1TopicName>/uav{{ mavlink_id }}/camera/infra1/image_raw</infrared1TopicName>
-       <infrared1CameraInfoTopicName>/uav{{ mavlink_id }}/camera/infra1/camera_info</infrared1CameraInfoTopicName>
-       <infrared2TopicName>/uav{{ mavlink_id }}/camera/infra2/image_raw</infrared2TopicName>
-       <infrared2CameraInfoTopicName>/uav{{ mavlink_id }}/camera/infra2/camera_info</infrared2CameraInfoTopicName>
-       <colorOpticalframeName>/uav{{ mavlink_id }}/camera_link</colorOpticalframeName>
-       <depthOpticalframeName>/uav{{ mavlink_id }}/camera_depth_frame</depthOpticalframeName>
-       <infrared1OpticalframeName>/uav{{ mavlink_id }}/camera_ired1_frame</infrared1OpticalframeName>
-       <infrared2OpticalframeName>/uav{{ mavlink_id }}/camera_ired2_frame</infrared2OpticalframeName>
-       <rangeMinDepth>0.2</rangeMinDepth>
-       <rangeMaxDepth>10.0</rangeMaxDepth>
-       <pointCloud>true</pointCloud>
-       <pointCloudTopicName>/uav{{ mavlink_id }}/camera/depth/color/points</pointCloudTopicName>
-       <pointCloudCutoff>0.25</pointCloudCutoff>
-       <pointCloudCutoffMax>9.0</pointCloudCutoffMax>
-     </plugin>
-    </include>
-    <joint name="D435i_joint" type="fixed">
-      <child>D435i::camera_link</child>
-      <parent>base_link</parent>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <upper>0</upper>
-          <lower>0</lower>
-        </limit>
-      </axis>
-    </joint>
-
     <plugin name='rosbag' filename='libgazebo_multirotor_base_plugin.so'>
       <robotNamespace></robotNamespace>
       <linkName>base_link</linkName>
@@ -472,18 +456,16 @@
       <magSubTopic>/mag</magSubTopic>
       <baroSubTopic>/baro</baroSubTopic>
       <mavlink_addr>INADDR_ANY</mavlink_addr>
-      <mavlink_udp_port>{{ mavlink_udp_port }}</mavlink_udp_port>
-      <serialEnabled>{{ serial_enabled }}</serialEnabled>
-      <serialDevice>{{ serial_device }}</serialDevice>
-      <baudRate>{{ serial_baudrate }}</baudRate>
+      <mavlink_udp_port>14560</mavlink_udp_port>
+      <serialEnabled>false</serialEnabled>
+      <serialDevice>/dev/ttyACM0</serialDevice>
+      <baudRate>921600</baudRate>
       <qgc_addr>INADDR_ANY</qgc_addr>
       <!-- mavlink_tcp_port: 4560 + ID-1 -->
-      <mavlink_tcp_port>{{ mavlink_tcp_port }}</mavlink_tcp_port>
+      <mavlink_tcp_port>4560</mavlink_tcp_port>
       <!-- <mavlink_udp_port>14560</mavlink_udp_port> -->
-      <hil_mode>{{ hil_mode }}</hil_mode>
+      <hil_mode>false</hil_mode>
       <hil_state_level>false</hil_state_level>
-      <send_vision_estimation>0</send_vision_estimation>
-      <send_odometry>1</send_odometry>
       <enable_lockstep>true</enable_lockstep>
       <use_tcp>true</use_tcp>
       <motorSpeedCommandPubTopic>/gazebo/command/motor_speed</motorSpeedCommandPubTopic>
@@ -542,11 +524,83 @@
       <updateRate>50.0</updateRate>
       <bodyName>base_link</bodyName>
       <!-- 默认是1号机 -->
-      <topicName>/uav{{ mavlink_id }}/prometheus/ground_truth</topicName>
+      <topicName>/uav1/prometheus/ground_truth</topicName>
       <gaussianNoise>0.00</gaussianNoise>
       <frameName>world</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
       <rpyOffsets>0 0 0</rpyOffsets>
     </plugin>
+
+    <!-- 激光雷达 默认0.4 -->
+    <link name="lidar_link">
+      <pose>0 0 0.05 0 0.0 0</pose>
+      <!-- 物理参数设置 -->
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>4.15e-6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.407e-6</iyy>
+          <iyz>0</iyz>
+          <izz>2.407e-6</izz>
+        </inertia>
+      </inertial>
+      <!-- 显示参数设置 -->
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.03</size>
+          </box>
+        </geometry>
+      </visual>
+      <!-- 传感器参数设置 -->
+      <sensor name="2Dlaser" type="ray">
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <!-- UST-20LX 视场为270度 -->
+              <min_angle>-3.14</min_angle>
+              <max_angle>3.14</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.5</min>
+            <max>5</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.000</stddev>
+          </noise>
+        </ray>
+        <plugin name="laser" filename="libRayPlugin.so" />
+        <plugin name="2Dlidar" filename="libgazebo_ros_laser.so">
+          <topicName>/uav1/scan</topicName>
+          <frameName>/uav1/lidar_link</frameName>
+        </plugin>
+        <always_on>1</always_on>
+        <!-- 更新频率 -->
+        <update_rate>20</update_rate>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+
+    <joint name="2Dlidar_joint" type="fixed">
+      <child>lidar_link</child>
+      <parent>base_link</parent>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <upper>0</upper>
+          <lower>0</lower>
+        </limit>
+      </axis>
+    </joint>
+
   </model>
 </sdf>

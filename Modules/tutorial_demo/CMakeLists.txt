@@ -52,7 +52,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  advanced/autonomous_landing/include
+  advanced/include
   ${catkin_INCLUDE_DIRS}
   ../common/include
   ../communication/include
@@ -62,20 +62,6 @@ include_directories(
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
-# add_executable(autonomous_landing autonomous_landing/autonomous_landing.cpp)
-# target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
-
-#add_executable(waypoint_tracking waypoint_tracking/waypoint_tracking.cpp)
-#target_link_libraries(waypoint_tracking ${catkin_LIBRARIES})
-
-#add_executable(object_tracking object_tracking/object_tracking.cpp)
-#target_link_libraries(object_tracking ${catkin_LIBRARIES})
-
-#add_executable(takeoff takeoff/takeoff.cpp)
-#target_link_libraries(takeoff ${catkin_LIBRARIES})
-
-#add_executable(formation_control formation_control/formation_control.cpp)
-#target_link_libraries(formation_control ${catkin_LIBRARIES})
 
 add_executable(takeoff_land basic/takeoff_land/src/takeoff_land.cpp)
 target_link_libraries(takeoff_land ${catkin_LIBRARIES})
@@ -100,15 +86,6 @@ target_link_libraries(waypoint_pos_control ${catkin_LIBRARIES})
 
 add_executable(formation_control advanced/formation_control/src/formation_control.cpp)
 target_link_libraries(formation_control ${catkin_LIBRARIES})
-
-add_executable(autonomous_landing advanced/autonomous_landing/src/autonomous_landing.cpp)
-target_link_libraries(autonomous_landing ${catkin_LIBRARIES})
-
-add_executable(siamrpn_track advanced/siamrpn_track/src/siamrpn_track.cpp)
-target_link_libraries(siamrpn_track ${catkin_LIBRARIES})
-
-add_executable(find_aruco_marker advanced/find_aruco_marker/src/find_aruco_marker.cpp)
-target_link_libraries(find_aruco_marker ${catkin_LIBRARIES})
 
 add_executable(yolov5_tracking advanced/yolov5_tracking/src/yolov5_tracking.cpp)
 target_link_libraries(yolov5_tracking ${catkin_LIBRARIES})

@@ -22,3 +22,6 @@ Target[] targets
 
 ## 当前检测的兴趣区域，ROIs
 ROI[] rois
+
+##focusing solely on tracking , without considering detection
+int32 no_track_frame_count

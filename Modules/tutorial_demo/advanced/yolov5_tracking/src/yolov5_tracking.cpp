@@ -135,7 +135,7 @@ int main(int argc, char **argv)
             // g_command_now.velocity_ref[0] = kpx_track * (pos_body_enu_frame[0] - tracking_delta[0]);
             // g_command_now.velocity_ref[1] = kpy_track * (pos_body_enu_frame[1] - tracking_delta[1]);
             // g_command_now.velocity_ref[2] = kpz_track * (pos_body_enu_frame[2] - tracking_delta[2]);
-            g_command_now.velocity_ref[0] = 0.5 * (g_Detection_raw.pz - 2.0);
+            g_command_now.velocity_ref[0] = 0.5 * (g_Detection_raw.pz - 1.0);
             g_command_now.velocity_ref[1] = -0.8 * g_Detection_raw.px;
             if(g_Detection_raw.los_ay <= 0)
             {
