@@ -56,10 +56,13 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication)
     this->custom_data_segment_sub_ = nh.subscribe<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(this->robot_id) + "/prometheus/set_customdatasegment", 10, &UAVBasic::customDataSegmentCb, this);
     // 【发布】发布该ROS节点中，用于接收到其他设备(无人机、地面站等)发过来的自定义消息后转为ROS话题
     this->custom_data_segment_pub_ = nh.advertise<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(this->robot_id) + "/prometheus/customdatasegment", 1);
-    //
+    // 【订阅】通过mavlink发送 SERIAL_CONTROL(126)后的反馈结果
     this->serial_control_sub_ = nh.subscribe<mavros_msgs::Mavlink>("/uav" + std::to_string(this->robot_id) + "/mavlink/from", 10, &UAVBasic::serialControlCb, this);
+    // 【发布】通过mavlink发送 SERIAL_CONTROL(126)
     this->serial_control_pub_ = nh.advertise<mavros_msgs::Mavlink>("/uav" + std::to_string(this->robot_id) + "/mavlink/to", 10);
-    
+    // 【发布】发布修改成功后ROS参数
+    this->param_settings_pub_ = nh.advertise<prometheus_msgs::ParamSettings>("/uav" + std::to_string(this->robot_id) + "/prometheus/param_settings", 10);
+
     if (send_hz > 0)
     {
         send_timer = nh.createTimer(ros::Duration(1.0 / send_hz), &UAVBasic::send, this);
@@ -523,6 +526,19 @@ void UAVBasic::serialControlCb(const mavros_msgs::Mavlink::ConstPtr &msg)
             ROS_WARN("Received empty payload in MAVLink message.");
         }
     }
+}
+
+void UAVBasic::paramSettingsPub(struct ParamSettings param_settings)
+{
+    prometheus_msgs::ParamSettings param_settings_msg;
+    int size = param_settings.params.size();
+    for(int i = 0; i < size; i++)
+    {
+        struct Param param = param_settings.params[i];
+        param_settings_msg.param_name.push_back(param.param_name);
+        param_settings_msg.param_value.push_back(param.param_value);
+    }
+    this->param_settings_pub_.publish(param_settings_msg);
 }
 
 void UAVBasic::send(const ros::TimerEvent &time_event)

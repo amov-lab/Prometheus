@@ -691,7 +691,9 @@ struct ParamSettings
         UAVCONTROL = 1,
         UAVCOMMUNICATION = 2,
         SWARMCONTROL = 3,
-        UAVCOMMANDPUB = 4
+        UAVCOMMANDPUB = 4,
+        SEARCH = 5,
+        SEARCHMODIFY = 6
     };
     std::vector<Param> params;
 };

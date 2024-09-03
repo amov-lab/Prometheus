@@ -61,6 +61,7 @@ add_message_files(
   Control.msg
   BasicDataTypeAndValue.msg
   CustomDataSegment.msg
+  ParamSettings.msg
 
   #spirecv-ros msg
   ROI.msg

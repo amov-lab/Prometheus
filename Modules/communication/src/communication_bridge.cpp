@@ -1,6 +1,8 @@
 #include "communication_bridge.hpp"
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include "param_manager.hpp"
+
 std::mutex g_m;
 std::mutex g_uav_basic;
 // boost::shared_mutex g_m;
@@ -71,7 +73,6 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
 
     heartbeat_check_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::checkHeartbeatState, this);
     
-    // this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
 }
 
 CommunicationBridge::~CommunicationBridge()
@@ -80,10 +81,6 @@ CommunicationBridge::~CommunicationBridge()
         delete this->uav_basic_;
     if (this->ugv_basic_ != NULL)
         delete this->ugv_basic_;
-    if (this->autonomous_landing_ != NULL)
-        delete this->autonomous_landing_;
-    if (this->object_tracking_ != NULL)
-        delete this->object_tracking_;
     if (this->swarm_control_ != NULL)
         delete this->swarm_control_;
 }
@@ -194,11 +191,6 @@ void CommunicationBridge::recvData(struct GimbalControl gimbal_control)
             (*it).second->gimbalControlPub(gimbal_control);
         }
     }
-    // if (this->gimbal_basic_ == NULL)
-    // {
-    //     return;
-    // }
-    // this->gimbal_basic_->gimbalControlPub(gimbal_control);
 }
 void CommunicationBridge::recvData(struct GimbalService gimbal_service)
 {
@@ -220,24 +212,10 @@ void CommunicationBridge::recvData(struct GimbalService gimbal_service)
             (*it).second->gimbalServer(gimbal_service);
         }
     }
-    // if (this->autonomous_landing_ == NULL)
-    // {
-    //     return;
-    // }
-    // if (gimbal_service.service == gimbal_service.search)
-    //     this->autonomous_landing_->gimbalSearchServer(gimbal_service.data);
-    // else if (gimbal_service.service == gimbal_service.record_video)
-    //     this->autonomous_landing_->gimbalRecordVideoServer(gimbal_service.data);
-    // else if (gimbal_service.service == gimbal_service.track_mode)
-    //     this->autonomous_landing_->gimbalTrackModeServer(gimbal_service.data);
 }
 void CommunicationBridge::recvData(struct GimbalParamSet param_set)
 {
-    if (this->autonomous_landing_ == NULL)
-    {
-        return;
-    }
-    this->autonomous_landing_->gimbalParamSetServer(param_set);
+
 }
 void CommunicationBridge::recvData(struct WindowPosition window_position)
 {
@@ -253,11 +231,6 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
         {
             this->uav_basic_->uavTargetPub(window_position);
         }
-        if (this->gimbal_basic_ == NULL)
-        {
-            return;
-        }
-        this->gimbal_basic_->gimbalWindowPositionPub(window_position);
     }
 }
 void CommunicationBridge::recvData(struct UGVCommand ugv_command)
@@ -331,6 +304,49 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         }
         return;
     }
+    // 是否是搜索
+    if(param_settings.param_module == ParamSettings::ParamModule::SEARCH)
+    {
+        if(param_settings.params.empty()){
+            sendTextInfo(TextInfo::MTG_INFO, "parameter search failed...");
+            return;
+        }
+        ParamManager p(nh_);
+        std::unordered_map<std::string, std::string> param_map = p.getParams(param_settings.params.begin()->param_name);
+        struct ParamSettings params;
+        params.param_module = ParamSettings::ParamModule::SEARCH;
+        for (const auto& pair : param_map) {
+            struct Param param;
+            param.param_name = pair.first;
+            param.param_value = pair.second;
+            params.params.push_back(param);
+        }
+        // 发送
+        sendMsgByUdp(encodeMsg(Send_Mode::UDP, params), udp_ip);
+        usleep(1000);
+        return;
+    }else if(param_settings.param_module == ParamSettings::ParamModule::SEARCHMODIFY)
+    {
+        if(param_settings.params.empty()){
+            return;
+        }
+        ParamManager p(nh_);   
+        if(p.setParam(param_settings.params.begin()->param_name, param_settings.params.begin()->param_value))
+        {
+            sendTextInfo(TextInfo::MTG_INFO, "parameter search modify success...");
+            // 并且发布话题出来告诉其他节点
+            if(this->uav_basic_)
+            {
+                this->uav_basic_->paramSettingsPub(param_settings);
+            }
+            return;
+        }else
+        {
+            sendTextInfo(TextInfo::MTG_INFO, "parameter search modify failed...");
+            return;
+        }
+    }
+
     for (int i = 0; i < param_settings.params.size(); i++)
     {
         bool is = false;
@@ -399,19 +415,11 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
 }
 void CommunicationBridge::recvData(struct MultiBsplines multi_bsplines)
 {
-    if (this->ego_planner_ == NULL)
-    {
-        return;
-    }
-    this->ego_planner_->swarmTrajPub(multi_bsplines);
+    
 }
 void CommunicationBridge::recvData(struct Bspline bspline)
 {
-    if (this->ego_planner_ == NULL)
-    {
-        return;
-    }
-    this->ego_planner_->oneTrajPub(bspline);
+    
 }
 // 此处为 地面站-->机载端 机载端<->机载端
 void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segment)
@@ -431,10 +439,7 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
 
 void CommunicationBridge::recvData(struct Goal goal)
 {
-    if (this->ego_planner_ != NULL)
-    {
-        this->ego_planner_->goalPub(goal);
-    }
+   
 }
 
 // 根据协议中MSG_ID的值，将数据段数据转化为正确的结构体
@@ -799,17 +804,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         }
         if (this->uav_basic_ != NULL)
         {
-            if (this->gimbal_basic_ == NULL)
-            {
-                this->gimbal_basic_ = new GimbalBasic(this->nh_, (Communication *)this);
-            }
-            // 自主降落
-            if (this->autonomous_landing_ == NULL)
-            {
-                this->autonomous_landing_ = new AutonomousLanding(this->nh_, (Communication *)this);
-            }
-            sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current autonomous landing mode.");
-            system(OPENAUTONOMOUSLANDING);
+            
         }
     }
     // 目标识别与跟踪模式
@@ -817,16 +812,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
     {
         if (this->uav_basic_ != NULL)
         {
-            if (this->gimbal_basic_ == NULL)
-            {
-                this->gimbal_basic_ = new GimbalBasic(this->nh_, (Communication *)this);
-            }
-            if (this->object_tracking_ == NULL)
-            {
-                this->object_tracking_ = new ObjectTracking(this->nh_, (Communication *)this);
-            }
-            sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current objectTracking mode.");
-            system(OPENOBJECTTRACKING);
+            
         }
     }
     else if (mode_selection.mode == ModeSelection::Mode::CUSTOMMODE)
@@ -856,30 +842,11 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
-        if (this->trajectoy_control_ != NULL)
-        {
-            delete this->trajectoy_control_;
-            this->trajectoy_control_ = NULL;
-        }
-        if (this->ego_planner_ == NULL)
-        {
-            this->ego_planner_ = new EGOPlannerSwarm(this->nh_);
-        }
-        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current EGO planner swarm mode.");
-        system(OPENEGOPLANNER);
+       
     }
     else if (mode_selection.mode == ModeSelection::Mode::TRAJECTOYCONTROL)
     {
-        if (this->ego_planner_ != NULL)
-        {
-            delete this->ego_planner_;
-            this->ego_planner_ = NULL;
-        }
-        if (this->trajectoy_control_ == NULL)
-        {
-            this->trajectoy_control_ = new EGOPlannerSwarm(this->nh_, ROBOT_ID, udp_ip);
-        }
-        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current trajectoy control mode.");
+        
     }
     
     this->current_mode_ = mode_selection.mode;
@@ -982,30 +949,15 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
     }
     else if (mode_selection.mode == ModeSelection::Mode::AUTONOMOUSLANDING)
     {
-        if (this->autonomous_landing_ != NULL)
-        {
-            delete this->autonomous_landing_;
-            this->autonomous_landing_ = NULL;
-            system(CLOSEOTHERMODE);
-        }
+        
     }
     else if (mode_selection.mode == ModeSelection::Mode::OBJECTTRACKING)
     {
-        if (this->object_tracking_ != NULL)
-        {
-            delete this->object_tracking_;
-            this->object_tracking_ = NULL;
-            system(CLOSEOTHERMODE);
-        }
+        
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
-        if (this->object_tracking_ != NULL)
-        {
-            delete this->ego_planner_;
-            this->ego_planner_ = NULL;
-            system(CLOSEEGOPLANNER);
-        }
+        
     }
 }
 

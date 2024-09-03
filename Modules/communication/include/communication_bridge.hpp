@@ -12,10 +12,6 @@
 #include "uav_basic_topic.hpp"
 #include "ugv_basic_topic.hpp"
 #include "swarm_control_topic.hpp"
-#include "autonomous_landing_topic.hpp"
-#include "gimbal_basic_topic.hpp"
-#include "object_tracking_topic.hpp"
-#include "ego_planner_swarm_topic.hpp"
 
 #include <mutex>
 #include <condition_variable>
@@ -25,24 +21,6 @@
 #include "mavros_msgs/Waypoint.h"
 #include "mavros_msgs/WaypointList.h"
 
-//uav control
-// #define OPENUAVBASIC ""//"gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"
-// #define CLOSEUAVBASIC ""//"gnome-terminal -- rosnode kill /joy_node | gnome-terminal -- rosnode kill /uav_control_main_1"
-//rhea control
-// #define OPENUGVBASIC ""
-// #define CLOSEUGVBASIC ""
-//集群
-// #define OPENSWARMCONTROL ""
-// #define CLOSESWARMCONTROL ""
-//自主降落
-#define OPENAUTONOMOUSLANDING ""
-#define CLOSEAUTONOMOUSLANDING ""
-//目标识别与追踪
-#define OPENOBJECTTRACKING ""
-#define CLOSEOBJECTTRACKING ""
-//EGO Planner
-#define OPENEGOPLANNER ""
-#define CLOSEEGOPLANNER ""
 
 //杀掉除了通信节点和主节点的其他节点
 //分为两种情况  
@@ -152,12 +130,6 @@ private:
     // std::vector<UAVBasic*> swarm_control_simulation_;
     std::map<int, UAVBasic *> swarm_control_simulation_;
     std::map<int, UGVBasic *> swarm_ugv_control_simulation_;
-    AutonomousLanding *autonomous_landing_ = NULL;
-    GimbalBasic *gimbal_basic_ = NULL;
-    ObjectTracking *object_tracking_ = NULL;
-
-    EGOPlannerSwarm *ego_planner_ = NULL;
-    EGOPlannerSwarm *trajectoy_control_ = NULL;
 
     int current_mode_ = 0;
 

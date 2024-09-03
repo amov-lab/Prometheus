@@ -20,6 +20,7 @@
 // 自定义消息
 #include "prometheus_msgs/CustomDataSegment.h"
 #include "prometheus_msgs/BasicDataTypeAndValue.h"
+#include "prometheus_msgs/ParamSettings.h"
 #include "custom_data_segment.hpp"
 
 #include "rviz_reduce_the_frequency.hpp"
@@ -79,6 +80,8 @@ public:
     void serialControlPub(const std::string &cmd);
     void serialControlCb(const mavros_msgs::Mavlink::ConstPtr &msg);
 
+    void paramSettingsPub(struct ParamSettings param_settings);
+
 private:
     ros::Subscriber uav_state_sub_;
 
@@ -105,6 +108,8 @@ private:
     // SERIAL_CONTROL(126)
     ros::Subscriber serial_control_sub_;
     ros::Publisher serial_control_pub_;
+
+    ros::Publisher param_settings_pub_;
 
     ros::ServiceClient gimbal_home_client_;
     ros::ServiceClient gimbal_take_client_;
