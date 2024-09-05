@@ -8,8 +8,9 @@ sleep 1.5s
 
 # 获取 prometheus_gazebo 的路径
 PROMETHEUS_GAZEBO_PATH=$(rospack find prometheus_gazebo)
-# 二维码 world 文件路径
-WORLD_FILE="$PROMETHEUS_GAZEBO_PATH/gazebo_worlds/detection_worlds/KKSwarmCar/kkcarair.world"
+#  world 文件路径
+#WORLD_FILE="$PROMETHEUS_GAZEBO_PATH/gazebo_worlds/detection_worlds/KKSwarmCar/kkcarair.world"
+WORLD_FILE="$PROMETHEUS_GAZEBO_PATH/gazebo_worlds/detection_worlds/multi_person.world"
 
 gnome-terminal --window -e 'bash -c "roscore; exec bash"' \
 --tab -e 'bash -c "sleep 3; roslaunch prometheus_gazebo sitl_indoor_1uav_P450.launch vehicle:='p450_D435i' d435i_enable:=true world:='$WORLD_FILE'; exec bash"' \
@@ -18,7 +19,7 @@ gnome-terminal --window -e 'bash -c "roscore; exec bash"' \
 
 echo “prometheus_yolov5_tracking  successfully started”
 # 两个roslauch之间需要间隔一段时间，否则会相互抢占roscore,导致其中一个roslaunch失败,报runid错误
-sleep 0.7s  
+sleep 1.0s  
 
 gnome-terminal -- bash -c "roslaunch spirecv_ros car_detection_with_d435i.launch; exec bash"
 

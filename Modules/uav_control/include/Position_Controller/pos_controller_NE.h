@@ -303,9 +303,9 @@ void pos_controller_NE::printf_param()
     cout << GREEN << "pxy_int_max   : "<< ctrl_param.int_max[0]<< TAIL <<endl;
     cout << GREEN << "pz_int_max   : "<< ctrl_param.int_max[2]<< TAIL <<endl;
 
-    cout << GREEN << "ne_gain/Kp_xy   : "<< ctrl_param.Kp<< TAIL <<endl;
+    cout << GREEN << "ne_gain/Kp_xy   : "<< ctrl_param.Kp(0,0) << TAIL <<endl;
     cout << GREEN << "ne_gain/Kp_z    : "<< ctrl_param.Kp(2,2) << TAIL <<endl;
-    cout << GREEN << "ne_gain/Kd_xy   : "<< ctrl_param.Kd << TAIL <<endl;
+    cout << GREEN << "ne_gain/Kd_xy   : "<< ctrl_param.Kd(0,0) << TAIL <<endl;
     cout << GREEN << "ne_gain/Kd_z    : "<< ctrl_param.Kd(2,2) << TAIL <<endl;
     cout << GREEN << "ne_gain/T_ude   : "<< ctrl_param.T_ude << TAIL <<endl;
     cout << GREEN << "ne_gain/T_ne   : "<< ctrl_param.T_ne << TAIL <<endl;

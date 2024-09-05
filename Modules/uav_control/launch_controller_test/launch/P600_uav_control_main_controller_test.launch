@@ -14,14 +14,14 @@
 		<param name="flag_printf" value="$(arg flag_printf)" />
         <param name="control/enable_external_control" value="$(arg control/enable_external_control)" />
         <param name="control/pos_controller" value="$(arg pos_controller)" />
-		<rosparam command="load" file="$(find prometheus_uav_control)/launch_controller_test/controller_params.yaml" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch_controller_test/yaml/P600_controller_params.yaml" />
 	</node>
 
     <!-- 启动测试程序 -->
 	<node pkg="prometheus_uav_control" type="uav_command_pub" name="uav_command_pub_$(arg uav_id)" output="screen" launch-prefix="gnome-terminal --">
 		<param name="uav_id" value="$(arg uav_id)" />
         <param name="sim_mode" value="$(arg sim_mode)" />
-		<rosparam command="load" file="$(find prometheus_uav_control)/launch_controller_test/ref_trajectory.yaml" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch_controller_test/yaml/ref_trajectory.yaml" />
 	</node>
 
     <!-- 启动虚拟摇杆驱动 -->
@@ -33,7 +33,7 @@
 
     <!-- Rviz config -->
     <arg name="rviz_enable" default="true"/>
-    <arg name="rivz_config" default="$(find prometheus_uav_control)/launch_controller_test/controller_test.rviz"/>
+    <arg name="rivz_config" default="$(find prometheus_uav_control)/launch_controller_test/yaml/controller_test.rviz"/>
 	<!-- 启动Rviz-->
 	<group if="$(arg rviz_enable)">
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
