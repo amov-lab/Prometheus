@@ -885,6 +885,7 @@ void UAV_estimator::printf_uav_state()
     case prometheus_msgs::UAVState::T265:
         cout << GREEN << "Location: [ T265 ] " << TAIL << endl;
         cout << GREEN << "T265_pos [X Y Z] : " << t265_pose.pose.position.x << " [ m ] " << t265_pose.pose.position.y << " [ m ] " << t265_pose.pose.position.z << " [ m ] " << TAIL << endl;
+        break;
     case prometheus_msgs::UAVState::OPTICAL_FLOW:
         cout << GREEN << "Location: [ OPTICAL_FLOW ] " << TAIL << endl;
         cout << GREEN << "OPTICAL_FLOW_pos [X Y Z] : " << uav_state.position[0] << " [ m ] " << uav_state.position[1] << " [ m ] " << uav_state.position[2] << " [ m ] " << TAIL << endl;
