@@ -57,7 +57,7 @@ ude_gain:
   tilt_angle_max : 20.0
 
 # 位置环参数 for NE, 对应pos_controller_NE.h
-ude_gain:
+ne_gain:
   quad_mass: 1.0
   hov_percent: 0.47
   pxy_int_max: 10.0

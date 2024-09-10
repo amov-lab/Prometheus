@@ -8,8 +8,10 @@ sleep 1.5s
 
 # 获取 prometheus_gazebo 的路径
 PROMETHEUS_GAZEBO_PATH=$(rospack find prometheus_gazebo)
-# 二维码 world 文件路径
-WORLD_FILE="$PROMETHEUS_GAZEBO_PATH/gazebo_worlds/detection_worlds/KKSwarmCar/kkcarair.world"
+#  world 文件路径
+#WORLD_FILE="$PROMETHEUS_GAZEBO_PATH/gazebo_worlds/detection_worlds/KKSwarmCar/kkcarair.world"
+WORLD_FILE="$PROMETHEUS_GAZEBO_PATH/gazebo_worlds/detection_worlds/multi_person.world"
+
 
 gnome-terminal --window -e 'bash -c "roscore; exec bash"' \
 --tab -e 'bash -c "sleep 3; roslaunch prometheus_gazebo sitl_indoor_1uav_P230.launch vehicle:='p230_D435i' d435i_enable:=true world:='$WORLD_FILE'; exec bash"' \
