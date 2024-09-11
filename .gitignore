@@ -21,7 +21,7 @@ Modules/common/CMakeLists.txt
 Modules/ego_planner_swarm/CMakeLists.txt
 Modules/motion_planning/CMakeLists.txt
 Modules/simulator_utils/CMakeLists.txt
-Modules/FAST_LIO/Log/
+Modules/FAST_LIO/Log/mat_pre.txt
 # pytorch/python/numpy formats
 # *.pth
 *.pkl
