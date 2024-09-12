@@ -97,7 +97,7 @@
     <param name="fsm/waypoint3_z" value="$(arg point3_z)" type="double"/>
     <!-- GridMap参数 -->
     <!-- 分辨率、地图尺寸 -->
-    <param name="grid_map/resolution"      value="0.1" /> 
+    <param name="grid_map/resolution"      value="0.15" /> 
     <param name="grid_map/map_size_x"   value="$(arg map_size_x_)" /> 
     <param name="grid_map/map_size_y"   value="$(arg map_size_y_)" /> 
     <param name="grid_map/map_size_z"   value="$(arg map_size_z_)" /> 
@@ -105,11 +105,11 @@
     <param name="grid_map/map_origin_y"   value="$(arg map_origin_y_)" /> 
     <!-- 地图更新距离 -->
     <!-- 点云数据会在特定范围内截断，只使用特定范围的信息，超出范围的数据丢弃 -->
-    <param name="grid_map/local_update_range_x"  value="40" /> 
-    <param name="grid_map/local_update_range_y"  value="40" /> 
-    <param name="grid_map/local_update_range_z"  value="10" /> 
+    <param name="grid_map/local_update_range_x"  value="20" /> 
+    <param name="grid_map/local_update_range_y"  value="20" /> 
+    <param name="grid_map/local_update_range_z"  value="5" /> 
     <!-- 膨胀距离 -->
-    <param name="grid_map/obstacles_inflation"     value="0.35" /> 
+    <param name="grid_map/obstacles_inflation"     value="0.6" /> 
     <param name="grid_map/local_map_margin" value="10"/>
     <!-- ground_height -->
     <param name="grid_map/ground_height"        value="$(arg ground_height)"/>

@@ -1177,7 +1177,8 @@ void GridMap::publishMapInflate(bool all_info)
   // 确保min_cut、max_cut在整体地图范围之内
   boundIndex(min_cut);
   boundIndex(max_cut);
-
+  // 计算天花板索引
+  int ceil_id = floor((mp_.virtual_ceil_height_ - mp_.map_origin_(2)) * mp_.resolution_inv_) - 1;
   // 遍历，将符合条件的点放入cloud中，并最后发布
   for (int x = min_cut(0); x <= max_cut(0); ++x)
     for (int y = min_cut(1); y <= max_cut(1); ++y)
@@ -1185,7 +1186,9 @@ void GridMap::publishMapInflate(bool all_info)
       {
         if (md_.occupancy_buffer_inflate_[toAddress(x, y, z)] == 0)
           continue;
-
+        // 忽略虚拟天花板的体素
+        if (z == ceil_id)
+          continue;
         Eigen::Vector3d pos;
         indexToPos(Eigen::Vector3i(x, y, z), pos);
         // 超过截断距离，则不显示该点
