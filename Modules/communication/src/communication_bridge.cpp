@@ -1038,6 +1038,7 @@ void CommunicationBridge::multicastUdpFun()
 // 无人机触发安全机制（一般为心跳包丢失） 进行降落
 void CommunicationBridge::triggerUAV()
 {
+    if(this->uav_basic_ == NULL) return;
     // 触发降落  暂定
     struct UAVCommand uav_command;
     uav_command.Agent_CMD = UAVCommand::AgentCMD::Land;
@@ -1061,6 +1062,7 @@ void CommunicationBridge::triggerUAV()
 // 集群触发安全机制（一般为心跳包丢失）
 void CommunicationBridge::triggerSwarmControl()
 {
+    if(this->swarm_control_ == NULL) return;
     if (this->is_simulation_ == 0)
     {
         this->swarm_control_->communicationStatePub(false);
