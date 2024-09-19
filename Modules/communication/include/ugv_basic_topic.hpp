@@ -28,6 +28,8 @@ public:
     struct UGVState getUGVState();
 
     void send(const ros::TimerEvent &time_event);
+
+    void setGroundStationIP(std::string ip);
 private:
     //
     ros::Publisher ugv_cmd_pub_;

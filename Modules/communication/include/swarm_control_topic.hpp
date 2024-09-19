@@ -126,6 +126,7 @@ public:
 
     inline prometheus_msgs::UAVState getUAVStateMsg(){return this->uav_state_msg_;};
 
+    void setGroundStationIP(std::string ip);
 private:
 
     struct MultiUAVState multi_uav_state_;

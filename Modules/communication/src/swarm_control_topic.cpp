@@ -462,3 +462,13 @@ void SwarmControl::swarmCmdCb(const prometheus_msgs::SwarmCommand::ConstPtr &msg
     }
     this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, swarm_command), udp_ip);
 }
+
+void SwarmControl::setGroundStationIP(std::string ip)
+{
+    if(this->multicast_udp_ip == this->udp_ip)
+    {
+        // 同步修改
+        this->multicast_udp_ip = ip;
+    }
+    this->udp_ip = ip;
+}

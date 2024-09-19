@@ -82,6 +82,8 @@ public:
 
     void paramSettingsPub(struct ParamSettings param_settings);
 
+    void setGroundStationIP(std::string ip);
+
 private:
     ros::Subscriber uav_state_sub_;
 

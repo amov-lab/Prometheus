@@ -565,3 +565,13 @@ void UAVBasic::send(const ros::TimerEvent &time_event)
         this->custom_data_segment_ready = false;
     }
 }
+
+void UAVBasic::setGroundStationIP(std::string ip)
+{
+    if(this->multicast_udp_ip == this->ground_station_ip)
+    {
+        // 同步修改
+        this->multicast_udp_ip = ip;
+    }
+    this->ground_station_ip = ip;
+}

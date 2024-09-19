@@ -71,7 +71,6 @@ private:
     sensor_msgs::PointCloud2 filtered(const sensor_msgs::PointCloud2 msg);
 
     sensor_msgs::PointCloud2 compressed(const sensor_msgs::PointCloud2 msg);
-
 private:
     ros::Subscriber octomap_point_cloud_centers_sub_,occupancy_inflate_sub_,scan_sub_,
         scan_filtered_sub_,trajectory_sub_,odom_sub_,tf_sub_,uav_mesh_sub_,optimal_list_sub_,
@@ -123,6 +122,8 @@ private:
     std::vector<bool> swarm_occupancy_ready, swarm_occupancy_inflate_ready, swarm_optimal_list_ready;
 
     ros::Timer send_timer_1000MS,send_timer_200MS,send_timer_500MS,send_timer_50MS;
+
+    ReduceTheFrequencyType reduce_the_frequency_type;
 };
 
 #endif

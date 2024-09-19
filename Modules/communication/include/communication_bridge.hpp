@@ -153,6 +153,9 @@ private:
     uint time_count = 0;
     std::vector<uint> swarm_control_time;
     std::vector<uint> swarm_control_timeout_count;
+
+    // 是否自动启动
+    bool autoload = false;
 };
 
 template <typename T>

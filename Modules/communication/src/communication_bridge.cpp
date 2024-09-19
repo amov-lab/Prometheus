@@ -30,7 +30,6 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     nh.param<int>("try_connect_num", try_connect_num, 3);
 
-    bool autoload;
     nh.param<bool>("autoload", autoload, false);
     if (autoload)
     {
@@ -97,11 +96,74 @@ void CommunicationBridge::serverFun()
 
     while (true)
     {
+        struct sockaddr_in client_addr; // 用来存储客户端地址
+        socklen_t addr_len = sizeof(client_addr);
+
         // 等待连接队列中抽取第一个连接，创建一个与s同类的新的套接口并返回句柄。
-        if ((recv_sock = accept(server_fd, (struct sockaddr *)NULL, NULL)) < 0)
+        if ((recv_sock = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len)) < 0)
         {
             perror("accept");
             exit(EXIT_FAILURE);
+        }
+
+        // 未连接的情况,以第一台连接的地面端为准
+        if(this->uav_basic_ == NULL && this->ugv_basic_ == NULL)
+        {
+            // 获取客户端的 IP 地址
+            std::cout << "Client connected: " << inet_ntoa(client_addr.sin_addr) << std::endl;
+            
+            // 如果 地面站IP和组播IP一致 则将组播地址同步修改
+            if(this->udp_ip == this->multicast_udp_ip)
+            {
+                // 设置ROS参数服务器的数据
+                CommunicationBridge::setParam("multicast_udp_ip",std::string(inet_ntoa(client_addr.sin_addr)));
+                multicast_udp_ip = inet_ntoa(client_addr.sin_addr);
+            }
+            // 设置ROS参数服务器的数据
+            CommunicationBridge::setParam("ground_station_ip",std::string(inet_ntoa(client_addr.sin_addr)));
+            // 设置客户端IP
+            udp_ip = inet_ntoa(client_addr.sin_addr);
+
+        }else if(udp_ip != inet_ntoa(client_addr.sin_addr))// 防止多机重复抢夺控制,只允许第一台连接的无人机进行控制
+        {
+            // 如果此时第一台连接的地面端心跳包丢失了,允许其连接其他地面端
+            if(!this->is_heartbeat_ready_)
+            {
+                try
+                {
+                    std::string message = "Original client " + udp_ip + " signal loss! new client " + std::string(inet_ntoa(client_addr.sin_addr)) + " takes over.";
+
+                    // 如果 地面站IP和组播IP一致 则将组播地址同步修改
+                    if(this->udp_ip == this->multicast_udp_ip)
+                    {
+                        // 设置ROS参数服务器的数据
+                        CommunicationBridge::setParam("multicast_udp_ip",std::string(inet_ntoa(client_addr.sin_addr)));
+                        multicast_udp_ip = inet_ntoa(client_addr.sin_addr);
+                    }
+                    // 设置ROS参数服务器的数据
+                    CommunicationBridge::setParam("ground_station_ip",std::string(inet_ntoa(client_addr.sin_addr)));
+                    udp_ip = inet_ntoa(client_addr.sin_addr);
+                
+                    // 根据实际情况实时修改
+                    if(this->uav_basic_ != NULL) this->uav_basic_->setGroundStationIP(udp_ip);
+                    else if(this->ugv_basic_ != NULL) this->ugv_basic_->setGroundStationIP(udp_ip);
+
+                    if(this->swarm_control_ != NULL) this->swarm_control_->setGroundStationIP(udp_ip);
+
+                    // 获取客户端的 IP 地址
+                    std::cout << "new client connected: " << inet_ntoa(client_addr.sin_addr) << std::endl;
+                    sendTextInfo(TextInfo::MTG_ERROR,message);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
+            }else
+            {
+                std::string message = "client " + std::string(inet_ntoa(client_addr.sin_addr)) + " attempt to connect control! If the client needs to control, please disconnect the current connection.";
+                sendTextInfo(TextInfo::MTG_ERROR,message);
+                continue;
+            }
         }
 
         // recv函数从TCP连接的另一端接收数据
@@ -392,7 +454,6 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         nh_.getParam("is_simulation", is_simulation_);
         nh_.getParam("swarm_data_update_timeout", swarm_data_update_timeout_);
 
-        bool autoload = false;
         nh_.getParam("autoload", autoload);
         if (autoload)
         {
@@ -446,6 +507,7 @@ void CommunicationBridge::recvData(struct Goal goal)
 void CommunicationBridge::pubMsg(int msg_id)
 {
     // std::cout << "recv_id: " << getRecvID() << std::endl;
+    // std::cout << "msg_id: " << msg_id << std::endl;
 
     switch (msg_id)
     {
@@ -570,7 +632,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     this->uav_basic_ = this->swarm_control_simulation_[mode_selection.selectId[i]];
 
                     // 打开
-                    system(OPENUAVBASIC.c_str());
+                    if(autoload) system(OPENUAVBASIC.c_str());
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UAV" + to_string(mode_selection.selectId[i]) + " connection succeeded!!!");
             }
@@ -590,7 +652,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " connection succeeded!!!");
 
                         // 打开
-                        system(OPENUAVBASIC.c_str());
+                        if(autoload) system(OPENUAVBASIC.c_str());
                     }
                     else
                         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " duplicate connections!!!");
@@ -653,7 +715,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     this->ugv_basic_ = this->swarm_ugv_control_simulation_[id];
 
                     // 打开
-                    system(OPENUGVBASIC.c_str());
+                    if(autoload) system(OPENUGVBASIC.c_str());
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UGV" + to_string(id) + " connection succeeded!!!");
             }
@@ -675,7 +737,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " connection succeeded!!!");
 
                         // 打开
-                        system(OPENUGVBASIC.c_str());
+                        if(autoload) system(OPENUGVBASIC.c_str());
                     }
                     else
                         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " duplicate connections!!!");
@@ -751,7 +813,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                     this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control simulation mode.");
-                system(OPENSWARMCONTROL.c_str());
+                if(autoload) system(OPENSWARMCONTROL.c_str());
             }
         }
         else // 真机
@@ -789,7 +851,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 }
 
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control mode.");
-                system(OPENSWARMCONTROL.c_str());
+                if(autoload) system(OPENSWARMCONTROL.c_str());
             }
         }
         // 加载集群参数
@@ -830,13 +892,13 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 }
             }else
             {
-                system(mode_selection.cmd.c_str());
+                if(autoload) system(mode_selection.cmd.c_str());
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
             }
         }
         else
         {
-            system(mode_selection.cmd.c_str());
+            if(autoload) system(mode_selection.cmd.c_str());
             sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
         }
     }
@@ -875,7 +937,7 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
                         this->is_heartbeat_ready_ = false;
                         // delete this->uav_basic_;
                         this->uav_basic_ = NULL;
-                        system(CLOSEUAVBASIC.c_str());
+                        if(autoload) system(CLOSEUAVBASIC.c_str());
                     }
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UAV" + to_string(mode_selection.selectId[i]) + " disconnect!!!");
@@ -889,7 +951,7 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
                 {
                     delete this->uav_basic_;
                     this->uav_basic_ = NULL;
-                    system(CLOSEUAVBASIC.c_str());
+                    if(autoload) system(CLOSEUAVBASIC.c_str());
                     sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " disconnect!!!");
                 }
             }
@@ -913,7 +975,7 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
                         this->is_heartbeat_ready_ = false;
                         // delete this->uav_basic_;
                         this->ugv_basic_ = NULL;
-                        system(CLOSEUGVBASIC.c_str());
+                        if(autoload) system(CLOSEUGVBASIC.c_str());
                     }
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UGV" + to_string(mode_selection.selectId[i]) + " disconnect!!!");
@@ -927,7 +989,7 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
                 {
                     delete this->ugv_basic_;
                     this->ugv_basic_ = NULL;
-                    system(CLOSEUGVBASIC.c_str());
+                    if(autoload) system(CLOSEUGVBASIC.c_str());
                     sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ROBOT_ID) + " disconnect!!!");
                 }
             }
@@ -944,7 +1006,7 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
             std::lock_guard<std::mutex> lg(g_m);
             delete this->swarm_control_;
             this->swarm_control_ = NULL;
-            system(CLOSESWARMCONTROL.c_str());
+            if(autoload) system(CLOSESWARMCONTROL.c_str());
         }
     }
     else if (mode_selection.mode == ModeSelection::Mode::AUTONOMOUSLANDING)

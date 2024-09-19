@@ -40,6 +40,7 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh)
 
 ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh, ReduceTheFrequencyType type, int id)
 {
+    this->reduce_the_frequency_type = type;
     if(type == ReduceTheFrequencyType_UAV)
     {
         int uav_id = id;
@@ -149,7 +150,32 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh, ReduceTheFrequencyTy
 
 ReduceTheFrequency::~ReduceTheFrequency()
 {
+    if(this->reduce_the_frequency_type == ReduceTheFrequencyType_UAV)
+    {
+        octomap_point_cloud_centers_sub_.shutdown();
+        occupancy_inflate_sub_.shutdown();
+        trajectory_sub_.shutdown();
+        uav_mesh_sub_.shutdown();
+        optimal_list_sub_.shutdown();
+    }else if(this->reduce_the_frequency_type == ReduceTheFrequencyType_UGV)
+    {
+        ugv_point_cloud_sub_.shutdown();
+        ugv_odom_sub_.shutdown();
+        ugv_path_sub_.shutdown();
+        ugv_optimal_list_sub_.shutdown();
+    }else if(this->reduce_the_frequency_type == ReduceTheFrequencyType_SWARM)
+    {
+        optimal_list_sub_.shutdown();
+        octomap_point_cloud_centers_sub_.shutdown();
+        occupancy_inflate_sub_.shutdown();
+        swarm_graph_visual_sub_.shutdown();
+    }
 
+    send_timer_1000MS.stop();
+    send_timer_500MS.stop();
+    send_timer_200MS.stop();
+    send_timer_50MS.stop();
+    usleep(1000);
 }
 
 void ReduceTheFrequency::send1000MS(const ros::TimerEvent &time_event)
@@ -161,7 +187,6 @@ void ReduceTheFrequency::send1000MS(const ros::TimerEvent &time_event)
         octomap_compressed_pub_.publish(octomap_compressed_point_cloud);
         octomap_point_cloud_ready = false;
     }
-    usleep(100000);
     if(occupancy_inflate_ready)
     {
         occupancy_inflate_filtered_point_cloud = filtered(occupancy_inflate_point_cloud);
@@ -171,19 +196,16 @@ void ReduceTheFrequency::send1000MS(const ros::TimerEvent &time_event)
         occupancy_inflate_compressed_pub_.publish(occupancy_inflate_compressed_point_cloud);
         occupancy_inflate_ready = false;
     }
-    usleep(100000);
     if(scan_ready)
     {
         scan_pub_.publish(scan);
         scan_ready = false;
     }
-    usleep(100000);
     if(scan_filtered_ready)
     {
         scan_filtered_pub_.publish(scan_filtered);
         scan_filtered_ready = false;
     }
-    usleep(100000);
     if(ugv_point_cloud_ready)
     {
         ugv_compressed_point_cloud = compressed(ugv_point_cloud);
@@ -199,25 +221,21 @@ void ReduceTheFrequency::send500MS(const ros::TimerEvent &time_event)
         trajectory_pub_.publish(trajectory);
         trajectory_ready = false;
     }
-    usleep(100000);
     if(uav_mesh_ready)
     {
         uav_mesh_pub_.publish(uav_mesh);
         uav_mesh_ready = false;
     }
-    usleep(100000);
     if(ugv_odom_ready)
     {
         ugv_odom_pub_.publish(ugv_odom);
         ugv_odom_ready = false;
     }
-     usleep(100000);
     if(ugv_path_ready)
     {
         ugv_path_pub_.publish(ugv_path);
         ugv_path_ready = false;
     }
-    usleep(100000);
     if(swarm_graph_visual_ready)
     {
         swarm_graph_visual_pub_.publish(swarm_graph_visual);
@@ -241,7 +259,6 @@ void ReduceTheFrequency::send50MS(const ros::TimerEvent &time_event)
         optimal_list_pub_.publish(optimal_list);
         optimal_list_ready = false;
     }
-    usleep(100000);
     if(ugv_optimal_list_ready)
     {
         ugv_optimal_list_pub_.publish(ugv_optimal_list);

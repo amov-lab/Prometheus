@@ -88,3 +88,13 @@ void UGVBasic::send(const ros::TimerEvent &time_event)
         ugv_state_ready = false;
     }
 }
+
+void UGVBasic::setGroundStationIP(std::string ip)
+{
+    if(this->multicast_udp_ip == this->udp_ip)
+    {
+        // 同步修改
+        this->multicast_udp_ip = ip;
+    }
+    this->udp_ip = ip;
+}
