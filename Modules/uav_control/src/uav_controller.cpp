@@ -680,6 +680,15 @@ void UAV_controller::uav_cmd_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg
         return;
     }
 
+    // 绝对悬停指令触发
+    if(msg->Control_Level == prometheus_msgs::UAVCommand::ABSOLUTE_CONTROL &&
+        msg->Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover
+    )
+    {
+        stop_control_state.data = true;
+        stop_control_state_pub.publish(stop_control_state);
+    }
+
     // 如果当前处于绝对控制下并且接收的这条命令不为绝对控制
     if(uav_command.Control_Level == prometheus_msgs::UAVCommand::ABSOLUTE_CONTROL &&
         msg->Control_Level != prometheus_msgs::UAVCommand::ABSOLUTE_CONTROL

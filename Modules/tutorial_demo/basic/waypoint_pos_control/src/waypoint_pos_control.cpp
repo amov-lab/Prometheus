@@ -13,6 +13,7 @@
 #include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/BasicDataTypeAndValue.h>
 #include <prometheus_msgs/CustomDataSegment.h>
+#include <std_msgs/Bool.h>
 #include "custom_data_segment_msg.hpp"
 #include <unistd.h>
 #include "printf_utils.h"
@@ -28,6 +29,8 @@ prometheus_msgs::UAVControlState uav_control_state;
 constexpr double kEarthRadius = 6371000.0; // 地球半径，单位：米
 std::vector<Eigen::Vector3d> waypoint_list;
 int waypoint_list_current = 0;
+std_msgs::Bool stop_control_state;
+prometheus_msgs::UAVCommand recv_uav_command;
 
 // 将角度从度数转换为弧度
 double toRadians(double degrees) {
@@ -111,6 +114,16 @@ double calculateHeading(double uav_lat, double uav_lon, double target_lat, doubl
     return azimuth;
 }
 
+void stop_control_state_cb(const std_msgs::Bool::ConstPtr &msg)
+{
+    stop_control_state = *msg;
+}
+
+void uav_command_cb(const prometheus_msgs::UAVCommand::ConstPtr &msg)
+{
+    recv_uav_command = *msg;
+}
+
 // 主函数
 int main(int argc, char **argv)
 {
@@ -137,6 +150,10 @@ int main(int argc, char **argv)
     ros::Subscriber uav_control_state_sub = n.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(uav_id) + "/prometheus/control_state", 10, uav_control_state_cb);
     // 创建无人机航点订阅者
     ros::Subscriber waypoints_list_sub = n.subscribe<prometheus_msgs::CustomDataSegment>("/uav" + std::to_string(uav_id) + "/prometheus/customdatasegment", 10, uav_set_waypoints_cb);
+    //【订阅】无人机停止控制状态
+    ros::Subscriber stop_control_state_sub = n.subscribe<std_msgs::Bool>("/uav" + std::to_string(uav_id) + "/prometheus/stop_control_state", 1, stop_control_state_cb);
+    //【订阅】无人机控制命令
+    ros::Subscriber uav_command_sub = n.subscribe<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command", 1, uav_command_cb);
     // 循环频率设置为1HZ
     ros::Rate r(1);
     // 创建命令发布标志位,命令发布则为true;初始化为false
@@ -162,11 +179,34 @@ int main(int argc, char **argv)
 
     waypoint_list_current = 0;
     int point_count = 0;
+    stop_control_state.data = false;
+
+    bool last_stop_control_state = false;
 
     while (ros::ok())
     {
         // 调用一次回调函数
         ros::spinOnce();
+        // 如果是停止控制状态为正，则暂停规划
+        if(stop_control_state.data){
+            last_stop_control_state = true;
+            continue;
+        }
+
+        // 如果接收到悬停命令 并且 当前航点不为空 则初始化
+        if(recv_uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover &&
+            recv_uav_command.Control_Level == prometheus_msgs::UAVCommand::DEFAULT_CONTROL &&
+            !waypoint_list.empty())
+        {
+            cmd_pub_flag = false;
+            waypoint_list_current = 0;
+            point_count = 0;
+            waypoint_list.clear();
+            // 清空接受的命令
+            recv_uav_command.Agent_CMD = 0;
+            recv_uav_command.Control_Level = 0;
+        }
+        
         // 检测无人机是否处于[COMMAND_CONTROL]模式
         if (uav_control_state.control_state == prometheus_msgs::UAVControlState::COMMAND_CONTROL)
         {
@@ -190,6 +230,8 @@ int main(int argc, char **argv)
                     uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
                     // Move_mode
                     uav_command.Move_mode = prometheus_msgs::UAVCommand::LAT_LON_ALT;
+                    // 控制等级
+                    uav_command.Control_Level = prometheus_msgs::UAVCommand::DEFAULT_CONTROL;
                     // 在无人机当前经纬度飞到5米高度
                     uav_command.latitude = waypoint_list[waypoint_list_current][1];
                     uav_command.longitude = waypoint_list[waypoint_list_current][0];
@@ -197,7 +239,7 @@ int main(int argc, char **argv)
                     uav_command.yaw_ref = calculateHeading(uav_state.latitude,uav_state.longitude,uav_command.latitude,uav_command.longitude);
                     // 发布的命令ID加1
                     uav_command.Command_ID += 1;
-                    // 发布降落命令
+                    // 发布命令
                     uav_command_pub.publish(uav_command);
                     // 命令发布标志位置为true
                     cmd_pub_flag = true;
@@ -227,6 +269,9 @@ int main(int argc, char **argv)
                 {
                     // 打印当前距离目标点位置
                     cout << GREEN << " Distance from target point: " << distance << TAIL << endl;
+                    uav_command.header.stamp = ros::Time::now();
+                    uav_command.Command_ID += 1;
+                    uav_command_pub.publish(uav_command);
                 }
             }
         }
