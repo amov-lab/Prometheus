@@ -183,6 +183,54 @@ void GridMap::initMap(ros::NodeHandle &nh)
 
   md_.flag_depth_odom_timeout_ = false;
   md_.flag_use_depth_fusion = false;
+  // 订阅参数服务器内ego相关的参数
+  gridparam_sub_ = nh.subscribe("/uav1/prometheus/param_settings", 1, &GridMap::gridparam_Callback, this);
+  grid_params_get_i = {&uav_id,&mp_.depth_filter_margin_,&mp_.skip_pixel_,&mp_.pose_type_,&mp_.local_map_margin_};
+  grid_params_get_d = {&mp_.resolution_,&x_size,&y_size,&z_size,&x_origin,&y_origin,&mp_.local_update_range_(0),&mp_.local_update_range_(1),
+                       &mp_.local_update_range_(2),&mp_.obstacles_inflation_,&mp_.fx_,&mp_.fy_,&mp_.cx_,&mp_.cy_,&mp_.depth_filter_tolerance_,
+                       &mp_.depth_filter_maxdist_,&mp_.depth_filter_mindist_,&mp_.k_depth_scaling_factor_,&mp_.p_hit_,&mp_.p_miss_,&mp_.p_min_,
+                       &mp_.p_max_,&mp_.p_occ_,&mp_.min_ray_length_,&mp_.max_ray_length_,&mp_.visualization_truncate_height_,&mp_.ground_height_,
+                       &mp_.virtual_ceil_height_,&mp_.virtual_ceil_yp_,&mp_.virtual_ceil_yn_,&mp_.odom_depth_timeout_ };
+  grid_params_get_b = {&mp_.use_depth_filter_,&mp_.show_occ_time_};
+}
+
+void GridMap::gridparam_Callback(const prometheus_msgs::ParamSettingsConstPtr &msg)
+{
+  std::cout <<"param_settings_name = "<< msg->param_name[0]<<"\t"<<"param_settings_value = "<< msg->param_value[0]<<std::endl;
+  pre_grid_params_compare(grid_params_compare, grid_params_compare_all);
+  // 遍历 param_name 和 param_value，更新参数
+  for (size_t i = 0; i < grid_params_compare_all.size(); ++i) 
+  {
+    auto it = std::find(( grid_params_compare_all.begin()),(grid_params_compare_all.end()), msg->param_name[0]);
+    if (it != grid_params_compare_all.end()) 
+    {
+      size_t index = std::distance(grid_params_compare_all.begin(), it);
+      //std::cout << "Value: " << " found at index: " << index << typeid(index).name()<< std::endl;
+    
+      if(index < 5)
+      {
+        *grid_params_get_i[index] = std::stoi(msg->param_value[0]);
+        //std::cout << "*grid_params_get_i[index] =" << *grid_params_get_i[index] << "\n" <<"local_map_margin = " << mp_.local_map_margin_ << std::endl;
+      }else if(index < 36)
+      {
+        *grid_params_get_d[index - 5] = std::stod(msg->param_value[0]);
+        //std::cout << "&grid_params_get_d[] = " << &grid_params_get_d[index - 5] <<"\n" <<"mp_.obstacles_inflation_ = " << mp_.obstacles_inflation_<< std::endl;
+      }else if(index < 38)
+      { 
+        if(msg->param_value[0] == "0"){
+          *grid_params_get_b[index - 36] = false ; 
+          //std::cout << "*grid_params_get_b[index - 36] = " << *grid_params_get_b[index - 36] <<"\n"<< "use_depth_filter_ = " << mp_.use_depth_filter_<< std::endl;
+        }else{
+          *grid_params_get_b[index - 36] = true ;          
+          //std::cout << "*grid_params_get_b[index - 36] = " << *grid_params_get_b[index - 36] <<"\n"<< "use_depth_filter_ = " << mp_.use_depth_filter_<< std::endl;
+        }
+      }else
+      {
+        mp_.frame_id_ = msg->param_value[0];
+        //std::cout << "mp_.frame_id_ = " << mp_.frame_id_<< std::endl;
+      }
+    }
+  }
 }
 
 // 膨胀地图全部重置

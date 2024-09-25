@@ -50,12 +50,45 @@ namespace ego_planner
     bspline_optimizer_->a_star_->initGridMap(grid_map_, Eigen::Vector3i(100, 100, 100));
 
     visualization_ = vis;
+    manage_param_sub_ = nh.subscribe("/uav1/prometheus/param_settings", 1, &EGOPlannerManager::manage_param_Callback, this);
+    manage_params_get_d = {&pp_.max_vel_,&pp_.max_acc_,&pp_.max_jerk_,&pp_.feasibility_tolerance_,&pp_.ctrl_pt_dist,&pp_.planning_horizen_};
   }
 
   // !SECTION
 
   // SECTION rebond replanning
-
+  void EGOPlannerManager::manage_param_Callback(const prometheus_msgs::ParamSettingsConstPtr &msg)
+  {
+    //std::cout <<"param_settings_name = "<< msg->param_name[0]<<"\t"<<"param_settings_value = "<< msg->param_value[0]<<std::endl;
+    pre_manage_params_compare(manage_params_compare, manage_params_compare_all);
+    // 遍历 param_name 和 param_value，更新参数
+    for (size_t i = 0; i < manage_params_compare_all.size(); ++i) 
+    {
+      auto it = std::find(( manage_params_compare_all.begin()),(manage_params_compare_all.end()), msg->param_name[0]);
+      if (it != manage_params_compare_all.end()) 
+      {
+        size_t index = std::distance(manage_params_compare_all.begin(), it);
+        std::cout << "Value: " << " found at index: " << index << typeid(index).name()<< std::endl;
+        if(index < 6){
+          *manage_params_get_d[index] = std::stoi(msg->param_value[0]);
+          std::cout << "*manage_params_get_d[index] =" << *manage_params_get_d[index] << std::endl;
+        }else if(index < 7)
+        {
+          pp_.drone_id = std::stod(msg->param_value[0]);
+          std::cout << "pp_.drone_id = " << pp_.drone_id<<"\n" << "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
+        }else
+        {
+          if(msg->param_value[0] == "0"){
+            pp_.use_distinctive_trajs = false ; 
+            std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
+          }else{
+            pp_.use_distinctive_trajs = true ;          
+            std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0]<< std::endl;
+          }
+        }
+      }
+    }
+  }
   bool EGOPlannerManager::reboundReplan(Eigen::Vector3d start_pt, Eigen::Vector3d start_vel,
                                         Eigen::Vector3d start_acc, Eigen::Vector3d local_target_pt,
                                         Eigen::Vector3d local_target_vel, bool flag_polyInit, bool flag_randomPolyTraj)
@@ -89,7 +122,7 @@ namespace ego_planner
       point_set.clear();
       start_end_derivatives.clear();
       flag_regenerate = false;
-
+      
       if (flag_first_call || flag_polyInit || flag_force_polynomial /*|| ( start_pt - local_target_pt ).norm() < 1.0*/) // Initial path generated from a min-snap traj by order.
       {
         flag_first_call = false;
@@ -119,7 +152,7 @@ namespace ego_planner
           t(0) = t(1) = time / 2;
           gl_traj = PolynomialTraj::minSnapTraj(pos, start_vel, local_target_vel, start_acc, Eigen::Vector3d::Zero(), t);
         }
-
+        
         double t;
         bool flag_too_far;
         ts *= 1.5; // ts will be divided by 1.5 in the next
@@ -129,6 +162,7 @@ namespace ego_planner
           point_set.clear();
           flag_too_far = false;
           Eigen::Vector3d last_pt = gl_traj.evaluate(0);
+          cout << "rebound aaAAAAAAAA"<< endl;
           for (t = 0; t < time; t += ts)
           {
             Eigen::Vector3d pt = gl_traj.evaluate(t);
@@ -225,7 +259,7 @@ namespace ego_planner
         }
       }
     } while (flag_regenerate);
-
+    cout << "rebound aaBBBBBBB"<< endl;
     Eigen::MatrixXd ctrl_pts, ctrl_pts_temp;
     UniformBspline::parameterizeToBspline(ts, point_set, start_end_derivatives, ctrl_pts);
 
@@ -350,6 +384,7 @@ namespace ego_planner
 
     // success. YoY
     continous_failures_count_ = 0;
+    std::cout<<"reboundReplan _end end end"<<std::endl;
     return true;
   }
 

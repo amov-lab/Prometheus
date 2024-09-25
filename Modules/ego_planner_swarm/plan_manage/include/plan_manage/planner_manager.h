@@ -53,7 +53,20 @@ namespace ego_planner
     GridMap::Ptr grid_map_;
     fast_planner::ObjPredictor::Ptr obj_predictor_;    
     SwarmTrajData swarm_trajs_buf_;
-
+    std::vector<std::string> manage_params_compare ={ "max_vel","max_acc","max_jerk","feasibility_tolerance","control_points_distance",
+                                                      "planning_horizon","drone_id","use_distinctive_trajs"}; 
+    std::vector<std::string> manage_params_compare_all;
+    std::vector<double*> manage_params_get_d;
+    inline void pre_manage_params_compare(std::vector<std::string>& manage_params_compare, std::vector<std::string>& manage_params_compare_all)
+    {
+      // 确保 grid_params_compare_all 的大小足够大
+      manage_params_compare_all.resize(manage_params_compare.size());
+      // 遍历 grid_params_compare，将每个元素添加前缀，并赋值给 grid_params_compare_all
+      for (size_t i = 0; i < manage_params_compare.size(); ++i) 
+      {
+        manage_params_compare_all[i] = "/uav1_ego_planner_node/manager/" + manage_params_compare[i]; 
+      }
+    }
   private:
     /* main planning algorithms & modules */
     PlanningVisualization::Ptr visualization_;
@@ -70,7 +83,8 @@ namespace ego_planner
                         double &time_inc);
 
     bool refineTrajAlgo(UniformBspline &traj, vector<Eigen::Vector3d> &start_end_derivative, double ratio, double &ts, Eigen::MatrixXd &optimal_control_points);
-
+    void manage_param_Callback(const prometheus_msgs::ParamSettingsConstPtr &msg);
+    ros::Subscriber manage_param_sub_;
     // !SECTION stable
 
     // SECTION developing

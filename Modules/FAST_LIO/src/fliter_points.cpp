@@ -4,7 +4,7 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 ros::Subscriber mid_sub;
 ros::Publisher mid_pub;
-double filter_range;
+double filter_range_x,filter_range_y,filter_range_z;
 void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr& input_cloud){
     sensor_msgs::PointCloud pointcloud,out_pointcloud;
     sensor_msgs::PointCloud2 pointcloud2;
@@ -16,7 +16,7 @@ void cloudCallback(const sensor_msgs::PointCloud2::ConstPtr& input_cloud){
     {
         const auto& point = pointcloud.points[i];
         // 计算点与参考点之间的距离,如果点在指定范围内，则跳过该点
-        if (point.z <= filter_range)
+        if (point.z > 30 || point.z <= filter_range_z || point.x <= -filter_range_x || point.x > filter_range_x || point.y <= -filter_range_y || point.y > filter_range_y)
             continue;
         // 将点添加到输出点云
         out_pointcloud.points.push_back(point);
@@ -31,7 +31,9 @@ int main(int argc,char** argv){
   ros::NodeHandle nh;
 
   int uav_id = 1;
-  nh.param<double>("filter_range", filter_range, 0.5);
+  nh.param<double>("filter_range_x", filter_range_x, 25.0);
+  nh.param<double>("filter_range_y", filter_range_y, 25.0);
+  nh.param<double>("filter_range_z", filter_range_z, 0.5);
   nh.param<int>("uav_id", uav_id, 1);
   mid_sub = nh.subscribe<sensor_msgs::PointCloud2>("/uav" + std::to_string(uav_id) + "/mid_point_cloud_centers", 10, cloudCallback);
   mid_pub = nh.advertise<sensor_msgs::PointCloud2>("/uav" + std::to_string(uav_id) + "/octomap_point_cloud_centers", 10);

@@ -9,6 +9,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
 #include <vector>
+#include <string>
 #include <visualization_msgs/Marker.h>
 
 #include <bspline_opt/bspline_optimizer.h>
@@ -19,7 +20,8 @@
 #include <traj_utils/DataDisp.h>
 #include <plan_manage/planner_manager.h>
 #include <traj_utils/planning_visualization.h>
-
+#include <prometheus_msgs/ParamSettings.h>
+#include <std_msgs/Bool.h>
 using std::vector;
 
 namespace ego_planner
@@ -80,12 +82,13 @@ namespace ego_planner
     std::vector<Eigen::Vector3d> wps_;
     int current_wp_;
 
-    bool flag_escape_emergency_;
-
+    bool flag_escape_emergency_,has_last_bspline_;
+    std_msgs::Bool stop_control_state;
+    traj_utils::Bspline last_bspline_;
     /* ROS utils */
     ros::NodeHandle node_;
     ros::Timer exec_timer_, safety_timer_;
-    ros::Subscriber waypoint_sub_, odom_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_;
+    ros::Subscriber waypoint_sub_, odom_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_ ,param_sub_,stop_control_state_sub;
     ros::Publisher replan_pub_, new_pub_, bspline_pub_, data_disp_pub_, swarm_trajs_pub_, broadcast_bspline_pub_;
 
     /* helper functions */
@@ -111,10 +114,31 @@ namespace ego_planner
     void odometryCallback(const nav_msgs::OdometryConstPtr &msg);
     void swarmTrajsCallback(const traj_utils::MultiBsplinesPtr &msg);
     void BroadcastBsplineCallback(const traj_utils::BsplinePtr &msg);
-
+    void paramCallback(const prometheus_msgs::ParamSettingsConstPtr &msg);
     bool checkCollision();
     void publishSwarmTrajs(bool startup_pub);
-
+    void stop_control_state_cb(const std_msgs::Bool::ConstPtr &msg);
+    std::vector<std::string> fsm_params_compare={ "flight_type","waypoint_num",
+                                                  "emergency_time","planning_horizon","thresh_no_replan_meter",
+                                                  "thresh_replan_time","waypoint0_x","waypoint0_y","waypoint0_z",
+                                                  "waypoint1_x","waypoint1_y","waypoint1_z","waypoint2_x","waypoint2_y",
+                                                  "waypoint2_z","waypoint3_x","waypoint3_y","waypoint3_z","fail_safe","realworld_experiment"
+                                                }; 
+    std::vector<std::string> fsm_params_compare_all;
+    std::vector<int*> fsm_params_get_i;
+    std::vector<bool*> fsm_params_get_b;
+    std::vector<double*> fsm_params_get_d;
+    inline void pre_fsm_params_compare(std::vector<std::string>& fsm_params_compare, std::vector<std::string>& fsm_params_compare_all)
+    {
+        // 确保 fsm_params_compare_all 的大小足够大
+        fsm_params_compare_all.resize(fsm_params_compare.size());
+        
+        // 遍历 fsm_params_compare，将每个元素添加前缀，并赋值给 fsm_params_compare_all
+        for (size_t i = 0; i < fsm_params_compare.size(); ++i) 
+        {
+            fsm_params_compare_all[i] = "/uav1_ego_planner_node/fsm/" + fsm_params_compare[i]; 
+        }
+    }
   public:
     EGOReplanFSM(/* args */)
     {
@@ -124,7 +148,6 @@ namespace ego_planner
     }
 
     void init(ros::NodeHandle &nh);
-
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };
 
