@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   message_filters
   laser_geometry
+  prometheus_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -25,7 +26,7 @@ find_package(PCL 1.7 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES plan_env
- CATKIN_DEPENDS roscpp std_msgs
+ CATKIN_DEPENDS roscpp std_msgs prometheus_msgs
  DEPENDS OpenCV
 #  DEPENDS system_lib
 )
@@ -33,6 +34,7 @@ catkin_package(
 include_directories( 
     SYSTEM 
     include 
+    /home/amov/Prometheus/devel/include/prometheus_msgs/ParamSettings.h
     ${catkin_INCLUDE_DIRS}
     ${Eigen3_INCLUDE_DIRS} 
     ${PCL_INCLUDE_DIRS}

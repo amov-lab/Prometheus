@@ -11,6 +11,8 @@ namespace ego_planner
     have_target_ = false;
     have_odom_ = false;
     have_recv_pre_agent_ = false;
+    has_last_bspline_ = false;
+    stop_control_state.data = false;
 
     // 目标点类型：1，手动设定目标点；2，预设目标点
     nh.param("fsm/flight_type", target_type_, -1);
@@ -36,7 +38,12 @@ namespace ego_planner
       nh.param("fsm/waypoint" + to_string(i) + "_y", waypoints_[i][1], -1.0);
       nh.param("fsm/waypoint" + to_string(i) + "_z", waypoints_[i][2], -1.0);
     }
-
+    fsm_params_get_i = { &target_type_, &waypoint_num_};
+    fsm_params_get_b = { &enable_fail_safe_, &flag_realworld_experiment_};
+    fsm_params_get_d = { &emergency_time_, &planning_horizen_, &no_replan_thresh_, &replan_thresh_,
+                                              &waypoints_[0][0], &waypoints_[0][1], &waypoints_[0][2], &waypoints_[1][0],
+                                              &waypoints_[1][1], &waypoints_[1][2], &waypoints_[2][0], &waypoints_[2][1],
+                                              &waypoints_[2][2], &waypoints_[3][0], &waypoints_[3][1], &waypoints_[3][2]};
     /* initialize main modules */
     // 显示类
     visualization_.reset(new PlanningVisualization(nh));
@@ -53,6 +60,9 @@ namespace ego_planner
     safety_timer_ = nh.createTimer(ros::Duration(0.05), &EGOReplanFSM::checkCollisionCallback, this);
     // 订阅里程计
     odom_sub_ = nh.subscribe("odom_world", 1, &EGOReplanFSM::odometryCallback, this);
+    // 订阅参数服务器内ego相关的参数
+    param_sub_ = nh.subscribe("/uav1/prometheus/param_settings", 1, &EGOReplanFSM::paramCallback, this);
+    stop_control_state_sub = nh.subscribe("/uav1/prometheus/stop_control_state",1,&EGOReplanFSM::stop_control_state_cb,this);
 
     // 订阅其他无人机位置
     // ~/swarm_trajs是发送给相邻的无人机，~/broadcast_bspline_from_planner是发送给所有无人机
@@ -67,6 +77,7 @@ namespace ego_planner
 
     broadcast_bspline_pub_ = nh.advertise<traj_utils::Bspline>("planning/broadcast_bspline_from_planner", 10);
     broadcast_bspline_sub_ = nh.subscribe("planning/broadcast_bspline_to_planner", 100, &EGOReplanFSM::BroadcastBsplineCallback, this, ros::TransportHints().tcpNoDelay());
+
 
     bspline_pub_ = nh.advertise<traj_utils::Bspline>("planning/bspline", 10);
     data_disp_pub_ = nh.advertise<traj_utils::DataDisp>("planning/data_display", 100);
@@ -125,7 +136,10 @@ namespace ego_planner
     else
       cout << "Wrong target_type_ value! target_type_=" << target_type_ << endl;
   }
-
+  void EGOReplanFSM::stop_control_state_cb(const std_msgs::Bool::ConstPtr &msg)
+  {
+    stop_control_state = *msg;
+  }
   // 读取 预设目标点
   void EGOReplanFSM::readGivenWps()
   {
@@ -232,6 +246,40 @@ namespace ego_planner
     odom_orient_.z() = msg->pose.pose.orientation.z;
 
     have_odom_ = true;
+  }
+
+  void EGOReplanFSM::paramCallback(const prometheus_msgs::ParamSettingsConstPtr &msg)
+  {
+    //std::cout <<"param_settings_name = "<< msg->param_name[0]<<"\t"<<"param_settings_value = "<< msg->param_value[0]<<std::endl;
+    pre_fsm_params_compare(fsm_params_compare, fsm_params_compare_all);
+    // 遍历 param_name 和 param_value，更新参数
+    for (size_t i = 0; i < fsm_params_compare_all.size(); ++i) 
+    {
+      auto it = std::find(( fsm_params_compare_all.begin()),(fsm_params_compare_all.end()), msg->param_name[0]);
+      if (it != fsm_params_compare_all.end()) 
+      {
+        size_t index = std::distance(fsm_params_compare_all.begin(), it);
+        //std::cout << "Value: " << " found at index: " << index << typeid(index).name()<< std::endl;
+
+        if(index < 2){
+          *fsm_params_get_i[index] = std::stoi(msg->param_value[0]);
+          //std::cout << "*fsm_params_get_i[index] =" << *fsm_params_get_i[index] << std::endl;
+        }else if(index < 18)
+        {
+          *fsm_params_get_d[index - 2] = std::stod(msg->param_value[0]);
+          //std::cout << "&fsm_params_get_d[] = " << &fsm_params_get_d[index - 2]<<"*fsm_params_get_d[] = " << *fsm_params_get_d[index - 2]<<"\n"<<"&planning_horizen_ = "<<&planning_horizen_<<"planning_horizen_ = "<<planning_horizen_<< std::endl;
+        }else
+        {
+          if(msg->param_value[0] == "0"){
+            *fsm_params_get_b[index - 18] = false ; 
+            //std::cout << "*fsm_params_get_i[index-18] = " << *fsm_params_get_b[index -18] <<"\n"<< "msg->param_value[index]_0 = " << msg->param_value[0]<< std::endl;
+          }else{
+            *fsm_params_get_b[index - 18] = true ;          
+            //std::cout << "*fsm_params_get_i[index-18] = " << *fsm_params_get_b[index -18] <<"\n"<< "msg->param_value[index]_0 = " << msg->param_value[0]<< std::endl;
+          }
+        }
+      }
+    }
   }
 
   void EGOReplanFSM::BroadcastBsplineCallback(const traj_utils::BsplinePtr &msg)
@@ -642,10 +690,13 @@ namespace ego_planner
     //cout << "info->velocity_traj_=" << info->velocity_traj_.get_control_points() << endl;
 
     // 将start_pt改为当前位置?
-    start_pt_ = info->position_traj_.evaluateDeBoorT(t_cur);
-    start_vel_ = info->velocity_traj_.evaluateDeBoorT(t_cur);
+    // // // start_pt_ = info->position_traj_.evaluateDeBoorT(t_cur);
+    // // // start_vel_ = info->velocity_traj_.evaluateDeBoorT(t_cur);
+    // // // start_acc_ = info->acceleration_traj_.evaluateDeBoorT(t_cur);
+    start_pt_ = odom_pos_;
+    start_vel_ = odom_vel_;
+    // // // start_acc_.setZero();
     start_acc_ = info->acceleration_traj_.evaluateDeBoorT(t_cur);
-
     bool success = callReboundReplan(false, false);
 
     if (!success)
@@ -781,38 +832,80 @@ namespace ego_planner
 
       Eigen::MatrixXd pos_pts = info->position_traj_.getControlPoint();
       bspline.pos_pts.reserve(pos_pts.cols());
-      for (int i = 0; i < pos_pts.cols(); ++i)
+      while (true)
       {
-        geometry_msgs::Point pt;
-        pt.x = pos_pts(0, i);
-        pt.y = pos_pts(1, i);
-        pt.z = pos_pts(2, i);
-        bspline.pos_pts.push_back(pt);
-      }
+        bool stop_flag;
+        for (int i = 0; i < pos_pts.cols(); ++i)
+        {
+          if(stop_control_state.data)
+          {
+            stop_flag = stop_control_state.data;
+            return false;
+          }
+          geometry_msgs::Point pt;
+          pt.x = pos_pts(0, i);
+          pt.y = pos_pts(1, i);
+          pt.z = pos_pts(2, i);
 
+          bspline.pos_pts.push_back(pt);
+        }
+        if (!stop_control_state.data)
+        {
+          stop_flag = stop_control_state.data;
+          break;  // 退出 while 循环
+        }
+      }
+  
       Eigen::VectorXd knots = info->position_traj_.getKnot();
       // cout << knots.transpose() << endl;
       bspline.knots.reserve(knots.rows());
-      for (int i = 0; i < knots.rows(); ++i)
+      // 只有在 stop_control_state.data 为 false 时才发布轨迹
+      if (!stop_control_state.data)
       {
-        bspline.knots.push_back(knots(i));
+        for (int i = 0; i < knots.rows(); ++i)
+        {
+          bspline.knots.push_back(knots(i));
+        }
+
+        /* 1. publish traj to traj_server */
+        bspline_pub_.publish(bspline);
+
+        /* 2. publish traj to the next drone of swarm */
+
+        /* 3. publish traj for visualization */
+        // 发布优化后的轨迹   "/optimal_list" , 颜色和scale已经内置
+        visualization_->displayOptimalList(info->position_traj_.get_control_points(), 0);
       }
-
-      /* 1. publish traj to traj_server */
-      bspline_pub_.publish(bspline);
-
-      /* 2. publish traj to the next drone of swarm */
-
-      /* 3. publish traj for visualization */
-      // 发布优化后的轨迹   "/optimal_list" , 颜色和scale已经内置
-      visualization_->displayOptimalList(info->position_traj_.get_control_points(), 0);
     }
-
     return plan_and_refine_success;
   }
 
   void EGOReplanFSM::publishSwarmTrajs(bool startup_pub)
   {
+    // if (stop_control_state.data)
+    // {
+    //   ROS_INFO("Trajectory publishing is paused.");
+    //   // 保存当前的Bspline轨迹状态
+    //   if (!has_last_bspline_) {
+    //     last_bspline_ = bspline;  // 保存当前Bspline
+    //     has_last_bspline_ = true; // 标记已经有保存的轨迹
+    //   }
+    //   return; // 暂停发布
+    // }
+
+    // // 如果暂停之后恢复发布，重新发布上次的轨迹
+    // if (has_last_bspline_)
+    // {
+    //   ROS_INFO("Resuming trajectory publishing with saved trajectory.");
+    //   // 发布保存的轨迹
+    //   if (startup_pub)
+    //   {
+    //     swarm_trajs_pub_.publish(multi_bspline_msgs_buf_);
+    //   }
+    //   broadcast_bspline_pub_.publish(last_bspline_);
+    //   has_last_bspline_ = false;  // 重置保存的轨迹状态
+    // }
+
     auto info = &planner_manager_->local_data_;
 
     traj_utils::Bspline bspline;
@@ -892,7 +985,6 @@ namespace ego_planner
     {
       bspline.knots.push_back(knots(i));
     }
-
     bspline_pub_.publish(bspline);
 
     return true;
