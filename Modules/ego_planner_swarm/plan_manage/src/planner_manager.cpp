@@ -68,22 +68,22 @@ namespace ego_planner
       if (it != manage_params_compare_all.end()) 
       {
         size_t index = std::distance(manage_params_compare_all.begin(), it);
-        std::cout << "Value: " << " found at index: " << index << typeid(index).name()<< std::endl;
+        //std::cout << "Value: " << " found at index: " << index << typeid(index).name()<< std::endl;
         if(index < 6){
           *manage_params_get_d[index] = std::stoi(msg->param_value[0]);
-          std::cout << "*manage_params_get_d[index] =" << *manage_params_get_d[index] << std::endl;
+          //std::cout << "*manage_params_get_d[index] =" << *manage_params_get_d[index] << std::endl;
         }else if(index < 7)
         {
           pp_.drone_id = std::stod(msg->param_value[0]);
-          std::cout << "pp_.drone_id = " << pp_.drone_id<<"\n" << "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
+          //std::cout << "pp_.drone_id = " << pp_.drone_id<<"\n" << "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
         }else
         {
           if(msg->param_value[0] == "0"){
             pp_.use_distinctive_trajs = false ; 
-            std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
+            //std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
           }else{
             pp_.use_distinctive_trajs = true ;          
-            std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0]<< std::endl;
+            //std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0]<< std::endl;
           }
         }
       }
@@ -162,7 +162,6 @@ namespace ego_planner
           point_set.clear();
           flag_too_far = false;
           Eigen::Vector3d last_pt = gl_traj.evaluate(0);
-          cout << "rebound aaAAAAAAAA"<< endl;
           for (t = 0; t < time; t += ts)
           {
             Eigen::Vector3d pt = gl_traj.evaluate(t);
@@ -259,7 +258,6 @@ namespace ego_planner
         }
       }
     } while (flag_regenerate);
-    cout << "rebound aaBBBBBBB"<< endl;
     Eigen::MatrixXd ctrl_pts, ctrl_pts_temp;
     UniformBspline::parameterizeToBspline(ts, point_set, start_end_derivatives, ctrl_pts);
 
@@ -384,7 +382,6 @@ namespace ego_planner
 
     // success. YoY
     continous_failures_count_ = 0;
-    std::cout<<"reboundReplan _end end end"<<std::endl;
     return true;
   }
 

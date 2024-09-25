@@ -832,17 +832,14 @@ namespace ego_planner
 
       Eigen::MatrixXd pos_pts = info->position_traj_.getControlPoint();
       bspline.pos_pts.reserve(pos_pts.cols());
-      std::cout << "aaaaaa = "<< std::to_string(stop_control_state.data)<< std::endl;
       while (true)
       {
         bool stop_flag;
-        std::cout << "bbbbbbb = "<< std::to_string(stop_control_state.data)<< std::endl;
         for (int i = 0; i < pos_pts.cols(); ++i)
         {
           if(stop_control_state.data)
           {
             stop_flag = stop_control_state.data;
-            std::cout << "stop_control_state.data = " << stop_flag << std::endl;
             return false;
           }
           geometry_msgs::Point pt;
@@ -855,7 +852,6 @@ namespace ego_planner
         if (!stop_control_state.data)
         {
           stop_flag = stop_control_state.data;
-          std::cout << "break while = " << stop_flag << std::endl;
           break;  // 退出 while 循环
         }
       }
@@ -872,7 +868,6 @@ namespace ego_planner
         }
 
         /* 1. publish traj to traj_server */
-        std::cout << "bbbbbbbbbb bspline bbbbbbbbbb" <<std::endl;
         bspline_pub_.publish(bspline);
 
         /* 2. publish traj to the next drone of swarm */
@@ -990,7 +985,6 @@ namespace ego_planner
     {
       bspline.knots.push_back(knots(i));
     }
-    std::cout << "aaaaaaaa bspline aaaaaaaaa" <<std::endl;
     bspline_pub_.publish(bspline);
 
     return true;

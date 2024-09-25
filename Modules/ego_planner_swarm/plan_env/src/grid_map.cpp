@@ -196,7 +196,6 @@ void GridMap::initMap(ros::NodeHandle &nh)
 
 void GridMap::gridparam_Callback(const prometheus_msgs::ParamSettingsConstPtr &msg)
 {
-  std::cout <<"param_settings_name = "<< msg->param_name[0]<<"\t"<<"param_settings_value = "<< msg->param_value[0]<<std::endl;
   pre_grid_params_compare(grid_params_compare, grid_params_compare_all);
   // 遍历 param_name 和 param_value，更新参数
   for (size_t i = 0; i < grid_params_compare_all.size(); ++i) 
