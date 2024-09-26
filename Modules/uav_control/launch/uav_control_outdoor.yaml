@@ -18,6 +18,10 @@ control:
   maximum_safe_vel_z : 4.0
   ## 最大vision/px4速度误差
   maximum_vel_error_for_vision : 2.0
+  ## px4中定位源参数设置的值
+  enable_aid_hgt_load : true
+  ekf2_aid_mask : 1
+  ekf2_hgt_mode : 0
 
 ##　地理围栏
 geo_fence:

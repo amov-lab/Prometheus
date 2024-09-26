@@ -14,6 +14,9 @@
 #include <mavros_msgs/RCIn.h>
 #include <mavros_msgs/CommandLong.h>
 #include <mavros_msgs/CommandHome.h>
+#include <mavros_msgs/ParamGet.h>
+#include <mavros_msgs/ParamSet.h>
+#include <mavros_msgs/ParamValue.h>
 
 #include <std_msgs/Bool.h>
 
@@ -63,6 +66,9 @@ public:
     ros::ServiceClient px4_set_mode_client;
     ros::ServiceClient px4_reboot_client;
     ros::ServiceClient px4_emergency_client;
+    // 飞控参数获取/修改服务
+    ros::ServiceClient px4_param_get_client;
+    ros::ServiceClient px4_param_set_client;
 
     prometheus_msgs::UAVCommand uav_command;      // 指令
     prometheus_msgs::UAVCommand uav_command_last; // 上一时刻指令
@@ -108,6 +114,11 @@ public:
     };
     geo_fence uav_geo_fence;
 
+    // 记录px4参数根据定位源不同值
+    int ekf2_aid_mask;
+    int ekf2_hgt_mode;
+    bool is_rebot_px4 = false;
+
     // 基本变量
     int uav_id;      // 无人机编号
     string uav_name; // 无人机名字
@@ -143,7 +154,7 @@ public:
     double Hover_yaw;
     ros::Time last_set_hover_pose_time;
 
-
+    ros::Timer check_px4_location_source_timer;
     ros::Timer ground_station_info_timer;
 
     pos_controller_PID pos_controller_pid;
@@ -200,6 +211,9 @@ private:
     void reboot_PX4();
 
     void load_communication_param(ros::NodeHandle &nh);
+    // 定时器检查当前定位源下飞控参数设置是否正确
+    void timercb_check_px4_location_source(const ros::TimerEvent &e);
+    bool px4_param_set(std::string param_id, int64_t param_value);
 };
 
 #endif

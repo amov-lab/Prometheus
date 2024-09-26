@@ -27,6 +27,11 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
     nh.param<float>("geo_fence/y_max", uav_geo_fence.y_max, 100.0);
     nh.param<float>("geo_fence/z_min", uav_geo_fence.z_min, -100.0);
     nh.param<float>("geo_fence/z_max", uav_geo_fence.z_max, 100.0);
+    // 【参数】定位源px4参数设置
+    bool enable_aid_hgt_load = false;
+    nh.param<bool>("control/enable_aid_hgt_load", enable_aid_hgt_load, false);
+    nh.param<int>("control/ekf2_aid_mask", ekf2_aid_mask, 24);
+    nh.param<int>("control/ekf2_hgt_mode", ekf2_hgt_mode, 3);
 
     load_communication_param(nh);
 
@@ -145,8 +150,17 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh)
 
     // 【服务】重启PX4飞控
     px4_reboot_client = nh.serviceClient<mavros_msgs::CommandLong>("/uav" + std::to_string(uav_id) + "/mavros/cmd/command");
-    
+
+    // 【服务】PX4参数获取服务
+    this->px4_param_get_client = nh.serviceClient<mavros_msgs::ParamGet>("/uav" + std::to_string(uav_id) + "/mavros/param/get");
+    // 【服务】PX4参数设置服务
+    this->px4_param_set_client = nh.serviceClient<mavros_msgs::ParamSet>("/uav" + std::to_string(uav_id) + "/mavros/param/set");
+
     this->ground_station_info_timer = nh.createTimer(ros::Duration(0.1), &UAV_controller::sendStationTextInfo, this);
+
+    if(enable_aid_hgt_load){
+        this->check_px4_location_source_timer = nh.createTimer(ros::Duration(1), &UAV_controller::timercb_check_px4_location_source, this);
+    }
 
     control_state = CONTROL_STATE::INIT;
     uav_control_state.failsafe = false;
@@ -1532,4 +1546,73 @@ void UAV_controller::load_communication_param(ros::NodeHandle &nh)
     nh.getParam("/communication_bridge/geo_fence/y_max",uav_geo_fence.y_max);
     nh.getParam("/communication_bridge/geo_fence/z_min",uav_geo_fence.z_min);
     nh.getParam("/communication_bridge/geo_fence/z_max",uav_geo_fence.z_max);
+}
+
+// 检查当前定位源下飞控参数设置是否正确，不正确将进行修改，正确就停止该定时器
+void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
+{
+    // 如果PX4未连接或者解锁，则退出不进行修改，防止出现意外
+    if(!uav_state.connected || uav_state.armed) return;
+
+    // 设置EKF2_AID_MASK和EKF2_HGT_MODE
+    if(px4_param_set("EKF2_AID_MASK",ekf2_aid_mask) && px4_param_set("EKF2_HGT_MODE",ekf2_hgt_mode))
+    {
+        // 判断是否需要重启飞控
+        if(is_rebot_px4)
+        {
+            reboot_PX4();
+            is_rebot_px4 = false;
+        }
+        this->text_info.MessageType = prometheus_msgs::TextInfo::INFO;
+        this->text_info.Message = "EKF2_AID_MASK and EKF2_HGT_MODE init success!";
+        // 停止该定时器
+        check_px4_location_source_timer.stop();
+    }
+}
+
+bool UAV_controller::px4_param_set(std::string param_id, int64_t param_value)
+{
+    // 获取并记录飞控当前的参数值
+    int64_t px4_param_value = -1;
+    mavros_msgs::ParamGet px4_param_get;
+    px4_param_get.request.param_id = param_id;
+    px4_param_get.response.success = false;
+    if(this->px4_param_get_client.call(px4_param_get))
+    {
+        if(!px4_param_get.response.success)
+        {
+            return false;
+        }
+        px4_param_value = px4_param_get.response.value.integer;
+    }
+    if(px4_param_value == -1){
+        return false;
+    }
+
+    // 根据ROS参数值先进行比较，不同就进行设置
+    mavros_msgs::ParamSet px4_param_set;
+    if(px4_param_value != param_value)
+    {
+        px4_param_set.request.param_id = param_id;
+        px4_param_set.request.value.integer = param_value;
+        px4_param_set.response.success = false;
+        if(this->px4_param_set_client.call(px4_param_set))
+        {
+            if(!px4_param_set.response.success)
+            {
+                return false;
+            }
+            this->text_info.MessageType = prometheus_msgs::TextInfo::INFO;
+            this->text_info.Message = "set px4 param success!" + param_id + ": " + to_string(px4_param_value) + "->" + to_string(px4_param_set.response.value.integer);
+            cout << GREEN << "set px4 param success ! " + param_id +" : " << px4_param_set.response.value.integer << endl;
+        }else
+        {
+            this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+            this->text_info.Message = "set px4 param faild: " + param_id;
+            cout << RED << "set px4 param faild ! " + param_id + " : " << px4_param_set.response.value.integer << endl;
+            return false;
+        }
+        is_rebot_px4 = true;
+    }
+    return true;
 }
