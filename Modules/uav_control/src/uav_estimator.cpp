@@ -214,6 +214,10 @@ void UAV_estimator::timercb_pub_uav_state(const ros::TimerEvent &e)
 {
     if (!uav_state_update)
     {
+        // 发布uav_state
+        // uav_state.header.stamp = ros::Time::now();
+        uav_state.odom_valid = false;
+        uav_state_pub.publish(uav_state);
         return;
     }
 
