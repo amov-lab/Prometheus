@@ -29,84 +29,58 @@ std::unordered_map<std::string, std::string> ParamManager::getParams(std::string
             }
         }
 
-        // 尝试获取不同类型的参数
-        std::string value_string;
-        if (nh_.getParam(param_name, value_string))
+        XmlRpc::XmlRpcValue value;
+        if(!nh_.getParam(param_name, value)) continue;
+
+        // 检查获取参数的结果并转换为字符串
+        if (value.getType() == XmlRpc::XmlRpcValue::TypeString)
         {
-            param_map[param_name] = value_string;
+            param_map[param_name] = std::string(value);
+        }
+        else if (value.getType() == XmlRpc::XmlRpcValue::TypeInt)
+        {
+            param_map[param_name] = std::to_string(static_cast<int>(value));
+        }
+        else if (value.getType() == XmlRpc::XmlRpcValue::TypeDouble)
+        {
+            param_map[param_name] = std::to_string(static_cast<double>(value));
+        }
+        else if (value.getType() == XmlRpc::XmlRpcValue::TypeBoolean)
+        {
+            param_map[param_name] = value ? "true" : "false";
+        }
+        else if (value.getType() == XmlRpc::XmlRpcValue::TypeArray)
+        {
+            std::string vector_string = "[";
+            for (int i = 0; i < value.size(); ++i)
+            {
+                vector_string += XmlRpcValueToString(value[i]);
+                if (i < value.size() - 1)
+                {
+                    vector_string += ", ";
+                }
+            }
+            vector_string += "]";
+            param_map[param_name] = vector_string;
+        }
+        else if (value.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+        {
+            std::string struct_string = "{";
+            for (int i = 0; i < value.size(); ++i)
+            {
+                struct_string += std::string(value[i][0]) + ": " + XmlRpcValueToString(value[i][1]) + ", ";
+            }
+            if (value.size() > 0) {
+                struct_string.erase(struct_string.length() - 2); // 移除最后的逗号和空格
+            }
+            struct_string += "}";
+            param_map[param_name] = struct_string;
         }
         else
         {
-            int int_value;
-            if (nh_.getParam(param_name, int_value))
-            {
-                param_map[param_name] = std::to_string(int_value);
-            }
-            else
-            {
-                double double_value;
-                if (nh_.getParam(param_name, double_value))
-                {
-                    param_map[param_name] = std::to_string(double_value);
-                }
-                else
-                {
-                    bool bool_value;
-                    if (nh_.getParam(param_name, bool_value))
-                    {
-                        param_map[param_name] = std::to_string(bool_value);
-                    }
-                    else
-                    {
-                        std::vector<int> int_vector_value;
-                        if (nh_.getParam(param_name, int_vector_value))
-                        {
-                            std::string vector_string = "[";
-                            for (const auto &val : int_vector_value)
-                            {
-                                vector_string += std::to_string(val) + " ";
-                            }
-                            vector_string += "]";
-                            param_map[param_name] = vector_string;
-                        }
-                        else
-                        {
-                            std::vector<double> double_vector_value;
-                            if (nh_.getParam(param_name, double_vector_value))
-                            {
-                                std::string vector_string = "[";
-                                for (const auto &val : double_vector_value)
-                                {
-                                    vector_string += std::to_string(val) + " ";
-                                }
-                                vector_string += "]";
-                                param_map[param_name] = vector_string;
-                            }
-                            else
-                            {
-                                std::vector<std::string> string_vector_value;
-                                if (nh_.getParam(param_name, string_vector_value))
-                                {
-                                    std::string vector_string = "[";
-                                    for (const auto &val : string_vector_value)
-                                    {
-                                        vector_string += val + " ";
-                                    }
-                                    vector_string += "]";
-                                    param_map[param_name] = vector_string;
-                                }
-                                else
-                                {
-                                    param_map[param_name] = "(failed to get value)";
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            param_map[param_name] = "(unsupported type)";
         }
     }
-
     // for (const auto& pair : param_map) {
     //     std::cout << pair.first << ": " << pair.second << std::endl;
     // }
@@ -123,6 +97,23 @@ std::string ParamManager::toLowerCase(const std::string &str)
     return result; // 返回转换后的字符串
 }
 
+// XmlRpcValue 转换为 std::string 的辅助函数
+std::string ParamManager::XmlRpcValueToString(const XmlRpc::XmlRpcValue& value)
+{
+    switch (value.getType()) {
+        case XmlRpc::XmlRpcValue::TypeString:
+            return std::string(value);
+        case XmlRpc::XmlRpcValue::TypeInt:
+            return std::to_string(static_cast<int>(value));
+        case XmlRpc::XmlRpcValue::TypeDouble:
+            return std::to_string(static_cast<double>(value));
+        case XmlRpc::XmlRpcValue::TypeBoolean:
+            return value ? "true" : "false";
+        default:
+            return "(unsupported type)";
+    }
+}
+
 bool ParamManager::setParam(std::string name, std::string value)
 {
     // 获取当前参数的值
@@ -137,7 +128,7 @@ bool ParamManager::setParam(std::string name, std::string value)
             {
                 int int_value = std::stoi(value);
                 nh_.setParam(name, int_value);
-                //ROS_INFO("Parameter '%s' set to int: %d", name.c_str(), int_value);
+                // ROS_INFO("Parameter '%s' set to int: %d", name.c_str(), int_value);
             }
             catch (const std::invalid_argument &)
             {
@@ -151,7 +142,7 @@ bool ParamManager::setParam(std::string name, std::string value)
             {
                 double double_value = std::stod(value);
                 nh_.setParam(name, double_value);
-                //ROS_INFO("Parameter '%s' set to double: %f", name.c_str(), double_value);
+                // ROS_INFO("Parameter '%s' set to double: %f", name.c_str(), double_value);
             }
             catch (const std::invalid_argument &)
             {
@@ -162,19 +153,19 @@ bool ParamManager::setParam(std::string name, std::string value)
 
         case XmlRpc::XmlRpcValue::TypeString:
             nh_.setParam(name, value);
-            //ROS_INFO("Parameter '%s' set to string: %s", name.c_str(), value.c_str());
+            // ROS_INFO("Parameter '%s' set to string: %s", name.c_str(), value.c_str());
             break;
 
         case XmlRpc::XmlRpcValue::TypeBoolean:
             if (value == "true" || value == "1")
             {
                 nh_.setParam(name, true);
-                //ROS_INFO("Parameter '%s' set to boolean: true", name.c_str());
+                // ROS_INFO("Parameter '%s' set to boolean: true", name.c_str());
             }
             else if (value == "false" || value == "0")
             {
                 nh_.setParam(name, false);
-                //ROS_INFO("Parameter '%s' set to boolean: false", name.c_str());
+                // ROS_INFO("Parameter '%s' set to boolean: false", name.c_str());
             }
             else
             {
@@ -192,7 +183,7 @@ bool ParamManager::setParam(std::string name, std::string value)
     {
         // 如果参数不存在，直接设置为字符串
         nh_.setParam(name, value);
-        //ROS_INFO("Parameter '%s' set to string (default): %s", name.c_str(), value.c_str());
+        // ROS_INFO("Parameter '%s' set to string (default): %s", name.c_str(), value.c_str());
     }
     return true;
 }

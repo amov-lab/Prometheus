@@ -21,6 +21,8 @@ public:
 private:
     std::string toLowerCase(const std::string &str);
 
+    std::string XmlRpcValueToString(const XmlRpc::XmlRpcValue& value);
+
 private:
     ros::NodeHandle nh_;
 };
