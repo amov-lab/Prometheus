@@ -1022,9 +1022,12 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
     return;
   }
 
-  if (latest_cloud.points.size() == 0)
+  if (latest_cloud.points.size() == 0){
+    stop_publishMapInflate = true;
     return;
-
+  }else{
+    stop_publishMapInflate = false;
+  }
   if (isnan(md_.camera_pos_(0)) || isnan(md_.camera_pos_(1)) || isnan(md_.camera_pos_(2)))
     return;
 
@@ -1281,7 +1284,14 @@ void GridMap::publishMapInflate(bool all_info)
   sensor_msgs::PointCloud2 cloud_msg;
 
   pcl::toROSMsg(cloud, cloud_msg);
-  map_inf_pub_.publish(cloud_msg); 
+  if(stop_publishMapInflate){
+    cloud_msg.data.clear();
+    cloud_msg.width = 0;
+    cloud_msg.height = 0;
+    map_inf_pub_.publish(cloud_msg); 
+  }else{
+    map_inf_pub_.publish(cloud_msg); 
+  }
 }
 
 bool GridMap::odomValid() { return md_.has_odom_; }
