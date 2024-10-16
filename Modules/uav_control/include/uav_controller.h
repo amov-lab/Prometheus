@@ -38,6 +38,8 @@
 #include "pos_controller_UDE.h"
 #include "pos_controller_NE.h"
 
+#include "param_manager.hpp"
+
 using namespace std;
 
 class UAV_controller
@@ -115,8 +117,6 @@ public:
     geo_fence uav_geo_fence;
 
     // 记录px4参数根据定位源不同值
-    int ekf2_aid_mask;
-    int ekf2_hgt_mode;
     bool is_rebot_px4 = false;
 
     // 基本变量
@@ -131,6 +131,10 @@ public:
     float Disarm_height;  // 自动上锁高度
     float Land_speed;     // 降落速度
     bool set_landing_des;
+
+    // PX4参数 用于存储需要修改的PX4参数
+    std::unordered_map<std::string, std::string> px4_params;
+    ros::NodeHandle nh;
 
     // 无人机状态量
     Eigen::Vector3d uav_pos;     // 无人机位置
@@ -211,9 +215,11 @@ private:
     void reboot_PX4();
 
     void load_communication_param(ros::NodeHandle &nh);
+    std::unordered_map<std::string, std::string> get_px4_params(ros::NodeHandle &nh);
     // 定时器检查当前定位源下飞控参数设置是否正确
     void timercb_check_px4_location_source(const ros::TimerEvent &e);
     bool px4_param_set(std::string param_id, int64_t param_value);
+    bool px4_param_set(std::string param_id, double param_value);
 };
 
 #endif

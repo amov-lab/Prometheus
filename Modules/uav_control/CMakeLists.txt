@@ -47,13 +47,14 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   include/Position_Controller
   ../common/include
+  ../communication/include
 )
 
 
 ###############################
 ##      声明可执行cpp文件     ##
 ###############################
-add_library(uav_controller src/uav_controller.cpp)
+add_library(uav_controller src/uav_controller.cpp ../communication/src/param_manager.cpp)
 add_library(uav_estimator src/uav_estimator.cpp)
 target_link_libraries(uav_estimator ${catkin_LIBRARIES})
 

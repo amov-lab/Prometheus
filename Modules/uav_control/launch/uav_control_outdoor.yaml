@@ -18,10 +18,12 @@ control:
   maximum_safe_vel_z : 4.0
   ## 最大vision/px4速度误差
   maximum_vel_error_for_vision : 2.0
-  ## px4中定位源参数设置的值
-  enable_aid_hgt_load : true
-  ekf2_aid_mask : 1
-  ekf2_hgt_mode : 0
+  
+## px4参数是否加载 enable_px4_params_load 为true的情况，将加载下面px4_params中的参数到飞控中
+enable_px4_params_load : true
+px4_params: # 严格区分参数值，为int64和float64，如果参数值为float64，需要设置小数点如：1.0
+  EKF2_AID_MASK : 1
+  EKF2_HGT_MODE : 0
 
 ##　地理围栏
 geo_fence:
