@@ -180,8 +180,8 @@ void CommunicationBridge::serverFun()
 
         std::cout << "tcp valread: " << valread << std::endl;
         // char *ptr = tcp_recv_buf;
-        pubMsg(decodeMsg(tcp_recv_buf, Send_Mode::TCP));
         close(recv_sock);
+        pubMsg(decodeMsg(tcp_recv_buf, Send_Mode::TCP));
     }
 }
 
