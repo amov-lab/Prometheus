@@ -1550,7 +1550,7 @@ void UAV_controller::load_communication_param(ros::NodeHandle &nh)
 std::unordered_map<std::string, std::string> UAV_controller::get_px4_params(ros::NodeHandle &nh)
 {
     ParamManager param_manager(nh);
-    return param_manager.getParams("/px4_params");
+    return param_manager.getParams("/uav_control_main_" + to_string(uav_id) + "/px4_params");
 }
 
 // 检查当前定位源下飞控参数设置是否正确，不正确将进行修改，正确就停止该定时器
