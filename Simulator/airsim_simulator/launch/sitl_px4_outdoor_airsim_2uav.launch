@@ -1,0 +1,40 @@
+<launch>
+	<!-- 模型文件，参考值如下： -->
+	<!-- p450：只有p450模型无人机 -->
+	<!-- p450_2Dlidar：p450模型无人机和2D雷达传感器(含雷达数据) -->
+	<!-- p450_D435i：p450模型无人机和深度相机D435i(含深度相机相关数据) -->
+	<!-- p450_2Dlidar_D435i：p450模型无人机、2D雷达传感器(含雷达数据)、深度相机D435i(含深度相机相关数据) -->
+	<arg name="vehicle" default="p450"/>
+
+    <!--无人机编号-->
+    <arg name="uav1_id" default="1"/>
+    <arg name="uav2_id" default="2"/>
+	<!-- 无人机初始位置 -->
+	<arg name="uav1_init_x" default="0.0"/>
+    <arg name="uav1_init_y" default="0.0"/>
+	<arg name="uav1_init_yaw" default="0.0"/>
+    <arg name="uav2_init_x" default="1.5"/>
+    <arg name="uav2_init_y" default="0.0"/>
+	<arg name="uav2_init_yaw" default="0.0"/>
+
+	<!-- 1号无人机 -->
+	<include file="$(find prometheus_airsim)/launch/sitl_px4_outdoor_airsim.launch">
+		<arg name="uav_id" value="$(arg uav1_id)"/>
+		<arg name="vehicle" value="$(arg vehicle)"/>
+		<arg name="uav_init_x" value="$(arg uav1_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav1_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="$(arg uav1_init_yaw)"/>
+	</include>
+
+	<!-- 2号无人机 -->
+	<include file="$(find prometheus_airsim)/launch/sitl_px4_outdoor_airsim.launch">
+		<arg name="uav_id" value="$(arg uav2_id)"/>
+		<arg name="vehicle" value="$(arg vehicle)"/>
+		<arg name="uav_init_x" value="$(arg uav2_init_x)"/>
+		<arg name="uav_init_y" value="$(arg uav2_init_y)"/>
+		<arg name="uav_init_z" value="0.15"/>
+		<arg name="uav_init_yaw" value="$(arg uav2_init_yaw)"/>
+	</include>
+</launch>
+

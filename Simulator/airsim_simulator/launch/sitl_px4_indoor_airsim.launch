@@ -1,0 +1,82 @@
+<launch>
+	<!-- 启动 PX4 SITL -->
+	<!-- 相关文件： -->
+	<!-- PX4 SITL rcS启动脚本路径：~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/rcS -->
+	<!-- PX4 SITL 无人机模型文件：~/prometheus_px4/ROMFS/px4fmu_common/init.d-posix/1046_p230 或 1045_p450-->
+
+	<!-- vehicle model and config -->
+    <arg name="est" default="ekf2"/>
+    <arg name="vehicle" default="p450"/>
+
+	<!-- 仿真模型，对应不同的模型文件 -->
+	<env name="PX4_SIM_MODEL" value="$(arg vehicle)" />
+	<!-- ekf2 使用GPS作为定位来源-->
+    <env name="PX4_ESTIMATOR" value="ekf2_vision" />
+	<!-- 仿真速度因子 1.0代表与真实时间同步，大于1加快仿真速度，小于1则减慢 （电脑性能较差，可选择减小该参数）-->
+	<env name="PX4_SIM_SPEED_FACTOR" value="1.0" />
+
+	<!-- 无人机ID号 -->
+	<arg name="uav_id" default="1"/>
+	
+	<!-- 初始位置，Yaw为偏航角 -->
+	<arg name="uav_init_x" default="0.0"/>
+    <arg name="uav_init_y" default="0.0"/>
+	<arg name="uav_init_z" default="0.15"/>
+	<arg name="uav_init_yaw" default="0.0"/>
+	
+    <!-- arg name="ID" default="1"/ -->
+    <!-- env name="PX4_SIM_MODEL" value="$(arg vehicle)" / -->
+    <!-- env name="PX4_ESTIMATOR" value="$(arg est)" / -->
+    <!-- arg name="mavlink_udp_port" default="14560"/ -->
+    <!-- arg name="mavlink_tcp_port" default="4560"/ -->
+	
+	<!-- 无人机编号说明 -->
+	<!-- uav_id为Prometheus系统中对无人机编号的定义，从1开始 -->
+	<!-- ID为本文件中对无人机编号的定义，从0开始 -->
+	<!-- MAV_SYS_ID为PX4中无人机编号的定义，在rcS文件中可以发现：MAV_SYS_ID = ID + 1，即从1开始--> 
+	<!-- 端口号说明 -->
+	<!-- 仿真器端口号（用于飞控与Gazebo进行通讯）: SDF文件中的mavlink_tcp_port与rcS文件中的simulator_tcp_port应当一致，并随着无人机编号递增 -->
+	<!-- mavlink_tcp_port = simulator_tcp_port = 4560 + ID -->
+	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_local = 14580 + ID -->
+	<!-- Offboard端口号（用于飞控与Mavros进行通讯） udp_offboard_port_remote = 14540 + ID -->
+	<!-- 备注：PX4 SITL原生最多只支持10架无人机仿真，具体原因见rcS启动文件-->
+
+    <!-- 使用group标签来对不同的无人机进行分组，因此，不同无人机的话题会带上前缀，如/uav0、/uav1等 -->
+	<group ns="/uav$(arg uav_id)">
+		<!-- ID编号 -->
+        <arg name="ID" value="$(eval arg('uav_id') - 1)"/>
+        <arg name="mavlink_id" value="$(eval 1 + arg('ID'))" />
+        <arg name="mavlink_udp_port" default="$(eval 14560 + arg('ID'))"/>
+    	<arg name="mavlink_tcp_port" default="$(eval 4560 + arg('ID'))"/>
+		<!-- 启动PX4 SITL，此处参数配置不可删除 -->
+		<arg name="interactive" default="true"/>
+		
+		<!-- generate sdf vehicle model -->
+    	<arg name="cmd" default="$(find prometheus_gazebo)/scripts/jinja_gen.py --stdout --mavlink_id=$(arg mavlink_id) --mavlink_udp_port=$(arg mavlink_udp_port) --mavlink_tcp_port=$(arg mavlink_tcp_port) $(find prometheus_gazebo)/gazebo_models/uav_models/$(arg vehicle)/$(arg vehicle).sdf.jinja $(find prometheus_gazebo)"/>
+    	<param command="$(arg cmd)" name="sdf_$(arg vehicle)_$(arg ID)"/>
+		
+		
+		<arg unless="$(arg interactive)" name="px4_command_arg1" value=""/>
+		<arg     if="$(arg interactive)" name="px4_command_arg1" value="-d"/>
+		<node name="sitl_$(arg uav_id)" pkg="px4" type="px4" output="screen" 
+			args="$(find px4)/ROMFS/px4fmu_common -s etc/init.d-posix/rcS -i $(arg ID) -w sitl_amov_$(arg ID) $(arg px4_command_arg1)">
+		</node>
+		<!-- 启动Gazebo模型 -->
+		<!-- <node name="$(arg vehicle)_$(arg uav_id)_spawn" pkg="gazebo_ros" type="spawn_model" output="screen"
+			args="-sdf -param sdf_$(arg vehicle)_$(arg ID) -model $(arg vehicle)_$(arg ID) -x $(arg uav_init_x) -y $(arg uav_init_y) -z $(arg uav_init_z) -Y $(arg uav_init_yaw)">
+		</node> -->
+		
+		<!-- 启动MAVROS -->
+		<arg name="udp_offboard_port_remote" value="$(eval 14030 + arg('ID'))"/>
+		<arg name="udp_offboard_port_local" value="$(eval 14280 + arg('ID'))"/>
+		<node pkg="mavros" type="mavros_node" name="mavros" output="screen">
+			<param name="fcu_url" value="udp://:$(arg udp_offboard_port_remote)@localhost:$(arg udp_offboard_port_local)"/>
+			<param name="gcs_url" value="" />
+			<param name="target_system_id" value="$(eval 1 + arg('ID'))"/>
+			<param name="target_component_id" value="1" />
+			<rosparam command="load" file="$(find prometheus_airsim)/config/mavros_config/px4_config_outdoor.yaml" />
+			<rosparam command="load" file="$(find prometheus_airsim)/config/mavros_config/px4_pluginlists_outdoor.yaml" />
+		</node>
+    </group>
+</launch>
+

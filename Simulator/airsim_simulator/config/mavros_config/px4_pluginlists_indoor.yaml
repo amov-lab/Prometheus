@@ -1,0 +1,67 @@
+plugin_blacklist:
+# common
+- altitude
+- actuator_control
+- ftp
+- hil
+- nav_controller_output
+- rallypoint
+- setpoint_accel
+- setpoint_position
+- setpoint_trajectory
+- setpoint_velocity
+- vfr_hud
+- wind_estimation
+- global_position
+- safety_area
+- waypoint
+- 3dr_radio
+
+# extras
+- adsb
+- cam_imu_sync
+- camera
+- companion_process_status
+- debug_value
+- odom
+- esc_status
+- esc_telemetry
+- fake_gps
+- home_position
+- gimbal_control
+- gps_input
+- landing_target
+- log_transfer
+- mag_calibration_status
+- mocap_pose_estimate
+- mount_control
+- obstacle_distance
+- onboard_computer_status
+- play_tune
+- px4flow
+- rangefinder
+- trajectory
+- tunnel
+- vibration
+- wheel_odometry
+- gps_rtk
+- gps_status
+
+
+plugin_whitelist: # 如果模块即被同时声明在plugin_blacklist和plugin_whitelist中，也会启动
+# common
+- command
+- imu
+- local_position
+- manual_control
+- param
+- rc_io
+- setpoint_raw
+- setpoint_attitude
+- sys_status
+- sys_time
+
+# extras
+- distance_sensor
+- vision_pose_estimate
+- vision_speed_estimate
