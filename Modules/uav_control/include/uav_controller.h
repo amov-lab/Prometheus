@@ -26,6 +26,7 @@
 #include <prometheus_msgs/UAVCommand.h>
 #include <prometheus_msgs/TextInfo.h>
 #include <prometheus_msgs/OffsetPose.h>
+#include <prometheus_msgs/ParamSettings.h>
 
 #include <nav_msgs/Odometry.h>
 
@@ -56,6 +57,8 @@ public:
     ros::Subscriber px4_attitude_target_sub;
     ros::Subscriber px4_rc_sub;
     ros::Subscriber offset_pose_sub;
+    // 地面站参数修改话题
+    ros::Subscriber ros_param_set_sub;
     // 发布话题
     ros::Publisher px4_setpoint_raw_local_pub;
     ros::Publisher px4_setpoint_raw_global_pub;
@@ -157,6 +160,7 @@ public:
     Eigen::Vector3d Hover_position;
     double Hover_yaw;
     ros::Time last_set_hover_pose_time;
+    ros::Time last_check_px4_location_source_time;
 
     ros::Timer check_px4_location_source_timer;
     ros::Timer ground_station_info_timer;
@@ -187,6 +191,7 @@ private:
     void px4_pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr &msg);
     void px4_att_target_cb(const mavros_msgs::AttitudeTarget::ConstPtr &msg);
     void offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg);
+    void param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr &msg);
     void sendStationTextInfo(const ros::TimerEvent &e);
 
     void set_command_des();

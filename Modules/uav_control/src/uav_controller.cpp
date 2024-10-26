@@ -116,6 +116,12 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
                                                   1,
                                                   &UAV_controller::offset_pose_cb, this);
 
+    // 【订阅】地面站修改ROS参数
+    ros_param_set_sub = 
+        nh.subscribe<prometheus_msgs::ParamSettings>("/uav" + std::to_string(uav_id) + "/prometheus/param_settings",
+                                                  1,
+                                                  &UAV_controller::param_set_cb, this);
+
     // 【发布】位置/速度/加速度期望值 坐标系:ENU系
     px4_setpoint_raw_local_pub =
         nh.advertise<mavros_msgs::PositionTarget>("/uav" + std::to_string(uav_id) + "/mavros/setpoint_raw/local", 1);
@@ -159,6 +165,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
 
     if (enable_px4_params_load)
     {
+        last_check_px4_location_source_time = ros::Time::now();
         this->check_px4_location_source_timer = nh.createTimer(ros::Duration(1), &UAV_controller::timercb_check_px4_location_source, this);
     }
 
@@ -1409,6 +1416,30 @@ void UAV_controller::offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr 
     }
 }
 
+void UAV_controller::param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr &msg)
+{
+    size_t size = msg->param_name.size();
+    for(size_t i = 0; i < size; i++)
+    {
+        std::cout << msg->param_name[i] << " : " << msg->param_value[i] << std::endl;
+        
+        // 有些参数必须在未解锁前才能修改
+        if(msg->param_name[i].find("enable_px4_params_load") != std::string::npos)
+        {
+            if (msg->param_value[i] == "true" || msg->param_value[i] == "1")
+            {
+                if(this->check_px4_location_source_timer.isValid())
+                {
+                    this->check_px4_location_source_timer.stop();
+                }
+                px4_params = get_px4_params(nh);
+                last_check_px4_location_source_time = ros::Time::now();
+                this->check_px4_location_source_timer = nh.createTimer(ros::Duration(1), &UAV_controller::timercb_check_px4_location_source, this);
+            }
+        }
+    }
+}
+
 /***
  * 上锁解锁函数，调用mavros上锁和解决服务
  * 参数: bool on_or_off，true为解锁指令，false为上锁指令
@@ -1560,9 +1591,10 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
     if (!uav_state.connected || uav_state.armed)
         return;
 
-    static ros::Time time_first = ros::Time::now();
     ros::Time time_now = ros::Time::now();
-    if(time_now.sec - time_first.sec > 10)
+
+    // 10s停止定时器
+    if(time_now.sec - last_check_px4_location_source_time.sec > 10)
     {
         // 判断是否需要重启飞控
         if (is_rebot_px4)
@@ -1578,6 +1610,7 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
         }
         // 停止该定时器
         check_px4_location_source_timer.stop();
+        nh.setParam("enable_px4_params_load", false);
         return;
     }
 
@@ -1594,6 +1627,7 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
         this->text_info.Message = "px4 params init success!";
         // 停止该定时器
         check_px4_location_source_timer.stop();
+        nh.setParam("enable_px4_params_load", false);
     }
     else // 不为空 则进行修改
     {

@@ -24,6 +24,7 @@ enable_px4_params_load : true
 px4_params: # 严格区分参数值，为int64和float64，如果参数值为float64，需要设置小数点如：1.0
   EKF2_AID_MASK : 1
   EKF2_HGT_MODE : 0
+  
 
 ##　地理围栏
 geo_fence:

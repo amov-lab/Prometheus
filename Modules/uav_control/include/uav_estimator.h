@@ -15,6 +15,7 @@
 #include <prometheus_msgs/GPSData.h>
 #include <prometheus_msgs/LinktrackNodeframe2.h>
 #include <prometheus_msgs/LinktrackNode2.h>
+#include <prometheus_msgs/ParamSettings.h>
 
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/GPSRAW.h>
@@ -90,6 +91,8 @@ class UAV_estimator
         ros::Subscriber gps_status_sub;
         ros::Subscriber set_local_pose_offset_sub;
         ros::Subscriber gps_satellites_sub;
+        // 地面站参数修改话题
+        ros::Subscriber ros_param_set_sub;
         // 发布话题
         ros::Publisher uav_state_pub;
         ros::Publisher px4_vision_pose_pub;
@@ -114,6 +117,8 @@ class UAV_estimator
         prometheus_msgs::TextInfo text_info;
         prometheus_msgs::TextInfo last_text_info;
         prometheus_msgs::OffsetPose offset_pose;
+
+        ros::NodeHandle nh;
 
         Sensor_TF_Offset d435i_offset;
         Sensor_TF_Offset lidar_offset;
@@ -186,6 +191,7 @@ class UAV_estimator
         void gps_status_cb(const mavros_msgs::GPSRAW::ConstPtr& msg);
         void set_local_pose_offset_cb(const prometheus_msgs::GPSData::ConstPtr& msg);
         void gps_satellites_cb(const std_msgs::UInt32::ConstPtr &msg);
+        void param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr &msg);
 
         void timercb_pub_vision_pose(const ros::TimerEvent &e);
         void timercb_pub_uav_state(const ros::TimerEvent &e);
@@ -198,6 +204,7 @@ class UAV_estimator
         void printf_param();
 
         void load_communication_param(ros::NodeHandle &nh);
+        void switch_location_source(int old_location_source, int new_location_source);
 };
 
 
