@@ -1590,6 +1590,12 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
     // 如果PX4未连接或者解锁，则退出不进行修改，防止出现意外
     if (!uav_state.connected || uav_state.armed)
         return;
+    
+    static bool is_first = true;
+    if(is_first){
+    	last_check_px4_location_source_time = ros::Time::now();
+    	is_first = false;
+    }
 
     ros::Time time_now = ros::Time::now();
 
@@ -1611,6 +1617,7 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
         // 停止该定时器
         check_px4_location_source_timer.stop();
         nh.setParam("enable_px4_params_load", false);
+        is_first = true;
         return;
     }
 
@@ -1628,6 +1635,7 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
         // 停止该定时器
         check_px4_location_source_timer.stop();
         nh.setParam("enable_px4_params_load", false);
+        is_first = true;
     }
     else // 不为空 则进行修改
     {

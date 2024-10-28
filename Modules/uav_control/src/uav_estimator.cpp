@@ -35,6 +35,14 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh): nh(nh)
     nh.param<float>("T265/offset_roll", t265_offset.roll, 0.0);
     nh.param<float>("T265/offset_pitch", t265_offset.pitch, 0.0);
     nh.param<float>("T265/offset_yaw", t265_offset.yaw, 0.0);
+    
+    // 【参数】BSA_SLAM tf相对于base_link偏移量
+    nh.param<float>("BSA_SLAM/offset_x", BSA_SLAM_offset.x, 0.0);
+    nh.param<float>("BSA_SLAM/offset_y", BSA_SLAM_offset.y, 0.0);
+    nh.param<float>("BSA_SLAM/offset_z", BSA_SLAM_offset.z, 0.0);
+    nh.param<float>("BSA_SLAM/offset_roll", BSA_SLAM_offset.roll, 0.0);
+    nh.param<float>("BSA_SLAM/offset_pitch", BSA_SLAM_offset.pitch, 0.0);
+    nh.param<float>("BSA_SLAM/offset_yaw", BSA_SLAM_offset.yaw, 0.0);
 
     // 【参数】UWB tf相对于A0基站端偏移量
     nh.param<float>("UWB/offset_x", uwb_offset.x, 0.0);
@@ -124,6 +132,11 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh): nh(nh)
         // 【订阅】UWB
         uwb_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>("/nlink_linktrack_nodeframe2", 10, &UAV_estimator::uwb_cb, this);
     }
+    else if (location_source == prometheus_msgs::UAVState::BSA_SLAM)
+    {
+        // 【订阅】BSA_SLAM估计位置
+        BSA_SLAM_sub = nh.subscribe<nav_msgs::Odometry>("/BSAslam/odometry", 1, &UAV_estimator::BSA_SLAM_cb, this);
+    }
     else
     {
         text_info.MessageType = prometheus_msgs::TextInfo::WARN;
@@ -154,7 +167,7 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh): nh(nh)
     // 【发布】运行状态信息(-> 通信节点 -> 地面站)
     ground_station_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(uav_id) + "/prometheus/text_info", 1);
 
-    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::viobot || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB|| location_source == prometheus_msgs::UAVState::VINS || location_source == prometheus_msgs::UAVState::MID360)
+    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::BSA_SLAM || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::viobot || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB|| location_source == prometheus_msgs::UAVState::VINS || location_source == prometheus_msgs::UAVState::MID360)
     {
         // 【定时器】当需要使用外部定位设备时，需要定时发送vision信息至飞控,并保证一定频率
         timer_px4_vision_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_vision_pose, this);
@@ -337,6 +350,10 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     else if (location_source == prometheus_msgs::UAVState::VINS)
     {
         vision_pose = vins_pose;
+    }
+    else if (location_source == prometheus_msgs::UAVState::BSA_SLAM)
+    {
+        vision_pose = BSA_SLAM_pose;
     }
     else
     {
@@ -522,6 +539,34 @@ void UAV_estimator::timercb_rviz(const ros::TimerEvent &e)
         //  |--------- 广播器发布数据
         broadcaster.sendTransform(tfs);
     }
+    else if(location_source == prometheus_msgs::UAVState::BSA_SLAM)
+    {
+        //  |----坐标系相对信息设置  偏移量  无人机相对于世界坐标系的坐标
+        tfs.transform.translation.x = BSA_SLAM_offset.x;
+        tfs.transform.translation.y = BSA_SLAM_offset.y;
+        tfs.transform.translation.z = BSA_SLAM_offset.z;
+
+        //  |--------- 四元数设置
+        tfs.transform.rotation.x = 0.00;
+        tfs.transform.rotation.y = 0.00;
+        tfs.transform.rotation.z = 0.00;
+        tfs.transform.rotation.w = 1.00;
+
+        tf2::convert(tfs.transform.rotation , q_orig);
+
+        q_rot.setRPY(BSA_SLAM_offset.roll, BSA_SLAM_offset.pitch, BSA_SLAM_offset.yaw);//求得 tf 的旋转四元数
+
+        q_new = q_orig*q_rot;  // 通过 姿态的四元数 乘以旋转的四元数 即为 旋转 后的  四元数
+        q_new.normalize(); // 归一化
+
+        //  将 旋转后的 tf 四元数 转换 为 msg 四元数
+        tf2::convert(q_new, tfs.transform.rotation);
+
+        tfs.child_frame_id = "/BSA_SLAM_link"; //子坐标系，无人机的坐标系
+        // tfs.child_frame_id = "/camera_link"; //子坐标系，无人机的坐标系
+        //  |--------- 广播器发布数据
+        broadcaster.sendTransform(tfs);
+    }
 }
 
 void UAV_estimator::px4_state_cb(const mavros_msgs::State::ConstPtr &msg)
@@ -627,6 +672,14 @@ void UAV_estimator::t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
     t265_pose.pose = msg->pose.pose;
     get_t265_stamp = ros::Time::now(); // 记录时间戳，防止超时
 }
+
+void UAV_estimator::BSA_SLAM_cb(const nav_msgs::Odometry::ConstPtr &msg)
+{
+    BSA_SLAM_pose.header = msg->header;
+    BSA_SLAM_pose.pose = msg->pose.pose;
+    get_BSA_SLAM_stamp = ros::Time::now(); // 记录时间戳，防止超时
+}
+
 void UAV_estimator::viobot_cb(const nav_msgs::Odometry::ConstPtr &msg) 
 {
     viobot_pose.header = msg->header;
@@ -798,6 +851,10 @@ int UAV_estimator::check_uav_odom()
     {
         return 1;
     }
+    else if (location_source == prometheus_msgs::UAVState::BSA_SLAM && (time_now - get_BSA_SLAM_stamp).toSec() > BSA_SLAM_TIMEOUT)
+    {
+        return 1;
+    }
     else if ((location_source == prometheus_msgs::UAVState::GPS || location_source == prometheus_msgs::UAVState::RTK) && (time_now - get_gps_stamp).toSec() > GPS_TIMEOUT)
     {
         return 7;
@@ -929,6 +986,10 @@ void UAV_estimator::printf_uav_state()
         cout << GREEN << "Location: [ VINS ] " << TAIL << endl;
         cout << GREEN << "VINS_pos [X Y Z] : " << vins_pose.pose.position.x << " [ m ] " << vins_pose.pose.position.y << " [ m ] " << vins_pose.pose.position.z << " [ m ] " << TAIL << endl;
         break;
+    case prometheus_msgs::UAVState::BSA_SLAM:
+        cout << GREEN << "Location: [ BSA_SLAM ] " << TAIL << endl;
+        cout << GREEN << "BSA_SLAM_pos [X Y Z] : " << BSA_SLAM_pose.pose.position.x << " [ m ] " << BSA_SLAM_pose.pose.position.y << " [ m ] " << BSA_SLAM_pose.pose.position.z << " [ m ] " << TAIL << endl;
+        break;
     }
 
     if (uav_state.odom_valid)
@@ -1054,6 +1115,10 @@ void UAV_estimator::printf_param()
     else if (location_source == prometheus_msgs::UAVState::VINS)
     {
         cout << GREEN << "location_source: [VINS] " << TAIL << endl;
+    }
+    else if (location_source == prometheus_msgs::UAVState::BSA_SLAM)
+    {
+        cout << GREEN << "location_source: [BSA_SLAM] " << TAIL << endl;
     }
     else
     {

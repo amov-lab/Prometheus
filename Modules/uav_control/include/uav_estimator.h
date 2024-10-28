@@ -52,6 +52,7 @@ using namespace std;
 #define UWB_TIMEOUT 0.1
 #define GPS_TIMEOUT 1.0
 #define VINS_TIMEOUT 0.35
+#define BSA_SLAM_TIMEOUT 0.3
 
 // 传感器相对于飞控(base_link)的位置偏移量、姿态偏移量
 struct Sensor_TF_Offset
@@ -91,6 +92,7 @@ class UAV_estimator
         ros::Subscriber gps_status_sub;
         ros::Subscriber set_local_pose_offset_sub;
         ros::Subscriber gps_satellites_sub;
+        ros::Subscriber BSA_SLAM_sub;
         // 地面站参数修改话题
         ros::Subscriber ros_param_set_sub;
         // 发布话题
@@ -124,11 +126,13 @@ class UAV_estimator
         Sensor_TF_Offset lidar_offset;
         Sensor_TF_Offset t265_offset;
         Sensor_TF_Offset uwb_offset;
+        Sensor_TF_Offset BSA_SLAM_offset;
         int j=0;
 
         geometry_msgs::PoseStamped mocap_pose;         // mocap pose
         geometry_msgs::PoseStamped gazebo_pose;        // gazebo pose
         geometry_msgs::PoseStamped t265_pose;          // t265 pose
+        geometry_msgs::PoseStamped BSA_SLAM_pose;          // BSA_SLAM pose
         geometry_msgs::PoseStamped viobot_pose;         // viobot pose
         geometry_msgs::PoseStamped mid360_pose;          // mid360 pose
         // geometry_msgs::PoseStamped uwb_pose;           // uwb pose
@@ -153,6 +157,7 @@ class UAV_estimator
         ros::Time get_uwb_stamp{0};
         ros::Time get_gps_stamp{0};
         ros::Time get_vins_stamp{0};
+        ros::Time get_BSA_SLAM_stamp{0};
 
         // 基本变量
         int uav_id;                   // 无人机编号
@@ -177,6 +182,7 @@ class UAV_estimator
         void uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg);
         void fake_odom_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void t265_cb(const nav_msgs::Odometry::ConstPtr &msg);
+        void BSA_SLAM_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void viobot_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void mid360_cb(const nav_msgs::Odometry::ConstPtr &msg);
         void vins_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);

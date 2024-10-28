@@ -392,8 +392,15 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         if(param_settings.params.empty()){
             return;
         }
-        ParamManager p(nh_);   
-        if(p.setParam(param_settings.params.begin()->param_name, param_settings.params.begin()->param_value))
+        ParamManager p(nh_);
+     	
+     	bool set_param_flag = true;
+
+        for (const auto& set_param : param_settings.params) {
+            set_param_flag = set_param_flag && p.setParam(set_param.param_name, set_param.param_value);
+        }
+        
+        if(set_param_flag)
         {
             sendTextInfo(TextInfo::MTG_INFO, "parameter search modify success...");
             // 并且发布话题出来告诉其他节点
