@@ -145,6 +145,14 @@ public:
     Eigen::Quaterniond uav_quat; // 无人机四元数
     double uav_yaw;
 
+    
+    float vel_control_grap = 0.04f;
+    float vel_control_Kp = 1.8f;
+    float Speed_decision_range = 0.009f;
+    bool vel_control = false;
+    Eigen::Vector3d prev_vel_sp;
+    Eigen::Vector3d current_pos;     // 控制中无人机当前位置
+
     // 目标设定值
     Eigen::Vector3d pos_des;
     Eigen::Vector3d global_pos_des;

@@ -737,6 +737,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
     if (control_state == CONTROL_STATE::RC_POS_CONTROL)
     {
         send_pos_setpoint(pos_des, yaw_des);
+        vel_control = false;
         return;
     }
 
@@ -746,10 +747,12 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
         {
             // quick_land一般用于位置失效情况，因此直接使用速度控制
             send_vel_setpoint(vel_des, yaw_des);
+            vel_control = false;
         }
         else
         {
             send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
+            vel_control = false;
         }
         return;
     }
@@ -760,6 +763,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover)
         {
             send_pos_setpoint(pos_des, yaw_des);
+            vel_control = false;
         }
         else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Move)
         {
@@ -767,6 +771,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_POS_BODY)
             {
                 send_pos_setpoint(pos_des, yaw_des);
+                vel_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL ||
                      uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL_BODY)
@@ -774,6 +779,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 if (uav_command.Yaw_Rate_Mode)
                 {
                     send_vel_setpoint_yaw_rate(vel_des, yaw_rate_des);
+                    vel_control = false;
                 }
                 else
                 {
@@ -786,24 +792,29 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 if (uav_command.Yaw_Rate_Mode)
                 {
                     send_vel_xy_pos_z_setpoint_yaw_rate(pos_des, vel_des, yaw_rate_des);
+                    vel_control = false;
                 }
                 else
                 {
                     send_vel_xy_pos_z_setpoint(pos_des, vel_des, yaw_des);
+                    vel_control = false;
                 }
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
             {
                 send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
+                vel_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_ATT)
             {
                 // 此处为使用外部发布的姿态期望值
                 send_attitude_setpoint(u_att);
+                vel_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
             {
                 send_global_setpoint(global_pos_des, yaw_des);
+                vel_control = false;
             }
         }
         return;
@@ -1065,18 +1076,225 @@ void UAV_controller::send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
-// 发送速度期望值至飞控（输入: 期望vxvyvz,期望yaw）
+
+//发送速度期望值至飞控（输入: 期望vxvyvz,期望yaw）
 void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_sp)
 {
-    mavros_msgs::PositionTarget pos_setpoint;
-    pos_setpoint.type_mask = 0b100111000111;
-    pos_setpoint.coordinate_frame = 1;
-    pos_setpoint.velocity.x = vel_sp[0];
-    pos_setpoint.velocity.y = vel_sp[1];
-    pos_setpoint.velocity.z = vel_sp[2];
-    pos_setpoint.yaw = yaw_sp;
-    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+    int zero_count = 0;
+    for (int i = 0; i < 3; ++i) {
+        if (abs(vel_sp[i]) <= Speed_decision_range) {
+            zero_count++;
+        }
+    }
+
+    if (!vel_control)
+    {
+        current_pos[0] = uav_state.position[0];
+        current_pos[1] = uav_state.position[1];
+        current_pos[2] = uav_state.position[2];
+
+        prev_vel_sp = vel_sp;
+        
+        vel_control = true;
+
+    }
+
+    for (int j = 0; j < 3; ++j) {
+        if (vel_sp[j] != prev_vel_sp[j]) {
+            vel_control = false;
+            return;
+        }
+    }
+
+
+    switch (zero_count) {
+        case 3: {
+            mavros_msgs::PositionTarget pos_setpoint;
+            pos_setpoint.type_mask = 0b100111111000; 
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.position.x = current_pos[0];
+            pos_setpoint.position.y = current_pos[1];
+            pos_setpoint.position.z = current_pos[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+            break;
+        }
+        case 2: {
+            if (abs(vel_sp[0]) <= Speed_decision_range && abs(vel_sp[1]) <= Speed_decision_range) {
+
+
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    pos_setpoint.type_mask = 0b100111011100; 
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.position.x = current_pos[0];
+                    pos_setpoint.position.y = current_pos[1];
+                    pos_setpoint.velocity.x = 0;
+                    pos_setpoint.velocity.y = 0;
+                    pos_setpoint.velocity.z = vel_sp[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+            
+            } 
+            else if (abs(vel_sp[0]) <= Speed_decision_range && abs(vel_sp[2]) <= Speed_decision_range) {
+
+                if( abs(uav_state.position[0] - current_pos[0]) >= vel_control_grap)
+                {
+
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+                    pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = -vel_control_Kp* (uav_state.position[0] - current_pos[0]);
+                    pos_setpoint.velocity.y = vel_sp[1];
+                    pos_setpoint.velocity.z = 0;
+                    pos_setpoint.position.z = current_pos[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+                }
+                else
+                {
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+                    pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = 0;
+                    pos_setpoint.velocity.y = vel_sp[1];
+                    pos_setpoint.velocity.z = 0;
+                    pos_setpoint.position.z = current_pos[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+                }   
+
+            } 
+            else if (abs(vel_sp[1]) <= Speed_decision_range && abs(vel_sp[2]) <= Speed_decision_range) {
+
+                if( abs(uav_state.position[1] - current_pos[1]) >= vel_control_grap)
+                {
+
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+                    pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = vel_sp[0];
+                    pos_setpoint.velocity.y = -vel_control_Kp* (uav_state.position[1] - current_pos[1]);
+                    pos_setpoint.velocity.z = 0;
+                    pos_setpoint.position.z = current_pos[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+                }
+                else
+                {
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+                    pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = vel_sp[0];
+                    pos_setpoint.velocity.y = 0;
+                    pos_setpoint.velocity.z = 0;
+                    pos_setpoint.position.z = current_pos[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+                }
+
+            }
+
+            break;
+        }
+        case 1: {
+            if (abs(vel_sp[0]) <= Speed_decision_range) {
+
+                if( abs(uav_state.position[0] - current_pos[0]) >= vel_control_grap)
+                {
+
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    pos_setpoint.type_mask = 0b100111000111;
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = -vel_control_Kp* (uav_state.position[0] - current_pos[0]);
+                    pos_setpoint.velocity.y = vel_sp[1];
+                    pos_setpoint.velocity.z = vel_sp[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+                }
+                else
+                {
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    pos_setpoint.type_mask = 0b100111000111;
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = 0;
+                    pos_setpoint.velocity.y = vel_sp[1];
+                    pos_setpoint.velocity.z = vel_sp[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+                }   
+                
+            } 
+            else if (abs(vel_sp[1]) <= Speed_decision_range) {
+                
+                if( abs(uav_state.position[1] - current_pos[1]) >= vel_control_grap)
+                {
+
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    pos_setpoint.type_mask = 0b100111000111;
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = vel_sp[0];
+                    pos_setpoint.velocity.y = -vel_control_Kp* (uav_state.position[1] - current_pos[1]);
+                    pos_setpoint.velocity.z = vel_sp[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+                }
+                else
+                {
+                    mavros_msgs::PositionTarget pos_setpoint;
+                    pos_setpoint.type_mask = 0b100111000111;
+                    pos_setpoint.coordinate_frame = 1;
+                    pos_setpoint.velocity.x = vel_sp[0];
+                    pos_setpoint.velocity.y = 0;
+                    pos_setpoint.velocity.z = vel_sp[2];
+                    pos_setpoint.yaw = yaw_sp;
+                    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+                }   
+            } 
+            else if (abs(vel_sp[2]) <= Speed_decision_range) {
+
+                mavros_msgs::PositionTarget pos_setpoint;
+                // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+                pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
+                pos_setpoint.coordinate_frame = 1;
+                pos_setpoint.velocity.x = vel_sp[0];
+                pos_setpoint.velocity.y = vel_sp[1];
+                pos_setpoint.velocity.z = 0;
+                pos_setpoint.position.z = current_pos[2];
+                pos_setpoint.yaw = yaw_sp;
+                px4_setpoint_raw_local_pub.publish(pos_setpoint);              
+                
+            }
+
+            break;
+        }
+        case 0: {
+            mavros_msgs::PositionTarget pos_setpoint;
+            pos_setpoint.type_mask = 0b100111000111;
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.velocity.x = vel_sp[0];
+            pos_setpoint.velocity.y = vel_sp[1];
+            pos_setpoint.velocity.z = vel_sp[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+            break;
+        }
+    }
+
+
 }
+
+
 
 // 发送速度期望值至飞控（输入: 期望vxvyvz,期望yaw_rate）
 void UAV_controller::send_vel_setpoint_yaw_rate(const Eigen::Vector3d &vel_sp, float yaw_rate_sp)
