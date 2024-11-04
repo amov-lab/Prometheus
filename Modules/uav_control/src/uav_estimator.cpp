@@ -1263,6 +1263,9 @@ void UAV_estimator::switch_location_source(int old_location_source, int new_loca
     case prometheus_msgs::UAVState::MID360:
         mid360_sub.shutdown();
         break;
+    case prometheus_msgs::UAVState::BSA_SLAM:
+        BSA_SLAM_sub.shutdown();
+        break;
     }
 
     location_source = new_location_source;
@@ -1305,6 +1308,9 @@ void UAV_estimator::switch_location_source(int old_location_source, int new_loca
     case prometheus_msgs::UAVState::MID360:
         mid360_sub = nh.subscribe<nav_msgs::Odometry>("/Odometry", 1, &UAV_estimator::mid360_cb, this);
         break;
+    case prometheus_msgs::UAVState::BSA_SLAM:
+        BSA_SLAM_sub = nh.subscribe<nav_msgs::Odometry>("/BSAslam/odometry", 1, &UAV_estimator::BSA_SLAM_cb, this);
+        break;
     default:
         text_info.MessageType = prometheus_msgs::TextInfo::WARN;
         text_info.Message = node_name + ": wrong location_source param, no external location information input!";
@@ -1312,7 +1318,7 @@ void UAV_estimator::switch_location_source(int old_location_source, int new_loca
         break;
     }
 
-    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::viobot || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB|| location_source == prometheus_msgs::UAVState::VINS || location_source == prometheus_msgs::UAVState::MID360)
+    if (location_source == prometheus_msgs::UAVState::MOCAP || location_source == prometheus_msgs::UAVState::BSA_SLAM || location_source == prometheus_msgs::UAVState::T265 || location_source == prometheus_msgs::UAVState::viobot || location_source == prometheus_msgs::UAVState::GAZEBO || location_source == prometheus_msgs::UAVState::UWB|| location_source == prometheus_msgs::UAVState::VINS || location_source == prometheus_msgs::UAVState::MID360)
     {
         // 【定时器】当需要使用外部定位设备时，需要定时发送vision信息至飞控,并保证一定频率
         timer_px4_vision_pub = nh.createTimer(ros::Duration(0.02), &UAV_estimator::timercb_pub_vision_pose, this);
