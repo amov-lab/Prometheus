@@ -1,6 +1,6 @@
 Header header
 
-# gimbal type; value = {SV::GimbalType}
+# gimbal type; value = {SV::GimbalType};0:G1;1:Q10F;2:AT10;3:GX40;4:SU17
 uint8 type
 # gimbal movement mode; 0:None; 1:lock head; 2：unlock head; 3: tracking;
 uint8 moveMode
