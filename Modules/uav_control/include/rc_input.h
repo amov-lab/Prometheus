@@ -15,9 +15,9 @@ public:
 
     double ch[4];     // 1-4通道数值: roll pitch yaw thrust
     double channel_5; // 通道5（二段） - 解锁无人机
-    double channel_6; // 通道6（三段） - 切换LAND_CONTROL/切换COMMAND_CONTROL
+    double channel_6; // 通道6（三段） - 切换RC_POS_CONTROL/切换COMMAND_CONTROL
     double channel_7; // 通道7（二段） - 紧急上锁
-    double channel_8; // 通道8（二段） - 自动降落
+    double channel_8; // 通道8（二段） - 切换LAND_CONTROL，自动降落
     double channel_9; 
     double last_channel_5;
     double last_channel_6;
