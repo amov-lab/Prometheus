@@ -547,7 +547,7 @@ struct UAVCommand
         Current_Pos_Hover = 2,
         Land = 3,
         Move = 4,
-        User_Mode1 = 5
+        User_Model = 5
     };
 
     // 控制等级 

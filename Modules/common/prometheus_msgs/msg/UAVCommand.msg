@@ -7,7 +7,7 @@ uint8 Init_Pos_Hover=1  # home点上方悬停
 uint8 Current_Pos_Hover=2 # 当前位置上方悬停
 uint8 Land=3
 uint8 Move=4
-uint8 User_Mode1=5
+uint8 User_Model=5
 
 ## 控制等级 
 uint8 Control_Level
