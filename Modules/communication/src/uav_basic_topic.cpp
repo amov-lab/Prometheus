@@ -528,14 +528,14 @@ void UAVBasic::serialControlCb(const mavros_msgs::Mavlink::ConstPtr &msg)
     }
 }
 
-void UAVBasic::paramSettingsPub(struct ParamSettings param_settings)
+void UAVBasic::paramSettingsPub(struct ParamSettings param_settings, std::string prefix)
 {
     prometheus_msgs::ParamSettings param_settings_msg;
     int size = param_settings.params.size();
     for(int i = 0; i < size; i++)
     {
         struct Param param = param_settings.params[i];
-        param_settings_msg.param_name.push_back(param.param_name);
+        param_settings_msg.param_name.push_back(prefix + param.param_name);
         param_settings_msg.param_value.push_back(param.param_value);
     }
     this->param_settings_pub_.publish(param_settings_msg);

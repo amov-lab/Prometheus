@@ -220,7 +220,7 @@ int main(int argc, char **argv)
                     nh.getParam("/communication_bridge/trajectory_flag", flag);
                     if (flag){
                         // 重新加载圆心、速度等通信节点修改后的参数
-                        Controller_Test.update_communication_param();
+                        Controller_Test.update_param();
                         Controller_Test.printf_param();
                         break;
                     }
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
                 }
 
                 // 可以更新速度和半径等
-                Controller_Test.real_time_update_communication_param();
+                Controller_Test.real_time_update_param();
 
                 if (Trjectory_mode == 0)
                 {

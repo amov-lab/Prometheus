@@ -80,7 +80,7 @@ public:
     void serialControlPub(const std::string &cmd);
     void serialControlCb(const mavros_msgs::Mavlink::ConstPtr &msg);
 
-    void paramSettingsPub(struct ParamSettings param_settings);
+    void paramSettingsPub(struct ParamSettings param_settings, std::string prefix = "");
 
     void setGroundStationIP(std::string ip);
 

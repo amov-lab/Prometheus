@@ -227,7 +227,6 @@ private:
     void enable_emergency_func();
     void reboot_PX4();
 
-    void load_communication_param(ros::NodeHandle &nh);
     std::unordered_map<std::string, std::string> get_px4_params(ros::NodeHandle &nh);
     // 定时器检查当前定位源下飞控参数设置是否正确
     void timercb_check_px4_location_source(const ros::TimerEvent &e);

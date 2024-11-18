@@ -1169,23 +1169,91 @@ void UAV_estimator::gps_satellites_cb(const std_msgs::UInt32::ConstPtr &msg)
 
 void UAV_estimator::param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr &msg)
 {
-    size_t size = msg->param_name.size();
-    for(size_t i = 0; i < size; i++)
+    try
     {
-        std::cout << msg->param_name[i] << " : " << msg->param_value[i] << std::endl;
-        
-        // 有些参数必须在未解锁前才能修改
-        if(msg->param_name[i].find("control/location_source") != std::string::npos)
+        size_t size = msg->param_name.size();
+        for(size_t i = 0; i < size; i++)
         {
-            if(!uav_state.armed)
-                switch_location_source(location_source, std::stoi(msg->param_value[i]));
+            // 如果不包含本节点名则跳过
+            if (msg->param_name[i].find("/uav_control_main_" + std::to_string(uav_id) + "/") == std::string::npos)
+                continue;
+
+            std::cout << msg->param_name[i] << " : " << msg->param_value[i] << std::endl;
+
+            // 有些参数必须在未解锁前才能修改
+            if(msg->param_name[i].find("control/location_source") != std::string::npos)
+            {
+                if(!uav_state.armed)
+                    switch_location_source(location_source, std::stoi(msg->param_value[i]));
+            }
+            else if(msg->param_name[i].find("control/maximum_safe_vel_xy") != std::string::npos)
+                maximum_safe_vel_xy = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("control/maximum_safe_vel_z") != std::string::npos)
+                maximum_safe_vel_z = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("control/maximum_vel_error_for_vision") != std::string::npos)
+                maximum_vel_error_for_vision = std::stod(msg->param_value[i]);
+            // d435i offset
+            else if(msg->param_name[i].find("D435i/offset_x") != std::string::npos)
+                d435i_offset.x = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("D435i/offset_y") != std::string::npos)
+                d435i_offset.y = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("D435i/offset_z") != std::string::npos)
+                d435i_offset.z = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("D435i/offset_roll") != std::string::npos)
+                d435i_offset.roll = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("D435i/offset_pitch") != std::string::npos)
+                d435i_offset.pitch = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("D435i/offset_yaw") != std::string::npos)
+                d435i_offset.yaw = std::stod(msg->param_value[i]);
+            // lidar offset
+            else if(msg->param_name[i].find("Lidar/offset_x") != std::string::npos)
+                lidar_offset.x = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("Lidar/offset_y") != std::string::npos)
+                lidar_offset.y = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("Lidar/offset_z") != std::string::npos)
+                lidar_offset.z = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("Lidar/offset_roll") != std::string::npos)
+                lidar_offset.roll = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("Lidar/offset_pitch") != std::string::npos)
+                lidar_offset.pitch = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("Lidar/offset_yaw") != std::string::npos)
+                lidar_offset.yaw = std::stod(msg->param_value[i]);
+            // t265
+            else if(msg->param_name[i].find("T265/offset_x") != std::string::npos)
+                t265_offset.x = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("T265/offset_y") != std::string::npos)
+                t265_offset.y = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("T265/offset_z") != std::string::npos)
+                t265_offset.z = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("T265/offset_roll") != std::string::npos)
+                t265_offset.roll = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("T265/offset_pitch") != std::string::npos)
+                t265_offset.pitch = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("T265/offset_yaw") != std::string::npos)
+                t265_offset.yaw = std::stod(msg->param_value[i]);
+            // BSA_SLAM
+            else if(msg->param_name[i].find("BSA_SLAM/offset_x") != std::string::npos)
+                BSA_SLAM_offset.x = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("BSA_SLAM/offset_y") != std::string::npos)
+                BSA_SLAM_offset.y = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("BSA_SLAM/offset_z") != std::string::npos)
+                BSA_SLAM_offset.z = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("BSA_SLAM/offset_roll") != std::string::npos)
+                BSA_SLAM_offset.roll = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("BSA_SLAM/offset_pitch") != std::string::npos)
+                BSA_SLAM_offset.pitch = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("BSA_SLAM/offset_yaw") != std::string::npos)
+                BSA_SLAM_offset.yaw = std::stod(msg->param_value[i]);
+            // uwb offset
+            else if(msg->param_name[i].find("UWB/offset_x") != std::string::npos)
+                uwb_offset.x = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("UWB/offset_y") != std::string::npos)
+                uwb_offset.y = std::stod(msg->param_value[i]);
         }
-        else if(msg->param_name[i].find("control/maximum_safe_vel_xy") != std::string::npos)
-            maximum_safe_vel_xy = std::stod(msg->param_value[i]);
-        else if(msg->param_name[i].find("control/maximum_safe_vel_z") != std::string::npos)
-            maximum_safe_vel_z = std::stod(msg->param_value[i]);
-        else if(msg->param_name[i].find("control/maximum_vel_error_for_vision") != std::string::npos)
-            maximum_vel_error_for_vision = std::stod(msg->param_value[i]);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
     }
 }
 
@@ -1203,17 +1271,6 @@ void UAV_estimator::sendStationTextInfo(const ros::TimerEvent &e)
         this->last_text_info = this->text_info;
         return;
     }
-    
-}
-
-//加载通信节点的配置参数，可通过地面站进行修改
-void UAV_estimator::load_communication_param(ros::NodeHandle &nh)
-{
-    //如果该参数名的参数不存在则不会生效
-    nh.getParam("/communication_bridge/control/location_source",location_source);
-    nh.getParam("/communication_bridge/control/maximum_safe_vel_xy",maximum_safe_vel_xy);
-    nh.getParam("/communication_bridge/control/maximum_safe_vel_z",maximum_safe_vel_z);
-    nh.getParam("/communication_bridge/control/maximum_vel_error_for_vision",maximum_vel_error_for_vision);
 }
 
 void UAV_estimator::switch_location_source(int old_location_source, int new_location_source)

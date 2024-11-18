@@ -366,6 +366,8 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         }
         return;
     }
+    ParamManager p(nh_);
+
     // 是否是搜索
     if(param_settings.param_module == ParamSettings::ParamModule::SEARCH)
     {
@@ -373,7 +375,7 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
             sendTextInfo(TextInfo::MTG_INFO, "parameter search failed...");
             return;
         }
-        ParamManager p(nh_);
+        // ParamManager p(nh_);
         std::unordered_map<std::string, std::string> param_map = p.getParams(param_settings.params.begin()->param_name);
         struct ParamSettings params;
         params.param_module = ParamSettings::ParamModule::SEARCH;
@@ -388,12 +390,7 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         usleep(1000);
         return;
     }else if(param_settings.param_module == ParamSettings::ParamModule::SEARCHMODIFY)
-    {
-        if(param_settings.params.empty()){
-            return;
-        }
-        ParamManager p(nh_);
-     	
+    { 	
      	bool set_param_flag = true;
 
         for (const auto& set_param : param_settings.params) {
@@ -414,44 +411,34 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
             sendTextInfo(TextInfo::MTG_INFO, "parameter search modify failed...");
             return;
         }
+    }else if(param_settings.param_module == ParamSettings::ParamModule::UAVCONTROL)
+    {
+        bool set_param_flag = true;
+        std::string prefix = "/uav_control_main_" + std::to_string(getRecvID()) + "/";
+        bool is_prefix = false;
+        for (const auto& set_param : param_settings.params) {
+            if(set_param.param_name[0] != '/')
+                is_prefix = true;
+                
+            set_param_flag = set_param_flag && p.setParam((is_prefix?prefix:"") + set_param.param_name, set_param.param_value);
+        }
+        
+        if(set_param_flag)
+        {
+            sendTextInfo(TextInfo::MTG_INFO, "parameter search modify success...");
+            // 并且发布话题出来告诉其他节点
+            if(this->uav_basic_)
+            {
+                    this->uav_basic_->paramSettingsPub(param_settings, (is_prefix?prefix:""));
+            }
+            return;
+        }else
+        {
+            sendTextInfo(TextInfo::MTG_INFO, "parameter search modify failed...");
+            return;
+        }
     }
 
-    for (int i = 0; i < param_settings.params.size(); i++)
-    {
-        bool is = false;
-        // 根据不同类型将string转为对应类型
-        if (param_settings.params[i].type == param_settings.params[i].INT)
-        {
-            int value = atoi(param_settings.params[i].param_value.c_str());
-            // this->nh_.setParam(param_settings.params[i].param_name,value);
-            is = setParam(param_settings.params[i].param_name, value);
-        }
-        else if (param_settings.params[i].type == param_settings.params[i].FLOAT)
-        {
-            float value = atof(param_settings.params[i].param_value.c_str());
-            // this->nh_.setParam(param_settings.params[i].param_name,value);
-            is = setParam(param_settings.params[i].param_name, value);
-        }
-        else if (param_settings.params[i].type == param_settings.params[i].DOUBLE)
-        {
-            double value = stod(param_settings.params[i].param_value.c_str());
-            // this->nh_.setParam(param_settings.params[i].param_name,value);
-            is = setParam(param_settings.params[i].param_name, value);
-        }
-        else if (param_settings.params[i].type == param_settings.params[i].STRING)
-        {
-            // this->nh_.setParam(param_settings.params[i].param_name,param_settings.params[i].param_value);
-            is = setParam(param_settings.params[i].param_name, param_settings.params[i].param_value);
-        }
-        else if (param_settings.params[i].type == param_settings.params[i].BOOLEAN)
-        {
-            bool value = param_settings.params[i].param_value == "true" ? true : false;
-            is = setParam(param_settings.params[i].param_name, value);
-        }
-        // 反馈消息 表示、设置成功与否 textinfo
-        std::string info = is ? "param settings success!" : "param settings failed!";
-        sendTextInfo(is ? TextInfo::MessageTypeGrade::MTG_INFO : TextInfo::MessageTypeGrade::MTG_ERROR, info);
-    }
     if (param_settings.param_module == ParamSettings::ParamModule::UAVCOMMUNICATION)
     {
         nh_.getParam("ground_station_ip", udp_ip);
@@ -1483,9 +1470,9 @@ void CommunicationBridge::sendControlParam()
     for (int i = 0; i < 15; i++)
     {
         if (i < 9)
-            param_name[i] = "/communication_bridge/control/" + param_name[i];
+            param_name[i] = "/uav_control_main_" + std::to_string(uav_id) + "/control/" + param_name[i];
         else
-            param_name[i] = "/communication_bridge/geo_fence/" + param_name[i];
+            param_name[i] = "/uav_control_main_" + std::to_string(uav_id) + "/geo_fence/" + param_name[i];
         struct Param param;
         param.param_name = param_name[i];
         param.type = param_type[i];
@@ -1569,7 +1556,7 @@ void CommunicationBridge::sendCommandPubParam()
     struct ParamSettings param_settings;
     for (int i = 0; i < 13; i++)
     {
-        param_name[i] = "/communication_bridge/Controller_Test/" + param_name[i];
+        param_name[i] = "/uav_command_pub/Controller_Test/" + param_name[i];
         struct Param param;
         param.param_name = param_name[i];
         param.type = param_type[i];

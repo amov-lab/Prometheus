@@ -30,8 +30,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
     // 【参数】定位源px4参数设置
     bool enable_px4_params_load = false;
     nh.param<bool>("enable_px4_params_load", enable_px4_params_load, false);
-
-    load_communication_param(nh);
+    
     px4_params = get_px4_params(nh);
 
     // 【函数】打印参数
@@ -1636,25 +1635,72 @@ void UAV_controller::offset_pose_cb(const prometheus_msgs::OffsetPose::ConstPtr 
 
 void UAV_controller::param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr &msg)
 {
-    size_t size = msg->param_name.size();
-    for(size_t i = 0; i < size; i++)
+    try
     {
-        std::cout << msg->param_name[i] << " : " << msg->param_value[i] << std::endl;
-        
-        // 有些参数必须在未解锁前才能修改
-        if(msg->param_name[i].find("enable_px4_params_load") != std::string::npos)
+        size_t size = msg->param_name.size();
+        for(size_t i = 0; i < size; i++)
         {
-            if (msg->param_value[i] == "true" || msg->param_value[i] == "1")
+            // 如果不包含本节点名则跳过
+            if(msg->param_name[i].find("/uav_control_main_" + std::to_string(uav_id) + "/") == std::string::npos)
+                continue;
+
+            std::cout << msg->param_name[i] << " : " << msg->param_value[i] << std::endl;
+        
+            // 有些参数必须在未解锁前才能修改
+            if(msg->param_name[i].find("enable_px4_params_load") != std::string::npos)
             {
-                if(this->check_px4_location_source_timer.isValid())
+                if (msg->param_value[i] == "true" || msg->param_value[i] == "1")
                 {
-                    this->check_px4_location_source_timer.stop();
+                    if(this->check_px4_location_source_timer.isValid())
+                    {
+                        this->check_px4_location_source_timer.stop();
+                    }
+                    px4_params = get_px4_params(nh);
+                    last_check_px4_location_source_time = ros::Time::now();
+                    this->check_px4_location_source_timer = nh.createTimer(ros::Duration(1), &UAV_controller::timercb_check_px4_location_source, this);
                 }
-                px4_params = get_px4_params(nh);
-                last_check_px4_location_source_time = ros::Time::now();
-                this->check_px4_location_source_timer = nh.createTimer(ros::Duration(1), &UAV_controller::timercb_check_px4_location_source, this);
+            }
+
+            // 是否仿真模式
+            if(msg->param_name[i].find("sim_mode") != std::string::npos)
+            {
+                sim_mode = (msg->param_value[i] == "true" || msg->param_value[i] == "1")?true:false;
+                px4_rc_sub.shutdown();
+                // 【订阅】PX4遥控器数据
+                string rc_topic_name;
+                if (sim_mode)  
+                    rc_topic_name = "/uav" + std::to_string(uav_id) + "/prometheus/fake_rc_in";
+                else
+                    rc_topic_name = "/uav" + std::to_string(uav_id) + "/mavros/rc/in";
+                px4_rc_sub = nh.subscribe<mavros_msgs::RCIn>(rc_topic_name, 1, &UAV_controller::px4_rc_cb, this);
+            }else if(msg->param_name[i].find("control/pos_controller") != std::string::npos){
+                // 该参数不支持实时修改，需要再启动时进行修改
+            }else if(msg->param_name[i].find("control/enable_external_control") != std::string::npos){
+                enable_external_control = (msg->param_value[i] == "true" || msg->param_value[i] == "1")?true:false;
+            }else if(msg->param_name[i].find("control/Takeoff_height") != std::string::npos){
+                Takeoff_height = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("control/Disarm_height") != std::string::npos){
+                Disarm_height = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("control/Land_speed") != std::string::npos){
+                Land_speed = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("geo_fence/x_min") != std::string::npos){
+                uav_geo_fence.x_min = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("geo_fence/x_max") != std::string::npos){
+                uav_geo_fence.x_max = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("geo_fence/y_min") != std::string::npos){
+                uav_geo_fence.y_min = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("geo_fence/y_max") != std::string::npos){
+                uav_geo_fence.y_max = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("geo_fence/z_min") != std::string::npos){
+                uav_geo_fence.z_min = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("geo_fence/z_max") != std::string::npos){
+                uav_geo_fence.z_max = std::stod(msg->param_value[i]);
             }
         }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
     }
 }
 
@@ -1776,24 +1822,6 @@ void UAV_controller::sendStationTextInfo(const ros::TimerEvent &e)
         this->last_text_info = this->text_info;
         return;
     }
-}
-
-// 加载通信节点的配置参数，可通过地面站进行修改
-void UAV_controller::load_communication_param(ros::NodeHandle &nh)
-{
-    // 如果该参数名的参数不存在则不会生效
-    nh.getParam("/communication_bridge/control/pos_controller", pos_controller);
-    nh.getParam("/communication_bridge/control/enable_external_control", enable_external_control);
-    nh.getParam("/communication_bridge/control/Takeoff_height", Takeoff_height);
-    nh.getParam("/communication_bridge/control/Disarm_height", Disarm_height);
-    nh.getParam("/communication_bridge/control/Land_speed", Land_speed);
-
-    nh.getParam("/communication_bridge/geo_fence/x_min", uav_geo_fence.x_min);
-    nh.getParam("/communication_bridge/geo_fence/x_max", uav_geo_fence.x_max);
-    nh.getParam("/communication_bridge/geo_fence/y_min", uav_geo_fence.y_min);
-    nh.getParam("/communication_bridge/geo_fence/y_max", uav_geo_fence.y_max);
-    nh.getParam("/communication_bridge/geo_fence/z_min", uav_geo_fence.z_min);
-    nh.getParam("/communication_bridge/geo_fence/z_max", uav_geo_fence.z_max);
 }
 
 std::unordered_map<std::string, std::string> UAV_controller::get_px4_params(ros::NodeHandle &nh)

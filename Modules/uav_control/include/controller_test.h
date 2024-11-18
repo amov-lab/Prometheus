@@ -33,48 +33,45 @@ class Controller_Test
 
             Controller_Test_nh.param<float>("Controller_Test/Step/step_length", step_length, 0.0);
             Controller_Test_nh.param<float>("Controller_Test/Step/step_interval", step_interval, 0.0);
-
-            load_communication_param(Controller_Test_nh);
-
         }
 
         //加载地面站参数
-        void load_communication_param(ros::NodeHandle &nh)
+        void load_param(ros::NodeHandle &nh)
         {
-            nh.getParam("/communication_bridge/Controller_Test/Circle/Center_x", circle_center[0]);
-            nh.getParam("/communication_bridge/Controller_Test/Circle/Center_y", circle_center[1]);
-            nh.getParam("/communication_bridge/Controller_Test/Circle/Center_z", circle_center[2]);
-            nh.getParam("/communication_bridge/Controller_Test/Circle/circle_radius", circle_radius);
-            nh.getParam("/communication_bridge/Controller_Test/Circle/linear_vel", linear_vel);
-            nh.getParam("/communication_bridge/Controller_Test/Circle/direction", direction);
+            nh.getParam("/uav_command_pub/Controller_Test/Circle/Center_x", circle_center[0]);
+            nh.getParam("/uav_command_pub/Controller_Test/Circle/Center_y", circle_center[1]);
+            nh.getParam("/uav_command_pub/Controller_Test/Circle/Center_z", circle_center[2]);
+            nh.getParam("/uav_command_pub/Controller_Test/Circle/circle_radius", circle_radius);
+            nh.getParam("/uav_command_pub/Controller_Test/Circle/linear_vel", linear_vel);
+            nh.getParam("/uav_command_pub/Controller_Test/Circle/direction", direction);
 
-            nh.getParam("/communication_bridge/Controller_Test/Eight/Center_x", eight_origin_[0]);
-            nh.getParam("/communication_bridge/Controller_Test/Eight/Center_y", eight_origin_[1]);
-            nh.getParam("/communication_bridge/Controller_Test/Eight/Center_z", eight_origin_[2]);
-            nh.getParam("/communication_bridge/Controller_Test/Eight/omega", eight_omega_);
-            nh.getParam("/communication_bridge/Controller_Test/Eight/radial", radial);
+            nh.getParam("/uav_command_pub/Controller_Test/Eight/Center_x", eight_origin_[0]);
+            nh.getParam("/uav_command_pub/Controller_Test/Eight/Center_y", eight_origin_[1]);
+            nh.getParam("/uav_command_pub/Controller_Test/Eight/Center_z", eight_origin_[2]);
+            nh.getParam("/uav_command_pub/Controller_Test/Eight/omega", eight_omega_);
+            nh.getParam("/uav_command_pub/Controller_Test/Eight/radial", radial);
 
-            nh.getParam("/communication_bridge/Controller_Test/Step/step_length", step_length);
-            nh.getParam("/communication_bridge/Controller_Test/Step/step_interval", step_interval);
+            nh.getParam("/uav_command_pub/Controller_Test/Step/step_length", step_length);
+            nh.getParam("/uav_command_pub/Controller_Test/Step/step_interval", step_interval);
         }
 
         // 更新/重新加载全部参数
-        void update_communication_param()
+        void update_param()
         {
-            load_communication_param(Controller_Test_nh);
+            load_param(Controller_Test_nh);
         }
 
         // 实时更新参数 只会重新更新速度、半径等
-        void real_time_update_communication_param()
+        void real_time_update_param()
         {
-            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Circle/circle_radius", circle_radius);
-            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Circle/linear_vel", linear_vel);
+            Controller_Test_nh.getParam("/uav_command_pub/Controller_Test/Circle/circle_radius", circle_radius);
+            Controller_Test_nh.getParam("/uav_command_pub/Controller_Test/Circle/linear_vel", linear_vel);
 
-            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Eight/omega", eight_omega_);
-            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Eight/radial", radial);
+            Controller_Test_nh.getParam("/uav_command_pub/Controller_Test/Eight/omega", eight_omega_);
+            Controller_Test_nh.getParam("/uav_command_pub/Controller_Test/Eight/radial", radial);
 
-            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Step/step_length", step_length);
-            Controller_Test_nh.getParam("/communication_bridge/Controller_Test/Step/step_interval", step_interval);
+            Controller_Test_nh.getParam("/uav_command_pub/Controller_Test/Step/step_length", step_length);
+            Controller_Test_nh.getParam("/uav_command_pub/Controller_Test/Step/step_interval", step_interval);
         }
 
         //Printf the Controller_Test parameter
