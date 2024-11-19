@@ -81,11 +81,11 @@ class Tracking_Error_Evaluation
             pos_error_vector.insert(pos_error_vector.begin(), track_error_pos);
             vel_error_vector.insert(vel_error_vector.begin(), track_error_vel);
             
-            if (pos_error_vector.size() > Slide_windouw)
+            if (pos_error_vector.size() > Slide_window)
             {
                 pos_error_vector.pop_back();
             }
-            if (vel_error_vector.size() > Slide_windouw)
+            if (vel_error_vector.size() > Slide_window)
             {
                 vel_error_vector.pop_back();
             }
@@ -96,7 +96,7 @@ class Tracking_Error_Evaluation
 
     private:
 
-        int Slide_windouw=100;
+        int Slide_window=100;
 };
 
 
