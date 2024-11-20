@@ -538,7 +538,16 @@ void publish_frame_body(const ros::Publisher & pubLaserCloudFull_body)
     sensor_msgs::PointCloud2 laserCloudmsg;
     pcl::toROSMsg(*laserCloudIMUBody, laserCloudmsg);
     laserCloudmsg.header.stamp = ros::Time().fromSec(lidar_end_time);
-    laserCloudmsg.header.frame_id = "body";
+    laserCloudmsg.header.frame_id = "uav1/lidar_link";
+    // // 将 sensor_msgs::PointCloud2 转换为 pcl::PointCloud 以便输出数据
+    // pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+    // pcl::fromROSMsg(laserCloudmsg, *pcl_cloud);
+
+    // // 输出点云的每个点
+    // std::cout << "=== laserCloudIMUBody Points ===" << std::endl;
+    // for (const auto &point : pcl_cloud->points) {
+    //     std::cout << "x: " << point.x << ", y: " << point.y << ", z: " << point.z << ", intensity: " << point.intensity << std::endl;
+    // }
     pubLaserCloudFull_body.publish(laserCloudmsg);
     publish_count -= PUBFRAME_PERIOD;
 }
@@ -842,7 +851,7 @@ int main(int argc, char** argv)
     ros::Publisher pubLaserCloudFull = nh.advertise<sensor_msgs::PointCloud2>
             ("/cloud_registered", 100000);
     ros::Publisher pubLaserCloudFull_body = nh.advertise<sensor_msgs::PointCloud2>
-            ("/cloud_registered_body", 100000);
+            ("/uav1/cloud_mid360_body", 100000);
     ros::Publisher pubLaserCloudEffect = nh.advertise<sensor_msgs::PointCloud2>
             ("/cloud_effected", 100000);
     ros::Publisher pubLaserCloudMap = nh.advertise<sensor_msgs::PointCloud2>

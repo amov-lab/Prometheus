@@ -4,7 +4,7 @@
 	<arg name="rviz" default="true" />
 
 	<rosparam command="load" file="$(find fast_lio)/config/mid360_gazebo.yaml" />
-
+	
 	<param name="feature_extract_enable" type="bool" value="0"/>
 	<param name="point_filter_num" type="int" value="3"/>
 	<param name="max_iteration" type="int" value="3" />
@@ -12,14 +12,18 @@
 	<param name="filter_size_map" type="double" value="0.5" />
 	<param name="cube_side_length" type="double" value="1000" />
 	<param name="runtime_pos_log_enable" type="bool" value="0" />
-	<param name="filter_range_x" type="double" value="15.0" />
-	<param name="filter_range_y" type="double" value="15.0" />
-	<param name="filter_range_z" type="double" value="0.5" />
-	<remap from="/cloud_registered" to="/uav$(arg uav_id)/mid_point_cloud_centers"/>
+	<!-- 设置雷达过滤范围 -->
+	<param name="filter_range_x" type="double" value="10" />
+	<param name="filter_range_y" type="double" value="10" />
+	<param name="filter_range_z" type="double" value="0.3" />
+	<!-- 修改雷达输出话题 -->
+	<!--全局点云-->
+	<remap from="/cloud_registered" to="/uav$(arg uav_id)/mid360_world_point"/>
+	<!--局部点云-->
+	<remap from="/uav1/cloud_mid360_body" to="/uav$(arg uav_id)/mid360_lidar_point"/>
     <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping" output="screen" /> 
+    	
     <node pkg="fast_lio" type="fliter_points" name="fliter_points" output="screen" /> 
-	<!-- <group if="$(arg rviz)">
-	<node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz2" args="-d $(find fast_lio)/rviz_cfg/loam_livox.rviz" />
-	</group> -->
-	<node pkg="tf" type="static_transform_publisher" name="fastlio_world" args="0 0 0 0 0 0 world camera_init 100"/>
+    
+	<node pkg="tf" type="static_transform_publisher" name="fastlio_world" args="0.13 0 0.23 0 0 0 world camera_init 100"/>
 </launch>

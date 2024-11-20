@@ -5,15 +5,12 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /无人机 - 11
         - /无人机 - 11/无人机位置 - odom1/Shape1
         - /无人机 - 11/无人机位置 - fake_odom1/Shape1
         - /无人机 - 11/无人机位置 - 模型1
         - /无人机 - 11/无人机位置 - 模型1/Namespaces1
         - /global_planner1/点云地图 - 膨胀后1
         - /local_planner1/desired_vel1
-        - /ego_planner1/点云地图 - 膨胀后1
-        - /三维激光雷达1
         - /三维激光雷达1/PointCloud21
         - /三维激光雷达1/env1
       Splitter Ratio: 0.7441176176071167
@@ -404,7 +401,7 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/goal_point
           Name: goal_point
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/Marker
@@ -412,13 +409,13 @@ Visualization Manager:
           Marker Topic: /uav1_ego_planner_node/optimal_list
           Name: optimal_traj
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 2.450000047683716
+            Max Value: 2.375
             Min Value: 0.5
             Value: true
           Axis: Z
@@ -450,8 +447,8 @@ Visualization Manager:
         - Alpha: 1
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
-            Max Value: 2.4118669033050537
-            Min Value: 0.5953959226608276
+            Max Value: 4.675300121307373
+            Min Value: 0.5336968898773193
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -470,7 +467,7 @@ Visualization Manager:
           Size (Pixels): 3
           Size (m): 0.07999999821186066
           Style: Flat Squares
-          Topic: /uav1/octomap_point_cloud_centers
+          Topic: /uav1/mid360_point_cloud_centers
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -478,8 +475,8 @@ Visualization Manager:
         - Alpha: 0.5
           Autocompute Intensity Bounds: false
           Autocompute Value Bounds:
-            Max Value: 2.4233431816101074
-            Min Value: 0.5215856432914734
+            Max Value: 4.675300121307373
+            Min Value: 0.5336968898773193
             Value: true
           Axis: Z
           Channel Name: intensity
@@ -500,7 +497,7 @@ Visualization Manager:
           Size (Pixels): 1
           Size (m): 0.07999999821186066
           Style: Points
-          Topic: /uav1/octomap_point_cloud_centers
+          Topic: /uav1/mid360_point_cloud_centers
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
@@ -535,7 +532,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 48.065765380859375
+      Distance: 35.124000549316406
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -543,17 +540,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 10.441462516784668
-        Y: -0.04599444568157196
-        Z: 2.5718696117401123
+        X: 5.931646823883057
+        Y: -0.11329755187034607
+        Z: 0.09669864177703857
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.814796507358551
+      Pitch: 1.3797961473464966
       Target Frame: <Fixed Frame>
-      Yaw: 2.6925880908966064
+      Yaw: 3.0725936889648438
     Saved: ~
 Window Geometry:
   Displays:

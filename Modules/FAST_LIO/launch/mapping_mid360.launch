@@ -14,7 +14,7 @@
 	<param name="runtime_pos_log_enable" type="bool" value="0" />
 	<param name="filter_range_x" type="double" value="25.0" />
 	<param name="filter_range_y" type="double" value="25.0" />
-	<param name="filter_range_z" type="double" value="0.5" />
+	<param name="filter_range_z" type="double" value="0.3" />
 	
     <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping" output="screen" /> 
 

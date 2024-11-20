@@ -104,7 +104,7 @@ namespace ego_planner
     {
       cout << "The start point is too Close to goal" << endl;
       continous_failures_count_++;
-      return false;
+      return true;
     }
 
     bspline_optimizer_->setLocalTargetPt(local_target_pt);
