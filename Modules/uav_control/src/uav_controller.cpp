@@ -1852,7 +1852,7 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
         if (is_rebot_px4)
         {
             reboot_PX4();
-            is_rebot_px4 = false;
+            // is_rebot_px4 = false;
         }
         this->text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
         this->text_info.Message = "px4 params init faild!";
@@ -1874,7 +1874,7 @@ void UAV_controller::timercb_check_px4_location_source(const ros::TimerEvent &e)
         if (is_rebot_px4)
         {
             reboot_PX4();
-            is_rebot_px4 = false;
+            // is_rebot_px4 = false;
         }
         this->text_info.MessageType = prometheus_msgs::TextInfo::INFO;
         this->text_info.Message = "px4 params init success!";

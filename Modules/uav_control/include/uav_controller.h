@@ -120,7 +120,7 @@ public:
     geo_fence uav_geo_fence;
 
     // 记录px4参数根据定位源不同值
-    bool is_rebot_px4 = false;
+    bool is_rebot_px4 = true;
 
     // 基本变量
     int uav_id;      // 无人机编号
