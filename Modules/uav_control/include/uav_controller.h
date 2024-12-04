@@ -40,6 +40,7 @@
 #include "pos_controller_NE.h"
 
 #include "param_manager.hpp"
+#include "message_convert.hpp"
 
 using namespace std;
 
@@ -66,6 +67,7 @@ public:
     ros::Publisher uav_control_state_pub;
     ros::Publisher ground_station_info_pub;
     ros::Publisher stop_control_state_pub;
+    ros::Publisher serial_control_pub;
     // 服务
     ros::ServiceClient px4_arming_client;
     ros::ServiceClient px4_set_mode_client;
@@ -120,7 +122,8 @@ public:
     geo_fence uav_geo_fence;
 
     // 记录px4参数根据定位源不同值
-    bool is_rebot_px4 = true;
+    bool is_rebot_px4 = false;
+    bool reboot_px4_set_reset_ekf = false;
 
     // 基本变量
     int uav_id;      // 无人机编号
@@ -226,6 +229,9 @@ private:
     void arm_disarm_func(bool on_or_off);
     void enable_emergency_func();
     void reboot_PX4();
+    // MAVLINK 消息： SERIAL_CONTROL(126)的发布
+    // 这里主要模拟一个QGC终端 MAVLINK CONSOLE 的实现
+    void send_serial_control(const std::string &cmd);
 
     std::unordered_map<std::string, std::string> get_px4_params(ros::NodeHandle &nh);
     // 定时器检查当前定位源下飞控参数设置是否正确

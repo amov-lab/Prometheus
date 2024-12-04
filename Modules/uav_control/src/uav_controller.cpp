@@ -30,6 +30,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
     // 【参数】定位源px4参数设置
     bool enable_px4_params_load = false;
     nh.param<bool>("enable_px4_params_load", enable_px4_params_load, false);
+    nh.param<bool>("reboot_px4_set_reset_ekf", reboot_px4_set_reset_ekf, false);
     
     px4_params = get_px4_params(nh);
 
@@ -142,6 +143,9 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
 
     // 【发布】触发绝对悬停后，向其他程序发布停止控制状态(本节点 -> 其他循环发送控制指令程序)
     stop_control_state_pub = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(uav_id) + "/prometheus/stop_control_state", 1);
+
+    // 【发布】通过mavlink发送 SERIAL_CONTROL(126)
+    serial_control_pub = nh.advertise<mavros_msgs::Mavlink>("/uav" + std::to_string(uav_id) + "/mavlink/to", 10);
 
     // 【服务】解锁/上锁
     px4_arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/uav" + std::to_string(uav_id) + "/mavros/cmd/arming");
@@ -329,7 +333,8 @@ void UAV_controller::mainloop()
             if (uav_pos[2] < Disarm_height)
             {
                 // 进入急停
-                enable_emergency_func();
+                // enable_emergency_func();
+                set_px4_mode_func("AUTO.LAND");
             }
         }
 
@@ -1795,17 +1800,24 @@ void UAV_controller::enable_emergency_func()
 
 void UAV_controller::reboot_PX4()
 {
-    // https://mavlink.io/en/messages/common.html, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN(#246)
-    mavros_msgs::CommandLong reboot_srv;
-    reboot_srv.request.broadcast = false;
-    reboot_srv.request.command = 246; // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN
-    reboot_srv.request.param1 = 1;    // Reboot autopilot
-    reboot_srv.request.param2 = 0;    // Do nothing for onboard computer
-    reboot_srv.request.confirmation = true;
-    px4_reboot_client.call(reboot_srv);
-    cout << GREEN << node_name << " Reboot PX4!" << TAIL << endl;
-    this->text_info.MessageType = prometheus_msgs::TextInfo::WARN;
-    this->text_info.Message = "Reboot PX4!";
+    if(!reboot_px4_set_reset_ekf)
+    {
+        // https://mavlink.io/en/messages/common.html, MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN(#246)
+        mavros_msgs::CommandLong reboot_srv;
+        reboot_srv.request.broadcast = false;
+        reboot_srv.request.command = 246; // MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN
+        reboot_srv.request.param1 = 1;    // Reboot autopilot
+        reboot_srv.request.param2 = 0;    // Do nothing for onboard computer
+        reboot_srv.request.confirmation = true;
+        px4_reboot_client.call(reboot_srv);
+        cout << GREEN << node_name << " Reboot PX4!" << TAIL << endl;
+        this->text_info.MessageType = prometheus_msgs::TextInfo::WARN;
+        this->text_info.Message = "Reboot PX4!";
+    }else{
+        send_serial_control("ekf2 stop");
+        sleep(3);
+        send_serial_control("ekf2 start");
+    }
 }
 
 // 向地面发送反馈信息,如果重复,将不会发送
@@ -2052,4 +2064,42 @@ bool UAV_controller::px4_param_set(std::string param_id, double param_value)
         is_rebot_px4 = true;
     }
     return true;
+}
+
+void UAV_controller::send_serial_control(const std::string &cmd)
+{
+    if (cmd.empty())
+        return;
+
+    // 准备要发送的命令
+    std::string command = cmd;
+    if (cmd.back() != '\n')
+    {
+        command += '\n';
+    }
+
+    std::vector<uint8_t> data(70, 0);
+    std::copy(command.begin(), command.end(), data.begin());
+
+    // 创建序列控制消息
+    mavlink_serial_control_t msg;
+    msg.device = SERIAL_CONTROL_DEV_SHELL;
+    msg.flags = (SERIAL_CONTROL_FLAG_RESPOND |
+                 SERIAL_CONTROL_FLAG_EXCLUSIVE |
+                 SERIAL_CONTROL_FLAG_MULTI);
+    msg.timeout = 1000;
+    msg.baudrate = 0;
+    msg.count = command.length();
+    std::copy(data.begin(), data.end(), msg.data);
+
+    // 将 mavlink_serial_control_t 消息编码为 mavlink_message_t 消息
+    mavlink_message_t mavlink_msg;
+    mavlink_msg_serial_control_encode(1, 240, &mavlink_msg, &msg); // 1 是系统ID，240 是组件ID
+
+    // 将 mavlink_message_t 转换为 mavros_msgs::Mavlink
+    mavros_msgs::Mavlink ros_msg;
+    message_convert::convert(mavlink_msg, ros_msg);
+
+    // 发布消息
+    this->serial_control_pub.publish(ros_msg);
 }

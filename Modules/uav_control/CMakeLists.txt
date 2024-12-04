@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(mavlink REQUIRED)
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -48,6 +49,7 @@ include_directories(
   include/Position_Controller
   ../common/include
   ../communication/include
+  ${mavlink_INCLUDE_DIRS}
 )
 
 
