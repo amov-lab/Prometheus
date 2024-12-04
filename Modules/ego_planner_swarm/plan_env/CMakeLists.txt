@@ -67,3 +67,12 @@ add_executable(laser_to_pointcloud
 target_link_libraries(laser_to_pointcloud 
     ${catkin_LIBRARIES}
     )
+add_executable(su17_depth
+    src/su17_depth.cpp 
+)
+target_link_libraries(su17_depth 
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBRARIES}
+    )
+    
+    

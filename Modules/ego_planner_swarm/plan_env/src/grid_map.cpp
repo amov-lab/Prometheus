@@ -1040,7 +1040,7 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
   Eigen::Vector3d p3d, p3d_inf;
 
   int inf_step = ceil(mp_.obstacles_inflation_ / mp_.resolution_);
-  int inf_step_z = 4;
+  int inf_step_z = 2;
 
   double max_x, max_y, max_z, min_x, min_y, min_z;
 

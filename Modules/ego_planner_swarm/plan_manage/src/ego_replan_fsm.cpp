@@ -55,9 +55,9 @@ namespace ego_planner
 
     /* callback */
     // 规划状态机定时器
-    exec_timer_ = nh.createTimer(ros::Duration(0.01), &EGOReplanFSM::execFSMCallback, this);
+    exec_timer_ = nh.createTimer(ros::Duration(0.05), &EGOReplanFSM::execFSMCallback, this);
     // 安全检查定时器
-    safety_timer_ = nh.createTimer(ros::Duration(0.05), &EGOReplanFSM::checkCollisionCallback, this);
+    safety_timer_ = nh.createTimer(ros::Duration(0.1), &EGOReplanFSM::checkCollisionCallback, this);
     // 订阅里程计
     odom_sub_ = nh.subscribe("odom_world", 1, &EGOReplanFSM::odometryCallback, this);
     // 订阅参数服务器内ego相关的参数
