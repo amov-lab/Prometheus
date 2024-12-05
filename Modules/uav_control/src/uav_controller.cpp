@@ -31,7 +31,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
     bool enable_px4_params_load = false;
     nh.param<bool>("enable_px4_params_load", enable_px4_params_load, false);
     nh.param<bool>("reboot_px4_set_reset_ekf", reboot_px4_set_reset_ekf, false);
-    
+    nh.param<double>("px4_params/MC_YAWRATE_MAX", mc_yawrate_max, 100.0);
+
     px4_params = get_px4_params(nh);
 
     // 【函数】打印参数
@@ -313,33 +314,36 @@ void UAV_controller::mainloop()
         else
         {
             // 第一次进入，设置降落的期望位置和速度
-            if (!set_landing_des)
-            {
-                // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
-                if (quick_land)
-                {
-                    Land_speed = 1.0;
-                }
-                pos_des[0] = uav_pos[0];
-                pos_des[1] = uav_pos[1];
-                pos_des[2] = Takeoff_position[2]; // 高度设定为初始起飞时的高度
-                vel_des << 0.0, 0.0, -Land_speed;
-                acc_des << 0.0, 0.0, 0.0;
-                yaw_des = uav_yaw;
-                set_landing_des = true;
-            }
+            // if (!set_landing_des)
+            // {
+            //     // 快速降落 - 一般用于无人机即将失控时，快速降落保证安全
+            //     if (quick_land)
+            //     {
+            //         Land_speed = 1.0;
+            //     }
+            //     pos_des[0] = uav_pos[0];
+            //     pos_des[1] = uav_pos[1];
+            //     pos_des[2] = Takeoff_position[2]; // 高度设定为初始起飞时的高度
+            //     vel_des << 0.0, 0.0, -Land_speed;
+            //     acc_des << 0.0, 0.0, 0.0;
+            //     yaw_des = uav_yaw;
+            //     set_landing_des = true;
+            // }
             // 当无人机位置低于指定高度时，自动上锁
             // 需要考虑万一高度数据不准确时，从高处自由落体
-            if (uav_pos[2] < Disarm_height)
-            {
-                // 进入急停
-                // enable_emergency_func();
+            // if (uav_pos[2] < Disarm_height)
+            // {
+            //     // 进入急停
+            //     // enable_emergency_func();
+            //     set_px4_mode_func("AUTO.LAND");
+            // }
+            // 暂时解决降落偏头问题方法
+            if(px4_param_set("MC_YAWRATE_MAX",0.0))
                 set_px4_mode_func("AUTO.LAND");
-            }
         }
 
         // 降落结束的标志：无人机上锁
-        if (!uav_state.armed)
+        if (!uav_state.armed && px4_param_set("MC_YAWRATE_MAX",mc_yawrate_max))
         {
             control_state = CONTROL_STATE::INIT;
             // 控制命令初始化,不初始化将影响setup接口切换command_control模式

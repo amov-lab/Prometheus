@@ -124,6 +124,7 @@ public:
     // 记录px4参数根据定位源不同值
     bool is_rebot_px4 = false;
     bool reboot_px4_set_reset_ekf = false;
+    double mc_yawrate_max = 100.0;
 
     // 基本变量
     int uav_id;      // 无人机编号

@@ -27,6 +27,7 @@ px4_params:
   EKF2_AID_MASK : 24
   EKF2_HGT_MODE : 3
   COM_ARM_WO_GPS : 1
+  MC_YAWRATE_MAX : 80.0
 
 ##　地理围栏
 geo_fence:
