@@ -216,7 +216,7 @@ protected:
 
     // tcp/udp 相关变量
     struct sockaddr_in tcp_addr, udp_addr;
-    int tcp_send_sock, udp_send_sock, server_fd, udp_fd, recv_sock, udp_socket, rviz_socket, UDP_PORT, TCP_PORT, TCP_HEARTBEAT_PORT;
+    int server_fd, udp_fd, recv_sock, udp_socket, rviz_socket, UDP_PORT, TCP_PORT, TCP_HEARTBEAT_PORT;
     char udp_send_buf[BUF_LEN], udp_recv_buf[BUF_LEN], tcp_send_buf[BUF_LEN], tcp_recv_buf[BUF_LEN];
     std::string udp_ip, multicast_udp_ip;
 
