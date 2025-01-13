@@ -12,7 +12,7 @@
       <remap from="/octomap_binary" to="/uav$(arg uav_id)/octomap_binary"/>
       
       <!-- 地图分辨率 -->
-      <param name="resolution" value="0.1" />
+      <param name="resolution" value="0.05" />
       <!-- 发布地图的坐标系 -->
       <param name="frame_id" type="string" value="world" />
       <!-- 传感器最大感知范围 (speedup!) -->

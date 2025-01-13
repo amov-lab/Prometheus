@@ -41,9 +41,9 @@ namespace ego_planner
     fsm_params_get_i = { &target_type_, &waypoint_num_};
     fsm_params_get_b = { &enable_fail_safe_, &flag_realworld_experiment_};
     fsm_params_get_d = { &emergency_time_, &planning_horizen_, &no_replan_thresh_, &replan_thresh_,
-                                              &waypoints_[0][0], &waypoints_[0][1], &waypoints_[0][2], &waypoints_[1][0],
-                                              &waypoints_[1][1], &waypoints_[1][2], &waypoints_[2][0], &waypoints_[2][1],
-                                              &waypoints_[2][2], &waypoints_[3][0], &waypoints_[3][1], &waypoints_[3][2]};
+                         &waypoints_[0][0], &waypoints_[0][1], &waypoints_[0][2], &waypoints_[1][0],
+                         &waypoints_[1][1], &waypoints_[1][2], &waypoints_[2][0], &waypoints_[2][1],
+                         &waypoints_[2][2], &waypoints_[3][0], &waypoints_[3][1], &waypoints_[3][2]};
     /* initialize main modules */
     // 显示类
     visualization_.reset(new PlanningVisualization(nh));
@@ -857,7 +857,6 @@ namespace ego_planner
       }
   
       Eigen::VectorXd knots = info->position_traj_.getKnot();
-      // cout << knots.transpose() << endl;
       bspline.knots.reserve(knots.rows());
       // 只有在 stop_control_state.data 为 false 时才发布轨迹
       if (!stop_control_state.data)
@@ -882,30 +881,6 @@ namespace ego_planner
 
   void EGOReplanFSM::publishSwarmTrajs(bool startup_pub)
   {
-    // if (stop_control_state.data)
-    // {
-    //   ROS_INFO("Trajectory publishing is paused.");
-    //   // 保存当前的Bspline轨迹状态
-    //   if (!has_last_bspline_) {
-    //     last_bspline_ = bspline;  // 保存当前Bspline
-    //     has_last_bspline_ = true; // 标记已经有保存的轨迹
-    //   }
-    //   return; // 暂停发布
-    // }
-
-    // // 如果暂停之后恢复发布，重新发布上次的轨迹
-    // if (has_last_bspline_)
-    // {
-    //   ROS_INFO("Resuming trajectory publishing with saved trajectory.");
-    //   // 发布保存的轨迹
-    //   if (startup_pub)
-    //   {
-    //     swarm_trajs_pub_.publish(multi_bspline_msgs_buf_);
-    //   }
-    //   broadcast_bspline_pub_.publish(last_bspline_);
-    //   has_last_bspline_ = false;  // 重置保存的轨迹状态
-    // }
-
     auto info = &planner_manager_->local_data_;
 
     traj_utils::Bspline bspline;

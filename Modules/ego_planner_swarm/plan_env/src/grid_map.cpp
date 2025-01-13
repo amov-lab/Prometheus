@@ -30,6 +30,7 @@ void GridMap::initMap(ros::NodeHandle &nh)
   node_.param("grid_map/cx", mp_.cx_, -1.0);
   node_.param("grid_map/cy", mp_.cy_, -1.0);
   // 使用深度相机作为输入时，深度滤波范围
+  node_.param("no_depth", no_depth, false);
   node_.param("grid_map/use_depth_filter", mp_.use_depth_filter_, true);
   node_.param("grid_map/depth_filter_tolerance", mp_.depth_filter_tolerance_, -1.0);
   node_.param("grid_map/depth_filter_maxdist", mp_.depth_filter_maxdist_, -1.0);
@@ -85,12 +86,6 @@ void GridMap::initMap(ros::NodeHandle &nh)
   mp_.clamp_max_log_ = logit(mp_.p_max_);
   mp_.min_occupancy_log_ = logit(mp_.p_occ_);
   mp_.unknown_flag_ = 0.01;
-
-  // cout << "hit: " << mp_.prob_hit_log_ << endl;
-  // cout << "miss: " << mp_.prob_miss_log_ << endl;
-  // cout << "min log: " << mp_.clamp_min_log_ << endl;
-  // cout << "max: " << mp_.clamp_max_log_ << endl;
-  // cout << "thresh log: " << mp_.min_occupancy_log_ << endl;
 
   for (int i = 0; i < 3; ++i)
     mp_.map_voxel_num_(i) = ceil(mp_.map_size_(i) / mp_.resolution_);
@@ -204,29 +199,22 @@ void GridMap::gridparam_Callback(const prometheus_msgs::ParamSettingsConstPtr &m
     if (it != grid_params_compare_all.end()) 
     {
       size_t index = std::distance(grid_params_compare_all.begin(), it);
-      //std::cout << "Value: " << " found at index: " << index << typeid(index).name()<< std::endl;
-    
       if(index < 5)
       {
         *grid_params_get_i[index] = std::stoi(msg->param_value[0]);
-        //std::cout << "*grid_params_get_i[index] =" << *grid_params_get_i[index] << "\n" <<"local_map_margin = " << mp_.local_map_margin_ << std::endl;
       }else if(index < 36)
       {
         *grid_params_get_d[index - 5] = std::stod(msg->param_value[0]);
-        //std::cout << "&grid_params_get_d[] = " << &grid_params_get_d[index - 5] <<"\n" <<"mp_.obstacles_inflation_ = " << mp_.obstacles_inflation_<< std::endl;
       }else if(index < 38)
       { 
         if(msg->param_value[0] == "0"){
           *grid_params_get_b[index - 36] = false ; 
-          //std::cout << "*grid_params_get_b[index - 36] = " << *grid_params_get_b[index - 36] <<"\n"<< "use_depth_filter_ = " << mp_.use_depth_filter_<< std::endl;
         }else{
           *grid_params_get_b[index - 36] = true ;          
-          //std::cout << "*grid_params_get_b[index - 36] = " << *grid_params_get_b[index - 36] <<"\n"<< "use_depth_filter_ = " << mp_.use_depth_filter_<< std::endl;
         }
       }else
       {
         mp_.frame_id_ = msg->param_value[0];
-        //std::cout << "mp_.frame_id_ = " << mp_.frame_id_<< std::endl;
       }
     }
   }
@@ -1022,7 +1010,8 @@ void GridMap::cloudCallback(const sensor_msgs::PointCloud2ConstPtr &img)
     return;
   }
 
-  if (latest_cloud.points.size() == 0){
+  if (latest_cloud.points.size() == 0 && no_depth){
+    std::cout << "no depth = "<< no_depth << std::endl;
     stop_publishMapInflate = true;
     return;
   }else{
@@ -1299,10 +1288,6 @@ bool GridMap::odomValid() { return md_.has_odom_; }
 bool GridMap::hasDepthObservation() { return md_.has_first_depth_; }
 
 Eigen::Vector3d GridMap::getOrigin() { return mp_.map_origin_; }
-
-// int GridMap::getVoxelNum() {
-//   return mp_.map_voxel_num_[0] * mp_.map_voxel_num_[1] * mp_.map_voxel_num_[2];
-// }
 
 void GridMap::getRegion(Eigen::Vector3d &ori, Eigen::Vector3d &size)
 {

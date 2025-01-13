@@ -68,22 +68,17 @@ namespace ego_planner
       if (it != manage_params_compare_all.end()) 
       {
         size_t index = std::distance(manage_params_compare_all.begin(), it);
-        //std::cout << "Value: " << " found at index: " << index << typeid(index).name()<< std::endl;
         if(index < 6){
           *manage_params_get_d[index] = std::stoi(msg->param_value[0]);
-          //std::cout << "*manage_params_get_d[index] =" << *manage_params_get_d[index] << std::endl;
         }else if(index < 7)
         {
           pp_.drone_id = std::stod(msg->param_value[0]);
-          //std::cout << "pp_.drone_id = " << pp_.drone_id<<"\n" << "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
         }else
         {
           if(msg->param_value[0] == "0"){
             pp_.use_distinctive_trajs = false ; 
-            //std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0] << std::endl;
           }else{
             pp_.use_distinctive_trajs = true ;          
-            //std::cout << "pp_.use_distinctive_trajs = " << pp_.use_distinctive_trajs <<"\n"<< "&msg->param_value[0] = " << msg->param_value[0]<< std::endl;
           }
         }
       }
@@ -273,11 +268,7 @@ namespace ego_planner
 
     if (pp_.use_distinctive_trajs)
     {
-      // cout << "enter" << endl;
       std::vector<ControlPoints> trajs = bspline_optimizer_->distinctiveTrajs(segments);
-      // comment
-      // cout << "\033[1;33m"<< "multi-trajs=" << trajs.size() << "\033[1;0m" << endl;
-
       double final_cost, min_cost = 999999.0;
       for (int i = trajs.size() - 1; i >= 0; i--)
       {
@@ -320,7 +311,6 @@ namespace ego_planner
       visualization_->displayInitPathList(point_set, 0.2, 0);
     }
     // comment
-    // cout << "/uav"<< pp_.drone_id<< "  plan_success=" << flag_step_1_success << endl;
     if (!flag_step_1_success)
     {
       visualization_->displayOptimalList(ctrl_pts, 0);
@@ -377,8 +367,6 @@ namespace ego_planner
     static int count_success = 0;
     sum_time += (t_init + t_opt + t_refine).toSec();
     count_success++;
-    // comment
-    // cout << "total time:\033[42m" << (t_init + t_opt + t_refine).toSec() << "\033[0m,optimize:" << (t_init + t_opt).toSec() << ",refine:" << t_refine.toSec() << ",avg_time=" << sum_time / count_success << endl;
 
     // success. YoY
     continous_failures_count_ = 0;
@@ -464,11 +452,6 @@ namespace ego_planner
     }
 
     inter_points.push_back(points.back());
-
-    // for ( int i=0; i<inter_points.size(); i++ )
-    // {
-    //   cout << inter_points[i].transpose() << endl;
-    // }
 
     // write position matrix
     int pt_num = inter_points.size();
@@ -582,7 +565,6 @@ namespace ego_planner
 
     Eigen::MatrixXd ctrl_pts; // = traj.getControlPoint()
 
-    // std::cout << "ratio: " << ratio << std::endl;
     reparamBspline(traj, start_end_derivative, ratio, ctrl_pts, ts, t_inc);
 
     traj = UniformBspline(ctrl_pts, 3, ts);

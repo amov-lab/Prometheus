@@ -158,7 +158,7 @@ public:
   std::vector<int*> grid_params_get_i;
   std::vector<bool*> grid_params_get_b;
   std::vector<double*> grid_params_get_d;
-  bool stop_publishMapInflate;
+  bool stop_publishMapInflate,no_depth;
   // occupancy map management
   void resetBuffer();
   void resetBuffer(Eigen::Vector3d min, Eigen::Vector3d max);

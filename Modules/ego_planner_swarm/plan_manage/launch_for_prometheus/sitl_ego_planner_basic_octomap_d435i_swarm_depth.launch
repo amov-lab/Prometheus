@@ -34,9 +34,9 @@
     <arg name="fx" value="387.229248046875"/>
     <arg name="fy" value="387.229248046875"/>
     <!-- 点云信息，仿真中由map_generator产生 -->
-    <arg name="cloud1_topic" value=""/>
-    <arg name="cloud2_topic" value=""/>
-    <arg name="cloud3_topic" value=""/>
+    <arg name="cloud1_topic" value="/no_cloud1"/>
+    <arg name="cloud2_topic" value="/no_cloud2"/>
+    <arg name="cloud3_topic" value="/no_cloud3"/>
     <!--arg name="cloud4_topic" value="/uav$(arg uav4_id)/octomap_point_cloud_centers"/-->
     
     <!-- scan -->
