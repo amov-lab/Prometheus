@@ -10,5 +10,6 @@ catkin_make --source Modules/uav_control --build build/uav_control
 catkin_make --source Modules/communication --build build/communication
 # 编译AirSim仿真模块
 catkin_make --source Simulator/airsim_simulator --build build/prometheus_airsim
+catkin_make --source Simulator/airsim_simulator/airsim_ros/ros --build build/prometheus_airsim_ros
 
 

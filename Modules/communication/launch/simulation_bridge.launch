@@ -1,8 +1,8 @@
 <launch>
 
     <arg name="swarm_num" default="3"/>
-    <arg name="autoload" default="false"/>
-    <arg name="uav_control_start" default="gnome-terminal -- roslaunch prometheus_uav_control uav_control_main_indoor.launch"/>
+    <arg name="autoload" default="true"/>
+    <arg name="uav_control_start" default="gnome-terminal -- /home/amov/Prometheus/Scripts/simulation/airsim_sitl_outdoor_P450.sh"/>
     <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout`"/>
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
@@ -55,7 +55,7 @@
         <param name="next_drone_ip" value="127.0.0.1"/>
         <param name="broadcast_ip" value="127.0.0.255"/>
 
-        <param name="trajectory_ground_control" value="false"/>
+        <param name="trajectory_ground_control" value="true"/>
         <param name="trajectory_flag" value="false"/>
         <param name="trajectory_mode" value="0"/>
         <param name="trajectory_time" value="0"/>
