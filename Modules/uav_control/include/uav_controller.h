@@ -122,7 +122,7 @@ public:
     geo_fence uav_geo_fence;
 
     // 记录px4参数根据定位源不同值
-    bool is_rebot_px4 = false;
+    bool is_rebot_px4 = true;
     bool reboot_px4_set_reset_ekf = false;
     double mc_yawrate_max = 100.0;
 
