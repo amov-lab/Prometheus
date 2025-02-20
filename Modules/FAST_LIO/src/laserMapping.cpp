@@ -60,6 +60,7 @@
 #include "preprocess.h"
 #include <ikd-Tree/ikd_Tree.h>
 #include <fstream>
+#include <std_msgs/Bool.h> 
 #define INIT_TIME           (0.1)
 #define LASER_POINT_COV     (0.001)
 #define MAXN                (720000)
@@ -70,7 +71,8 @@ double kdtree_incremental_time = 0.0, kdtree_search_time = 0.0, kdtree_delete_ti
 double T1[MAXN], s_plot[MAXN], s_plot2[MAXN], s_plot3[MAXN], s_plot4[MAXN], s_plot5[MAXN], s_plot6[MAXN], s_plot7[MAXN], s_plot8[MAXN], s_plot9[MAXN], s_plot10[MAXN], s_plot11[MAXN];
 double match_time = 0, solve_time = 0, solve_const_H_time = 0;
 int    kdtree_size_st = 0, kdtree_size_end = 0, add_point_size = 0, kdtree_delete_counter = 0;
-bool   runtime_pos_log = false, pcd_save_en = false, time_sync_en = false, extrinsic_est_en = true, path_en = true;
+bool   runtime_pos_log = false, pcd_save_en = false, time_sync_en = false, extrinsic_est_en = true, path_en = true,odom_pub_flag = false;
+ros::Time stop_time;
 /**************************/
 
 float res_last[100000] = {0.0};
@@ -330,6 +332,11 @@ void livox_pcl_cbk(const prometheus_msgs::LivoxCustomMsg::ConstPtr &msg)
     s_plot11[scan_count] = omp_get_wtime() - preprocess_start_time;
     mtx_buffer.unlock();
     sig_buffer.notify_all();
+}
+
+void stop_odom_cbk(const std_msgs::Bool::ConstPtr &msg){
+    odom_pub_flag = msg->data;
+    stop_time = ros::Time::now();
 }
 
 void imu_cbk(const sensor_msgs::Imu::ConstPtr &msg_in) 
@@ -641,8 +648,14 @@ void publish_odometry(const ros::Publisher & pubOdomAftMapped)
             << roll << "," << pitch << "," << yaw << std::endl;  
     // ROS_INFO("/Odometry.pose.x = %.3f\t pose.y =%.3f\t pose.z = =%.3f \n",odomAftMapped.pose.pose.position.x,odomAftMapped.pose.pose.position.y,odomAftMapped.pose.pose.position.z,
     // "orientation.x = %.3f\t orientation.y = %.3f\t orientation.z = %.3f\t ",roll, pitch, yaw);
-    
-    pubOdomAftMapped.publish(odomAftMapped);
+        // 手动暂停发布odom
+    if (!odom_pub_flag){
+        pubOdomAftMapped.publish(odomAftMapped);
+    }
+    else{
+        if((ros::Time::now() - stop_time).toSec() > 1.0)
+        pubOdomAftMapped.publish(odomAftMapped);
+    }
     auto P = kf.get_P();
     for (int i = 0; i < 6; i ++)
     {
@@ -894,6 +907,7 @@ int main(int argc, char** argv)
         nh.subscribe(lid_topic, 200000, livox_pcl_cbk) : \
         nh.subscribe(lid_topic, 200000, standard_pcl_cbk);
     ros::Subscriber sub_imu = nh.subscribe(imu_topic, 200000, imu_cbk);
+    ros::Subscriber stop_odom = nh.subscribe("/Stop_Odom", 10, stop_odom_cbk);
     ros::Publisher pubLaserCloudFull = nh.advertise<sensor_msgs::PointCloud2>
             ("/cloud_registered", 100000);
     ros::Publisher pubLaserCloudFull_body = nh.advertise<sensor_msgs::PointCloud2>
