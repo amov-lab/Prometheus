@@ -12,4 +12,5 @@ catkin_make --source Modules/communication --build build/communication
 catkin_make --source Simulator/airsim_simulator --build build/prometheus_airsim
 catkin_make --source Simulator/airsim_simulator/airsim_ros/ros --build build/prometheus_airsim_ros
 
-
+# 编译demo模块
+catkin_make --source Modules/tutorial_demo --build build/tutorial_demo
