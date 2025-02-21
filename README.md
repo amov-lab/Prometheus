@@ -16,7 +16,7 @@ Prometheus是一套开源的**自主无人机软件系统平台**，为无人机
 
 ## 快速入门
 
- - 安装及使用：[Prometheus使用手册](https://wiki.amovlab.com/public/prometheus-wiki/)
+ - 安装及使用：[Prometheus使用手册](https://docs.amovlab.com/prometheus-wiki/#/src/Prometheus-%E8%87%AA%E4%B8%BB%E6%97%A0%E4%BA%BA%E6%9C%BA%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/Prometheus-%E8%87%AA%E4%B8%BB%E6%97%A0%E4%BA%BA%E6%9C%BA%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE)
     - 需掌握C语言基础（大部分程序为C语言，部分模块有少量C++和python的语法）。
     - 纯新手入门者建议先自学ROS官网教程。
     - PX4飞控代码可不掌握，但需要掌握基本概念及基本操作。
