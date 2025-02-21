@@ -1,0 +1,4 @@
+lxml>=3.6.4
+Mako>=1.0.4
+mkdocs
+pygments

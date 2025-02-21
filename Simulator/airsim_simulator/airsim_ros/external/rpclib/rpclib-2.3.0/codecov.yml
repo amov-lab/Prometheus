@@ -1,0 +1,7 @@
+
+ignore:
+  - "include/rpc/msgpack"
+  - "dependencies"
+
+coverage:
+  precision: 2

@@ -1,0 +1,7 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+Standard: Cpp11
+UseTab: Never
+ColumnLimit: 80
+AccessModifierOffset: -4
+ConstructorInitializerAllOnOneLineOrOnePerLine: true

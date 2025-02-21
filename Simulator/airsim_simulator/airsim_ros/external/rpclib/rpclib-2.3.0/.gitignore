@@ -1,0 +1,16 @@
+.DS_Store
+build/
+.idea/
+.vscode/
+
+doc/site/
+doc/doxygen/
+
+*.pyc
+compile_commands.json
+CMakeLists.txt.user
+cppcheck*
+report
+utils/release
+doc/all.xml
+reference.md

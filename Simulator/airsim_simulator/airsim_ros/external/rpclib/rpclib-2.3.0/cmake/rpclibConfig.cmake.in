@@ -1,0 +1,10 @@
+# Example usage:
+#   find_package(rpclib REQUIRED)
+#   add_executable(foo main.cpp)
+#   target_link_libraries(foo rpclib::rpc)
+
+@PACKAGE_INIT@
+
+set(RPCLIB_VERSION @RPCLIB_VERSION_MAJOR@.@RPCLIB_VERSION_MINOR@.@RPCLIB_VERSION_PATCH@)
+
+include("${CMAKE_CURRENT_LIST_DIR}/rpclibTargets.cmake")

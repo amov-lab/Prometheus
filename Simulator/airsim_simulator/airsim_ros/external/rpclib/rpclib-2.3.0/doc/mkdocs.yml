@@ -1,0 +1,37 @@
+docs_dir: pages
+site_name: rpclib
+
+pages:
+  - 'Home': 'index.md'
+  - 'Guides':
+    - 'Getting started': 'gettingstarted.md'
+    - 'Primer': 'primer.md'
+    - 'Cookbook': 'cookbook.md'
+    - 'Glossary': 'glossary.md'
+  - 'Advanced':
+    - 'Compiling': 'compiling.md'
+    - 'Internals': 'internals.md'
+    - 'Specification': 'spec.md'
+    - 'Roadmap': 'roadmap.md'
+  - 'Contributing': 'contributing.md'
+  - 'Reference': 'reference.md'
+  - 'Versions': 'versions.md'
+
+theme: material
+
+markdown_extensions:
+  - toc:
+      permalink: False
+      baselevel: 2
+  - admonition
+  - attr_list
+  - codehilite
+  - pymdownx.magiclink
+
+copyright: "Copyright &copy; 2016 Tamás Szelei"
+
+extra_css:
+  - 'extra.css'
+
+repo_name: 'rpclib/rpclib'
+repo_url: 'https://github.com/rpclib/rpclib'

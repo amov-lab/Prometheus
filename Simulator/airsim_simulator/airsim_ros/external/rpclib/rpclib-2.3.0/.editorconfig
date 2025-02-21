@@ -1,0 +1,14 @@
+# EditorConfig is awesome: http://EditorConfig.org
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+# Matches multiple files with brace expansion notation
+# Set default charset
+[*.{cc,cpp,h,hpp,hh}]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true

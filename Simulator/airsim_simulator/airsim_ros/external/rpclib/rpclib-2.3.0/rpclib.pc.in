@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: rpclib
+Description: rpclib is a msgpack-rpc library written using modern C++
+Version: @rpclib_version@
+Libs: -L${libdir} -l@OUTPUT_LIBRARY_NAME@
+Cflags: -I${includedir} @rpclib_cflags@

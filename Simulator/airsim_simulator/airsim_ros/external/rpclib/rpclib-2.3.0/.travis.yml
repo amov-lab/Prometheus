@@ -1,0 +1,32 @@
+language: c++
+os: linux
+dist: focal
+sudo: required
+
+matrix:
+  include:
+    - compiler: gcc
+      env: RPCLIB_CXX_STANDARD=11 BUILD_TYPE=Release COVERAGE="ON"
+    - compiler: gcc
+      env: RPCLIB_CXX_STANDARD=14 BUILD_TYPE=Release COVERAGE="OFF"
+    - compiler: clang
+      env: RPCLIB_CXX_STANDARD=11 BUILD_TYPE=Release COVERAGE="OFF"
+    - compiler: clang
+      env: RPCLIB_CXX_STANDARD=14 BUILD_TYPE=Release COVERAGE="OFF"
+
+before_install:
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get install -qq g++ cmake
+
+script:
+  - mkdir build ; cd build
+  - cmake -DRPCLIB_ENABLE_COVERAGE=$COVERAGE -DRPCLIB_BUILD_TESTS=ON -DRPCLIB_CXX_STANDARD=$RPCLIB_CXX_STANDARD -DCMAKE_INSTALL_PREFIX=../install ..
+  - cmake --build . --config $BUILD_TYPE
+  - cmake --build . --target install
+
+after_success:
+  - ./tests/rpc_test
+  - lcov --capture --directory . --output-file coverage.info
+  - bash <(curl -s https://codecov.io/bash)
