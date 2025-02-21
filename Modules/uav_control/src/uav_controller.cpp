@@ -1001,7 +1001,7 @@ int UAV_controller::check_failsafe()
     }
 
     // 检查接收PX4遥控器数据的是否超时，超时说明遥控器断联
-    if ((ros::Time::now() - rc_input.rcv_stamp).toSec() > 1.5 /* 秒 */)
+    if ((ros::Time::now() - rc_input.rcv_stamp).toSec() > 1.5 /* 秒 */ && !sim_mode)
     {
         cout << RED << uav_name << ":----> Failsafe: Remote control disconnected！" << TAIL << endl;
         return 3;
