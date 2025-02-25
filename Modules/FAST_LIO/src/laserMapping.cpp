@@ -61,6 +61,10 @@
 #include <ikd-Tree/ikd_Tree.h>
 #include <fstream>
 #include <std_msgs/Bool.h> 
+#include <chrono>
+#include <filesystem>
+#include <iomanip>
+#include <sstream>
 #define INIT_TIME           (0.1)
 #define LASER_POINT_COV     (0.001)
 #define MAXN                (720000)
@@ -140,6 +144,50 @@ geometry_msgs::PoseStamped msg_body_pose;
 
 shared_ptr<Preprocess> p_pre(new Preprocess());
 shared_ptr<ImuProcess> p_imu(new ImuProcess());
+
+namespace fs = std::filesystem;
+// 添加文件管理功能
+struct OdometryLogger {
+    static std::ofstream outfile;
+    static std::string current_filename;
+    static constexpr const char* log_dir = "/home/amov/odometry_logs/";
+    static constexpr int retention_hours = 5 * 24;  // 将天数转换为小时数
+
+    static void init() {
+        // 创建日志目录
+        fs::create_directories(log_dir);
+
+        // 清理旧文件
+        auto now = fs::file_time_type::clock::now();
+        for (const auto& entry : fs::directory_iterator(log_dir)) {
+            if (entry.is_regular_file()) {
+                auto file_time = entry.last_write_time();
+                auto diff = now - file_time;
+                if (diff > std::chrono::hours(retention_hours)) {
+                    fs::remove(entry.path());
+                }
+            }
+        }
+
+        // 生成带时间戳的文件名
+        auto t = std::chrono::system_clock::to_time_t(
+            std::chrono::system_clock::now());
+        std::tm tm = *std::localtime(&t);
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "odometry_%Y%m%d_%H%M%S.txt");
+        current_filename = (fs::path(log_dir) / oss.str()).string();
+
+        // 打开文件
+        outfile.open(current_filename, std::ios::out);
+        if (outfile) {
+            outfile << "# timestamp(sec) x(m) y(m) z(m) roll(rad) pitch(rad) yaw(rad)\n";
+        } else {
+            ROS_ERROR("Failed to create log file: %s", current_filename.c_str());
+        }
+    }
+};
+std::ofstream OdometryLogger::outfile;
+std::string OdometryLogger::current_filename;
 
 void SigHandle(int sig)
 {
@@ -599,6 +647,9 @@ void set_posestamp(T & out)
 
 void publish_odometry(const ros::Publisher & pubOdomAftMapped)
 {
+    // 初始化日志（仅第一次调用时执行）
+    static std::once_flag init_flag;
+    std::call_once(init_flag, [](){ OdometryLogger::init(); });
     odomAftMapped.header.frame_id = "camera_init";
     odomAftMapped.child_frame_id = "body";
     odomAftMapped.header.stamp = ros::Time().fromSec(lidar_end_time);// ros::Time().fromSec(lidar_end_time);
@@ -615,40 +666,16 @@ void publish_odometry(const ros::Publisher & pubOdomAftMapped)
     tf::Matrix3x3 m(Q);
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
-    // 若文件已经存在就删除
-    static std::ofstream outfile;
-    static bool first_run = true;
-    if (first_run) {
-        const std::string filename = "/home/amov/odometry_data.txt";
-        // 检查文件是否存在
-        std::ifstream exist_check(filename);
-        if (exist_check.good()) {
-            exist_check.close();
-            if (std::remove(filename.c_str()) != 0) {
-                ROS_ERROR("Failed to delete existing file: %s", filename.c_str());
-            }
-        }
-        // 创建新文件
-        outfile.open(filename, std::ios::out | std::ios::trunc); // 明确指定截断模式
-        if (!outfile) {
-            ROS_ERROR("Failed to create new file: %s", filename.c_str());
-            return;
-        }
-        outfile << "\xEF\xBB\xBF"; 
-        outfile << "# timestamp(sec) x(m) y(m) z(m) roll(rad) pitch(rad) yaw(rad)\n";
-        first_run = false;
-    }
     // 数据写入
-    //std::cout << "数据写入" <<std::endl;
-    outfile << std::fixed << std::setprecision(6)
-            << odomAftMapped.header.stamp.toSec() << ","  
-            << odomAftMapped.pose.pose.position.x << ","
-            << odomAftMapped.pose.pose.position.y << ","
-            << odomAftMapped.pose.pose.position.z << ","
-            << roll << "," << pitch << "," << yaw << std::endl;  
-    // ROS_INFO("/Odometry.pose.x = %.3f\t pose.y =%.3f\t pose.z = =%.3f \n",odomAftMapped.pose.pose.position.x,odomAftMapped.pose.pose.position.y,odomAftMapped.pose.pose.position.z,
-    // "orientation.x = %.3f\t orientation.y = %.3f\t orientation.z = %.3f\t ",roll, pitch, yaw);
-        // 手动暂停发布odom
+    if (OdometryLogger::outfile) {
+        OdometryLogger::outfile << std::fixed << std::setprecision(6)
+                << odomAftMapped.header.stamp.toSec() << " "  
+                << odomAftMapped.pose.pose.position.x << " "
+                << odomAftMapped.pose.pose.position.y << " "
+                << odomAftMapped.pose.pose.position.z << " "
+                << roll << " " << pitch << " " << yaw << std::endl;
+    }
+    // 手动暂停发布odom
     if (!odom_pub_flag){
         pubOdomAftMapped.publish(odomAftMapped);
     }
