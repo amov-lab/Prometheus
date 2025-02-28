@@ -6,7 +6,7 @@
 using namespace std;
 
 ros::Publisher scan_pub, scan_point_cloud_pub;
-
+int uav_id = 1;
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr &laser_scan)
 {
   // 参考网页:http://wiki.ros.org/laser_geometry
@@ -16,6 +16,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr &laser_scan)
   projector_.projectLaser(*laser_scan, input_laser_scan);
   
   input_laser_scan.header.stamp = ros::Time::now(); //时间戳
+  input_laser_scan.header.frame_id = "uav"+std::to_string(uav_id)+"/lidar_link";
   scan_point_cloud_pub.publish(input_laser_scan);
 
   sensor_msgs::LaserScan scan_with_system_time =  *laser_scan;
@@ -31,10 +32,8 @@ int main(int argc, char** argv)
     //创建句柄
     ros::NodeHandle n;
 
-    int uav_id = 1;
     //获取起飞高度参数
     ros::param::get("~uav_id", uav_id);
-    // uav_id = 1;
     
     ros::Subscriber scan_sub = n.subscribe<sensor_msgs::LaserScan>("/uav" + std::to_string(uav_id) + "/scan_filtered", 10, scanCallback);
 

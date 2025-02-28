@@ -1,0 +1,88 @@
+<launch>
+  <arg name="uav_id" default="1"/>
+  <arg name="map_size_x" default="50.0"/>
+  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_origin_x" default="-25.0"/>
+  <arg name="map_origin_y" default="-25.0"/>
+  <arg name="map_size_z" default="3.0"/>
+  <arg name="ground_height" default="0.5"/>
+  <arg name="odom_topic" default="prometheus/odom" />
+  <arg name="yaw_init" default="0.0"/>
+  <arg name="flight_type" default="1"/>
+
+
+  <!-- ego_planner 仿真 -->
+  <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
+    <!-- 无人机编号 -->
+    <arg name="uav_id" value="$(arg uav_id)"/>
+    <!-- 地图尺寸 -->
+    <arg name="map_size_x_" value="50.0"/>
+    <arg name="map_size_y_" value="50.0"/>
+    <arg name="map_size_z_" value="3.0"/>
+    <arg name="map_origin_x_" value="-25.0"/>
+    <arg name="map_origin_y_" value="-25.0"/>
+    <!-- 可以通过限制ground_height和map_size_z来使得飞机在特定高度飞行 -->
+    <arg name="ground_height" value="0.5"/>
+    <!-- 虚拟天花板高度要小于等于ground_height+z_size，否则重置该高度 -->
+    <!-- 里程计话题 -->
+    <arg name="odometry_topic" value="prometheus/odom"/>
+    <!-- 仿真中相机及深度信息 -->
+    <arg name="camera_pose_topic" value="prometheus/odom"/>
+    <arg name="depth_topic" value="/airsim_node/uva1/front_right/DepthPlanar"/>
+    <arg name="cx" value="320.0"/>
+    <arg name="cy" value="240.0"/>
+    <arg name="fx" value="320.0"/>
+    <arg name="fy" value="320.0"/>
+    <!-- 点云信息，仿真中由map_generator产生 -->
+    <arg name="cloud_topic" value="/no_cloud"/>
+    <!-- scan -->
+    <arg name="scan_topic" value=""/>
+    <!-- 最大速度及加速度 -->
+    <arg name="max_vel" value="0.8" />
+    <arg name="max_acc" value="0.8" />
+    <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
+    <arg name="planning_horizon" value="7.5" /> 
+    <!-- ？ -->
+    <arg name="use_distinctive_trajs" value="true" />
+    <!-- 1: use 2D Nav Goal to select goal  -->
+    <!-- 2: use global waypoints below  -->
+    <!-- 单机建议直接使用rviz指定目标点,多机情况请预设目标点 -->
+    <arg name="flight_type" value="1" />
+    <!-- global waypoints -->
+    <!-- It generates a piecewise min-snap traj passing all waypoints -->
+    <arg name="point_num" value="4" />
+    <arg name="point0_x" value="-6.0" />
+    <arg name="point0_y" value="-3.0" />
+    <arg name="point0_z" value="1.5" />
+
+    <arg name="point1_x" value="0.0" />
+    <arg name="point1_y" value="3.0" />
+    <arg name="point1_z" value="1.5" />
+
+    <arg name="point2_x" value="3.0" />
+    <arg name="point2_y" value="-3.0" />
+    <arg name="point2_z" value="1.5" />
+
+    <arg name="point3_x" value="6.0" />
+    <arg name="point3_y" value="-7.0" />
+    <arg name="point3_z" value="1.5" />
+    <!-- 仿真 -->
+    <arg name="realworld_experiment" value="true" />
+    <param name="no_depth"        value="false"/>
+  </include>
+
+
+  <!-- trajectory server：由B样条生成轨迹 -->
+  <node pkg="ego_planner" name="uav$(arg uav_id)_traj_server_for_prometheus" type="traj_server_for_prometheus" output="screen">
+    <param name="uav_id" value="$(arg uav_id)"/>
+    <param name="control_flag" value="0"/>
+    <param name="traj_server/time_forward" value="1.0"/>
+    <param name="traj_server/last_yaw" value="$(arg yaw_init)"/>
+  </node>
+<!-- Rviz config -->
+    <arg name="rviz_enable" default="true"/>
+    <arg name="rivz_config" default="$(find prometheus_airsim)/launch/launch_planning/D435i_depth_airsim.rviz"/>
+	<group if="$(arg rviz_enable)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>
+    </group>
+</launch>

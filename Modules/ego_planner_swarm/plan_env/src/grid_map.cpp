@@ -31,6 +31,7 @@ void GridMap::initMap(ros::NodeHandle &nh)
   node_.param("grid_map/cy", mp_.cy_, -1.0);
   // 使用深度相机作为输入时，深度滤波范围
   node_.param("no_depth", no_depth, false);
+  node_.param("no_cloud", no_cloud, false);
   node_.param("grid_map/use_depth_filter", mp_.use_depth_filter_, true);
   node_.param("grid_map/depth_filter_tolerance", mp_.depth_filter_tolerance_, -1.0);
   node_.param("grid_map/depth_filter_maxdist", mp_.depth_filter_maxdist_, -1.0);
@@ -1273,7 +1274,7 @@ void GridMap::publishMapInflate(bool all_info)
   sensor_msgs::PointCloud2 cloud_msg;
 
   pcl::toROSMsg(cloud, cloud_msg);
-  if(stop_publishMapInflate){
+  if(stop_publishMapInflate && no_cloud){
     cloud_msg.data.clear();
     cloud_msg.width = 0;
     cloud_msg.height = 0;
