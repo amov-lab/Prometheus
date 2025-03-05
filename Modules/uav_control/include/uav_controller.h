@@ -125,6 +125,8 @@ public:
     bool is_rebot_px4 = true;
     bool reboot_px4_set_reset_ekf = false;
     double mc_yawrate_max = 100.0;
+    double mpc_xy_vel_max = 1.0;
+    double mpc_acc_hor = 2.0;
 
     // 基本变量
     int uav_id;      // 无人机编号
@@ -137,6 +139,8 @@ public:
     float Takeoff_height; // 默认起飞高度
     float Disarm_height;  // 自动上锁高度
     float Land_speed;     // 降落速度
+    double COMMAND_MPC_XY_VEL_MAX;
+    double COMMAND_MPC_ACC_HOR;
     bool set_landing_des;
 
     // PX4参数 用于存储需要修改的PX4参数

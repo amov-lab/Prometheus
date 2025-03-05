@@ -18,12 +18,18 @@ control:
   maximum_safe_vel_z : 4.0
   ## 最大vision/px4速度误差
   maximum_vel_error_for_vision : 2.0
+  ## command模式下水平速度
+  COMMAND_MPC_XY_VEL_MAX : 1.0
+  ## command模式下水平加速度
+  COMMAND_MPC_ACC_HOR : 2.0
   
 ## px4参数是否加载 enable_px4_params_load 为true的情况，将加载下面px4_params中的参数到飞控中
 enable_px4_params_load : true
 px4_params: # 严格区分参数值，为int64和float64，如果参数值为float64，需要设置小数点如：1.0
   EKF2_AID_MASK : 1
   EKF2_HGT_MODE : 0
+  MPC_XY_VEL_MAX : 3.0
+  MPC_ACC_HOR : 3.0
   
 
 ##　地理围栏

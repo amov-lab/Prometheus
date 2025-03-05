@@ -20,6 +20,10 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
     nh.param<float>("control/Disarm_height", Disarm_height, 0.2);
     // 【参数】降落速度
     nh.param<float>("control/Land_speed", Land_speed, 0.2);
+    // 【参数】command模式下水平速度
+    nh.param<double>("control/COMMAND_MPC_XY_VEL_MAX", COMMAND_MPC_XY_VEL_MAX, 1.0);
+    // 【参数】command模式下水平加速度
+    nh.param<double>("control/COMMAND_MPC_ACC_HOR", COMMAND_MPC_ACC_HOR, 2.0);
     // 【参数】地理围栏
     nh.param<float>("geo_fence/x_min", uav_geo_fence.x_min, -100.0);
     nh.param<float>("geo_fence/x_max", uav_geo_fence.x_max, 100.0);
@@ -32,6 +36,8 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
     nh.param<bool>("enable_px4_params_load", enable_px4_params_load, false);
     nh.param<bool>("reboot_px4_set_reset_ekf", reboot_px4_set_reset_ekf, false);
     nh.param<double>("px4_params/MC_YAWRATE_MAX", mc_yawrate_max, 100.0);
+    nh.param<double>("px4_params/MPC_XY_VEL_MAX", mpc_xy_vel_max, 1.0);
+    nh.param<double>("px4_params/MPC_ACC_HOR", mpc_acc_hor, 2.0);
 
     px4_params = get_px4_params(nh);
 
@@ -921,6 +927,10 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
             rc_input.enter_init = false;
             control_state = CONTROL_STATE::INIT;
             cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
+            px4_param_set("MPC_XY_VEL_MAX",mpc_xy_vel_max);
+            px4_param_set("MPC_ACC_HOR",mpc_acc_hor);
+            ROS_INFO("Parameter 'MPC_XY_VEL_MAX' set success: %f", mpc_xy_vel_max);
+            ROS_INFO("Parameter 'MPC_ACC_HOR' set success: %f", mpc_acc_hor);
         }
 
         if (rc_input.enter_rc_pos_control)
@@ -953,6 +963,10 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         rc_input.enter_init = false;
         control_state = CONTROL_STATE::INIT;
         cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
+        px4_param_set("MPC_XY_VEL_MAX",mpc_xy_vel_max);
+        px4_param_set("MPC_ACC_HOR",mpc_acc_hor);
+        ROS_INFO("Parameter 'MPC_XY_VEL_MAX' set success: %f", mpc_xy_vel_max);
+        ROS_INFO("Parameter 'MPC_ACC_HOR' set success: %f", mpc_acc_hor);
     }
 
     // 收到进入RC_POS_CONTROL指令，且不在RC_POS_CONTROL模式时
@@ -987,6 +1001,10 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         // 初始化默认的UAVCommand
         uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Init_Pos_Hover;
         cout << GREEN << node_name << " Switch to COMMAND_CONTROL" << TAIL << endl;
+        px4_param_set("MPC_XY_VEL_MAX",COMMAND_MPC_XY_VEL_MAX);
+        px4_param_set("MPC_ACC_HOR",COMMAND_MPC_ACC_HOR);
+        ROS_INFO("Parameter 'MPC_XY_VEL_MAX' set success: %f", COMMAND_MPC_XY_VEL_MAX);
+        ROS_INFO("Parameter 'MPC_ACC_HOR' set success: %f", COMMAND_MPC_ACC_HOR);
         return;
     }
 }
@@ -1046,6 +1064,10 @@ void UAV_controller::uav_setup_cb(const prometheus_msgs::UAVSetup::ConstPtr &msg
         {
             cout << GREEN << node_name << " Switch to COMMAND_CONTROL by uav_setup cmd" << TAIL << endl;
             control_state = CONTROL_STATE::COMMAND_CONTROL;
+            px4_param_set("MPC_XY_VEL_MAX",COMMAND_MPC_XY_VEL_MAX);
+            px4_param_set("MPC_ACC_HOR",COMMAND_MPC_ACC_HOR);
+            ROS_INFO("Parameter 'MPC_XY_VEL_MAX' set success: %f", COMMAND_MPC_XY_VEL_MAX);
+            ROS_INFO("Parameter 'MPC_ACC_HOR' set success: %f", COMMAND_MPC_ACC_HOR);
         }
     }
 }
@@ -1692,6 +1714,10 @@ void UAV_controller::param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr
                 Disarm_height = std::stod(msg->param_value[i]);
             }else if(msg->param_name[i].find("control/Land_speed") != std::string::npos){
                 Land_speed = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("control/COMMAND_MPC_XY_VEL_MAX") != std::string::npos){
+                COMMAND_MPC_XY_VEL_MAX = std::stod(msg->param_value[i]);
+            }else if(msg->param_name[i].find("control/COMMAND_MPC_ACC_HOR ") != std::string::npos){
+                COMMAND_MPC_ACC_HOR  = std::stod(msg->param_value[i]);
             }else if(msg->param_name[i].find("geo_fence/x_min") != std::string::npos){
                 uav_geo_fence.x_min = std::stod(msg->param_value[i]);
             }else if(msg->param_name[i].find("geo_fence/x_max") != std::string::npos){
