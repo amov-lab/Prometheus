@@ -3,10 +3,6 @@
 #include <boost/thread/shared_mutex.hpp>
 #include "param_manager.hpp"
 
-std::mutex g_m;
-std::mutex g_uav_basic;
-// boost::shared_mutex g_m;
-
 CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
 {
     // 是否仿真 1 为是  0为否
@@ -71,17 +67,16 @@ CommunicationBridge::CommunicationBridge(ros::NodeHandle &nh) : Communication()
     to_ground_heartbeat_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::toGroundHeartbeat, this);
 
     heartbeat_check_timer = nh.createTimer(ros::Duration(1.0), &CommunicationBridge::checkHeartbeatState, this);
-    
 }
 
 CommunicationBridge::~CommunicationBridge()
 {
-    if (this->uav_basic_ != NULL)
-        delete this->uav_basic_;
-    if (this->ugv_basic_ != NULL)
-        delete this->ugv_basic_;
-    if (this->swarm_control_ != NULL)
-        delete this->swarm_control_;
+    if (this->uav_)
+        this->uav_.reset();
+    if (this->ugv_)
+        this->ugv_.reset();
+    if (this->swarm_control_)
+        this->swarm_control_.reset();
 }
 
 // TCP服务端
@@ -106,66 +101,6 @@ void CommunicationBridge::serverFun()
             exit(EXIT_FAILURE);
         }
 
-        // 未连接的情况,以第一台连接的地面端为准
-        if(this->uav_basic_ == NULL && this->ugv_basic_ == NULL)
-        {
-            // 获取客户端的 IP 地址
-            std::cout << "Client connected: " << inet_ntoa(client_addr.sin_addr) << std::endl;
-            
-            // 如果 地面站IP和组播IP一致 则将组播地址同步修改
-            if(this->udp_ip == this->multicast_udp_ip)
-            {
-                // 设置ROS参数服务器的数据
-                CommunicationBridge::setParam("multicast_udp_ip",std::string(inet_ntoa(client_addr.sin_addr)));
-                multicast_udp_ip = inet_ntoa(client_addr.sin_addr);
-            }
-            // 设置ROS参数服务器的数据
-            CommunicationBridge::setParam("ground_station_ip",std::string(inet_ntoa(client_addr.sin_addr)));
-            // 设置客户端IP
-            udp_ip = inet_ntoa(client_addr.sin_addr);
-
-        }else if(udp_ip != inet_ntoa(client_addr.sin_addr))// 防止多机重复抢夺控制,只允许第一台连接的无人机进行控制
-        {
-            // 如果此时第一台连接的地面端心跳包丢失了,允许其连接其他地面端
-            if(!this->is_heartbeat_ready_)
-            {
-                try
-                {
-                    std::string message = "Original client " + udp_ip + " signal loss! new client " + std::string(inet_ntoa(client_addr.sin_addr)) + " takes over.";
-
-                    // 如果 地面站IP和组播IP一致 则将组播地址同步修改
-                    if(this->udp_ip == this->multicast_udp_ip)
-                    {
-                        // 设置ROS参数服务器的数据
-                        CommunicationBridge::setParam("multicast_udp_ip",std::string(inet_ntoa(client_addr.sin_addr)));
-                        multicast_udp_ip = inet_ntoa(client_addr.sin_addr);
-                    }
-                    // 设置ROS参数服务器的数据
-                    CommunicationBridge::setParam("ground_station_ip",std::string(inet_ntoa(client_addr.sin_addr)));
-                    udp_ip = inet_ntoa(client_addr.sin_addr);
-                
-                    // 根据实际情况实时修改
-                    if(this->uav_basic_ != NULL) this->uav_basic_->setGroundStationIP(udp_ip);
-                    else if(this->ugv_basic_ != NULL) this->ugv_basic_->setGroundStationIP(udp_ip);
-
-                    if(this->swarm_control_ != NULL) this->swarm_control_->setGroundStationIP(udp_ip);
-
-                    // 获取客户端的 IP 地址
-                    std::cout << "new client connected: " << inet_ntoa(client_addr.sin_addr) << std::endl;
-                    sendTextInfo(TextInfo::MTG_ERROR,message);
-                }
-                catch(const std::exception& e)
-                {
-                    std::cerr << e.what() << '\n';
-                }
-            }else
-            {
-                std::string message = "client " + std::string(inet_ntoa(client_addr.sin_addr)) + " attempt to connect control! If the client needs to control, please disconnect the current connection.";
-                sendTextInfo(TextInfo::MTG_ERROR,message);
-                continue;
-            }
-        }
-
         // recv函数从TCP连接的另一端接收数据
         valread = recv(recv_sock, tcp_recv_buf, BUF_LEN, 0);
 
@@ -176,10 +111,73 @@ void CommunicationBridge::serverFun()
             continue;
         }
 
-        // std::lock_guard<std::mutex> lg(g_m);
+        // 开启互斥锁
+        std::lock_guard<std::mutex> lg_mutex(g_mutex_);
+        // 未连接的情况,以第一台连接的地面端为准
+        if (!this->uav_ && !this->ugv_)
+        {
+            // 获取客户端的 IP 地址
+            std::cout << "Client connected: " << inet_ntoa(client_addr.sin_addr) << std::endl;
+
+            // 如果 地面站IP和组播IP一致 则将组播地址同步修改
+            if (this->udp_ip == this->multicast_udp_ip)
+            {
+                // 设置ROS参数服务器的数据
+                CommunicationBridge::setParam("multicast_udp_ip", std::string(inet_ntoa(client_addr.sin_addr)));
+                multicast_udp_ip = inet_ntoa(client_addr.sin_addr);
+            }
+            // 设置ROS参数服务器的数据
+            CommunicationBridge::setParam("ground_station_ip", std::string(inet_ntoa(client_addr.sin_addr)));
+            // 设置客户端IP
+            udp_ip = inet_ntoa(client_addr.sin_addr);
+        }
+        else if (udp_ip != inet_ntoa(client_addr.sin_addr)) // 防止多机重复抢夺控制,只允许第一台连接的无人机进行控制
+        {
+            // 如果此时第一台连接的地面端心跳包丢失了,允许其连接其他地面端
+            if (!this->is_heartbeat_ready_)
+            {
+                try
+                {
+                    std::string message = "Original client " + udp_ip + " signal loss! new client " + std::string(inet_ntoa(client_addr.sin_addr)) + " takes over.";
+
+                    // 如果 地面站IP和组播IP一致 则将组播地址同步修改
+                    if (this->udp_ip == this->multicast_udp_ip)
+                    {
+                        // 设置ROS参数服务器的数据
+                        CommunicationBridge::setParam("multicast_udp_ip", std::string(inet_ntoa(client_addr.sin_addr)));
+                        multicast_udp_ip = inet_ntoa(client_addr.sin_addr);
+                    }
+                    // 设置ROS参数服务器的数据
+                    CommunicationBridge::setParam("ground_station_ip", std::string(inet_ntoa(client_addr.sin_addr)));
+                    udp_ip = inet_ntoa(client_addr.sin_addr);
+
+                    // 根据实际情况实时修改
+                    if (this->uav_)
+                        this->uav_->setGroundStationIP(udp_ip);
+                    else if (this->ugv_)
+                        this->ugv_->setGroundStationIP(udp_ip);
+
+                    if (this->swarm_control_)
+                        this->swarm_control_->setGroundStationIP(udp_ip);
+
+                    // 获取客户端的 IP 地址
+                    std::cout << "new client connected: " << inet_ntoa(client_addr.sin_addr) << std::endl;
+                    sendTextInfo(TextInfo::MTG_ERROR, message);
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
+            }
+            else
+            {
+                std::string message = "client " + std::string(inet_ntoa(client_addr.sin_addr)) + " attempt to connect control! If the client needs to control, please disconnect the current connection.";
+                sendTextInfo(TextInfo::MTG_ERROR, message);
+                continue;
+            }
+        }
 
         std::cout << "tcp valread: " << valread << std::endl;
-        // char *ptr = tcp_recv_buf;
         close(recv_sock);
         pubMsg(decodeMsg(tcp_recv_buf, Send_Mode::TCP));
     }
@@ -187,7 +185,7 @@ void CommunicationBridge::serverFun()
 
 void CommunicationBridge::recvData(struct UAVState uav_state)
 {
-    if (this->swarm_control_ != NULL && this->swarm_num_ != 0)
+    if (this->swarm_control_ && this->swarm_num_ != 0)
     {
         // 融合到所有无人机状态然后发布话题
         this->swarm_control_->updateAllUAVState(uav_state);
@@ -200,17 +198,16 @@ void CommunicationBridge::recvData(struct UAVCommand uav_cmd)
     // 非仿真情况 只有一个UAV
     if (this->is_simulation_ == 0)
     {
-        if (this->uav_basic_ == NULL)
+        if (this->uav_)
         {
-            return;
+            this->uav_->uavCmdPub(uav_cmd);
         }
-        this->uav_basic_->uavCmdPub(uav_cmd);
     }
     // 仿真情况下 可能存在多个UAV 找到对应ID进行发布对应的控制命令
     else
     {
-        auto it = this->swarm_control_simulation_.find(recv_id);
-        if (it != this->swarm_control_simulation_.end())
+        auto it = this->uavs_.find(recv_id);
+        if (it != this->uavs_.end())
         {
             (*it).second->uavCmdPub(uav_cmd);
         }
@@ -218,12 +215,11 @@ void CommunicationBridge::recvData(struct UAVCommand uav_cmd)
 }
 void CommunicationBridge::recvData(struct SwarmCommand swarm_command)
 {
-    if (this->swarm_control_ == NULL)
+    if (this->swarm_control_)
     {
-        return;
+        // 发布话题
+        this->swarm_control_->swarmCommandPub(swarm_command);
     }
-    // 发布话题
-    this->swarm_control_->swarmCommandPub(swarm_command);
 }
 void CommunicationBridge::recvData(struct ConnectState connect_state)
 {
@@ -238,17 +234,16 @@ void CommunicationBridge::recvData(struct GimbalControl gimbal_control)
     // 非仿真情况 只有一个UAV
     if (this->is_simulation_ == 0)
     {
-        if (this->uav_basic_ == NULL)
+        if (this->uav_)
         {
-            return;
+            this->uav_->gimbalControlPub(gimbal_control);
         }
-        this->uav_basic_->gimbalControlPub(gimbal_control);
     }
     // 仿真情况下 可能存在多个UAV 找到对应ID进行发布对应的控制命令
     else
     {
-        auto it = this->swarm_control_simulation_.find(recv_id);
-        if (it != this->swarm_control_simulation_.end())
+        auto it = this->uavs_.find(recv_id);
+        if (it != this->uavs_.end())
         {
             (*it).second->gimbalControlPub(gimbal_control);
         }
@@ -259,17 +254,16 @@ void CommunicationBridge::recvData(struct GimbalService gimbal_service)
     // 非仿真情况 只有一个UAV
     if (this->is_simulation_ == 0)
     {
-        if (this->uav_basic_ == NULL)
+        if (this->uav_)
         {
-            return;
+            this->uav_->gimbalServer(gimbal_service);
         }
-        this->uav_basic_->gimbalServer(gimbal_service);
     }
     // 仿真情况下 可能存在多个UAV 找到对应ID进行发布对应的控制命令
     else
     {
-        auto it = this->swarm_control_simulation_.find(recv_id);
-        if (it != this->swarm_control_simulation_.end())
+        auto it = this->uavs_.find(recv_id);
+        if (it != this->uavs_.end())
         {
             (*it).second->gimbalServer(gimbal_service);
         }
@@ -277,7 +271,6 @@ void CommunicationBridge::recvData(struct GimbalService gimbal_service)
 }
 void CommunicationBridge::recvData(struct GimbalParamSet param_set)
 {
-
 }
 void CommunicationBridge::recvData(struct WindowPosition window_position)
 {
@@ -289,9 +282,9 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
     }
     else
     {
-        if (this->uav_basic_ != NULL && window_position.mode == WindowPosition::Mode::POINT && window_position.track_id < 0)
+        if (this->uav_ && window_position.mode == WindowPosition::Mode::POINT && window_position.track_id < 0)
         {
-            this->uav_basic_->uavTargetPub(window_position);
+            this->uav_->uavTargetPub(window_position);
         }
     }
 }
@@ -300,17 +293,16 @@ void CommunicationBridge::recvData(struct UGVCommand ugv_command)
     // 非仿真情况 只有一个UGV
     if (this->is_simulation_ == 0)
     {
-        if (this->ugv_basic_ == NULL)
+        if (this->ugv_)
         {
-            return;
+            this->ugv_->ugvCmdPub(ugv_command);
         }
-        this->ugv_basic_->ugvCmdPub(ugv_command);
     }
     // 仿真情况下 可能存在多个UGV 找到对应ID进行发布对应的控制命令
     else
     {
-        auto it = this->swarm_ugv_control_simulation_.find(abs(Communication::getRecvID()));
-        if (it != this->swarm_ugv_control_simulation_.end())
+        auto it = this->ugvs_.find(abs(Communication::getRecvID()));
+        if (it != this->ugvs_.end())
         {
             (*it).second->ugvCmdPub(ugv_command);
         }
@@ -319,7 +311,7 @@ void CommunicationBridge::recvData(struct UGVCommand ugv_command)
 void CommunicationBridge::recvData(struct UGVState ugv_state)
 {
 
-    if (this->swarm_control_ != NULL && this->swarm_ugv_num_ != 0)
+    if (this->swarm_control_ && this->swarm_ugv_num_ != 0)
     {
         // 融合到所有无人车状态然后发布话题
         this->swarm_control_->updateAllUGVState(ugv_state);
@@ -333,11 +325,10 @@ void CommunicationBridge::recvData(struct ImageData image_data)
 }
 void CommunicationBridge::recvData(struct UAVSetup uav_setup)
 {
-    if (this->uav_basic_ == NULL)
+    if (this->uav_)
     {
-        return;
+        this->uav_->uavSetupPub(uav_setup);
     }
-    this->uav_basic_->uavSetupPub(uav_setup);
 }
 void CommunicationBridge::recvData(struct ModeSelection mode_selection)
 {
@@ -369,9 +360,10 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
     ParamManager p(nh_);
 
     // 是否是搜索
-    if(param_settings.param_module == ParamSettings::ParamModule::SEARCH)
+    if (param_settings.param_module == ParamSettings::ParamModule::SEARCH)
     {
-        if(param_settings.params.empty()){
+        if (param_settings.params.empty())
+        {
             sendTextInfo(TextInfo::MTG_INFO, "parameter search failed...");
             return;
         }
@@ -379,7 +371,8 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         std::unordered_map<std::string, std::string> param_map = p.getParams(param_settings.params.begin()->param_name);
         struct ParamSettings params;
         params.param_module = ParamSettings::ParamModule::SEARCH;
-        for (const auto& pair : param_map) {
+        for (const auto &pair : param_map)
+        {
             struct Param param;
             param.param_name = pair.first;
             param.param_value = pair.second;
@@ -389,50 +382,56 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
         sendMsgByUdp(encodeMsg(Send_Mode::UDP, params), udp_ip);
         usleep(1000);
         return;
-    }else if(param_settings.param_module == ParamSettings::ParamModule::SEARCHMODIFY)
-    { 	
-     	bool set_param_flag = true;
+    }
+    else if (param_settings.param_module == ParamSettings::ParamModule::SEARCHMODIFY)
+    {
+        bool set_param_flag = true;
 
-        for (const auto& set_param : param_settings.params) {
+        for (const auto &set_param : param_settings.params)
+        {
             set_param_flag = set_param_flag && p.setParam(set_param.param_name, set_param.param_value);
         }
-        
-        if(set_param_flag)
+
+        if (set_param_flag)
         {
             sendTextInfo(TextInfo::MTG_INFO, "parameter search modify success...");
             // 并且发布话题出来告诉其他节点
-            if(this->uav_basic_)
+            if (this->uav_)
             {
-                this->uav_basic_->paramSettingsPub(param_settings);
+                this->uav_->paramSettingsPub(param_settings);
             }
             return;
-        }else
+        }
+        else
         {
             sendTextInfo(TextInfo::MTG_INFO, "parameter search modify failed...");
             return;
         }
-    }else if(param_settings.param_module == ParamSettings::ParamModule::UAVCONTROL)
+    }
+    else if (param_settings.param_module == ParamSettings::ParamModule::UAVCONTROL)
     {
         bool set_param_flag = true;
         std::string prefix = "/uav_control_main_" + std::to_string(getRecvID()) + "/";
         bool is_prefix = false;
-        for (const auto& set_param : param_settings.params) {
-            if(set_param.param_name[0] != '/')
+        for (const auto &set_param : param_settings.params)
+        {
+            if (set_param.param_name[0] != '/')
                 is_prefix = true;
-                
-            set_param_flag = set_param_flag && p.setParam((is_prefix?prefix:"") + set_param.param_name, set_param.param_value);
+
+            set_param_flag = set_param_flag && p.setParam((is_prefix ? prefix : "") + set_param.param_name, set_param.param_value);
         }
-        
-        if(set_param_flag)
+
+        if (set_param_flag)
         {
             sendTextInfo(TextInfo::MTG_INFO, "parameter search modify success...");
             // 并且发布话题出来告诉其他节点
-            if(this->uav_basic_)
+            if (this->uav_)
             {
-                    this->uav_basic_->paramSettingsPub(param_settings, (is_prefix?prefix:""));
+                this->uav_->paramSettingsPub(param_settings, (is_prefix ? prefix : ""));
             }
             return;
-        }else
+        }
+        else
         {
             sendTextInfo(TextInfo::MTG_INFO, "parameter search modify failed...");
             return;
@@ -470,11 +469,9 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
 }
 void CommunicationBridge::recvData(struct MultiBsplines multi_bsplines)
 {
-    
 }
 void CommunicationBridge::recvData(struct Bspline bspline)
 {
-    
 }
 // 此处为 地面站-->机载端 机载端<->机载端
 void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segment)
@@ -486,15 +483,14 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
     //     std::cout << "类型:" << (int)basic.type << " 变量名:" << basic.name << " 变量值:" << basic.value << std::endl;
     // }
 
-    if (this->uav_basic_)
+    if (this->uav_)
     {
-        this->uav_basic_->customDataSegmentPub(custom_data_segment);
+        this->uav_->customDataSegmentPub(custom_data_segment);
     }
 }
 
 void CommunicationBridge::recvData(struct Goal goal)
 {
-   
 }
 
 // 根据协议中MSG_ID的值，将数据段数据转化为正确的结构体
@@ -603,30 +599,22 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
-                // 判断是否已经存在
-                if (!this->swarm_control_simulation_.empty())
+                int key = mode_selection.selectId[i];
+                // 判断是否存在该键
+                if (this->uavs_.find(key) != this->uavs_.end()) // 表示已经存在
                 {
-                    if (this->swarm_control_simulation_.find(mode_selection.selectId[i]) != this->swarm_control_simulation_.end())
-                    {
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(mode_selection.selectId[i]) + " duplicate connections!!!");
-                        continue;
-                    }
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(key) + " duplicate connections!!!");
+                    continue;
                 }
+                // 不存在该键则创建加入
+                this->uavs_.insert({key, std::make_shared<UAVBasic>(this->nh_, key, (Communication *)this)});
 
-                // 创建并存入
-                this->swarm_control_simulation_[mode_selection.selectId[i]] = new UAVBasic(this->nh_, mode_selection.selectId[i], (Communication *)this);
-                // 如果id与通信节点相同则存入uav_basic_
-                if (ROBOT_ID == mode_selection.selectId[i])
+                if (ROBOT_ID == key) // 如果key等于本地设置的id则 再次赋值
                 {
-                    if (this->uav_basic_ != NULL)
-                    {
-                        delete this->uav_basic_;
-                        this->uav_basic_ = NULL;
-                    }
-                    this->uav_basic_ = this->swarm_control_simulation_[mode_selection.selectId[i]];
-
+                    this->uav_ = this->uavs_[key];
                     // 打开
-                    if(autoload) system(OPENUAVBASIC.c_str());
+                    if (autoload)
+                        system(OPENUAVBASIC.c_str());
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UAV" + to_string(mode_selection.selectId[i]) + " connection succeeded!!!");
             }
@@ -636,24 +624,29 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
-                // 如果id与通信节点相同则存入uav_basic_
-                if (mode_selection.selectId[i] == ROBOT_ID)
+                int key = mode_selection.selectId[i];
+                if (ROBOT_ID == key) // 真机，必然ID匹配
                 {
-                    this->is_heartbeat_ready_ = true;
-                    if (this->uav_basic_ == NULL)
+                    // 增加互斥锁
+                    // this->is_heartbeat_ready_ = true;
+                    if (this->uav_)
                     {
-                        this->uav_basic_ = new UAVBasic(this->nh_, uav_id, (Communication *)this);
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " connection succeeded!!!");
-
-                        // 打开
-                        if(autoload) system(OPENUAVBASIC.c_str());
+                        // 已经存在
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " duplicate connections!!!");
                     }
                     else
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " duplicate connections!!!");
+                    { // 不存在
+                        this->uav_ = std::make_shared<UAVBasic>(this->nh_, uav_id, (Communication *)this);
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " connection succeeded!!!");
+                        // 自启动
+                        if (autoload)
+                            system(OPENUAVBASIC.c_str());
+                    }
+                    break; // 退出循环
                 }
                 else
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(mode_selection.selectId[i]) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(key) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
                     return;
                 }
             }
@@ -664,7 +657,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         // 加载通信模块参数
         sendCommunicationParam();
         // 加载轨迹控制参数
-        sendCommandPubParam();
+        // sendCommandPubParam();
     }
     else if (mode_selection.mode == ModeSelection::Mode::UGVBASIC)
     {
@@ -672,44 +665,23 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
-                //
-                int id = abs(mode_selection.selectId[i]);
-                // int id = abs(getRecvID());
+                int key = mode_selection.selectId[i];     // key 为负值
+                int id = abs(mode_selection.selectId[i]); // ugv_id为正值
 
-                // std::cout << "ugv_id: " << id << std::endl;
-
-                if (id < 0)
+                if (this->ugvs_.find(key) != this->ugvs_.end()) // 存在
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Please check the parameters --- swarm_num");
-                    return;
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " duplicate connections!!!");
+                    continue;
                 }
 
-                // 判断是否已经存在
-                if (!this->swarm_ugv_control_simulation_.empty())
-                {
-                    if (this->swarm_ugv_control_simulation_.find(id) != this->swarm_ugv_control_simulation_.end())
-                    {
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " duplicate connections!!!");
-                        continue;
-                    }
-                }
-                //
+                this->ugvs_.insert({key, std::make_shared<UGVBasic>(this->nh_, id, (Communication *)this)});
 
-                this->swarm_ugv_control_simulation_[id] = new UGVBasic(this->nh_, id, (Communication *)this);
-                // 创建并存入
-                // this->swarm_ugv_control_simulation_[mode_selection.selectId[i]] = new UGVBasic(this->nh_, mode_selection.selectId[i], (Communication *)this);
-                // 如果id与通信节点相同则存入uav_basic_
-                if (ROBOT_ID == id)
+                if (ROBOT_ID == key)
                 {
-                    if (this->ugv_basic_ != NULL)
-                    {
-                        delete this->ugv_basic_;
-                        this->ugv_basic_ = NULL;
-                    }
-                    this->ugv_basic_ = this->swarm_ugv_control_simulation_[id];
-
+                    this->ugv_ = this->ugvs_[key];
                     // 打开
-                    if(autoload) system(OPENUGVBASIC.c_str());
+                    if (autoload)
+                        system(OPENUGVBASIC.c_str());
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UGV" + to_string(id) + " connection succeeded!!!");
             }
@@ -718,27 +690,29 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
+                int key = mode_selection.selectId[i];
                 int id = abs(mode_selection.selectId[i]);
                 // int id = abs(getRecvID());
 
-                // 如果id与通信节点相同则存入uav_basic_
-                if (id == ROBOT_ID || id == ugv_id)
+                if (key == ROBOT_ID && id == ugv_id)
                 {
-                    this->is_heartbeat_ready_ = true;
-                    if (this->ugv_basic_ == NULL)
+                    // this->is_heartbeat_ready_ = true;
+                    if (this->ugv_)
                     {
-                        this->ugv_basic_ = new UGVBasic(this->nh_, id, (Communication *)this);
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " connection succeeded!!!");
-
-                        // 打开
-                        if(autoload) system(OPENUGVBASIC.c_str());
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " duplicate connections!!!");
                     }
                     else
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " duplicate connections!!!");
+                    {
+                        this->ugv_ = std::make_shared<UGVBasic>(this->nh_, id, (Communication *)this);
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(id) + " connection succeeded!!!");
+                        // 打开
+                        if (autoload)
+                            system(OPENUGVBASIC.c_str());
+                    }
                 }
                 else
                 {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(id) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Robot" + to_string(key) + " connection failed, The ground station ID is inconsistent with the communication node ID.");
                     return;
                 }
             }
@@ -761,53 +735,50 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
+                int key = mode_selection.selectId[i];
                 // 按照顺序来判断 先无人机后无人车
-                if (mode_selection.selectId[i] > 0)
+                if (key > 0)
                 {
-                    if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0)
+                    int id = key;                                   // 无人机
+                    if (this->uavs_.find(key) == this->uavs_.end()) // 说明不存在
                     {
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UAV" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UAV" + to_string(id) + " non-existent, " + "please check whether it is connected.");
                         return;
                     }
                 }
-                else if (mode_selection.selectId[i] < 0)
+                else if (key < 0)
                 {
                     int id = abs(mode_selection.selectId[i]);
-                    if (this->swarm_ugv_control_simulation_.count(id) == 0)
+                    if (this->ugvs_.find(key) == this->ugvs_.end())
                     {
-                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UGV" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
+                        sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, UGV" + to_string(id) + " non-existent, " + "please check whether it is connected.");
                         return;
                     }
                 }
-
-                // if (this->swarm_control_simulation_.count(mode_selection.selectId[i]) == 0 && this->swarm_ugv_control_simulation_.count(mode_selection.selectId[i]) == 0)
-                // {
-                //     sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, Robot" + to_string(mode_selection.selectId[i]) + " non-existent, " + "please check whether it is connected.");
-                //     return;
-                // }
             }
-            if (this->swarm_control_ == NULL)
+            if (!this->swarm_control_)
             {
                 // 如果 预设无人机数量和地面站创建的无人机数量一致 并且无人车为空 说明只有无人机
-                if (this->swarm_num_ == this->swarm_control_simulation_.size() && this->swarm_ugv_control_simulation_.empty())
+                if (this->swarm_num_ == this->uavs_.size() && this->ugvs_.empty())
                 {
                     // 无人机集群
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
+                    this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
                 }
                 // 如果 预设无人车数量和地面站创建的无人车数量一致 并且无人机为空  说明只有无人车
-                else if (this->swarm_ugv_num_ == this->swarm_ugv_control_simulation_.size() && this->swarm_control_simulation_.empty())
+                else if (this->swarm_ugv_num_ == this->ugvs_.size() && this->uavs_.empty())
                 {
                     // 无人车集群
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
+                    this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
                 }
                 // 如果 预设无人车数量、无人机数量和地面站创建的无人机车数量一致并且不为空 说明该集群为车机协同
-                else if (this->swarm_ugv_num_ == this->swarm_ugv_control_simulation_.size() && this->swarm_num_ == this->swarm_control_simulation_.size() && !this->swarm_ugv_control_simulation_.empty() && !this->swarm_control_simulation_.empty())
+                else if (this->swarm_ugv_num_ == this->ugvs_.size() && this->swarm_num_ == this->uavs_.size() && !this->ugvs_.empty() && !this->uavs_.empty())
                 {
                     // 车机协同
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
+                    this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_SIMULATION, this->swarm_num_, this->swarm_ugv_num_);
                 }
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control simulation mode.");
-                if(autoload) system(OPENSWARMCONTROL.c_str());
+                if (autoload)
+                    system(OPENSWARMCONTROL.c_str());
             }
         }
         else // 真机
@@ -818,25 +789,25 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 return;
             }
 
-            if (this->swarm_control_ == NULL)
+            if (!this->swarm_control_)
             {
                 // 开启集群的数量跟无人机数量一致 并且无人车数量为0 进入 无人机集群
                 if (this->swarm_num_ == mode_selection.swarm_num && this->swarm_ugv_num_ == 0)
                 {
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, this->uav_id, this->swarm_num_);
+                    this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, this->uav_id, this->swarm_num_);
                 }
                 // 开启集群的数量跟无人车数量一致 并且无人机数量为0 进入 无人车集群
                 else if (this->swarm_ugv_num_ == mode_selection.swarm_num && this->swarm_num_ == 0)
                 {
-                    this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, this->ugv_id, this->swarm_ugv_num_);
+                    this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, this->ugv_id, this->swarm_ugv_num_);
                 }
                 // 开启集群的数量跟无人车和无人机总数量一致 进入 机车协同
                 else if (this->swarm_num_ + this->swarm_ugv_num_ == mode_selection.swarm_num)
                 {
-                    if (this->uav_basic_ != NULL)
-                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, this->uav_id, this->swarm_num_, this->swarm_ugv_num_);
-                    else if (this->ugv_basic_ != NULL)
-                        this->swarm_control_ = new SwarmControl(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, this->ugv_id, this->swarm_num_, this->swarm_ugv_num_);
+                    if (this->uav_)
+                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, this->uav_id, this->swarm_num_, this->swarm_ugv_num_);
+                    else if (this->ugv_)
+                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, this->ugv_id, this->swarm_num_, this->swarm_ugv_num_);
                 }
                 else
                 {
@@ -845,7 +816,8 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 }
 
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control mode.");
-                if(autoload) system(OPENSWARMCONTROL.c_str());
+                if (autoload)
+                    system(OPENSWARMCONTROL.c_str());
             }
         }
         // 加载集群参数
@@ -853,58 +825,46 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
     }
     else if (mode_selection.mode == ModeSelection::Mode::AUTONOMOUSLANDING)
     {
-        if (this->ugv_basic_ != NULL)
-        {
-            sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, because user type UGV.");
-            return;
-        }
-        if (this->uav_basic_ != NULL)
-        {
-            
-        }
     }
     // 目标识别与跟踪模式
     else if (mode_selection.mode == ModeSelection::Mode::OBJECTTRACKING)
     {
-        if (this->uav_basic_ != NULL)
-        {
-            
-        }
     }
     else if (mode_selection.mode == ModeSelection::Mode::CUSTOMMODE)
     {
         std::string prefix = "mavlink_console";
 
-        if(mode_selection.cmd.length() > prefix.length())
+        if (mode_selection.cmd.length() > prefix.length())
         {
-            if(mode_selection.cmd.compare(0,prefix.length(),prefix) == 0)
+            if (mode_selection.cmd.compare(0, prefix.length(), prefix) == 0)
             {
-                if(this->uav_basic_ != NULL)
+                if (this->uav_)
                 {
-                    std::string cmd = mode_selection.cmd.substr(prefix.length() + 1,mode_selection.cmd.length());
-                    this->uav_basic_->serialControlPub(cmd);
+                    std::string cmd = mode_selection.cmd.substr(prefix.length() + 1, mode_selection.cmd.length());
+                    this->uav_->serialControlPub(cmd);
                 }
-            }else
+            }
+            else
             {
-                if(autoload) system(mode_selection.cmd.c_str());
+                if (autoload)
+                    system(mode_selection.cmd.c_str());
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
             }
         }
         else
         {
-            if(autoload) system(mode_selection.cmd.c_str());
+            if (autoload)
+                system(mode_selection.cmd.c_str());
             sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
         }
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
-       
     }
     else if (mode_selection.mode == ModeSelection::Mode::TRAJECTOYCONTROL)
     {
-        
     }
-    
+
     this->current_mode_ = mode_selection.mode;
 }
 
@@ -920,32 +880,32 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
-                std::lock_guard<std::mutex> lg_uav_basic(g_uav_basic);
-                if (this->swarm_control_simulation_.find(mode_selection.selectId[i]) != this->swarm_control_simulation_.end())
+                int key = mode_selection.selectId[i];
+                if (this->uavs_.find(key) != this->uavs_.end())
                 {
-                    delete this->swarm_control_simulation_[mode_selection.selectId[i]];
-                    this->swarm_control_simulation_.erase(this->swarm_control_simulation_.find(mode_selection.selectId[i]));
-
-                    if (ROBOT_ID == mode_selection.selectId[i])
+                    // 删除
+                    this->uavs_[key].reset();
+                    this->uavs_.erase(key);
+                    if (ROBOT_ID == key)
                     {
                         this->is_heartbeat_ready_ = false;
-                        // delete this->uav_basic_;
-                        this->uav_basic_ = NULL;
-                        if(autoload) system(CLOSEUAVBASIC.c_str());
+                        this->uav_.reset();
+                        if (autoload)
+                            system(CLOSEUAVBASIC.c_str());
                     }
                 }
-                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UAV" + to_string(mode_selection.selectId[i]) + " disconnect!!!");
+                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UAV" + to_string(key) + " disconnect!!!");
             }
         }
         else
         {
-            if (std::find(mode_selection.selectId.begin(), mode_selection.selectId.end(), ROBOT_ID) != mode_selection.selectId.end())
+            if (std::find(mode_selection.selectId.begin(), mode_selection.selectId.end(), ROBOT_ID) != mode_selection.selectId.end()) // 存在本机ID
             {
-                if (this->uav_basic_ != NULL)
+                if (this->uav_)
                 {
-                    delete this->uav_basic_;
-                    this->uav_basic_ = NULL;
-                    if(autoload) system(CLOSEUAVBASIC.c_str());
+                    this->uav_.reset();
+                    if (autoload)
+                        system(CLOSEUAVBASIC.c_str());
                     sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UAV" + to_string(ROBOT_ID) + " disconnect!!!");
                 }
             }
@@ -958,32 +918,33 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
         {
             for (int i = 0; i < mode_selection.selectId.size(); i++)
             {
-                // std::lock_guard<std::mutex> lg_uav_basic(g_uav_basic);
-                if (this->swarm_ugv_control_simulation_.find(abs(mode_selection.selectId[i])) != this->swarm_ugv_control_simulation_.end())
+                int key = mode_selection.selectId[i];
+                int id = abs(key);
+                if (this->ugvs_.find(key) != this->ugvs_.end()) // 存在
                 {
-                    delete this->swarm_ugv_control_simulation_[abs(mode_selection.selectId[i])];
-                    this->swarm_ugv_control_simulation_.erase(this->swarm_ugv_control_simulation_.find(abs(mode_selection.selectId[i])));
-
-                    if (ROBOT_ID == abs(mode_selection.selectId[i]))
+                    // 删除
+                    this->ugvs_[key].reset();
+                    this->ugvs_.erase(key);
+                    if (ROBOT_ID == key && ugv_id == id)
                     {
                         this->is_heartbeat_ready_ = false;
-                        // delete this->uav_basic_;
-                        this->ugv_basic_ = NULL;
-                        if(autoload) system(CLOSEUGVBASIC.c_str());
+                        this->ugv_.reset();
+                        if (autoload)
+                            system(CLOSEUGVBASIC.c_str());
                     }
                 }
-                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UGV" + to_string(mode_selection.selectId[i]) + " disconnect!!!");
+                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Simulation UGV" + to_string(id) + " disconnect!!!");
             }
         }
         else
         {
             if (std::find(mode_selection.selectId.begin(), mode_selection.selectId.end(), ROBOT_ID) != mode_selection.selectId.end())
             {
-                if (this->ugv_basic_ != NULL)
+                if (this->ugv_)
                 {
-                    delete this->ugv_basic_;
-                    this->ugv_basic_ = NULL;
-                    if(autoload) system(CLOSEUGVBASIC.c_str());
+                    this->ugv_.reset();
+                    if (autoload)
+                        system(CLOSEUGVBASIC.c_str());
                     sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "UGV" + to_string(ROBOT_ID) + " disconnect!!!");
                 }
             }
@@ -992,28 +953,21 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
     }
     else if (mode_selection.mode == ModeSelection::Mode::SWARMCONTROL)
     {
-        // std::lock_guard<std::mutex> lg(g_m);
-        if (this->swarm_control_ != NULL)
+        if (this->swarm_control_)
         {
-            // 开启互斥锁
-            //  boost::unique_lock<boost::shared_mutex> lockImageStatus(g_m);
-            std::lock_guard<std::mutex> lg(g_m);
-            delete this->swarm_control_;
-            this->swarm_control_ = NULL;
-            if(autoload) system(CLOSESWARMCONTROL.c_str());
+            this->swarm_control_.reset();
+            if (autoload)
+                system(CLOSESWARMCONTROL.c_str());
         }
     }
     else if (mode_selection.mode == ModeSelection::Mode::AUTONOMOUSLANDING)
     {
-        
     }
     else if (mode_selection.mode == ModeSelection::Mode::OBJECTTRACKING)
     {
-        
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)
     {
-        
     }
 }
 
@@ -1026,30 +980,27 @@ void CommunicationBridge::multicastUdpFun()
     }
     while (this->is_simulation_ == 1)
     {
-        std::lock_guard<std::mutex> lg_uav_basic(g_uav_basic);
-        for (auto it = this->swarm_control_simulation_.begin(); it != this->swarm_control_simulation_.end(); it++)
+        for (auto it = this->uavs_.begin(); it != this->uavs_.end(); it++)
         {
             // 开启互斥锁
-            //  boost::shared_lock<boost::shared_mutex> lock(g_m);
-            std::lock_guard<std::mutex> lg(g_m);
-            if (this->swarm_control_ != NULL)
+            std::lock_guard<std::mutex> lg_mutex(g_mutex_);
+            if (this->swarm_control_)
             {
                 this->swarm_control_->updateAllUAVState(it->second->getUAVState());
                 this->swarm_control_->allUAVStatePub(this->swarm_control_->getMultiUAVState());
             }
         }
 
-        // std::lock_guard<std::mutex> lg_uav_basic(g_uav_basic);
-        for (auto it = this->swarm_ugv_control_simulation_.begin(); it != this->swarm_ugv_control_simulation_.end(); it++)
+        for (auto it = this->ugvs_.begin(); it != this->ugvs_.end(); it++)
         {
-            std::lock_guard<std::mutex> lg(g_m);
-            if (this->swarm_control_ != NULL)
+            std::lock_guard<std::mutex> lg_mutex(g_mutex_);
+            if (this->swarm_control_)
             {
                 this->swarm_control_->updateAllUGVState(it->second->getUGVState());
                 this->swarm_control_->allUGVStatePub(this->swarm_control_->getMultiUGVState());
             }
         }
-        usleep(10);
+        usleep(100000); // 控制更新频率 100ms
     }
     int valread;
     if (waitConnectionFromMulticast(UDP_PORT) < 0)
@@ -1068,10 +1019,10 @@ void CommunicationBridge::multicastUdpFun()
     while (true)
     {
         {
-            usleep(10);
-            std::lock_guard<std::mutex> lg(g_m);
-            if (this->swarm_control_ == NULL)
+            std::lock_guard<std::mutex> lg(g_mutex_);
+            if (!this->swarm_control_)
             {
+                usleep(100000); // 控制频率 100ms
                 continue;
             }
         }
@@ -1084,8 +1035,7 @@ void CommunicationBridge::multicastUdpFun()
             continue;
         }
 
-        std::lock_guard<std::mutex> lg(g_m);
-
+        std::lock_guard<std::mutex> lg(g_mutex_);
         std::cout << "udp valread: " << valread << std::endl;
         pubMsg(decodeMsg(udp_recv_buf, Send_Mode::UDP));
     }
@@ -1094,40 +1044,44 @@ void CommunicationBridge::multicastUdpFun()
 // 无人机触发安全机制（一般为心跳包丢失） 进行降落
 void CommunicationBridge::triggerUAV()
 {
-    if(this->uav_basic_ == NULL) return;
-    // 触发降落  暂定
-    struct UAVCommand uav_command;
-    uav_command.Agent_CMD = UAVCommand::AgentCMD::Land;
-    uav_command.Move_mode = UAVCommand::MoveMode::XYZ_VEL;
-    uav_command.yaw_ref = 0;
-    uav_command.Yaw_Rate_Mode = true;
-    uav_command.yaw_rate_ref = 0;
-    uav_command.latitude = 0;
-    uav_command.longitude = 0;
-    uav_command.altitude = 0;
-    for (int i = 0; i < 3; i++)
+    if (this->uav_)
     {
-        uav_command.position_ref[i] = 0;
-        uav_command.velocity_ref[i] = 0;
-        uav_command.acceleration_ref[i] = 0;
-        uav_command.att_ref[i] = 0;
+        // 触发降落  暂定
+        struct UAVCommand uav_command;
+        uav_command.Agent_CMD = UAVCommand::AgentCMD::Land;
+        uav_command.Move_mode = UAVCommand::MoveMode::XYZ_VEL;
+        uav_command.yaw_ref = 0;
+        uav_command.Yaw_Rate_Mode = true;
+        uav_command.yaw_rate_ref = 0;
+        uav_command.latitude = 0;
+        uav_command.longitude = 0;
+        uav_command.altitude = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            uav_command.position_ref[i] = 0;
+            uav_command.velocity_ref[i] = 0;
+            uav_command.acceleration_ref[i] = 0;
+            uav_command.att_ref[i] = 0;
+        }
+        uav_command.att_ref[3] = 0;
+        this->uav_->uavCmdPub(uav_command);
     }
-    uav_command.att_ref[3] = 0;
-    this->uav_basic_->uavCmdPub(uav_command);
 }
 // 集群触发安全机制（一般为心跳包丢失）
 void CommunicationBridge::triggerSwarmControl()
 {
-    if(this->swarm_control_ == NULL) return;
-    if (this->is_simulation_ == 0)
+    if (this->swarm_control_)
     {
-        this->swarm_control_->communicationStatePub(false);
-    }
-    else
-    {
-        for (int i = 0; i < this->swarm_num_; i++)
+        if (this->is_simulation_ == 0)
         {
-            this->swarm_control_->communicationStatePub(false, i);
+            this->swarm_control_->communicationStatePub(false);
+        }
+        else
+        {
+            for (int i = 0; i < this->swarm_num_; i++)
+            {
+                this->swarm_control_->communicationStatePub(false, i);
+            }
         }
     }
 }
@@ -1170,19 +1124,19 @@ void CommunicationBridge::toGroundStationFun()
             disconnect_flag = true;
             std::cout << "conenect ground station failed, please check the ground station IP!" << std::endl;
             // 如果是集群模式 由集群模块触发降落
-            if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
+            if (this->swarm_num_ != 0 && this->swarm_control_)
             {
                 triggerSwarmControl();
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, "TCP:" + udp_ip + " abnormal communication,triggering swarm control mode to land.");
             }
             // 无人机 触发降落或者返航
-            else if (this->uav_basic_ != NULL)
+            else if (this->uav_)
             {
                 triggerUAV();
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, "TCP:" + udp_ip + " abnormal communication,trigger landing.");
             }
             // 无人车  停止小车
-            else if (this->ugv_basic_ != NULL)
+            else if (this->ugv_)
             {
                 triggerUGV();
             }
@@ -1192,7 +1146,7 @@ void CommunicationBridge::toGroundStationFun()
         else if (disconnect_flag)
         {
             disconnect_flag = false;
-            if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
+            if (this->swarm_num_ != 0 && this->swarm_control_)
             {
                 if (this->is_simulation_ == 0)
                 {
@@ -1210,17 +1164,17 @@ void CommunicationBridge::toGroundStationFun()
         }
 
         // 无人机数据或者无人车数据是否超时
-        if (this->uav_basic_ != NULL || this->ugv_basic_ != NULL)
+        if (this->uav_ || this->ugv_)
         {
             uint time_stamp = 0;
             std::string type = "UAV";
-            if (this->uav_basic_ != NULL)
+            if (this->uav_)
             {
-                time_stamp = this->uav_basic_->getTimeStamp();
+                time_stamp = this->uav_->getTimeStamp();
             }
-            else if (this->ugv_basic_ != NULL)
+            else if (this->ugv_)
             {
-                time_stamp = this->ugv_basic_->getTimeStamp();
+                time_stamp = this->ugv_->getTimeStamp();
                 type = "UGV";
             }
             // 拿单机状态时间戳进行比较 如果不相等说明数据在更新
@@ -1256,11 +1210,6 @@ void CommunicationBridge::toGroundStationFun()
 
 void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
 {
-    // 记录 集群数据刷新的时间戳
-    // uint swarm_control_time[this->swarm_num_] = {0};
-    // 记录 未刷新的次数
-    // uint swarm_control_timeout_count[this->swarm_num_] = {0};
-
     std::string message = "CPUUsage:" + to_string(getCPUUsage());
     message += ",CPUTemperature:" + to_string(getCPUTemperature());
     ros::V_string v_nodes;
@@ -1283,20 +1232,22 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
     {
         disconnect_flag = true;
         std::cout << "conenect ground station failed, please check the ground station IP!" << std::endl;
+        // 开启互斥锁
+        std::lock_guard<std::mutex> lg_mutex(g_mutex_);
         // 如果是集群模式 由集群模块触发降落
-        if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
+        if (this->swarm_num_ != 0 && this->swarm_control_)
         {
             triggerSwarmControl();
             sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, "TCP:" + udp_ip + " abnormal communication,triggering swarm control mode to land.");
         }
         // 无人机 触发降落或者返航
-        else if (this->uav_basic_ != NULL)
+        else if (this->uav_)
         {
             triggerUAV();
             sendTextInfo(TextInfo::MessageTypeGrade::MTG_ERROR, "TCP:" + udp_ip + " abnormal communication,trigger landing.");
         }
         // 无人车  停止小车
-        else if (this->ugv_basic_ != NULL)
+        else if (this->ugv_)
         {
             triggerUGV();
         }
@@ -1306,7 +1257,9 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
     else if (disconnect_flag)
     {
         disconnect_flag = false;
-        if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
+        // 开启互斥锁
+        std::lock_guard<std::mutex> lg_mutex(g_mutex_);
+        if (this->swarm_num_ != 0 && this->swarm_control_)
         {
             if (this->is_simulation_ == 0)
             {
@@ -1323,18 +1276,20 @@ void CommunicationBridge::toGroundHeartbeat(const ros::TimerEvent &time_event)
         sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "TCP:" + udp_ip + " communication returns to normal.");
     }
 
+    // 开启互斥锁
+    std::lock_guard<std::mutex> lg_mutex(g_mutex_);
     // 无人机数据或者无人车数据是否超时
-    if (this->uav_basic_ != NULL || this->ugv_basic_ != NULL)
+    if (this->uav_ || this->ugv_)
     {
         uint time_stamp = 0;
         std::string type = "UAV";
-        if (this->uav_basic_ != NULL)
+        if (this->uav_)
         {
-            time_stamp = this->uav_basic_->getTimeStamp();
+            time_stamp = this->uav_->getTimeStamp();
         }
-        else if (this->ugv_basic_ != NULL)
+        else if (this->ugv_)
         {
-            time_stamp = this->ugv_basic_->getTimeStamp();
+            time_stamp = this->ugv_->getTimeStamp();
             type = "UGV";
         }
         // 拿单机状态时间戳进行比较 如果不相等说明数据在更新
@@ -1383,18 +1338,20 @@ void CommunicationBridge::checkHeartbeatState(const ros::TimerEvent &time_event)
             if (disconnect > try_connect_num)
             {
                 std::cout << "conenect ground station failed, please check the ground station IP!" << std::endl;
+                // 开启互斥锁
+                std::lock_guard<std::mutex> lg_mutex(g_mutex_);
                 // 如果是集群模式 由集群模块触发降落
-                if (this->swarm_num_ != 0 && this->swarm_control_ != NULL)
+                if (this->swarm_num_ != 0 && this->swarm_control_)
                 {
                     triggerSwarmControl();
                 }
                 // 无人机 触发降落或者返航
-                else if (this->uav_basic_ != NULL)
+                else if (this->uav_)
                 {
                     triggerUAV();
                 }
                 // 无人车  停止小车
-                else if (this->ugv_basic_ != NULL)
+                else if (this->ugv_)
                 {
                     // 停止小车
                     triggerUGV();

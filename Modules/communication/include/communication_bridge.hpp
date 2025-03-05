@@ -123,13 +123,13 @@ public:
     //获取当前CPU温度
     double getCPUTemperature();
 private:
-    // std::shared_ptr<SwarmControl> swarm_control_ ;
-    SwarmControl *swarm_control_ = NULL;
-    UGVBasic *ugv_basic_ = NULL;
-    UAVBasic *uav_basic_ = NULL;
-    // std::vector<UAVBasic*> swarm_control_simulation_;
-    std::map<int, UAVBasic *> swarm_control_simulation_;
-    std::map<int, UGVBasic *> swarm_ugv_control_simulation_;
+    std::shared_ptr<UAVBasic> uav_ = nullptr;
+    std::shared_ptr<UGVBasic> ugv_ = nullptr;
+    std::map<int, std::shared_ptr<UAVBasic>> uavs_;
+    std::map<int, std::shared_ptr<UGVBasic>> ugvs_;
+    std::shared_ptr<SwarmControl> swarm_control_ = nullptr;
+
+    std::mutex g_mutex_; // 防止
 
     int current_mode_ = 0;
 

@@ -16,7 +16,7 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication)
     this->communication_ = communication;
 
     // rviz显示数据相关，进行降频处理、数据压缩等
-    reduce_the_frequency_ = new ReduceTheFrequency(nh, ReduceTheFrequencyType::ReduceTheFrequencyType_UAV, id);
+    reduce_the_frequency_ = std::make_shared<ReduceTheFrequency>(nh, ReduceTheFrequencyType::ReduceTheFrequencyType_UAV, id);
 
     // 【订阅】uav状态信息
     this->uav_state_sub_ = nh.subscribe("/uav" + std::to_string(this->robot_id) + "/prometheus/state", 10, &UAVBasic::stateCb, this);
@@ -71,8 +71,10 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication)
 
 UAVBasic::~UAVBasic()
 {
-    // delete this->communication_;
-    delete reduce_the_frequency_;
+    if(send_timer.isValid()){
+        send_timer.stop();
+    }
+    reduce_the_frequency_.reset();
 }
 
 void UAVBasic::stateCb(const prometheus_msgs::UAVState::ConstPtr &msg)

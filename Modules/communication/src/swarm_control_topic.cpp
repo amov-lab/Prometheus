@@ -13,7 +13,7 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, Communication *communication, Sw
     if (mode == SwarmMode::ONLY_UAV)
     {
         std::cout << "真机：集群模式-无人机 开启" << std::endl;
-        reduce_the_frequency_ = new ReduceTheFrequency(nh, ReduceTheFrequencyType::ReduceTheFrequencyType_SWARM, id);
+        reduce_the_frequency_ = std::make_shared<ReduceTheFrequency>(nh, ReduceTheFrequencyType::ReduceTheFrequencyType_SWARM, id);
         // 【发布】连接是否失效
         this->communication_state_pub_ = nh.advertise<std_msgs::Bool>("/uav" + std::to_string(id) + "/prometheus/communication_state", 10);
         // 【发布】所有无人机状态
@@ -145,12 +145,8 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, Communication *communication, Sw
 
 SwarmControl::~SwarmControl()
 {
-    // delete this->communication_;
-    // this->communication_ = nullptr;
-    if (reduce_the_frequency_)
-    {
-        delete reduce_the_frequency_;
-    }
+    if(reduce_the_frequency_ )
+        reduce_the_frequency_.reset();
 }
 
 void SwarmControl::init(ros::NodeHandle &nh, SwarmMode mode, int swarm_num)

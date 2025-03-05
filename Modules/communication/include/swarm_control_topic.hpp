@@ -159,7 +159,7 @@ private:
     std::string user_type_ = "";
 
     // 
-    ReduceTheFrequency *reduce_the_frequency_;
+    std::shared_ptr<ReduceTheFrequency> reduce_the_frequency_ = nullptr;
 };
 
 #endif

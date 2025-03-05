@@ -51,7 +51,7 @@ private:
     // 下列变量仅在发送定时器中有效，为判断当前数据是否刷新
     bool ugv_state_ready = false;
 
-    ReduceTheFrequency *reduce_the_frequency_;
+    std::shared_ptr<ReduceTheFrequency> reduce_the_frequency_ = nullptr;
 };
 
 #endif

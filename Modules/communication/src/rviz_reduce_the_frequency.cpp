@@ -150,6 +150,13 @@ ReduceTheFrequency::ReduceTheFrequency(ros::NodeHandle &nh, ReduceTheFrequencyTy
 
 ReduceTheFrequency::~ReduceTheFrequency()
 {
+    // 先停止定时器
+    send_timer_1000MS.stop();
+    send_timer_500MS.stop();
+    send_timer_200MS.stop();
+    send_timer_50MS.stop();
+    sleep(1); // 等待1s
+    // 关闭其他ROS订阅者发布者
     if(this->reduce_the_frequency_type == ReduceTheFrequencyType_UAV)
     {
         octomap_point_cloud_centers_sub_.shutdown();
@@ -170,12 +177,6 @@ ReduceTheFrequency::~ReduceTheFrequency()
         occupancy_inflate_sub_.shutdown();
         swarm_graph_visual_sub_.shutdown();
     }
-
-    send_timer_1000MS.stop();
-    send_timer_500MS.stop();
-    send_timer_200MS.stop();
-    send_timer_50MS.stop();
-    usleep(1000);
 }
 
 void ReduceTheFrequency::send1000MS(const ros::TimerEvent &time_event)
