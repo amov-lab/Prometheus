@@ -127,6 +127,7 @@ public:
     double mc_yawrate_max = 100.0;
     double mpc_xy_vel_max = 1.0;
     double mpc_acc_hor = 2.0;
+    double mpc_vel_manual = 1.0;
 
     // 基本变量
     int uav_id;      // 无人机编号

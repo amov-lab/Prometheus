@@ -38,6 +38,7 @@ UAV_controller::UAV_controller(ros::NodeHandle &nh) : nh(nh)
     nh.param<double>("px4_params/MC_YAWRATE_MAX", mc_yawrate_max, 100.0);
     nh.param<double>("px4_params/MPC_XY_VEL_MAX", mpc_xy_vel_max, 1.0);
     nh.param<double>("px4_params/MPC_ACC_HOR", mpc_acc_hor, 2.0);
+    nh.param<double>("px4_params/MPC_VEL_MANUAL", mpc_vel_manual, 1.0);
 
     px4_params = get_px4_params(nh);
 
@@ -929,8 +930,10 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
             cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
             px4_param_set("MPC_XY_VEL_MAX",mpc_xy_vel_max);
             px4_param_set("MPC_ACC_HOR",mpc_acc_hor);
+            px4_param_set("MPC_VEL_MANUAL",mpc_vel_manual);
             ROS_INFO("Parameter 'MPC_XY_VEL_MAX' set success: %f", mpc_xy_vel_max);
             ROS_INFO("Parameter 'MPC_ACC_HOR' set success: %f", mpc_acc_hor);
+            ROS_INFO("Parameter 'MPC_VEL_MANUAL' set success: %f", mpc_vel_manual);
         }
 
         if (rc_input.enter_rc_pos_control)
@@ -965,8 +968,10 @@ void UAV_controller::px4_rc_cb(const mavros_msgs::RCIn::ConstPtr &msg)
         cout << GREEN << node_name << " Switch to INIT" << TAIL << endl;
         px4_param_set("MPC_XY_VEL_MAX",mpc_xy_vel_max);
         px4_param_set("MPC_ACC_HOR",mpc_acc_hor);
+        px4_param_set("MPC_VEL_MANUAL",mpc_vel_manual);
         ROS_INFO("Parameter 'MPC_XY_VEL_MAX' set success: %f", mpc_xy_vel_max);
         ROS_INFO("Parameter 'MPC_ACC_HOR' set success: %f", mpc_acc_hor);
+        ROS_INFO("Parameter 'MPC_VEL_MANUAL' set success: %f", mpc_vel_manual);
     }
 
     // 收到进入RC_POS_CONTROL指令，且不在RC_POS_CONTROL模式时
