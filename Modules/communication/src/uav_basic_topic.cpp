@@ -1,10 +1,12 @@
 #include "uav_basic_topic.hpp"
+#include "param_manager.hpp"
+#include <GeographicLib/Geocentric.hpp>
 
 UAVBasic::UAVBasic()
 {
 }
 
-UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication)
+UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication):nh_(nh)
 {
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
     nh.param<std::string>("ground_station_ip", ground_station_ip, "127.0.0.1");
@@ -62,6 +64,12 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication)
     this->serial_control_pub_ = nh.advertise<mavros_msgs::Mavlink>("/uav" + std::to_string(this->robot_id) + "/mavlink/to", 10);
     // 【发布】发布修改成功后ROS参数
     this->param_settings_pub_ = nh.advertise<prometheus_msgs::ParamSettings>("/uav" + std::to_string(this->robot_id) + "/prometheus/param_settings", 10);
+    if(id == 1){
+        // 【订阅】订阅搜寻返回的点和宽度
+        this->swarm_search_sub_ = nh.subscribe<geometry_msgs::Polygon>("/swarm_search", 10, &UAVBasic::swarmSearchCb, this);
+        // 【订阅】订阅搜索的进度
+        swarm_search_progress_sub_ = nh.subscribe<std_msgs::Float32>("/searching_progress", 10, &UAVBasic::swarmSearchProgress, this);
+    }
 
     if (send_hz > 0)
     {
@@ -543,6 +551,63 @@ void UAVBasic::paramSettingsPub(struct ParamSettings param_settings, std::string
     this->param_settings_pub_.publish(param_settings_msg);
 }
 
+void UAVBasic::swarmSearchCb(const geometry_msgs::Polygon::ConstPtr &msg)
+{
+    // 前四个为范围ENU坐标点，第五个为搜寻宽度 ,并且PX4连接和ID为1
+    if(msg->points.size() == 4 && uav_state_.connected && uav_state_.uav_id == 1){
+        ParamManager p(nh_);
+        bool set_param_flag = true;
+        for (int i = 0; i < 4; i++)
+        {
+            std::string name = "/communication_bridge/search_point" + to_string(i+1);
+            Eigen::Vector3d enu_position_in_uav_frame = calculate_enu_position_in_uav_frame(uav_state_, msg->points[i].x, msg->points[i].y, msg->points[i].z);
+            // std::cout << "enu_position: [" << enu_position_in_uav_frame[0] << ", " << enu_position_in_uav_frame[1] << ", " << enu_position_in_uav_frame[2] << "]" << std::endl; 
+            set_param_flag = set_param_flag && p.setParam(name + "_x", to_string(enu_position_in_uav_frame[0]));
+            set_param_flag = set_param_flag && p.setParam(name + "_y", to_string(enu_position_in_uav_frame[1]));
+        }
+
+        if (set_param_flag) // 修改成功
+        {
+            std::unordered_map<std::string, std::string> param_map = p.getParams("/communication_bridge/search_");
+            std::unordered_map<std::string, std::string> param_track_width = p.getParams("/tarck_width");
+            struct ParamSettings params;
+            params.param_module = ParamSettings::ParamModule::SEARCH;
+            for (const auto &pair : param_map)
+            {
+                struct Param param;
+                param.param_name = pair.first;
+                param.param_value = pair.second;
+                params.params.push_back(param);
+            }
+            for (const auto &pair : param_track_width)
+            {
+                struct Param param;
+                param.param_name = pair.first;
+                param.param_value = pair.second;
+                params.params.push_back(param);
+            }
+            // 发送
+            this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, params,this->robot_id), ground_station_ip);
+        }
+    }
+}
+
+void UAVBasic::swarmSearchProgress(const std_msgs::Float32::ConstPtr &msg)
+{
+    CustomDataSegment_1 cust;
+    BasicDataTypeAndValue value1;
+    value1.name = "topic_name";
+    value1.type = BasicDataTypeAndValue::STRING;
+    value1.value = "/searching_progress";
+    BasicDataTypeAndValue value2;
+    value2.name = "progress";
+    value2.type = BasicDataTypeAndValue::FLOAT;
+    value2.value = to_string(msg->data);
+    cust.datas.push_back(value1);
+    cust.datas.push_back(value2);
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, cust, this->robot_id), multicast_udp_ip);
+}
+
 void UAVBasic::send(const ros::TimerEvent &time_event)
 {
     // std::cout << "uav_basic: " << uav_state_ready << " " << uav_command_ready << " " << uav_control_state_ready << std::endl;
@@ -576,4 +641,88 @@ void UAVBasic::setGroundStationIP(std::string ip)
         this->multicast_udp_ip = ip;
     }
     this->ground_station_ip = ip;
+}
+
+Eigen::Vector3d UAVBasic::calculate_enu_position_in_uav_frame(struct UAVState uav_state, double target_lat, double target_lon, double target_alt)
+{
+    // 检查输入参数
+    if (std::isnan(uav_state.latitude) || std::isnan(uav_state.longitude) || std::isnan(uav_state.altitude) ||
+        std::isnan(target_lat) || std::isnan(target_lon) || std::isnan(target_alt)) {
+        std::cerr << "Error: Input parameters contain NaN." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    // 检查经纬度范围
+    if (uav_state.latitude < -90 || uav_state.latitude > 90 || target_lat < -90 || target_lat > 90) {
+        std::cerr << "Error: Latitude out of range [-90, 90]." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    if (uav_state.longitude < -180 || uav_state.longitude > 180 || target_lon < -180 || target_lon > 180) {
+        std::cerr << "Error: Longitude out of range [-180, 180]." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    // 检查高度
+    if (uav_state.altitude < 0 || target_alt < 0) {
+        std::cerr << "Error: Altitude must be non-negative." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    // 提取无人机的经纬高
+    double uav_lat = uav_state.latitude;  // 单位：度
+    double uav_lon = uav_state.longitude; // 单位：度
+    double uav_alt = uav_state.altitude;  // 单位：米
+    // 提取无人机的 ENU 位置和姿态
+    Eigen::Vector3d uav_enu_position(uav_state.position[0], uav_state.position[1], uav_state.position[2]); // 单位：米
+    Eigen::Vector3d uav_euler_angles(uav_state.attitude[0], uav_state.attitude[1], uav_state.attitude[2]); // 单位：弧度（欧拉角：roll, pitch, yaw）
+    // 将无人机的经纬高转换为 ECEF 坐标
+    GeographicLib::Geocentric earth(WGS84_A, WGS84_F);
+    double uav_x, uav_y, uav_z;
+    earth.Forward(uav_lat, uav_lon, uav_alt, uav_x, uav_y, uav_z);
+    Eigen::Vector3d uav_ecef(uav_x, uav_y, uav_z);
+    // 将目标点的经纬高转换为 ECEF 坐标
+    double target_x, target_y, target_z;
+    earth.Forward(target_lat, target_lon, target_alt, target_x, target_y, target_z);
+    Eigen::Vector3d target_ecef(target_x, target_y, target_z);
+    // 检查 ECEF 转换结果
+    if (std::isnan(uav_ecef[0]) || std::isnan(uav_ecef[1]) || std::isnan(uav_ecef[2]) ||
+        std::isnan(target_ecef[0]) || std::isnan(target_ecef[1]) || std::isnan(target_ecef[2])) {
+        std::cerr << "Error: ECEF conversion returned NaN." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    // 计算 ECEF 偏移量
+    Eigen::Vector3d ecef_offset = target_ecef - uav_ecef;
+    // 将 ECEF 偏移量转换为 ENU 坐标
+    double sin_lat = std::sin(uav_lat * M_PI / 180.0);
+    double cos_lat = std::cos(uav_lat * M_PI / 180.0);
+    double sin_lon = std::sin(uav_lon * M_PI / 180.0);
+    double cos_lon = std::cos(uav_lon * M_PI / 180.0);
+    Eigen::Matrix3d R_enu;
+    R_enu << -sin_lon,          cos_lon,          0.0,
+             -sin_lat * cos_lon, -sin_lat * sin_lon, cos_lat,
+              cos_lat * cos_lon,  cos_lat * sin_lon, sin_lat;
+    Eigen::Vector3d enu_position = R_enu * ecef_offset;
+    // 检查 ENU 转换结果
+    if (std::isnan(enu_position[0]) || std::isnan(enu_position[1]) || std::isnan(enu_position[2])) {
+        std::cerr << "Error: ENU conversion returned NaN." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    // 计算无人机的姿态旋转矩阵（ZYX 顺序）
+    double roll = uav_euler_angles[0];  // 滚转角
+    double pitch = uav_euler_angles[1]; // 俯仰角
+    double yaw = uav_euler_angles[2];   // 偏航角
+    Eigen::Matrix3d R_attitude;
+    R_attitude = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
+                 Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+                 Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
+    // 检查姿态旋转矩阵
+    if (std::isnan(R_attitude(0, 0)) || std::isnan(R_attitude(1, 1)) || std::isnan(R_attitude(2, 2))) {
+        std::cerr << "Error: Attitude rotation matrix contains NaN." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    // 将 ENU 坐标转换到无人机的当前 ENU 坐标系下
+    Eigen::Vector3d relative_position = enu_position - uav_enu_position;
+    // 检查相对位置计算结果
+    if (std::isnan(relative_position[0]) || std::isnan(relative_position[1]) || std::isnan(relative_position[2])) {
+        std::cerr << "Error: Relative position calculation returned NaN." << std::endl;
+        return Eigen::Vector3d(NAN, NAN, NAN);
+    }
+    return R_attitude * relative_position;
 }

@@ -1019,7 +1019,6 @@ void CommunicationBridge::multicastUdpFun()
     while (true)
     {
         {
-            std::lock_guard<std::mutex> lg(g_mutex_);
             if (!this->swarm_control_)
             {
                 usleep(100000); // 控制频率 100ms

@@ -23,9 +23,16 @@
 #include "prometheus_msgs/ParamSettings.h"
 #include "custom_data_segment.hpp"
 
+#include "geometry_msgs/Polygon.h"
+#include "std_msgs/Float32.h"
+
 #include "rviz_reduce_the_frequency.hpp"
 
 #include "message_convert.hpp"
+
+// 定义常量
+constexpr double WGS84_A = 6378137.0;           // WGS84 椭球长半轴
+constexpr double WGS84_F = 1.0 / 298.257223563; // WGS84 扁率
 
 class UAVBasic
 {
@@ -75,6 +82,9 @@ public:
 
     void gimbalControlPubTimer(const ros::TimerEvent &time_event);
 
+    void swarmSearchCb(const geometry_msgs::Polygon::ConstPtr &msg);
+    void swarmSearchProgress(const std_msgs::Float32::ConstPtr &msg);
+
     // MAVLINK 消息： SERIAL_CONTROL(126)的发布/接收 
     // 这里主要模拟一个QGC终端 MAVLINK CONSOLE 的实现
     void serialControlPub(const std::string &cmd);
@@ -84,7 +94,11 @@ public:
 
     void setGroundStationIP(std::string ip);
 
+    Eigen::Vector3d calculate_enu_position_in_uav_frame(struct UAVState uav_state, double target_lat, double target_lon, double target_alt);
+
 private:
+    ros::NodeHandle nh_;
+
     ros::Subscriber uav_state_sub_;
 
     // 反馈信息
@@ -112,6 +126,9 @@ private:
     ros::Publisher serial_control_pub_;
 
     ros::Publisher param_settings_pub_;
+
+    ros::Subscriber swarm_search_sub_; // 集群搜寻
+    ros::Subscriber swarm_search_progress_sub_; // 集群搜索进度
 
     ros::ServiceClient gimbal_home_client_;
     ros::ServiceClient gimbal_take_client_;

@@ -36,7 +36,8 @@
     <arg name="swarm_control_yaml" default="swarm_control/config/swarm_control_p600.yaml"/>
     <!-- 轨迹配置文件路径 -->
     <arg name="uav_command_yaml" default="uav_control/launch/uav_command_pub.yaml"/>
-
+    <!-- 搜寻宽度 -->
+    <param name="tarck_width" value="1.0"/>
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
         <!-- 组播ip -->
         <param name="multicast_udp_ip" value="$(arg ground_station_ip)"/>
@@ -76,11 +77,23 @@
         <param name="ugv_basic_hz" value="$(arg ugv_basic_hz)"/>
         <param name="gimbal_basic_hz" value="$(arg gimbal_basic_hz)"/>
 
+        <!-- 搜寻点设置 -->
+        <param name="search_point1_x" value="0.0"/>
+        <param name="search_point1_y" value="0.0"/>
+        <param name="search_point2_x" value="0.0"/>
+        <param name="search_point2_y" value="0.0"/>
+        <param name="search_point3_x" value="0.0"/>
+        <param name="search_point3_y" value="0.0"/>
+        <param name="search_point4_x" value="0.0"/>
+        <param name="search_point4_y" value="0.0"/>
+
         <!-- 单机配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_control_yaml)"/>
         <!-- 集群配置文件加载 -->
         <!-- <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg swarm_control_yaml)"/>	 -->
         <!-- 轨迹配置文件加载 -->
         <rosparam command="load" file="$(arg prometheus_moudles_url)$(arg uav_command_yaml)"/>
+        <!-- 功能脚本按钮加载 -->
+		<rosparam command="load" file="$(find prometheus_communication_bridge)/launch/config.yaml" />
     </node>
 </launch>
