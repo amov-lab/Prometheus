@@ -122,6 +122,8 @@ public:
     double getCPUUsage();
     //获取当前CPU温度
     double getCPUTemperature();
+    //切换定位
+    void switchLocationSource(int location_source);
 private:
     std::shared_ptr<UAVBasic> uav_ = nullptr;
     std::shared_ptr<UGVBasic> ugv_ = nullptr;

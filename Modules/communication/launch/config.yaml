@@ -9,7 +9,25 @@ load_functional_script:
   btn2:
     name: "航点规划"
     cmd: "roslaunch prometheus_demo waypoint_pos_control.launch"
-    
+
+## 定位源脚本
+load_location_source_script:
+  MOCAP: ""
+  T265: ""
+  GAZEBO: ""
+  FAKE_ODOM: ""
+  GPS: ""
+  RTK: ""
+  UWB: ""
+  VINS: ""
+  OPTICAL_FLOW: ""
+  VIOBOT: ""
+  MID360: ""
+  BSA_SLAM: ""
+  UNKNOW: ""
+  #切换之前关闭之前
+
+
 ## 其他参数？
 
 ## 从这里加载功能脚本， 通过参数形式最快，不用增加新的数据

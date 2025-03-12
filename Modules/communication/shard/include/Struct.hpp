@@ -83,7 +83,12 @@ struct UAVState
         FAKE_ODOM = 3,
         GPS = 4,
         RTK = 5,
-        UWB = 6
+        UWB = 6,
+        VINS = 7,
+        OPTICAL_FLOW = 8,
+        VIOBOT = 9,
+        MID360 = 10,
+        BSA_SLAM = 11
     };
 
     // PX4飞控当前飞行模式  int8

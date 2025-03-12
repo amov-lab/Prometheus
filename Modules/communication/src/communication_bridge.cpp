@@ -386,10 +386,14 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
     else if (param_settings.param_module == ParamSettings::ParamModule::SEARCHMODIFY)
     {
         bool set_param_flag = true;
+        int reset_location_source = -1;
 
         for (const auto &set_param : param_settings.params)
         {
             set_param_flag = set_param_flag && p.setParam(set_param.param_name, set_param.param_value);
+            if(set_param.param_name == "/uav_control_main_" + to_string(ROBOT_ID) + "/control/location_source"){
+                reset_location_source = std::stoi(set_param.param_value);
+            }
         }
 
         if (set_param_flag)
@@ -399,6 +403,9 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
             if (this->uav_)
             {
                 this->uav_->paramSettingsPub(param_settings);
+                if(reset_location_source != -1){
+                    // 启动定位
+                }
             }
             return;
         }
@@ -1593,4 +1600,57 @@ double CommunicationBridge::getCPUTemperature()
     file.close();
 
     return temperature / 1000.0; // 温度值通常以千分之一摄氏度为单位
+}
+
+void CommunicationBridge::switchLocationSource(int location_source)
+{
+    ParamManager p(nh_);
+    std::string param_name = "/communication_bridge/load_location_source_script/";
+    switch (location_source)
+    {
+    case UAVState::LocationSource::MOCAP:
+        param_name += "MOCAP";
+        break;
+    case UAVState::LocationSource::T265:
+        param_name += "T265";
+        break;
+    case UAVState::LocationSource::GAZEBO:
+        param_name += "GAZEBO";
+        break;
+    case UAVState::LocationSource::FAKE_ODOM:
+        param_name += "FAKE_ODOM";
+        break;
+    case UAVState::LocationSource::GPS:
+        param_name += "GPS";
+        break;
+    case UAVState::LocationSource::RTK:
+        param_name += "RTK";
+        break;
+    case UAVState::LocationSource::UWB:
+        param_name += "UWB";
+        break;
+    case UAVState::LocationSource::VINS:
+        param_name += "VINS";
+        break;
+    case UAVState::LocationSource::OPTICAL_FLOW:
+        param_name += "OPTICAL_FLOW";
+        break;
+    case UAVState::LocationSource::VIOBOT:
+        param_name += "VIOBOT";
+        break;
+    case UAVState::LocationSource::MID360:
+        param_name += "MID360";
+        break;
+    case UAVState::LocationSource::BSA_SLAM:
+        param_name += "BSA_SLAM";
+        break;
+    default:
+        param_name += "UNKNOW";
+        break;
+    }
+    std::unordered_map<std::string, std::string> param_map = p.getParams(param_name);
+    if(param_map.size() == 1){
+        std::string cmd = param_map.begin()->second;
+        if(autoload) system(cmd.c_str());
+    }
 }
