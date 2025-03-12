@@ -553,6 +553,7 @@ void UAVBasic::paramSettingsPub(struct ParamSettings param_settings, std::string
 
 void UAVBasic::swarmSearchCb(const geometry_msgs::Polygon::ConstPtr &msg)
 {
+    sleep(3);
     // 前四个为范围ENU坐标点，第五个为搜寻宽度 ,并且PX4连接和ID为1
     if(msg->points.size() == 4 && uav_state_.connected && uav_state_.uav_id == 1){
         ParamManager p(nh_);
@@ -569,7 +570,7 @@ void UAVBasic::swarmSearchCb(const geometry_msgs::Polygon::ConstPtr &msg)
         if (set_param_flag) // 修改成功
         {
             std::unordered_map<std::string, std::string> param_map = p.getParams("/communication_bridge/search_");
-            std::unordered_map<std::string, std::string> param_track_width = p.getParams("/tarck_width");
+            std::unordered_map<std::string, std::string> param_track_width = p.getParams("track_width");
             struct ParamSettings params;
             params.param_module = ParamSettings::ParamModule::SEARCH;
             for (const auto &pair : param_map)

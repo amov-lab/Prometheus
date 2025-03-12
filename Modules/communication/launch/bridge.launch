@@ -37,7 +37,7 @@
     <!-- 轨迹配置文件路径 -->
     <arg name="uav_command_yaml" default="uav_control/launch/uav_command_pub.yaml"/>
     <!-- 搜寻宽度 -->
-    <param name="tarck_width" value="1.0"/>
+    <param name="track_width" value="1.0"/>
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
         <!-- 组播ip -->
         <param name="multicast_udp_ip" value="$(arg ground_station_ip)"/>
