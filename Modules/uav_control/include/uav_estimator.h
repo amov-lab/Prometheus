@@ -145,6 +145,8 @@ class UAV_estimator
         Eigen::Quaterniond q_viobot;
         Eigen::Vector3d Euler_viobot; //无人机当前姿态 (viobot)
 
+        Eigen::Vector3d last_pos_vision;
+
 
         int odom_state,last_odom_state{10};
 
@@ -167,10 +169,12 @@ class UAV_estimator
         float maximum_safe_vel_xy;
         float maximum_safe_vel_z;
         float maximum_vel_error_for_vision;
+        float maximum_vel_error_for_Odom;
         int last_gps_status;
         bool fake_odom;                 // Gazebo是否使用fake_odom
         bool uav_state_update{false};
         bool vision_pose_error{false};
+        bool Odom_pose_error{false};
         bool odom_first_check{true};
 
         void printf_uav_state();

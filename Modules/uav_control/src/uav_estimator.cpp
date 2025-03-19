@@ -11,6 +11,8 @@ UAV_estimator::UAV_estimator(ros::NodeHandle &nh): nh(nh)
     nh.param<float>("control/maximum_safe_vel_z", maximum_safe_vel_z, 3.0f);
     // 【参数】最大vision/px4速度误差
     nh.param<float>("control/maximum_vel_error_for_vision", maximum_vel_error_for_vision, 1.0f);
+    // 【参数】最大vision/px4速度误差
+    nh.param<float>("control/maximum_vel_error_for_Odom", maximum_vel_error_for_Odom, 0.8f);
  
     // 【参数】D435i tf相对于base_link偏移量
     nh.param<float>("D435i/offset_x", d435i_offset.x, 0.0);
@@ -364,6 +366,16 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     Eigen::Vector3d pos_vision = Eigen::Vector3d(vision_pose.pose.position.x, vision_pose.pose.position.y, vision_pose.pose.position.z);
     Eigen::Vector3d pos_px4 = Eigen::Vector3d(uav_state.position[0], uav_state.position[1], uav_state.position[2]);
 
+    // vision位置这一时刻和上一时刻位置偏差如果过大，说明可能视觉定位源发散，对比值需要根据实际测试获得
+    if ((pos_vision - last_pos_vision).norm() > maximum_vel_error_for_Odom)
+    {
+        Odom_pose_error = true;
+    }
+    else
+    {
+        Odom_pose_error = false;
+    }
+
     // vision位置和px4回传位置相差较多，一般是PX4中EKF2参数设置错误导致PX4没有收到vision定位数据导致
     // 无人机发生剧烈位移，也会出现本错误，这个需要根据实际测试结果来确定
     if ((pos_vision - pos_px4).norm() > maximum_vel_error_for_vision)
@@ -374,6 +386,9 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
     {
         vision_pose_error = false;
     }
+
+    last_pos_vision = pos_vision;
+
     px4_vision_pose_pub.publish(vision_pose);
 }
 
@@ -770,6 +785,12 @@ void UAV_estimator::check_uav_state()
         text_info.Message = "Odom invalid: vision_pose_error!";
         cout << RED << node_name << "--->  Odom invalid: vision_pose_error! " << TAIL << endl;
     }
+    else if (odom_state == 10 && last_odom_state != 10)
+    {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "Odom invalid: Odom_vision_pose_error!";
+        cout << RED << node_name << "--->  Odom invalid: Odom_vision_pose_error! " << TAIL << endl;
+    }
     else if (odom_state == 4 && last_odom_state != 4)
     {
         text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
@@ -872,6 +893,12 @@ int UAV_estimator::check_uav_odom()
     if (vision_pose_error)
     {
         return 3;
+    }
+
+    // odom失效可能原因：外部定位设备这一时刻和上一时刻原始值相差过多
+    if (Odom_pose_error)
+    {
+        return 10;
     }
 
     // odom失效可能原因4:GPS定位模块数据异常,无法获取定位数据
@@ -1071,6 +1098,7 @@ void UAV_estimator::printf_param()
     cout << GREEN << "maximum_safe_vel_xy           : " << maximum_safe_vel_xy << " [m/s] " << TAIL << endl;
     cout << GREEN << "maximum_safe_vel_z            : " << maximum_safe_vel_z << " [m/s] " << TAIL << endl;
     cout << GREEN << "maximum_vel_error_for_vision  : " << maximum_vel_error_for_vision << " [m/s] " << TAIL << endl;
+    cout << GREEN << "maximum_vel_error_for_Odom    : " << maximum_vel_error_for_Odom << " [m/s] " << TAIL << endl;
 
     if (location_source == prometheus_msgs::UAVState::GAZEBO)
     {
@@ -1192,6 +1220,8 @@ void UAV_estimator::param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr 
                 maximum_safe_vel_z = std::stod(msg->param_value[i]);
             else if(msg->param_name[i].find("control/maximum_vel_error_for_vision") != std::string::npos)
                 maximum_vel_error_for_vision = std::stod(msg->param_value[i]);
+            else if(msg->param_name[i].find("control/maximum_vel_error_for_Odom") != std::string::npos)
+            maximum_vel_error_for_Odom = std::stod(msg->param_value[i]);
             // d435i offset
             else if(msg->param_name[i].find("D435i/offset_x") != std::string::npos)
                 d435i_offset.x = std::stod(msg->param_value[i]);

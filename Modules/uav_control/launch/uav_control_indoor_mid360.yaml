@@ -17,7 +17,9 @@ control:
   maximum_safe_vel_xy : 2.0
   maximum_safe_vel_z : 2.0
   ## 最大vision/px4速度误差
-  maximum_vel_error_for_vision : 100.0
+  maximum_vel_error_for_vision : 1.0
+  ## 最大vision误差
+  maximum_vel_error_for_Odom : 0.8
 
 ## px4参数是否加载 enable_px4_params_load 为true的情况，将加载下面px4_params中的参数到飞控中
 enable_px4_params_load : true

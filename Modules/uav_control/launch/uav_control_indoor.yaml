@@ -17,7 +17,9 @@ control:
   maximum_safe_vel_xy : 4.0
   maximum_safe_vel_z : 3.0
   ## 最大vision/px4速度误差
-  maximum_vel_error_for_vision : 100.0
+  maximum_vel_error_for_vision : 1.0
+  ## 最大vision误差
+  maximum_vel_error_for_Odom : 0.8
   ## command模式下水平速度
   COMMAND_MPC_XY_VEL_MAX : 1.0
   ## command模式下水平加速度
