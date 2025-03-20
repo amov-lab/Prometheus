@@ -1,7 +1,7 @@
 <launch>
   <arg name="uav_id" default="1"/>
-  <arg name="map_size_x" default="50.0"/>
-  <arg name="map_size_y" default="50.0"/>
+  <arg name="map_size_x" default="100.0"/>
+  <arg name="map_size_y" default="100.0"/>
   <arg name="map_origin_x" default="-25.0"/>
   <arg name="map_origin_y" default="-25.0"/>
   <arg name="map_size_z" default="3.0"/>
@@ -12,7 +12,7 @@
 
 
   <!-- ego_planner 仿真 -->
-  <include file="$(find ego_planner)/launch_for_prometheus/advanced_param.xml">
+  <include file="$(find prometheus_airsim)/launch/launch_planning/advanced_param.xml">
     <!-- 无人机编号 -->
     <arg name="uav_id" value="$(arg uav_id)"/>
     <!-- 地图尺寸 -->
@@ -28,7 +28,7 @@
     <arg name="odometry_topic" value="prometheus/odom"/>
     <!-- 仿真中相机及深度信息 -->
     <arg name="camera_pose_topic" value="prometheus/odom"/>
-    <arg name="depth_topic" value="/airsim_node/uva1/front_right/DepthPlanar"/>
+    <arg name="depth_topic" value="/airsim_node/uav1/front_right/DepthPlanar"/>
     <arg name="cx" value="320.0"/>
     <arg name="cy" value="240.0"/>
     <arg name="fx" value="320.0"/>
@@ -38,10 +38,10 @@
     <!-- scan -->
     <arg name="scan_topic" value=""/>
     <!-- 最大速度及加速度 -->
-    <arg name="max_vel" value="0.8" />
-    <arg name="max_acc" value="0.8" />
+    <arg name="max_vel" value="0.5" />
+    <arg name="max_acc" value="0.5" />
     <!-- 规划的范围，一般设置为感知范围的1.5倍 -->
-    <arg name="planning_horizon" value="7.5" /> 
+    <arg name="planning_horizon" value="9.5" /> 
     <!-- ？ -->
     <arg name="use_distinctive_trajs" value="true" />
     <!-- 1: use 2D Nav Goal to select goal  -->

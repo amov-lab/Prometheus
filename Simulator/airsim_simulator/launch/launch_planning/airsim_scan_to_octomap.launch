@@ -3,7 +3,7 @@
 	<!-- run the laser_to_pointcloud -->
   <node pkg="plan_env" type="laser_to_pointcloud" name="laser_to_pointcloud_$(arg uav_id)" output="screen">
       <param name="uav_id" value="$(arg uav_id)" />
-      <remap from="/uav$(arg uav_id)/scan_filtered" to="/airsim_node/uva1/lidarLaserScan/LidarSensor1"/>
+      <remap from="/uav$(arg uav_id)/scan_filtered" to="/airsim_node/uav1/lidarLaserScan/LidarSensor1"/>
   </node>
 
   <!-- 启动octomap建图 -->
