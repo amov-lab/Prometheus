@@ -553,7 +553,6 @@ void UAVBasic::paramSettingsPub(struct ParamSettings param_settings, std::string
 
 void UAVBasic::swarmSearchCb(const geometry_msgs::Polygon::ConstPtr &msg)
 {
-    sleep(3);
     // 前四个为范围ENU坐标点，第五个为搜寻宽度 ,并且PX4连接和ID为1
     if(msg->points.size() == 4 && uav_state_.connected && uav_state_.uav_id == 1){
         ParamManager p(nh_);
@@ -561,7 +560,7 @@ void UAVBasic::swarmSearchCb(const geometry_msgs::Polygon::ConstPtr &msg)
         for (int i = 0; i < 4; i++)
         {
             std::string name = "/communication_bridge/search_point" + to_string(i+1);
-            Eigen::Vector3d enu_position_in_uav_frame = calculate_enu_position_in_uav_frame(uav_state_, msg->points[i].x, msg->points[i].y, msg->points[i].z);
+            Eigen::Vector3d enu_position_in_uav_frame = calculate_enu_position_in_uav_frame(uav_state_, msg->points[i].x, msg->points[i].y, uav_state_.altitude);
             // std::cout << "enu_position: [" << enu_position_in_uav_frame[0] << ", " << enu_position_in_uav_frame[1] << ", " << enu_position_in_uav_frame[2] << "]" << std::endl; 
             set_param_flag = set_param_flag && p.setParam(name + "_x", to_string(enu_position_in_uav_frame[0]));
             set_param_flag = set_param_flag && p.setParam(name + "_y", to_string(enu_position_in_uav_frame[1]));
@@ -705,19 +704,6 @@ Eigen::Vector3d UAVBasic::calculate_enu_position_in_uav_frame(struct UAVState ua
         std::cerr << "Error: ENU conversion returned NaN." << std::endl;
         return Eigen::Vector3d(NAN, NAN, NAN);
     }
-    // 计算无人机的姿态旋转矩阵（ZYX 顺序）
-    double roll = uav_euler_angles[0];  // 滚转角
-    double pitch = uav_euler_angles[1]; // 俯仰角
-    double yaw = uav_euler_angles[2];   // 偏航角
-    Eigen::Matrix3d R_attitude;
-    R_attitude = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
-                 Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
-                 Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
-    // 检查姿态旋转矩阵
-    if (std::isnan(R_attitude(0, 0)) || std::isnan(R_attitude(1, 1)) || std::isnan(R_attitude(2, 2))) {
-        std::cerr << "Error: Attitude rotation matrix contains NaN." << std::endl;
-        return Eigen::Vector3d(NAN, NAN, NAN);
-    }
     // 将 ENU 坐标转换到无人机的当前 ENU 坐标系下
     Eigen::Vector3d relative_position = enu_position - uav_enu_position;
     // 检查相对位置计算结果
@@ -725,5 +711,5 @@ Eigen::Vector3d UAVBasic::calculate_enu_position_in_uav_frame(struct UAVState ua
         std::cerr << "Error: Relative position calculation returned NaN." << std::endl;
         return Eigen::Vector3d(NAN, NAN, NAN);
     }
-    return R_attitude * relative_position;
+    return relative_position;
 }
