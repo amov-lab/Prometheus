@@ -32,6 +32,7 @@ namespace ego_planner
     have_trigger_ = !flag_realworld_experiment_;
     // 读取waypoint
     nh.param("fsm/waypoint_num", waypoint_num_, -1);
+    
     for (int i = 0; i < waypoint_num_; i++)
     {
       nh.param("fsm/waypoint" + to_string(i) + "_x", waypoints_[i][0], -1.0);
@@ -63,7 +64,7 @@ namespace ego_planner
     // 订阅参数服务器内ego相关的参数
     param_sub_ = nh.subscribe("/uav1/prometheus/param_settings", 1, &EGOReplanFSM::paramCallback, this);
     stop_control_state_sub = nh.subscribe("/uav1/prometheus/stop_control_state",1,&EGOReplanFSM::stop_control_state_cb,this);
-
+    
     // 订阅其他无人机位置
     // ~/swarm_trajs是发送给相邻的无人机，~/broadcast_bspline_from_planner是发送给所有无人机
     // ego默认从0开始，我们默认从1开始，因此这里>2
@@ -136,6 +137,7 @@ namespace ego_planner
     else
       cout << "Wrong target_type_ value! target_type_=" << target_type_ << endl;
   }
+
   void EGOReplanFSM::stop_control_state_cb(const std_msgs::Bool::ConstPtr &msg)
   {
     stop_control_state = *msg;

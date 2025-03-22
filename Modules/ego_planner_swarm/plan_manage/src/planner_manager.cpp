@@ -117,12 +117,10 @@ namespace ego_planner
       point_set.clear();
       start_end_derivatives.clear();
       flag_regenerate = false;
-      
       if (flag_first_call || flag_polyInit || flag_force_polynomial /*|| ( start_pt - local_target_pt ).norm() < 1.0*/) // Initial path generated from a min-snap traj by order.
       {
         flag_first_call = false;
         flag_force_polynomial = false;
-
         PolynomialTraj gl_traj;
 
         double dist = (start_pt - local_target_pt).norm();
@@ -180,7 +178,6 @@ namespace ego_planner
 
         double t;
         double t_cur = (ros::Time::now() - local_data_.start_time_).toSec();
-
         vector<double> pseudo_arc_length;
         vector<Eigen::Vector3d> segment_point;
         pseudo_arc_length.push_back(0.0);
