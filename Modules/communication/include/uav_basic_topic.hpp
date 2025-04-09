@@ -21,7 +21,9 @@
 #include "prometheus_msgs/CustomDataSegment.h"
 #include "prometheus_msgs/BasicDataTypeAndValue.h"
 #include "prometheus_msgs/ParamSettings.h"
+#include "prometheus_msgs/SwitchLocationSource.h"
 #include "custom_data_segment.hpp"
+#include "prometheus_msgs/StartScript.h"
 
 #include "geometry_msgs/Polygon.h"
 #include "std_msgs/Float32.h"
@@ -92,6 +94,10 @@ public:
 
     void paramSettingsPub(struct ParamSettings param_settings, std::string prefix = "");
 
+    bool switchLocationSource(int location_source);
+
+    void loadCmdPub(std::string cmd);
+
     void setGroundStationIP(std::string ip);
 
     Eigen::Vector3d calculate_enu_position_in_uav_frame(struct UAVState uav_state, double target_lat, double target_lon, double target_alt);
@@ -126,6 +132,7 @@ private:
     ros::Publisher serial_control_pub_;
 
     ros::Publisher param_settings_pub_;
+    ros::Publisher load_cmd_pub_;
 
     ros::Subscriber swarm_search_sub_; // 集群搜寻
     ros::Subscriber swarm_search_progress_sub_; // 集群搜索进度
@@ -135,6 +142,7 @@ private:
     ros::ServiceClient local_take_client_;
     ros::ServiceClient gimbal_record_client_;
     ros::ServiceClient local_record_client_;
+    ros::ServiceClient switch_location_source_client_;
 
     int current_mode_;
 

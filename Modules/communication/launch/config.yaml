@@ -3,40 +3,16 @@ load_functional_script:
   btn1:
     name: "轨迹控制"
     cmd: "roslaunch prometheus_uav_control uav_command_pub.launch"
-    # 关联节点 实现一个节点判断是否已经有启动的了 暂不使用
-    # node: ""
-    # status: 1 # 状态: 1:打开 0: 关闭
+    close_cmd: "rosnode kill /uav_command_pub"
+    mode: 2
+    node_name: "/uav_command_pub"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: ""  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
   btn2:
     name: "航点规划"
     cmd: "roslaunch prometheus_demo waypoint_pos_control.launch"
-
-## 定位源脚本
-load_location_source_script:
-  MOCAP: ""
-  T265: ""
-  GAZEBO: ""
-  FAKE_ODOM: ""
-  GPS: ""
-  RTK: ""
-  UWB: ""
-  VINS: ""
-  OPTICAL_FLOW: ""
-  VIOBOT: ""
-  MID360: ""
-  BSA_SLAM: ""
-  UNKNOW: ""
-  #切换之前关闭之前
-
-
-## 其他参数？
-
-## 从这里加载功能脚本， 通过参数形式最快，不用增加新的数据
-## 启动考虑， 需要考虑启动过程是否重复启动问题 是否开发一个启动节点？
-## 关闭考虑， 增加status参数，地面站提前修改status参数，然后运行或关闭
-## 用户自己新增考虑， 用户增加的按钮怎么放入(放入地面站或者)
-
-## 地面站存在一些通用按钮（用户自定义 和 各个飞机同样的脚本）
-
-## 地面站操作
-## 1、点击加载按钮，查找参数
-## 2、生成功能脚本按钮
+    close_cmd: "rosnode kill /waypoint_pos_control"
+    mode: 2
+    node_name: "/waypoint_pos_control"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 2 # 启动位置

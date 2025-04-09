@@ -1,0 +1,7 @@
+# 定位源标识
+uint8 location_source
+---
+# 是否切换成功
+bool success
+# 如果失败反馈提示
+string message

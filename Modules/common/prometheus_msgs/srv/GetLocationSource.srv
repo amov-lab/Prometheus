@@ -1,0 +1,7 @@
+---
+# 是否获取成功
+bool success
+# 如果失败反馈提示
+string message
+uint8[] location_source
+string[] location_source_name

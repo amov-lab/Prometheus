@@ -64,6 +64,11 @@ UAVBasic::UAVBasic(ros::NodeHandle &nh, int id, Communication *communication):nh
     this->serial_control_pub_ = nh.advertise<mavros_msgs::Mavlink>("/uav" + std::to_string(this->robot_id) + "/mavlink/to", 10);
     // 【发布】发布修改成功后ROS参数
     this->param_settings_pub_ = nh.advertise<prometheus_msgs::ParamSettings>("/uav" + std::to_string(this->robot_id) + "/prometheus/param_settings", 10);
+    // 【服务】切换定位源
+    this->switch_location_source_client_ = nh.serviceClient<prometheus_msgs::SwitchLocationSource>("/uav" + std::to_string(this->robot_id) + "/prometheus/switch_location_source");
+    // 【发布】发布启动的脚本命令
+    load_cmd_pub_ = nh.advertise<prometheus_msgs::StartScript>("/uav" + std::to_string(this->robot_id) + "/prometheus/load_cmd", 10);
+    
     if(id == 1){
         // 【订阅】订阅搜寻返回的点和宽度
         this->swarm_search_sub_ = nh.subscribe<geometry_msgs::Polygon>("/swarm_search", 10, &UAVBasic::swarmSearchCb, this);
@@ -606,6 +611,80 @@ void UAVBasic::swarmSearchProgress(const std_msgs::Float32::ConstPtr &msg)
     cust.datas.push_back(value1);
     cust.datas.push_back(value2);
     this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, cust, this->robot_id), multicast_udp_ip);
+}
+
+bool UAVBasic::switchLocationSource(int location_source)
+{
+    bool is_ok = false;
+    prometheus_msgs::SwitchLocationSource switch_location_source;
+    switch_location_source.request.location_source = location_source;
+    if(this->switch_location_source_client_.call(switch_location_source))
+    {
+        is_ok = switch_location_source.response.success;
+    }
+    return is_ok;
+}
+
+void UAVBasic::loadCmdPub(std::string cmd)
+{
+    prometheus_msgs::StartScript script;
+    script.cmd = cmd;
+    script.close_cmd = "";
+    script.cmd_level = prometheus_msgs::StartScript::OTHER_CMD;
+    script.detection_cmd = "";
+    script.mode = prometheus_msgs::StartScript::NOT_DETECTION;
+    script.flag = 1;
+    // 判断是否是机器加载的脚本
+    ParamManager p(nh_);
+    std::unordered_map<std::string, std::string> param_map = p.getParams("/communication_bridge/load_functional_script/btn");
+    // 遍历参数，查找定位源
+    for (const auto &pair : param_map)
+    {
+        if(pair.first.find("/cmd") != std::string::npos)
+        {
+            if(cmd.find(pair.second) != std::string::npos)
+            {
+                std::string prefix = "btn";
+                std::string suffix = "/cmd";
+    
+                // 查找前缀和后缀
+                size_t start = pair.first.find(prefix);
+                size_t end = pair.first.find(suffix, start);
+    
+                if (start != std::string::npos && end != std::string::npos) {
+                    std::string btn_name = pair.first.substr(start, end - start);
+                    std::unordered_map<std::string, std::string> btns = p.getParams("/communication_bridge/load_functional_script/" + btn_name);
+                    for (const auto &btn : btns)
+                    {
+                        if(btn.first.find("/close_cmd") != std::string::npos){
+                            script.close_cmd = btn.second;
+                        }else if(btn.first.find("/mode") != std::string::npos){
+                            try{
+                                script.mode = std::stoi(btn.second);
+                            }
+                            catch(const std::exception& e){
+                                ROS_WARN("std::stoi(mode) error");
+                            }
+                        }else if(btn.first.find("/node_name") != std::string::npos){
+                            script.node_name = btn.second;
+                        }else if(btn.first.find("/detection_cmd") != std::string::npos){
+                            script.detection_cmd = btn.second;
+                        }else if(btn.first.find("/flag") != std::string::npos){
+                            try{
+                                script.flag = std::stoi(btn.second);
+                            }
+                            catch(const std::exception& e){
+                                ROS_WARN("std::stoi(flag) error");
+                            }
+                        }
+                    }
+                    break;
+                }
+
+            }
+        }
+    }
+    load_cmd_pub_.publish(script);
 }
 
 void UAVBasic::send(const ros::TimerEvent &time_event)

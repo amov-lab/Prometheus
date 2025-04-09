@@ -402,9 +402,10 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
             // 并且发布话题出来告诉其他节点
             if (this->uav_)
             {
-                this->uav_->paramSettingsPub(param_settings);
-                if(reset_location_source != -1){
-                    // 启动定位
+                if(reset_location_source != -1){ // 说明是切换定位源
+                    this->uav_->switchLocationSource(reset_location_source);
+                }else{
+                    this->uav_->paramSettingsPub(param_settings);
                 }
             }
             return;
@@ -619,6 +620,7 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 if (ROBOT_ID == key) // 如果key等于本地设置的id则 再次赋值
                 {
                     this->uav_ = this->uavs_[key];
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Recommend Prometheus GroundStation version 1.25.3.24 or later, otherwise some features cannot be used.");
                     // 打开
                     if (autoload)
                         system(OPENUAVBASIC.c_str());
@@ -853,16 +855,16 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
             }
             else
             {
-                if (autoload)
-                    system(mode_selection.cmd.c_str());
-                sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
+                if(this->uav_){
+                    this->uav_->loadCmdPub(mode_selection.cmd.c_str());
+                }
             }
         }
         else
         {
-            if (autoload)
-                system(mode_selection.cmd.c_str());
-            sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "CMD:" + mode_selection.cmd);
+            if(this->uav_){
+                this->uav_->loadCmdPub(mode_selection.cmd.c_str());
+            }
         }
     }
     else if (mode_selection.mode == ModeSelection::Mode::EGOPLANNER)

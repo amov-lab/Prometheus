@@ -77,6 +77,11 @@ elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
     target_link_libraries(communication_bridge ${catkin_LIBRARIES} ${PROJECT_SOURCE_DIR}/shard/libs/libcommunication_aarch64.so ${PCL_LIBRARIES})
 endif()
 
+file(GLOB_RECURSE PARAM_MANAGER_INCLUDE include/param_manager.hpp)
+file(GLOB_RECURSE PARAM_MANAGER_SOURCE src/param_manager.cpp)
 
-
+add_executable(switch_location_source ${PARAM_MANAGER_INCLUDE} ${PARAM_MANAGER_SOURCE}
+  utils/switch_location_source.cpp
+)
+target_link_libraries(switch_location_source ${catkin_LIBRARIES})
 

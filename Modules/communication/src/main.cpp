@@ -9,9 +9,9 @@ int main(int argc, char **argv)
 
     CommunicationBridge communication_bridge_(nh);
 
-    ros::AsyncSpinner spinner(4);
-    spinner.start();
-    ros::waitForShutdown();
+    // ros::AsyncSpinner spinner(4);
+    // spinner.start();
+    // ros::waitForShutdown();
 
     ros::spin();
 

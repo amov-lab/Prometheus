@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="prometheus_communication_bridge" type="switch_location_source" name="switch_location_source" output="screen">
+        <rosparam command="load" file="$(find prometheus_communication_bridge)/launch/location_source.yaml" />
+    </node>
+</launch>

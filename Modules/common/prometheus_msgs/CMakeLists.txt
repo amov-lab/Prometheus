@@ -67,10 +67,18 @@ add_message_files(
   ROI.msg
   Target.msg
   TargetsInFrame.msg
+  StartScript.msg
 
   #livox mid360 msg
   LivoxCustomMsg.msg
   LivoxCustomPoint.msg
+)
+
+add_service_files(
+  DIRECTORY srv
+  FILES
+  SwitchLocationSource.srv
+  GetLocationSource.srv
 )
 
 add_action_files(
