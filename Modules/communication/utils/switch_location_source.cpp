@@ -95,9 +95,8 @@ public:
             {
                 std::string param_name = param.first;
                 std::string param_value = param.second;
-                if(param_name.find("startScript") != std::string::npos){
-                    location_source_params[location_source].start_script = param_value;
-                }else if(param_name.find("closeStartScript") != std::string::npos){
+                
+                if(param_name.find("closeStartScript") != std::string::npos){
                     location_source_params[location_source].close_start_script = param_value;
                 }else if(param_name.find("startScriptFlag") != std::string::npos){
                     try{
@@ -107,6 +106,8 @@ public:
                         std::cerr << e.what() << '\n';
                         location_source_params[location_source].start_script_flag = 1;
                     }
+                }else if(param_name.find("startScript") != std::string::npos){
+                    location_source_params[location_source].start_script = param_value;
                 }else if(param_name.find("control/Takeoff_height") != std::string::npos){
                     location_source_params[location_source].takeoff_height = param_value;
                 }else if(param_name.find("control/maximum_safe_vel_xy") != std::string::npos){
@@ -315,7 +316,7 @@ public:
                 if(repeat_load_cmd_time.find(msg->cmd) != repeat_load_cmd_time.end()){
                     // 计算时间 如果小于10s
                     ros::Time now_time = ros::Time::now();
-                    if((now_time - repeat_load_cmd_time[msg->cmd]).toSec() < 10.0 && (now_time - repeat_load_cmd_time[msg->cmd]).toSec() > 2.0){
+                    if((now_time - repeat_load_cmd_time[msg->cmd]).toSec() < 10.0 && (now_time - repeat_load_cmd_time[msg->cmd]).toSec() > 3.0){
                         // 运行关闭
                         system(msg->close_cmd.c_str());
                         message = "LoadStartScript: The program has been closed. Click again and restart.";
@@ -323,13 +324,13 @@ public:
                     }else{ // 如果大于10s，则重新记录时间
                         repeat_load_cmd_time[msg->cmd] = now_time;
                         message_type = prometheus_msgs::TextInfo::WARN;
-                        message = "LoadStartScript: Click to close the program again within 10 seconds, the interval needs to exceed 2 seconds.";
+                        message = "LoadStartScript: Click to close the program again within 10 seconds, the interval needs to exceed 3 seconds.";
                     }
                 }else{ 
                     // 记录再次点击的第一次
                     repeat_load_cmd_time.insert({msg->cmd, ros::Time::now()});
                     message_type = prometheus_msgs::TextInfo::WARN;
-                    message = "LoadStartScript: Click to close the program again within 10 seconds, the interval needs to exceed 2 seconds.";
+                    message = "LoadStartScript: Click to close the program again within 10 seconds, the interval needs to exceed 3 seconds.";
                 }
             }else
             {
