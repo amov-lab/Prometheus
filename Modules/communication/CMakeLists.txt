@@ -85,3 +85,9 @@ add_executable(switch_location_source ${PARAM_MANAGER_INCLUDE} ${PARAM_MANAGER_S
 )
 target_link_libraries(switch_location_source ${catkin_LIBRARIES})
 
+file(GLOB_RECURSE RVIZ_REDUCE_THE_FREQUENCY_INCLUDE include/rviz_reduce_the_frequency.hpp ${PCL_INCLUDE_DIRS}) 
+add_executable(rviz_reduce_the_frequency ${RVIZ_REDUCE_THE_FREQUENCY_INCLUDE}
+  utils/rviz_reduce_the_frequency.cpp
+)
+target_link_libraries(rviz_reduce_the_frequency ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+

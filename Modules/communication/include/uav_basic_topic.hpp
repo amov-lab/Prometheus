@@ -178,7 +178,7 @@ private:
     prometheus_msgs::OffsetPose offset_pose_;
 
     // 
-    std::shared_ptr<ReduceTheFrequency> reduce_the_frequency_ = nullptr;
+    // std::shared_ptr<ReduceTheFrequency> reduce_the_frequency_ = nullptr;
 };
 
 #endif

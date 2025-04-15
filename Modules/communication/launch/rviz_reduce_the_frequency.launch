@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="prometheus_communication_bridge" type="rviz_reduce_the_frequency" name="rviz_reduce_the_frequency" output="screen">
+        <param name="robot_type" value="1"/>
+        <param name="id" value="1"/>
+    </node>
+</launch>
