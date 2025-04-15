@@ -1,5 +1,9 @@
 <launch>
     <node pkg="prometheus_communication_bridge" type="switch_location_source" name="switch_location_source" output="screen">
         <rosparam command="load" file="$(find prometheus_communication_bridge)/launch/location_source.yaml" />
+        <param name="switch_location_source_start_or_not" value="true"/>
+        <param name="load_start_script_start_or_not" value="true"/>
+        <param name="uav_id" value="1"/>
+        <param name="flag" value="1"/>
     </node>
 </launch>

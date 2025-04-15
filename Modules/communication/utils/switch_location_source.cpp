@@ -432,12 +432,24 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "switch_location_source");
     ros::NodeHandle nh("~");
+    bool is_switch_location_source, is_load_start_script;
+    nh.param<bool>("switch_location_source_start_or_not", is_switch_location_source, true);
+    nh.param<bool>("load_start_script_start_or_not", is_load_start_script, true);
 
     printf("\033[1;32m---->[switch_location_source] start running\n\033[0m");
-    
-    SwitchLocationSource switch_location_source(nh);
-    LoadStartScript load_start_script(nh);
 
-    ros::spin();
+    // 根据特定情况启动
+    if(is_switch_location_source && is_load_start_script){
+        SwitchLocationSource switch_location_source(nh);
+        LoadStartScript load_start_script(nh);
+        ros::spin();
+    }else if(is_switch_location_source){
+        SwitchLocationSource switch_location_source(nh);
+        ros::spin();
+    }else if(is_load_start_script){
+        LoadStartScript load_start_script(nh);
+        ros::spin();
+    }
+
     return 0;
 }
