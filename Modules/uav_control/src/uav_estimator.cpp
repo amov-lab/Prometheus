@@ -389,6 +389,22 @@ void UAV_estimator::timercb_pub_vision_pose(const ros::TimerEvent &e)
 
     last_pos_vision = pos_vision;
 
+    if (location_source == prometheus_msgs::UAVState::MID360) {
+
+        // 检查位置协方差
+        bool pose_error = (pose_cov[0] > 0.05) ||   // x方差
+                        (pose_cov[7] > 0.05) ||   // y方差
+                        (pose_cov[14] > 0.05);    // z方差
+
+        // 检查速度协方差
+        bool twist_error = (twist_cov[0] > 0.2) ||  // vx方差
+                        (twist_cov[7] > 0.2);     // vy方差
+
+        // 更新标志位
+        covariance_error = pose_error || twist_error;
+
+    }
+
     px4_vision_pose_pub.publish(vision_pose);
 }
 
@@ -723,6 +739,10 @@ void UAV_estimator::mid360_cb(const nav_msgs::Odometry::ConstPtr &msg)
     mid360_pose.header.stamp = ros::Time::now();
     mid360_pose.pose = msg->pose.pose;
 
+    // 提取协方差矩阵
+    pose_cov = msg->pose.covariance;
+    twist_cov = msg->twist.covariance;
+
     get_mid360_stamp = ros::Time::now(); // 记录时间戳，防止超时
    
 }
@@ -790,6 +810,12 @@ void UAV_estimator::check_uav_state()
         text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
         text_info.Message = "Odom invalid: Odom_vision_pose_error!";
         cout << RED << node_name << "--->  Odom invalid: Odom_vision_pose_error! " << TAIL << endl;
+    }
+    else if (odom_state == 11 && last_odom_state != 11)
+    {
+        text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
+        text_info.Message = "Odom invalid: MID360 covariance error!";
+        cout << RED << node_name << "--->  Odom invalid: MID360 covariance error! " << TAIL << endl;
     }
     else if (odom_state == 4 && last_odom_state != 4)
     {
@@ -899,6 +925,12 @@ int UAV_estimator::check_uav_odom()
     if (Odom_pose_error)
     {
         return 10;
+    }
+
+        // mid360:covariance error
+    if (covariance_error)
+    {
+        return 11;
     }
 
     // odom失效可能原因4:GPS定位模块数据异常,无法获取定位数据

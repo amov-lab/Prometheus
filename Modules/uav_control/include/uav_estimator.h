@@ -177,6 +177,11 @@ class UAV_estimator
         bool Odom_pose_error{false};
         bool odom_first_check{true};
 
+        bool covariance_error{false};      // 协方差异常标志 (true=异常, false=正常)
+
+        boost::array<double, 36> pose_cov;
+        boost::array<double, 36> twist_cov;
+
         void printf_uav_state();
 
     private:
