@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   message_filters
   laser_geometry
+  sensor_msgs
   prometheus_msgs
 )
 
@@ -67,12 +68,26 @@ add_executable(laser_to_pointcloud
 target_link_libraries(laser_to_pointcloud 
     ${catkin_LIBRARIES}
     )
-add_executable(su17_depth
-    src/su17_depth.cpp 
+add_executable(su17_depth_to_cloud
+    src/su17_depth_to_cloud.cpp 
 )
-target_link_libraries(su17_depth 
+target_link_libraries(su17_depth_to_cloud 
     ${catkin_LIBRARIES}
     ${OpenCV_LIBRARIES}
+    ${PCL_LIBRARIES}
     )
     
+add_executable(su17_rvl_encoder src/su17_rvl_encoder.cpp)
+target_link_libraries(su17_rvl_encoder
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  ${PCL_LIBRARIES}
+)
+
+add_executable(su17_rvl_decoder src/su17_rvl_decoder.cpp)
+target_link_libraries(su17_rvl_decoder
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  ${PCL_LIBRARIES}
+)    
     

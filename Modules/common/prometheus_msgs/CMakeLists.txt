@@ -72,6 +72,9 @@ add_message_files(
   #livox mid360 msg
   LivoxCustomMsg.msg
   LivoxCustomPoint.msg
+  
+  #su17 depth_filter msg
+  DepthCompressed.msg
 )
 
 add_service_files(
