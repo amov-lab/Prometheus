@@ -157,7 +157,7 @@ public:
     
     float vel_control_grap = 0.04f;
     float vel_control_Kp = 1.8f;
-    float Speed_decision_range = 0.009f;
+    float Speed_decision_range = 0.03f;
     bool vel_control = false;
     Eigen::Vector3d prev_vel_sp;
     Eigen::Vector3d current_pos;     // 控制中无人机当前位置
