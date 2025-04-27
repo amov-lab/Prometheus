@@ -157,10 +157,16 @@ public:
     
     float vel_control_grap = 0.04f;
     float vel_control_Kp = 1.8f;
-    float Speed_decision_range = 0.03f;
+    float Speed_decision_range = 0.09f;
+    float yaw_decision_range = 0.0349f;// 将0.0157(0.9°)以内的视为0°，由于自身误差
     bool vel_control = false;
+    bool yaw_control = false;
     Eigen::Vector3d prev_vel_sp;
     Eigen::Vector3d current_pos;     // 控制中无人机当前位置
+    double current_yaw;
+    double prev_yaw_sp;
+    int move_orient = 0;
+    int prev_move_orient = 0;
 
     // 目标设定值
     Eigen::Vector3d pos_des;

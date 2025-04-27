@@ -753,6 +753,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
     {
         send_pos_setpoint(pos_des, yaw_des);
         vel_control = false;
+        yaw_control = false;
         return;
     }
 
@@ -763,11 +764,13 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             // quick_land一般用于位置失效情况，因此直接使用速度控制
             send_vel_setpoint(vel_des, yaw_des);
             vel_control = false;
+            yaw_control = false;
         }
         else
         {
             send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
             vel_control = false;
+            yaw_control = false;
         }
         return;
     }
@@ -779,6 +782,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
         {
             send_pos_setpoint(pos_des, yaw_des);
             vel_control = false;
+            yaw_control = false;
         }
         else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Move)
         {
@@ -787,6 +791,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             {
                 send_pos_setpoint(pos_des, yaw_des);
                 vel_control = false;
+                yaw_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL ||
                      uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL_BODY)
@@ -795,6 +800,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 {
                     send_vel_setpoint_yaw_rate(vel_des, yaw_rate_des);
                     vel_control = false;
+                    yaw_control = false;
                 }
                 else
                 {
@@ -808,28 +814,33 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 {
                     send_vel_xy_pos_z_setpoint_yaw_rate(pos_des, vel_des, yaw_rate_des);
                     vel_control = false;
+                    yaw_control = false;
                 }
                 else
                 {
                     send_vel_xy_pos_z_setpoint(pos_des, vel_des, yaw_des);
                     vel_control = false;
+                    yaw_control = false;
                 }
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::TRAJECTORY)
             {
                 send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
                 vel_control = false;
+                yaw_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_ATT)
             {
                 // 此处为使用外部发布的姿态期望值
                 send_attitude_setpoint(u_att);
                 vel_control = false;
+                yaw_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
             {
                 send_global_setpoint(global_pos_des, yaw_des);
                 vel_control = false;
+                yaw_control = false;
             }
         }
         return;
@@ -1111,16 +1122,36 @@ void UAV_controller::send_pos_setpoint(const Eigen::Vector3d &pos_sp, float yaw_
     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 }
 
-
 //发送速度期望值至飞控（输入: 期望vxvyvz,期望yaw）
 void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_sp)
 {
+
 
     int zero_count = 0;
     for (int i = 0; i < 3; ++i) {
         if (abs(vel_sp[i]) <= Speed_decision_range) {
             zero_count++;
         }
+    }
+
+        // 计算条件
+    bool cond1 = abs(vel_sp[0] - prev_vel_sp[1]) >= Speed_decision_range;
+    bool cond2 = abs(vel_sp[1] - prev_vel_sp[1]) >= Speed_decision_range;
+    bool cond3 = abs(vel_sp[2] - prev_vel_sp[2]) >= Speed_decision_range;
+
+    // 将条件组合成一个 3 位二进制数
+    int condition = (cond1 << 2) | (cond2 << 1) | cond3;
+
+    // 根据 condition 赋值 move_orient
+    switch (condition) {
+        case 0b000: move_orient = 0; break;  // 所有差值都小于
+        case 0b001: move_orient = 1; break;  // 仅第三个差值大于等于
+        case 0b010: move_orient = 2; break;  // 仅第二个差值大于等于
+        case 0b011: move_orient = 3; break;  // 第二个和第三个差值大于等于
+        case 0b100: move_orient = 4; break;  // 仅第一个差值大于等于
+        case 0b101: move_orient = 5; break;  // 第一个和第三个差值大于等于
+        case 0b110: move_orient = 6; break;  // 第一个和第二个差值大于等于
+        case 0b111: move_orient = 7; break;  // 所有差值都大于等于
     }
 
     if (!vel_control)
@@ -1130,16 +1161,40 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
         current_pos[2] = uav_state.position[2];
 
         prev_vel_sp = vel_sp;
+        prev_move_orient = move_orient;
         
         vel_control = true;
 
     }
 
-    for (int j = 0; j < 3; ++j) {
-        if (vel_sp[j] != prev_vel_sp[j]) {
-            vel_control = false;
-            return;
-        }
+    if (move_orient != prev_move_orient) 
+    {
+        vel_control = false;
+        return;
+    }
+
+
+
+    if (abs(yaw_sp) <= yaw_decision_range)
+    {
+        yaw_sp = 0;
+    }
+
+
+    if (!yaw_control)
+    {
+        current_yaw = yaw_sp;
+
+        prev_yaw_sp = yaw_sp;
+        
+        yaw_control = true;
+
+    }
+
+    if (abs(yaw_sp - prev_yaw_sp) > yaw_decision_range)
+    {
+        yaw_control = false;
+        return;
     }
 
 
@@ -1151,9 +1206,8 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
             pos_setpoint.position.x = current_pos[0];
             pos_setpoint.position.y = current_pos[1];
             pos_setpoint.position.z = current_pos[2];
-            pos_setpoint.yaw = yaw_sp;
+            pos_setpoint.yaw = current_yaw;
             px4_setpoint_raw_local_pub.publish(pos_setpoint);
-
             break;
         }
         case 2: {
@@ -1168,7 +1222,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.x = 0;
                     pos_setpoint.velocity.y = 0;
                     pos_setpoint.velocity.z = vel_sp[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
             
             } 
@@ -1185,7 +1239,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.y = vel_sp[1];
                     pos_setpoint.velocity.z = 0;
                     pos_setpoint.position.z = current_pos[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
                 }
                 else
@@ -1198,7 +1252,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.y = vel_sp[1];
                     pos_setpoint.velocity.z = 0;
                     pos_setpoint.position.z = current_pos[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 
                 }   
@@ -1217,7 +1271,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.y = -vel_control_Kp* (uav_state.position[1] - current_pos[1]);
                     pos_setpoint.velocity.z = 0;
                     pos_setpoint.position.z = current_pos[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
                 }
                 else
@@ -1230,7 +1284,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.y = 0;
                     pos_setpoint.velocity.z = 0;
                     pos_setpoint.position.z = current_pos[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 
                 }
@@ -1251,7 +1305,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.x = -vel_control_Kp* (uav_state.position[0] - current_pos[0]);
                     pos_setpoint.velocity.y = vel_sp[1];
                     pos_setpoint.velocity.z = vel_sp[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
                 }
                 else
@@ -1262,7 +1316,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.x = 0;
                     pos_setpoint.velocity.y = vel_sp[1];
                     pos_setpoint.velocity.z = vel_sp[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 
                 }   
@@ -1279,7 +1333,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.x = vel_sp[0];
                     pos_setpoint.velocity.y = -vel_control_Kp* (uav_state.position[1] - current_pos[1]);
                     pos_setpoint.velocity.z = vel_sp[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
                 }
                 else
@@ -1290,7 +1344,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                     pos_setpoint.velocity.x = vel_sp[0];
                     pos_setpoint.velocity.y = 0;
                     pos_setpoint.velocity.z = vel_sp[2];
-                    pos_setpoint.yaw = yaw_sp;
+                    pos_setpoint.yaw = current_yaw;
                     px4_setpoint_raw_local_pub.publish(pos_setpoint);
 
                 }   
@@ -1305,7 +1359,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
                 pos_setpoint.velocity.y = vel_sp[1];
                 pos_setpoint.velocity.z = 0;
                 pos_setpoint.position.z = current_pos[2];
-                pos_setpoint.yaw = yaw_sp;
+                pos_setpoint.yaw = current_yaw;
                 px4_setpoint_raw_local_pub.publish(pos_setpoint);              
                 
             }
@@ -1319,7 +1373,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
             pos_setpoint.velocity.x = vel_sp[0];
             pos_setpoint.velocity.y = vel_sp[1];
             pos_setpoint.velocity.z = vel_sp[2];
-            pos_setpoint.yaw = yaw_sp;
+            pos_setpoint.yaw = current_yaw;
             px4_setpoint_raw_local_pub.publish(pos_setpoint);
 
             break;
