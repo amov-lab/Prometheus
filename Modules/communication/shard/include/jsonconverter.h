@@ -32,6 +32,8 @@ public:
     static void fromJson(const nlohmann::json& json, struct MultiDetectionInfo& multi_detection_info);
     // MSG_ID 9 JSON转换为UAVControlState
     static void fromJson(const nlohmann::json& json, struct UAVControlState& uav_contorl_state);
+    // MSG_ID 10 JSON转换为PoseStamped
+    static void fromJson(const nlohmann::json& json, struct PoseStamped& pose_stamped);
     // MSG_ID 101 JSON转换为SwarmCommand
     static void fromJson(const nlohmann::json& json, struct SwarmCommand& swarm_command);
     // MSG_ID 102 JSON转换为GimbalControl
@@ -82,6 +84,8 @@ public:
     static void toJson(const struct MultiDetectionInfo& multi_detection_info, nlohmann::json& json);
     // MSG_ID 9 UAVControlState转换为JSON
     static void toJson(struct UAVControlState& uav_contorl_state,nlohmann::json& json);
+    // MSG_ID 10 PoseStamped转换为JSON
+    static void toJson(struct PoseStamped& pose_stamped,nlohmann::json& json);
     // MSG_ID 101 SwarmCommand转换为JSON
     static void toJson(struct SwarmCommand& swarm_command,nlohmann::json& json);
     // MSG_ID 102 GimbalControl转换为JSON
@@ -119,7 +123,7 @@ public:
 template <typename T>
 T getValueFromJSON(const nlohmann::json& json, const std::string& key, T defaultValue)
 {
-    if (json.contains(key) && (json[key].is_number_integer() || json[key].is_array())) {
+    if (json.contains(key)) {
         return json[key].get<T>();
     }
     return defaultValue;

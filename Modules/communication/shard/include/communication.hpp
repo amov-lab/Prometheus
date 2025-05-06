@@ -9,7 +9,7 @@
 #include <sstream>
 #include "jsonconverter.h"
 
-#define BUF_LEN 1024 * 10 // 1024*10 bytes
+#define BUF_LEN 1024 * 1024 // 理论最大字节数 //1024 * 10 // 1024*10 bytes
 #define SERV_PORT 20168
 
 typedef unsigned char byte;
@@ -208,6 +208,7 @@ public:
     struct MultiBsplines getMultiBsplines();
     struct CustomDataSegment_1 getCustomDataSegment_1();
     struct Goal getGoal();
+    struct PoseStamped getPoseStamped();
 protected:
     // 无人机的ID（通信节点的ID），初始值为0
     int ROBOT_ID = 0;
@@ -255,6 +256,7 @@ private:
     struct MultiDetectionInfo recv_multi_detection_info_;
     struct UAVControlState recv_uav_control_state_;
     struct CustomDataSegment_1 recv_custom_data_1_;
+    struct PoseStamped recv_pose_stamped_;
 };
 
 #endif
