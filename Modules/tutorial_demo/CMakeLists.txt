@@ -25,6 +25,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ##  System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(OpenCV 4 REQUIRED)
+#find_package(SpireCV REQUIRED)
 
 
 ################################################
@@ -56,8 +58,10 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ../common/include
   ../communication/include
+  ${OpenCV_INCLUDE_DIRS}
 )
-
+message(STATUS "include dirs")
+message(STATUS ${catkin_INCLUDE_DIRS})
 
 ###############################
 ##      声明可执行cpp文件     ##
@@ -87,11 +91,20 @@ target_link_libraries(waypoint_pos_control ${catkin_LIBRARIES})
 add_executable(formation_control advanced/formation_control/src/formation_control.cpp)
 target_link_libraries(formation_control ${catkin_LIBRARIES})
 
+add_executable(swarm_control advanced/formation_control/src/swarm_control.cpp)
+target_link_libraries(swarm_control ${catkin_LIBRARIES})
+
 add_executable(yolov5_tracking advanced/yolov5_tracking/src/yolov5_tracking.cpp)
 target_link_libraries(yolov5_tracking ${catkin_LIBRARIES})
 
 add_executable(aruco_tracking advanced/aruco_tracking/src/aruco_tracking.cpp)
 target_link_libraries(aruco_tracking ${catkin_LIBRARIES})
+
+add_executable(prosim_yolov5_tracking advanced/yolov5_tracking/src/prosim_yolov5_tracking.cpp)
+target_link_libraries(prosim_yolov5_tracking ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(prosim_aruco_tracking advanced/aruco_tracking/src/prosim_aruco_tracking.cpp)
+target_link_libraries(prosim_aruco_tracking ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 #############
 ## Install ##
 #############

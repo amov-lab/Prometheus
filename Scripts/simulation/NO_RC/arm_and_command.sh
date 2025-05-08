@@ -12,7 +12,7 @@ control_state: \"\""'
 
 # 暂停 3 秒
 sleep 3
-
+echo "pub_command_control"
 # 进入命令模式
 gnome-terminal --window -e 'rostopic pub -1 /uav1/prometheus/setup prometheus_msgs/UAVSetup "header:
   seq: 0

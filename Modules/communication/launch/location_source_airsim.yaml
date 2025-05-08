@@ -1,0 +1,66 @@
+Location_Source:
+  GPS:
+    # 启动的脚本
+    startScript: "/home/amov/Prometheus/Scripts/simulation/airsim_sitl_outdoor_P450.sh"
+    closeStartScript: "/home/amov/Prometheus/Scripts/simulation/tutorial_demo/simulation_communication/killpx4.sh && rosnode kill /uav_control_main_1 /joy_node /uav1/mavros"
+    startScriptFlag: 1
+    # 控制节点
+    control:
+      ## 起飞高度
+      Takeoff_height : 1.5
+      ## 定位源: 0 for MOCAP, 1 for T265, 2 for GAZEBO, 3 for FAKE_ODOM, 4 for GPS, 5 for RTK, 6 for UWB, 7 for VINS, 8 for OpticalFlow, 9 for Viobot, 10 for MID360, 11 for BSA_SLAM
+      location_source : 4
+      ## 最大安全速度
+      maximum_safe_vel_xy : 5.0
+      maximum_safe_vel_z : 4.0
+      ## 最大vision/px4速度误差
+      maximum_vel_error_for_vision : 2.0
+      ## 最大vision误差
+      maximum_vel_error_for_Odom : 0.8
+    # PX4参数设置
+    px4_params:
+      EKF2_AID_MASK : 24
+      EKF2_HGT_MODE : 3
+      COM_ARM_WO_GPS : 1
+      MC_YAWRATE_MAX : 80.0
+    ##　地理围栏
+    geo_fence:
+      x_min: -1000.0
+      x_max: 1000.0
+      y_min: -1000.0
+      y_max: 1000.0
+      z_min: -50.0
+      z_max: 1000.0
+
+  MID360:
+    # 启动的脚本
+    startScript: "/home/amov/Prometheus/Scripts/simulation/airsim_sitl_indoor_su17.sh"
+    closeStartScript: "/home/amov/Prometheus/Scripts/simulation/tutorial_demo/simulation_communication/killpx4.sh && rosnode kill /uav1/mavros /fastlio_world /fliter_points /joy_node /ned_to_enu_pub /laserMapping /uav_control_main_1"
+    startScriptFlag: 1
+    # 控制节点
+    control:
+      ## 起飞高度
+      Takeoff_height : 1.5
+      ## 定位源: 0 for MOCAP, 1 for T265, 2 for GAZEBO, 3 for FAKE_ODOM, 4 for GPS, 5 for RTK, 6 for UWB, 7 for VINS, 8 for OpticalFlow, 9 for Viobot, 10 for MID360, 11 for BSA_SLAM
+      location_source : 10
+      ## 最大安全速度
+      maximum_safe_vel_xy : 4.0
+      maximum_safe_vel_z : 3.0
+      ## 最大vision/px4速度误差
+      maximum_vel_error_for_vision : 1.0
+      ## 最大vision误差
+      maximum_vel_error_for_Odom : 0.8
+    # PX4参数设置
+    px4_params:
+      EKF2_AID_MASK : 24
+      EKF2_HGT_MODE : 3
+      COM_ARM_WO_GPS : 1
+      MC_YAWRATE_MAX : 80.0
+    ##　地理围栏
+    geo_fence:
+      x_min: -100.0
+      x_max: 100.0
+      y_min: -100.0
+      y_max: 100.0
+      z_min: -0.5
+      z_max: 100.0

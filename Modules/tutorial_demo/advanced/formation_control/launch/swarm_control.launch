@@ -1,0 +1,6 @@
+<launch>
+
+    <node pkg="prometheus_demo" type="swarm_control" name="swarm_control" output="screen">
+    </node>
+
+</launch>

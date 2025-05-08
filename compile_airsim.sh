@@ -19,3 +19,6 @@ catkin_make --source Modules/tutorial_demo --build build/tutorial_demo
 catkin_make --source Modules/simulator_utils --build build/simulator_utils
 catkin_make --source Modules/ego_planner_swarm --build build/ego_planner_swarm
 catkin_make --source Modules/motion_planning --build build/motion_planning
+
+# 编译Fast-lio模块
+catkin_make --source Modules/FAST_LIO --build build/FAST_LIO

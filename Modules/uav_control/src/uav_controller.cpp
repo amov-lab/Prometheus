@@ -606,6 +606,8 @@ void UAV_controller::set_command_des()
                 vel_des(i) = uav_command.velocity_ref[i];
                 acc_des(i) = uav_command.acceleration_ref[i];
             }
+            pos_des(0) -= offset_pose.x;
+            pos_des(1) -= offset_pose.y;
             yaw_des = uav_command.yaw_ref;
         }
         else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_ATT)
@@ -681,6 +683,8 @@ void UAV_controller::set_command_des_for_pos_controller()
                 vel_des(i) = uav_command.velocity_ref[i];
                 acc_des(i) = uav_command.acceleration_ref[i];
             }
+            pos_des(0) -= offset_pose.x;
+            pos_des(1) -= offset_pose.y;
             yaw_des = uav_command.yaw_ref;
         }
         else

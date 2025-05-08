@@ -3,7 +3,7 @@
     <arg name="swarm_num" default="3"/>
     <arg name="autoload" default="true"/>
     <arg name="uav_control_start" default="gnome-terminal -- /home/amov/Prometheus/Scripts/simulation/airsim_sitl_outdoor_P450.sh"/>
-    <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /rosapi | grep -v /rosbridge_websocket` &amp;&amp; /home/amov/Prometheus/Scripts/simulation/tutorial_demo/simulation_communication/killpx4.sh &amp;&amp; /home/amov/Prometheus/Scripts/simulation/tutorial_demo/simulation_communication/killTrajectory.sh"/>
+    <arg name="close_uav_control" default="gnome-terminal -- rosnode kill `rosnode list | grep -v /communication_bridge | grep -v /rosout | grep -v /rosapi | grep -v /rosbridge_websocket` &amp;&amp; /home/amov/Prometheus/Scripts/simulation/tutorial_demo/simulation_communication/killpx4.sh &amp;&amp; /home/amov/Prometheus/Scripts/simulation/tutorial_demo/simulation_communication/killTrajectory.sh &amp;&amp; /home/amov/Prometheus/Scripts/simulation/tutorial_demo/simulation_communication/killMediaServer.sh"/>
     <arg name="swarm_control_start" default="'/home/amov/Prometheus/Modules/swarm_control/sh/simulation/sitl_swarm_3uav.sh'"/>
     <arg name="close_swarm_control" default=""/>
 

@@ -24,6 +24,7 @@ uint8 OPTICAL_FLOW = 8
 uint8 viobot = 9
 uint8 MID360 = 10
 uint8 BSA_SLAM=11
+uint8 ProSim = 12
 ## odom标志位
 bool odom_valid
 

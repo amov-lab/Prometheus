@@ -1,0 +1,24 @@
+<launch>
+    	<!-- 启动跟踪程序 -->
+    	<node pkg="prometheus_demo" type="prosim_yolov5_tracking" name="prosim_yolov5_tracking" output="screen">
+		<param name="uav_id" value="1" />
+		<!-- 视觉丢失次数阈值 -->
+		<param name="Thres_vision" value="10" />
+
+		<!-- 跟踪到前后间隔,坐标为相机系.注意区分相机系、机体系与惯性系.-->
+		<param name="tracking_delta_x" value="0" />
+		<param name="tracking_delta_y" value="5" />
+		<param name="tracking_delta_z" value="8" />
+
+		<!-- 相机相对于无人机偏移,坐标为相机系 -->
+		<param name="camera_offset_x" value="0" />
+		<param name="camera_offset_y" value="0" />
+		<param name="camera_offset_z" value="0" />
+
+		<!-- 跟踪速度倍率 -->
+		<param name="kpx_track" value="1" />
+		<param name="kpy_track" value="1" />
+		<param name="kpz_track" value="1" />
+		
+	</node>
+</launch>

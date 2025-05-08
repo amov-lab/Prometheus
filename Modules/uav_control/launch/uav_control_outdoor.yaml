@@ -33,7 +33,7 @@ px4_params: # 严格区分参数值，为int64和float64，如果参数值为flo
   MPC_XY_VEL_MAX : 3.0
   MPC_ACC_HOR : 3.0
   MPC_VEL_MANUAL : 3.0
-  
+  MC_YAWRATE_MAX : 30.0
 
 ##　地理围栏
 geo_fence:

@@ -1,0 +1,46 @@
+<launch>
+    <!--无人机编号,名字-->
+    <arg name="uav1_id" default="1"/>
+    <arg name="uav2_id" default="2"/>
+    <arg name="uav3_id" default="3"/>
+
+    <arg name="sim_mode" default="true"/>
+    <arg name="flag_printf" default="true"/>
+    <arg name="agent_num" default="3"/>
+
+    <!-- 1号飞机 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav1_id)" output="screen">
+		<param name="uav_id" value="$(arg uav1_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+        <rosparam command="load" file="$(find prometheus_uav_control)/launch/sensor_tf_offset.yaml" />
+	</node>
+
+    <!-- 2号飞机 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav2_id)" output="screen">
+		<param name="uav_id" value="$(arg uav2_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+        <rosparam command="load" file="$(find prometheus_uav_control)/launch/sensor_tf_offset.yaml" />
+	</node>
+
+    <!-- 3号飞机 -->
+	<node pkg="prometheus_uav_control" type="uav_control_main" name="uav_control_main_$(arg uav3_id)" output="screen">
+		<param name="uav_id" value="$(arg uav3_id)" />
+        <param name="sim_mode" value="$(arg sim_mode)" />
+		<param name="flag_printf" value="$(arg flag_printf)" />
+		<rosparam command="load" file="$(find prometheus_uav_control)/launch/uav_control_outdoor.yaml" />
+        <rosparam command="load" file="$(find prometheus_uav_control)/launch/sensor_tf_offset.yaml" />
+	</node>
+
+    <!-- 启动虚拟摇杆驱动 -->
+    <arg name="joy_enable" default="true"/>
+    <group if="$(arg joy_enable)">
+        <node pkg="prometheus_uav_control" type="joy_node" name="joy_node" output="screen">
+            <param name="agent_num" value="$(arg agent_num)" />
+        </node>
+    </group>
+</launch>
+

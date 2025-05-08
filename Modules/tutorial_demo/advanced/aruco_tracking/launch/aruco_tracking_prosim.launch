@@ -1,0 +1,22 @@
+<launch>
+    <node pkg="prometheus_demo" type="prosim_aruco_tracking" name="prosim_aruco_tracking" output="screen">
+		<param name="uav_id" value="1" />
+		<!-- 视觉丢失次数阈值 -->
+		<param name="Thres_vision" value="10" />
+
+		<!-- 跟踪到前后间隔 -->
+		<param name="tracking_delta_x" value="0" />
+		<param name="tracking_delta_y" value="3" />
+		<param name="tracking_delta_z" value="10" />
+
+		<!-- 相机相对于无人机偏移 -->
+		<param name="camera_offset_x" value="0" />
+		<param name="camera_offset_y" value="0" />
+		<param name="camera_offset_z" value="0" />
+
+		<!-- 跟踪速度倍率 -->
+		<param name="kpx_track" value="1" />
+		<param name="kpy_track" value="1" />
+		<param name="kpz_track" value="1" />
+	</node>
+</launch>

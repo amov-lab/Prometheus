@@ -1,0 +1,106 @@
+## 脚本启动参数
+load_functional_script:
+  btn1:
+    name: "Trajectory轨迹控制"
+    cmd: "roslaunch prometheus_uav_control uav_command_pub.launch"
+    close_cmd: "rosnode kill /uav_command_pub"
+    mode: 2
+    node_name: "/uav_command_pub"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: ""  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn2:
+    name: "航点规划"
+    cmd: "roslaunch prometheus_demo waypoint_pos_control.launch"
+    close_cmd: "rosnode kill /waypoint_pos_control"
+    mode: 2
+    node_name: "/waypoint_pos_control"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn3:
+    name: "解锁起飞"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/NO_RC/arm_and_command.sh"
+    close_cmd: ""
+    mode: 2
+    node_name: ""  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn4:
+    name: "深度避障"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/ego_planner/prosim_ego_d435i_depth.sh"
+    close_cmd: "rosnode kill /airsim_node /ned_to_enu_pub /uav1_ego_planner_node /uav1_traj_server_for_prometheus /rviz"
+    mode: 2
+    node_name: "/uav1_ego_planner_node | /uav1_traj_server_for_prometheus"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn5:
+    name: "雷达避障"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/ego_planner/prosim_ego_2dlidar.sh"
+    close_cmd: "rosnode kill /airsim_node /ned_to_enu_pub /uav1_ego_planner_node /uav1_traj_server_for_prometheus"
+    mode: 2
+    node_name: "/uav1_ego_planner_node | /uav1_traj_server_for_prometheus"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn6:
+    name: "人物点击跟踪"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/tutorial_demo/yolov5_tracking/yolov5_tracking_prosim.sh"
+    close_cmd: "rosnode kill /airsim_node /ned_to_enu_pub /prosim_detection_tracking_with_d435i /video_streaming"
+    mode: 2
+    node_name: "/prosim_detection_tracking_with_d435i"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn7:
+    name: "二维码点击跟踪"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/tutorial_demo/Tracking_QR/Tracking_QR_prosim.sh"
+    close_cmd: "rosnode kill /airsim_node /ned_to_enu_pub /prosim_aruco_detection_with_d435i /video_streaming"
+    mode: 2
+    node_name: "/prosim_aruco_detection_with_d435i"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn8:
+    name: "4uav控制"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/airsim_sitl_outdoor_4uav.sh"
+    close_cmd: "rosnode kill /formation_control /joy_node /uav_control_main_1 /uav_control_main_2 /uav_control_main_3 /uav_control_main_4"
+    mode: 2
+    node_name: "/formation_control"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn9:
+    name: "Mid360避障"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/ego_planner/prosim_ego_mid360.sh"
+    close_cmd: "rosnode kill /airsim_node /fastlio_world /fliter_points /laserMapping /laser_to_pointcloud_1 /octomap_server_1 /uav1/mavros /uav1_ego_planner_node /uav1_traj_server_for_prometheus /uav_control_main_1"
+    mode: 2
+    node_name: "/airsim_node | /fastlio_world | /fliter_points | /laserMapping | /laser_to_pointcloud_1 | /octomap_server_1 | /uav1_ego_planner_node | /uav1_traj_server_for_prometheus"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn10:
+    name: "3uav D435i Ego"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/ego_planner/prosim_ego_D435i_3uav.sh"
+    close_cmd: "rosnode kill /airsim_node /motion_goal_swarm /uav1/mavros /uav1_ego_planner_node /uav1_traj_server_for_prometheus /uav2/mavros /uav2_ego_planner_node /uav2_traj_server_for_prometheus /uav3/mavros /uav3_ego_planner_node /uav3_traj_server_for_prometheus /uav_control_main_1 /uav_control_main_2 /uav_control_main_3"
+    mode: 2
+    node_name: "/airsim_node | /motion_goal_swarm | /uav1_ego_planner_node | /uav1_traj_server_for_prometheus | /uav2_ego_planner_node | /uav2_traj_server_for_prometheus | /uav3_ego_planner_node | /uav3_traj_server_for_prometheus"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn11:
+    name: "3uav GPS Offset"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/ego_planner/gps_offset_3uav.sh"
+    close_cmd: "rosnode kill /swarm_control"
+    mode: 2
+    node_name: "/swarm_control"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn12:
+    name: "3uav Lidar Ego"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/ego_planner/prosim_ego_lidar_3uav.sh"
+    close_cmd: "rosnode kill /airsim_node /motion_goal_swarm /uav1/mavros /uav1_ego_planner_node /uav1_traj_server_for_prometheus /uav2/mavros /uav2_ego_planner_node /uav2_traj_server_for_prometheus /uav3/mavros /uav3_ego_planner_node /uav3_traj_server_for_prometheus /uav_control_main_1 /uav_control_main_2 /uav_control_main_3 /laser_to_pointcloud_1 /laser_to_pointcloud_2 /laser_to_pointcloud_3"
+    mode: 2
+    node_name: "/airsim_node | /motion_goal_swarm | /uav1_ego_planner_node | /uav1_traj_server_for_prometheus | /uav2_ego_planner_node | /uav2_traj_server_for_prometheus | /uav3_ego_planner_node | /uav3_traj_server_for_prometheus | /laser_to_pointcloud_1 | /laser_to_pointcloud_2 | /laser_to_pointcloud_3"  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
+  btn13:
+    name: "3uav take off"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/NO_RC/arm_and_command_3uav.sh"
+    close_cmd: ""
+    mode: 2
+    node_name: ""  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
