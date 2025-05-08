@@ -20,6 +20,7 @@ enum MsgId
     UGVSTATE = 7,
     MULTIDETECTIONINFO = 8,
     UAVCONTROLSTATE = 9,
+    POSESTAMPED = 10,
 
     SWARMCOMMAND = 101,
     GIMBALCONTROL = 102,
@@ -61,6 +62,16 @@ struct Quaternion
     double z;
     double w;
 };
+
+struct Header
+{
+    uint32_t seq;
+    //时间戳
+    uint32_t time_secs;
+    uint32_t time_nsecs;
+    std::string frame_id;
+};
+
 //MSG 1
 struct UAVState
 {
@@ -205,6 +216,14 @@ struct Point
     double x;
     double y;
     double z;
+};
+
+struct PoseStamped
+{
+    std::string topic_name;
+    struct Header header;
+    struct Point pose_position;
+    struct Quaternion pose_orientation;
 };
 
 // SwarmCommand.msg
