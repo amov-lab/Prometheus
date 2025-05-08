@@ -38,7 +38,7 @@
       <!-- <param name = "latch" value = "false" />  -->
   </node>
     <arg name="rviz_enable" default="true"/>
-    <arg name="rivz_config" default="$(find prometheus_gazebo)/launch_uav_with_sensor/2dlidar_mapping.rviz"/>
+    <arg name="rivz_config" default="$(find prometheus_airsim)/launch/launch_planning/2dlidar_mapping.rviz"/>
 	<!-- 启动Rviz-->
 	<group if="$(arg rviz_enable)">
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(arg rivz_config)"/>

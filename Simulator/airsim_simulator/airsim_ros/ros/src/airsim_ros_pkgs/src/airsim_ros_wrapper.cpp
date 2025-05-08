@@ -115,8 +115,8 @@ void AirsimROSWrapper::initialize_ros()
 void AirsimROSWrapper::create_ros_pubs_from_settings_json()
 {
     // subscribe to control commands on global nodehandle
-    // gimbal_angle_quat_cmd_sub_ = nh_private_.subscribe("gimbal_angle_quat_cmd", 50, &AirsimROSWrapper::gimbal_angle_quat_cmd_cb, this);
-    // gimbal_angle_euler_cmd_sub_ = nh_private_.subscribe("gimbal_angle_euler_cmd", 50, &AirsimROSWrapper::gimbal_angle_euler_cmd_cb, this);
+    gimbal_angle_quat_cmd_sub_ = nh_private_.subscribe("gimbal_angle_quat_cmd", 50, &AirsimROSWrapper::gimbal_angle_quat_cmd_cb, this);
+    gimbal_angle_euler_cmd_sub_ = nh_private_.subscribe("gimbal_angle_euler_cmd", 50, &AirsimROSWrapper::gimbal_angle_euler_cmd_cb, this);
     origin_geo_point_pub_ = nh_private_.advertise<airsim_ros_pkgs::GPSYaw>("origin_geo_point", 10);
 
     airsim_img_request_vehicle_name_pair_vec_.clear();
@@ -278,7 +278,7 @@ void AirsimROSWrapper::create_ros_pubs_from_settings_json()
                     float SensorDataType = lidar_setting.settings.getInt("SensorDataType", SensorDataType);
                     if (SensorDataType == 1)
                     {
-                        sensor_publisher.publisher = nh_private_.advertise<airsim_ros_pkgs::LivoxCustomMsg>(curr_vehicle_name + "/lidarLivox/" + sensor_name, 10);
+                        sensor_publisher.publisher = nh_private_.advertise<prometheus_msgs::LivoxCustomMsg>(curr_vehicle_name + "/lidarLivox/" + sensor_name, 10);
                     }
                     else if(SensorDataType == 2)
                     {
@@ -727,13 +727,15 @@ tf2::Quaternion AirsimROSWrapper::calculateQ2(const tf2::Quaternion &Q1) const
     return q_new;
 }
 
-nav_msgs::Odometry AirsimROSWrapper::get_odom_msg_from_multirotor_state(const msr::airlib::MultirotorState& drone_state) const
+nav_msgs::Odometry AirsimROSWrapper::get_odom_msg_from_multirotor_state(const msr::airlib::MultirotorState& drone_state, VehicleSetting& vehicle_setting) const
 {
     nav_msgs::Odometry odom_msg;
 
-    odom_msg.pose.pose.position.x = drone_state.getPosition().x();
-    odom_msg.pose.pose.position.y = drone_state.getPosition().y();
-    odom_msg.pose.pose.position.z = drone_state.getPosition().z();
+    odom_msg.pose.pose.position.x = drone_state.getPosition().x() + vehicle_setting.position.x();
+    odom_msg.pose.pose.position.y = drone_state.getPosition().y() + 
+    vehicle_setting.position.y();
+    odom_msg.pose.pose.position.z = drone_state.getPosition().z() + 
+    vehicle_setting.position.z();
     odom_msg.pose.pose.orientation.x = drone_state.getOrientation().x();
     odom_msg.pose.pose.orientation.y = drone_state.getOrientation().y();
     odom_msg.pose.pose.orientation.z = drone_state.getOrientation().z();
@@ -816,9 +818,9 @@ sensor_msgs::PointCloud2 AirsimROSWrapper::get_lidarPointCloud2_msg_from_airsim(
 // https://docs.ros.org/jade/api/sensor_msgs/html/point__cloud__conversion_8h_source.html#l00066
 // look at UnrealLidarSensor.cpp UnrealLidarSensor::getPointCloud() for math
 // read this carefully https://docs.ros.org/kinetic/api/sensor_msgs/html/msg/PointCloud2.html
-airsim_ros_pkgs::LivoxCustomMsg AirsimROSWrapper::get_lidar_msg_from_airsim(const msr::airlib::LidarData& lidar_data, const std::string& vehicle_name, const std::string& sensor_name) const
+prometheus_msgs::LivoxCustomMsg AirsimROSWrapper::get_lidar_msg_from_airsim(const msr::airlib::LidarData& lidar_data, const std::string& vehicle_name, const std::string& sensor_name) const
 {
-    airsim_ros_pkgs::LivoxCustomMsg lidar_msg_livox;
+    prometheus_msgs::LivoxCustomMsg lidar_msg_livox;
     lidar_msg_livox.header.frame_id = vehicle_name + "/" + sensor_name;
     struct timespec tn; 
     clock_gettime(CLOCK_REALTIME, &tn);
@@ -895,10 +897,15 @@ airsim_ros_pkgs::LivoxCustomMsg AirsimROSWrapper::get_lidar_msg_from_airsim(cons
                 // float y = ptr[i * point_step + 1]; // y坐标
                 // float z = ptr[i * point_step + 2]; // z坐标
 
-                airsim_ros_pkgs::LivoxCustomPoint pt;
+                prometheus_msgs::LivoxCustomPoint pt;
                 pt.x = ptr[i * point_step]; 
                 pt.y = ptr[i * point_step + 1];
                 pt.z = ptr[i * point_step + 2]; 
+                if (pt.x == 0.f && pt.y == 0.f && pt.z == 0.f)
+                {
+                    continue;
+                }
+
                 pt.line = lidar_data.lines[i];
                 pt.tag = 0x10;
                 pt.reflectivity = 100;
@@ -1229,7 +1236,16 @@ ros::Time AirsimROSWrapper::update_state()
             vehicle_ros->gps_sensor_msg = get_gps_sensor_msg_from_airsim_geo_point(drone->curr_drone_state.gps_location);
             vehicle_ros->gps_sensor_msg.header.stamp = vehicle_time;
 
-            vehicle_ros->curr_odom = get_odom_msg_from_multirotor_state(drone->curr_drone_state);
+            for (const auto& curr_vehicle_elem : AirSimSettings::singleton().vehicles) {
+                auto& vehicle_setting = curr_vehicle_elem.second;
+                auto curr_vehicle_name = curr_vehicle_elem.first;
+
+                if (curr_vehicle_name == vehicle_ros->vehicle_name)
+                {
+                    vehicle_ros->curr_odom = get_odom_msg_from_multirotor_state(drone->curr_drone_state, *vehicle_setting);
+                }
+            }  
+            // vehicle_ros->curr_odom = get_odom_msg_from_multirotor_state(drone->curr_drone_state);
         }
         else {
             auto car = static_cast<CarROS*>(vehicle_ros.get());
@@ -1371,7 +1387,7 @@ void AirsimROSWrapper::update_commands()
     // Only camera rotation, no translation movement of camera
     if (has_gimbal_cmd_) {
         std::lock_guard<std::mutex> guard(drone_control_mutex_);
-        airsim_client_->simSetCameraPose(gimbal_cmd_.camera_name, get_airlib_pose(0, 0, 0, gimbal_cmd_.target_quat), gimbal_cmd_.vehicle_name);
+        airsim_client_->simSetCameraPose(gimbal_cmd_.camera_name, get_airlib_pose(0.55, 0, 0.5, gimbal_cmd_.target_quat), gimbal_cmd_.vehicle_name);
     }
 
     has_gimbal_cmd_ = false;
@@ -1560,7 +1576,7 @@ void AirsimROSWrapper::lidar_timer_cb(const ros::TimerEvent& event)
                                     }
                                     else if (SensorDataType == 1)
                                     {
-                                        airsim_ros_pkgs::LivoxCustomMsg lidar_msg = get_lidar_msg_from_airsim(lidar_data, vehicle_name_ptr_pair.first, lidar_publisher.sensor_name);
+                                        prometheus_msgs::LivoxCustomMsg lidar_msg = get_lidar_msg_from_airsim(lidar_data, vehicle_name_ptr_pair.first, lidar_publisher.sensor_name);
                                         lidar_publisher.publisher.publish(lidar_msg);
                                     }
                                     else

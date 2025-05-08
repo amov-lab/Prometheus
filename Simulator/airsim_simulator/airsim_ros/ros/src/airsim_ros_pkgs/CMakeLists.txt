@@ -44,6 +44,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_sensor_msgs
   tf2_geometry_msgs
+  prometheus_msgs
 )
 
 add_message_files(
@@ -57,8 +58,8 @@ add_message_files(
   CarState.msg
   Altimeter.msg
   Environment.msg
-  LivoxCustomMsg.msg
-  LivoxCustomPoint.msg
+  # LivoxCustomMsg.msg
+  # LivoxCustomPoint.msg
 )
 
 add_service_files(
@@ -87,6 +88,7 @@ catkin_package(
 
 include_directories(
   include
+  /home/amov/Prometheus/devel/include/prometheus_msgs
   ${catkin_INCLUDE_DIRS}
   ${AIRSIM_ROOT}/AirLib/deps/eigen3
   ${AIRSIM_ROOT}/AirLib/include
