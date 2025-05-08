@@ -79,7 +79,7 @@ public:
         pass_through_z.setFilterFieldName("z");		
         pass_through_z.setFilterLimits(fZpass_min,fZpass_max);
         pass_through_z.filter(*intermediate_cloud_z);	
-        ROS_INFO("intermediate_cloud_z size = %ld",intermediate_cloud_z->points.size());
+        //ROS_INFO("intermediate_cloud_z size = %ld",intermediate_cloud_z->points.size());
             // Y
         pcl::PointCloud<pcl::PointXYZ>::Ptr intermediate_cloud_y(
                                 new pcl::PointCloud<pcl::PointXYZ>);
@@ -87,7 +87,7 @@ public:
         pass_through_y.setFilterFieldName("y");			
         pass_through_y.setFilterLimits(-fYpass,fYpass);			
         pass_through_y.filter(*intermediate_cloud_y);
-        ROS_INFO("intermediate_cloud_y size = %ld",intermediate_cloud_y->points.size());
+        //ROS_INFO("intermediate_cloud_y size = %ld",intermediate_cloud_y->points.size());
             // X
         pcl::PointCloud<pcl::PointXYZ>::Ptr intermediate_cloud_x(
                                 new pcl::PointCloud<pcl::PointXYZ>);
@@ -95,7 +95,7 @@ public:
         pass_through_x.setFilterFieldName("x");			
         pass_through_x.setFilterLimits(fXpass_min,fXpass_max);			
         pass_through_x.filter(*intermediate_cloud_x);
-        ROS_INFO("intermediate_cloud_x size = %ld",intermediate_cloud_x->points.size());
+        //ROS_INFO("intermediate_cloud_x size = %ld",intermediate_cloud_x->points.size());
             // 体素滤波
         pcl::PointCloud<pcl::PointXYZ>::Ptr intermediate_cloud_voxel(
                                 new pcl::PointCloud<pcl::PointXYZ>);
@@ -104,7 +104,7 @@ public:
         voxel_filter.setInputCloud(intermediate_cloud_x);					
         voxel_filter.setLeafSize(f_voxel, f_voxel, f_voxel);//设置体素大小，单位是m，这里设置5cm的立方体
         voxel_filter.filter(*intermediate_cloud_voxel);	
-        ROS_INFO("intermediate_cloud_voxel size = %ld",intermediate_cloud_voxel->points.size());
+        //ROS_INFO("intermediate_cloud_voxel size = %ld",intermediate_cloud_voxel->points.size());
             // 离群点滤波器
         now_times = ros::Time::now();
         pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(
@@ -114,7 +114,7 @@ public:
         outlier_filter.setMeanK (f_outlier_meank);                               //设置在进行统计时考虑的临近点个数
         outlier_filter.setStddevMulThresh (f_outlier_thresh);                      //设置判断是否为离群点的阀值，越小越严格,1-2 之间
         outlier_filter.filter (*filtered_cloud);
-        ROS_INFO("intermediate_cloud_Outlier size = %ld",filtered_cloud->points.size());
+        //ROS_INFO("intermediate_cloud_Outlier size = %ld",filtered_cloud->points.size());
         return filtered_cloud;
     }
 
