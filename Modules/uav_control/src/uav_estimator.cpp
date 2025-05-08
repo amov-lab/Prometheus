@@ -928,7 +928,7 @@ int UAV_estimator::check_uav_odom()
     }
 
         // mid360:covariance error
-    if (covariance_error)
+    if (location_source == prometheus_msgs::UAVState::MID360 && covariance_error)
     {
         return 11;
     }
