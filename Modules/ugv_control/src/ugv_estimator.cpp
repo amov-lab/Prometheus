@@ -31,6 +31,10 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
             // 【订阅】飞控本地位置数据
             this->gps_pos_sub = nh.subscribe<geometry_msgs::PoseStamped>(ugv_name + "/mavros/local_position/pose", 1, &UGV_estimator::gps_pos_cb, this);
         }
+        else if (this->location_source == UGVLocationSource::UWB)
+        {
+            this->uwb_pos_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>("/nlink_linktrack_nodeframe2", 1, & &UGV_estimator::uwb_pos_cb, this);
+        }
         
         // 【订阅】电池状态(无人车底板电压)
         this->battery_sub = nh.subscribe<std_msgs::Float32>(this->ugv_name + "/PowerVoltage", 1, &UGV_estimator::battery_cb, this);
@@ -165,6 +169,29 @@ void UGV_estimator::mocap_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &ms
     this->ugv_state.velocity[0] = msg->twist.linear.x;
     this->ugv_state.velocity[1] = msg->twist.linear.y;
     this->ugv_state.velocity[2] = msg->twist.linear.z;
+}
+
+void UGV_estimator::uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg)
+{
+    this->ugv_state.position[0] = msg->pos_3d[0];
+    this->ugv_state.position[1] = msg->pos_3d[1];
+    this->ugv_state.position[2] = msg->pos_3d[2];
+    Eigen::Quaterniond q_uwb = Eigen::Quaterniond(msg->quaternion[0],msg->quaternion[1],msg->quaternion[2],msg->quaternion[3]);
+    Eigen::Vector3d Euler_uwb = quaternion_to_euler(q_uwb);
+    this->ugv_state.attitude[0] = Euler_uwb[0];
+    this->ugv_state.attitude[1] = Euler_uwb[1];
+    this->ugv_state.attitude[2] = Euler_uwb[2];
+
+    this->dt  = 0.01;
+    this->ugv_state.velocity[0] = (ugv_state.position[0] - last_position_x) / dt;
+    this->ugv_state.velocity[1] = (ugv_state.position[1] - last_position_y) / dt;
+    this->ugv_state.velocity[2] = (ugv_state.position[2] - last_position_z) / dt;
+
+    //保存当前信息为上一时刻
+    this->last_position_x = this->ugv_state.position[0];
+    this->last_position_y = this->ugv_state.position[1];
+    this->last_position_z = this->ugv_state.position[2];
+
 }
 
 void UGV_estimator::battery_cb(const std_msgs::Float32::ConstPtr &msg)
