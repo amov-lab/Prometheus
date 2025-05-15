@@ -34,6 +34,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
         else if (this->location_source == UGVLocationSource::UWB)
         {
             this->uwb_pos_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>("/nlink_linktrack_nodeframe2", 1, &UGV_estimator::uwb_pos_cb, this);
+            this->uwb_imu_sub = nh.subscribe<sensor_msgs::Imu>("/imu" , 1, &UGV_estimator::uwb_imu_cb, this);
         }
         
         // 【订阅】电池状态(无人车底板电压)
@@ -176,11 +177,6 @@ void UGV_estimator::uwb_pos_cb(const prometheus_msgs::LinktrackNodeframe2::Const
     this->ugv_state.position[0] = msg->pos_3d[0];
     this->ugv_state.position[1] = msg->pos_3d[1];
     this->ugv_state.position[2] = msg->pos_3d[2];
-    Eigen::Quaterniond q_uwb = Eigen::Quaterniond(msg->quaternion[0],msg->quaternion[1],msg->quaternion[2],msg->quaternion[3]);
-    Eigen::Vector3d Euler_uwb = quaternion_to_euler(q_uwb);
-    this->ugv_state.attitude[0] = Euler_uwb[0];
-    this->ugv_state.attitude[1] = Euler_uwb[1];
-    this->ugv_state.attitude[2] = Euler_uwb[2];
 
     this->dt  = 0.01;
     this->ugv_state.velocity[0] = (ugv_state.position[0] - last_position_x) / dt;
@@ -192,6 +188,15 @@ void UGV_estimator::uwb_pos_cb(const prometheus_msgs::LinktrackNodeframe2::Const
     this->last_position_y = this->ugv_state.position[1];
     this->last_position_z = this->ugv_state.position[2];
 
+}
+
+void UGV_estimator::uwb_imu_cb(const sensor_msgs::Imu::ConstPtr &msg)
+{
+    Eigen::Quaterniond q_uwb = Eigen::Quaterniond(msg->orientation.x,msg->orientation.y,msg->orientation.z,msg->orientation.w);
+    Eigen::Vector3d Euler_uwb = quaternion_to_euler(q_uwb);
+    this->ugv_state.attitude[0] = Euler_uwb[0];
+    this->ugv_state.attitude[1] = Euler_uwb[1];
+    this->ugv_state.attitude[2] = Euler_uwb[2];
 }
 
 void UGV_estimator::battery_cb(const std_msgs::Float32::ConstPtr &msg)

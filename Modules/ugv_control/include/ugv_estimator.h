@@ -16,6 +16,7 @@
 #include <std_msgs/Float32.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
+#include <sensor_msgs/Imu.h>
 #include <std_msgs/UInt8.h>
 #include <geometry_msgs/Point.h>
 
@@ -67,6 +68,7 @@ public:
     ros::Subscriber battery_sub;
     ros::Subscriber gps_pos_sub;
     ros::Subscriber uwb_pos_sub;
+    ros::Subscriber uwb_imu_sub;
    
     // 发布话题
     ros::Publisher ugv_state_pub;
@@ -89,6 +91,7 @@ private:
     void mocap_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
     void gps_pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);
     void uwb_pos_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg);
+    void uwb_imu_cb(const sensor_msgs::Imu::ConstPtr &msg);
     void battery_cb(const std_msgs::Float32::ConstPtr &msg);
     void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg);
     float get_time_in_sec(const ros::Time& begin_time);
