@@ -122,7 +122,9 @@ void AirsimROSWrapper::create_ros_pubs_from_settings_json()
     airsim_img_request_vehicle_name_pair_vec_.clear();
     image_pub_vec_.clear();
     cam_info_pub_vec_.clear();
+    cam_gimbal_info_pub_vec_.clear();
     camera_info_msg_vec_.clear();
+    camera_gimbal_info_msg_vec_.clear();
     vehicle_name_ptr_map_.clear();
     size_t lidar_cnt = 0;
 
@@ -229,6 +231,10 @@ void AirsimROSWrapper::create_ros_pubs_from_settings_json()
                     image_pub_vec_.push_back(image_transporter.advertise(cam_image_topic, 1));
                     cam_info_pub_vec_.push_back(nh_private_.advertise<sensor_msgs::CameraInfo>(cam_image_topic + "/camera_info", 10));
                     camera_info_msg_vec_.push_back(generate_cam_info(curr_camera_name, camera_setting, capture_setting));
+
+                    cam_gimbal_info_pub_vec_.push_back(nh_private_.advertise<airsim_ros_pkgs::GimbalState>(cam_image_topic + "/camera_gimbal_info", 10));
+                    // camera_gimbal_info_msg_vec_.push_back(generate_cam_info(curr_camera_name, camera_setting, capture_setting));
+
                 }
             }
             // push back pair (vector of image captures, current vehicle name)
@@ -644,7 +650,7 @@ void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAn
         tf2::Quaternion quat_control_cmd;
         quat_control_cmd.setRPY(math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll),
                                 math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch),
-                                math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw));
+                                math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw + 90));
         quat_control_cmd.normalize();
         gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd);
         gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
@@ -1660,6 +1666,44 @@ sensor_msgs::CameraInfo AirsimROSWrapper::generate_cam_info(const std::string& c
     return cam_info_msg;
 }
 
+airsim_ros_pkgs::GimbalState AirsimROSWrapper::generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const std::string& camera_name)
+{
+    tf2::Quaternion quat(
+            camera_info.pose.orientation.x(),
+            camera_info.pose.orientation.y(),
+            camera_info.pose.orientation.z(),
+            camera_info.pose.orientation.w()
+        );
+    tf2::Matrix3x3 m(quat);
+
+   // 获取欧拉角（roll, pitch, yaw）
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+
+    // 转换为角度（可选）
+    roll = roll * 180.0 / M_PI;
+    pitch = pitch * 180.0 / M_PI;
+    yaw = yaw * 180.0 / M_PI;
+
+    airsim_ros_pkgs::GimbalState cam_gimbal_info_msg;
+    cam_gimbal_info_msg.header.frame_id = camera_name + "_gimbal";
+    cam_gimbal_info_msg.header.stamp = ros::Time::now();
+    cam_gimbal_info_msg.type = 0; // 0 = G1云台
+    cam_gimbal_info_msg.moveMode = 0;
+    cam_gimbal_info_msg.imageMode = 0;
+    cam_gimbal_info_msg.isZoom = false; // 正在变焦 = flase
+    cam_gimbal_info_msg.isRec = 0; // 录制 none
+
+    cam_gimbal_info_msg.fov[0] = 90.0f; // FOV-X方向
+    cam_gimbal_info_msg.fov[1] = 60.0f; // FOV-Y方向
+
+    cam_gimbal_info_msg.angleRT[0] = std::round(roll * 1000.0f) / 1000.0f; 
+    cam_gimbal_info_msg.angleRT[1] = std::round(pitch * 1000.0f) / 1000.0f;
+    cam_gimbal_info_msg.angleRT[2] = std::round((yaw - 90) * 1000.0f) / 1000.0f;
+
+    return cam_gimbal_info_msg;
+}
+
 void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageResponse>& img_response_vec, const int img_response_idx, const std::string& vehicle_name)
 {
     // todo add option to use airsim time (image_response.TTimePoint) like Gazebo /use_sim_time param
@@ -1672,12 +1716,15 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
         publish_camera_tf(curr_img_response, curr_ros_time, vehicle_name, curr_img_response.camera_name);
 
         // todo simGetCameraInfo is wrong + also it's only for image type -1.
-        // msr::airlib::CameraInfo camera_info = airsim_client_.simGetCameraInfo(curr_img_response.camera_name);
-
+        // msr::airlib::CameraInfo camera_info = airsim_client_->simGetCameraInfo(curr_img_response.camera_name);
+        // ROS_INFO("Pose: %f-%f-%f-%f, %f-%f-%f-%f, fov: %f", camera_info.pose.orientation.x(), camera_info.pose.orientation.y(), camera_info.pose.orientation.z(), camera_info.pose.orientation.w(), camera_info.pose.position.x(), camera_info.pose.position.y(), camera_info.pose.position.z(), camera_info.fov);
+    
         // update timestamp of saved cam info msgs
 
         camera_info_msg_vec_[img_response_idx_internal].header.stamp = airsim_timestamp_to_ros(curr_img_response.time_stamp);
         cam_info_pub_vec_[img_response_idx_internal].publish(camera_info_msg_vec_[img_response_idx_internal]);
+
+        cam_gimbal_info_pub_vec_[img_response_idx_internal].publish(generate_cam_gimbal_info(airsim_client_->simGetCameraInfo(curr_img_response.camera_name), curr_img_response.camera_name));
 
         // DepthPlanar / DepthPerspective / DepthVis / DisparityNormalized
         if (curr_img_response.pixels_as_float) {

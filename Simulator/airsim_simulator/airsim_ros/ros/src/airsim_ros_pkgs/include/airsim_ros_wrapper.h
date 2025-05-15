@@ -51,6 +51,7 @@ STRICT_MODE_OFF //todo what does this do?
 #include <airsim_ros_pkgs/Altimeter.h> //hector_uav_msgs defunct?
 // #include <airsim_ros_pkgs/LivoxCustomMsg.h> //Custom Lidar
 #include <prometheus_msgs/LivoxCustomMsg.h>
+#include <airsim_ros_pkgs/GimbalState.h>
 #include <sensor_msgs/MagneticField.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/LaserScan.h>
@@ -264,6 +265,8 @@ private:
     sensor_msgs::CameraInfo generate_cam_info(const std::string& camera_name, const CameraSetting& camera_setting, const CaptureSetting& capture_setting) const;
     cv::Mat manual_decode_depth(const ImageResponse& img_response) const;
 
+    airsim_ros_pkgs::GimbalState generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const std::string& camera_name);
+
     sensor_msgs::ImagePtr get_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
     sensor_msgs::ImagePtr get_depth_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
 
@@ -386,9 +389,12 @@ private:
     typedef std::pair<std::vector<ImageRequest>, std::string> airsim_img_request_vehicle_name_pair;
     std::vector<airsim_img_request_vehicle_name_pair> airsim_img_request_vehicle_name_pair_vec_;
     std::vector<image_transport::Publisher> image_pub_vec_;
-    std::vector<ros::Publisher> cam_info_pub_vec_;
 
+    std::vector<ros::Publisher> cam_info_pub_vec_;
     std::vector<sensor_msgs::CameraInfo> camera_info_msg_vec_;
+
+    std::vector<ros::Publisher> cam_gimbal_info_pub_vec_;
+    std::vector<airsim_ros_pkgs::GimbalState> camera_gimbal_info_msg_vec_;
 
     /// ROS other publishers
     ros::Publisher clock_pub_;

@@ -58,6 +58,7 @@ add_message_files(
   CarState.msg
   Altimeter.msg
   Environment.msg
+  GimbalState.msg
   # LivoxCustomMsg.msg
   # LivoxCustomPoint.msg
 )
