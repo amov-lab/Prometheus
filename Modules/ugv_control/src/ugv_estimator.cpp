@@ -33,7 +33,7 @@ UGV_estimator::UGV_estimator(ros::NodeHandle& nh)
         }
         else if (this->location_source == UGVLocationSource::UWB)
         {
-            this->uwb_pos_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>("/nlink_linktrack_nodeframe2", 1, & &UGV_estimator::uwb_pos_cb, this);
+            this->uwb_pos_sub = nh.subscribe<prometheus_msgs::LinktrackNodeframe2>("/nlink_linktrack_nodeframe2", 1, &UGV_estimator::uwb_pos_cb, this);
         }
         
         // 【订阅】电池状态(无人车底板电压)
@@ -171,7 +171,7 @@ void UGV_estimator::mocap_vel_cb(const geometry_msgs::TwistStamped::ConstPtr &ms
     this->ugv_state.velocity[2] = msg->twist.linear.z;
 }
 
-void UGV_estimator::uwb_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg)
+void UGV_estimator::uwb_pos_cb(const prometheus_msgs::LinktrackNodeframe2::ConstPtr &msg)
 {
     this->ugv_state.position[0] = msg->pos_3d[0];
     this->ugv_state.position[1] = msg->pos_3d[1];
