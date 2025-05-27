@@ -139,7 +139,10 @@ public:
     };
 
     AirsimROSWrapper(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const std::string& host_ip);
-    ~AirsimROSWrapper(){};
+    ~AirsimROSWrapper(){
+        img_async_spinner_.stop();
+        lidar_async_spinner_.stop();
+    };
 
     void initialize_airsim();
     void initialize_ros();
@@ -265,7 +268,7 @@ private:
     sensor_msgs::CameraInfo generate_cam_info(const std::string& camera_name, const CameraSetting& camera_setting, const CaptureSetting& capture_setting) const;
     cv::Mat manual_decode_depth(const ImageResponse& img_response) const;
 
-    airsim_ros_pkgs::GimbalState generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const std::string& camera_name);
+    airsim_ros_pkgs::GimbalState generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const msr::airlib::Pose& uav_pose, const std::string& camera_name);
 
     sensor_msgs::ImagePtr get_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
     sensor_msgs::ImagePtr get_depth_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);

@@ -647,15 +647,36 @@ void AirsimROSWrapper::gimbal_angle_quat_cmd_cb(const airsim_ros_pkgs::GimbalAng
 void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAngleEulerCmd& gimbal_angle_euler_cmd_msg)
 {
     try {
-        tf2::Quaternion quat_control_cmd;
-        quat_control_cmd.setRPY(math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll),
-                                math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch),
-                                math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw + 90));
-        quat_control_cmd.normalize();
-        gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd);
-        gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
-        gimbal_cmd_.vehicle_name = gimbal_angle_euler_cmd_msg.vehicle_name;
-        has_gimbal_cmd_ = true;
+            if (airsim_client_)
+            {
+                msr::airlib::Pose uav_pose = airsim_client_->simGetVehiclePose(gimbal_angle_euler_cmd_msg.vehicle_name);
+
+                tf2::Quaternion quat(
+                        uav_pose.orientation.x(),
+                        uav_pose.orientation.y(),
+                        uav_pose.orientation.z(),
+                        uav_pose.orientation.w()
+                    );
+                tf2::Matrix3x3 m(quat);
+
+                // 获取欧拉角（roll, pitch, yaw）
+                double roll, pitch, yaw;
+                m.getRPY(roll, pitch, yaw);
+
+                roll = std::round((roll * 180.0 / M_PI) * 1000.0f) / 1000.0f;
+                pitch = std::round((pitch * 180.0 / M_PI) * 1000.0f) / 1000.0f;
+                yaw = std::round((yaw * 180.0 / M_PI) * 1000.0f) / 1000.0f;
+
+                tf2::Quaternion quat_control_cmd;
+                quat_control_cmd.setRPY(math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll + roll),
+                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch + pitch),
+                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw + yaw));
+                quat_control_cmd.normalize();
+                gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd);
+                gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
+                gimbal_cmd_.vehicle_name = gimbal_angle_euler_cmd_msg.vehicle_name;
+                has_gimbal_cmd_ = true;
+            }
     }
     catch (tf2::TransformException& ex) {
         ROS_WARN("%s", ex.what());
@@ -1393,7 +1414,22 @@ void AirsimROSWrapper::update_commands()
     // Only camera rotation, no translation movement of camera
     if (has_gimbal_cmd_) {
         std::lock_guard<std::mutex> guard(drone_control_mutex_);
-        airsim_client_->simSetCameraPose(gimbal_cmd_.camera_name, get_airlib_pose(0.55, 0, 0.5, gimbal_cmd_.target_quat), gimbal_cmd_.vehicle_name);
+        for (const auto& curr_vehicle_elem : AirSimSettings::singleton().vehicles) 
+        {
+            if(curr_vehicle_elem.first == gimbal_cmd_.vehicle_name)
+            {
+                auto& vehicle_setting = curr_vehicle_elem.second;
+                for (auto& curr_camera_elem : vehicle_setting->cameras) 
+                {
+                    if (curr_camera_elem.first == gimbal_cmd_.camera_name)
+                    {
+                        auto& camera_setting = curr_camera_elem.second;
+                        airsim_client_->simSetCameraPose(gimbal_cmd_.camera_name, get_airlib_pose(camera_setting.position.x(), camera_setting.position.y(), camera_setting.position.z(), gimbal_cmd_.target_quat), gimbal_cmd_.vehicle_name);
+                    }
+                }
+            }
+        }
+        // airsim_client_->simSetCameraPose(gimbal_cmd_.camera_name, get_airlib_pose(0.55, 0, 0.5, gimbal_cmd_.target_quat), gimbal_cmd_.vehicle_name);
     }
 
     has_gimbal_cmd_ = false;
@@ -1666,15 +1702,20 @@ sensor_msgs::CameraInfo AirsimROSWrapper::generate_cam_info(const std::string& c
     return cam_info_msg;
 }
 
-airsim_ros_pkgs::GimbalState AirsimROSWrapper::generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const std::string& camera_name)
+airsim_ros_pkgs::GimbalState AirsimROSWrapper::generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const msr::airlib::Pose& uav_pose, const std::string& camera_name)
 {
+    msr::airlib::Pose relative_pose = camera_info.pose - uav_pose;
+
     tf2::Quaternion quat(
-            camera_info.pose.orientation.x(),
-            camera_info.pose.orientation.y(),
-            camera_info.pose.orientation.z(),
-            camera_info.pose.orientation.w()
+            relative_pose.orientation.x(),
+            relative_pose.orientation.y(),
+            relative_pose.orientation.z(),
+            relative_pose.orientation.w()
         );
     tf2::Matrix3x3 m(quat);
+
+
+    //   ROS_INFO("Pose: %f-%f-%f-%f, %f-%f-%f-%f", uav_pose.orientation.x(), uav_pose.orientation.y(), uav_pose.orientation.z(), uav_pose.orientation.w(), uav_pose.position.x(), uav_pose.position.y(), uav_pose.position.z());
 
    // 获取欧拉角（roll, pitch, yaw）
     double roll, pitch, yaw;
@@ -1699,7 +1740,7 @@ airsim_ros_pkgs::GimbalState AirsimROSWrapper::generate_cam_gimbal_info(const ms
 
     cam_gimbal_info_msg.angleRT[0] = std::round(roll * 1000.0f) / 1000.0f; 
     cam_gimbal_info_msg.angleRT[1] = std::round(pitch * 1000.0f) / 1000.0f;
-    cam_gimbal_info_msg.angleRT[2] = std::round((yaw - 90) * 1000.0f) / 1000.0f;
+    cam_gimbal_info_msg.angleRT[2] = std::round(yaw * 1000.0f) / 1000.0f;
 
     return cam_gimbal_info_msg;
 }
@@ -1724,7 +1765,7 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
         camera_info_msg_vec_[img_response_idx_internal].header.stamp = airsim_timestamp_to_ros(curr_img_response.time_stamp);
         cam_info_pub_vec_[img_response_idx_internal].publish(camera_info_msg_vec_[img_response_idx_internal]);
 
-        cam_gimbal_info_pub_vec_[img_response_idx_internal].publish(generate_cam_gimbal_info(airsim_client_->simGetCameraInfo(curr_img_response.camera_name), curr_img_response.camera_name));
+        cam_gimbal_info_pub_vec_[img_response_idx_internal].publish(generate_cam_gimbal_info(airsim_client_->simGetCameraInfo(curr_img_response.camera_name),airsim_client_->simGetVehiclePose(vehicle_name) ,curr_img_response.camera_name));
 
         // DepthPlanar / DepthPerspective / DepthVis / DisparityNormalized
         if (curr_img_response.pixels_as_float) {
