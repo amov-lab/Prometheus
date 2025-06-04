@@ -368,7 +368,17 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
             return;
         }
         // ParamManager p(nh_);
-        std::unordered_map<std::string, std::string> param_map = p.getParams(param_settings.params.begin()->param_name);
+        std::unordered_map<std::string, std::string> param_map;
+        std::vector<std::string> keywords;
+        if(param_settings.params.size() == 1){
+            param_map = p.getParams(param_settings.params.begin()->param_name);
+        }
+        else{
+            for (const auto &param: param_settings.params){
+                keywords.push_back(param.param_name);
+            }
+            param_map = p.getParams(keywords);
+        }
         struct ParamSettings params;
         params.param_module = ParamSettings::ParamModule::SEARCH;
         for (const auto &pair : param_map)
@@ -378,6 +388,7 @@ void CommunicationBridge::recvData(struct ParamSettings param_settings)
             param.param_value = pair.second;
             params.params.push_back(param);
         }
+        
         // 发送
         sendMsgByUdp(encodeMsg(Send_Mode::UDP, params), udp_ip);
         usleep(1000);
@@ -660,13 +671,16 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 }
             }
         }
-        this->is_heartbeat_ready_ = true;
-        // 加载单机参数
-        sendControlParam();
-        // 加载通信模块参数
-        sendCommunicationParam();
-        // 加载轨迹控制参数
-        // sendCommandPubParam();
+        if(this->uav_){
+            this->is_heartbeat_ready_ = true;
+            // 加载单机参数
+            sendControlParam();
+            // 加载通信模块参数
+            sendCommunicationParam();
+            // 加载轨迹控制参数
+            // sendCommandPubParam();
+            returnConfigFile();
+        }
     }
     else if (mode_selection.mode == ModeSelection::Mode::UGVBASIC)
     {
@@ -1097,6 +1111,27 @@ void CommunicationBridge::triggerSwarmControl()
 void CommunicationBridge::triggerUGV()
 {
     // 停止小车
+}
+
+void CommunicationBridge::returnConfigFile()
+{
+    // 加载地面站功能脚本
+    struct ParamSettings param_settings;
+    param_settings.param_module = ParamSettings::SEARCH;
+    struct Param param;
+    param.param_name = "/communication_bridge/load_functional_script/btn";
+    param.param_value = "";
+    param_settings.params.push_back(param);
+    param.param_name = "/name|/cmd";
+    param_settings.params.push_back(param);
+    recvData(param_settings);
+
+    usleep(100000);
+    // 加载流地址
+    param_settings.params.clear(); // 清空
+    param.param_name = "/communication_bridge/rtsp_url";
+    param_settings.params.push_back(param);
+    recvData(param_settings);
 }
 
 // 给地面站发送心跳包,  超时检测

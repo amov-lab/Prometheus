@@ -411,6 +411,7 @@ sensor_msgs::PointCloud2 ReduceTheFrequency::compressed(const sensor_msgs::Point
     // 创建压缩后的PointCloud2消息
     sensor_msgs::PointCloud2 compressed_cloud_msg;
     compressed_cloud_msg.header = msg.header;
+    compressed_cloud_msg.header.stamp = ros::Time::now();
     compressed_cloud_msg.row_step = compressed_size;  // 压缩数据的大小作为行步长
     compressed_cloud_msg.is_dense = true;
     compressed_cloud_msg.data = std::vector<uint8_t>(compressed_data_ptr, compressed_data_ptr + compressed_size);

@@ -38,6 +38,7 @@ public:
     SwitchLocationSource(ros::NodeHandle& nh)
     {
         nh.param<int>("uav_id", uav_id, 1);
+        printf("\033[1;32m---->[switch_location_source] start running\n\033[0m");
         param_manager = new ParamManager(nh);
         //【服务】切换定位源
         switch_location_source_server = nh.advertiseService("/uav" + std::to_string(uav_id) + "/prometheus/switch_location_source", &SwitchLocationSource::switchLocationSourceServerCallback, this);
@@ -270,6 +271,7 @@ public:
     {
         nh.param<int>("uav_id", uav_id, 1);
         nh.param<int>("flag", flag, 1);
+        printf("\033[1;32m---->[load_start_script] start running\n\033[0m");
         //【话题】订阅启动命令
         load_cmd_sub = nh.subscribe("/uav" + std::to_string(uav_id) + "/prometheus/load_cmd", 10, &LoadStartScript::loadCmdCb, this);
         //【话题】发布消息反馈
@@ -430,13 +432,11 @@ private:
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "switch_location_source");
+    ros::init(argc, argv, "communication_utils");
     ros::NodeHandle nh("~");
     bool is_switch_location_source, is_load_start_script;
     nh.param<bool>("switch_location_source_start_or_not", is_switch_location_source, true);
     nh.param<bool>("load_start_script_start_or_not", is_load_start_script, true);
-
-    printf("\033[1;32m---->[switch_location_source] start running\n\033[0m");
 
     // 根据特定情况启动
     if(is_switch_location_source && is_load_start_script){

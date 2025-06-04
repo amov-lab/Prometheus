@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <algorithm> // std::transform
 #include <cctype>    // std::tolower
+#include <sstream>
 
 class ParamManager{
 public:
@@ -16,6 +17,8 @@ public:
     std::vector<std::string> getParamNames();
 
     std::unordered_map<std::string, std::string> getParams(std::string keywords = "");
+
+    std::unordered_map<std::string, std::string> getParams(const std::vector<std::string>& keywords);
 
     bool setParam(std::string name,std::string value);
 private:

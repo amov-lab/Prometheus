@@ -124,6 +124,9 @@ public:
     double getCPUTemperature();
     //切换定位
     void switchLocationSource(int location_source);
+
+    // 连接后返回地面站配置文件参数
+    void returnConfigFile();
 private:
     std::shared_ptr<UAVBasic> uav_ = nullptr;
     std::shared_ptr<UGVBasic> ugv_ = nullptr;
