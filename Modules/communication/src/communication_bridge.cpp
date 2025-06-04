@@ -101,15 +101,27 @@ void CommunicationBridge::serverFun()
             exit(EXIT_FAILURE);
         }
 
-        // recv函数从TCP连接的另一端接收数据
-        valread = recv(recv_sock, tcp_recv_buf, BUF_LEN, 0);
+        // 设置接收超时(5秒)
+        struct timeval tv;
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
+        setsockopt(recv_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
-        if (valread <= 0)
-        {
-            ROS_ERROR("Received message length <= 0, maybe connection has lost");
-            close(recv_sock);
-            continue;
+        size_t total_received = 0;
+        while (total_received < BUF_LEN) {
+            valread = recv(recv_sock, tcp_recv_buf + total_received, 
+                      BUF_LEN - total_received, 0);
+        
+            if (valread <= 0) {
+                if (valread == -1 && errno == EINTR) continue;
+                // ROS_ERROR("Receive error: %s", strerror(errno));
+                close(recv_sock);
+                break;
+            }
+            total_received += valread;
         }
+
+        if(total_received == 0) continue;
 
         // 开启互斥锁
         std::lock_guard<std::mutex> lg_mutex(g_mutex_);
@@ -177,7 +189,7 @@ void CommunicationBridge::serverFun()
             }
         }
 
-        std::cout << "tcp valread: " << valread << std::endl;
+        std::cout << "tcp valread: " << total_received << std::endl;
         close(recv_sock);
         pubMsg(decodeMsg(tcp_recv_buf, Send_Mode::TCP));
     }
