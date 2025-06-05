@@ -270,6 +270,8 @@ private:
 
     airsim_ros_pkgs::GimbalState generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const msr::airlib::Pose& uav_pose, const std::string& camera_name);
 
+    void UEQuatToEuler(const tf2::Quaternion& quat, double& yaw, double& pitch, double& roll);
+
     sensor_msgs::ImagePtr get_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
     sensor_msgs::ImagePtr get_depth_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
 

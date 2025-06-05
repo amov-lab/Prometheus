@@ -668,9 +668,9 @@ void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAn
                 yaw = std::round((yaw * 180.0 / M_PI) * 1000.0f) / 1000.0f;
 
                 tf2::Quaternion quat_control_cmd;
-                quat_control_cmd.setRPY(math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll + roll),
-                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch + pitch),
-                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw + yaw));
+                quat_control_cmd.setRPY(math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll),
+                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch),
+                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw));
                 quat_control_cmd.normalize();
                 gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd);
                 gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
@@ -1410,7 +1410,7 @@ void AirsimROSWrapper::update_commands()
             car->has_car_cmd = false;
         }
     }
-
+    
     // Only camera rotation, no translation movement of camera
     if (has_gimbal_cmd_) {
         std::lock_guard<std::mutex> guard(drone_control_mutex_);
@@ -1702,9 +1702,76 @@ sensor_msgs::CameraInfo AirsimROSWrapper::generate_cam_info(const std::string& c
     return cam_info_msg;
 }
 
+void AirsimROSWrapper::UEQuatToEuler(const tf2::Quaternion& quat, double& yaw, double& pitch, double& roll)
+{
+    // 确保四元数已规范化
+    tf2::Quaternion q = quat.normalized();
+    
+    // 提取四元数分量
+    const double x = q.x();
+    const double y = q.y();
+    const double z = q.z();
+    const double w = q.w();
+    
+    // 计算旋转矩阵元素 (左手坐标系)
+    const double xx = x * x;
+    const double yy = y * y;
+    const double zz = z * z;
+    const double xy = x * y;
+    const double xz = x * z;
+    const double xw = x * w;
+    const double yz = y * z;
+    const double yw = y * w;
+    const double zw = z * w;
+    
+    // 计算旋转矩阵元素 (ZYX顺序)
+    const double m00 = 1.0 - 2.0 * (yy + zz);
+    const double m01 = 2.0 * (xy - zw);
+    const double m02 = 2.0 * (xz + yw);
+    const double m10 = 2.0 * (xy + zw);
+    const double m11 = 1.0 - 2.0 * (xx + zz);
+    const double m12 = 2.0 * (yz - xw);
+    const double m20 = 2.0 * (xz - yw);
+    const double m21 = 2.0 * (yz + xw);
+    const double m22 = 1.0 - 2.0 * (xx + yy);
+    
+    // 提取欧拉角 (Z-Y-X顺序，即Yaw-Pitch-Roll)
+    if (std::fabs(m20) > 0.999999)
+    {
+        pitch = m20 > 0.0 ? -90.0 : 90.0;
+        yaw = std::atan2(-m01, m11) * (180.0 / M_PI);
+        roll = 0.0;
+    }
+    else
+    {
+        pitch = std::asin(-m20) * (180.0 / M_PI);
+        yaw = std::atan2(m10, m00) * (180.0 / M_PI);
+        roll = std::atan2(m21, m22) * (180.0 / M_PI);
+    }
+    
+    // 规范化角度到[-180,180]范围
+    auto normalizeAngle = [](double angle) {
+        angle = std::fmod(angle, 360.0);
+        if (angle > 180.0) angle -= 360.0;
+        if (angle < -180.0) angle += 360.0;
+        return angle;
+    };
+    
+    yaw = normalizeAngle(yaw);
+    pitch = normalizeAngle(pitch);
+    roll = normalizeAngle(roll);
+    
+    // 处理非常小的角度接近于零的情况
+    const double epsilon = 1.0e-6;
+    if (std::fabs(pitch) < epsilon) pitch = 0.0;
+    if (std::fabs(yaw) < epsilon) yaw = 0.0;
+    if (std::fabs(roll) < epsilon) roll = 0.0;
+
+}
+
 airsim_ros_pkgs::GimbalState AirsimROSWrapper::generate_cam_gimbal_info(const msr::airlib::CameraInfo& camera_info, const msr::airlib::Pose& uav_pose, const std::string& camera_name)
 {
-    msr::airlib::Pose relative_pose = camera_info.pose - uav_pose;
+    msr::airlib::Pose relative_pose = camera_info.pose;
 
     tf2::Quaternion quat(
             relative_pose.orientation.x(),
@@ -1712,19 +1779,30 @@ airsim_ros_pkgs::GimbalState AirsimROSWrapper::generate_cam_gimbal_info(const ms
             relative_pose.orientation.z(),
             relative_pose.orientation.w()
         );
-    tf2::Matrix3x3 m(quat);
+//     tf2::Matrix3x3 m(quat);
 
 
-    //   ROS_INFO("Pose: %f-%f-%f-%f, %f-%f-%f-%f", uav_pose.orientation.x(), uav_pose.orientation.y(), uav_pose.orientation.z(), uav_pose.orientation.w(), uav_pose.position.x(), uav_pose.position.y(), uav_pose.position.z());
+//     //   ROS_INFO("Pose: %f-%f-%f-%f, %f-%f-%f-%f", uav_pose.orientation.x(), uav_pose.orientation.y(), uav_pose.orientation.z(), uav_pose.orientation.w(), uav_pose.position.x(), uav_pose.position.y(), uav_pose.position.z());
 
-   // 获取欧拉角（roll, pitch, yaw）
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
+//    // 获取欧拉角（roll, pitch, yaw）
+//     double roll, pitch, yaw;
+//     m.getRPY(roll, pitch, yaw);
 
-    // 转换为角度（可选）
-    roll = roll * 180.0 / M_PI;
-    pitch = pitch * 180.0 / M_PI;
-    yaw = yaw * 180.0 / M_PI;
+//     // 转换为角度（可选）
+//     roll = roll * 180.0 / M_PI;
+//     pitch = pitch * 180.0 / M_PI;
+//     yaw = yaw * 180.0 / M_PI;
+
+    // tf2::Quaternion ue_quat(
+    //     relative_pose.orientation.x,
+    //     relative_pose.orientation.y,
+    //     relative_pose.orientation.z,
+    //     relative_pose.orientation.w
+    // );
+    
+    // 2. 转换为UE风格的欧拉角
+    double yaw, pitch, roll;
+    UEQuatToEuler(quat, yaw, pitch, roll);
 
     airsim_ros_pkgs::GimbalState cam_gimbal_info_msg;
     cam_gimbal_info_msg.header.frame_id = camera_name + "_gimbal";
@@ -1782,7 +1860,7 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
         img_response_idx_internal++;
     }
 }
-
+//  
 // publish camera transforms
 // camera poses are obtained from airsim's client API which are in (local) NED frame.
 // We first do a change of basis to camera optical frame (Z forward, X right, Y down)
