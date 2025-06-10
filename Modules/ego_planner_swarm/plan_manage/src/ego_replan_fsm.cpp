@@ -13,7 +13,7 @@ namespace ego_planner
     have_recv_pre_agent_ = false;
     has_last_bspline_ = false;
     stop_control_state.data = false;
-
+    goal_flag_ = false;
     // 目标点类型：1，手动设定目标点；2，预设目标点
     nh.param("fsm/flight_type", target_type_, -1);
     // 重规划时间间隔
@@ -53,18 +53,31 @@ namespace ego_planner
     planner_manager_->initPlanModules(nh, visualization_);
     planner_manager_->deliverTrajToOptimizer(); // store trajectories
     planner_manager_->setDroneIdtoOpt();
-
+    end_wp <<-9999.0,-9999.0,-9999.0;
+    waypointCallback_status = false;
     /* callback */
     // 规划状态机定时器
     exec_timer_ = nh.createTimer(ros::Duration(0.05), &EGOReplanFSM::execFSMCallback, this);
     // 安全检查定时器
     safety_timer_ = nh.createTimer(ros::Duration(0.1), &EGOReplanFSM::checkCollisionCallback, this);
+    goal_timer_ = nh.createTimer(ros::Duration(0.5), &EGOReplanFSM::GoalCollisionCallback, this);
     // 订阅里程计
     odom_sub_ = nh.subscribe("odom_world", 1, &EGOReplanFSM::odometryCallback, this);
+    
+    // 里程计 回调显式绑定回调队列 
+    ros::SubscribeOptions opt = ros::SubscribeOptions::create<nav_msgs::Odometry>("odom_world",10,boost::bind(&EGOReplanFSM::odometryCallback_opt, this, _1),ros::VoidPtr(),&callback_queue_);
+    sub_callback = nh.subscribe(opt);
+    if (!sub_callback) {
+      printf("Failed to create subscriber!");
+    }
+    ros::AsyncSpinner queue_spinner(1, &callback_queue_);
+    queue_spinner.start();
     // 订阅参数服务器内ego相关的参数
     param_sub_ = nh.subscribe("/uav1/prometheus/param_settings", 1, &EGOReplanFSM::paramCallback, this);
     stop_control_state_sub = nh.subscribe("/uav1/prometheus/stop_control_state",1,&EGOReplanFSM::stop_control_state_cb,this);
-    
+    yaw_local_pub_ = nh.advertise<prometheus_msgs::UAVCommand>("/uav1/prometheus/command", 10);
+    ego_command_pub_ = nh.advertise<std_msgs::Bool>("/uav1/prometheus/command/ego_command_stop_pub", 10);
+    // 订阅其他无人机位置
     // 订阅其他无人机位置
     // ~/swarm_trajs是发送给相邻的无人机，~/broadcast_bspline_from_planner是发送给所有无人机
     // ego默认从0开始，我们默认从1开始，因此这里>2
@@ -78,7 +91,7 @@ namespace ego_planner
 
     broadcast_bspline_pub_ = nh.advertise<traj_utils::Bspline>("planning/broadcast_bspline_from_planner", 10);
     broadcast_bspline_sub_ = nh.subscribe("planning/broadcast_bspline_to_planner", 100, &EGOReplanFSM::BroadcastBsplineCallback, this, ros::TransportHints().tcpNoDelay());
-
+    new_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/uav1/prometheus/motion_planning/goal",5);
 
     bspline_pub_ = nh.advertise<traj_utils::Bspline>("planning/bspline", 10);
     data_disp_pub_ = nh.advertise<traj_utils::DataDisp>("planning/data_display", 100);
@@ -152,10 +165,10 @@ namespace ego_planner
 
   void EGOReplanFSM::planNextWaypoint(const Eigen::Vector3d next_wp)
   {
+    //ego_command_stop_pub(true);
     bool success = false;
     // planGlobalTraj(起始位置\速度\加速度,终点位置\速度\加速度)
     success = planner_manager_->planGlobalTraj(odom_pos_, odom_vel_, Eigen::Vector3d::Zero(), next_wp, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
-
     if (success)
     {
       end_pt_ = next_wp;
@@ -169,24 +182,23 @@ namespace ego_planner
         // 按照step_size_t提取路径点,按照时间分布
         gloabl_traj[i] = planner_manager_->global_data_.global_traj_.evaluate(i * step_size_t);
       }
-
       end_vel_.setZero();
       have_target_ = true;
       have_new_target_ = true;
-
       /*** FSM ***/
       if (exec_state_ == WAIT_TARGET)
         changeFSMExecState(GEN_NEW_TRAJ, "TRIG");
       else
       {
-        while (exec_state_ != EXEC_TRAJ)
+        ros::Time start_time = ros::Time::now();
+        const double timeout_status = 0.5; 
+        while (exec_state_ != EXEC_TRAJ && (ros::Time::now() - start_time).toSec() < timeout_status)
         {
-          ros::spinOnce();
+          //ros::spinOnce();
           ros::Duration(0.001).sleep();
         }
         changeFSMExecState(REPLAN_TRAJ, "TRIG");
       }
-
       // 发布GlobalPath用于显示 "/drone_x_ego_planner_node/global_list" - [GlobalPath,大小,id]
       visualization_->displayGlobalPathList(gloabl_traj, 0.1, 0);
     }
@@ -201,6 +213,41 @@ namespace ego_planner
     have_trigger_ = true;
     cout << "Triggered!" << endl;
     init_pt_ = odom_pos_;
+  }
+
+  void EGOReplanFSM::enu_yaw_pub(const float yaw_p,Eigen::Vector3d init_pt){
+    ego_command_stop_pub(false);//暂停发布command,false：暂停发布，true：开始发布
+    // 通过prometheus command 发布偏航指令
+    prometheus_msgs::UAVCommand yaw_data;
+    yaw_data.header.stamp = ros::Time::now();
+    yaw_data.Agent_CMD = 4;
+    yaw_data.Control_Level = 0;
+    yaw_data.Move_mode = 0;
+    
+    yaw_data.position_ref = {init_pt(0),init_pt(1),init_pt(2)};
+    yaw_data.velocity_ref = {0.0,0.0,0.0};
+    yaw_data.acceleration_ref = {0.0,0.0,0.0};
+    yaw_data.yaw_ref = yaw_p;
+    
+    yaw_data.Yaw_Rate_Mode = false;
+    yaw_data.yaw_rate_ref = 0.0;
+    yaw_data.att_ref = {0.0, 0.0, 0.0, 0.0};
+
+    yaw_data.latitude = 0.0;
+    yaw_data.longitude = 0.0;
+    yaw_data.altitude = 0.0;
+
+    yaw_data.Command_ID = Last_Command_ID + 1;
+    yaw_local_pub_.publish(yaw_data);
+    Last_Command_ID = yaw_data.Command_ID;
+  }
+
+  // 是否发布ego的command
+  void EGOReplanFSM::ego_command_stop_pub(bool msg)
+  {
+    std_msgs::Bool command_stop_flag;
+    command_stop_flag.data = msg;
+    ego_command_pub_.publish(command_stop_flag);
   }
 
   void EGOReplanFSM::waypointCallback(const geometry_msgs::PoseStampedPtr &msg)
@@ -218,17 +265,60 @@ namespace ego_planner
       exec_state_ = WAIT_TARGET;
       return;
     }
-
+    
     callEmergencyStop(odom_pos_);
-    sleep(2.0);
+    sleep(1.0);
 
     init_pt_ = odom_pos_;
 
-    Eigen::Vector3d end_wp(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+    end_wp(0) = msg->pose.position.x;
+    end_wp(1) = msg->pose.position.y;
+    end_wp(2) = msg->pose.position.z;
+    Eigen::Vector3d delta_pos = end_wp - init_pt_;
+    // 计算当前位置的偏航角度
+    tf::Quaternion Q{odom_orient_.x(),odom_orient_.y(),odom_orient_.z(),odom_orient_.w()};
+    tf::Matrix3x3 m(Q);
+    double roll_s, pitch_s, yaw_s;
+    m.getRPY(roll_s, pitch_s, yaw_s);
+    auto publishYaw = [&](double delta_yaw) {
+        target_yaw = std::fmod(delta_yaw + 2*PI, 2*PI); // 规范化角度到[0, 2π)
+        enu_yaw_pub(target_yaw, init_pt_);
+    };
+    double delta_yaw = std::atan2(delta_pos(1),delta_pos(0));// 计算当前位置与期望位置的偏航角度 y/x
+    ros::Time start_time = ros::Time::now();
+    const double timeout = 6.0; // 超时时间 6 秒
+
+    // 等待无人机旋转到目标角度
+    ros::Rate rate(5);
+    while (ros::ok()) {
+
+      publishYaw(delta_yaw);
+      if(callback_queue_.isEmpty()){
+        ROS_INFO("Queue has pending callbacks");
+      }
+      callback_queue_.callAvailable(ros::WallDuration(0.1));
+      tf::Quaternion Q_cur{odom_orient_.x(), odom_orient_.y(), odom_orient_.z(), odom_orient_.w()};// 获取无人机目前的偏航角
+      tf::Matrix3x3 m_cur(Q_cur);
+      double roll_c, pitch_c, yaw_c;
+      m_cur.getRPY(roll_c, pitch_c, yaw_c);
+      double yaw_error = std::abs(std::fmod(yaw_c - delta_yaw + PI, 2 * PI) - PI);// 计算当前偏航角与期望偏航角之间的误差
+      // 计算最短角度差
+      //double yaw_error = std::abs(angles::shortest_angular_distance(yaw_c, delta_yaw));
+      if (yaw_error < 0.15) { 
+          break;
+      }
+      if ((ros::Time::now() - start_time).toSec() > timeout) {
+        ROS_WARN("Yaw alignment timed out. Proceeding to plan trajectory.");
+        break;
+      }
+      // 发布目标点用于显示 - [目标点,黄色,大小,id]
+      // visualization_->displayGoalPoint(end_wp, Eigen::Vector4d(1.0, 1.0, 0.0, 1), 0.2, 1);
+      rate.sleep();
+    }
 
     // 发布目标点用于显示 - [目标点,颜色,大小,id]
     visualization_->displayGoalPoint(end_wp, Eigen::Vector4d(0, 0.5, 0.5, 1), 0.3, 1);
-
+    waypointCallback_status = true;
     planNextWaypoint(end_wp);
   }
 
@@ -249,7 +339,23 @@ namespace ego_planner
 
     have_odom_ = true;
   }
+  void EGOReplanFSM::odometryCallback_opt(const nav_msgs::OdometryConstPtr &msg)
+  {
+    odom_pos_(0) = msg->pose.pose.position.x;
+    odom_pos_(1) = msg->pose.pose.position.y;
+    odom_pos_(2) = msg->pose.pose.position.z;
 
+    odom_vel_(0) = msg->twist.twist.linear.x;
+    odom_vel_(1) = msg->twist.twist.linear.y;
+    odom_vel_(2) = msg->twist.twist.linear.z;
+
+    odom_orient_.w() = msg->pose.pose.orientation.w;
+    odom_orient_.x() = msg->pose.pose.orientation.x;
+    odom_orient_.y() = msg->pose.pose.orientation.y;
+    odom_orient_.z() = msg->pose.pose.orientation.z;
+
+    have_odom_ = true;
+  }
   void EGOReplanFSM::paramCallback(const prometheus_msgs::ParamSettingsConstPtr &msg)
   {
     //std::cout <<"param_settings_name = "<< msg->param_name[0]<<"\t"<<"param_settings_value = "<< msg->param_value[0]<<std::endl;
@@ -684,14 +790,13 @@ namespace ego_planner
 
   bool EGOReplanFSM::planFromCurrentTraj(const int trial_times /*=1*/)
   {
-
     LocalTrajData *info = &planner_manager_->local_data_;
     ros::Time time_now = ros::Time::now();
     double t_cur = (time_now - info->start_time_).toSec();
 
     //cout << "info->velocity_traj_=" << info->velocity_traj_.get_control_points() << endl;
 
-    // 将start_pt改为当前位置?
+    // 将start_pt改为当前位置
     // // // start_pt_ = info->position_traj_.evaluateDeBoorT(t_cur);
     // // // start_vel_ = info->velocity_traj_.evaluateDeBoorT(t_cur);
     // // // start_acc_ = info->acceleration_traj_.evaluateDeBoorT(t_cur);
@@ -700,7 +805,6 @@ namespace ego_planner
     // // // start_acc_.setZero();
     start_acc_ = info->acceleration_traj_.evaluateDeBoorT(t_cur);
     bool success = callReboundReplan(false, false);
-
     if (!success)
     {
       success = callReboundReplan(true, false);
@@ -721,6 +825,36 @@ namespace ego_planner
     }
 
     return true;
+  }
+
+  void EGOReplanFSM::GoalCollisionCallback(const ros::TimerEvent &e) {
+    if (!planner_manager_ || !planner_manager_->grid_map_) {
+      ROS_ERROR("Planner manager or grid map not initialized!");
+      return;
+    }
+
+    if (waypointCallback_status && end_wp.allFinite() &&
+        (end_wp(0) != -9999) && (end_wp(1) != -9999) && (end_wp(2) != -9999)) {
+
+      auto map = planner_manager_->grid_map_;
+      bool occ = map->getInflateOccupancy(end_wp);
+
+      if (occ) {
+        callEmergencyStop(odom_pos_);
+        std::cout << "\033[34m" << "Adjusting target point due to collision..." << "\033[0m" << std::endl;
+        Eigen::Vector3d adjusted_point = map->adjustTargetPointOutsideObstacle(end_wp, odom_pos_);
+        visualization_->displayGoalPoint(adjusted_point, Eigen::Vector4d(0, 0, 1, 1), 0.3, 1);
+      
+        callEmergencyStop(odom_pos_);
+        ros::Duration(1.0).sleep(); // 等待轨迹完全停止
+
+        // 更新目标点
+        end_wp = adjusted_point;
+
+        // 直接调用规划函数
+        planNextWaypoint(end_wp);
+      }
+    }
   }
 
   void EGOReplanFSM::checkCollisionCallback(const ros::TimerEvent &e)
@@ -813,14 +947,10 @@ namespace ego_planner
   {
     // 根据planning_horizen_来确定局部目标点 local_target_pt_,local_target_vel_
     getLocalTarget();
-
     //
     bool plan_and_refine_success =
         planner_manager_->reboundReplan(start_pt_, start_vel_, start_acc_, local_target_pt_, local_target_vel_, (have_new_target_ || flag_use_poly_init), flag_randomPolyTraj);
     have_new_target_ = false;
-
-    // comment
-    // cout << "refine_success=" << plan_and_refine_success << endl;
 
     if (plan_and_refine_success)
     {
@@ -870,7 +1000,8 @@ namespace ego_planner
 
         /* 1. publish traj to traj_server */
         bspline_pub_.publish(bspline);
-
+        ros::Duration(0.1).sleep(); // 延迟 0.1 秒，确保轨迹已发布
+        ego_command_stop_pub(true);
         /* 2. publish traj to the next drone of swarm */
 
         /* 3. publish traj for visualization */

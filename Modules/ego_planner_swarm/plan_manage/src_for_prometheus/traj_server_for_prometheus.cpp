@@ -6,8 +6,10 @@
 #include <prometheus_msgs/UAVCommand.h>
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
-
+#include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 #include "geometry_utils.h"
+#include <tf/tf.h>
 
 // 无人机编号
 int uav_id;
@@ -25,17 +27,20 @@ bool receive_traj_ = false;
 vector<UniformBspline> traj_;
 double traj_duration_;
 ros::Time start_time_;
-int traj_id_;
-
+int traj_id_,action_status_data;
+std_msgs::Bool Command_status,ego_command_status;
 // yaw control
-double last_yaw_, last_yaw_dot_;
+double last_yaw_, last_yaw_dot_,current_yaw_;
 double time_forward_;
 
 void pub_prometheus_command(quadrotor_msgs::PositionCommand ego_traj_cmd);
 void bsplineCallback(traj_utils::BsplineConstPtr msg);
+//void prometheus_command_subCallback(const std_msgs::BoolConstPtr &msg);
 void cmdCallback(const ros::TimerEvent &e);
+//void action_status_subcallback(const std_msgs::Int32::ConstPtr &msg);
 std::pair<double, double> calculate_yaw(double t_cur, Eigen::Vector3d &pos, ros::Time &time_now, ros::Time &time_last);
-
+void OdomCallback(const nav_msgs::OdometryConstPtr &msg);
+void ego_command_subCallback(const std_msgs::BoolConstPtr &msg);
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "traj_server_for_prometheus");
@@ -51,6 +56,12 @@ int main(int argc, char **argv)
   // [订阅] EGO规划结果
   ros::Subscriber bspline_sub = nh.subscribe(uav_name +"/planning/bspline", 10, bsplineCallback);
 
+  // [订阅] Command是否应该切换
+  //ros::Subscriber prometheus_command_sub = nh.subscribe<std_msgs::Bool>(uav_name +"/prometheus/command/prometheus_command_stop_pub", 10, prometheus_command_subCallback);
+  // ros::Subscriber action_status_sub_ = nh.subscribe<std_msgs::Int32>("/uav1/prometheus/trigger", 10, action_status_subcallback);
+  ros::Subscriber ego_command_sub = nh.subscribe<std_msgs::Bool>("/uav1/prometheus/command/ego_command_stop_pub", 10, ego_command_subCallback);
+  // [订阅] 无人机Odom数据
+  ros::Subscriber odom_sub = nh.subscribe(uav_name + "/prometheus/odom", 10, OdomCallback);
   // [发布] EGO规划结果
   pos_cmd_pub = nh.advertise<quadrotor_msgs::PositionCommand>(uav_name + "/position_cmd", 50);
 
@@ -107,16 +118,18 @@ void pub_prometheus_command(quadrotor_msgs::PositionCommand ego_traj_cmd)
   uav_command.acceleration_ref[2] = ego_traj_cmd.acceleration.z;
   uav_command.yaw_ref = geometry_utils::normalize_angle(ego_traj_cmd.yaw);
   // uav_command.yaw_rate_ref         = ego_traj_cmd.yaw_dot;
-
-  uav_cmd_pub.publish(uav_command);
+  if(ego_command_status.data){
+    uav_cmd_pub.publish(uav_command);
+  }
 }
 
 void cmdCallback(const ros::TimerEvent &e)
 {
   /* no publishing before receive traj_ */
-  if (!receive_traj_)
+  if (!receive_traj_){
+    last_yaw_ = current_yaw_;
     return;
-
+  }
   ros::Time time_now = ros::Time::now();
   double t_cur = (time_now - start_time_).toSec();
 
@@ -144,7 +157,7 @@ void cmdCallback(const ros::TimerEvent &e)
     vel.setZero();
     acc.setZero();
 
-    yaw_yawdot.first = last_yaw_;
+    yaw_yawdot.first = current_yaw_;
     yaw_yawdot.second = 0;
 
     pos_f = pos;
@@ -178,7 +191,6 @@ void cmdCallback(const ros::TimerEvent &e)
   last_yaw_ = cmd.yaw;
 
   pos_cmd_pub.publish(cmd);
-
   pub_prometheus_command(cmd);
 }
 
@@ -211,12 +223,18 @@ void bsplineCallback(traj_utils::BsplineConstPtr msg)
   traj_.push_back(pos_traj);
   traj_.push_back(traj_[0].getDerivative());
   traj_.push_back(traj_[1].getDerivative());
-
+  last_yaw_ = current_yaw_; 
   traj_duration_ = traj_[0].getTimeSum();
-
   receive_traj_ = true;
 }
 
+// void prometheus_command_subCallback(const std_msgs::BoolConstPtr &msg)
+// {
+//   Command_status.data = msg->data;
+// }
+// void action_status_subcallback(const std_msgs::Int32::ConstPtr &msg){
+//   action_status_data = msg->data;
+// }
 std::pair<double, double> calculate_yaw(double t_cur, Eigen::Vector3d &pos, ros::Time &time_now, ros::Time &time_last)
 {
   constexpr double PI = 3.1415926;
@@ -307,4 +325,21 @@ std::pair<double, double> calculate_yaw(double t_cur, Eigen::Vector3d &pos, ros:
   yaw_yawdot.second = yawdot;
 
   return yaw_yawdot;
+}
+void OdomCallback(const nav_msgs::OdometryConstPtr &msg){
+  tf::Quaternion quat;
+  tf::quaternionMsgToTF(msg->pose.pose.orientation, quat);
+  double roll, pitch, yaw;//定义存储roll,pitch and yaw的容器
+  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw); //进行转换
+  current_yaw_ = yaw;
+  static bool first_time = true;
+  if(first_time){
+    last_yaw_ = current_yaw_;
+    first_time = false;
+  }
+  //std::cout<<"current rpy:"<<roll<<", "<<pitch<<", "<<yaw<<std::endl;
+}
+void ego_command_subCallback(const std_msgs::BoolConstPtr &msg)
+{
+  ego_command_status.data = msg->data;
 }

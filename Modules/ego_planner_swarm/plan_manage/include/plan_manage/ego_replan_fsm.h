@@ -21,7 +21,12 @@
 #include <plan_manage/planner_manager.h>
 #include <traj_utils/planning_visualization.h>
 #include <prometheus_msgs/ParamSettings.h>
+#include <prometheus_msgs/UAVCommand.h>
 #include <std_msgs/Bool.h>
+#include <unordered_set>
+#include <angles/angles.h> 
+#include <ros/callback_queue.h>
+#define PI 3.14159265358979323846
 using std::vector;
 
 namespace ego_planner
@@ -62,12 +67,13 @@ namespace ego_planner
     double no_replan_thresh_, replan_thresh_;
     double waypoints_[10][3];
 
-    int waypoint_num_, wp_id_;
-    double planning_horizen_, planning_horizen_time_;
+    int waypoint_num_, wp_id_,Last_Command_ID;
+    double planning_horizen_, planning_horizen_time_,target_yaw;
     double emergency_time_;
     bool flag_realworld_experiment_;
     bool enable_fail_safe_;
-
+    bool waypointCallback_status;
+    bool goal_flag_;// 发布终点的标志位
     /* planning data */
     bool have_trigger_, have_target_, have_odom_, have_new_target_, have_recv_pre_agent_;
     FSM_EXEC_STATE exec_state_;
@@ -81,22 +87,24 @@ namespace ego_planner
     Eigen::Vector3d local_target_pt_, local_target_vel_;                     // local target state
     std::vector<Eigen::Vector3d> wps_;
     int current_wp_;
-
+    Eigen::Vector3d end_wp;
     bool flag_escape_emergency_,has_last_bspline_;
     std_msgs::Bool stop_control_state;
     traj_utils::Bspline last_bspline_;
     /* ROS utils */
     ros::NodeHandle node_;
-    ros::Timer exec_timer_, safety_timer_;
-    ros::Subscriber waypoint_sub_, odom_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_ ,param_sub_,stop_control_state_sub;
-    ros::Publisher replan_pub_, new_pub_, bspline_pub_, data_disp_pub_, swarm_trajs_pub_, broadcast_bspline_pub_;
+    ros::CallbackQueue callback_queue_;
+    ros::Timer exec_timer_, safety_timer_,goal_timer_;
+    ros::Subscriber waypoint_sub_, odom_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_ ,param_sub_,stop_control_state_sub,sub_callback;
+    ros::Publisher replan_pub_, new_pub_, bspline_pub_, data_disp_pub_, swarm_trajs_pub_, broadcast_bspline_pub_,new_goal_pub_,yaw_local_pub_,ego_command_pub_;
 
     /* helper functions */
     bool callReboundReplan(bool flag_use_poly_init, bool flag_randomPolyTraj); // front-end and back-end method
     bool callEmergencyStop(Eigen::Vector3d stop_pos);                          // front-end and back-end method
     bool planFromGlobalTraj(const int trial_times = 1);
     bool planFromCurrentTraj(const int trial_times = 1);
-
+    void enu_yaw_pub(const float yaw_p,Eigen::Vector3d init_pt);
+    void ego_command_stop_pub(bool flag_stop);
     /* return value: std::pair< Times of the same state be continuously called, current continuously called state > */
     void changeFSMExecState(FSM_EXEC_STATE new_state, string pos_call);
     std::pair<int, EGOReplanFSM::FSM_EXEC_STATE> timesOfConsecutiveStateCalls();
@@ -109,9 +117,11 @@ namespace ego_planner
     /* ROS functions */
     void execFSMCallback(const ros::TimerEvent &e);
     void checkCollisionCallback(const ros::TimerEvent &e);
+    void GoalCollisionCallback(const ros::TimerEvent &e);
     void waypointCallback(const geometry_msgs::PoseStampedPtr &msg);
     void triggerCallback(const geometry_msgs::PoseStampedPtr &msg);
     void odometryCallback(const nav_msgs::OdometryConstPtr &msg);
+    void odometryCallback_opt(const nav_msgs::OdometryConstPtr &msg);
     void swarmTrajsCallback(const traj_utils::MultiBsplinesPtr &msg);
     void BroadcastBsplineCallback(const traj_utils::BsplinePtr &msg);
     void paramCallback(const prometheus_msgs::ParamSettingsConstPtr &msg);

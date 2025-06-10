@@ -59,7 +59,6 @@ namespace ego_planner
   // SECTION rebond replanning
   void EGOPlannerManager::manage_param_Callback(const prometheus_msgs::ParamSettingsConstPtr &msg)
   {
-    //std::cout <<"param_settings_name = "<< msg->param_name[0]<<"\t"<<"param_settings_value = "<< msg->param_value[0]<<std::endl;
     pre_manage_params_compare(manage_params_compare, manage_params_compare_all);
     // 遍历 param_name 和 param_value，更新参数
     for (size_t i = 0; i < manage_params_compare_all.size(); ++i) 
@@ -99,7 +98,7 @@ namespace ego_planner
     {
       cout << "The start point is too Close to goal" << endl;
       continous_failures_count_++;
-      return true;
+      return false;
     }
 
     bspline_optimizer_->setLocalTargetPt(local_target_pt);
@@ -149,6 +148,9 @@ namespace ego_planner
         double t;
         bool flag_too_far;
         ts *= 1.5; // ts will be divided by 1.5 in the next
+        // double total_length = gl_traj.getLength();// 获取轨迹长度
+        // int min_pts = std::min(7, static_cast<int>(total_length/(pp_.ctrl_pt_dist*0.5)) + 1);
+        // min_pts = std::max(2, min_pts);
         do
         {
           ts /= 1.5;
@@ -218,25 +220,67 @@ namespace ego_planner
         double sample_length = 0;
         double cps_dist = pp_.ctrl_pt_dist * 1.5; // cps_dist will be divided by 1.5 in the next
         size_t id = 0;
-        do
-        {
-          cps_dist /= 1.5;
-          point_set.clear();
-          sample_length = 0;
-          id = 0;
-          while ((id <= pseudo_arc_length.size() - 2) && sample_length <= pseudo_arc_length.back())
-          {
-            if (sample_length >= pseudo_arc_length[id] && sample_length < pseudo_arc_length[id + 1])
-            {
-              point_set.push_back((sample_length - pseudo_arc_length[id]) / (pseudo_arc_length[id + 1] - pseudo_arc_length[id]) * segment_point[id + 1] +
-                                  (pseudo_arc_length[id + 1] - sample_length) / (pseudo_arc_length[id + 1] - pseudo_arc_length[id]) * segment_point[id]);
-              sample_length += cps_dist;
+
+        // 阈值定义
+        const double MIN_TOTAL_LENGTH = 0.2;  // 轨迹总长度阈值
+        const double MIN_CPS_DIST = 0.05;     // 最小采样间隔
+        const int MAX_ITERATIONS = 20;        // 最大尝试次数
+
+        point_set.clear();
+
+        // 起点与目标距离很近
+        double total_length = pseudo_arc_length.empty() ? 0 : pseudo_arc_length.back();
+        if (total_length < MIN_TOTAL_LENGTH) {
+            // 直接填充7个目标点
+            point_set.resize(7, local_target_pt);
+            ROS_WARN("Generated trajectory too short, filled with target points.");
+        } 
+        else {
+          int iteration = 0;
+          bool success = false;
+          do{
+            point_set.clear();
+            sample_length = 0;
+            id = 0;
+            // 按当前间隔采样
+            while (id <= pseudo_arc_length.size() - 2 && sample_length <= pseudo_arc_length.back()) {
+                if (sample_length >= pseudo_arc_length[id] && sample_length < pseudo_arc_length[id + 1]) {
+                    // 线性插值计算采样点
+                    point_set.push_back((sample_length - pseudo_arc_length[id]) / (pseudo_arc_length[id + 1] - pseudo_arc_length[id]) * segment_point[id + 1] +
+                                (pseudo_arc_length[id + 1] - sample_length) / (pseudo_arc_length[id + 1] - pseudo_arc_length[id]) * segment_point[id]);
+                    sample_length += cps_dist;
+                } else {
+                    id++;
+                }
             }
-            else
-              id++;
-          }
-          point_set.push_back(local_target_pt);
-        } while (point_set.size() < 7); // If the start point is very close to end point, this will help
+            
+            // 总是包含目标点
+            if (!segment_point.empty()) {
+                point_set.push_back(local_target_pt);
+            }
+
+            // 检查结果
+            if (point_set.size() >= 7) {
+                success = true;
+                break;
+            } 
+            else {
+              cps_dist /= 1.5;  // 缩小采样间隔
+              iteration++;
+              
+              // 防止无限循环
+              if (cps_dist < MIN_CPS_DIST || iteration > MAX_ITERATIONS){
+                  // 强制填充剩余点
+                  while (point_set.size() < 7) {
+                      point_set.push_back(local_target_pt);
+                  }
+                  ROS_WARN("Failed to generate enough points, filled with target points.");
+                  success = true;
+                  break;
+              }
+            }
+          } while (!success);
+        }
 
         start_end_derivatives.push_back(local_data_.velocity_traj_.evaluateDeBoorT(t_cur));
         start_end_derivatives.push_back(local_target_vel);

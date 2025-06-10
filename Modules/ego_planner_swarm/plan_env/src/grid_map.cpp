@@ -1350,3 +1350,70 @@ void GridMap::depthOdomCallback(const sensor_msgs::ImageConstPtr &img,
   // reset depth lost flag
   if(md_.flag_depth_odom_timeout_ == true) md_.flag_depth_odom_timeout_ = false;
 }
+// 把在障碍物内部的目标点移出来
+Eigen::Vector3d GridMap::adjustTargetPointOutsideObstacle(Eigen::Vector3d& end_wp, 
+                                                         Eigen::Vector3d& uav_pos) 
+{
+  if (std::isnan(end_wp.x()) || std::isnan(end_wp.y()) || std::isnan(end_wp.z())) {
+      ROS_ERROR("Invalid position in movePointOutOfObstacle: [%f, %f, %f]", 
+                end_wp.x(), end_wp.y(), end_wp.z());
+      return end_wp;
+  }
+
+  Eigen::Vector3i start_idx;
+  posToIndex(end_wp, start_idx);
+  boundIndex(start_idx);
+
+  std::queue<Eigen::Vector3i> queue;
+  std::unordered_set<int> visited;
+  const int start_addr = toAddress(start_idx);
+  visited.insert(start_addr);
+  queue.push(start_idx);
+
+  // 设置搜索半径和最近点
+  const double max_search_dist = 1.0; // 最大搜索距离（单位：米）
+  double min_dist = std::numeric_limits<double>::max();// 返回double对应的最大值
+  Eigen::Vector3d adjusted_point = end_wp;
+
+  while (!queue.empty()) {
+    Eigen::Vector3i current_idx = queue.front();
+    queue.pop();
+    // 循环搜素周围的26个节点
+    for (int dx = -1; dx <= 1; ++dx) {
+      for (int dy = -1; dy <= 1; ++dy) {
+        for (int dz = -1; dz <= 1; ++dz) {
+          if (dx == 0 && dy == 0 && dz == 0) continue;
+
+          Eigen::Vector3i neighbor_idx = current_idx + Eigen::Vector3i(dx, dy, dz);
+          if (!isInMap(neighbor_idx)) continue;
+
+          int addr = toAddress(neighbor_idx);
+          if (visited.count(addr)) continue;
+          visited.insert(addr);
+
+          Eigen::Vector3d current_pos;
+          indexToPos(neighbor_idx, current_pos);
+
+          double dist_to_start = (current_pos - end_wp).norm();
+          if (dist_to_start > max_search_dist) continue;
+
+          if (getInflateOccupancy(current_pos) == 0) {
+              double dist_to_uav = (current_pos - uav_pos).norm();
+              if (dist_to_uav < min_dist) {
+                  min_dist = dist_to_uav;
+                  adjusted_point = current_pos;
+              }
+          }
+          queue.push(neighbor_idx);
+        }
+      }
+    }
+  }
+
+  std::cout << "Adjusted point: [" 
+            << adjusted_point.x() << ", " 
+            << adjusted_point.y() << ", " 
+            << adjusted_point.z() << "]" << std::endl;
+
+  return adjusted_point;
+}

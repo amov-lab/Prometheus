@@ -25,7 +25,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/sync_policies/exact_time.h>
 #include <message_filters/time_synchronizer.h>
-
+#include <unordered_set>
 #include <plan_env/raycast.h>
 #include "prometheus_msgs/ParamSettings.h"
 #define logit(x) (log((x) / (1 - (x))))
@@ -162,7 +162,7 @@ public:
   // occupancy map management
   void resetBuffer();
   void resetBuffer(Eigen::Vector3d min, Eigen::Vector3d max);
-
+  Eigen::Vector3d adjustTargetPointOutsideObstacle(Eigen::Vector3d& target_pos, Eigen::Vector3d& uav_pos);
   inline void posToIndex(const Eigen::Vector3d& pos, Eigen::Vector3i& id);
   inline void indexToPos(const Eigen::Vector3i& id, Eigen::Vector3d& pos);
   inline int toAddress(const Eigen::Vector3i& id);
