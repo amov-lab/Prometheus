@@ -25,3 +25,6 @@ ROI[] rois
 
 ##focusing solely on tracking , without considering detection
 int32 no_track_frame_count
+
+## 是否处于跟踪状态，0：否，1：是。当状态为1，targets为空表示丢失；targets不为空表示正常跟踪。
+bool tracking_state
