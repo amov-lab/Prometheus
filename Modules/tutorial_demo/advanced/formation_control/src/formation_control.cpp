@@ -12,6 +12,7 @@
 #include <prometheus_msgs/UAVState.h>
 #include <prometheus_msgs/UAVSetup.h>
 #include <prometheus_msgs/GPSData.h>
+#include <cmath>
 
 prometheus_msgs::GPSData origin_gps;
 
@@ -124,7 +125,7 @@ int main(int argc, char** argv)
     n.param<int>("formation_size", formation_size, 1);
 
     int formation_shape;
-    Eigen::Vector3d leader_pos;
+    Eigen::Vector3d leader_pos = Eigen::Vector3d::Zero();
     Eigen::MatrixXf separation = getFormationSeparation(0, formation_size, agent_num);
 
     ros::Publisher uav_command_pub[agent_num];
@@ -179,9 +180,10 @@ int main(int argc, char** argv)
             uav_command.position_ref[0] = leader_pos[0] + separation(i,0);
             uav_command.position_ref[1] = leader_pos[1] + separation(i,1);
             uav_command.position_ref[2] = leader_pos[2] + separation(i,2);
-            if(uav_command.position_ref[2] < 1)
+
+            if (!std::isfinite(uav_command.position_ref[2]) || uav_command.position_ref[2] < 1.0)
             {
-                uav_command.position_ref[2] = 1;
+                uav_command.position_ref[2] = 1.0; // 处理inf和小于1的情况
             }
 
             uav_command_pub[i].publish(uav_command); 

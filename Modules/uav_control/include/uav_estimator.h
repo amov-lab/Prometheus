@@ -45,7 +45,7 @@ using namespace std;
 // 宏定义
 #define TRA_WINDOW 40                // 发布轨迹长度
 #define MOCAP_TIMEOUT 0.35                 
-#define GAZEBO_TIMEOUT 0.1                    
+#define GAZEBO_TIMEOUT 1.1                    
 #define T265_TIMEOUT 0.3
 #define VIOBOT_TIMEOUT 0.3
 #define MID360_TIMEOUT 1.0
