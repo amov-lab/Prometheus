@@ -1911,6 +1911,28 @@ void UAV_controller::reboot_PX4()
         sleep(3);
         send_serial_control("ekf2 start");
     }
+
+
+    // 将机载电脑时间同步到飞控
+    // 获取当前Unix时间戳（秒级）
+    const auto now = std::chrono::system_clock::now();
+    const uint64_t timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        now.time_since_epoch()
+    ).count();
+
+    // 北京时间偏移（UTC+8 -> 增加8小时 = 28800秒）
+    constexpr uint64_t beijing_time_offset = 8 * 3600; 
+    const uint64_t adjusted_timestamp = timestamp + beijing_time_offset;
+
+    // 构造PX4系统时间设置命令字符串
+    const std::string cmd = "system_time set " + std::to_string(adjusted_timestamp);
+    
+    // 调试输出（显示实际发送的命令）
+    std::cout << "[Time Sync] Sent command: \"" << cmd << "\"" << std::endl;
+
+    // 通过串口发送命令
+    send_serial_control(cmd.c_str());
+
 }
 
 // 向地面发送反馈信息,如果重复,将不会发送
