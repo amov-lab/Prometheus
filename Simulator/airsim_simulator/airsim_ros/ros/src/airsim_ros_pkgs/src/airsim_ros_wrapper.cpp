@@ -669,8 +669,8 @@ void AirsimROSWrapper::gimbal_angle_euler_cmd_cb(const airsim_ros_pkgs::GimbalAn
 
                 tf2::Quaternion quat_control_cmd;
                 quat_control_cmd.setRPY(math_common::deg2rad(gimbal_angle_euler_cmd_msg.roll),
-                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.pitch),
-                                        math_common::deg2rad(gimbal_angle_euler_cmd_msg.yaw));
+                                        math_common::deg2rad(-gimbal_angle_euler_cmd_msg.pitch),
+                                        math_common::deg2rad(-gimbal_angle_euler_cmd_msg.yaw));
                 quat_control_cmd.normalize();
                 gimbal_cmd_.target_quat = get_airlib_quat(quat_control_cmd);
                 gimbal_cmd_.camera_name = gimbal_angle_euler_cmd_msg.camera_name;
@@ -1817,8 +1817,8 @@ airsim_ros_pkgs::GimbalState AirsimROSWrapper::generate_cam_gimbal_info(const ms
     cam_gimbal_info_msg.fov[1] = 60.0f; // FOV-Y方向
 
     cam_gimbal_info_msg.angleRT[0] = std::round(roll * 1000.0f) / 1000.0f; 
-    cam_gimbal_info_msg.angleRT[1] = std::round(pitch * 1000.0f) / 1000.0f;
-    cam_gimbal_info_msg.angleRT[2] = std::round(yaw * 1000.0f) / 1000.0f;
+    cam_gimbal_info_msg.angleRT[1] = std::round(-pitch * 1000.0f) / 1000.0f;
+    cam_gimbal_info_msg.angleRT[2] = std::round(-yaw * 1000.0f) / 1000.0f;
 
     return cam_gimbal_info_msg;
 }
