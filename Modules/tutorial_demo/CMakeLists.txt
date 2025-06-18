@@ -105,6 +105,10 @@ target_link_libraries(prosim_yolov5_tracking ${catkin_LIBRARIES} ${OpenCV_LIBRAR
 
 add_executable(prosim_aruco_tracking advanced/aruco_tracking/src/prosim_aruco_tracking.cpp)
 target_link_libraries(prosim_aruco_tracking ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(prosim_gimbal_yolov5_tracking advanced/gimbal_yolov5_tracking/src/prosim_gimbal_yolov5_tracking.cpp)
+target_link_libraries(prosim_gimbal_yolov5_tracking ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} yaml-cpp)
+
 #############
 ## Install ##
 #############

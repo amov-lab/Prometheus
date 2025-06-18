@@ -1,0 +1,20 @@
+<launch>
+    <node pkg="prometheus_demo" type="prosim_gimbal_yolov5_tracking" name="prosim_gimbal_yolov5_tracking" output="screen">
+		<!-- G1：kp_x、kp_gimbal 推荐设置为 5.0/跟踪距离(tracking_distance) -->
+		<param name="uav_id" value="1" />
+		<!-- 根据百分比面积变换调整，前进速度 -->
+            	<param name="kp_x" type="double" value="0.3" />
+            	<!-- 根据pitch误差调整高度 -->
+            	<param name="kp_z" type="double" value="0.1" />
+            	<!-- 更具yaw误差调整无人机航向角 -->
+            	<param name="kp_gimbal" type="double" value="1.0" />
+            	<!-- 最大X轴速度 -->
+            	<param name="max_velocity" type="double" value="2.5" />
+            	<!-- 最大航向角速率（角度） -->
+            	<param name="max_yaw_rate" type="double" value="40" />
+            	<!-- 跟踪距离 -->
+            	<param name="tracking_distance" type="double" value="5.0" />	
+	</node>
+</launch>
+
+

@@ -112,3 +112,11 @@ load_functional_script:
     node_name: ""  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
     detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
     flag: 1 # 启动位置
+  btn15:
+    name: "吊舱目标点击跟踪"
+    cmd: "/home/amov/Prometheus/Scripts/simulation/tutorial_demo/gimbal_yolov5_tracking/gimbal_yolov5_tracking_prosim.sh"
+    close_cmd: ""
+    mode: 2
+    node_name: ""  # 当mode为2时，在启动的时候会去检测是否存在该节点，不存在则启动，存在则会提示用户先关闭在启动
+    detection_cmd: "echo true"  # 当mode为3时，在启动的时候会去运行该检测命令，存在则返回true，不存在返回false，且会提示用户先关闭在启动
+    flag: 1 # 启动位置
