@@ -18,3 +18,5 @@ float32[3] angleRT
 float32[3] angleRTRate
 # gimbal setted max angle rate <deg/s> <if gimbal supported>
 float32[3] angleRateSet
+# gimbal follow the track result; 0: false, 1:true 
+uint8 gimbalFollowTrackResMode
