@@ -22,6 +22,7 @@
 #include <traj_utils/planning_visualization.h>
 #include <prometheus_msgs/ParamSettings.h>
 #include <prometheus_msgs/UAVCommand.h>
+#include <prometheus_msgs/UAVControlState.h>
 #include <std_msgs/Bool.h>
 #include <unordered_set>
 #include <angles/angles.h> 
@@ -55,7 +56,7 @@ namespace ego_planner
       PRESET_TARGET = 2,
       REFENCE_PATH = 3
     };
-
+    prometheus_msgs::UAVControlState last_control_status;//无人机控制状态
     /* planning utils */
     EGOPlannerManager::Ptr planner_manager_;
     PlanningVisualization::Ptr visualization_;
@@ -74,6 +75,11 @@ namespace ego_planner
     bool enable_fail_safe_;
     bool waypointCallback_status;
     bool goal_flag_;// 发布终点的标志位
+    bool first_enter_command;  // 首次进入COMMAND标志
+    int previous_control_state;  // 上一次控制状态（初始化为无效值）
+    bool command_mode_active; // 当前是否在COMMAND模式
+    bool uav_status_change; // 遥控器控制状态是否改变
+    traj_utils::Bspline bspline;
     /* planning data */
     bool have_trigger_, have_target_, have_odom_, have_new_target_, have_recv_pre_agent_;
     FSM_EXEC_STATE exec_state_;
@@ -95,7 +101,7 @@ namespace ego_planner
     ros::NodeHandle node_;
     ros::CallbackQueue callback_queue_;
     ros::Timer exec_timer_, safety_timer_,goal_timer_;
-    ros::Subscriber waypoint_sub_, odom_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_ ,param_sub_,stop_control_state_sub,sub_callback;
+    ros::Subscriber waypoint_sub_, odom_sub_, swarm_trajs_sub_, broadcast_bspline_sub_, trigger_sub_ ,param_sub_,stop_control_state_sub,sub_callback,control_state_sub_;
     ros::Publisher replan_pub_, new_pub_, bspline_pub_, data_disp_pub_, swarm_trajs_pub_, broadcast_bspline_pub_,new_goal_pub_,yaw_local_pub_,ego_command_pub_;
 
     /* helper functions */
@@ -105,6 +111,7 @@ namespace ego_planner
     bool planFromCurrentTraj(const int trial_times = 1);
     void enu_yaw_pub(const float yaw_p,Eigen::Vector3d init_pt);
     void ego_command_stop_pub(bool flag_stop);
+    void uav_control_state_cb(const prometheus_msgs::UAVControlStatePtr &msg);
     /* return value: std::pair< Times of the same state be continuously called, current continuously called state > */
     void changeFSMExecState(FSM_EXEC_STATE new_state, string pos_call);
     std::pair<int, EGOReplanFSM::FSM_EXEC_STATE> timesOfConsecutiveStateCalls();
@@ -113,7 +120,7 @@ namespace ego_planner
     void readGivenWps();
     void planNextWaypoint(const Eigen::Vector3d next_wp);
     void getLocalTarget();
-
+    void stop_planning_and_clear_path();// 停止规划，清空轨迹
     /* ROS functions */
     void execFSMCallback(const ros::TimerEvent &e);
     void checkCollisionCallback(const ros::TimerEvent &e);

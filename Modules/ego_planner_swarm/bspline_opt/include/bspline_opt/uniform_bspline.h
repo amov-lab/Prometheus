@@ -34,7 +34,7 @@ namespace ego_planner
     ~UniformBspline();
 
     Eigen::MatrixXd get_control_points(void) { return control_points_; }
-
+    Eigen::MatrixXd ClearControlPoint() { return control_points_ = Eigen::MatrixXd(); }// 清除控制点
     // initialize as an uniform B-spline
     void setUniformBspline(const Eigen::MatrixXd &points, const int &order, const double &interval);
 

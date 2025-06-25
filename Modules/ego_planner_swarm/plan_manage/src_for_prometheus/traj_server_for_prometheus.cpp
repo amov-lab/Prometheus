@@ -4,6 +4,7 @@
 #include "traj_utils/Bspline.h"
 #include "quadrotor_msgs/PositionCommand.h"
 #include <prometheus_msgs/UAVCommand.h>
+#include <prometheus_msgs/UAVControlState.h>
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
 #include <std_msgs/Bool.h>
@@ -28,11 +29,13 @@ vector<UniformBspline> traj_;
 double traj_duration_;
 ros::Time start_time_;
 int traj_id_,action_status_data;
+int new_state;// 遥控器状态
+bool stop_bspline; 
 std_msgs::Bool Command_status,ego_command_status;
 // yaw control
 double last_yaw_, last_yaw_dot_,current_yaw_;
 double time_forward_;
-
+nav_msgs::Odometry uav_odom;
 void pub_prometheus_command(quadrotor_msgs::PositionCommand ego_traj_cmd);
 void bsplineCallback(traj_utils::BsplineConstPtr msg);
 //void prometheus_command_subCallback(const std_msgs::BoolConstPtr &msg);
@@ -41,6 +44,7 @@ void cmdCallback(const ros::TimerEvent &e);
 std::pair<double, double> calculate_yaw(double t_cur, Eigen::Vector3d &pos, ros::Time &time_now, ros::Time &time_last);
 void OdomCallback(const nav_msgs::OdometryConstPtr &msg);
 void ego_command_subCallback(const std_msgs::BoolConstPtr &msg);
+void uav_control_state_cb(const prometheus_msgs::UAVControlStatePtr &msg);
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "traj_server_for_prometheus");
@@ -56,9 +60,8 @@ int main(int argc, char **argv)
   // [订阅] EGO规划结果
   ros::Subscriber bspline_sub = nh.subscribe(uav_name +"/planning/bspline", 10, bsplineCallback);
 
-  // [订阅] Command是否应该切换
-  //ros::Subscriber prometheus_command_sub = nh.subscribe<std_msgs::Bool>(uav_name +"/prometheus/command/prometheus_command_stop_pub", 10, prometheus_command_subCallback);
-  // ros::Subscriber action_status_sub_ = nh.subscribe<std_msgs::Int32>("/uav1/prometheus/trigger", 10, action_status_subcallback);
+  // [订阅] Command是否切换
+  ros::Subscriber control_state_sub_ = nh.subscribe("/uav1/prometheus/control_state", 1,uav_control_state_cb);
   ros::Subscriber ego_command_sub = nh.subscribe<std_msgs::Bool>("/uav1/prometheus/command/ego_command_stop_pub", 10, ego_command_subCallback);
   // [订阅] 无人机Odom数据
   ros::Subscriber odom_sub = nh.subscribe(uav_name + "/prometheus/odom", 10, OdomCallback);
@@ -90,13 +93,33 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
+void uav_control_state_cb(const prometheus_msgs::UAVControlStatePtr &msg)
+{
+  // 保存新状态值
+  new_state = msg->control_state;
+  if(new_state != 2){
+    stop_bspline = true;
+  }
+}
 void pub_prometheus_command(quadrotor_msgs::PositionCommand ego_traj_cmd)
 {
   prometheus_msgs::UAVCommand uav_command;
   uav_command.header.stamp = ros::Time::now();
   uav_command.Agent_CMD = prometheus_msgs::UAVCommand::Move;
   uav_command.Command_ID = uav_command.Command_ID + 1;
+  
+  if(stop_bspline){
+    uav_command.position_ref[0] = uav_odom.pose.pose.position.x;
+    uav_command.position_ref[1] = uav_odom.pose.pose.position.y;
+    uav_command.position_ref[2] = uav_odom.pose.pose.position.z;
+    uav_command.velocity_ref[0] = 0;
+    uav_command.velocity_ref[1] = 0;
+    uav_command.velocity_ref[2] = 0;
+    uav_command.acceleration_ref[0] = 0;
+    uav_command.acceleration_ref[1] = 0;
+    uav_command.acceleration_ref[2] = 0;
+  }
+
   if (control_flag == 0)
   {
     // 轨迹追踪
@@ -226,6 +249,7 @@ void bsplineCallback(traj_utils::BsplineConstPtr msg)
   last_yaw_ = current_yaw_; 
   traj_duration_ = traj_[0].getTimeSum();
   receive_traj_ = true;
+
 }
 
 // void prometheus_command_subCallback(const std_msgs::BoolConstPtr &msg)
@@ -327,6 +351,7 @@ std::pair<double, double> calculate_yaw(double t_cur, Eigen::Vector3d &pos, ros:
   return yaw_yawdot;
 }
 void OdomCallback(const nav_msgs::OdometryConstPtr &msg){
+  uav_odom = *msg;
   tf::Quaternion quat;
   tf::quaternionMsgToTF(msg->pose.pose.orientation, quat);
   double roll, pitch, yaw;//定义存储roll,pitch and yaw的容器
