@@ -653,7 +653,7 @@ void UAVBasic::loadCmdPub(std::string cmd)
     
                 if (start != std::string::npos && end != std::string::npos) {
                     std::string btn_name = pair.first.substr(start, end - start);
-                    std::unordered_map<std::string, std::string> btns = p.getParams("/communication_bridge/load_functional_script/" + btn_name);
+                    std::unordered_map<std::string, std::string> btns = p.getParams("/communication_bridge/load_functional_script/" + btn_name + "/");
                     for (const auto &btn : btns)
                     {
                         if(btn.first.find("/close_cmd") != std::string::npos){
