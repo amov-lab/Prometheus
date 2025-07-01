@@ -183,7 +183,7 @@ int main(int argc, char **argv)
     // 获取 无人机ENU下的位置
     ros::Subscriber curr_pos_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(uav_id) + "/prometheus/state", 10, droneStateCb);
     // 获取视觉反馈
-    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::TargetsInFrame>("/uav" + std::to_string(uav_id) + "/spirecv/prosim_aruco_detection_with_d435i", 10, VisionCb);
+    ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::TargetsInFrame>("/uav" + std::to_string(uav_id) + "/spirecv/target", 10, VisionCb);
     // 【发布】发送给prometheus_uav_control的命令
     ros::Publisher command_pub = nh.advertise<prometheus_msgs::UAVCommand>("/uav" + std::to_string(uav_id) + "/prometheus/command", 10 );
     // 获取遥控器状态
