@@ -884,12 +884,18 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
                 if(this->uav_){
                     this->uav_->loadCmdPub(mode_selection.cmd.c_str());
                 }
+                if(this->ugv_){
+                    system(mode_selection.cmd.c_str());
+                }
             }
         }
         else
         {
             if(this->uav_){
                 this->uav_->loadCmdPub(mode_selection.cmd.c_str());
+            }
+            if(this->ugv_){
+                system(mode_selection.cmd.c_str());
             }
         }
     }
