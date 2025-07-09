@@ -14,6 +14,8 @@ UGVBasic::UGVBasic(ros::NodeHandle &nh, int id, Communication *communication)
 
     this->ugv_cmd_pub_ = nh.advertise<prometheus_msgs::UGVCommand>("/ugv" + to_string(id) + "/prometheus/ugv_command", 1000);
     this->ugv_state_sub_ = nh.subscribe("/ugv" + to_string(id) + "/prometheus/ugv_state", 10, &UGVBasic::stateCb, this);
+    this->text_info_sub_ = nh.subscribe("/ugv" + to_string(id) + "/prometheus/text_info", 10, &UGVBasic::textInfoCb, this);
+    
 
     if(send_hz > 0)
     {
@@ -65,6 +67,16 @@ void UGVBasic::stateCb(const prometheus_msgs::UGVState::ConstPtr &msg)
     if(send_hz <= 0) this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, ugv_state_, robot_id), multicast_udp_ip);
     else ugv_state_ready = true;
     setTimeStamp(msg->header.stamp.sec);
+}
+
+void UGVBasic::textInfoCb(const prometheus_msgs::TextInfo::ConstPtr &msg)
+{
+    this->text_info_.sec = msg->header.stamp.sec;
+    this->text_info_.MessageType = msg->MessageType;
+    this->text_info_.Message = msg->Message;
+
+    // 发送到地面站
+    this->communication_->sendMsgByUdp(this->communication_->encodeMsg(Send_Mode::UDP, this->text_info_, -std::abs(this->robot_id)), udp_ip);
 }
 
 void UGVBasic::setTimeStamp(uint time)

@@ -5,6 +5,7 @@
 #include "communication.hpp"
 #include "prometheus_msgs/UGVCommand.h"
 #include "prometheus_msgs/UGVState.h"
+#include "prometheus_msgs/TextInfo.h"
 
 #include "rviz_reduce_the_frequency.hpp"
 
@@ -20,6 +21,8 @@ public:
     void ugvCmdPub(struct UGVCommand ugv_command);
 
     void stateCb(const prometheus_msgs::UGVState::ConstPtr &msg);
+    
+    void textInfoCb(const prometheus_msgs::TextInfo::ConstPtr &msg);
 
     void setTimeStamp(uint time);
 
@@ -34,10 +37,12 @@ private:
     //
     ros::Publisher ugv_cmd_pub_;
     ros::Subscriber ugv_state_sub_;
+    ros::Subscriber text_info_sub_;
 
     Communication* communication_ = NULL;
 
     struct UGVState ugv_state_;
+    struct TextInfo text_info_;
 
     int robot_id;
     std::string udp_ip;
