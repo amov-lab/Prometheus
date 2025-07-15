@@ -916,13 +916,13 @@ int UAV_estimator::check_uav_odom()
     }
 
     // odom失效可能原因3：无人机位置与外部定位设备原始值相差过多
-    if (vision_pose_error)
+    if (vision_pose_error && location_source != prometheus_msgs::UAVState::OPTICAL_FLOW)
     {
         return 3;
     }
 
     // odom失效可能原因：外部定位设备这一时刻和上一时刻原始值相差过多
-    if (Odom_pose_error)
+    if (Odom_pose_error && location_source != prometheus_msgs::UAVState::OPTICAL_FLOW)
     {
         return 10;
     }
