@@ -82,6 +82,7 @@ add_service_files(
   FILES
   SwitchLocationSource.srv
   GetLocationSource.srv
+  GimbalFollowTrackResSevice.srv
 )
 
 add_action_files(

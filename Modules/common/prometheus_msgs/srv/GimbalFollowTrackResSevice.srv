@@ -1,0 +1,8 @@
+# gimbal_follow_track_result_action; 
+# 0:keep tracking but do not rotate gimbal; 
+# 1:keep tracking and rotate gimbal;
+# 2:keep tracking but only rotate pitch;
+uint8 action
+---
+# result 
+bool stateResponse
