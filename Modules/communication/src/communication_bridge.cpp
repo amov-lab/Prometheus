@@ -518,6 +518,10 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
     {
         this->uav_->customDataSegmentPub(custom_data_segment);
     }
+    if (this->ugv_)
+    {
+        this->ugv_->customDataSegmentPub(custom_data_segment);
+    }
 }
 
 void CommunicationBridge::recvData(struct Goal goal)
