@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     //获取遥控器控制状态
     ros::Subscriber uav_control_state_sub = nh.subscribe<prometheus_msgs::UAVControlState>("/uav" + std::to_string(g_uav_id) + "/prometheus/control_state", 10, droneControlStateCb);
     //获取吊舱状态
-    ros::Subscriber gimbal_state_sub = nh.subscribe<prometheus_msgs::GimbalState>("/uav" + std::to_string(g_uav_id) + "/prosim/gimbal/state", 10, GimbalStateCb);
+    ros::Subscriber gimbal_state_sub = nh.subscribe<prometheus_msgs::GimbalState>("/uav" + std::to_string(g_uav_id) + "/gimbal/state", 10, GimbalStateCb);
     //获取视觉反馈
     ros::Subscriber vision_sub = nh.subscribe<prometheus_msgs::TargetsInFrame>("/uav" + std::to_string(g_uav_id) + "/spirecv/target", 10, VisionCb);
     //发布控制指令到uav_controller
