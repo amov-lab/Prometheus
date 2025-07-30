@@ -1732,12 +1732,15 @@ void UAV_controller::param_set_cb(const prometheus_msgs::ParamSettings::ConstPtr
     try
     {
         size_t size = msg->param_name.size();
+        ParamManager param_manager(nh);
         for(size_t i = 0; i < size; i++)
         {
             // 如果不包含本节点名则跳过
             if(msg->param_name[i].find("/uav_control_main_" + std::to_string(uav_id) + "/") == std::string::npos)
                 continue;
 
+            // 替换uav_control的参数值
+            param_manager.setParam(msg->param_name[i], msg->param_value[i]);
             std::cout << msg->param_name[i] << " : " << msg->param_value[i] << std::endl;
         
             // 有些参数必须在未解锁前才能修改
