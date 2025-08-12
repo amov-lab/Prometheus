@@ -479,7 +479,8 @@ void UAV_controller::set_command_des()
         pos_des << Takeoff_position + Eigen::Vector3d(0, 0, Takeoff_height);
         vel_des << 0.0, 0.0, 0.0;
         acc_des << 0.0, 0.0, 0.0;
-        yaw_des = uav_command.yaw_ref;
+        // yaw_des = uav_command.yaw_ref;
+        yaw_des = 0;
     }
     else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Current_Pos_Hover)
     {
