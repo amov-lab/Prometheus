@@ -7,3 +7,6 @@
 [submodule "Modules/swarm_formation"]
 	path = Modules/swarm_formation
 	url = https://gitee.com/amovlab1/Swarm-Formation.git
+[submodule "Modules/searching_pkg"]
+	path = Modules/searching_pkg
+	url = https://gitee.com/amovlab1/swarm-sch-track.git
