@@ -252,6 +252,12 @@ void smooth_velocity(float target[3], float smoothed[3])
     }
 }
 
+
+
+// 在全局变量区域添加新的变量
+int landing_condition_count = 0;  // 满足降落条件的连续计数
+float last_gimbal_pitch = 0.0;  // 上一次的吊舱pitch角
+
 int main(int argc, char **argv)
 {
     ros::init(argc,argv,NODE_NAME);
@@ -260,6 +266,9 @@ int main(int argc, char **argv)
     float kp_x, kp_z,kp_gimbal, max_velocity, max_yaw_rate, ignore_error_pitch, land_height ,
      static_vel_thresh , gimbal_offset, gimbal_pitch_init,ignore_error_yaw, threshold_distance,land_cx,land_cy,verticalThreshold,kp_gimbal_single
      ,land_move_duration,land_lost_count_threshold,track_move_duration,track_lost_count_threshold;
+    // 降落条件相关参数
+    int min_landing_condition_frames;
+    float gimbal_pitch_stability_threshold;
     nh.param<float>(ros::this_node::getName() + "/kp_x", kp_x, 100);
     nh.param<float>(ros::this_node::getName() + "/kp_z", kp_z, 0.005);
     nh.param<float>(ros::this_node::getName() + "/kp_gimbal", kp_gimbal, 0.01);
@@ -280,7 +289,16 @@ int main(int argc, char **argv)
     nh.param<float>(ros::this_node::getName() + "/track_move_duration", land_move_duration, 2.0);
     nh.param<float>(ros::this_node::getName() + "/land_lost_count_threshold", land_lost_count_threshold, 60.0);
     nh.param<float>(ros::this_node::getName() + "/land_move_duration", land_move_duration, 2.0);
+    // 降落条件相关参数
+    nh.param<int>(ros::this_node::getName() + "/min_landing_condition_frames", min_landing_condition_frames, 4);
+    nh.param<float>(ros::this_node::getName() + "/gimbal_pitch_stability_threshold", gimbal_pitch_stability_threshold, 6.0);
     nh.param<int>(ros::this_node::getName() + "uav_id", g_uav_id, 1);
+    
+    // 输出降落条件参数
+    printf("[INFO] Landing condition parameters:\n");
+    printf("[INFO]   min_landing_condition_frames: %d\n", min_landing_condition_frames);
+    printf("[INFO]   gimbal_pitch_stability_threshold: %.1f\n", gimbal_pitch_stability_threshold);
+    printf("[INFO]   ignore_error_pitch: %.1f\n", ignore_error_pitch);
     //获取无人机ENU下位置
     ros::Subscriber curr_pos_sub = nh.subscribe<prometheus_msgs::UAVState>("/uav" + std::to_string(g_uav_id) + "/prometheus/state", 10, droneStateCb);
     //获取遥控器控制状态
@@ -538,12 +556,47 @@ int main(int argc, char **argv)
                 // y_vel = smoothed_velocity[1];
                 // z_vel = smoothed_velocity[2];
 
-                // 判断是否能进入降落状态，  判断条件  吊舱的pitch角 或者 估计的平面距离(因为yaw角可能对pitch角存在误差)
-                if(std::abs(90 - gimbal_pitch) < ignore_error_pitch || sqrt(KF.statePost.at<float>(0)*KF.statePost.at<float>(0) + KF.statePost.at<float>(2)*KF.statePost.at<float>(2)) < 0.2)
+                // 判断是否能进入降落状态，只判断吊舱角度
+                bool gimbal_condition = std::abs(90 - gimbal_pitch) < ignore_error_pitch;
+                
+                // 检查吊舱角度稳定性
+                bool gimbal_stable = std::abs(gimbal_pitch - last_gimbal_pitch) < gimbal_pitch_stability_threshold;
+                
+                // 综合判断条件：只判断吊舱角度，不判断水平距离
+                bool landing_ready = (gimbal_condition && gimbal_stable);
+                
+                // 每10帧输出一次调试信息
+                // static int debug_counter = 0;
+                // debug_counter++;
+                // if (debug_counter % 10 == 0) {
+                //     printf("[DEBUG] Landing check: gimbal_pitch=%.1f, gimbal_stable=%d\n", 
+                //            gimbal_pitch, gimbal_stable);
+                //     printf("[DEBUG] Conditions: gimbal_cond=%d, gimbal_stable=%d\n",
+                //            gimbal_condition, gimbal_stable);
+                //     printf("[DEBUG] Landing ready: %d, count: %d/%d\n",
+                //            landing_ready, landing_condition_count, min_landing_condition_frames);
+                // }
+                
+                // 更新降落条件计数
+                if (landing_ready) {
+                    landing_condition_count++;
+                } else {
+                    landing_condition_count = 0;
+                }
+                
+                // 保存当前值用于下次比较
+                last_gimbal_pitch = gimbal_pitch;
+                
+                // 最终判断：需要连续满足条件足够长时间
+                if(landing_condition_count >= min_landing_condition_frames)
                 {
                     // 如果可以进入则先保持悬停
                     g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
                     g_command_now.Yaw_Rate_Mode = false;
+                    
+                    // 输出调试信息
+                    printf("[INFO] Landing conditions met: gimbal_pitch=%.1f, count=%d\n", 
+                           gimbal_pitch, landing_condition_count);
                     
                     // 取消跟踪进入锁头模式
                     if(g_GimbalState.moveMode == 3)
@@ -591,7 +644,13 @@ int main(int argc, char **argv)
 
                         tracking_height = height;
                     }
-                }  
+                } else {
+                    // 输出当前状态信息用于调试
+                    if (landing_condition_count > 0) {
+                        printf("[WARN] Landing conditions progress: count=%d/%d\n", 
+                               landing_condition_count, min_landing_condition_frames);
+                    }
+                }
 
             }else if(current_state == State::LANDING)
             {
@@ -771,6 +830,10 @@ int main(int argc, char **argv)
                 g_command_now.Agent_CMD     = prometheus_msgs::UAVCommand::Current_Pos_Hover;
                 g_command_now.Yaw_Rate_Mode = false;
                 Cx_Cy_init = false;
+                // 重置降落条件相关变量
+                landing_condition_count = 0;
+                last_gimbal_pitch = 0.0;
+
                 // 退出降落循环
                 break;
             }

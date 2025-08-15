@@ -34,7 +34,11 @@
 		<!-- 降落时目标丢失程序判断次数 根据程序频率修改  -->
             	<param name="land_lost_count_threshold" type="double" value="80.0" />
 		<!-- 降落时目标丢失程序运行时间 s -->
-            	<param name="land_move_duration" type="double" value="3.0" />			
+            	<param name="land_move_duration" type="double" value="3.0" />
+		<!-- 需要连续满足条件的最小帧数 -->
+            	<param name="min_landing_condition_frames" type="int" value="4" />
+		<!-- 吊舱角度稳定性阈值（度） -->
+            	<param name="gimbal_pitch_stability_threshold" type="double" value="6.0" />
 	</node>
 </launch>
 
