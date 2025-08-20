@@ -3,26 +3,21 @@
 		<param name="uav_id" value="1" />
 		<!-- 根据百分比面积变换调整，前进速度 -->
             	<param name="kp_x" type="double" value="0.4" />
-            	<!-- 根据pitch误差调整高度 -->
-            	<param name="kp_z" type="double" value="0.5" />
+
             	<!-- 更具yaw误差调整无人机航向角 -->
             	<param name="kp_gimbal" type="double" value="0.5" />
             	<!-- 最大X轴速度 -->
             	<param name="max_velocity" type="double" value="0.5" />
             	<!-- 最大航向角速率（角度） -->
             	<param name="max_yaw_rate" type="double" value="30" />
-            	<!-- 吊舱pitch角度误差 -->
-            	<param name="ignore_error_pitch" type="double" value="5.0" />
-            	<!-- 降落高度 -->
-            	<param name="land_height" type="double" value="0.3" />
-            	<!-- 吊舱相对无人机的偏差高度 -->
-            	<param name="gimbal_offset" type="double" value="0.1" />
+            			<!-- 吊舱pitch角度误差 -->
+            	<param name="ignore_error_pitch" type="double" value="13.0" />
             	<!-- 吊舱初始向下角度 -->
             	<param name="gimbal_pitch_init" type="double" value="45" />
             	<!-- 吊舱向下,目标位置, 画面左到右为0到1-->
             	<param name="land_cx" type="double" value="0.5" />
             	<!-- 吊舱向下,目标位置, 画面上到下为0到1 -->
-            	<param name="land_cy" type="double" value="0.7" />
+            	<param name="land_cy" type="double" value="0.65" />
             	<!-- 降落趋势的阈值 -->
             	<param name="verticalThreshold" type="double" value="30.0" />
             	<!-- su17单轴有效 -->
@@ -32,13 +27,15 @@
 		<!-- 跟踪时目标丢失程序运行时间 s -->
             	<param name="track_move_duration" type="double" value="3.5" />				
 		<!-- 降落时目标丢失程序判断次数 根据程序频率修改  -->
-            	<param name="land_lost_count_threshold" type="double" value="80.0" />
+            	<param name="land_lost_count_threshold" type="double" value="40.0" />
 		<!-- 降落时目标丢失程序运行时间 s -->
-            	<param name="land_move_duration" type="double" value="3.0" />
+            	<param name="land_move_duration" type="double" value="1.5" />
 		<!-- 需要连续满足条件的最小帧数 -->
             	<param name="min_landing_condition_frames" type="int" value="4" />
-		<!-- 吊舱角度稳定性阈值（度） -->
+		<!-- 吊舱角度稳定性阈值（度）一般不需要调整 -->
             	<param name="gimbal_pitch_stability_threshold" type="double" value="6.0" />
+		<!-- Gimbal Only Pitch 的阈值（度）一般不需要调整 -->
+            	<param name="gimbal_only_pitch_threshold" type="double" value="30.0" />
 	</node>
 </launch>
 

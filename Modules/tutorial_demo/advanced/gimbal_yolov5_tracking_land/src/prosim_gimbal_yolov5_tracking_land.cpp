@@ -8,7 +8,7 @@
 #include <prometheus_msgs/UAVControlState.h>
 #include <prometheus_msgs/TargetsInFrame.h>
 #include <prometheus_msgs/Target.h>
-#include <prometheus_msgs/ROI.h>
+
 #include <prometheus_msgs/GimbalState.h>
 #include <prometheus_msgs/GimbalControl.h>
 #include <prometheus_msgs/GimbalFollowTrackResSevice.h>
@@ -26,8 +26,7 @@
 #include <std_srvs/SetBool.h>
 #include <queue>
 #include <algorithm>
-#include <mavros_msgs/ParamGet.h>
-#include <mavros_msgs/ParamSet.h>
+
 
 #include <vector>
 #include <cmath>
@@ -45,8 +44,7 @@ prometheus_msgs::UAVCommand g_command_now; //发送给控制模块的命令
 int g_uav_id;
 
 
-bool is_detected = false;              // 是否检测到目标标志
-float gimbal_roll, gimbal_pitch, gimbal_yaw; //吊舱RYP参数
+float gimbal_pitch, gimbal_yaw; // 吊舱PY参数
 prometheus_msgs::GimbalState g_GimbalState;
 prometheus_msgs::TextInfo text_info;
 std_srvs::SetBool gimbal_downlock;
@@ -54,11 +52,9 @@ prometheus_msgs::GimbalControl gimbal_control_angle;
 prometheus_msgs::GimbalFollowTrackResSevice gimbal_tracking_state;
 
 int tracked_id = -1;
-// 记录时间戳
-ros::Time last_time;
 
-ros::ServiceClient px4_param_get_client;
-ros::ServiceClient px4_param_set_client;
+
+
 
 
 
@@ -69,19 +65,20 @@ float yaw_rate = 0.0;
 
 
 // 全局或类成员变量，指数加权平均平滑参数，建议可调
-float velocity_smooth_alpha = 0.3f; // 平滑因子，0~1，越大响应越快但抖动多
-float diff_vel_threshold = 0.3;     // 速度突变阈值，可根据情况调节
+
+
 double move_duration = 0; // 在丢失后移动持续时间（秒）
 int lost_count_threshold = 0;  // 丢失目标计数阈值（根据频率调节）
-float smoothed_velocity[3] = {0.0f, 0.0f, 0.0f};
+
 float last_tracked_velocity[3] = {0.0, 0.0, 0.0};
-bool tracking_state = false;
-int lost_count = 0;
+
+int track_lost_count = 0; // 跟踪阶段丢失计数
+int land_lost_count = 0;   // 降落阶段丢失计数
 bool has_moved_after_lost = false;
 ros::Time move_start_time;
 bool is_spirecv_cmd = false;
 bool Cx_Cy_init = false;
-float target_velocity[3];
+
 
 struct Position3D {
     double x;
@@ -89,20 +86,18 @@ struct Position3D {
     double z;
 };
 
-const size_t MAX_SIZE = 50; //不能低于40，在降落中有一定缓冲作用，减小数据波动
+const size_t MAX_SIZE = 30; // 默认窗口（未使用动态窗口时）
+size_t angle_window_size = 30; // 降落趋势角度动态窗口大小
+const size_t ANGLE_WINDOW_MIN = 5;
+const size_t ANGLE_WINDOW_MAX = 50;
+
 std::vector<Position3D> positions;
-double land_angle;
+double land_angle = 90.0;
 // const double verticalThreshold = 15.0;  // 15度以内认为垂直降落
 
 
 
-void addPosition(std::vector<Position3D>& positions, const Position3D& newPos) {
-    if (positions.size() == MAX_SIZE) {
-        // 超过最大容量，删除最早的数据（第0个元素）
-        positions.erase(positions.begin());
-    }
-    positions.push_back(newPos);
-}
+
 
 // 计算向量长度
 double length(const Position3D& v) {
@@ -132,53 +127,6 @@ double calculateLandingAngle(const Position3D& start, const Position3D& end) {
     return angleDeg;
 }
 
-bool px4_param_set(std::string param_id, double param_value)
-{
-    // 获取并记录飞控当前的参数值
-    double px4_param_value = -1;
-    mavros_msgs::ParamGet px4_param_get;
-    px4_param_get.request.param_id = param_id;
-    px4_param_get.response.success = false;
-    if (px4_param_get_client.call(px4_param_get))
-    {
-        if (!px4_param_get.response.success)
-        {
-            return false;
-        }
-        px4_param_value = px4_param_get.response.value.real;
-    }
-    else 
-    {
-        return false;
-    }
-
-    // 根据ROS参数值先进行比较，不同就进行设置
-    mavros_msgs::ParamSet px4_param_set;
-    if (px4_param_value != param_value)
-    {
-        px4_param_set.request.param_id = param_id;
-        px4_param_set.request.value.real = param_value;
-        px4_param_set.response.success = false;
-        if (px4_param_set_client.call(px4_param_set))
-        {
-            if (!px4_param_set.response.success)
-            {
-                return false;
-            }
-            text_info.MessageType = prometheus_msgs::TextInfo::INFO;
-            text_info.Message = "set px4 param success!" + param_id + ": " + to_string(px4_param_value) + "->" + to_string(px4_param_set.response.value.real);
-            cout << GREEN << "set px4 param success ! " + param_id + " : " << px4_param_set.response.value.real << endl;
-        }
-        else
-        {
-            text_info.MessageType = prometheus_msgs::TextInfo::ERROR;
-            text_info.Message = "set px4 param faild: " + param_id;
-            cout << RED << "set px4 param faild ! " + param_id + " : " << px4_param_set.response.value.real << endl;
-            return false;
-        }
-    }
-    return true;
-}
 
 void droneStateCb(const prometheus_msgs::UAVState::ConstPtr &msg)
 {
@@ -205,20 +153,18 @@ void VisionCb(const prometheus_msgs::TargetsInFrame::ConstPtr &msg)
         }
         g_Detection_raw = tar;
         tracked_id = g_Detection_raw.tracked_id;
-        last_time = ros::Time::now();
         is_update = true;
         break;
     }
     if(!is_update && tracked_id != -1)
     {
-    	ros::Time now_time = ros::Time::now();
+        // no-op
     }
 }
 
 void GimbalStateCb(const prometheus_msgs::GimbalState::ConstPtr &msg)
 {
     g_GimbalState = *msg;
-    gimbal_roll = g_GimbalState.angleRT[0];
     gimbal_pitch = g_GimbalState.angleRT[1];
     gimbal_yaw = g_GimbalState.angleRT[2];
 }
@@ -236,24 +182,6 @@ inline float clamp(float value, float max)
 
 
 
-// 统一的指数加权平滑函数（可封装）
-void smooth_velocity(float target[3], float smoothed[3])
-{
-    for (int i = 0; i < 3; ++i)
-    {
-        float diff = std::abs(target[i] - smoothed[i]);
-        float alpha = velocity_smooth_alpha;
-        if (diff > diff_vel_threshold) 
-        {
-            // 突变时降低alpha，提高平滑度
-            alpha *= 0.3f;
-        }
-        smoothed[i] = smoothed[i] + alpha * (target[i] - smoothed[i]);
-    }
-}
-
-
-
 // 在全局变量区域添加新的变量
 int landing_condition_count = 0;  // 满足降落条件的连续计数
 float last_gimbal_pitch = 0.0;  // 上一次的吊舱pitch角
@@ -263,24 +191,19 @@ int main(int argc, char **argv)
     ros::init(argc,argv,NODE_NAME);
     ros::NodeHandle nh;
         
-    float kp_x, kp_z,kp_gimbal, max_velocity, max_yaw_rate, ignore_error_pitch, land_height ,
-     static_vel_thresh , gimbal_offset, gimbal_pitch_init,ignore_error_yaw, threshold_distance,land_cx,land_cy,verticalThreshold,kp_gimbal_single
+    float kp_x, kp_gimbal, max_velocity, max_yaw_rate, ignore_error_pitch,
+     gimbal_pitch_init,land_cx,land_cy,verticalThreshold,kp_gimbal_single
      ,land_move_duration,land_lost_count_threshold,track_move_duration,track_lost_count_threshold;
+    float gimbal_only_pitch_threshold;
     // 降落条件相关参数
     int min_landing_condition_frames;
     float gimbal_pitch_stability_threshold;
     nh.param<float>(ros::this_node::getName() + "/kp_x", kp_x, 100);
-    nh.param<float>(ros::this_node::getName() + "/kp_z", kp_z, 0.005);
     nh.param<float>(ros::this_node::getName() + "/kp_gimbal", kp_gimbal, 0.01);
     nh.param<float>(ros::this_node::getName() + "/max_velocity", max_velocity, 0.5);
     nh.param<float>(ros::this_node::getName() + "/max_yaw_rate", max_yaw_rate, 10);
-    nh.param<float>(ros::this_node::getName() + "/ignore_error_pitch", ignore_error_pitch, 2);
-    nh.param<float>(ros::this_node::getName() + "/ignore_error_yaw", ignore_error_yaw, 30);
-    nh.param<float>(ros::this_node::getName() + "/land_height", land_height, 0.35);
-    nh.param<float>(ros::this_node::getName() + "/static_vel_thresh", static_vel_thresh, 0.05);
-    nh.param<float>(ros::this_node::getName() + "/gimbal_offset", gimbal_offset, 0.1);
+    nh.param<float>(ros::this_node::getName() + "/ignore_error_pitch", ignore_error_pitch, 10);
     nh.param<float>(ros::this_node::getName() + "/gimbal_pitch_init", gimbal_pitch_init, 20);
-    nh.param<float>(ros::this_node::getName() + "/threshold_distance", threshold_distance, 0.35);
     nh.param<float>(ros::this_node::getName() + "/land_cx", land_cx, 0.5);
     nh.param<float>(ros::this_node::getName() + "/land_cy", land_cy, 0.7);
     nh.param<float>(ros::this_node::getName() + "/verticalThreshold", verticalThreshold, 15.0);
@@ -289,6 +212,7 @@ int main(int argc, char **argv)
     nh.param<float>(ros::this_node::getName() + "/track_move_duration", land_move_duration, 2.0);
     nh.param<float>(ros::this_node::getName() + "/land_lost_count_threshold", land_lost_count_threshold, 60.0);
     nh.param<float>(ros::this_node::getName() + "/land_move_duration", land_move_duration, 2.0);
+    nh.param<float>(ros::this_node::getName() + "/gimbal_only_pitch_threshold", gimbal_only_pitch_threshold, 40.0);
     // 降落条件相关参数
     nh.param<int>(ros::this_node::getName() + "/min_landing_condition_frames", min_landing_condition_frames, 4);
     nh.param<float>(ros::this_node::getName() + "/gimbal_pitch_stability_threshold", gimbal_pitch_stability_threshold, 6.0);
@@ -317,10 +241,6 @@ int main(int argc, char **argv)
     ros::ServiceClient gimbal_downward_lock_client_ = nh.serviceClient<std_srvs::SetBool>("/uav" + std::to_string(g_uav_id) + "/gimbal_downward_lock");
     //反馈给地面站消息
     ros::Publisher text_info_pub = nh.advertise<prometheus_msgs::TextInfo>("/uav" + std::to_string(g_uav_id) + "/prometheus/text_info", 1);
-    // 【服务】PX4参数获取服务
-    px4_param_get_client = nh.serviceClient<mavros_msgs::ParamGet>("/uav" + std::to_string(g_uav_id) + "/mavros/param/get");
-    // 【服务】PX4参数设置服务
-    px4_param_set_client = nh.serviceClient<mavros_msgs::ParamSet>("/uav" + std::to_string(g_uav_id) + "/mavros/param/set");
 
 
     //发布吊舱控制
@@ -348,8 +268,8 @@ int main(int argc, char **argv)
     Mat measurement = Mat::zeros(measureNum, 1, CV_32F);                           //初始测量值x'(0)，因为后面要更新这个值，所以必须先定义   
 
     double distance = 0;// 估计距离
-    float gimbal_height = 0.1; //吊舱高度
-    //height = 1;
+
+
     
     std::string last_message = "";
     std::string message = "Gimbal Aruco Landing Start!!!";
@@ -364,7 +284,7 @@ int main(int argc, char **argv)
 
     State current_state = State::INIT;
 
-    float tracking_height = 0.0;
+    
 
     int hz = 20;
     ros::Rate rate(hz);
@@ -442,17 +362,14 @@ int main(int argc, char **argv)
                 // 失去目标时
                 if (g_Detection_raw.mode == false) 
                 {
-                    lost_count++;
+                    track_lost_count++;
 
-                    if (lost_count > lost_count_threshold)
+                    if (track_lost_count > lost_count_threshold)
                     {
                         g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
                         PCOUT(-1, GREEN, "Target lost, hovering...\n");
                         has_moved_after_lost = false;
 
-                        // 期望速度为0（悬停无速度）
-                        float zero_velocity[3] = {0.0f, 0.0f, 0.0f};
-                        smooth_velocity(zero_velocity, smoothed_velocity);
                     }
                     else
                     {
@@ -466,7 +383,7 @@ int main(int argc, char **argv)
 
                         if (g_Detection_raw.mode == true)
                         {
-                            lost_count = 0;
+                            track_lost_count = 0;
                             has_moved_after_lost = false;
                             PCOUT(-1, GREEN, "Target recovered during move, resuming tracking...\n");
                             // 这里可以跳出当前循环或直接continue进入目标跟踪逻辑
@@ -476,34 +393,26 @@ int main(int argc, char **argv)
                             g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Move;
                             g_command_now.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL_BODY;
                             g_command_now.yaw_ref = 0;
-
-                            // 期望速度使用之前记录的速度last_tracked_velocity
-                            // smooth_velocity(last_tracked_velocity, smoothed_velocity);
-
                             PCOUT(-1, GREEN, "Moving after lost with last velocity...\n");
                         }
                         else
                         {
                             g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
                             PCOUT(-1, GREEN, "Moved after lost, target still lost, hovering.\n");
-
-                            // 停止运动，目标速度为零
-                            float zero_velocity[3] = {0.0f, 0.0f, 0.0f};
-                            // smooth_velocity(zero_velocity, smoothed_velocity);
                         }
                     }
                 }
                 // 识别到目标时
                 else 
                 {
-                    lost_count = 0;
+                    track_lost_count = 0;
                     has_moved_after_lost = false;
 
-                    // 计算当前速度 std::abs((g_Detection_raw.cx-0.5)) < 0.1 &&
+                    // 计算当前速度
                     // 控制无人机前进
                     x_vel = kp_x * KF.statePost.at<float>(2);                 
                     
-                    if ( (std::abs(90 - gimbal_pitch) < 40))
+                    if ( (std::abs(90 - gimbal_pitch) < gimbal_only_pitch_threshold))
                     {
                         //固定吊舱航向
                         gimbal_tracking_state.request.action = 2;
@@ -535,47 +444,25 @@ int main(int argc, char **argv)
                         g_command_now.Yaw_Rate_Mode = true;                
                     }
 
-                    // target_velocity[0] = clamp(x_vel, max_velocity);
-                    // target_velocity[1] = clamp(y_vel, max_velocity);
-                    // target_velocity[2] = clamp(z_vel, max_velocity);
                     last_tracked_velocity[0] = clamp(x_vel, max_velocity);
                     last_tracked_velocity[1] = clamp(y_vel, max_velocity);
-                    last_tracked_velocity[2] = clamp(z_vel, max_velocity);        
-
-                    // 使用统一平滑函数平滑速度
-                    // smooth_velocity(target_velocity, smoothed_velocity);
-
-                    // 更新last_tracked_velocity
-                    // for (int i = 0; i < 3; ++i){
-                    //     last_tracked_velocity[i] = smoothed_velocity[i];
-                    // }         
+                    last_tracked_velocity[2] = clamp(z_vel, max_velocity);               
                     PCOUT(-1, GREEN, "Tracking target, moving...\n");                       
                 }
-                
-                // x_vel = smoothed_velocity[0];
-                // y_vel = smoothed_velocity[1];
-                // z_vel = smoothed_velocity[2];
 
                 // 判断是否能进入降落状态，只判断吊舱角度
-                bool gimbal_condition = std::abs(90 - gimbal_pitch) < ignore_error_pitch;
+                // 使用平方关系：目标面积越大（距离越近），角度容差越大
+                float area = g_Detection_raw.w * g_Detection_raw.h;
+                float dynamic_ignore_pitch = std::max(13.0f, area * area * ignore_error_pitch * 200);
+                // printf("area * area * ignore_error_pitch * 200 = %f\n", area * area * ignore_error_pitch * 200);
+
+                bool gimbal_condition = std::abs(90 - gimbal_pitch) < dynamic_ignore_pitch;
                 
                 // 检查吊舱角度稳定性
                 bool gimbal_stable = std::abs(gimbal_pitch - last_gimbal_pitch) < gimbal_pitch_stability_threshold;
                 
                 // 综合判断条件：只判断吊舱角度，不判断水平距离
                 bool landing_ready = (gimbal_condition && gimbal_stable);
-                
-                // 每10帧输出一次调试信息
-                // static int debug_counter = 0;
-                // debug_counter++;
-                // if (debug_counter % 10 == 0) {
-                //     printf("[DEBUG] Landing check: gimbal_pitch=%.1f, gimbal_stable=%d\n", 
-                //            gimbal_pitch, gimbal_stable);
-                //     printf("[DEBUG] Conditions: gimbal_cond=%d, gimbal_stable=%d\n",
-                //            gimbal_condition, gimbal_stable);
-                //     printf("[DEBUG] Landing ready: %d, count: %d/%d\n",
-                //            landing_ready, landing_condition_count, min_landing_condition_frames);
-                // }
                 
                 // 更新降落条件计数
                 if (landing_ready) {
@@ -629,7 +516,15 @@ int main(int argc, char **argv)
                                 // 进入后 进入降落状态
                                 current_state = State::LANDING;
                                 is_spirecv_cmd = false;
-                                // 清空队列
+                                // 锁头时确定角度窗口大小（随目标面积设置，使用平方关系）
+                                {
+                                    double area = (double)g_Detection_raw.w * (double)g_Detection_raw.h;
+                                    // 使用平方关系：面积越小（距离越远），窗口越大
+                                    double win = (1.0 - area) * (1.0 - area) * 12.0;
+                                    win = std::max<double>((double)ANGLE_WINDOW_MIN, std::min<double>((double)ANGLE_WINDOW_MAX, win));
+                                    angle_window_size = static_cast<size_t>(win);
+                                }
+                                positions.clear();
 
                                 PCOUT(0, GREEN, " gimbal lock head!!!\n");
                                 message = " gimbal lock head!!!";
@@ -642,13 +537,15 @@ int main(int argc, char **argv)
                                 is_spirecv_cmd = false;
                             }
 
-                        tracking_height = height;
+                        
                     }
                 } else {
                     // 输出当前状态信息用于调试
                     if (landing_condition_count > 0) {
                         printf("[WARN] Landing conditions progress: count=%d/%d\n", 
                                landing_condition_count, min_landing_condition_frames);
+                        printf("[INFO] gimbal_pitch=%.1f,dynamic_ignore_pitch=%.1f\n", 
+                        gimbal_pitch, dynamic_ignore_pitch);
                     }
                 }
 
@@ -657,22 +554,17 @@ int main(int argc, char **argv)
                 //更新丢失判断变量
                 lost_count_threshold = land_lost_count_threshold;
                 move_duration = land_move_duration;
-                lost_count = 0;
                 
                 // land目标丢失
                 if (det.targets.empty()) 
                 {
-                    lost_count++;
+                    land_lost_count++;
 
-                    if (lost_count > lost_count_threshold && land_angle >= verticalThreshold)
+                    if (land_lost_count > lost_count_threshold && land_angle >= verticalThreshold)
                     {
                         g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
                         PCOUT(-1, GREEN, "Target lost, Land hovering...\n");
                         has_moved_after_lost = false;
-
-                        // 期望速度为0（悬停无速度）
-                        // float zero_velocity[3] = {0.0f, 0.0f, 0.0f};
-                        // smooth_velocity(zero_velocity, smoothed_velocity);
                     }
                     else
                     {
@@ -680,53 +572,40 @@ int main(int argc, char **argv)
                         {
                             move_start_time = ros::Time::now();
                             has_moved_after_lost = true;
-                            // PCOUT(-1, GREEN, "Target lost long time, start landing...\n");
                         }
                         ros::Duration elapsed = ros::Time::now() - move_start_time;
 
-                        if ( !det.targets.empty())
-                        {
-                            lost_count = 0;
-                            has_moved_after_lost = false;
-                            PCOUT(-1, GREEN, "Target recovered during move, resuming landing...\n");
-                            // 这里可以跳出当前循环或直接continue进入目标跟踪逻辑
-                        }
-                        else if ((elapsed.toSec() < move_duration))
+                        bool in_move_window = (elapsed.toSec() < move_duration) && (land_lost_count <= lost_count_threshold);
+                        if (in_move_window)
                         {
                             g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Move;
                             g_command_now.Move_mode = prometheus_msgs::UAVCommand::XYZ_VEL_BODY;
                             g_command_now.yaw_ref = 0;
-
-                            // 期望速度使用之前记录的速度last_tracked_velocity
-                            // smooth_velocity(last_tracked_velocity, smoothed_velocity);
-
                             PCOUT(-1, GREEN, "Landing after lost with last velocity...\n");
-                        }
-                        else if ((land_angle < verticalThreshold) && has_moved_after_lost)
-                        {
-                            //目标丢失，保持降落一段时间，角度小于15，最终降落接口
-                            g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Land;
-                            PCOUT(-1, GREEN, "Find the target and start land!!!\n");
-                            message = "Find the target and start land!!!";
-                            message_type = prometheus_msgs::TextInfo::INFO;
                         }
                         else
                         {
-                            g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
-                            PCOUT(-1, GREEN, "Moved after lost, target still lost,land hovering.\n");
-
-                            // 停止运动，目标速度为零
-                            // float zero_velocity[3] = {0.0f, 0.0f, 0.0f};
-                            // smooth_velocity(zero_velocity, smoothed_velocity);
+                            if ((land_angle < verticalThreshold) && has_moved_after_lost)
+                            {
+                                g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Land;
+                                PCOUT(-1, GREEN, "Find the target and start land!!!\n");
+                                message = "Find the target and start land!!!";
+                                message_type = prometheus_msgs::TextInfo::INFO;
+                            }
+                            else
+                            {
+                                g_command_now.Agent_CMD = prometheus_msgs::UAVCommand::Current_Pos_Hover;
+                                PCOUT(-1, GREEN, "Moved after lost, target still lost, land hovering.\n");
+                            }
                         }
                     }
                 }
-                // 识别到目标时,先水平对齐，再开始降落，确保降落趋势正常，防止水平飘
                 else 
                 {
-                    lost_count = 0;
+                    // 识别到目标时,先水平对齐，再开始降落，确保降落趋势正常，防止水平飘
+                    land_lost_count = 0;
                     has_moved_after_lost = false;
-
+ 
                     // 根据目标ID，查到对应检测的目标的 cx 和 cy 控制无人机 细微调整位置
                     
                     if(std::abs(x_vel) + std::abs(y_vel) <0.1 )
@@ -736,47 +615,82 @@ int main(int argc, char **argv)
                     if(Cx_Cy_init)
                     {
                         //不同大小无人机调整cy的中心,画面上到下为0到1
-                        x_vel = kp_x * (land_cy - g_Detection_raw.cy)  * (3 - (tracking_height - height)/(tracking_height - land_height));
-                        y_vel = kp_x * (land_cx - g_Detection_raw.cx)  * (3 - (tracking_height - height)/(tracking_height - land_height));
-                        z_vel = -0.2;
+                        // 使用平方关系计算控制增益，更好地反映距离变化
+                        float area = g_Detection_raw.w * g_Detection_raw.h;
+                        float distance_factor = (1.0f - area) * (1.0f - area);  // 平方关系
+                        
+                        x_vel = kp_x * (land_cy - g_Detection_raw.cy) * distance_factor * 1.5f;
+                        y_vel = kp_x * (land_cx - g_Detection_raw.cx) * distance_factor * 1.5f;                        
+                        
+                        // Z速度使用平方关系计算
+                        float s_raw = 1.0f - area;      // 目标面积反比因子
+                        float s = std::max(0.0f, std::min(1.0f, s_raw));                  // 限制到[0,1]
+                        s = s * s;  // 平方关系，增强距离敏感性
+
+                        const float s_thresh = 0.85f;   // 面积阈值(可调)
+                        const float z_min   = -0.08f;   // 最小下降速度
+                        const float z_mid   = -0.12f;   // 在阈值处的目标速度，保证两段连续
+                        const float z_max   = -0.2f;   // 最大下降速度
+
+                        // 分段线性：更细致地映射 s 到 z_vel，保持段间连续
+                        float s1 = 0.5f * s_thresh;           // 第一段上界
+                        float s2 = s_thresh;                  // 第二段上界（中点）
+                        float s3 = 0.5f * (1.0f + s_thresh);  // 第三段上界
+                        
+                        if (s <= s1) {
+                            // 段1：s in [0, s1]，z: z_min → z_min + 0.5*(z_mid - z_min)
+                            float t = (s1 > 1e-6f) ? (s / s1) : 1.0f;
+                            float z_mid1 = z_min + 0.5f * (z_mid - z_min);
+                            z_vel = z_min + t * (z_mid1 - z_min);
+                        } else if (s <= s2) {
+                            // 段2：s in (s1, s2]，z: z_min + 0.5*(z_mid - z_min) → z_mid
+                            float t = (s2 - s1 > 1e-6f) ? ((s - s1) / (s2 - s1)) : 1.0f;
+                            float z_mid1 = z_min + 0.5f * (z_mid - z_min);
+                            z_vel = z_mid1 + t * (z_mid - z_mid1);
+                        } else if (s <= s3) {
+                            // 段3：s in (s2, s3]，z: z_mid → (z_mid + z_max)/2
+                            float t = (s3 - s2 > 1e-6f) ? ((s - s2) / (s3 - s2)) : 1.0f;
+                            float z_mid2 = 0.5f * (z_mid + z_max);
+                            z_vel = z_mid + t * (z_mid2 - z_mid);
+                        } else {
+                            // 段4：s in (s3, 1]，z: (z_mid + z_max)/2 → z_max
+                            float t = (1.0f - s3 > 1e-6f) ? ((s - s3) / (1.0f - s3)) : 1.0f;
+                            float z_mid2 = 0.5f * (z_mid + z_max);
+                            z_vel = z_mid2 + t * (z_max - z_mid2);
+                        }
+                        // printf("s = %f ,s_thresh = %f  \n",s,s_thresh);
+
                     }else{
                         // 水平对齐计算速度，使目标在画面中间，避免高度低的时候看不全  
-                        x_vel = kp_x * (0.5 - g_Detection_raw.cy)  * (3 - (tracking_height - height)/(tracking_height - land_height));
-                        y_vel = kp_x * (0.5 - g_Detection_raw.cx)  * (3 - (tracking_height - height)/(tracking_height - land_height));
+                        // 水平对齐也使用平方关系
+                        float area = g_Detection_raw.w * g_Detection_raw.h;
+                        float distance_factor = (1.0f - area) * (1.0f - area);  // 平方关系
+                        
+                        x_vel = kp_x * (0.5 - g_Detection_raw.cy) * distance_factor * 4.0f;
+                        y_vel = kp_x * (0.5 - g_Detection_raw.cx) * distance_factor * 4.0f;
                     }
-
-                    // target_velocity[0] = clamp(x_vel, max_velocity);
-                    // target_velocity[1] = clamp(y_vel, max_velocity);
-                    // target_velocity[2] = clamp(z_vel, max_velocity);
-
                     last_tracked_velocity[0] = clamp(x_vel, max_velocity);
                     last_tracked_velocity[1] = clamp(y_vel, max_velocity);
                     last_tracked_velocity[2] = clamp(z_vel, max_velocity);
-                    // 使用统一平滑函数平滑速度
-                    // smooth_velocity(target_velocity, smoothed_velocity);
-
-                    // 更新last_tracked_velocity
-                    // for (int i = 0; i < 3; ++i){
-                    //     last_tracked_velocity[i] = smoothed_velocity[i];
-                    // }
-                        
                     PCOUT(-1, GREEN, "Tracking target, landing...\n");                    
                 }
-             
-                // x_vel = smoothed_velocity[0];
-                // y_vel = smoothed_velocity[1];
-                // z_vel = smoothed_velocity[2];
                 yaw_rate = 0 ;
             }
-
             //计算降落趋势角度
-            // 无人机降落轨迹记录
+            // if(Cx_Cy_init && !det.targets.empty())
             if(Cx_Cy_init)
             {
                 Position3D p = {g_UAVState.position[0],g_UAVState.position[1], g_UAVState.position[2]};
-                addPosition(positions, p);
-                land_angle = calculateLandingAngle(positions[0], positions[MAX_SIZE-1]);
-                std::cout << "无人机总降落趋势角度: " << land_angle << " 度" << std::endl;
+                // 维护动态窗口大小
+                if (positions.size() >= angle_window_size) {
+                    positions.erase(positions.begin());
+                }
+                positions.push_back(p);
+                if (positions.size() >= angle_window_size)
+                {
+                    land_angle = calculateLandingAngle(positions[0], positions[positions.size()-1]);
+                    std::cout << "无人机总降落趋势角度: " << land_angle << " 度" << std::endl;
+                }
             }
         }
         
@@ -791,6 +705,7 @@ int main(int argc, char **argv)
         printf("yaw_rate_ref = %f [ang/s] \n",g_command_now.yaw_rate_ref);
         printf("g_Detection_raw.cx = %f  \n",g_Detection_raw.cx);
         printf("g_Detection_raw.cy = %f  \n",g_Detection_raw.cy);
+        printf("angle_window_size = %ld  \n",angle_window_size);
 
         // Publish
         g_command_now.header.stamp = ros::Time::now();
@@ -825,7 +740,8 @@ int main(int argc, char **argv)
                 // 初始化
                 tracked_id                  = -1;
                 current_state               = State::INIT;
-                lost_count = 0;
+                track_lost_count = 0;
+                land_lost_count = 0;
                 has_moved_after_lost = false;
                 g_command_now.Agent_CMD     = prometheus_msgs::UAVCommand::Current_Pos_Hover;
                 g_command_now.Yaw_Rate_Mode = false;
