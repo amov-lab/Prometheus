@@ -804,7 +804,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 if (uav_command.Yaw_Rate_Mode)
                 {
                     send_vel_setpoint_yaw_rate(vel_des, yaw_rate_des);
-                    vel_control = false;
+                    //vel_control = false;
                     yaw_control = false;
                 }
                 else
