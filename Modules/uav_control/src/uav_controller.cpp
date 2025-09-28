@@ -1925,11 +1925,12 @@ void UAV_controller::reboot_PX4()
     ).count();
 
     // 北京时间偏移（UTC+8 -> 增加8小时 = 28800秒）
-    constexpr uint64_t beijing_time_offset = 8 * 3600; 
-    const uint64_t adjusted_timestamp = timestamp + beijing_time_offset;
+    // constexpr uint64_t beijing_time_offset = 8 * 3600; 
+    // const uint64_t adjusted_timestamp = timestamp + beijing_time_offset;
 
     // 构造PX4系统时间设置命令字符串
-    const std::string cmd = "system_time set " + std::to_string(adjusted_timestamp);
+    // const std::string cmd = "system_time set " + std::to_string(adjusted_timestamp);
+    const std::string cmd = "system_time set " + std::to_string(timestamp);
     
     // 调试输出（显示实际发送的命令）
     std::cout << "[Time Sync] Sent command: \"" << cmd << "\"" << std::endl;
