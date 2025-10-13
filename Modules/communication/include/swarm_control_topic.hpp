@@ -15,6 +15,7 @@
 #include "prometheus_msgs/MultiUGVState.h"
 
 #include <vector>
+#include <unordered_set>
 
 #include "rviz_reduce_the_frequency.hpp"
 
@@ -127,6 +128,10 @@ public:
     inline prometheus_msgs::UAVState getUAVStateMsg(){return this->uav_state_msg_;};
 
     void setGroundStationIP(std::string ip);
+
+    void checkSimulationDataStatus(const ros::TimerEvent &time_event);
+    void disconnectUAV(int id);
+    void disconnectUGV(int id);
 private:
 
     struct MultiUAVState multi_uav_state_;
@@ -160,6 +165,15 @@ private:
 
     // 
     std::shared_ptr<ReduceTheFrequency> reduce_the_frequency_ = nullptr;
+
+    // 参与集群的载体编号
+    std::unordered_set<int> connect_uav_ids;
+    std::unordered_set<int> connect_ugv_ids;
+    // 参与前期集群,中途因数据中断/断联导致 从参数集群的载体编号 中移除
+    std::unordered_set<int> disconnect_uav_ids;
+    std::unordered_set<int> disconnect_ugv_ids;
+    // 增加一个定时器, 用于仿真情况下判断 仿真下各无人机的数据状态
+    ros::Timer check_simulation_data_status_timer;
 };
 
 #endif

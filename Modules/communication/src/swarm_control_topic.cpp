@@ -141,6 +141,8 @@ SwarmControl::SwarmControl(ros::NodeHandle &nh, Communication *communication, Sw
         // 【发布】所有无人车状态
         this->all_ugv_state_pub_ = nh.advertise<prometheus_msgs::MultiUGVState>("/prometheus/all_ugv_state", 1000);
     }
+
+    check_simulation_data_status_timer = nh.createTimer(ros::Duration(1.0), &SwarmControl::checkSimulationDataStatus, this);
 }
 
 SwarmControl::~SwarmControl()
@@ -154,62 +156,62 @@ void SwarmControl::init(ros::NodeHandle &nh, SwarmMode mode, int swarm_num)
     nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
 
-    if (mode == SwarmMode::ONLY_UAV)
-    {
-        for (int i = 1; i <= swarm_num; ++i)
-        {
-            struct UAVState uav_state;
-            uav_state.uav_id = i;
-            // uav_state.state = UAVState::State::unknown;
-            uav_state.location_source = UAVState::LocationSource::MOCAP;
-            uav_state.gps_status = 0;
-            uav_state.mode = "";
-            uav_state.connected = false;
-            uav_state.armed = false;
-            uav_state.odom_valid = false;
-            uav_state.gps_num = 0;
-            for (int j = 0; j < 3; j++)
-            {
-                uav_state.position[j] = 0;
-                uav_state.velocity[j] = 0;
-                uav_state.attitude[j] = 0;
-                uav_state.attitude_rate[j] = 0;
-            }
-            uav_state.latitude = 0;
-            uav_state.longitude = 0;
-            uav_state.altitude = 0;
+    // if (mode == SwarmMode::ONLY_UAV)
+    // {
+    //     for (int i = 1; i <= swarm_num; ++i)
+    //     {
+    //         struct UAVState uav_state;
+    //         uav_state.uav_id = i;
+    //         // uav_state.state = UAVState::State::unknown;
+    //         uav_state.location_source = UAVState::LocationSource::MOCAP;
+    //         uav_state.gps_status = 0;
+    //         uav_state.mode = "";
+    //         uav_state.connected = false;
+    //         uav_state.armed = false;
+    //         uav_state.odom_valid = false;
+    //         uav_state.gps_num = 0;
+    //         for (int j = 0; j < 3; j++)
+    //         {
+    //             uav_state.position[j] = 0;
+    //             uav_state.velocity[j] = 0;
+    //             uav_state.attitude[j] = 0;
+    //             uav_state.attitude_rate[j] = 0;
+    //         }
+    //         uav_state.latitude = 0;
+    //         uav_state.longitude = 0;
+    //         uav_state.altitude = 0;
 
-            uav_state.attitude_q.x = 0;
-            uav_state.attitude_q.y = 0;
-            uav_state.attitude_q.z = 0;
-            uav_state.attitude_q.w = 0;
-            uav_state.battery_state = 0;
-            uav_state.battery_percetage = 0;
-            this->multi_uav_state_.uav_state_all.push_back(uav_state);
-        }
-    }
-    else if (mode == SwarmMode::ONLY_UGV)
-    {
-        for (int i = 1; i <= swarm_num; ++i)
-        {
-            struct UGVState ugv_state;
-            ugv_state.ugv_id = i;
-            ugv_state.secs = 0;
-            ugv_state.nsecs = 0;
-            ugv_state.battery = 0;
-            for (int j = 0; j < 3; j++)
-            {
-                ugv_state.position[j] = 0;
-                ugv_state.velocity[j] = 0;
-                ugv_state.attitude[j] = 0;
-            }
-            ugv_state.attitude_q.x = 0;
-            ugv_state.attitude_q.y = 0;
-            ugv_state.attitude_q.z = 0;
-            ugv_state.attitude_q.w = 0;
-            this->multi_ugv_state_.ugv_state_all.push_back(ugv_state);
-        }
-    }
+    //         uav_state.attitude_q.x = 0;
+    //         uav_state.attitude_q.y = 0;
+    //         uav_state.attitude_q.z = 0;
+    //         uav_state.attitude_q.w = 0;
+    //         uav_state.battery_state = 0;
+    //         uav_state.battery_percetage = 0;
+    //         this->multi_uav_state_.uav_state_all.push_back(uav_state);
+    //     }
+    // }
+    // else if (mode == SwarmMode::ONLY_UGV)
+    // {
+    //     for (int i = 1; i <= swarm_num; ++i)
+    //     {
+    //         struct UGVState ugv_state;
+    //         ugv_state.ugv_id = i;
+    //         ugv_state.secs = 0;
+    //         ugv_state.nsecs = 0;
+    //         ugv_state.battery = 0;
+    //         for (int j = 0; j < 3; j++)
+    //         {
+    //             ugv_state.position[j] = 0;
+    //             ugv_state.velocity[j] = 0;
+    //             ugv_state.attitude[j] = 0;
+    //         }
+    //         ugv_state.attitude_q.x = 0;
+    //         ugv_state.attitude_q.y = 0;
+    //         ugv_state.attitude_q.z = 0;
+    //         ugv_state.attitude_q.w = 0;
+    //         this->multi_ugv_state_.ugv_state_all.push_back(ugv_state);
+    //     }
+    // }
 }
 
 void SwarmControl::init(ros::NodeHandle &nh, SwarmMode mode, int swarm_uav_num, int swarm_ugv_num)
@@ -217,68 +219,84 @@ void SwarmControl::init(ros::NodeHandle &nh, SwarmMode mode, int swarm_uav_num, 
     nh.param<std::string>("ground_station_ip", udp_ip, "127.0.0.1");
     nh.param<std::string>("multicast_udp_ip", multicast_udp_ip, "224.0.0.88");
 
-    for (int i = 1; i <= swarm_uav_num; ++i)
-    {
-        struct UAVState uav_state;
-        uav_state.uav_id = i;
-        // uav_state.state = UAVState::State::unknown;
-        uav_state.location_source = UAVState::LocationSource::MOCAP;
-        uav_state.gps_status = 0;
-        uav_state.mode = "";
-        uav_state.connected = false;
-        uav_state.armed = false;
-        uav_state.odom_valid = false;
-        uav_state.gps_num = 0;
-        for (int j = 0; j < 3; j++)
-        {
-            uav_state.position[j] = 0;
-            uav_state.velocity[j] = 0;
-            uav_state.attitude[j] = 0;
-            uav_state.attitude_rate[j] = 0;
-        }
-        uav_state.latitude = 0;
-        uav_state.longitude = 0;
-        uav_state.altitude = 0;
+    // for (int i = 1; i <= swarm_uav_num; ++i)
+    // {
+    //     struct UAVState uav_state;
+    //     uav_state.uav_id = i;
+    //     // uav_state.state = UAVState::State::unknown;
+    //     uav_state.location_source = UAVState::LocationSource::MOCAP;
+    //     uav_state.gps_status = 0;
+    //     uav_state.mode = "";
+    //     uav_state.connected = false;
+    //     uav_state.armed = false;
+    //     uav_state.odom_valid = false;
+    //     uav_state.gps_num = 0;
+    //     for (int j = 0; j < 3; j++)
+    //     {
+    //         uav_state.position[j] = 0;
+    //         uav_state.velocity[j] = 0;
+    //         uav_state.attitude[j] = 0;
+    //         uav_state.attitude_rate[j] = 0;
+    //     }
+    //     uav_state.latitude = 0;
+    //     uav_state.longitude = 0;
+    //     uav_state.altitude = 0;
 
-        uav_state.attitude_q.x = 0;
-        uav_state.attitude_q.y = 0;
-        uav_state.attitude_q.z = 0;
-        uav_state.attitude_q.w = 0;
-        uav_state.battery_state = 0;
-        uav_state.battery_percetage = 0;
-        this->multi_uav_state_.uav_state_all.push_back(uav_state);
-    }
-    for (int i = 1; i <= swarm_ugv_num; ++i)
-    {
-        struct UGVState ugv_state;
-        ugv_state.ugv_id = i;
-        ugv_state.secs = 0;
-        ugv_state.nsecs = 0;
-        ugv_state.battery = 0;
-        for (int j = 0; j < 3; j++)
-        {
-            ugv_state.position[j] = 0;
-            ugv_state.velocity[j] = 0;
-            ugv_state.attitude[j] = 0;
-        }
-        ugv_state.attitude_q.x = 0;
-        ugv_state.attitude_q.y = 0;
-        ugv_state.attitude_q.z = 0;
-        ugv_state.attitude_q.w = 0;
-        this->multi_ugv_state_.ugv_state_all.push_back(ugv_state);
-    }
+    //     uav_state.attitude_q.x = 0;
+    //     uav_state.attitude_q.y = 0;
+    //     uav_state.attitude_q.z = 0;
+    //     uav_state.attitude_q.w = 0;
+    //     uav_state.battery_state = 0;
+    //     uav_state.battery_percetage = 0;
+    //     this->multi_uav_state_.uav_state_all.push_back(uav_state);
+    // }
+    // for (int i = 1; i <= swarm_ugv_num; ++i)
+    // {
+    //     struct UGVState ugv_state;
+    //     ugv_state.ugv_id = i;
+    //     ugv_state.secs = 0;
+    //     ugv_state.nsecs = 0;
+    //     ugv_state.battery = 0;
+    //     for (int j = 0; j < 3; j++)
+    //     {
+    //         ugv_state.position[j] = 0;
+    //         ugv_state.velocity[j] = 0;
+    //         ugv_state.attitude[j] = 0;
+    //     }
+    //     ugv_state.attitude_q.x = 0;
+    //     ugv_state.attitude_q.y = 0;
+    //     ugv_state.attitude_q.z = 0;
+    //     ugv_state.attitude_q.w = 0;
+    //     this->multi_ugv_state_.ugv_state_all.push_back(ugv_state);
+    // }
 }
 
 // 更新全部无人机数据
 void SwarmControl::updateAllUAVState(struct UAVState uav_state)
 {
-    // 更新数据
-    for (int i = 0; i < this->multi_uav_state_.uav_state_all.size(); i++)
-    {
-        if (this->multi_uav_state_.uav_state_all[i].uav_id == uav_state.uav_id)
+    // 判断传入无人机的数据载体编号是否在 参与载体或者断开载体中
+    // 都不存在 则添加
+    // 在参与载体 则更新数据
+    // 在断开载体 则不更新数据
+
+    if(connect_uav_ids.find(uav_state.uav_id) == connect_uav_ids.end() && disconnect_uav_ids.find(uav_state.uav_id) == disconnect_uav_ids.end()){
+        connect_uav_ids.emplace(uav_state.uav_id);
+        this->multi_uav_state_.uav_state_all.push_back(uav_state);
+        return;
+    }
+
+    if(connect_uav_ids.find(uav_state.uav_id) != connect_uav_ids.end()){
+        // 更新数据
+        for (int i = 0; i < this->multi_uav_state_.uav_state_all.size(); i++)
         {
-            this->multi_uav_state_.uav_state_all[i] = uav_state;
-            break;
+            if (this->multi_uav_state_.uav_state_all[i].uav_id == uav_state.uav_id)
+            {
+                // 更新时间戳
+                uav_state.secs = ros::Time::now().sec;
+                uav_state.nsecs = ros::Time::now().nsec;
+                this->multi_uav_state_.uav_state_all[i] = uav_state;
+                break;
+            }
         }
     }
 }
@@ -286,13 +304,23 @@ void SwarmControl::updateAllUAVState(struct UAVState uav_state)
 // 更新全部无人车数据
 void SwarmControl::updateAllUGVState(struct UGVState ugv_state)
 {
-    // 更新数据
-    for (int i = 0; i < this->multi_ugv_state_.ugv_state_all.size(); i++)
-    {
-        if (this->multi_ugv_state_.ugv_state_all[i].ugv_id == ugv_state.ugv_id)
+    if(connect_ugv_ids.find(ugv_state.ugv_id) == connect_ugv_ids.end() && disconnect_ugv_ids.find(ugv_state.ugv_id) == disconnect_ugv_ids.end()){
+        connect_ugv_ids.emplace(ugv_state.ugv_id);
+        this->multi_ugv_state_.ugv_state_all.push_back(ugv_state);
+        return;
+    }
+
+    if(connect_ugv_ids.find(ugv_state.ugv_id) != connect_ugv_ids.end()){
+        // 更新数据
+        for (int i = 0; i < this->multi_ugv_state_.ugv_state_all.size(); i++)
         {
-            this->multi_ugv_state_.ugv_state_all[i] = ugv_state;
-            break;
+            if (this->multi_ugv_state_.ugv_state_all[i].ugv_id == ugv_state.ugv_id)
+            {
+                ugv_state.secs = ros::Time::now().sec;
+                ugv_state.nsecs = ros::Time::now().nsec;
+                this->multi_ugv_state_.ugv_state_all[i] = ugv_state;
+                break;
+            }
         }
     }
 }
@@ -467,4 +495,63 @@ void SwarmControl::setGroundStationIP(std::string ip)
         this->multicast_udp_ip = ip;
     }
     this->udp_ip = ip;
+}
+
+void SwarmControl::disconnectUAV(int id)
+{
+    // 断联的无人机
+    if(connect_uav_ids.find(id) != connect_uav_ids.end()){
+        // 交换
+        disconnect_uav_ids.emplace(id);
+        connect_uav_ids.erase(connect_uav_ids.find(id));
+        // 找到对应的数据清除
+        for (auto it = this->multi_uav_state_.uav_state_all.begin(); it != this->multi_uav_state_.uav_state_all.end(); it++){
+            if((*it).uav_id == id)
+            {
+                this->multi_uav_state_.uav_state_all.erase(it);
+                break;
+            }
+        }
+    }
+}
+    
+void SwarmControl::disconnectUGV(int id)
+{
+    // 断联的无人车
+    if(connect_ugv_ids.find(id) != connect_ugv_ids.end()){
+        // 交换
+        disconnect_ugv_ids.emplace(id);
+        connect_ugv_ids.erase(connect_ugv_ids.find(id));
+        // 找到对应的数据清除
+        for (auto it = this->multi_ugv_state_.ugv_state_all.begin(); it != this->multi_ugv_state_.ugv_state_all.end(); it++){
+            if((*it).ugv_id == id)
+            {
+                this->multi_ugv_state_.ugv_state_all.erase(it);
+                break;
+            }
+        }
+    }
+}
+
+void SwarmControl::checkSimulationDataStatus(const ros::TimerEvent &time_event)
+{
+    // 判断数据的时间戳，长时间未更新则判断其断联
+    ros::Time now_time = ros::Time::now();
+    // 存储局部变量，用于判断是否超时，否则直接操作原始数据 导致 边操作边遍历可能导致冲突
+    struct MultiUAVState m_multi_uav_state = this->multi_uav_state_;
+    struct MultiUGVState m_multi_ugv_state = this->multi_ugv_state_;
+    // 判断无人机的数据是否超时
+    for (auto it = m_multi_uav_state.uav_state_all.begin(); it != m_multi_uav_state.uav_state_all.end(); it++){
+        // 判断无人机 时间戳相差5s 则判定其断联
+        if(now_time.sec - (*it).secs > 5){
+            disconnectUAV((*it).uav_id);
+        }
+    }
+    // 判断无人车的数据是否超时
+    for (auto it = m_multi_ugv_state.ugv_state_all.begin(); it != m_multi_ugv_state.ugv_state_all.end(); it++){
+        // 判断无人机 时间戳相差5s 则判定其断联
+        if(now_time.sec - (*it).secs > 5){
+            disconnectUGV((*it).ugv_id);
+        }
+    }
 }
