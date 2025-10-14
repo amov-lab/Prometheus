@@ -291,9 +291,6 @@ void SwarmControl::updateAllUAVState(struct UAVState uav_state)
         {
             if (this->multi_uav_state_.uav_state_all[i].uav_id == uav_state.uav_id)
             {
-                // 更新时间戳
-                uav_state.secs = ros::Time::now().sec;
-                uav_state.nsecs = ros::Time::now().nsec;
                 this->multi_uav_state_.uav_state_all[i] = uav_state;
                 break;
             }
@@ -316,8 +313,6 @@ void SwarmControl::updateAllUGVState(struct UGVState ugv_state)
         {
             if (this->multi_ugv_state_.ugv_state_all[i].ugv_id == ugv_state.ugv_id)
             {
-                ugv_state.secs = ros::Time::now().sec;
-                ugv_state.nsecs = ros::Time::now().nsec;
                 this->multi_ugv_state_.ugv_state_all[i] = ugv_state;
                 break;
             }
@@ -501,6 +496,7 @@ void SwarmControl::disconnectUAV(int id)
 {
     // 断联的无人机
     if(connect_uav_ids.find(id) != connect_uav_ids.end()){
+        std::cout << "UAV" << id << " swarm control disconnect!" << std::endl;
         // 交换
         disconnect_uav_ids.emplace(id);
         connect_uav_ids.erase(connect_uav_ids.find(id));
@@ -519,6 +515,7 @@ void SwarmControl::disconnectUGV(int id)
 {
     // 断联的无人车
     if(connect_ugv_ids.find(id) != connect_ugv_ids.end()){
+        std::cout << "UGV" << id << " swarm control disconnect!" << std::endl;
         // 交换
         disconnect_ugv_ids.emplace(id);
         connect_ugv_ids.erase(connect_ugv_ids.find(id));
@@ -538,17 +535,17 @@ void SwarmControl::checkSimulationDataStatus(const ros::TimerEvent &time_event)
     // 判断数据的时间戳，长时间未更新则判断其断联
     ros::Time now_time = ros::Time::now();
     // 存储局部变量，用于判断是否超时，否则直接操作原始数据 导致 边操作边遍历可能导致冲突
-    struct MultiUAVState m_multi_uav_state = this->multi_uav_state_;
-    struct MultiUGVState m_multi_ugv_state = this->multi_ugv_state_;
+    std::vector<struct UAVState> m_all_uav_state = this->multi_uav_state_.uav_state_all;
+    std::vector<struct UGVState> m_all_ugv_state = this->multi_ugv_state_.ugv_state_all;
     // 判断无人机的数据是否超时
-    for (auto it = m_multi_uav_state.uav_state_all.begin(); it != m_multi_uav_state.uav_state_all.end(); it++){
+    for (auto it = m_all_uav_state.begin(); it != m_all_uav_state.end(); it++){
         // 判断无人机 时间戳相差5s 则判定其断联
         if(now_time.sec - (*it).secs > 5){
             disconnectUAV((*it).uav_id);
         }
     }
     // 判断无人车的数据是否超时
-    for (auto it = m_multi_ugv_state.ugv_state_all.begin(); it != m_multi_ugv_state.ugv_state_all.end(); it++){
+    for (auto it = m_all_ugv_state.begin(); it != m_all_ugv_state.end(); it++){
         // 判断无人机 时间戳相差5s 则判定其断联
         if(now_time.sec - (*it).secs > 5){
             disconnectUGV((*it).ugv_id);

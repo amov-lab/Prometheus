@@ -297,6 +297,11 @@ void CommunicationBridge::recvData(struct WindowPosition window_position)
         if (this->uav_ && window_position.mode == WindowPosition::Mode::POINT && window_position.track_id < 0)
         {
             this->uav_->uavTargetPub(window_position);
+        }else if(window_position.mode == WindowPosition::RECTANGLE){
+            std::cout << "origin_x: " << window_position.origin_x << std::endl;
+            std::cout << "origin_y: " << window_position.origin_y << std::endl;
+            std::cout << "width: " << window_position.width << std::endl;
+            std::cout << "height: " << window_position.height << std::endl;
         }
     }
 }
@@ -1000,9 +1005,18 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
     {
         if (this->swarm_control_)
         {
-            this->swarm_control_.reset();
-            if (autoload)
-                system(CLOSESWARMCONTROL.c_str());
+            // 全部断开连接，则判断为退出集群
+            if(mode_selection.swarm_num == mode_selection.selectId.size()){
+                this->swarm_control_.reset();
+                if (autoload)
+                    system(CLOSESWARMCONTROL.c_str());
+            }else{// 其中一台断开
+                int id = *mode_selection.selectId.begin();
+                if(id > 0) // uav
+                    this->swarm_control_->disconnectUAV(id);
+                else // ugv
+                    this->swarm_control_->disconnectUGV(id);
+            }
         }
     }
     else if (mode_selection.mode == ModeSelection::Mode::AUTONOMOUSLANDING)
