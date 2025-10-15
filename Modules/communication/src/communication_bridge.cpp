@@ -835,29 +835,63 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
 
             if (!this->swarm_control_)
             {
-                // 开启集群的数量跟无人机数量一致 并且无人车数量为0 进入 无人机集群
-                if (this->swarm_num_ == mode_selection.swarm_num && this->swarm_ugv_num_ == 0)
-                {
-                    this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, this->uav_id, this->swarm_num_);
+                bool is_uav_swarm = false;
+                int uav_num = 0;
+                bool is_ugv_swarm = false;
+                int ugv_num = 0;
+                for(auto it = mode_selection.selectId.begin(); it != mode_selection.selectId.end(); it++){
+                    if((*it) > 0){ // id 大于 0 为无人机
+                        is_uav_swarm = true;
+                        uav_num++;
+                    }else if((*it) < 0){ // id 小于0 为无人车
+                        is_ugv_swarm = true;
+                        ugv_num++;                        
+                    }
                 }
-                // 开启集群的数量跟无人车数量一致 并且无人机数量为0 进入 无人车集群
-                else if (this->swarm_ugv_num_ == mode_selection.swarm_num && this->swarm_num_ == 0)
-                {
-                    this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, this->ugv_id, this->swarm_ugv_num_);
-                }
-                // 开启集群的数量跟无人车和无人机总数量一致 进入 机车协同
-                else if (this->swarm_num_ + this->swarm_ugv_num_ == mode_selection.swarm_num)
-                {
-                    if (this->uav_)
-                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, this->uav_id, this->swarm_num_, this->swarm_ugv_num_);
-                    else if (this->ugv_)
-                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, this->ugv_id, this->swarm_num_, this->swarm_ugv_num_);
-                }
-                else
-                {
-                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The number of ground stations is inconsistent with the number of communication nodes.");
+
+                if(!is_uav_swarm && !is_ugv_swarm){
+                    sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed!");
                     return;
                 }
+
+                if(is_uav_swarm && is_ugv_swarm){// 机车协同
+                    if (this->uav_)
+                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, this->uav_id, uav_num, ugv_num);
+                    else if (this->ugv_)
+                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, this->ugv_id, uav_num, ugv_num);
+                }else{
+                    // 单种类型集群
+                    if(is_uav_swarm){
+                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, this->uav_id, uav_num);
+                    }else if(is_ugv_swarm){
+                        this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, this->ugv_id, ugv_num);
+                    }
+                }
+
+
+                // // 开启集群的数量跟无人机数量一致 并且无人车数量为0 进入 无人机集群
+                // if (this->swarm_num_ == mode_selection.swarm_num && this->swarm_ugv_num_ == 0)
+                // {
+                //     this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UAV, this->uav_id, this->swarm_num_);
+                // }
+                // // 开启集群的数量跟无人车数量一致 并且无人机数量为0 进入 无人车集群
+                // else if (this->swarm_ugv_num_ == mode_selection.swarm_num && this->swarm_num_ == 0)
+                // {
+                //     this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::ONLY_UGV, this->ugv_id, this->swarm_ugv_num_);
+                // }
+                // // 开启集群的数量跟无人车和无人机总数量一致 进入 机车协同
+                // else if (this->swarm_num_ + this->swarm_ugv_num_ == mode_selection.swarm_num)
+                // {
+                //     if (this->uav_)
+                //         this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UAV, this->uav_id, this->swarm_num_, this->swarm_ugv_num_);
+                //     else if (this->ugv_)
+                //         this->swarm_control_ = std::make_shared<SwarmControl>(this->nh_, (Communication *)this, SwarmMode::UAV_AND_UGV, RobotType::ROBOT_TYPE_UGV, this->ugv_id, this->swarm_num_, this->swarm_ugv_num_);
+                // }
+                // else
+                // {
+                //     sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The number of ground stations is inconsistent with the number of communication nodes.");
+                //     return;
+                // }
 
                 sendTextInfo(TextInfo::MessageTypeGrade::MTG_INFO, "Mode switching succeeded, current swarm control mode.");
                 if (autoload)
