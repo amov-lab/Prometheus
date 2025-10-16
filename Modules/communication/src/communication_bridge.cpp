@@ -766,11 +766,12 @@ void CommunicationBridge::createMode(struct ModeSelection mode_selection)
     // 集群模式
     else if (mode_selection.mode == ModeSelection::Mode::SWARMCONTROL)
     {
-        if (this->swarm_num_ != mode_selection.selectId.size() && this->swarm_ugv_num_ != mode_selection.selectId.size() && this->swarm_num_ + this->swarm_ugv_num_ != mode_selection.selectId.size())
-        {
-            sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The number of ground stations is inconsistent with the number of communication nodes.");
-        }
-        else if (this->is_simulation_ != mode_selection.is_simulation)
+        // if (this->swarm_num_ != mode_selection.selectId.size() && this->swarm_ugv_num_ != mode_selection.selectId.size() && this->swarm_num_ + this->swarm_ugv_num_ != mode_selection.selectId.size())
+        // {
+            // sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The number of ground stations is inconsistent with the number of communication nodes.");
+        // }
+        // else 
+        if (this->is_simulation_ != mode_selection.is_simulation)
         {
             sendTextInfo(TextInfo::MessageTypeGrade::MTG_WARN, "Switching mode failed, The ground station and communication node are simulation mode and real machine mode respectively.");
         }
