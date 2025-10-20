@@ -988,6 +988,7 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
             {
                 if (this->uav_)
                 {
+                    this->is_heartbeat_ready_ = false;
                     this->uav_.reset();
                     if (autoload)
                         system(CLOSEUAVBASIC.c_str());
@@ -995,7 +996,6 @@ void CommunicationBridge::deleteMode(struct ModeSelection mode_selection)
                 }
             }
         }
-        this->is_heartbeat_ready_ = false;
     }
     else if (mode_selection.mode == ModeSelection::Mode::UGVBASIC)
     {
