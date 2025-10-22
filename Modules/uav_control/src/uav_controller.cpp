@@ -759,6 +759,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
         send_pos_setpoint(pos_des, yaw_des);
         vel_control = false;
         yaw_control = false;
+        vel_xy_control = false;
         return;
     }
 
@@ -770,12 +771,14 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             send_vel_setpoint(vel_des, yaw_des);
             vel_control = false;
             yaw_control = false;
+            vel_xy_control = false;
         }
         else
         {
             send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
             vel_control = false;
             yaw_control = false;
+            vel_xy_control = false;
         }
         return;
     }
@@ -788,6 +791,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
             send_pos_setpoint(pos_des, yaw_des);
             vel_control = false;
             yaw_control = false;
+            vel_xy_control = false;
         }
         else if (uav_command.Agent_CMD == prometheus_msgs::UAVCommand::Move)
         {
@@ -797,6 +801,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 send_pos_setpoint(pos_des, yaw_des);
                 vel_control = false;
                 yaw_control = false;
+                vel_xy_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL ||
                      uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_VEL_BODY)
@@ -806,10 +811,12 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                     send_vel_setpoint_yaw_rate(vel_des, yaw_rate_des);
                     //vel_control = false;
                     yaw_control = false;
+                    vel_xy_control = false;
                 }
                 else
                 {
                     send_vel_setpoint(vel_des, yaw_des);
+                    vel_xy_control = false;
                 }
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XY_VEL_Z_POS ||
@@ -820,6 +827,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                     send_vel_xy_pos_z_setpoint_yaw_rate(pos_des, vel_des, yaw_rate_des);
                     vel_control = false;
                     yaw_control = false;
+                    vel_xy_control = false;
                 }
                 else
                 {
@@ -833,6 +841,7 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);
                 vel_control = false;
                 yaw_control = false;
+                vel_xy_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::XYZ_ATT)
             {
@@ -840,12 +849,14 @@ void UAV_controller::send_pos_cmd_to_px4_original_controller()
                 send_attitude_setpoint(u_att);
                 vel_control = false;
                 yaw_control = false;
+                vel_xy_control = false;
             }
             else if (uav_command.Move_mode == prometheus_msgs::UAVCommand::LAT_LON_ALT)
             {
                 send_global_setpoint(global_pos_des, yaw_des);
                 vel_control = false;
                 yaw_control = false;
+                vel_xy_control = false;
             }
         }
         return;
@@ -1140,7 +1151,7 @@ void UAV_controller::send_vel_setpoint(const Eigen::Vector3d &vel_sp, float yaw_
     }
 
         // 计算条件
-    bool cond1 = abs(vel_sp[0] - prev_vel_sp[1]) >= Speed_decision_range;
+    bool cond1 = abs(vel_sp[0] - prev_vel_sp[0]) >= Speed_decision_range;
     bool cond2 = abs(vel_sp[1] - prev_vel_sp[1]) >= Speed_decision_range;
     bool cond3 = abs(vel_sp[2] - prev_vel_sp[2]) >= Speed_decision_range;
 
@@ -1405,16 +1416,136 @@ void UAV_controller::send_vel_setpoint_yaw_rate(const Eigen::Vector3d &vel_sp, f
 
 void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_sp)
 {
-    mavros_msgs::PositionTarget pos_setpoint;
-    // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
-    pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
-    pos_setpoint.coordinate_frame = 1;
-    pos_setpoint.velocity.x = vel_sp[0];
-    pos_setpoint.velocity.y = vel_sp[1];
-    pos_setpoint.velocity.z = 0.0;
-    pos_setpoint.position.z = pos_sp[2];
-    pos_setpoint.yaw = yaw_sp;
-    px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+
+        // 计算条件（只判断前两个速度分量）
+    bool cond1 = abs(vel_sp[0] - prev_vel_sp[0]) >= Speed_decision_range;
+    bool cond2 = abs(vel_sp[1] - prev_vel_sp[1]) >= Speed_decision_range;
+
+
+    // 将条件组合成一个 2 位二进制数
+    int condition = (cond1 << 1) | cond2;
+
+    // 根据 condition 赋值 move_orient
+    switch (condition) {
+        case 0b00: move_orient = 0; break;  // 两个差值都小于阈值
+        case 0b01: move_orient = 1; break;  // 仅第二个差值大于等于
+        case 0b10: move_orient = 2; break;  // 仅第一个差值大于等于
+        case 0b11: move_orient = 3; break;  // 两个差值都大于等于阈值
+    }
+
+
+    // 速度控制标志检查
+    if (!vel_xy_control)
+    {
+        current_pos[0] = uav_state.position[0];
+        current_pos[1] = uav_state.position[1];
+        current_pos[2] = uav_state.position[2];
+        prev_vel_xy_sp = vel_sp;
+        prev_move_xy_orient = move_xy_orient;
+        vel_xy_control = true;
+    }
+
+
+    if (move_xy_orient != prev_move_xy_orient) 
+    {
+        vel_xy_control = false;
+        return;
+    }
+
+    // 主要条件判断逻辑
+    if (abs(vel_sp[0]) <= Speed_decision_range && 
+        abs(vel_sp[1]) > Speed_decision_range)
+    {
+        // 条件1: vel_x接近零且vel_y显著
+        if (abs(uav_state.position[0] - current_pos[0]) >= vel_control_grap)
+        {
+            mavros_msgs::PositionTarget pos_setpoint;
+            pos_setpoint.type_mask = 0b100111000011; // 控制 vx, vy, vz, z 和 yaw
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.velocity.x = -vel_control_Kp * (uav_state.position[0] - current_pos[0]);
+            pos_setpoint.velocity.y = vel_sp[1];
+            pos_setpoint.velocity.z = 0;
+            pos_setpoint.position.z = pos_sp[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+        }
+        else
+        {
+            mavros_msgs::PositionTarget pos_setpoint;
+            pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.velocity.x = 0;
+            pos_setpoint.velocity.y = vel_sp[1];
+            pos_setpoint.velocity.z = 0;
+            pos_setpoint.position.z = pos_sp[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+        }
+    }
+
+
+    else if (abs(vel_sp[1]) <= Speed_decision_range && 
+             abs(vel_sp[0]) > Speed_decision_range)
+    {
+        // 条件2: vel_y接近零且vel_x显著
+        if (abs(uav_state.position[1] - current_pos[1]) >= vel_control_grap)
+        {
+            mavros_msgs::PositionTarget pos_setpoint;
+            pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.velocity.x = vel_sp[0];
+            pos_setpoint.velocity.y = -vel_control_Kp * (uav_state.position[1] - current_pos[1]);
+            pos_setpoint.velocity.z = 0;
+            pos_setpoint.position.z = pos_sp[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+        }
+        else
+        {
+            mavros_msgs::PositionTarget pos_setpoint;
+            pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.velocity.x = vel_sp[0];
+            pos_setpoint.velocity.y = 0;
+            pos_setpoint.velocity.z = 0;
+            pos_setpoint.position.z = pos_sp[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+        }
+    }
+
+
+    else if (abs(vel_sp[0]) <= Speed_decision_range && 
+             abs(vel_sp[1]) <= Speed_decision_range)
+        {
+            // 条件3: vel_x和vel_y都接近零
+            mavros_msgs::PositionTarget pos_setpoint;
+            pos_setpoint.type_mask = 0b100111111000; // 100 111 111 000
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.position.x = current_pos[0];
+            pos_setpoint.position.y = current_pos[1];
+            pos_setpoint.position.z = pos_sp[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+        }
+        else
+        {
+            mavros_msgs::PositionTarget pos_setpoint;
+            // 此处由于飞控暂不支持位置－速度追踪的复合模式，因此type_mask设定如下
+            pos_setpoint.type_mask = 0b100111000011; // 100 111 000 011  vx vy vz z + yaw
+            pos_setpoint.coordinate_frame = 1;
+            pos_setpoint.velocity.x = vel_sp[0];
+            pos_setpoint.velocity.y = vel_sp[1];
+            pos_setpoint.velocity.z = 0.0;
+            pos_setpoint.position.z = pos_sp[2];
+            pos_setpoint.yaw = yaw_sp;
+            px4_setpoint_raw_local_pub.publish(pos_setpoint);
+
+        }
 }
 
 void UAV_controller::send_vel_xy_pos_z_setpoint_yaw_rate(const Eigen::Vector3d &pos_sp, const Eigen::Vector3d &vel_sp, float yaw_rate_sp)

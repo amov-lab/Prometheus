@@ -168,6 +168,11 @@ public:
     int move_orient = 0;
     int prev_move_orient = 0;
 
+    bool vel_xy_control = false; 
+    Eigen::Vector3d prev_vel_xy_sp;
+    int move_xy_orient = 0;
+    int prev_move_xy_orient = 0;
+
     // 目标设定值
     Eigen::Vector3d pos_des;
     Eigen::Vector3d global_pos_des;

@@ -124,6 +124,7 @@ void pub_prometheus_command(quadrotor_msgs::PositionCommand ego_traj_cmd)
   {
     // 轨迹追踪
     uav_command.Move_mode = prometheus_msgs::UAVCommand::TRAJECTORY;
+    // uav_command.Move_mode = prometheus_msgs::UAVCommand::XYZ_POS;
   }
   else if (control_flag == 1)
   {
