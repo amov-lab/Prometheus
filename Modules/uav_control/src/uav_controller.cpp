@@ -1419,8 +1419,11 @@ void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d &pos_sp, c
 
 
         // 计算条件（只判断前两个速度分量）
-    bool cond1 = abs(vel_sp[0] - prev_vel_sp[0]) >= Speed_decision_range;
-    bool cond2 = abs(vel_sp[1] - prev_vel_sp[1]) >= Speed_decision_range;
+    // bool cond1 = abs(vel_sp[0] - prev_vel_sp[0]) >= Speed_decision_range;
+    // bool cond2 = abs(vel_sp[1] - prev_vel_sp[1]) >= Speed_decision_range;
+
+    bool cond1 = abs(vel_sp[0] - prev_vel_sp[0]) >= 0.001;
+    bool cond2 = abs(vel_sp[1] - prev_vel_sp[1]) >= 0.001;
 
 
     // 将条件组合成一个 2 位二进制数
@@ -1454,8 +1457,8 @@ void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d &pos_sp, c
     }
 
     // 主要条件判断逻辑
-    if (abs(vel_sp[0]) <= Speed_decision_range && 
-        abs(vel_sp[1]) > Speed_decision_range)
+    if (abs(vel_sp[0]) <= 0.001 && 
+        abs(vel_sp[1]) > 0.001)
     {
         // 条件1: vel_x接近零且vel_y显著
         if (abs(uav_state.position[0] - current_pos[0]) >= vel_control_grap)
@@ -1487,8 +1490,8 @@ void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d &pos_sp, c
     }
 
 
-    else if (abs(vel_sp[1]) <= Speed_decision_range && 
-             abs(vel_sp[0]) > Speed_decision_range)
+    else if (abs(vel_sp[1]) <= 0.001 && 
+             abs(vel_sp[0]) > 0.001)
     {
         // 条件2: vel_y接近零且vel_x显著
         if (abs(uav_state.position[1] - current_pos[1]) >= vel_control_grap)
@@ -1518,8 +1521,8 @@ void UAV_controller::send_vel_xy_pos_z_setpoint(const Eigen::Vector3d &pos_sp, c
     }
 
 
-    else if (abs(vel_sp[0]) <= Speed_decision_range && 
-             abs(vel_sp[1]) <= Speed_decision_range)
+    else if (abs(vel_sp[0]) <= 0.001 && 
+             abs(vel_sp[1]) <= 0.001)
         {
             // 条件3: vel_x和vel_y都接近零
             mavros_msgs::PositionTarget pos_setpoint;
