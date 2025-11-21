@@ -19,3 +19,5 @@ catkin_make --source Modules/swarm_control --build build/swarm_control
 # 编译swarm_formation模块
 catkin_make --source Modules/swarm_formation --build build/swarm_formation
 
+catkin_make --source Modules/searching_pkg --build build/searching_pkg
+

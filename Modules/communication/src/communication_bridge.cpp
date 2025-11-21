@@ -518,6 +518,13 @@ void CommunicationBridge::recvData(struct CustomDataSegment_1 custom_data_segmen
     //     struct BasicDataTypeAndValue basic = custom_data_segment.datas[i];
     //     std::cout << "类型:" << (int)basic.type << " 变量名:" << basic.name << " 变量值:" << basic.value << std::endl;
     // }
+    if(this->is_simulation_ && this->swarm_control_)
+    {
+        for(auto it = uavs_.begin(); it != uavs_.end(); it++){
+            (*it).second.get()->customDataSegmentPub(custom_data_segment);
+        }
+        return;
+    }
 
     if (this->uav_)
     {

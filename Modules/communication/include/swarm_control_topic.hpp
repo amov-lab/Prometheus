@@ -174,6 +174,9 @@ private:
     std::unordered_set<int> disconnect_ugv_ids;
     // 增加一个定时器, 用于仿真情况下判断 仿真下各无人机的数据状态
     ros::Timer check_simulation_data_status_timer;
+    // 记录offset_time 
+    std::map<int, int> uav_offset_time;
+    std::map<int, int> ugv_offset_time;
 };
 
 #endif

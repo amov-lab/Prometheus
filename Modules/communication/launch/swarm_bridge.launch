@@ -38,7 +38,7 @@
     <arg name="swarm_control_yaml" default="swarm_control/config/swarm_control_p600.yaml"/>
     <!-- 轨迹配置文件路径 -->
     <arg name="uav_command_yaml" default="uav_control/launch/uav_command_pub.yaml"/>
-
+<param name="track_width" value="1.0"/>
     <node pkg="prometheus_communication_bridge" type="communication_bridge" name="communication_bridge" output="screen">
         <!-- 组播ip -->
         <param name="multicast_udp_ip" value="$(arg multicast_udp_ip)"/>
@@ -77,6 +77,16 @@
         <param name="swarm_control_start" value="$(arg swarm_control_start)"/>
         <param name="close_swarm_control" value="$(arg close_swarm_control)"/>
 
+
+	<param name="search_point1_x" value="0.0"/>	
+	<param name="search_point1_y" value="0.0"/>	
+	<param name="search_point2_x" value="0.0"/>	
+	<param name="search_point2_y" value="0.0"/>	
+	<param name="search_point3_x" value="0.0"/>	
+	<param name="search_point3_y" value="0.0"/>	
+	<param name="search_point4_x" value="0.0"/>
+	<param name="search_point4_y" value="0.0"/>		
+	
         <!-- 发送频率 -->
         <param name="uav_basic_hz" value="$(arg uav_basic_hz)"/>
         <param name="ugv_basic_hz" value="$(arg ugv_basic_hz)"/>
