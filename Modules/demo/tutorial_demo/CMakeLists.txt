@@ -56,8 +56,8 @@ include_directories(
   include
   advanced/include
   ${catkin_INCLUDE_DIRS}
-  ../common/include
-  ../communication/include
+  ../../core/common/include
+  ../../communication/include
   ${OpenCV_INCLUDE_DIRS}
 )
 message(STATUS "include dirs")

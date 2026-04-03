@@ -38,7 +38,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
   # ${CMAKE_CURRENT_SOURCE_DIR}/include/ode
-  ../common/include
+  ../../core/common/include
 )
 
 ###############################

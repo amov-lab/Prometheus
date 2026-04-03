@@ -37,8 +37,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/include
   ${EIGEN3_INCLUDE_DIR}
   ${PCL_INCLUDE_DIRS}
-  ${PROJECT_SOURCE_DIR}/../../uav_control/include
-  ${PROJECT_SOURCE_DIR}/../../common/include
+    ${PROJECT_SOURCE_DIR}/../../../control/uav_control/include
+    ${PROJECT_SOURCE_DIR}/../../../core/common/include
 )
 
 

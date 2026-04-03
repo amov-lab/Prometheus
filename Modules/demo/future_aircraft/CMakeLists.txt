@@ -57,7 +57,7 @@ catkin_package(
 include_directories(
   include ../tutorial_demo/advanced/autonomous_landing/include
   ${catkin_INCLUDE_DIRS}
-  ../common/include
+  ../../core/common/include
 )
 
 

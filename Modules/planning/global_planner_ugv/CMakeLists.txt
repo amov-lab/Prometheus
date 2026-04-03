@@ -30,7 +30,7 @@ include_directories(
        ${catkin_INCLUDE_DIRS}
        ${Eigen3_INCLUDE_DIRS}
        ${PCL_INCLUDE_DIRS}
-	   ${PROJECT_SOURCE_DIR}/../common/include
+	   ${PROJECT_SOURCE_DIR}/../../core/common/include
 )
 
 link_directories(${PCL_LIBRARY_DIRS})
