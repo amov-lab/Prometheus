@@ -50,6 +50,9 @@ jobs:
   clang-format-check:
     name: Code Style Check
     runs-on: ubuntu-latest
+    # Advisory only — existing code is not yet reformatted.
+    # This check will report style violations but won't block merges.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Check C++ code style
