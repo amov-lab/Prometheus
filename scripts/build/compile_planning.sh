@@ -1,0 +1,19 @@
+#!/bin/bash
+# 脚本名称: compile_planning.sh
+# 脚本描述: 编译Prometheus规划模块
+
+# 编译基础模块
+catkin_make --source Modules/core/common --build build/common
+# 编译Gazebo仿真模块
+catkin_make --source Simulator/gazebo_simulator --build build/prometheus_gazebo
+catkin_make --source Simulator/realsense_gazebo_plugin --build build/realsense_gazebo_plugin
+catkin_make --source Simulator/velodyne_gazebo_plugins --build build/velodyne_gazebo_plugins
+catkin_make --source Simulator/livox_laser_gazebo_plugins --build build/livox_laser_gazebo_plugins
+# 编译控制模块
+catkin_make --source Modules/control/uav_control --build build/uav_control
+# 编译规划相关模块
+catkin_make --source Modules/perception/simulator_utils --build build/simulator_utils
+catkin_make --source Modules/planning/ego_planner_swarm --build build/ego_planner_swarm
+catkin_make --source Modules/planning/motion_planning --build build/motion_planning
+# 编译建图定位模块
+catkin_make --source Modules/perception/FAST_LIO --build build/FAST_LIO

@@ -5,7 +5,7 @@
   <description>The ground_station_bridge module</description>
 
   <maintainer email="Amov@gmail.com">Amov</maintainer> 
-  <license>Aomv</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
