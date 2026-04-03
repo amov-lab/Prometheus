@@ -9,7 +9,7 @@ on:
 jobs:
   build-core:
     name: Build Core Modules
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: ros:noetic-ros-base-focal
     steps:
