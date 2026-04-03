@@ -71,7 +71,7 @@ swarm: core communication control
 	catkin_make --source Modules/swarm/searching_pkg --build build/searching_pkg
 
 # Build everything
-all: core communication simulator control demo planning perception
+all: core communication simulator control demo planning perception swarm
 
 clean:
 	rm -rf build/ devel/
