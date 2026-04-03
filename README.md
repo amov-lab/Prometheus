@@ -14,6 +14,39 @@ Prometheus是一套开源的**自主无人机软件系统平台**，为无人机
  - Gitee：https://gitee.com/amovlab/Prometheus
  - **开源项目，维护不易，还烦请点一个star收藏，谢谢支持！**
 
+## 项目结构
+
+```
+Modules/
+├── core/           # 核心消息定义与工具
+├── control/        # 无人机/地面车辆控制
+├── planning/       # 路径规划 (全局/局部/集群避障)
+├── perception/     # 感知与定位 (FAST_LIO等)
+├── communication/  # 地面站通信桥接
+├── swarm/          # 集群控制与编队
+├── demo/           # 教程与实验示例
+└── integration/    # 外部集成 (MATLAB等)
+```
+
+详细架构说明请参阅 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
+## 快速构建
+
+```bash
+# 克隆仓库（含子模块）
+git clone --recursive https://github.com/amov-lab/Prometheus.git
+cd Prometheus
+
+# 使用 Makefile 构建
+make all            # 构建全部模块
+make control        # 仅构建控制模块
+make planning       # 仅构建规划模块
+make help           # 查看所有构建目标
+
+# 或使用传统脚本
+bash scripts/build/compile_all.sh
+```
+
 ## 快速入门
 
  - 安装及使用：[Prometheus使用手册](https://docs.amovlab.com/prometheus-wiki/#/src/Prometheus-%E8%87%AA%E4%B8%BB%E6%97%A0%E4%BA%BA%E6%9C%BA%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/Prometheus-%E8%87%AA%E4%B8%BB%E6%97%A0%E4%BA%BA%E6%9C%BA%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE)
@@ -24,7 +57,7 @@ Prometheus是一套开源的**自主无人机软件系统平台**，为无人机
  - 答疑及交流：
     - 答疑论坛（官方定期答疑，推荐）：[阿木社区-Prometheus问答专区](https://bbs.amovlab.com/forum.php?mod=forumdisplay&fid=101)
     - 添加微信jiayue199506（备注消息：Prometheus）进入Prometheus自主无人机交流群。
-    - B站搜索并关注“阿木社区”，开发团队定期直播答疑。
+    - B站搜索并关注"阿木社区"，开发团队定期直播答疑。。
 
 ## 进阶学习
 
